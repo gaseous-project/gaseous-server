@@ -9,9 +9,29 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="classes\" />
+    <None Remove="Classes\" />
+    <None Remove="Support\" />
+    <None Remove="Support\Parsers\" />
+    <None Remove="Support\Parsers\TOSEC\" />
+    <None Remove="Support\Parsers\TOSEC\Systems.txt" />
+    <None Remove="Support\Parsers\TOSEC\Video.txt" />
+    <None Remove="Support\Parsers\TOSEC\Country.txt" />
+    <None Remove="Support\Parsers\TOSEC\Language.txt" />
+    <None Remove="Support\Parsers\TOSEC\Copyright.txt" />
+    <None Remove="Support\Parsers\TOSEC\DevelopmentStatus.txt" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="classes\" />
+    <Folder Include="Classes\" />
+    <Folder Include="Support\" />
+    <Folder Include="Support\Parsers\" />
+    <Folder Include="Support\Parsers\TOSEC\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Support\Parsers\TOSEC\Systems.txt" />
+    <EmbeddedResource Include="Support\Parsers\TOSEC\Video.txt" />
+    <EmbeddedResource Include="Support\Parsers\TOSEC\Country.txt" />
+    <EmbeddedResource Include="Support\Parsers\TOSEC\Language.txt" />
+    <EmbeddedResource Include="Support\Parsers\TOSEC\Copyright.txt" />
+    <EmbeddedResource Include="Support\Parsers\TOSEC\DevelopmentStatus.txt" />
   </ItemGroup>
 </Project>

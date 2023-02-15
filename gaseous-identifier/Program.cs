@@ -50,8 +50,7 @@ scanPath = Path.GetFullPath(scanPath);
 Console.WriteLine("ROM search path: " + scanPath);
 
 System.Collections.ArrayList TOSEC = new System.Collections.ArrayList();
-List<gaseous_identifier.classes.tosecXML> tosecLists = new List<gaseous_identifier.classes.tosecXML>();
-UInt32 GameCounter = 0;
+List<gaseous_identifier.objects.RomSignatureObject> tosecLists = new List<gaseous_identifier.objects.RomSignatureObject>();
 if (tosecXML != null && tosecXML.Length > 0)
 {
     tosecXML = Path.GetFullPath(tosecXML);
@@ -61,127 +60,8 @@ if (tosecXML != null && tosecXML.Length > 0)
     string[] tosecPathContents = Directory.GetFiles(tosecXML);
     foreach (string tosecXMLFile in tosecPathContents)
     {
-        XmlDocument tosecXmlDoc = new XmlDocument();
-        tosecXmlDoc.Load(tosecXMLFile);
-
-        gaseous_identifier.classes.tosecXML tosecObject = new gaseous_identifier.classes.tosecXML();
-
-        // get header
-        XmlNode xmlHeader = tosecXmlDoc.DocumentElement.SelectSingleNode("/datafile/header");
-        foreach (XmlNode childNode in xmlHeader.ChildNodes)
-        {
-            switch (childNode.Name.ToLower())
-            {
-                case "name":
-                    tosecObject.Name = childNode.InnerText;
-                    break;
-
-                case "description":
-                    tosecObject.Description = childNode.InnerText;
-                    break;
-
-                case "category":
-                    tosecObject.Category = childNode.InnerText;
-                    break;
-
-                case "version":
-                    tosecObject.Version = childNode.InnerText;
-                    break;
-
-                case "author":
-                    tosecObject.Author = childNode.InnerText;
-                    break;
-
-                case "email":
-                    tosecObject.Email = childNode.InnerText;
-                    break;
-
-                case "homepage":
-                    tosecObject.Homepage = childNode.InnerText;
-                    break;
-
-                case "url":
-                    try
-                    {
-                        tosecObject.Url = new Uri(childNode.InnerText);
-                    } catch
-                    {
-                        tosecObject.Url = null;
-                    }
-                    break;
-            }
-        }
-
-        // get games
-        tosecObject.Games = new List<gaseous_identifier.classes.tosecXML.Game>();
-        XmlNodeList xmlGames = tosecXmlDoc.DocumentElement.SelectNodes("/datafile/game");
-        foreach (XmlNode xmlGame in xmlGames)
-        {
-            gaseous_identifier.classes.tosecXML.Game gameObject = new gaseous_identifier.classes.tosecXML.Game();
-
-            // parse game name
-            string gameName = xmlGame.Attributes["name"].Value;
-            string[] gameNameTokens = gameName.Split("(");
-            // game title should be first item
-            gameObject.Name = gameNameTokens[0].Trim();
-            // game year should be second item
-            if (gameNameTokens.Length == 2)
-            {
-                gameObject.Year = gameNameTokens[1].Replace(")", "").Trim();
-            } else
-            {
-                gameObject.Year = "";
-            }
-            // game publisher should be third item
-            if (gameNameTokens.Length == 3)
-            {
-                gameObject.Publisher = gameNameTokens[2].Replace(")", "").Trim();
-            } else
-            {
-                gameObject.Publisher = "";
-            }
-
-            gameObject.Roms = new List<gaseous_identifier.classes.tosecXML.Game.Rom>();
-
-            // get the roms
-            foreach (XmlNode xmlGameDetail in xmlGame.ChildNodes)
-            {
-                switch (xmlGameDetail.Name.ToLower())
-                {
-                    case "description":
-                        gameObject.Description = xmlGameDetail.InnerText;
-                        break;
-
-                    case "rom":
-                        gaseous_identifier.classes.tosecXML.Game.Rom romObject = new gaseous_identifier.classes.tosecXML.Game.Rom();
-                        romObject.Name = xmlGameDetail.Attributes["name"]?.Value;
-                        romObject.Size = UInt64.Parse(xmlGameDetail.Attributes["size"]?.Value);
-                        romObject.Crc = xmlGameDetail.Attributes["crc"]?.Value;
-                        romObject.Md5 = xmlGameDetail.Attributes["md5"]?.Value;
-                        romObject.Sha1 = xmlGameDetail.Attributes["sha1"]?.Value;
-
-                        gameObject.Roms.Add(romObject);
-                        break;
-                }
-            }
-
-            // search for existing gameObject to update
-            bool existingGameFound = false;
-            foreach (gaseous_identifier.classes.tosecXML.Game existingGame in tosecObject.Games)
-            {
-                if (existingGame.Name == gameObject.Name && existingGame.Year == gameObject.Year && existingGame.Publisher == gameObject.Publisher)
-                {
-                    existingGame.Roms.AddRange(gameObject.Roms);
-                    existingGameFound = true;
-                    break;
-                }
-            }
-            if (existingGameFound == false)
-            {
-                tosecObject.Games.Add(gameObject);
-                GameCounter += 1;
-            }
-        }
+        gaseous_identifier.classes.TosecParser tosecParser = new gaseous_identifier.classes.TosecParser();
+        gaseous_identifier.objects.RomSignatureObject tosecObject = tosecParser.Parse(tosecXMLFile);
 
         Console.Write(".");
         tosecLists.Add(tosecObject);
@@ -191,12 +71,12 @@ if (tosecXML != null && tosecXML.Length > 0)
 {
     Console.WriteLine("TOSEC is disabled, title matching will be by file name only.");
 }
-Console.WriteLine(tosecLists.Count + " TOSEC files loaded - " + GameCounter + " games cataloged");
+Console.WriteLine(tosecLists.Count + " TOSEC files loaded");
 
 if (tosecLists.Count > 0)
 {
     Console.WriteLine("TOSEC lists available:");
-    foreach (gaseous_identifier.classes.tosecXML tosecList in tosecLists)
+    foreach (gaseous_identifier.objects.RomSignatureObject tosecList in tosecLists)
     {
         Console.WriteLine(" * " + tosecList.Name);
     }
@@ -219,11 +99,11 @@ foreach (string romFile in romPathContents)
     string sha1Hash = BitConverter.ToString(md5HashByte).Replace("-", "").ToLowerInvariant();
 
     bool gameFound = false;
-    foreach (gaseous_identifier.classes.tosecXML tosecList in tosecLists)
+    foreach (gaseous_identifier.objects.RomSignatureObject tosecList in tosecLists)
     {
-        foreach (gaseous_identifier.classes.tosecXML.Game gameObject in tosecList.Games)
+        foreach (gaseous_identifier.objects.RomSignatureObject.Game gameObject in tosecList.Games)
         {
-            foreach (gaseous_identifier.classes.tosecXML.Game.Rom romObject in gameObject.Roms)
+            foreach (gaseous_identifier.objects.RomSignatureObject.Game.Rom romObject in gameObject.Roms)
             {
                 if (md5Hash == romObject.Md5)
                 {
