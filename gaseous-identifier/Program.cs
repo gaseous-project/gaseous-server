@@ -105,12 +105,21 @@ foreach (string romFile in romPathContents)
         {
             foreach (gaseous_identifier.objects.RomSignatureObject.Game.Rom romObject in gameObject.Roms)
             {
-                if (md5Hash == romObject.Md5)
+                if (romObject.Md5 != null)
                 {
-                    // match
-                    gameFound = true;
-                    Console.WriteLine(romObject.Name);
-                    break;
+                    if (md5Hash == romObject.Md5.ToLowerInvariant())
+                    {
+                        // match
+                        gameFound = true;
+                        Console.WriteLine(romObject.Name);
+
+                        gaseous_identifier.objects.RomSignatureObject.Game gameSignature = gameObject;
+                        gameSignature.Roms.Clear();
+                        gameSignature.Roms.Add(romObject);
+
+                        Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(gameSignature, Newtonsoft.Json.Formatting.Indented));
+                        break;
+                    }
                 }
             }
             if (gameFound == true) { break; }

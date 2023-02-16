@@ -256,14 +256,6 @@ namespace gaseous_identifier.classes
                     StartToken += 1;
                 }
 
-
-
-
-
-
-
-
-
                 gameObject.Roms = new List<objects.RomSignatureObject.Game.Rom>();
 
                 // get the roms
@@ -326,13 +318,18 @@ namespace gaseous_identifier.classes
 
                                 // check for media label
                                 if (token.Length > 0 &&
-                                    token == gameNameTokens.Last() &&
-                                    gameNameTokens.Length > 2 &&
+                                    (token + ")") == gameNameTokens.Last() &&
                                     (
                                         token != romObject.RomTypeMedia &&
                                         token != gameObject.Publisher &&
-                                        token != gameObject.Country.Key)
+                                        token != gameObject.Country.Key &&
+                                        token != gameObject.Copyright.Key &&
+                                        token != gameObject.Language.Key &&
+                                        token != gameObject.SystemVariant &&
+                                        token != gameObject.Video &&
+                                        token != gameObject.DevelopmentStatus.Key
                                     )
+                                   )
                                 {
                                     // likely the media label?
                                     romObject.MediaLabel = token;

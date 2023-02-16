@@ -19,6 +19,7 @@
     <None Remove="Support\Parsers\TOSEC\Language.txt" />
     <None Remove="Support\Parsers\TOSEC\Copyright.txt" />
     <None Remove="Support\Parsers\TOSEC\DevelopmentStatus.txt" />
+    <None Remove="Newtonsoft.Json" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Classes\" />
@@ -33,5 +34,8 @@
     <EmbeddedResource Include="Support\Parsers\TOSEC\Language.txt" />
     <EmbeddedResource Include="Support\Parsers\TOSEC\Copyright.txt" />
     <EmbeddedResource Include="Support\Parsers\TOSEC\DevelopmentStatus.txt" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
   </ItemGroup>
 </Project>
