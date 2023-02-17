@@ -10,33 +10,33 @@ namespace gaseous_identifier.objects
     /// </summary>
 	public class RomSignatureObject
     {
-        public string Name { get; set; }
-        public string Description { get; set; }
-        public string Category { get; set; }
-        public string Version { get; set; }
-        public string Author { get; set; }
-        public string Email { get; set; }
-        public string Homepage { get; set; }
+        public string? Name { get; set; }
+        public string? Description { get; set; }
+        public string? Category { get; set; }
+        public string? Version { get; set; }
+        public string? Author { get; set; }
+        public string? Email { get; set; }
+        public string? Homepage { get; set; }
         public Uri? Url { get; set; }
-        public string SourceType { get; set; }
+        public string? SourceType { get; set; }
 
-        public List<Game> Games { get; set; }
+        public List<Game> Games { get; set; } = new List<Game>();
 
         public class Game
         {
-            public string Name { get; set; }
-            public string Description { get; set; }
-            public string Year { get; set; }
-            public string Publisher { get; set; }
+            public string? Name { get; set; }
+            public string? Description { get; set; }
+            public string? Year { get; set; }
+            public string? Publisher { get; set; }
             public DemoTypes Demo { get; set; }
-            public string System { get; set; }
-            public string SystemVariant { get; set; }
-            public string Video { get; set; }
+            public string? System { get; set; }
+            public string? SystemVariant { get; set; }
+            public string? Video { get; set; }
             public KeyValuePair<string, string> Country { get; set; }
             public KeyValuePair<string, string> Language { get; set; }
             public KeyValuePair<string, string> Copyright { get; set; }
             public KeyValuePair<string, string> DevelopmentStatus { get; set; }
-            public List<Rom> Roms { get; set; }
+            public List<Rom> Roms { get; set; } = new List<Rom>();
 
             public enum DemoTypes
             {
@@ -50,17 +50,17 @@ namespace gaseous_identifier.objects
 
             public class Rom
             {
-                public string Name { get; set; }
-                public UInt64 Size { get; set; }
-                public string Crc { get; set; }
-                public string Md5 { get; set; }
-                public string Sha1 { get; set; }
+                public string? Name { get; set; }
+                public UInt64? Size { get; set; }
+                public string? Crc { get; set; }
+                public string? Md5 { get; set; }
+                public string? Sha1 { get; set; }
 
-                public string flags { get; set; }
+                public string? flags { get; set; }
 
                 public RomTypes RomType { get; set; }
-                public string RomTypeMedia { get; set; }
-                public string MediaLabel { get; set; }
+                public string? RomTypeMedia { get; set; }
+                public string? MediaLabel { get; set; }
 
                 public enum RomTypes
                 {

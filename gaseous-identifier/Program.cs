@@ -49,8 +49,10 @@ foreach (string commandLineArg in commandLineArgs)
 scanPath = Path.GetFullPath(scanPath);
 Console.WriteLine("ROM search path: " + scanPath);
 
-System.Collections.ArrayList TOSEC = new System.Collections.ArrayList();
-List<gaseous_identifier.objects.RomSignatureObject> tosecLists = new List<gaseous_identifier.objects.RomSignatureObject>();
+List<gaseous_identifier.objects.RomSignatureObject> romSignatures = new List<gaseous_identifier.objects.RomSignatureObject>();
+System.Collections.ArrayList availablePlatforms = new System.Collections.ArrayList();
+
+// load TOSEC XML files
 if (tosecXML != null && tosecXML.Length > 0)
 {
     tosecXML = Path.GetFullPath(tosecXML);
@@ -58,27 +60,43 @@ if (tosecXML != null && tosecXML.Length > 0)
     Console.WriteLine("TOSEC XML search path: " + tosecXML);
 
     string[] tosecPathContents = Directory.GetFiles(tosecXML);
-    foreach (string tosecXMLFile in tosecPathContents)
+    int lastCLILineLength = 0;
+    for (UInt16 i = 0; i < tosecPathContents.Length; ++i)
     {
+        string tosecXMLFile = tosecPathContents[i];
+
         gaseous_identifier.classes.TosecParser tosecParser = new gaseous_identifier.classes.TosecParser();
         gaseous_identifier.objects.RomSignatureObject tosecObject = tosecParser.Parse(tosecXMLFile);
 
-        Console.Write(".");
-        tosecLists.Add(tosecObject);
+        string statusOutput = i + " / " + tosecPathContents.Length + " : " + Path.GetFileName(tosecXMLFile);
+        Console.Write("\r " + statusOutput.PadRight(lastCLILineLength, ' ') + "\r");
+        lastCLILineLength = statusOutput.Length;
+
+        foreach (gaseous_identifier.objects.RomSignatureObject.Game gameRom in tosecObject.Games)
+        {
+            if (!availablePlatforms.Contains(gameRom.System))
+            {
+                availablePlatforms.Add(gameRom.System);
+            }
+        }
+
+        romSignatures.Add(tosecObject);
     }
     Console.WriteLine("");
 } else
 {
-    Console.WriteLine("TOSEC is disabled, title matching will be by file name only.");
+    Console.WriteLine("TOSEC is disabled.");
 }
-Console.WriteLine(tosecLists.Count + " TOSEC files loaded");
+Console.WriteLine(romSignatures.Count + " TOSEC files loaded");
 
-if (tosecLists.Count > 0)
+// Summarise signatures
+if (availablePlatforms.Count > 0)
 {
-    Console.WriteLine("TOSEC lists available:");
-    foreach (gaseous_identifier.objects.RomSignatureObject tosecList in tosecLists)
+    availablePlatforms.Sort();
+    Console.WriteLine("Platforms loaded:");
+    foreach (string platform in availablePlatforms)
     {
-        Console.WriteLine(" * " + tosecList.Name);
+        Console.WriteLine(" * " + platform);
     }
 }
 
@@ -99,7 +117,7 @@ foreach (string romFile in romPathContents)
     string sha1Hash = BitConverter.ToString(md5HashByte).Replace("-", "").ToLowerInvariant();
 
     bool gameFound = false;
-    foreach (gaseous_identifier.objects.RomSignatureObject tosecList in tosecLists)
+    foreach (gaseous_identifier.objects.RomSignatureObject tosecList in romSignatures)
     {
         foreach (gaseous_identifier.objects.RomSignatureObject.Game gameObject in tosecList.Games)
         {
