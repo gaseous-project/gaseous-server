@@ -56,7 +56,7 @@ namespace gaseous_identifier.objects
                 public string? Md5 { get; set; }
                 public string? Sha1 { get; set; }
 
-                public string? flags { get; set; }
+                public List<string> flags { get; set; } = new List<string>();
 
                 public RomTypes RomType { get; set; }
                 public string? RomTypeMedia { get; set; }

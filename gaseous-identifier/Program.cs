@@ -3,6 +3,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 
 string[] commandLineArgs = Environment.GetCommandLineArgs();
 
@@ -135,7 +136,10 @@ foreach (string romFile in romPathContents)
                         gameSignature.Roms.Clear();
                         gameSignature.Roms.Add(romObject);
 
-                        Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(gameSignature, Newtonsoft.Json.Formatting.Indented));
+                        var jsonSerializerSettings = new JsonSerializerSettings();
+                        jsonSerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                        jsonSerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+                        Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(gameSignature, Newtonsoft.Json.Formatting.Indented, jsonSerializerSettings));
                         break;
                     }
                 }
