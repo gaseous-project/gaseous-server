@@ -84,6 +84,7 @@ namespace gaseous_identifier.classes
 
             // get header
             XmlNode xmlHeader = tosecXmlDoc.DocumentElement.SelectSingleNode("/datafile/header");
+            tosecObject.SourceType = "TOSEC";
             foreach (XmlNode childNode in xmlHeader.ChildNodes)
             {
                 switch (childNode.Name.ToLower())
@@ -143,27 +144,27 @@ namespace gaseous_identifier.classes
                 if (gameName.Contains("(demo) ", StringComparison.CurrentCulture))
                 {
                     gameObject.Demo = objects.RomSignatureObject.Game.DemoTypes.demo;
-                    gameName.Replace("(demo) ", "");
+                    gameName = gameName.Replace("(demo) ", "");
                 }
                 else if (gameName.Contains("(demo-kiosk) ", StringComparison.CurrentCulture))
                 {
                     gameObject.Demo = objects.RomSignatureObject.Game.DemoTypes.demo_kiosk;
-                    gameName.Replace("(demo-kiosk) ", "");
+                    gameName = gameName.Replace("(demo-kiosk) ", "");
                 }
                 else if (gameName.Contains("(demo-playable) ", StringComparison.CurrentCulture))
                 {
                     gameObject.Demo = objects.RomSignatureObject.Game.DemoTypes.demo_playable;
-                    gameName.Replace("(demo-playable) ", "");
+                    gameName = gameName.Replace("(demo-playable) ", "");
                 }
                 else if (gameName.Contains("(demo-rolling) ", StringComparison.CurrentCulture))
                 {
                     gameObject.Demo = objects.RomSignatureObject.Game.DemoTypes.demo_rolling;
-                    gameName.Replace("(demo-rolling) ", "");
+                    gameName = gameName.Replace("(demo-rolling) ", "");
                 }
                 else if (gameName.Contains("(demo-slideshow) ", StringComparison.CurrentCulture))
                 {
                     gameObject.Demo = objects.RomSignatureObject.Game.DemoTypes.demo_slideshow;
-                    gameName.Replace("(demo-slideshow) ", "");
+                    gameName = gameName.Replace("(demo-slideshow) ", "");
                 }
                 else
                 {
@@ -177,7 +178,81 @@ namespace gaseous_identifier.classes
                 // game year should be second item
                 if (gameNameTokens.Length >= 2)
                 {
-                    gameObject.Year = gameNameTokens[1].Replace(")", "").Trim();
+                    bool dateFound = false;
+
+                    // verify the value
+                    string dateToken = gameNameTokens[1].Replace(")", "");
+                    if (dateToken.Length >= 4)
+                    {
+                        // test for possible year values
+                        // first up - centuries
+                        if (dateToken == "19xx" || dateToken == "20xx")
+                        {
+                            // date is a century
+                            gameObject.Year = dateToken;
+                            dateFound = true;
+                        } else
+                        {
+                            // check for decades
+                            for (UInt16 i = 0; i < 10; i++)
+                            {
+                                if (dateToken == "19" + i + "x" || dateToken == "20" + i + "x")
+                                {
+                                    // date is a decade
+                                    gameObject.Year = dateToken;
+                                    dateFound = true;
+                                    break;
+                                }
+                            }
+
+                            if (dateFound == false)
+                            {
+                                // check if the year is a four digit number
+                                DateTime dateTime = new DateTime();
+                                if (DateTime.TryParse(string.Format("1/1/{0}", dateToken), out dateTime))
+                                {
+                                    // is a valid year!
+                                    gameObject.Year = dateToken;
+                                    dateFound = true;
+                                }
+
+                                // if we still haven't found a valid date, check if the whole string is a valid date object
+                                if (dateFound == false)
+                                {
+                                    if (DateTime.TryParse(dateToken, out dateTime))
+                                    {
+                                        // is a valid year!
+                                        gameObject.Year = dateToken;
+                                        dateFound = true;
+                                    }
+                                }
+
+                                // if we still haven't found a valid date, check if the whole string is a valid date object, but with x's
+                                // example: 19xx-12-2x
+                                if (dateFound == false)
+                                {
+                                    if (DateTime.TryParse(dateToken.Replace("x", "0"), out dateTime))
+                                    {
+                                        // is a valid year!
+                                        gameObject.Year = dateToken;
+                                        dateFound = true;
+                                    }
+                                }
+
+                                // if we still haven't found a valid date, perhaps it a year and month?
+                                // example: 19xx-12
+                                if (dateFound == false)
+                                {
+                                    if (DateTime.TryParse(dateToken.Replace("x", "0") + "-01", out dateTime))
+                                    {
+                                        // is a valid year!
+                                        gameObject.Year = dateToken;
+                                        dateFound = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 else
                 {

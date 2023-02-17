@@ -18,6 +18,7 @@ namespace gaseous_identifier.objects
         public string Email { get; set; }
         public string Homepage { get; set; }
         public Uri? Url { get; set; }
+        public string SourceType { get; set; }
 
         public List<Game> Games { get; set; }
 
