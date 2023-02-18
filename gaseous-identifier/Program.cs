@@ -115,7 +115,7 @@ foreach (string romFile in romPathContents)
 
     var sha1 = SHA1.Create();
     byte[] sha1HashByte = sha1.ComputeHash(stream);
-    string sha1Hash = BitConverter.ToString(md5HashByte).Replace("-", "").ToLowerInvariant();
+    string sha1Hash = BitConverter.ToString(sha1HashByte).Replace("-", "").ToLowerInvariant();
 
     bool gameFound = false;
     foreach (gaseous_identifier.objects.RomSignatureObject tosecList in romSignatures)
