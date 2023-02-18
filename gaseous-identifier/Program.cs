@@ -130,18 +130,29 @@ foreach (string romFile in romPathContents)
                     {
                         // match
                         gameFound = true;
-                        Console.WriteLine(romObject.Name);
-
-                        gaseous_identifier.objects.RomSignatureObject.Game gameSignature = gameObject;
-                        gameSignature.Roms.Clear();
-                        gameSignature.Roms.Add(romObject);
-
-                        var jsonSerializerSettings = new JsonSerializerSettings();
-                        jsonSerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-                        jsonSerializerSettings.NullValueHandling = NullValueHandling.Ignore;
-                        Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(gameSignature, Newtonsoft.Json.Formatting.Indented, jsonSerializerSettings));
-                        break;
                     }
+                }
+                if (romObject.Sha1 != null)
+                {
+                    if (md5Hash == romObject.Sha1.ToLowerInvariant())
+                    {
+                        // match
+                        gameFound = true;
+                    }
+                }
+                if (gameFound == true)
+                {
+                    Console.WriteLine(romObject.Name);
+
+                    gaseous_identifier.objects.RomSignatureObject.Game gameSignature = gameObject;
+                    gameSignature.Roms.Clear();
+                    gameSignature.Roms.Add(romObject);
+
+                    var jsonSerializerSettings = new JsonSerializerSettings();
+                    jsonSerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                    jsonSerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+                    Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(gameSignature, Newtonsoft.Json.Formatting.Indented, jsonSerializerSettings));
+                    break;
                 }
             }
             if (gameFound == true) { break; }
