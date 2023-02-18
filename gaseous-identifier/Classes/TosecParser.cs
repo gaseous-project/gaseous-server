@@ -2,6 +2,7 @@
 using System.Xml;
 using System.IO;
 using System.Reflection;
+using System.Security.Cryptography;
 
 namespace gaseous_identifier.classes
 {
@@ -76,6 +77,17 @@ namespace gaseous_identifier.classes
                 } while (reader.EndOfStream == false);
             }
 
+            // get hashes of TOSEC file
+            var xmlStream = File.OpenRead(XMLFile);
+
+            var md5 = MD5.Create();
+            byte[] md5HashByte = md5.ComputeHash(xmlStream);
+            string md5Hash = BitConverter.ToString(md5HashByte).Replace("-", "").ToLowerInvariant();
+
+            var sha1 = SHA1.Create();
+            byte[] sha1HashByte = sha1.ComputeHash(xmlStream);
+            string sha1Hash = BitConverter.ToString(md5HashByte).Replace("-", "").ToLowerInvariant();
+
             // load TOSEC file
             XmlDocument tosecXmlDoc = new XmlDocument();
             tosecXmlDoc.Load(XMLFile);
@@ -85,6 +97,8 @@ namespace gaseous_identifier.classes
             // get header
             XmlNode xmlHeader = tosecXmlDoc.DocumentElement.SelectSingleNode("/datafile/header");
             tosecObject.SourceType = "TOSEC";
+            tosecObject.SourceMd5 = md5Hash;
+            tosecObject.SourceSHA1 = sha1Hash;
             foreach (XmlNode childNode in xmlHeader.ChildNodes)
             {
                 switch (childNode.Name.ToLower())

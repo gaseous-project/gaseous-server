@@ -19,6 +19,8 @@ namespace gaseous_identifier.objects
         public string? Homepage { get; set; }
         public Uri? Url { get; set; }
         public string? SourceType { get; set; }
+        public string SourceMd5 { get; set; } = "";
+        public string SourceSHA1 { get; set; } = "";
 
         public List<Game> Games { get; set; } = new List<Game>();
 
