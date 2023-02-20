@@ -479,7 +479,11 @@ namespace gaseous_identifier.classes
                 bool existingGameFound = false;
                 foreach (gaseous_identifier.objects.RomSignatureObject.Game existingGame in tosecObject.Games)
                 {
-                    if (existingGame.Name == gameObject.Name && existingGame.Year == gameObject.Year && existingGame.Publisher == gameObject.Publisher)
+                    if (existingGame.Name == gameObject.Name &&
+                        existingGame.Year == gameObject.Year &&
+                        existingGame.Publisher == gameObject.Publisher &&
+                        existingGame.Country.Key == gameObject.Country.Key &&
+                        existingGame.Language.Key == gameObject.Language.Key)
                     {
                         existingGame.Roms.AddRange(gameObject.Roms);
                         existingGameFound = true;
