@@ -337,10 +337,6 @@ namespace gaseous_identifier.classes
                                 gameObject.DevelopmentStatus = new KeyValuePair<string, string>(token, TOSECDevelopment[token]);
                             }
                         }
-                        else
-                        {
-                            // handle the square bracket tokens
-                        }
                     }
                     StartToken += 1;
                 }
