@@ -330,12 +330,6 @@ namespace gaseous_identifier.classes
                             {
                                 gameObject.Copyright = new KeyValuePair<string, string>(token, TOSECCopyright[token]);
                             }
-
-                            // check for copyright
-                            if (TOSECDevelopment.ContainsKey(token))
-                            {
-                                gameObject.DevelopmentStatus = new KeyValuePair<string, string>(token, TOSECDevelopment[token]);
-                            }
                         }
                     }
                     StartToken += 1;
@@ -367,6 +361,12 @@ namespace gaseous_identifier.classes
 
                                 // replace the extra closing bracket
                                 string token = tokenSplit[0].Replace(")", "").Trim();
+
+                                // check for copyright
+                                if (TOSECDevelopment.ContainsKey(token))
+                                {
+                                    romObject.DevelopmentStatus = new KeyValuePair<string, string>(token, TOSECDevelopment[token]);
+                                }
 
                                 // check for media type
                                 if (token.StartsWith("Disc") ||
@@ -412,7 +412,7 @@ namespace gaseous_identifier.classes
                                         token != gameObject.Country.Key &&
                                         token != gameObject.Copyright.Key &&
                                         token != gameObject.Language.Key &&
-                                        token != gameObject.DevelopmentStatus.Key
+                                        token != romObject.DevelopmentStatus.Key
                                     )
                                    )
                                 {

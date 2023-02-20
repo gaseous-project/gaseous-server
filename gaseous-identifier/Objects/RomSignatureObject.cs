@@ -37,7 +37,6 @@ namespace gaseous_identifier.objects
             public KeyValuePair<string, string> Country { get; set; }
             public KeyValuePair<string, string> Language { get; set; }
             public KeyValuePair<string, string> Copyright { get; set; }
-            public KeyValuePair<string, string> DevelopmentStatus { get; set; }
             public List<Rom> Roms { get; set; } = new List<Rom>();
 
             public enum DemoTypes
@@ -57,6 +56,8 @@ namespace gaseous_identifier.objects
                 public string? Crc { get; set; }
                 public string? Md5 { get; set; }
                 public string? Sha1 { get; set; }
+
+                public KeyValuePair<string, string> DevelopmentStatus { get; set; }
 
                 public List<string> flags { get; set; } = new List<string>();
 
