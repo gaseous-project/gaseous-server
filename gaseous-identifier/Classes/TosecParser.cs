@@ -343,7 +343,7 @@ namespace gaseous_identifier.classes
                     switch (xmlGameDetail.Name.ToLower())
                     {
                         case "description":
-                            gameObject.Description = xmlGameDetail.InnerText;
+                            //gameObject.Description = xmlGameDetail.InnerText;
                             break;
 
                         case "rom":
