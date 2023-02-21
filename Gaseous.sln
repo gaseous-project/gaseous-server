@@ -5,6 +5,8 @@ VisualStudioVersion = 25.0.1704.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-identifier", "gaseous-identifier\gaseous-identifier.csproj", "{F5C42134-5372-430A-A9AE-1871981850DB}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gaseous-ROMSignatureObject", "RomSignatureObject\Gaseous-ROMSignatureObject\Gaseous-ROMSignatureObject.csproj", "{08699C93-15CD-4E39-9053-D3C8056CE938}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{F5C42134-5372-430A-A9AE-1871981850DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F5C42134-5372-430A-A9AE-1871981850DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F5C42134-5372-430A-A9AE-1871981850DB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08699C93-15CD-4E39-9053-D3C8056CE938}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08699C93-15CD-4E39-9053-D3C8056CE938}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08699C93-15CD-4E39-9053-D3C8056CE938}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08699C93-15CD-4E39-9053-D3C8056CE938}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
