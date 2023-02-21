@@ -38,6 +38,11 @@ namespace gaseous_identifier.objects
             public string? Language { get; set; }
             public string? Copyright { get; set; }
             public List<Rom> Roms { get; set; } = new List<Rom>();
+            public int RomCount { get
+                {
+                    return Roms.Count();
+                }
+            }
 
             public enum DemoTypes
             {

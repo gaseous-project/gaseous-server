@@ -434,37 +434,45 @@ namespace gaseous_identifier.classes
                                         if (dToken.Length > 0)
                                         {
                                             string[] dTokenCompare = dToken.Split(" ");
-                                            switch (dTokenCompare[0].Trim().ToLower())
+                                            if (dTokenCompare[0].Trim().ToLower().StartsWith("a"))
                                             {
-                                                case "cr":
-                                                // cracked
-                                                case "f":
-                                                // fixed
-                                                case "h":
-                                                // hacked
-                                                case "m":
-                                                // modified
-                                                case "p":
-                                                // pirated
-                                                case "t":
-                                                // trained
-                                                case "tr":
-                                                // translated
-                                                case "o":
-                                                // overdump
-                                                case "u":
-                                                // underdump
-                                                case "v":
-                                                // virus
-                                                case "b":
-                                                // bad dump
-                                                case "a":
-                                                // alternate
-                                                case "!":
-                                                    // known verified dump
-                                                    // -------------------
-                                                    romObject.flags.Add(dToken);
-                                                    break;
+                                                romObject.flags.Add(dTokenCompare[0].Trim());
+                                            }
+                                            else
+                                            {
+
+                                                switch (dTokenCompare[0].Trim().ToLower())
+                                                {
+                                                    case "cr":
+                                                    // cracked
+                                                    case "f":
+                                                    // fixed
+                                                    case "h":
+                                                    // hacked
+                                                    case "m":
+                                                    // modified
+                                                    case "p":
+                                                    // pirated
+                                                    case "t":
+                                                    // trained
+                                                    case "tr":
+                                                    // translated
+                                                    case "o":
+                                                    // overdump
+                                                    case "u":
+                                                    // underdump
+                                                    case "v":
+                                                    // virus
+                                                    case "b":
+                                                    // bad dump
+                                                    case "a":
+                                                    // alternate
+                                                    case "!":
+                                                        // known verified dump
+                                                        // -------------------
+                                                        romObject.flags.Add(dToken);
+                                                        break;
+                                                }
                                             }
                                             
                                         }
