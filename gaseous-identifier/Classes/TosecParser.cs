@@ -316,19 +316,19 @@ namespace gaseous_identifier.classes
                             // check for country
                             if (TOSECCountry.ContainsKey(token))
                             {
-                                gameObject.Country = new KeyValuePair<string, string>(token, TOSECCountry[token]);
+                                gameObject.Country = token;
                             }
 
                             // check for language
                             if (TOSECLanguage.ContainsKey(token))
                             {
-                                gameObject.Language = new KeyValuePair<string, string>(token, TOSECLanguage[token]);
+                                gameObject.Language = token;
                             }
 
                             // check for copyright
                             if (TOSECCopyright.ContainsKey(token))
                             {
-                                gameObject.Copyright = new KeyValuePair<string, string>(token, TOSECCopyright[token]);
+                                gameObject.Copyright = token;
                             }
                         }
                     }
@@ -365,7 +365,7 @@ namespace gaseous_identifier.classes
                                 // check for copyright
                                 if (TOSECDevelopment.ContainsKey(token))
                                 {
-                                    romObject.DevelopmentStatus = new KeyValuePair<string, string>(token, TOSECDevelopment[token]);
+                                    romObject.DevelopmentStatus = token;
                                 }
 
                                 // check for media type
@@ -409,10 +409,10 @@ namespace gaseous_identifier.classes
                                         token != gameObject.Publisher &&
                                         token != gameObject.SystemVariant &&
                                         token != gameObject.Video &&
-                                        token != gameObject.Country.Key &&
-                                        token != gameObject.Copyright.Key &&
-                                        token != gameObject.Language.Key &&
-                                        token != romObject.DevelopmentStatus.Key
+                                        token != gameObject.Country &&
+                                        token != gameObject.Copyright &&
+                                        token != gameObject.Language &&
+                                        token != romObject.DevelopmentStatus
                                     )
                                    )
                                 {
@@ -482,8 +482,8 @@ namespace gaseous_identifier.classes
                     if (existingGame.Name == gameObject.Name &&
                         existingGame.Year == gameObject.Year &&
                         existingGame.Publisher == gameObject.Publisher &&
-                        existingGame.Country.Key == gameObject.Country.Key &&
-                        existingGame.Language.Key == gameObject.Language.Key)
+                        existingGame.Country == gameObject.Country &&
+                        existingGame.Language == gameObject.Language)
                     {
                         existingGame.Roms.AddRange(gameObject.Roms);
                         existingGameFound = true;
