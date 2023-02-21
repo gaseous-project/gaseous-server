@@ -20,12 +20,14 @@
     <None Remove="Support\Parsers\TOSEC\Copyright.txt" />
     <None Remove="Support\Parsers\TOSEC\DevelopmentStatus.txt" />
     <None Remove="Newtonsoft.Json" />
+    <None Remove="Objects\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Classes\" />
     <Folder Include="Support\" />
     <Folder Include="Support\Parsers\" />
     <Folder Include="Support\Parsers\TOSEC\" />
+    <Folder Include="Objects\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Support\Parsers\TOSEC\Systems.txt" />
@@ -37,5 +39,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\RomSignatureObject\Gaseous-ROMSignatureObject\Gaseous-ROMSignatureObject.csproj" />
   </ItemGroup>
 </Project>

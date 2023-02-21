@@ -8,7 +8,7 @@ namespace gaseous_identifier.classes
 {
 	public class TosecParser
 	{
-		public objects.RomSignatureObject Parse(string XMLFile)
+		public Gaseous_ROMSignatureObject.RomSignatureObject Parse(string XMLFile)
 		{
             // load resources
             var assembly = Assembly.GetExecutingAssembly();
@@ -92,7 +92,7 @@ namespace gaseous_identifier.classes
             XmlDocument tosecXmlDoc = new XmlDocument();
             tosecXmlDoc.Load(XMLFile);
 
-            objects.RomSignatureObject tosecObject = new objects.RomSignatureObject();
+            Gaseous_ROMSignatureObject.RomSignatureObject tosecObject = new Gaseous_ROMSignatureObject.RomSignatureObject();
 
             // get header
             XmlNode xmlHeader = tosecXmlDoc.DocumentElement.SelectSingleNode("/datafile/header");
@@ -145,11 +145,11 @@ namespace gaseous_identifier.classes
             }
 
             // get games
-            tosecObject.Games = new List<gaseous_identifier.objects.RomSignatureObject.Game>();
+            tosecObject.Games = new List<Gaseous_ROMSignatureObject.RomSignatureObject.Game>();
             XmlNodeList xmlGames = tosecXmlDoc.DocumentElement.SelectNodes("/datafile/game");
             foreach (XmlNode xmlGame in xmlGames)
             {
-                objects.RomSignatureObject.Game gameObject = new objects.RomSignatureObject.Game();
+                Gaseous_ROMSignatureObject.RomSignatureObject.Game gameObject = new Gaseous_ROMSignatureObject.RomSignatureObject.Game();
 
                 // parse game name
                 string[] gameNameTitleParts = xmlGame.Attributes["name"].Value.Split("[");
@@ -158,32 +158,32 @@ namespace gaseous_identifier.classes
                 // before split, save and remove the demo tag if present
                 if (gameName.Contains("(demo) ", StringComparison.CurrentCulture))
                 {
-                    gameObject.Demo = objects.RomSignatureObject.Game.DemoTypes.demo;
+                    gameObject.Demo = Gaseous_ROMSignatureObject.RomSignatureObject.Game.DemoTypes.demo;
                     gameName = gameName.Replace("(demo) ", "");
                 }
                 else if (gameName.Contains("(demo-kiosk) ", StringComparison.CurrentCulture))
                 {
-                    gameObject.Demo = objects.RomSignatureObject.Game.DemoTypes.demo_kiosk;
+                    gameObject.Demo = Gaseous_ROMSignatureObject.RomSignatureObject.Game.DemoTypes.demo_kiosk;
                     gameName = gameName.Replace("(demo-kiosk) ", "");
                 }
                 else if (gameName.Contains("(demo-playable) ", StringComparison.CurrentCulture))
                 {
-                    gameObject.Demo = objects.RomSignatureObject.Game.DemoTypes.demo_playable;
+                    gameObject.Demo = Gaseous_ROMSignatureObject.RomSignatureObject.Game.DemoTypes.demo_playable;
                     gameName = gameName.Replace("(demo-playable) ", "");
                 }
                 else if (gameName.Contains("(demo-rolling) ", StringComparison.CurrentCulture))
                 {
-                    gameObject.Demo = objects.RomSignatureObject.Game.DemoTypes.demo_rolling;
+                    gameObject.Demo = Gaseous_ROMSignatureObject.RomSignatureObject.Game.DemoTypes.demo_rolling;
                     gameName = gameName.Replace("(demo-rolling) ", "");
                 }
                 else if (gameName.Contains("(demo-slideshow) ", StringComparison.CurrentCulture))
                 {
-                    gameObject.Demo = objects.RomSignatureObject.Game.DemoTypes.demo_slideshow;
+                    gameObject.Demo = Gaseous_ROMSignatureObject.RomSignatureObject.Game.DemoTypes.demo_slideshow;
                     gameName = gameName.Replace("(demo-slideshow) ", "");
                 }
                 else
                 {
-                    gameObject.Demo = objects.RomSignatureObject.Game.DemoTypes.NotDemo;
+                    gameObject.Demo = Gaseous_ROMSignatureObject.RomSignatureObject.Game.DemoTypes.NotDemo;
                 }
 
                 string[] gameNameTokens = gameName.Split("(");
@@ -336,7 +336,7 @@ namespace gaseous_identifier.classes
                     StartToken += 1;
                 }
 
-                gameObject.Roms = new List<objects.RomSignatureObject.Game.Rom>();
+                gameObject.Roms = new List<Gaseous_ROMSignatureObject.RomSignatureObject.Game.Rom>();
 
                 // get the roms
                 string romDescription = "";
@@ -349,7 +349,7 @@ namespace gaseous_identifier.classes
                             break;
 
                         case "rom":
-                            objects.RomSignatureObject.Game.Rom romObject = new objects.RomSignatureObject.Game.Rom();
+                            Gaseous_ROMSignatureObject.RomSignatureObject.Game.Rom romObject = new Gaseous_ROMSignatureObject.RomSignatureObject.Game.Rom();
                             romObject.Name = xmlGameDetail.Attributes["name"]?.Value;
                             romObject.Size = UInt64.Parse(xmlGameDetail.Attributes["size"]?.Value);
                             romObject.Crc = xmlGameDetail.Attributes["crc"]?.Value;
@@ -382,22 +382,22 @@ namespace gaseous_identifier.classes
                                     switch (tokens[0])
                                     {
                                         case "Disc":
-                                            romObject.RomType = objects.RomSignatureObject.Game.Rom.RomTypes.Disc;
+                                            romObject.RomType = Gaseous_ROMSignatureObject.RomSignatureObject.Game.Rom.RomTypes.Disc;
                                             break;
                                         case "Disk":
-                                            romObject.RomType = objects.RomSignatureObject.Game.Rom.RomTypes.Disk;
+                                            romObject.RomType = Gaseous_ROMSignatureObject.RomSignatureObject.Game.Rom.RomTypes.Disk;
                                             break;
                                         case "File":
-                                            romObject.RomType = objects.RomSignatureObject.Game.Rom.RomTypes.File;
+                                            romObject.RomType = Gaseous_ROMSignatureObject.RomSignatureObject.Game.Rom.RomTypes.File;
                                             break;
                                         case "Part":
-                                            romObject.RomType = objects.RomSignatureObject.Game.Rom.RomTypes.Part;
+                                            romObject.RomType = Gaseous_ROMSignatureObject.RomSignatureObject.Game.Rom.RomTypes.Part;
                                             break;
                                         case "Side":
-                                            romObject.RomType = objects.RomSignatureObject.Game.Rom.RomTypes.Side;
+                                            romObject.RomType = Gaseous_ROMSignatureObject.RomSignatureObject.Game.Rom.RomTypes.Side;
                                             break;
                                         case "Tape":
-                                            romObject.RomType = objects.RomSignatureObject.Game.Rom.RomTypes.Tape;
+                                            romObject.RomType = Gaseous_ROMSignatureObject.RomSignatureObject.Game.Rom.RomTypes.Tape;
                                             break;
                                     }
                                     romObject.RomTypeMedia = token;
@@ -487,7 +487,7 @@ namespace gaseous_identifier.classes
 
                 // search for existing gameObject to update
                 bool existingGameFound = false;
-                foreach (gaseous_identifier.objects.RomSignatureObject.Game existingGame in tosecObject.Games)
+                foreach (Gaseous_ROMSignatureObject.RomSignatureObject.Game existingGame in tosecObject.Games)
                 {
                     if (existingGame.Name == gameObject.Name &&
                         existingGame.Year == gameObject.Year &&
