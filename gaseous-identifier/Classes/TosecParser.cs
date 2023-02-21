@@ -152,7 +152,8 @@ namespace gaseous_identifier.classes
                 objects.RomSignatureObject.Game gameObject = new objects.RomSignatureObject.Game();
 
                 // parse game name
-                string gameName = xmlGame.Attributes["name"].Value;
+                string[] gameNameTitleParts = xmlGame.Attributes["name"].Value.Split("[");
+                string gameName = gameNameTitleParts[0];
 
                 // before split, save and remove the demo tag if present
                 if (gameName.Contains("(demo) ", StringComparison.CurrentCulture))
@@ -338,12 +339,13 @@ namespace gaseous_identifier.classes
                 gameObject.Roms = new List<objects.RomSignatureObject.Game.Rom>();
 
                 // get the roms
+                string romDescription = "";
                 foreach (XmlNode xmlGameDetail in xmlGame.ChildNodes)
                 {
                     switch (xmlGameDetail.Name.ToLower())
                     {
                         case "description":
-                            //gameObject.Description = xmlGameDetail.InnerText;
+                            romDescription = xmlGameDetail.InnerText;
                             break;
 
                         case "rom":
@@ -355,8 +357,8 @@ namespace gaseous_identifier.classes
                             romObject.Sha1 = xmlGameDetail.Attributes["sha1"]?.Value;
 
                             // parse name
-                            string[] romNameTokens = romObject.Name.Split("(");
-                            foreach (string rawToken in gameNameTokens) {
+                            string[] romNameTokens = romDescription.Split("(");
+                            foreach (string rawToken in romNameTokens) {
                                 string[] tokenSplit = rawToken.Split("[");
 
                                 // replace the extra closing bracket
