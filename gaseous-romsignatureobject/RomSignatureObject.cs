@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace Gaseous_ROMSignatureObject
+namespace gaseous_romsignatureobject
 {
     /// <summary>
     /// Object returned by all signature engines containing metadata about the ROM's in the data files

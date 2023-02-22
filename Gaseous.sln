@@ -1,11 +1,13 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 25.0.1704.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-identifier-testapp", "gaseous-identifier\gaseous-identifier-testapp.csproj", "{F5C42134-5372-430A-A9AE-1871981850DB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-romsignatureobject", "gaseous-romsignatureobject\Gaseous-ROMSignatureObject.csproj", "{B0328A09-F50C-40BB-AC3D-040635AF927F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-signature-parser", "gaseous-signature-parser\gaseous-signature-parser.csproj", "{DAEBBB82-5051-43FD-A406-F9D64A38F468}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-romsignatureobject", "gaseous-romsignatureobject\gaseous-romsignatureobject.csproj", "{9DCD243D-37CE-4562-8411-B5242B687D4F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,10 +23,18 @@ Global
 		{08699C93-15CD-4E39-9053-D3C8056CE938}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{08699C93-15CD-4E39-9053-D3C8056CE938}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{08699C93-15CD-4E39-9053-D3C8056CE938}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B0328A09-F50C-40BB-AC3D-040635AF927F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B0328A09-F50C-40BB-AC3D-040635AF927F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B0328A09-F50C-40BB-AC3D-040635AF927F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B0328A09-F50C-40BB-AC3D-040635AF927F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DAEBBB82-5051-43FD-A406-F9D64A38F468}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DAEBBB82-5051-43FD-A406-F9D64A38F468}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DAEBBB82-5051-43FD-A406-F9D64A38F468}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DAEBBB82-5051-43FD-A406-F9D64A38F468}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FFCEC386-033F-4772-A45B-D33579F2E5EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FFCEC386-033F-4772-A45B-D33579F2E5EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FFCEC386-033F-4772-A45B-D33579F2E5EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FFCEC386-033F-4772-A45B-D33579F2E5EE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9DCD243D-37CE-4562-8411-B5242B687D4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9DCD243D-37CE-4562-8411-B5242B687D4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9DCD243D-37CE-4562-8411-B5242B687D4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9DCD243D-37CE-4562-8411-B5242B687D4F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

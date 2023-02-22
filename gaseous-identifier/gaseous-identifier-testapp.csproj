@@ -9,36 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="Classes\" />
-    <None Remove="Support\" />
-    <None Remove="Support\Parsers\" />
-    <None Remove="Support\Parsers\TOSEC\" />
-    <None Remove="Support\Parsers\TOSEC\Systems.txt" />
-    <None Remove="Support\Parsers\TOSEC\Video.txt" />
-    <None Remove="Support\Parsers\TOSEC\Country.txt" />
-    <None Remove="Support\Parsers\TOSEC\Language.txt" />
-    <None Remove="Support\Parsers\TOSEC\Copyright.txt" />
-    <None Remove="Support\Parsers\TOSEC\DevelopmentStatus.txt" />
     <None Remove="Newtonsoft.Json" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Classes\" />
-    <Folder Include="Support\" />
-    <Folder Include="Support\Parsers\" />
-    <Folder Include="Support\Parsers\TOSEC\" />
-  </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Include="Support\Parsers\TOSEC\Systems.txt" />
-    <EmbeddedResource Include="Support\Parsers\TOSEC\Video.txt" />
-    <EmbeddedResource Include="Support\Parsers\TOSEC\Country.txt" />
-    <EmbeddedResource Include="Support\Parsers\TOSEC\Language.txt" />
-    <EmbeddedResource Include="Support\Parsers\TOSEC\Copyright.txt" />
-    <EmbeddedResource Include="Support\Parsers\TOSEC\DevelopmentStatus.txt" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\gaseous-romsignatureobject\Gaseous-ROMSignatureObject.csproj" />
+    <ProjectReference Include="..\gaseous-romsignatureobject\gaseous-romsignatureobject.csproj" />
+    <ProjectReference Include="..\gaseous-signature-parser\gaseous-signature-parser.csproj" />
   </ItemGroup>
 </Project>

@@ -4,6 +4,8 @@ using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
 using Newtonsoft.Json;
+using gaseous_romsignatureobject;
+using gaseous_signature_parser.parsers;
 
 string[] commandLineArgs = Environment.GetCommandLineArgs();
 
@@ -50,7 +52,7 @@ foreach (string commandLineArg in commandLineArgs)
 scanPath = Path.GetFullPath(scanPath);
 Console.WriteLine("ROM search path: " + scanPath);
 
-List<Gaseous_ROMSignatureObject.RomSignatureObject> romSignatures = new List<Gaseous_ROMSignatureObject.RomSignatureObject>();
+List<RomSignatureObject> romSignatures = new List<RomSignatureObject>();
 System.Collections.ArrayList availablePlatforms = new System.Collections.ArrayList();
 
 // load TOSEC XML files
@@ -66,14 +68,14 @@ if (tosecXML != null && tosecXML.Length > 0)
     {
         string tosecXMLFile = tosecPathContents[i];
 
-        gaseous_identifier.classes.TosecParser tosecParser = new gaseous_identifier.classes.TosecParser();
-        Gaseous_ROMSignatureObject.RomSignatureObject tosecObject = tosecParser.Parse(tosecXMLFile);
+        TosecParser tosecParser = new TosecParser();
+        RomSignatureObject tosecObject = tosecParser.Parse(tosecXMLFile);
 
         string statusOutput = i + " / " + tosecPathContents.Length + " : " + Path.GetFileName(tosecXMLFile);
         Console.Write("\r " + statusOutput.PadRight(lastCLILineLength, ' ') + "\r");
         lastCLILineLength = statusOutput.Length;
 
-        foreach (Gaseous_ROMSignatureObject.RomSignatureObject.Game gameRom in tosecObject.Games)
+        foreach (RomSignatureObject.Game gameRom in tosecObject.Games)
         {
             if (!availablePlatforms.Contains(gameRom.System))
             {
@@ -118,11 +120,11 @@ foreach (string romFile in romPathContents)
     string sha1Hash = BitConverter.ToString(sha1HashByte).Replace("-", "").ToLowerInvariant();
 
     bool gameFound = false;
-    foreach (Gaseous_ROMSignatureObject.RomSignatureObject tosecList in romSignatures)
+    foreach (RomSignatureObject tosecList in romSignatures)
     {
-        foreach (Gaseous_ROMSignatureObject.RomSignatureObject.Game gameObject in tosecList.Games)
+        foreach (RomSignatureObject.Game gameObject in tosecList.Games)
         {
-            foreach (Gaseous_ROMSignatureObject.RomSignatureObject.Game.Rom romObject in gameObject.Roms)
+            foreach (RomSignatureObject.Game.Rom romObject in gameObject.Roms)
             {
                 if (romObject.Md5 != null)
                 {
@@ -144,7 +146,7 @@ foreach (string romFile in romPathContents)
                 {
                     Console.WriteLine(romObject.Name);
 
-                    Gaseous_ROMSignatureObject.RomSignatureObject.Game gameSignature = gameObject;
+                    RomSignatureObject.Game gameSignature = gameObject;
                     gameSignature.Roms.Clear();
                     gameSignature.Roms.Add(romObject);
 
@@ -166,9 +168,9 @@ foreach (string romFile in romPathContents)
 }
 
 string SearchTitle = "California Games";
-foreach (Gaseous_ROMSignatureObject.RomSignatureObject romSignatureObject in romSignatures)
+foreach (RomSignatureObject romSignatureObject in romSignatures)
 {
-    foreach (Gaseous_ROMSignatureObject.RomSignatureObject.Game gameObject in romSignatureObject.Games)
+    foreach (RomSignatureObject.Game gameObject in romSignatureObject.Games)
     {
         if (gameObject.Name == SearchTitle)
         {
