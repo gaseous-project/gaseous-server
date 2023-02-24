@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-signature-parser", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-romsignatureobject", "gaseous-romsignatureobject\gaseous-romsignatureobject.csproj", "{9DCD243D-37CE-4562-8411-B5242B687D4F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-signature-ingestor", "gaseous-signature-ingestor\gaseous-signature-ingestor.csproj", "{86DF6E45-2C2B-4C30-AEC1-E7EF8C5CEA7D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-tools", "gaseous-tools\gaseous-tools.csproj", "{08FE408A-5EC1-4110-ABD8-D19A1155B8CE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +39,14 @@ Global
 		{9DCD243D-37CE-4562-8411-B5242B687D4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9DCD243D-37CE-4562-8411-B5242B687D4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9DCD243D-37CE-4562-8411-B5242B687D4F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{86DF6E45-2C2B-4C30-AEC1-E7EF8C5CEA7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{86DF6E45-2C2B-4C30-AEC1-E7EF8C5CEA7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{86DF6E45-2C2B-4C30-AEC1-E7EF8C5CEA7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{86DF6E45-2C2B-4C30-AEC1-E7EF8C5CEA7D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{08FE408A-5EC1-4110-ABD8-D19A1155B8CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{08FE408A-5EC1-4110-ABD8-D19A1155B8CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{08FE408A-5EC1-4110-ABD8-D19A1155B8CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{08FE408A-5EC1-4110-ABD8-D19A1155B8CE}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>gaseous_signature_ingestor</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\gaseous-romsignatureobject\gaseous-romsignatureobject.csproj" />
+    <ProjectReference Include="..\gaseous-signature-parser\gaseous-signature-parser.csproj" />
+    <ProjectReference Include="..\gaseous-tools\gaseous-tools.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <PackageReference Include="MySql.Data" Version="8.0.32" />
+  </ItemGroup>
+</Project>
