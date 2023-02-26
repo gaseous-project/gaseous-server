@@ -47,8 +47,6 @@ foreach (string commandLineArg in commandLineArgs)
     }
 }
 
-tosecXML = "/Users/michaelgreen/Downloads/TOSEC - DAT Pack - Complete (3764) (TOSEC-v2023-01-23)/TOSEC";
-
 // check if configPath is valid and create it if not
 if (!Directory.Exists(configPath))
 {
@@ -98,78 +96,15 @@ if (Directory.Exists(tosecXML))
         {
             sql = "SELECT * FROM signatures_sources WHERE sourcemd5=@sourcemd5";
             dbDict = new Dictionary<string, object>();
-            if (tosecObject.Name != null)
-            {
-                dbDict.Add("name", tosecObject.Name);
-            }
-            else
-            {
-                dbDict.Add("name", "");
-            }
-            if (tosecObject.Description != null)
-            {
-                dbDict.Add("description", tosecObject.Description);
-            }
-            else
-            {
-                dbDict.Add("description", "");
-            }
-            if (tosecObject.Category != null)
-            {
-                dbDict.Add("category", tosecObject.Category);
-            }
-            else
-            {
-                dbDict.Add("category", "");
-            }
-            if (tosecObject.Version != null)
-            {
-                dbDict.Add("version", tosecObject.Version);
-            }
-            else
-            {
-                dbDict.Add("version", "");
-            }
-            if (tosecObject.Author != null)
-            {
-                dbDict.Add("author", tosecObject.Author);
-            }
-            else
-            {
-                dbDict.Add("author", "");
-            }
-            if (tosecObject.Email != null)
-            {
-                dbDict.Add("email", tosecObject.Email);
-            }
-            else
-            {
-                dbDict.Add("email", "");
-            }
-            if (tosecObject.Homepage != null)
-            {
-                dbDict.Add("homepage", tosecObject.Homepage);
-            }
-            else
-            {
-                dbDict.Add("homepage", "");
-            }
-            if (tosecObject.Url != null)
-            {
-                dbDict.Add("uri", tosecObject.Url.ToString());
-            }
-            else
-            {
-                dbDict.Add("uri", "");
-            }
-            if (tosecObject.SourceType != null)
-            {
-                dbDict.Add("sourcetype", tosecObject.SourceType);
-            }
-            else
-            {
-                dbDict.Add("sourcetype", "");
-            }
+            dbDict.Add("name", Common.ReturnValueIfNull(tosecObject.Name, ""));
+            dbDict.Add("description", Common.ReturnValueIfNull(tosecObject.Description, ""));
+            dbDict.Add("category", Common.ReturnValueIfNull(tosecObject.Category, ""));
+            dbDict.Add("version", Common.ReturnValueIfNull(tosecObject.Version, ""));
+            dbDict.Add("author", Common.ReturnValueIfNull(tosecObject.Author, ""));
+            dbDict.Add("email", Common.ReturnValueIfNull(tosecObject.Email, ""));
+            dbDict.Add("homepage", Common.ReturnValueIfNull(tosecObject.Homepage, ""));
+            dbDict.Add("uri", Common.ReturnValueIfNull(tosecObject.Url, ""));
+            dbDict.Add("sourcetype", Common.ReturnValueIfNull(tosecObject.SourceType, ""));
             dbDict.Add("sourcemd5", tosecObject.SourceMd5);
             dbDict.Add("sourcesha1", tosecObject.SourceSHA1);
 
@@ -201,88 +136,19 @@ if (Directory.Exists(tosecXML))
 
                     // set up game dictionary
                     dbDict = new Dictionary<string, object>();
-                    if (gameObject.Name != null)
-                    {
-                        dbDict.Add("name", gameObject.Name);
-                    } else
-                    {
-                        dbDict.Add("name", "");
-                    }
-                    if (gameObject.Description != null)
-                    {
-                        dbDict.Add("description", gameObject.Description);
-                    }
-                    else
-                    {
-                        dbDict.Add("description", "");
-                    }
-                    if (gameObject.Year != null)
-                    {
-                        dbDict.Add("year", gameObject.Year);
-                    }
-                    else
-                    {
-                        dbDict.Add("year", "");
-                    }
-                    if (gameObject.Publisher != null)
-                    {
-                        dbDict.Add("publisher", gameObject.Publisher);
-                    }
-                    else
-                    {
-                        dbDict.Add("publisher", "");
-                    }
+                    dbDict.Add("name", Common.ReturnValueIfNull(gameObject.Name, ""));
+                    dbDict.Add("description", Common.ReturnValueIfNull(gameObject.Description, ""));
+                    dbDict.Add("year", Common.ReturnValueIfNull(gameObject.Year, ""));
+                    dbDict.Add("publisher", Common.ReturnValueIfNull(gameObject.Publisher, ""));
                     dbDict.Add("demo", (int)gameObject.Demo);
-                    if (gameObject.System != null)
-                    {
-                        dbDict.Add("system", gameObject.System);
-                        dbDict.Add("platform", gameObject.System);
-                    }
-                    else
-                    {
-                        dbDict.Add("system", "");
-                    }
-                    if (gameObject.SystemVariant != null)
-                    {
-                        dbDict.Add("systemvariant", gameObject.SystemVariant);
-                    }
-                    else
-                    {
-                        dbDict.Add("systemvariant", "");
-                    }
-                    if (gameObject.Video != null)
-                    {
-                        dbDict.Add("video", gameObject.Video);
-                    }
-                    else
-                    {
-                        dbDict.Add("video", "");
-                    }
-                    if (gameObject.Country != null)
-                    {
-                        dbDict.Add("country", gameObject.Country);
-                    }
-                    else
-                    {
-                        dbDict.Add("country", "");
-                    }
-                    if (gameObject.Language != null)
-                    {
-                        dbDict.Add("language", gameObject.Language);
-                    }
-                    else
-                    {
-                        dbDict.Add("language", "");
-                    }
-                    if (gameObject.Copyright != null)
-                    {
-                        dbDict.Add("copyright", gameObject.Copyright);
-                    }
-                    else
-                    {
-                        dbDict.Add("copyright", "");
-                    }
-
+                    dbDict.Add("system", Common.ReturnValueIfNull(gameObject.System, ""));
+                    dbDict.Add("platform", Common.ReturnValueIfNull(gameObject.System, ""));
+                    dbDict.Add("systemvariant", Common.ReturnValueIfNull(gameObject.SystemVariant, ""));
+                    dbDict.Add("video", Common.ReturnValueIfNull(gameObject.Video, ""));
+                    dbDict.Add("country", Common.ReturnValueIfNull(gameObject.Country, ""));
+                    dbDict.Add("language", Common.ReturnValueIfNull(gameObject.Language, ""));
+                    dbDict.Add("copyright", Common.ReturnValueIfNull(gameObject.Copyright, ""));
+                    
                     // store platform
                     int gameSystem = 0;
                     if (gameObject.System != null)
@@ -354,46 +220,13 @@ if (Directory.Exists(tosecXML))
                             sql = "SELECT * FROM signatures_roms WHERE gameid=@gameid AND md5=@md5";
                             dbDict = new Dictionary<string, object>();
                             dbDict.Add("gameid", gameId);
-                            if (romObject.Name != null)
-                            {
-                                dbDict.Add("name", romObject.Name);
-                            } else
-                            {
-                                dbDict.Add("name", "");
-                            }
-                            if (romObject.Size != null)
-                            {
-                                dbDict.Add("size", romObject.Size);
-                            }
-                            else
-                            {
-                                dbDict.Add("size", 0);
-                            }
-                            if (romObject.Crc != null)
-                            {
-                                dbDict.Add("crc", romObject.Crc);
-                            }
-                            else
-                            {
-                                dbDict.Add("name", "");
-                            }
+                            dbDict.Add("name", Common.ReturnValueIfNull(romObject.Name, ""));
+                            dbDict.Add("size", Common.ReturnValueIfNull(romObject.Size, ""));
+                            dbDict.Add("crc", Common.ReturnValueIfNull(romObject.Crc, ""));
                             dbDict.Add("md5", romObject.Md5);
-                            if (romObject.Sha1 != null)
-                            {
-                                dbDict.Add("sha1", romObject.Sha1);
-                            }
-                            else
-                            {
-                                dbDict.Add("sha1", "");
-                            }
-                            if (romObject.DevelopmentStatus != null)
-                            {
-                                dbDict.Add("developmentstatus", romObject.DevelopmentStatus);
-                            }
-                            else
-                            {
-                                dbDict.Add("developmentstatus", "");
-                            }
+                            dbDict.Add("sha1", Common.ReturnValueIfNull(romObject.Sha1, ""));
+                            dbDict.Add("developmentstatus", Common.ReturnValueIfNull(romObject.DevelopmentStatus, ""));
+                            
                             if (romObject.flags != null)
                             {
                                 if (romObject.flags.Count > 0)
@@ -401,30 +234,16 @@ if (Directory.Exists(tosecXML))
                                     dbDict.Add("flags", Newtonsoft.Json.JsonConvert.SerializeObject(romObject.flags));
                                 } else
                                 {
-                                    dbDict.Add("flags", "{ }");
+                                    dbDict.Add("flags", "[ ]");
                                 }
                             }
                             else
                             {
-                                dbDict.Add("flags", "{ }");
+                                dbDict.Add("flags", "[ ]");
                             }
                             dbDict.Add("romtype", (int)romObject.RomType);
-                            if (romObject.RomTypeMedia != null)
-                            {
-                                dbDict.Add("romtypemedia", romObject.RomTypeMedia);
-                            }
-                            else
-                            {
-                                dbDict.Add("romtypemedia", "");
-                            }
-                            if (romObject.MediaLabel != null)
-                            {
-                                dbDict.Add("medialabel", romObject.MediaLabel);
-                            }
-                            else
-                            {
-                                dbDict.Add("medialabel", "");
-                            }
+                            dbDict.Add("romtypemedia", Common.ReturnValueIfNull(romObject.RomTypeMedia, ""));
+                            dbDict.Add("medialabel", Common.ReturnValueIfNull(romObject.MediaLabel, ""));
 
                             sigDB = db.ExecuteCMD(sql, dbDict);
                             if (sigDB.Rows.Count == 0)
