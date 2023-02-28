@@ -6,8 +6,6 @@ using gaseous_signature_parser.parsers;
 using gaseous_tools;
 using MySqlX.XDevAPI;
 
-string configPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".gaseous-server");
-
 // process command line
 string[] commandLineArgs = Environment.GetCommandLineArgs();
 
@@ -47,15 +45,14 @@ foreach (string commandLineArg in commandLineArgs)
     }
 }
 
-// check if configPath is valid and create it if not
-if (!Directory.Exists(configPath))
+// check if Config.ConfigurationPath is valid and create it if not
+if (!Directory.Exists(Config.ConfigurationPath))
 {
-    Directory.CreateDirectory(configPath);
+    Directory.CreateDirectory(Config.ConfigurationPath);
 }
 
 // connect to database
-string cs = @"server=localhost;userid=gaseous;password=gaseous;database=gaseous";
-Database db = new gaseous_tools.Database(Database.databaseType.MySql, cs);
+Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
 // process provided files
 Console.WriteLine("Processing input files:");
