@@ -83,181 +83,198 @@ if (Directory.Exists(tosecXML))
         Console.WriteLine("\r " + statusOutput.PadRight(lineFileNameLength, ' ') + "\r");
         lineFileNameLength = statusOutput.Length;
 
-        Console.WriteLine("  ==> Parsing file");
+        // check tosec file md5
+        Console.WriteLine("  ==> Checking input file       ");
+        Common.hashObject hashObject = new Common.hashObject(tosecXMLFile);
+        sql = "SELECT * FROM signatures_sources WHERE sourcemd5=@sourcemd5";
+        dbDict = new Dictionary<string, object>();
+        dbDict.Add("sourcemd5", hashObject.md5hash);
+        sigDB = db.ExecuteCMD(sql, dbDict);
 
-        TosecParser tosecParser = new TosecParser();
-        RomSignatureObject tosecObject = tosecParser.Parse(tosecXMLFile);
-
-        // store in database
-
-        // store source object
-        bool processGames = false;
-        if (tosecObject.SourceMd5 != null)
+        if (sigDB.Rows.Count == 0)
         {
-            sql = "SELECT * FROM signatures_sources WHERE sourcemd5=@sourcemd5";
-            dbDict = new Dictionary<string, object>();
-            dbDict.Add("name", Common.ReturnValueIfNull(tosecObject.Name, ""));
-            dbDict.Add("description", Common.ReturnValueIfNull(tosecObject.Description, ""));
-            dbDict.Add("category", Common.ReturnValueIfNull(tosecObject.Category, ""));
-            dbDict.Add("version", Common.ReturnValueIfNull(tosecObject.Version, ""));
-            dbDict.Add("author", Common.ReturnValueIfNull(tosecObject.Author, ""));
-            dbDict.Add("email", Common.ReturnValueIfNull(tosecObject.Email, ""));
-            dbDict.Add("homepage", Common.ReturnValueIfNull(tosecObject.Homepage, ""));
-            dbDict.Add("uri", Common.ReturnValueIfNull(tosecObject.Url, ""));
-            dbDict.Add("sourcetype", Common.ReturnValueIfNull(tosecObject.SourceType, ""));
-            dbDict.Add("sourcemd5", tosecObject.SourceMd5);
-            dbDict.Add("sourcesha1", tosecObject.SourceSHA1);
+            // start parsing file
+            Console.SetCursorPosition(0, Console.CursorTop - 1);
+            Console.WriteLine("  ==> Parsing file              ");
+            TosecParser tosecParser = new TosecParser();
+            RomSignatureObject tosecObject = tosecParser.Parse(tosecXMLFile);
 
-            sigDB = db.ExecuteCMD(sql, dbDict);
-            if (sigDB.Rows.Count == 0)
+            // store in database
+
+            // store source object
+            bool processGames = false;
+            if (tosecObject.SourceMd5 != null)
             {
-                // entry not present, insert it
-                sql = "INSERT INTO signatures_sources (name, description, category, version, author, email, homepage, url, sourcetype, sourcemd5, sourcesha1) VALUES (@name, @description, @category, @version, @author, @email, @homepage, @uri, @sourcetype, @sourcemd5, @sourcesha1)";
+                Console.SetCursorPosition(0, Console.CursorTop - 1);
+                Console.WriteLine("  ==> Storing file in database  ");
 
-                db.ExecuteCMD(sql, dbDict);
+                sql = "SELECT * FROM signatures_sources WHERE sourcemd5=@sourcemd5";
+                dbDict = new Dictionary<string, object>();
+                dbDict.Add("name", Common.ReturnValueIfNull(tosecObject.Name, ""));
+                dbDict.Add("description", Common.ReturnValueIfNull(tosecObject.Description, ""));
+                dbDict.Add("category", Common.ReturnValueIfNull(tosecObject.Category, ""));
+                dbDict.Add("version", Common.ReturnValueIfNull(tosecObject.Version, ""));
+                dbDict.Add("author", Common.ReturnValueIfNull(tosecObject.Author, ""));
+                dbDict.Add("email", Common.ReturnValueIfNull(tosecObject.Email, ""));
+                dbDict.Add("homepage", Common.ReturnValueIfNull(tosecObject.Homepage, ""));
+                dbDict.Add("uri", Common.ReturnValueIfNull(tosecObject.Url, ""));
+                dbDict.Add("sourcetype", Common.ReturnValueIfNull(tosecObject.SourceType, ""));
+                dbDict.Add("sourcemd5", tosecObject.SourceMd5);
+                dbDict.Add("sourcesha1", tosecObject.SourceSHA1);
 
-                processGames = true;
-            }
-
-            if (processGames == true)
-            {
-                for (int x = 0; x < tosecObject.Games.Count; ++x)
+                sigDB = db.ExecuteCMD(sql, dbDict);
+                if (sigDB.Rows.Count == 0)
                 {
-                    RomSignatureObject.Game gameObject = tosecObject.Games[x];
+                    // entry not present, insert it
+                    sql = "INSERT INTO signatures_sources (name, description, category, version, author, email, homepage, url, sourcetype, sourcemd5, sourcesha1) VALUES (@name, @description, @category, @version, @author, @email, @homepage, @uri, @sourcetype, @sourcemd5, @sourcesha1)";
 
-                    // update display
-                    if (showGames == true)
+                    db.ExecuteCMD(sql, dbDict);
+
+                    processGames = true;
+                }
+
+                if (processGames == true)
+                {
+                    for (int x = 0; x < tosecObject.Games.Count; ++x)
                     {
-                        Console.SetCursorPosition(0, Console.CursorTop - 1);
-                        string statusGameOutput = " ==> " + (x + 1).ToString().PadLeft(7, ' ') + " / " + tosecObject.Games.Count.ToString().PadLeft(7, ' ') + " : " + gameObject.Name;
-                        Console.WriteLine("\r " + statusGameOutput.PadRight(lineGameNameLength, ' ') + "\r");
-                        lineGameNameLength = statusGameOutput.Length;
-                    }
+                        RomSignatureObject.Game gameObject = tosecObject.Games[x];
 
-                    // set up game dictionary
-                    dbDict = new Dictionary<string, object>();
-                    dbDict.Add("name", Common.ReturnValueIfNull(gameObject.Name, ""));
-                    dbDict.Add("description", Common.ReturnValueIfNull(gameObject.Description, ""));
-                    dbDict.Add("year", Common.ReturnValueIfNull(gameObject.Year, ""));
-                    dbDict.Add("publisher", Common.ReturnValueIfNull(gameObject.Publisher, ""));
-                    dbDict.Add("demo", (int)gameObject.Demo);
-                    dbDict.Add("system", Common.ReturnValueIfNull(gameObject.System, ""));
-                    dbDict.Add("platform", Common.ReturnValueIfNull(gameObject.System, ""));
-                    dbDict.Add("systemvariant", Common.ReturnValueIfNull(gameObject.SystemVariant, ""));
-                    dbDict.Add("video", Common.ReturnValueIfNull(gameObject.Video, ""));
-                    dbDict.Add("country", Common.ReturnValueIfNull(gameObject.Country, ""));
-                    dbDict.Add("language", Common.ReturnValueIfNull(gameObject.Language, ""));
-                    dbDict.Add("copyright", Common.ReturnValueIfNull(gameObject.Copyright, ""));
-                    
-                    // store platform
-                    int gameSystem = 0;
-                    if (gameObject.System != null)
-                    {
-                        sql = "SELECT id FROM signatures_platforms WHERE platform=@platform";
-                        
-                        sigDB = db.ExecuteCMD(sql, dbDict);
-                        if (sigDB.Rows.Count == 0)
+                        // update display
+                        if (showGames == true)
                         {
-                            // entry not present, insert it
-                            sql = "INSERT INTO signatures_platforms (platform) VALUES (@platform); SELECT LAST_INSERT_ID()";
-                            sigDB = db.ExecuteCMD(sql, dbDict);
-
-                            gameSystem = int.Parse(sigDB.Rows[0][0].ToString());
-                        } else
-                        {
-                            gameSystem = int.Parse(sigDB.Rows[0][0].ToString());
+                            Console.SetCursorPosition(0, Console.CursorTop - 1);
+                            string statusGameOutput = " ==> " + (x + 1).ToString().PadLeft(7, ' ') + " / " + tosecObject.Games.Count.ToString().PadLeft(7, ' ') + " : " + gameObject.Name;
+                            Console.WriteLine("\r " + statusGameOutput.PadRight(lineGameNameLength, ' ') + "\r");
+                            lineGameNameLength = statusGameOutput.Length;
                         }
-                    }
-                    dbDict.Add("systemid", gameSystem);
 
-                    // store publisher
-                    int gamePublisher = 0;
-                    if (gameObject.Publisher != null)
-                    {
-                        sql = "SELECT * FROM signatures_publishers WHERE publisher=@publisher";
-                        
-                        sigDB = db.ExecuteCMD(sql, dbDict);
-                        if (sigDB.Rows.Count == 0)
+                        // set up game dictionary
+                        dbDict = new Dictionary<string, object>();
+                        dbDict.Add("name", Common.ReturnValueIfNull(gameObject.Name, ""));
+                        dbDict.Add("description", Common.ReturnValueIfNull(gameObject.Description, ""));
+                        dbDict.Add("year", Common.ReturnValueIfNull(gameObject.Year, ""));
+                        dbDict.Add("publisher", Common.ReturnValueIfNull(gameObject.Publisher, ""));
+                        dbDict.Add("demo", (int)gameObject.Demo);
+                        dbDict.Add("system", Common.ReturnValueIfNull(gameObject.System, ""));
+                        dbDict.Add("platform", Common.ReturnValueIfNull(gameObject.System, ""));
+                        dbDict.Add("systemvariant", Common.ReturnValueIfNull(gameObject.SystemVariant, ""));
+                        dbDict.Add("video", Common.ReturnValueIfNull(gameObject.Video, ""));
+                        dbDict.Add("country", Common.ReturnValueIfNull(gameObject.Country, ""));
+                        dbDict.Add("language", Common.ReturnValueIfNull(gameObject.Language, ""));
+                        dbDict.Add("copyright", Common.ReturnValueIfNull(gameObject.Copyright, ""));
+
+                        // store platform
+                        int gameSystem = 0;
+                        if (gameObject.System != null)
                         {
-                            // entry not present, insert it
-                            sql = "INSERT INTO signatures_publishers (publisher) VALUES (@publisher); SELECT LAST_INSERT_ID()";
-                            sigDB = db.ExecuteCMD(sql, dbDict);
-                            gamePublisher = int.Parse(sigDB.Rows[0][0].ToString());
-                        }
-                        else
-                        {
-                            gamePublisher = int.Parse(sigDB.Rows[0][0].ToString());
-                        }
-                    }
-                    dbDict.Add("publisherid", gamePublisher);
-
-                    // store game
-                    int gameId = 0;
-                    sql = "SELECT * FROM signatures_games WHERE name=@name AND year=@year AND publisherid=@publisher AND systemid=@systemid AND country=@country AND language=@language";
-
-                    sigDB = db.ExecuteCMD(sql, dbDict);
-                    if (sigDB.Rows.Count == 0)
-                    {
-                        // entry not present, insert it
-                        sql = "INSERT INTO signatures_games " +
-                            "(name, description, year, publisherid, demo, systemid, systemvariant, video, country, language, copyright) VALUES " +
-                            "(@name, @description, @year, @publisherid, @demo, @systemid, @systemvariant, @video, @country, @language, @copyright); SELECT LAST_INSERT_ID()";
-                        sigDB = db.ExecuteCMD(sql, dbDict);
-
-                        gameId = int.Parse(sigDB.Rows[0][0].ToString());
-                    }
-                    else
-                    {
-                        gameId = int.Parse(sigDB.Rows[0][0].ToString());
-                    }
-
-                    // store rom
-                    foreach (RomSignatureObject.Game.Rom romObject in gameObject.Roms)
-                    {
-                        if (romObject.Md5 != null)
-                        {
-                            int romId = 0;
-                            sql = "SELECT * FROM signatures_roms WHERE gameid=@gameid AND md5=@md5";
-                            dbDict = new Dictionary<string, object>();
-                            dbDict.Add("gameid", gameId);
-                            dbDict.Add("name", Common.ReturnValueIfNull(romObject.Name, ""));
-                            dbDict.Add("size", Common.ReturnValueIfNull(romObject.Size, ""));
-                            dbDict.Add("crc", Common.ReturnValueIfNull(romObject.Crc, ""));
-                            dbDict.Add("md5", romObject.Md5);
-                            dbDict.Add("sha1", Common.ReturnValueIfNull(romObject.Sha1, ""));
-                            dbDict.Add("developmentstatus", Common.ReturnValueIfNull(romObject.DevelopmentStatus, ""));
-                            
-                            if (romObject.flags != null)
-                            {
-                                if (romObject.flags.Count > 0)
-                                {
-                                    dbDict.Add("flags", Newtonsoft.Json.JsonConvert.SerializeObject(romObject.flags));
-                                } else
-                                {
-                                    dbDict.Add("flags", "[ ]");
-                                }
-                            }
-                            else
-                            {
-                                dbDict.Add("flags", "[ ]");
-                            }
-                            dbDict.Add("romtype", (int)romObject.RomType);
-                            dbDict.Add("romtypemedia", Common.ReturnValueIfNull(romObject.RomTypeMedia, ""));
-                            dbDict.Add("medialabel", Common.ReturnValueIfNull(romObject.MediaLabel, ""));
+                            sql = "SELECT id FROM signatures_platforms WHERE platform=@platform";
 
                             sigDB = db.ExecuteCMD(sql, dbDict);
                             if (sigDB.Rows.Count == 0)
                             {
                                 // entry not present, insert it
-                                sql = "INSERT INTO signatures_roms (gameid, name, size, crc, md5, sha1, developmentstatus, flags, romtype, romtypemedia, medialabel) VALUES (@gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel); SELECT LAST_INSERT_ID()";
+                                sql = "INSERT INTO signatures_platforms (platform) VALUES (@platform); SELECT LAST_INSERT_ID()";
                                 sigDB = db.ExecuteCMD(sql, dbDict);
 
-
-                                romId = int.Parse(sigDB.Rows[0][0].ToString());
+                                gameSystem = int.Parse(sigDB.Rows[0][0].ToString());
                             }
                             else
                             {
-                                romId = int.Parse(sigDB.Rows[0][0].ToString());
+                                gameSystem = int.Parse(sigDB.Rows[0][0].ToString());
+                            }
+                        }
+                        dbDict.Add("systemid", gameSystem);
+
+                        // store publisher
+                        int gamePublisher = 0;
+                        if (gameObject.Publisher != null)
+                        {
+                            sql = "SELECT * FROM signatures_publishers WHERE publisher=@publisher";
+
+                            sigDB = db.ExecuteCMD(sql, dbDict);
+                            if (sigDB.Rows.Count == 0)
+                            {
+                                // entry not present, insert it
+                                sql = "INSERT INTO signatures_publishers (publisher) VALUES (@publisher); SELECT LAST_INSERT_ID()";
+                                sigDB = db.ExecuteCMD(sql, dbDict);
+                                gamePublisher = int.Parse(sigDB.Rows[0][0].ToString());
+                            }
+                            else
+                            {
+                                gamePublisher = int.Parse(sigDB.Rows[0][0].ToString());
+                            }
+                        }
+                        dbDict.Add("publisherid", gamePublisher);
+
+                        // store game
+                        int gameId = 0;
+                        sql = "SELECT * FROM signatures_games WHERE name=@name AND year=@year AND publisherid=@publisher AND systemid=@systemid AND country=@country AND language=@language";
+
+                        sigDB = db.ExecuteCMD(sql, dbDict);
+                        if (sigDB.Rows.Count == 0)
+                        {
+                            // entry not present, insert it
+                            sql = "INSERT INTO signatures_games " +
+                                "(name, description, year, publisherid, demo, systemid, systemvariant, video, country, language, copyright) VALUES " +
+                                "(@name, @description, @year, @publisherid, @demo, @systemid, @systemvariant, @video, @country, @language, @copyright); SELECT LAST_INSERT_ID()";
+                            sigDB = db.ExecuteCMD(sql, dbDict);
+
+                            gameId = int.Parse(sigDB.Rows[0][0].ToString());
+                        }
+                        else
+                        {
+                            gameId = int.Parse(sigDB.Rows[0][0].ToString());
+                        }
+
+                        // store rom
+                        foreach (RomSignatureObject.Game.Rom romObject in gameObject.Roms)
+                        {
+                            if (romObject.Md5 != null)
+                            {
+                                int romId = 0;
+                                sql = "SELECT * FROM signatures_roms WHERE gameid=@gameid AND md5=@md5";
+                                dbDict = new Dictionary<string, object>();
+                                dbDict.Add("gameid", gameId);
+                                dbDict.Add("name", Common.ReturnValueIfNull(romObject.Name, ""));
+                                dbDict.Add("size", Common.ReturnValueIfNull(romObject.Size, ""));
+                                dbDict.Add("crc", Common.ReturnValueIfNull(romObject.Crc, ""));
+                                dbDict.Add("md5", romObject.Md5);
+                                dbDict.Add("sha1", Common.ReturnValueIfNull(romObject.Sha1, ""));
+                                dbDict.Add("developmentstatus", Common.ReturnValueIfNull(romObject.DevelopmentStatus, ""));
+
+                                if (romObject.flags != null)
+                                {
+                                    if (romObject.flags.Count > 0)
+                                    {
+                                        dbDict.Add("flags", Newtonsoft.Json.JsonConvert.SerializeObject(romObject.flags));
+                                    }
+                                    else
+                                    {
+                                        dbDict.Add("flags", "[ ]");
+                                    }
+                                }
+                                else
+                                {
+                                    dbDict.Add("flags", "[ ]");
+                                }
+                                dbDict.Add("romtype", (int)romObject.RomType);
+                                dbDict.Add("romtypemedia", Common.ReturnValueIfNull(romObject.RomTypeMedia, ""));
+                                dbDict.Add("medialabel", Common.ReturnValueIfNull(romObject.MediaLabel, ""));
+
+                                sigDB = db.ExecuteCMD(sql, dbDict);
+                                if (sigDB.Rows.Count == 0)
+                                {
+                                    // entry not present, insert it
+                                    sql = "INSERT INTO signatures_roms (gameid, name, size, crc, md5, sha1, developmentstatus, flags, romtype, romtypemedia, medialabel) VALUES (@gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel); SELECT LAST_INSERT_ID()";
+                                    sigDB = db.ExecuteCMD(sql, dbDict);
+
+
+                                    romId = int.Parse(sigDB.Rows[0][0].ToString());
+                                }
+                                else
+                                {
+                                    romId = int.Parse(sigDB.Rows[0][0].ToString());
+                                }
                             }
                         }
                     }
