@@ -14,9 +14,13 @@
   <ItemGroup>
     <None Remove="Database\" />
     <None Remove="Database\MySQL\" />
+    <None Remove="Database\MySQL\gaseous-1000.sql" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Database\" />
     <Folder Include="Database\MySQL\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Database\MySQL\gaseous-1000.sql" />
   </ItemGroup>
 </Project>

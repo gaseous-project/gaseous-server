@@ -53,6 +53,8 @@ if (!Directory.Exists(Config.ConfigurationPath))
 
 // connect to database
 Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+// initialise the db
+db.InitDB();
 
 // process provided files
 Console.WriteLine("Processing input files:");
