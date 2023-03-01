@@ -81,7 +81,8 @@ namespace gaseous_tools
 						string resourceName = "gaseous_tools.Database.MySQL.gaseous-" + i + ".sql";
 						string dbScript = "";
 
-						try
+						string[] resources = Assembly.GetExecutingAssembly().GetManifestResourceNames();
+						if (resources.Contains(resourceName))
 						{
 							using (Stream stream = assembly.GetManifestResourceStream(resourceName))
 							using (StreamReader reader = new StreamReader(stream))
@@ -115,9 +116,6 @@ namespace gaseous_tools
 									}
 								}
 							}
-						} catch
-						{
-							break;
 						}
                     }
 					break;
