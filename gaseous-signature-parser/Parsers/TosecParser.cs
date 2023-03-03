@@ -351,131 +351,142 @@ namespace gaseous_signature_parser.parsers
 
                         case "rom":
                             RomSignatureObject.Game.Rom romObject = new RomSignatureObject.Game.Rom();
-                            romObject.Name = xmlGameDetail.Attributes["name"]?.Value;
-                            romObject.Size = UInt64.Parse(xmlGameDetail.Attributes["size"]?.Value);
-                            romObject.Crc = xmlGameDetail.Attributes["crc"]?.Value;
-                            romObject.Md5 = xmlGameDetail.Attributes["md5"]?.Value;
-                            romObject.Sha1 = xmlGameDetail.Attributes["sha1"]?.Value;
-
-                            // parse name
-                            string[] romNameTokens = romDescription.Split("(");
-                            foreach (string rawToken in romNameTokens) {
-                                string[] tokenSplit = rawToken.Split("[");
-
-                                // replace the extra closing bracket
-                                string token = tokenSplit[0].Replace(")", "").Trim();
-
-                                // check for copyright
-                                if (TOSECDevelopment.ContainsKey(token))
+                            if (xmlGameDetail != null)
+                            {
+                                romObject.Name = xmlGameDetail.Attributes["name"]?.Value;
+                                if (xmlGameDetail.Attributes["size"]?.Value != null)
                                 {
-                                    romObject.DevelopmentStatus = token;
+                                    romObject.Size = UInt64.Parse(xmlGameDetail.Attributes["size"]?.Value);
                                 }
-
-                                // check for media type
-                                if (token.StartsWith("Disc") ||
-                                token.StartsWith("Disk") ||
-                                token.StartsWith("File") ||
-                                token.StartsWith("Part") ||
-                                token.StartsWith("Side") ||
-                                token.StartsWith("Tape"))
+                                else
                                 {
-                                    string[] tokens = token.Split(" ");
-                                    switch (tokens[0])
+                                    romObject.Size = 0;
+                                }
+                                romObject.Crc = xmlGameDetail.Attributes["crc"]?.Value;
+                                romObject.Md5 = xmlGameDetail.Attributes["md5"]?.Value;
+                                romObject.Sha1 = xmlGameDetail.Attributes["sha1"]?.Value;
+
+                                // parse name
+                                string[] romNameTokens = romDescription.Split("(");
+                                foreach (string rawToken in romNameTokens)
+                                {
+                                    string[] tokenSplit = rawToken.Split("[");
+
+                                    // replace the extra closing bracket
+                                    string token = tokenSplit[0].Replace(")", "").Trim();
+
+                                    // check for copyright
+                                    if (TOSECDevelopment.ContainsKey(token))
                                     {
-                                        case "Disc":
-                                            romObject.RomType = RomSignatureObject.Game.Rom.RomTypes.Disc;
-                                            break;
-                                        case "Disk":
-                                            romObject.RomType = RomSignatureObject.Game.Rom.RomTypes.Disk;
-                                            break;
-                                        case "File":
-                                            romObject.RomType = RomSignatureObject.Game.Rom.RomTypes.File;
-                                            break;
-                                        case "Part":
-                                            romObject.RomType = RomSignatureObject.Game.Rom.RomTypes.Part;
-                                            break;
-                                        case "Side":
-                                            romObject.RomType = RomSignatureObject.Game.Rom.RomTypes.Side;
-                                            break;
-                                        case "Tape":
-                                            romObject.RomType = RomSignatureObject.Game.Rom.RomTypes.Tape;
-                                            break;
+                                        romObject.DevelopmentStatus = token;
                                     }
-                                    romObject.RomTypeMedia = token;
-                                }
 
-                                // check for media label
-                                if (token.Length > 0 &&
-                                    (token + ")") == gameNameTokens.Last() &&
-                                    (
-                                        token != romObject.RomTypeMedia &&
-                                        token != gameObject.Publisher &&
-                                        token != gameObject.SystemVariant &&
-                                        token != gameObject.Video &&
-                                        token != gameObject.Country &&
-                                        token != gameObject.Copyright &&
-                                        token != gameObject.Language &&
-                                        token != romObject.DevelopmentStatus
-                                    )
-                                   )
-                                {
-                                    // likely the media label?
-                                    romObject.MediaLabel = token;
-                                }
-
-                                // process dump flags
-                                if (rawToken.IndexOf("[") > 0)
-                                {
-                                    // has dump flags
-                                    string rawDumpFlags = rawToken.Substring(rawToken.IndexOf("["));
-                                    string[] dumpFlags = rawDumpFlags.Split("[");
-                                    foreach (string dumpFlag in dumpFlags)
+                                    // check for media type
+                                    if (token.StartsWith("Disc") ||
+                                    token.StartsWith("Disk") ||
+                                    token.StartsWith("File") ||
+                                    token.StartsWith("Part") ||
+                                    token.StartsWith("Side") ||
+                                    token.StartsWith("Tape"))
                                     {
-                                        string dToken = dumpFlag.Replace("]", "");
-                                        if (dToken.Length > 0)
+                                        string[] tokens = token.Split(" ");
+                                        switch (tokens[0])
                                         {
-                                            string[] dTokenCompare = dToken.Split(" ");
-                                            if (dTokenCompare[0].Trim().ToLower().StartsWith("a"))
-                                            {
-                                                romObject.flags.Add(dTokenCompare[0].Trim());
-                                            }
-                                            else
-                                            {
+                                            case "Disc":
+                                                romObject.RomType = RomSignatureObject.Game.Rom.RomTypes.Disc;
+                                                break;
+                                            case "Disk":
+                                                romObject.RomType = RomSignatureObject.Game.Rom.RomTypes.Disk;
+                                                break;
+                                            case "File":
+                                                romObject.RomType = RomSignatureObject.Game.Rom.RomTypes.File;
+                                                break;
+                                            case "Part":
+                                                romObject.RomType = RomSignatureObject.Game.Rom.RomTypes.Part;
+                                                break;
+                                            case "Side":
+                                                romObject.RomType = RomSignatureObject.Game.Rom.RomTypes.Side;
+                                                break;
+                                            case "Tape":
+                                                romObject.RomType = RomSignatureObject.Game.Rom.RomTypes.Tape;
+                                                break;
+                                        }
+                                        romObject.RomTypeMedia = token;
+                                    }
 
-                                                switch (dTokenCompare[0].Trim().ToLower())
+                                    // check for media label
+                                    if (token.Length > 0 &&
+                                        (token + ")") == gameNameTokens.Last() &&
+                                        (
+                                            token != romObject.RomTypeMedia &&
+                                            token != gameObject.Publisher &&
+                                            token != gameObject.SystemVariant &&
+                                            token != gameObject.Video &&
+                                            token != gameObject.Country &&
+                                            token != gameObject.Copyright &&
+                                            token != gameObject.Language &&
+                                            token != romObject.DevelopmentStatus
+                                        )
+                                       )
+                                    {
+                                        // likely the media label?
+                                        romObject.MediaLabel = token;
+                                    }
+
+                                    // process dump flags
+                                    if (rawToken.IndexOf("[") > 0)
+                                    {
+                                        // has dump flags
+                                        string rawDumpFlags = rawToken.Substring(rawToken.IndexOf("["));
+                                        string[] dumpFlags = rawDumpFlags.Split("[");
+                                        foreach (string dumpFlag in dumpFlags)
+                                        {
+                                            string dToken = dumpFlag.Replace("]", "");
+                                            if (dToken.Length > 0)
+                                            {
+                                                string[] dTokenCompare = dToken.Split(" ");
+                                                if (dTokenCompare[0].Trim().ToLower().StartsWith("a"))
                                                 {
-                                                    case "cr":
-                                                    // cracked
-                                                    case "f":
-                                                    // fixed
-                                                    case "h":
-                                                    // hacked
-                                                    case "m":
-                                                    // modified
-                                                    case "p":
-                                                    // pirated
-                                                    case "t":
-                                                    // trained
-                                                    case "tr":
-                                                    // translated
-                                                    case "o":
-                                                    // overdump
-                                                    case "u":
-                                                    // underdump
-                                                    case "v":
-                                                    // virus
-                                                    case "b":
-                                                    // bad dump
-                                                    case "a":
-                                                    // alternate
-                                                    case "!":
-                                                        // known verified dump
-                                                        // -------------------
-                                                        romObject.flags.Add(dToken);
-                                                        break;
+                                                    romObject.flags.Add(dTokenCompare[0].Trim());
                                                 }
+                                                else
+                                                {
+
+                                                    switch (dTokenCompare[0].Trim().ToLower())
+                                                    {
+                                                        case "cr":
+                                                        // cracked
+                                                        case "f":
+                                                        // fixed
+                                                        case "h":
+                                                        // hacked
+                                                        case "m":
+                                                        // modified
+                                                        case "p":
+                                                        // pirated
+                                                        case "t":
+                                                        // trained
+                                                        case "tr":
+                                                        // translated
+                                                        case "o":
+                                                        // overdump
+                                                        case "u":
+                                                        // underdump
+                                                        case "v":
+                                                        // virus
+                                                        case "b":
+                                                        // bad dump
+                                                        case "a":
+                                                        // alternate
+                                                        case "!":
+                                                            // known verified dump
+                                                            // -------------------
+                                                            romObject.flags.Add(dToken);
+                                                            break;
+                                                    }
+                                                }
+
                                             }
-                                            
                                         }
                                     }
                                 }

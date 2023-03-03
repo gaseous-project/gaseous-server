@@ -175,11 +175,11 @@ if (Directory.Exists(tosecXML))
                                 sql = "INSERT INTO signatures_platforms (platform) VALUES (@platform); SELECT LAST_INSERT_ID()";
                                 sigDB = db.ExecuteCMD(sql, dbDict);
 
-                                gameSystem = int.Parse(sigDB.Rows[0][0].ToString());
+                                gameSystem = (int)sigDB.Rows[0][0];
                             }
                             else
                             {
-                                gameSystem = int.Parse(sigDB.Rows[0][0].ToString());
+                                gameSystem = (int)sigDB.Rows[0][0];
                             }
                         }
                         dbDict.Add("systemid", gameSystem);
@@ -196,11 +196,11 @@ if (Directory.Exists(tosecXML))
                                 // entry not present, insert it
                                 sql = "INSERT INTO signatures_publishers (publisher) VALUES (@publisher); SELECT LAST_INSERT_ID()";
                                 sigDB = db.ExecuteCMD(sql, dbDict);
-                                gamePublisher = int.Parse(sigDB.Rows[0][0].ToString());
+                                gamePublisher = (int)sigDB.Rows[0][0];
                             }
                             else
                             {
-                                gamePublisher = int.Parse(sigDB.Rows[0][0].ToString());
+                                gamePublisher = (int)sigDB.Rows[0][0];
                             }
                         }
                         dbDict.Add("publisherid", gamePublisher);
@@ -218,11 +218,11 @@ if (Directory.Exists(tosecXML))
                                 "(@name, @description, @year, @publisherid, @demo, @systemid, @systemvariant, @video, @country, @language, @copyright); SELECT LAST_INSERT_ID()";
                             sigDB = db.ExecuteCMD(sql, dbDict);
 
-                            gameId = int.Parse(sigDB.Rows[0][0].ToString());
+                            gameId = (int)sigDB.Rows[0][0];
                         }
                         else
                         {
-                            gameId = int.Parse(sigDB.Rows[0][0].ToString());
+                            gameId = (int)sigDB.Rows[0][0];
                         }
 
                         // store rom
@@ -268,11 +268,11 @@ if (Directory.Exists(tosecXML))
                                     sigDB = db.ExecuteCMD(sql, dbDict);
 
 
-                                    romId = int.Parse(sigDB.Rows[0][0].ToString());
+                                    romId = (int)sigDB.Rows[0][0];
                                 }
                                 else
                                 {
-                                    romId = int.Parse(sigDB.Rows[0][0].ToString());
+                                    romId = (int)sigDB.Rows[0][0];
                                 }
                             }
                         }
