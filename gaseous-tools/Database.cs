@@ -122,17 +122,33 @@ namespace gaseous_tools
 			}
 		}
 
+        public DataTable ExecuteCMD(string Command)
+		{
+			Dictionary<string, object> dbDict = new Dictionary<string, object>();
+			return _ExecuteCMD(Command, dbDict, 30, "");
+		}
+
+        public DataTable ExecuteCMD(string Command, Dictionary<string, object> Parameters)
+        {
+            return _ExecuteCMD(Command, Parameters, 30, "");
+        }
+
         public DataTable ExecuteCMD(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
         {
-			if (ConnectionString == "") { ConnectionString = _ConnectionString; }
+			return _ExecuteCMD(Command, Parameters, Timeout, ConnectionString);
+        }
+
+        private DataTable _ExecuteCMD(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
+        {
+            if (ConnectionString == "") { ConnectionString = _ConnectionString; }
             switch (_ConnectorType)
-			{
-				case databaseType.MySql:
+            {
+                case databaseType.MySql:
                     MySQLServerConnector conn = new MySQLServerConnector(ConnectionString);
-					return (DataTable)conn.ExecCMD(Command, Parameters, Timeout);
-				default:
-					return new DataTable();
-			}
+                    return (DataTable)conn.ExecCMD(Command, Parameters, Timeout);
+                default:
+                    return new DataTable();
+            }
         }
 
         private partial class MySQLServerConnector
