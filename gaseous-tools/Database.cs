@@ -109,11 +109,6 @@ namespace gaseous_tools
 										dbDict.Add("schemaver", i);
 										ExecuteCMD(sql, dbDict);
 									}
-									if (SchemaVer == i)
-									{
-										// no more updates, no point looping anymore
-										break;
-									}
 								}
 							}
 						}
