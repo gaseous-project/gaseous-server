@@ -1,0 +1,9 @@
+﻿CW,Cardware
+CW-R,Cardware-Registered
+FW,Freeware
+GW,Giftware
+GW-R,Giftware-Registered
+LW,Licenceware
+PD,Public Domain
+SW,Shareware
+SW-R,Shareware-Registered

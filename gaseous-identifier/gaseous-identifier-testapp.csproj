@@ -9,9 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Remove="classes\" />
+    <None Remove="Newtonsoft.Json" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="classes\" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\gaseous-romsignatureobject\gaseous-romsignatureobject.csproj" />
+    <ProjectReference Include="..\gaseous-signature-parser\gaseous-signature-parser.csproj" />
   </ItemGroup>
 </Project>

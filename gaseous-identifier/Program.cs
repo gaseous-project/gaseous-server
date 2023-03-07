@@ -3,6 +3,9 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Xml;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
+using gaseous_romsignatureobject;
+using gaseous_signature_parser.parsers;
 
 string[] commandLineArgs = Environment.GetCommandLineArgs();
 
@@ -49,9 +52,10 @@ foreach (string commandLineArg in commandLineArgs)
 scanPath = Path.GetFullPath(scanPath);
 Console.WriteLine("ROM search path: " + scanPath);
 
-System.Collections.ArrayList TOSEC = new System.Collections.ArrayList();
-List<gaseous_identifier.classes.tosecXML> tosecLists = new List<gaseous_identifier.classes.tosecXML>();
-UInt32 GameCounter = 0;
+List<RomSignatureObject> romSignatures = new List<RomSignatureObject>();
+System.Collections.ArrayList availablePlatforms = new System.Collections.ArrayList();
+
+// load TOSEC XML files
 if (tosecXML != null && tosecXML.Length > 0)
 {
     tosecXML = Path.GetFullPath(tosecXML);
@@ -59,146 +63,43 @@ if (tosecXML != null && tosecXML.Length > 0)
     Console.WriteLine("TOSEC XML search path: " + tosecXML);
 
     string[] tosecPathContents = Directory.GetFiles(tosecXML);
-    foreach (string tosecXMLFile in tosecPathContents)
+    int lastCLILineLength = 0;
+    for (UInt16 i = 0; i < tosecPathContents.Length; ++i)
     {
-        XmlDocument tosecXmlDoc = new XmlDocument();
-        tosecXmlDoc.Load(tosecXMLFile);
+        string tosecXMLFile = tosecPathContents[i];
 
-        gaseous_identifier.classes.tosecXML tosecObject = new gaseous_identifier.classes.tosecXML();
+        TosecParser tosecParser = new TosecParser();
+        RomSignatureObject tosecObject = tosecParser.Parse(tosecXMLFile);
 
-        // get header
-        XmlNode xmlHeader = tosecXmlDoc.DocumentElement.SelectSingleNode("/datafile/header");
-        foreach (XmlNode childNode in xmlHeader.ChildNodes)
+        string statusOutput = i + " / " + tosecPathContents.Length + " : " + Path.GetFileName(tosecXMLFile);
+        Console.Write("\r " + statusOutput.PadRight(lastCLILineLength, ' ') + "\r");
+        lastCLILineLength = statusOutput.Length;
+
+        foreach (RomSignatureObject.Game gameRom in tosecObject.Games)
         {
-            switch (childNode.Name.ToLower())
+            if (!availablePlatforms.Contains(gameRom.System))
             {
-                case "name":
-                    tosecObject.Name = childNode.InnerText;
-                    break;
-
-                case "description":
-                    tosecObject.Description = childNode.InnerText;
-                    break;
-
-                case "category":
-                    tosecObject.Category = childNode.InnerText;
-                    break;
-
-                case "version":
-                    tosecObject.Version = childNode.InnerText;
-                    break;
-
-                case "author":
-                    tosecObject.Author = childNode.InnerText;
-                    break;
-
-                case "email":
-                    tosecObject.Email = childNode.InnerText;
-                    break;
-
-                case "homepage":
-                    tosecObject.Homepage = childNode.InnerText;
-                    break;
-
-                case "url":
-                    try
-                    {
-                        tosecObject.Url = new Uri(childNode.InnerText);
-                    } catch
-                    {
-                        tosecObject.Url = null;
-                    }
-                    break;
+                availablePlatforms.Add(gameRom.System);
             }
         }
 
-        // get games
-        tosecObject.Games = new List<gaseous_identifier.classes.tosecXML.Game>();
-        XmlNodeList xmlGames = tosecXmlDoc.DocumentElement.SelectNodes("/datafile/game");
-        foreach (XmlNode xmlGame in xmlGames)
-        {
-            gaseous_identifier.classes.tosecXML.Game gameObject = new gaseous_identifier.classes.tosecXML.Game();
-
-            // parse game name
-            string gameName = xmlGame.Attributes["name"].Value;
-            string[] gameNameTokens = gameName.Split("(");
-            // game title should be first item
-            gameObject.Name = gameNameTokens[0].Trim();
-            // game year should be second item
-            if (gameNameTokens.Length == 2)
-            {
-                gameObject.Year = gameNameTokens[1].Replace(")", "").Trim();
-            } else
-            {
-                gameObject.Year = "";
-            }
-            // game publisher should be third item
-            if (gameNameTokens.Length == 3)
-            {
-                gameObject.Publisher = gameNameTokens[2].Replace(")", "").Trim();
-            } else
-            {
-                gameObject.Publisher = "";
-            }
-
-            gameObject.Roms = new List<gaseous_identifier.classes.tosecXML.Game.Rom>();
-
-            // get the roms
-            foreach (XmlNode xmlGameDetail in xmlGame.ChildNodes)
-            {
-                switch (xmlGameDetail.Name.ToLower())
-                {
-                    case "description":
-                        gameObject.Description = xmlGameDetail.InnerText;
-                        break;
-
-                    case "rom":
-                        gaseous_identifier.classes.tosecXML.Game.Rom romObject = new gaseous_identifier.classes.tosecXML.Game.Rom();
-                        romObject.Name = xmlGameDetail.Attributes["name"]?.Value;
-                        romObject.Size = UInt64.Parse(xmlGameDetail.Attributes["size"]?.Value);
-                        romObject.Crc = xmlGameDetail.Attributes["crc"]?.Value;
-                        romObject.Md5 = xmlGameDetail.Attributes["md5"]?.Value;
-                        romObject.Sha1 = xmlGameDetail.Attributes["sha1"]?.Value;
-
-                        gameObject.Roms.Add(romObject);
-                        break;
-                }
-            }
-
-            // search for existing gameObject to update
-            bool existingGameFound = false;
-            foreach (gaseous_identifier.classes.tosecXML.Game existingGame in tosecObject.Games)
-            {
-                if (existingGame.Name == gameObject.Name && existingGame.Year == gameObject.Year && existingGame.Publisher == gameObject.Publisher)
-                {
-                    existingGame.Roms.AddRange(gameObject.Roms);
-                    existingGameFound = true;
-                    break;
-                }
-            }
-            if (existingGameFound == false)
-            {
-                tosecObject.Games.Add(gameObject);
-                GameCounter += 1;
-            }
-        }
-
-        Console.Write(".");
-        tosecLists.Add(tosecObject);
+        romSignatures.Add(tosecObject);
     }
     Console.WriteLine("");
 } else
 {
-    Console.WriteLine("TOSEC is disabled, title matching will be by file name only.");
+    Console.WriteLine("TOSEC is disabled.");
 }
-Console.WriteLine(tosecLists.Count + " TOSEC files loaded - " + GameCounter + " games cataloged");
+Console.WriteLine(romSignatures.Count + " TOSEC files loaded");
 
-if (tosecLists.Count > 0)
+// Summarise signatures
+if (availablePlatforms.Count > 0)
 {
-    Console.WriteLine("TOSEC lists available:");
-    foreach (gaseous_identifier.classes.tosecXML tosecList in tosecLists)
+    availablePlatforms.Sort();
+    Console.WriteLine("Platforms loaded:");
+    foreach (string platform in availablePlatforms)
     {
-        Console.WriteLine(" * " + tosecList.Name);
+        Console.WriteLine(" * " + platform);
     }
 }
 
@@ -216,20 +117,43 @@ foreach (string romFile in romPathContents)
 
     var sha1 = SHA1.Create();
     byte[] sha1HashByte = sha1.ComputeHash(stream);
-    string sha1Hash = BitConverter.ToString(md5HashByte).Replace("-", "").ToLowerInvariant();
+    string sha1Hash = BitConverter.ToString(sha1HashByte).Replace("-", "").ToLowerInvariant();
 
     bool gameFound = false;
-    foreach (gaseous_identifier.classes.tosecXML tosecList in tosecLists)
+    foreach (RomSignatureObject tosecList in romSignatures)
     {
-        foreach (gaseous_identifier.classes.tosecXML.Game gameObject in tosecList.Games)
+        foreach (RomSignatureObject.Game gameObject in tosecList.Games)
         {
-            foreach (gaseous_identifier.classes.tosecXML.Game.Rom romObject in gameObject.Roms)
+            foreach (RomSignatureObject.Game.Rom romObject in gameObject.Roms)
             {
-                if (md5Hash == romObject.Md5)
+                if (romObject.Md5 != null)
                 {
-                    // match
-                    gameFound = true;
+                    if (md5Hash == romObject.Md5.ToLowerInvariant())
+                    {
+                        // match
+                        gameFound = true;
+                    }
+                }
+                if (romObject.Sha1 != null)
+                {
+                    if (md5Hash == romObject.Sha1.ToLowerInvariant())
+                    {
+                        // match
+                        gameFound = true;
+                    }
+                }
+                if (gameFound == true)
+                {
                     Console.WriteLine(romObject.Name);
+
+                    RomSignatureObject.Game gameSignature = gameObject;
+                    gameSignature.Roms.Clear();
+                    gameSignature.Roms.Add(romObject);
+
+                    var jsonSerializerSettings = new JsonSerializerSettings();
+                    jsonSerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                    jsonSerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+                    Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(gameSignature, Newtonsoft.Json.Formatting.Indented, jsonSerializerSettings));
                     break;
                 }
             }
@@ -240,5 +164,20 @@ foreach (string romFile in romPathContents)
     if (gameFound == false)
     {
         Console.WriteLine("File not found in TOSEC library");
+    }
+}
+
+string SearchTitle = "California Games";
+foreach (RomSignatureObject romSignatureObject in romSignatures)
+{
+    foreach (RomSignatureObject.Game gameObject in romSignatureObject.Games)
+    {
+        if (gameObject.Name == SearchTitle)
+        {
+            var jsonSerializerSettings = new JsonSerializerSettings();
+            jsonSerializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+            jsonSerializerSettings.NullValueHandling = NullValueHandling.Ignore;
+            Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(gameObject, Newtonsoft.Json.Formatting.Indented, jsonSerializerSettings));
+        }
     }
 }

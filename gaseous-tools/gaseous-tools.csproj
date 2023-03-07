@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <RootNamespace>gaseous_tools</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MySql.Data" Version="8.0.32" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Remove="Database\" />
+    <None Remove="Database\MySQL\" />
+    <None Remove="Database\MySQL\gaseous-1000.sql" />
+    <None Remove="Database\MySQL\gaseous-1001.sql" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Database\" />
+    <Folder Include="Database\MySQL\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Database\MySQL\gaseous-1000.sql" />
+    <EmbeddedResource Include="Database\MySQL\gaseous-1001.sql" />
+  </ItemGroup>
+</Project>
