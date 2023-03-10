@@ -1,8 +1,4 @@
-﻿CREATE 
-    ALGORITHM = UNDEFINED 
-    DEFINER = `root`@`localhost` 
-    SQL SECURITY DEFINER
-VIEW `view_signatures_games` AS
+﻿CREATE VIEW `view_signatures_games` AS
     SELECT 
         `signatures_games`.`id` AS `id`,
         `signatures_games`.`name` AS `name`,

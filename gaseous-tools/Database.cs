@@ -91,6 +91,7 @@ namespace gaseous_tools
 
 								// apply script
 								sql = "SELECT schema_version FROM schema_version;";
+								dbDict = new Dictionary<string, object>();
 								DataTable SchemaVersion = ExecuteCMD(sql, dbDict);
 								if (SchemaVersion.Rows.Count == 0)
 								{
@@ -106,6 +107,7 @@ namespace gaseous_tools
 										ExecuteCMD(dbScript, dbDict);
 
 										sql = "UPDATE schema_version SET schema_version=@schemaver";
+										dbDict = new Dictionary<string, object>();
 										dbDict.Add("schemaver", i);
 										ExecuteCMD(sql, dbDict);
 									}

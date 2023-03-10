@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using Newtonsoft.Json;
 
 namespace gaseous_tools
@@ -84,9 +85,43 @@ namespace gaseous_tools
             File.WriteAllText(ConfigurationFilePath, configRaw);
         }
 
+        private static string ReadSetting(string SettingName, string DefaultValue)
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT * FROM settings WHERE setting = @settingname";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            dbDict.Add("settingname", SettingName);
+            dbDict.Add("value", DefaultValue);
+
+            DataTable dbResponse = db.ExecuteCMD(sql, dbDict);
+            if (dbResponse.Rows.Count == 0)
+            {
+                // no value with that name stored - respond with the default value
+                return DefaultValue;
+            }
+            else
+            {
+                return (string)dbResponse.Rows[0][0];
+            }
+        }
+
+        private static void SetSetting(string SettingName, string Value)
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "REPLACE INTO settings (setting, value) VALUES (@settingname, @value)";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            dbDict.Add("settingname", SettingName);
+            dbDict.Add("value", Value);
+
+            db.ExecuteCMD(sql, dbDict);
+        }
+
         public class ConfigFile
         {
             public Database DatabaseConfiguration = new Database();
+
+            [JsonIgnore]
+            public Library LibraryConfiguration = new Library();
 
             public class Database
             {
@@ -103,6 +138,45 @@ namespace gaseous_tools
                     {
                         string dbConnString = "server=" + HostName + ";port=" + Port + ";userid=" + UserName + ";password=" + Password + ";database=" + DatabaseName + "";
                         return dbConnString;
+                    }
+                }
+            }
+
+            public class Library
+            {
+                public string LibraryRootDirectory
+                {
+                    get
+                    {
+                        return ReadSetting("LibraryRootDirectory", Path.Combine(Config.ConfigurationPath, "Data"));
+                    }
+                    set
+                    {
+                        SetSetting("LibraryRootDirectory", value);
+                    }
+                }
+
+                public string LibraryUploadDirectory
+                {
+                    get
+                    {
+                        return Path.Combine(LibraryRootDirectory, "Upload");
+                    }
+                }
+
+                public string LibraryImportDirectory
+                {
+                    get
+                    {
+                        return Path.Combine(LibraryRootDirectory, "Import");
+                    }
+                }
+
+                public string LibraryDataDirectory
+                {
+                    get
+                    {
+                        return Path.Combine(LibraryRootDirectory, "Library");
                     }
                 }
             }

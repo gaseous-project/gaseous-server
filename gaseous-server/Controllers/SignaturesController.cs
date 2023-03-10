@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace gaseous_server.Controllers
 {
     [ApiController]
-    [Route("api/[controller]/[action]")]
+    [Route("api/v1/[controller]/[action]")]
     public class SignaturesController : ControllerBase
     {
         /// <summary>

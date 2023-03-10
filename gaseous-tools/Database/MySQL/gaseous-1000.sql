@@ -42,7 +42,7 @@ CREATE TABLE `signatures_games` (
   KEY `ingest_idx` (`name`,`year`,`publisherid`,`systemid`,`country`,`language`) USING BTREE,
   CONSTRAINT `publisher` FOREIGN KEY (`publisherid`) REFERENCES `signatures_publishers` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
   CONSTRAINT `system` FOREIGN KEY (`systemid`) REFERENCES `signatures_platforms` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=1466355 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -58,7 +58,7 @@ CREATE TABLE `signatures_platforms` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `idsignatures_platforms_UNIQUE` (`id`),
   KEY `platforms_idx` (`platform`,`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=1231 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -74,7 +74,7 @@ CREATE TABLE `signatures_publishers` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `id_UNIQUE` (`id`),
   KEY `publisher_idx` (`publisher`,`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=97693 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -104,7 +104,7 @@ CREATE TABLE `signatures_roms` (
   KEY `sha1_idx` (`sha1`) USING BTREE,
   KEY `flags_idx` ((cast(`flags` as char(255) array))),
   CONSTRAINT `gameid` FOREIGN KEY (`gameid`) REFERENCES `signatures_games` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
-) ENGINE=InnoDB AUTO_INCREMENT=3350963 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -131,7 +131,7 @@ CREATE TABLE `signatures_sources` (
   UNIQUE KEY `id_UNIQUE` (`id`),
   KEY `sourcemd5_idx` (`sourcemd5`,`id`) USING BTREE,
   KEY `sourcesha1_idx` (`sourcesha1`,`id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=7573 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 

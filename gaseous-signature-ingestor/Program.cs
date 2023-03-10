@@ -66,6 +66,7 @@ if (Directory.Exists(tosecXML))
 
     tosecXML = Path.GetFullPath(tosecXML);
     string[] tosecPathContents = Directory.GetFiles(tosecXML);
+    Array.Sort(tosecPathContents);
     int lineFileNameLength = 0;
     int lineGameNameLength = 0;
 
@@ -172,10 +173,10 @@ if (Directory.Exists(tosecXML))
                             if (sigDB.Rows.Count == 0)
                             {
                                 // entry not present, insert it
-                                sql = "INSERT INTO signatures_platforms (platform) VALUES (@platform); SELECT LAST_INSERT_ID()";
+                                sql = "INSERT INTO signatures_platforms (platform) VALUES (@platform); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
                                 sigDB = db.ExecuteCMD(sql, dbDict);
 
-                                gameSystem = (int)sigDB.Rows[0][0];
+                                gameSystem = Convert.ToInt32(sigDB.Rows[0][0]);
                             }
                             else
                             {
@@ -194,9 +195,9 @@ if (Directory.Exists(tosecXML))
                             if (sigDB.Rows.Count == 0)
                             {
                                 // entry not present, insert it
-                                sql = "INSERT INTO signatures_publishers (publisher) VALUES (@publisher); SELECT LAST_INSERT_ID()";
+                                sql = "INSERT INTO signatures_publishers (publisher) VALUES (@publisher); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
                                 sigDB = db.ExecuteCMD(sql, dbDict);
-                                gamePublisher = (int)sigDB.Rows[0][0];
+                                gamePublisher = Convert.ToInt32(sigDB.Rows[0][0]);
                             }
                             else
                             {
@@ -215,10 +216,10 @@ if (Directory.Exists(tosecXML))
                             // entry not present, insert it
                             sql = "INSERT INTO signatures_games " +
                                 "(name, description, year, publisherid, demo, systemid, systemvariant, video, country, language, copyright) VALUES " +
-                                "(@name, @description, @year, @publisherid, @demo, @systemid, @systemvariant, @video, @country, @language, @copyright); SELECT LAST_INSERT_ID()";
+                                "(@name, @description, @year, @publisherid, @demo, @systemid, @systemvariant, @video, @country, @language, @copyright); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
                             sigDB = db.ExecuteCMD(sql, dbDict);
 
-                            gameId = (int)sigDB.Rows[0][0];
+                            gameId = Convert.ToInt32(sigDB.Rows[0][0]);
                         }
                         else
                         {
@@ -264,11 +265,11 @@ if (Directory.Exists(tosecXML))
                                 if (sigDB.Rows.Count == 0)
                                 {
                                     // entry not present, insert it
-                                    sql = "INSERT INTO signatures_roms (gameid, name, size, crc, md5, sha1, developmentstatus, flags, romtype, romtypemedia, medialabel) VALUES (@gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel); SELECT LAST_INSERT_ID()";
+                                    sql = "INSERT INTO signatures_roms (gameid, name, size, crc, md5, sha1, developmentstatus, flags, romtype, romtypemedia, medialabel) VALUES (@gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
                                     sigDB = db.ExecuteCMD(sql, dbDict);
 
 
-                                    romId = (int)sigDB.Rows[0][0];
+                                    romId = Convert.ToInt32(sigDB.Rows[0][0]);
                                 }
                                 else
                                 {
