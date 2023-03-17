@@ -41,6 +41,14 @@ namespace gaseous_tools
             }
         }
 
+        public static ConfigFile.Library LibraryConfiguration
+        {
+            get
+            {
+                return _config.LibraryConfiguration;
+            }
+        }
+
         public static string LogPath
         {
             get
@@ -235,6 +243,32 @@ namespace gaseous_tools
                         return Path.Combine(LibraryRootDirectory, "Library");
                     }
                 }
+
+                public string LibrarySignatureImportDirectory
+                {
+                    get
+                    {
+                        return Path.Combine(LibraryRootDirectory, "Signatures");
+                    }
+                }
+
+                public string LibrarySignatureImportDirectory_TOSEC
+                {
+                    get
+                    {
+                        return Path.Combine(LibrarySignatureImportDirectory, "TOSEC");
+                    }
+                }
+
+                public void InitLibrary()
+                {
+                    if (!Directory.Exists(LibraryRootDirectory)) { Directory.CreateDirectory(LibraryRootDirectory); }
+                    if (!Directory.Exists(LibraryUploadDirectory)) { Directory.CreateDirectory(LibraryUploadDirectory); }
+                    if (!Directory.Exists(LibraryImportDirectory)) { Directory.CreateDirectory(LibraryImportDirectory); }
+                    if (!Directory.Exists(LibraryDataDirectory)) { Directory.CreateDirectory(LibraryDataDirectory); }
+                    if (!Directory.Exists(LibrarySignatureImportDirectory)) { Directory.CreateDirectory(LibrarySignatureImportDirectory); }
+                    if (!Directory.Exists(LibrarySignatureImportDirectory_TOSEC)) { Directory.CreateDirectory(LibrarySignatureImportDirectory_TOSEC); }
+                }
             }
 
             public class Logging
@@ -252,4 +286,3 @@ namespace gaseous_tools
         }
     }
 }
-

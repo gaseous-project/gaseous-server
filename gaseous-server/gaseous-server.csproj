@@ -16,23 +16,27 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Controllers\" />
+    <None Remove="Models\" />
+    <None Remove="Models\Signatures.Status" />
+    <None Remove="Classes\" />
+    <None Remove="Classes\SignatureIngestors\" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Controllers\" />
+    <Folder Include="Models\" />
+    <Folder Include="Classes\" />
+    <Folder Include="Classes\SignatureIngestors\" />
+  </ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\gaseous-tools\gaseous-tools.csproj">
       <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
     </ProjectReference>
     <ProjectReference Include="..\gaseous-romsignatureobject\gaseous-romsignatureobject.csproj">
       <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
     </ProjectReference>
-    <ProjectReference Include="..\gaseous-signature-ingestor\gaseous-signature-ingestor.csproj">
+    <ProjectReference Include="..\gaseous-signature-parser\gaseous-signature-parser.csproj">
       <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="Controllers\" />
-    <None Remove="Models\" />
-    <None Remove="Models\Signatures.Status" />
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Controllers\" />
-    <Folder Include="Models\" />
   </ItemGroup>
 </Project>

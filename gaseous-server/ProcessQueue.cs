@@ -52,7 +52,6 @@ namespace gaseous_server
                         _ItemState = QueueItemState.Running;
                         _LastResult = "";
                         _LastError = null;
-                        _ForceExecute = false;
 
                         Logging.Log(Logging.LogType.Information, "Timered Event", "Executing " + _ItemType);
 
@@ -62,6 +61,8 @@ namespace gaseous_server
                             {
                                 case QueueItemType.SignatureIngestor:
                                     Logging.Log(Logging.LogType.Information, "Timered Event", "Starting Signature Ingestor");
+                                    SignatureIngestors.TOSEC.TOSECIngestor tIngest = new SignatureIngestors.TOSEC.TOSECIngestor();
+                                    tIngest.Import(Config.LibraryConfiguration.LibrarySignatureImportDirectory_TOSEC);
                                     break;
 
                                 case QueueItemType.TitleIngestor:
@@ -76,6 +77,7 @@ namespace gaseous_server
                             _LastError = ex;
                         }
 
+                        _ForceExecute = false;
                         _ItemState = QueueItemState.Stopped;
                         _LastFinishTime = DateTime.UtcNow;
                     }
