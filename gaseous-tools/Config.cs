@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using Google.Protobuf.WellKnownTypes;
 using Newtonsoft.Json;
 
 namespace gaseous_tools
@@ -40,6 +41,35 @@ namespace gaseous_tools
             }
         }
 
+        public static string LogPath
+        {
+            get
+            {
+                string logPath = Path.Combine(ConfigurationPath, "Logs");
+                if (!Directory.Exists(logPath)) {
+                    Directory.CreateDirectory(logPath);
+                }
+                return logPath;
+            }
+        }
+
+        public static string LogFilePath
+        {
+            get
+            {
+                string logPathName = Path.Combine(LogPath, "Log " + DateTime.Now.ToUniversalTime().ToString("yyyyMMdd") + ".txt");
+                return logPathName;
+            }
+        }
+
+        public static ConfigFile.Logging LoggingConfiguration
+        {
+            get
+            {
+                return _config.LoggingConfiguration;
+            }
+        }
+
         static Config()
         {
             if (_config == null)
@@ -61,8 +91,7 @@ namespace gaseous_tools
                     // no config file!
                     // use defaults and save
                     _config = new ConfigFile();
-                    string configRaw = Newtonsoft.Json.JsonConvert.SerializeObject(_config, Newtonsoft.Json.Formatting.Indented);
-                    File.WriteAllText(ConfigurationFilePath, configRaw);
+                    UpdateConfig();
                 }
             }
 
@@ -73,7 +102,14 @@ namespace gaseous_tools
         public static void UpdateConfig()
         {
             // save any updates to the configuration
-            string configRaw = Newtonsoft.Json.JsonConvert.SerializeObject(_config, Newtonsoft.Json.Formatting.Indented);
+            Newtonsoft.Json.JsonSerializerSettings serializerSettings = new Newtonsoft.Json.JsonSerializerSettings
+            {
+                NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+                Formatting = Newtonsoft.Json.Formatting.Indented
+            };
+            serializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+            string configRaw = Newtonsoft.Json.JsonConvert.SerializeObject(_config, serializerSettings);
+
             if (File.Exists(ConfigurationFilePath_Backup))
             {
                 File.Delete(ConfigurationFilePath_Backup);
@@ -85,7 +121,7 @@ namespace gaseous_tools
             File.WriteAllText(ConfigurationFilePath, configRaw);
         }
 
-        private static string ReadSetting(string SettingName, string DefaultValue)
+        public static string ReadSetting(string SettingName, string DefaultValue)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM settings WHERE setting = @settingname";
@@ -93,19 +129,28 @@ namespace gaseous_tools
             dbDict.Add("settingname", SettingName);
             dbDict.Add("value", DefaultValue);
 
-            DataTable dbResponse = db.ExecuteCMD(sql, dbDict);
-            if (dbResponse.Rows.Count == 0)
+            try
             {
-                // no value with that name stored - respond with the default value
-                return DefaultValue;
+                Logging.Log(Logging.LogType.Debug, "Database", "Reading setting '" + SettingName + "'");
+                DataTable dbResponse = db.ExecuteCMD(sql, dbDict);
+                if (dbResponse.Rows.Count == 0)
+                {
+                    // no value with that name stored - respond with the default value
+                    return DefaultValue;
+                }
+                else
+                {
+                    return (string)dbResponse.Rows[0][0];
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return (string)dbResponse.Rows[0][0];
+                Logging.Log(Logging.LogType.Critical, "Database", "Failed reading setting " + SettingName, ex);
+                throw;
             }
         }
 
-        private static void SetSetting(string SettingName, string Value)
+        public static void SetSetting(string SettingName, string Value)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "REPLACE INTO settings (setting, value) VALUES (@settingname, @value)";
@@ -113,7 +158,16 @@ namespace gaseous_tools
             dbDict.Add("settingname", SettingName);
             dbDict.Add("value", Value);
 
-            db.ExecuteCMD(sql, dbDict);
+            Logging.Log(Logging.LogType.Debug, "Database", "Storing setting '" + SettingName + "' to value: '" + Value + "'");
+            try
+            {
+                db.ExecuteCMD(sql, dbDict);
+            }
+            catch (Exception ex)
+            {
+                Logging.Log(Logging.LogType.Critical, "Database", "Failed storing setting" + SettingName, ex);
+                throw;
+            }
         }
 
         public class ConfigFile
@@ -122,6 +176,8 @@ namespace gaseous_tools
 
             [JsonIgnore]
             public Library LibraryConfiguration = new Library();
+
+            public Logging LoggingConfiguration = new Logging();
 
             public class Database
             {
@@ -178,6 +234,19 @@ namespace gaseous_tools
                     {
                         return Path.Combine(LibraryRootDirectory, "Library");
                     }
+                }
+            }
+
+            public class Logging
+            {
+                public bool DebugLogging = false;
+
+                public LoggingFormat LogFormat = Logging.LoggingFormat.Json;
+
+                public enum LoggingFormat
+                {
+                    Json,
+                    Text
                 }
             }
         }

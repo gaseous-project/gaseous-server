@@ -64,6 +64,7 @@ namespace gaseous_tools
 					// check if the database exists first - first run must have permissions to create a database
 					string sql = "CREATE DATABASE IF NOT EXISTS `" + Config.DatabaseConfiguration.DatabaseName + "`;";
 					Dictionary<string, object> dbDict = new Dictionary<string, object>();
+					Logging.Log(Logging.LogType.Information, "Database", "Creating database if it doesn't exist");
 					ExecuteCMD(sql, dbDict, 30, "server=" + Config.DatabaseConfiguration.HostName + ";port=" + Config.DatabaseConfiguration.Port + ";userid=" + Config.DatabaseConfiguration.UserName + ";password=" + Config.DatabaseConfiguration.Password);
 
 					// check if schema version table is in place - if not, create the schema version table
@@ -71,8 +72,9 @@ namespace gaseous_tools
 					DataTable SchemaVersionPresent = ExecuteCMD(sql, dbDict);
 					if (SchemaVersionPresent.Rows.Count == 0)
 					{
-						// no schema table present - create it
-						sql = "CREATE TABLE `schema_version` (`schema_version` INT NOT NULL, PRIMARY KEY (`schema_version`)); INSERT INTO `schema_version` (`schema_version`) VALUES (0);";
+                        // no schema table present - create it
+                        Logging.Log(Logging.LogType.Information, "Database", "Schema version table doesn't exist. Creating it.");
+                        sql = "CREATE TABLE `schema_version` (`schema_version` INT NOT NULL, PRIMARY KEY (`schema_version`)); INSERT INTO `schema_version` (`schema_version`) VALUES (0);";
 						ExecuteCMD(sql, dbDict);
 					}
 
@@ -87,7 +89,7 @@ namespace gaseous_tools
 							using (Stream stream = assembly.GetManifestResourceStream(resourceName))
 							using (StreamReader reader = new StreamReader(stream))
 							{
-								dbScript = reader.ReadToEnd();
+                                dbScript = reader.ReadToEnd();
 
 								// apply script
 								sql = "SELECT schema_version FROM schema_version;";
@@ -95,16 +97,19 @@ namespace gaseous_tools
 								DataTable SchemaVersion = ExecuteCMD(sql, dbDict);
 								if (SchemaVersion.Rows.Count == 0)
 								{
-									// something is broken here... where's the table?
-									throw new Exception("schema_version table is missing!");
+                                    // something is broken here... where's the table?
+                                    Logging.Log(Logging.LogType.Critical, "Database", "Schema table missing! This shouldn't happen!");
+                                    throw new Exception("schema_version table is missing!");
 								}
 								else
 								{
 									int SchemaVer = (int)SchemaVersion.Rows[0][0];
-									if (SchemaVer < i)
+                                    Logging.Log(Logging.LogType.Information, "Database", "Schema version is " + SchemaVer);
+                                    if (SchemaVer < i)
 									{
-										// apply schema!
-										ExecuteCMD(dbScript, dbDict);
+                                        // apply schema!
+                                        Logging.Log(Logging.LogType.Information, "Database", "Schema update available - applying");
+                                        ExecuteCMD(dbScript, dbDict);
 
 										sql = "UPDATE schema_version SET schema_version=@schemaver";
 										dbDict = new Dictionary<string, object>();
@@ -115,7 +120,8 @@ namespace gaseous_tools
 							}
 						}
                     }
-					break;
+                    Logging.Log(Logging.LogType.Information, "Database", "Database setup complete");
+                    break;
 			}
 		}
 
@@ -161,6 +167,7 @@ namespace gaseous_tools
 			{
 				DataTable RetTable = new DataTable();
 
+                Logging.Log(Logging.LogType.Debug, "Database", "Connecting to database");
                 MySqlConnection conn = new MySqlConnection(DBConn);
 				conn.Open();
 
@@ -178,12 +185,20 @@ namespace gaseous_tools
 
 				try
 				{
-					RetTable.Load(cmd.ExecuteReader());
+                    Logging.Log(Logging.LogType.Debug, "Database", "Executing sql: '" + SQL + "'");
+					if (Parameters.Count > 0)
+					{
+						string dictValues = string.Join(";", Parameters.Select(x => string.Join("=", x.Key, x.Value)));
+						Logging.Log(Logging.LogType.Debug, "Database", "Parameters: " + dictValues);
+					}
+                    RetTable.Load(cmd.ExecuteReader());
 				} catch (Exception ex) {
+					Logging.Log(Logging.LogType.Critical, "Database", "Error while executing '" + SQL + "'", ex);
 					Trace.WriteLine("Error executing " + SQL);
 					Trace.WriteLine("Full exception: " + ex.ToString());
 				}
 
+				Logging.Log(Logging.LogType.Debug, "Database", "Closing database connection");
 				conn.Close();
 
 				return RetTable;

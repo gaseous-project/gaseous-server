@@ -20,13 +20,14 @@ namespace gaseous_server.Controllers
         /// </summary>
         /// <returns>Number of sources, publishers, games, and rom signatures in the database</returns>
         [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public Models.Signatures_Status Status()
         {
             return new Models.Signatures_Status();
         }
 
         [HttpGet]
-        [Route("api/[controller]/[action]")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
         public List<Models.Signatures_Games> GetSignature(string md5 = "", string sha1 = "")
         {
             if (md5.Length > 0)

@@ -1,4 +1,5 @@
 ﻿using System;
+using gaseous_tools;
 
 namespace gaseous_server
 {
@@ -6,17 +7,18 @@ namespace gaseous_server
     public class TimedHostedService : IHostedService, IDisposable
     {
         private int executionCount = 0;
-        private readonly ILogger<TimedHostedService> _logger;
+        //private readonly ILogger<TimedHostedService> _logger;
         private Timer _timer;
 
-        public TimedHostedService(ILogger<TimedHostedService> logger)
-        {
-            _logger = logger;
-        }
+        //public TimedHostedService(ILogger<TimedHostedService> logger)
+        //{
+        //    _logger = logger;
+        //}
 
         public Task StartAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Timed Hosted Service running.");
+            //_logger.LogInformation("Timed Hosted Service running.");
+            Logging.Log(Logging.LogType.Debug, "Background", "Starting background task monitor");
 
             _timer = new Timer(DoWork, null, TimeSpan.Zero,
                 TimeSpan.FromSeconds(5));
@@ -28,13 +30,20 @@ namespace gaseous_server
         {
             var count = Interlocked.Increment(ref executionCount);
 
-            _logger.LogInformation(
-                "Timed Hosted Service is working. Count: {Count}", count);
+            //_logger.LogInformation(
+            //    "Timed Hosted Service is working. Count: {Count}", count);
+
+            foreach (ProcessQueue.QueueItem qi in ProcessQueue.QueueItems) {
+                if (DateTime.UtcNow > qi.NextRunTime || qi.Force == true) {
+                    qi.Execute();
+                }
+            }
         }
 
         public Task StopAsync(CancellationToken stoppingToken)
         {
-            _logger.LogInformation("Timed Hosted Service is stopping.");
+            //_logger.LogInformation("Timed Hosted Service is stopping.");
+            Logging.Log(Logging.LogType.Debug, "Background", "Stopping background task monitor");
 
             _timer?.Change(Timeout.Infinite, 0);
 
