@@ -49,6 +49,14 @@ namespace gaseous_tools
             }
         }
 
+        public static ConfigFile.IGDB IGDB
+        {
+            get
+            {
+                return _config.IGDBConfiguration;
+            }
+        }
+
         public static string LogPath
         {
             get
@@ -185,6 +193,8 @@ namespace gaseous_tools
             [JsonIgnore]
             public Library LibraryConfiguration = new Library();
 
+            public IGDB IGDBConfiguration = new IGDB();
+
             public Logging LoggingConfiguration = new Logging();
 
             public class Database
@@ -217,14 +227,6 @@ namespace gaseous_tools
                     set
                     {
                         SetSetting("LibraryRootDirectory", value);
-                    }
-                }
-
-                public string LibraryUploadDirectory
-                {
-                    get
-                    {
-                        return Path.Combine(LibraryRootDirectory, "Upload");
                     }
                 }
 
@@ -263,12 +265,17 @@ namespace gaseous_tools
                 public void InitLibrary()
                 {
                     if (!Directory.Exists(LibraryRootDirectory)) { Directory.CreateDirectory(LibraryRootDirectory); }
-                    if (!Directory.Exists(LibraryUploadDirectory)) { Directory.CreateDirectory(LibraryUploadDirectory); }
                     if (!Directory.Exists(LibraryImportDirectory)) { Directory.CreateDirectory(LibraryImportDirectory); }
                     if (!Directory.Exists(LibraryDataDirectory)) { Directory.CreateDirectory(LibraryDataDirectory); }
                     if (!Directory.Exists(LibrarySignatureImportDirectory)) { Directory.CreateDirectory(LibrarySignatureImportDirectory); }
                     if (!Directory.Exists(LibrarySignatureImportDirectory_TOSEC)) { Directory.CreateDirectory(LibrarySignatureImportDirectory_TOSEC); }
                 }
+            }
+
+            public class IGDB
+            {
+                public string ClientId = "";
+                public string Secret = "";
             }
 
             public class Logging

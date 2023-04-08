@@ -31,7 +31,6 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                     string tosecXMLFile = tosecPathContents[i];
 
                     // check tosec file md5
-                    Logging.Log(Logging.LogType.Information, "Signature Ingestor - TOSEC", "Checking file: " + tosecXMLFile);
                     Common.hashObject hashObject = new Common.hashObject(tosecXMLFile);
                     sql = "SELECT * FROM signatures_sources WHERE sourcemd5=@sourcemd5";
                     dbDict = new Dictionary<string, object>();
@@ -40,6 +39,8 @@ namespace gaseous_server.SignatureIngestors.TOSEC
 
                     if (sigDB.Rows.Count == 0)
                     {
+                        Logging.Log(Logging.LogType.Information, "Signature Ingestor - TOSEC", "Importing file: " + tosecXMLFile);
+
                         // start parsing file
                         TosecParser tosecParser = new TosecParser();
                         RomSignatureObject tosecObject = tosecParser.Parse(tosecXMLFile);
@@ -213,6 +214,10 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                                 }
                             }
                         }
+                    }
+                    else
+                    {
+                        Logging.Log(Logging.LogType.Debug, "Signature Ingestor - TOSEC", "Rejecting already imported file: " + tosecXMLFile);
                     }
                 }
             }

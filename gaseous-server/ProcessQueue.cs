@@ -23,7 +23,7 @@ namespace gaseous_server
             private DateTime _LastFinishTime = DateTime.UtcNow;
             private int _Interval = 0;
             private string _LastResult = "";
-            private Exception? _LastError = null;
+            private string? _LastError = null;
             private bool _ForceExecute = false;
 
             public QueueItemType ItemType => _ItemType;
@@ -38,7 +38,7 @@ namespace gaseous_server
             }
             public int Interval => _Interval;
             public string LastResult => _LastResult;
-            public Exception? LastError => _LastError;
+            public string? LastError => _LastError;
             public bool Force => _ForceExecute;
 
             public void Execute()
@@ -67,6 +67,7 @@ namespace gaseous_server
 
                                 case QueueItemType.TitleIngestor:
                                     Logging.Log(Logging.LogType.Information, "Timered Event", "Starting Title Ingestor");
+                                    Classes.ImportGames importGames = new Classes.ImportGames(Config.LibraryConfiguration.LibraryImportDirectory);
                                     break;
                             }
                         }
@@ -74,7 +75,7 @@ namespace gaseous_server
                         {
                             Logging.Log(Logging.LogType.Warning, "Timered Event", "An error occurred", ex);
                             _LastResult = "";
-                            _LastError = ex;
+                            _LastError = ex.ToString();
                         }
 
                         _ForceExecute = false;
