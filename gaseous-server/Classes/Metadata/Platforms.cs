@@ -99,6 +99,12 @@ namespace gaseous_server.Classes.Metadata
                     PlatformLogos.GetPlatformLogo((long)result.PlatformLogo.Id, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(result), "platform_logo.jpg"));
                 }
 
+                // get platform versions
+                foreach (long platformVersionId in result.Versions.Ids)
+                {
+                    PlatformVersions.GetPlatformVersion(platformVersionId, result);
+                }
+
                 return result;
             }
             else

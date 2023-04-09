@@ -28,6 +28,7 @@ namespace gaseous_server.Classes.Metadata
             {
                 using (var s = client.GetStreamAsync("https:" + logo_result.Url))
                 {
+                    if (!Directory.Exists(Path.GetDirectoryName(LogoPath))) { Directory.CreateDirectory(Path.GetDirectoryName(LogoPath)); }
                     using (var fs = new FileStream(LogoPath, FileMode.OpenOrCreate))
                     {
                         s.Result.CopyTo(fs);
