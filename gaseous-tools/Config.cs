@@ -2,6 +2,7 @@
 using System.Data;
 using Google.Protobuf.WellKnownTypes;
 using Newtonsoft.Json;
+using IGDB.Models;
 
 namespace gaseous_tools
 {
@@ -246,6 +247,21 @@ namespace gaseous_tools
                     }
                 }
 
+                public string LibraryMetadataDirectory
+                {
+                    get
+                    {
+                        return Path.Combine(LibraryRootDirectory, "Metadata");
+                    }
+                }
+
+                public string LibraryMetadataDirectory_Platform(Platform platform)
+                {
+                    string MetadataPath = Path.Combine(LibraryMetadataDirectory, platform.Slug);
+                    if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
+                    return MetadataPath;
+                }
+
                 public string LibrarySignatureImportDirectory
                 {
                     get
@@ -267,6 +283,7 @@ namespace gaseous_tools
                     if (!Directory.Exists(LibraryRootDirectory)) { Directory.CreateDirectory(LibraryRootDirectory); }
                     if (!Directory.Exists(LibraryImportDirectory)) { Directory.CreateDirectory(LibraryImportDirectory); }
                     if (!Directory.Exists(LibraryDataDirectory)) { Directory.CreateDirectory(LibraryDataDirectory); }
+                    if (!Directory.Exists(LibraryMetadataDirectory)) { Directory.CreateDirectory(LibraryMetadataDirectory); }
                     if (!Directory.Exists(LibrarySignatureImportDirectory)) { Directory.CreateDirectory(LibrarySignatureImportDirectory); }
                     if (!Directory.Exists(LibrarySignatureImportDirectory_TOSEC)) { Directory.CreateDirectory(LibrarySignatureImportDirectory_TOSEC); }
                 }

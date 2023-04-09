@@ -23,6 +23,7 @@
     <None Remove="Classes\" />
     <None Remove="Classes\SignatureIngestors\" />
     <None Remove="Support\" />
+    <None Remove="Classes\Metadata\" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Controllers\" />
@@ -31,6 +32,7 @@
     <Folder Include="Classes\SignatureIngestors\" />
     <Folder Include="Support\" />
     <Folder Include="wwwroot\" />
+    <Folder Include="Classes\Metadata\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\gaseous-tools\gaseous-tools.csproj">

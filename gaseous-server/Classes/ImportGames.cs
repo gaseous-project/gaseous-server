@@ -94,7 +94,7 @@ namespace gaseous_server.Classes
 
 				//Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(discoveredSignature));
 
-				IGDB.Models.Platform determinedPlatform = Platforms.GetPlatform(discoveredSignature.Flags.IGDBPlatformId);
+				IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(discoveredSignature.Flags.IGDBPlatformId);
             }
 		}
 	}
