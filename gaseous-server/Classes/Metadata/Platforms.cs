@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Data;
+using System.Net;
 using gaseous_tools;
 using IGDB;
 using IGDB.Models;
 
-namespace gaseous_server.Classes
+namespace gaseous_server.Classes.Metadata
 {
 	public class Platforms
 	{
@@ -86,10 +87,29 @@ namespace gaseous_server.Classes
 
             if (platform == null)
             {
+                // get platform metadata
                 var results = await igdb.QueryAsync<Platform>(IGDBClient.Endpoints.Platforms, query: "fields abbreviation,alternative_name,category,checksum,created_at,generation,name,platform_family,platform_logo,slug,summary,updated_at,url,versions,websites; " + WhereClause + ";");
                 var result = results.First();
 
                 DBInsertPlatform(result, true);
+
+                // get platform logo
+                if (result.PlatformLogo != null)
+                {
+                    var logo_results = await igdb.QueryAsync<PlatformLogo>(IGDBClient.Endpoints.PlatformLogos, query: "fields alpha_channel,animated,checksum,height,image_id,url,width; where id = " + result.PlatformLogo.Id + ";");
+                    var logo_result = logo_results.First();
+
+                    using (var client = new HttpClient())
+                    {
+                        using (var s = client.GetStreamAsync("https:" + logo_result.Url))
+                        {
+                            using (var fs = new FileStream(Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(result), "platform_logo.jpg"), FileMode.OpenOrCreate))
+                            {
+                                s.Result.CopyTo(fs);
+                            }
+                        }
+                    }
+                }
 
                 return result;
             }
