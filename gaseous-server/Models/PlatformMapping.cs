@@ -44,6 +44,7 @@ namespace gaseous_server.Models
                         if (Signature.Game != null) { Signature.Game.System = PlatformMapping.IGDBName; }
                     }
                     Signature.Flags.IGDBPlatformId = PlatformMapping.IGDBId;
+                    Signature.Flags.IGDBPlatformName = PlatformMapping.IGDBName;
                 }
             }
         }

@@ -8,7 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MySql.Data" Version="8.0.32.1" />
+    <PackageReference Include="MySql.Data" Version="8.0.33" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="IGDB" Version="2.3.1" />
   </ItemGroup>
@@ -16,9 +16,6 @@
     <None Remove="Database\" />
     <None Remove="Database\MySQL\" />
     <None Remove="Database\MySQL\gaseous-1000.sql" />
-    <None Remove="Database\MySQL\gaseous-1001.sql" />
-    <None Remove="Database\MySQL\gaseous-1002.sql" />
-    <None Remove="Database\MySQL\gaseous-1003.sql" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Database\" />
@@ -26,8 +23,5 @@
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Database\MySQL\gaseous-1000.sql" />
-    <EmbeddedResource Include="Database\MySQL\gaseous-1001.sql" />
-    <EmbeddedResource Include="Database\MySQL\gaseous-1002.sql" />
-    <EmbeddedResource Include="Database\MySQL\gaseous-1003.sql" />
   </ItemGroup>
 </Project>

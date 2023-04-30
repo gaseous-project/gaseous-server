@@ -257,7 +257,14 @@ namespace gaseous_tools
 
                 public string LibraryMetadataDirectory_Platform(Platform platform)
                 {
-                    string MetadataPath = Path.Combine(LibraryMetadataDirectory, platform.Slug);
+                    string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Platforms", platform.Slug);
+                    if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
+                    return MetadataPath;
+                }
+
+                public string LibraryMetadataDirectory_Game(Game game)
+                {
+                    string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Games", game.Slug);
                     if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
                     return MetadataPath;
                 }

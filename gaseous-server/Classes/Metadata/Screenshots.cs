@@ -7,11 +7,11 @@ using static gaseous_tools.Config.ConfigFile;
 
 namespace gaseous_server.Classes.Metadata
 {
-	public class PlatformLogos
+	public class Screenshots
     {
-        const string fieldList = "fields alpha_channel,animated,checksum,height,image_id,url,width;";
+        const string fieldList = "fields alpha_channel,animated,checksum,game,height,image_id,url,width;";
 
-        public PlatformLogos()
+        public Screenshots()
         {
         }
 
@@ -21,7 +21,7 @@ namespace gaseous_server.Classes.Metadata
                     Config.IGDB.Secret
                 );
 
-        public static PlatformLogo? GetPlatformLogo(long? Id, string LogoPath)
+        public static Screenshot? GetScreenshot(long? Id, string LogoPath)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -29,28 +29,28 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<PlatformLogo> RetVal = _GetPlatformLogo(SearchUsing.id, Id, LogoPath);
+                Task<Screenshot> RetVal = _GetScreenshot(SearchUsing.id, Id, LogoPath);
                 return RetVal.Result;
             }
         }
 
-        public static PlatformLogo GetPlatformLogo(string Slug, string LogoPath)
+        public static Screenshot GetScreenshot(string Slug, string LogoPath)
         {
-            Task<PlatformLogo> RetVal = _GetPlatformLogo(SearchUsing.slug, Slug, LogoPath);
+            Task<Screenshot> RetVal = _GetScreenshot(SearchUsing.slug, Slug, LogoPath);
             return RetVal.Result;
         }
 
-        private static async Task<PlatformLogo> _GetPlatformLogo(SearchUsing searchUsing, object searchValue, string LogoPath)
+        private static async Task<Screenshot> _GetScreenshot(SearchUsing searchUsing, object searchValue, string LogoPath)
         {
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
             if (searchUsing == SearchUsing.id)
             {
-                cacheStatus = Storage.GetCacheStatus("PlatformLogo", (long)searchValue);
+                cacheStatus = Storage.GetCacheStatus("Screenshot", (long)searchValue);
             }
             else
             {
-                cacheStatus = Storage.GetCacheStatus("PlatformLogo", (string)searchValue);
+                cacheStatus = Storage.GetCacheStatus("Screenshot", (string)searchValue);
             }
 
             // set up where clause
@@ -67,8 +67,9 @@ namespace gaseous_server.Classes.Metadata
                     throw new Exception("Invalid search type");
             }
 
-            PlatformLogo returnValue = new PlatformLogo();
+            Screenshot returnValue = new Screenshot();
             bool forceImageDownload = false;
+            LogoPath = Path.Combine(LogoPath, "Screenshots");
             switch (cacheStatus)
             {
                 case Storage.CacheStatus.NotPresent:
@@ -82,16 +83,17 @@ namespace gaseous_server.Classes.Metadata
                     forceImageDownload = true;
                     break;  
                 case Storage.CacheStatus.Current:
-                    returnValue = Storage.GetCacheValue<PlatformLogo>(returnValue, "id", (long)searchValue);
+                    returnValue = Storage.GetCacheValue<Screenshot>(returnValue, "id", (long)searchValue);
                     break;
                 default:
                     throw new Exception("How did you get here?");
             }
 
-            if ((!File.Exists(Path.Combine(LogoPath, "Logo.jpg"))) || forceImageDownload == true)
+            if ((!File.Exists(Path.Combine(LogoPath, "Screenshot.jpg"))) || forceImageDownload == true)
             {
-                GetImageFromServer(returnValue.Url, LogoPath, LogoSize.t_thumb);
-                GetImageFromServer(returnValue.Url, LogoPath, LogoSize.t_logo_med);
+                //GetImageFromServer(returnValue.Url, LogoPath, LogoSize.t_thumb, returnValue.ImageId);
+                //GetImageFromServer(returnValue.Url, LogoPath, LogoSize.t_logo_med, returnValue.ImageId);
+                GetImageFromServer(returnValue.Url, LogoPath, LogoSize.t_original, returnValue.ImageId);
             }
 
             return returnValue;
@@ -103,39 +105,45 @@ namespace gaseous_server.Classes.Metadata
             slug
         }
 
-        private static async Task<PlatformLogo> GetObjectFromServer(string WhereClause, string LogoPath)
+        private static async Task<Screenshot> GetObjectFromServer(string WhereClause, string LogoPath)
         {
-            // get PlatformLogo metadata
-            var results = await igdb.QueryAsync<PlatformLogo>(IGDBClient.Endpoints.PlatformLogos, query: fieldList + " " + WhereClause + ";");
+            // get Screenshot metadata
+            var results = await igdb.QueryAsync<Screenshot>(IGDBClient.Endpoints.Screenshots, query: fieldList + " " + WhereClause + ";");
             var result = results.First();
 
-            GetImageFromServer(result.Url, LogoPath, LogoSize.t_thumb);
-            GetImageFromServer(result.Url, LogoPath, LogoSize.t_logo_med);
+            //GetImageFromServer(result.Url, LogoPath, LogoSize.t_thumb, result.ImageId);
+            //GetImageFromServer(result.Url, LogoPath, LogoSize.t_logo_med, result.ImageId);
+            GetImageFromServer(result.Url, LogoPath, LogoSize.t_original, result.ImageId);
 
             return result;
         }
 
-        private static void GetImageFromServer(string Url, string LogoPath, LogoSize logoSize)
+        private static void GetImageFromServer(string Url, string LogoPath, LogoSize logoSize, string ImageId)
         {
             using (var client = new HttpClient())
             {
-                string fileName = "Logo.jpg";
+                string fileName = "Artwork.jpg";
                 string extension = "jpg";
                 switch (logoSize)
                 {
                     case LogoSize.t_thumb:
-                        fileName = "Logo_Thumb";
+                        fileName = "_Thumb";
                         extension = "jpg";
                         break;
                     case LogoSize.t_logo_med:
-                        fileName = "Logo_Medium";
+                        fileName = "_Medium";
+                        extension = "png";
+                        break;
+                    case LogoSize.t_original:
+                        fileName = "_Original";
                         extension = "png";
                         break;
                     default:
-                        fileName = "Logo";
+                        fileName = "Artwork";
                         extension = "jpg";
                         break;
                 }
+                fileName = ImageId + fileName;
                 string imageUrl = Url.Replace(LogoSize.t_thumb.ToString(), logoSize.ToString()).Replace("jpg", extension);
 
                 using (var s = client.GetStreamAsync("https:" + imageUrl))
@@ -152,7 +160,8 @@ namespace gaseous_server.Classes.Metadata
         private enum LogoSize
         {
             t_thumb,
-            t_logo_med
+            t_logo_med,
+            t_original
         }
 	}
 }
