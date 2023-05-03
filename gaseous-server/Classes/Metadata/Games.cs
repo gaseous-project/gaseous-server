@@ -146,8 +146,11 @@ namespace gaseous_server.Classes.Metadata
                     searchBody += "search \"" + SearchString + "\"; ";
                     searchBody += "where platforms = (" + PlatformId + ");";
                     break;
-                case SearchType.where:
+                case SearchType.wherefuzzy:
                     searchBody += "where platforms = (" + PlatformId + ") & name ~ *\"" + SearchString + "\"*;";
+                    break;
+                case SearchType.where:
+                    searchBody += "where platforms = (" + PlatformId + ") & name ~ \"" + SearchString + "\";";
                     break;
             }
             
@@ -160,8 +163,9 @@ namespace gaseous_server.Classes.Metadata
 
         public enum SearchType
         {
-            where,
-            search
+            where = 0,
+            wherefuzzy = 1,
+            search = 2
         }
     }
 }

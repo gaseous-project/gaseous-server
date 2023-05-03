@@ -71,13 +71,19 @@ namespace gaseous_server.Classes.Metadata
             {
                 case Storage.CacheStatus.NotPresent:
                     returnValue = await GetObjectFromServer(WhereClause);
-                    Storage.NewCacheValue(returnValue);
-                    UpdateSubClasses(ParentPlatform, returnValue);
+                    if (returnValue != null)
+                    {
+                        Storage.NewCacheValue(returnValue);
+                        UpdateSubClasses(ParentPlatform, returnValue);
+                    }
                     return returnValue;
                 case Storage.CacheStatus.Expired:
                     returnValue = await GetObjectFromServer(WhereClause);
-                    Storage.NewCacheValue(returnValue, true);
-                    UpdateSubClasses(ParentPlatform, returnValue);
+                    if (returnValue != null)
+                    {
+                        Storage.NewCacheValue(returnValue, true);
+                        UpdateSubClasses(ParentPlatform, returnValue);
+                    }
                     return returnValue;
                 case Storage.CacheStatus.Current:
                     return Storage.GetCacheValue<PlatformVersion>(returnValue, "id", (long)searchValue);
@@ -100,13 +106,20 @@ namespace gaseous_server.Classes.Metadata
             slug
         }
 
-        private static async Task<PlatformVersion> GetObjectFromServer(string WhereClause)
+        private static async Task<PlatformVersion?> GetObjectFromServer(string WhereClause)
         {
             // get PlatformVersion metadata
             var results = await igdb.QueryAsync<PlatformVersion>(IGDBClient.Endpoints.PlatformVersions, query: fieldList + " " + WhereClause + ";");
-            var result = results.First();
+            if (results.Length > 0)
+            {
+                var result = results.First();
 
-            return result;
+                return result;
+            }
+            else
+            {
+                return null;
+            }
         }
     }
 }

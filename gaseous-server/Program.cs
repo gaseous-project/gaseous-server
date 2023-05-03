@@ -53,6 +53,9 @@ app.MapControllers();
 // setup library directories
 Config.LibraryConfiguration.InitLibrary();
 
+// organise library
+gaseous_server.Classes.ImportGame.OrganiseLibrary();
+
 // add background tasks
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.SignatureIngestor, 60));
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.TitleIngestor, 1));

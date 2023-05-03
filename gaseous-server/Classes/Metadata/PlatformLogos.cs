@@ -73,13 +73,19 @@ namespace gaseous_server.Classes.Metadata
             {
                 case Storage.CacheStatus.NotPresent:
                     returnValue = await GetObjectFromServer(WhereClause, LogoPath);
-                    Storage.NewCacheValue(returnValue);
-                    forceImageDownload = true;
+                    if (returnValue != null)
+                    {
+                        Storage.NewCacheValue(returnValue);
+                        forceImageDownload = true;
+                    }
                     break;  
                 case Storage.CacheStatus.Expired:
                     returnValue = await GetObjectFromServer(WhereClause, LogoPath);
-                    Storage.NewCacheValue(returnValue, true);
-                    forceImageDownload = true;
+                    if (returnValue != null)
+                    {
+                        Storage.NewCacheValue(returnValue, true);
+                        forceImageDownload = true;
+                    }
                     break;  
                 case Storage.CacheStatus.Current:
                     returnValue = Storage.GetCacheValue<PlatformLogo>(returnValue, "id", (long)searchValue);
@@ -88,10 +94,13 @@ namespace gaseous_server.Classes.Metadata
                     throw new Exception("How did you get here?");
             }
 
-            if ((!File.Exists(Path.Combine(LogoPath, "Logo.jpg"))) || forceImageDownload == true)
+            if (returnValue != null)
             {
-                GetImageFromServer(returnValue.Url, LogoPath, LogoSize.t_thumb);
-                GetImageFromServer(returnValue.Url, LogoPath, LogoSize.t_logo_med);
+                if ((!File.Exists(Path.Combine(LogoPath, "Logo.jpg"))) || forceImageDownload == true)
+                {
+                    GetImageFromServer(returnValue.Url, LogoPath, LogoSize.t_thumb);
+                    GetImageFromServer(returnValue.Url, LogoPath, LogoSize.t_logo_med);
+                }
             }
 
             return returnValue;
@@ -103,16 +112,23 @@ namespace gaseous_server.Classes.Metadata
             slug
         }
 
-        private static async Task<PlatformLogo> GetObjectFromServer(string WhereClause, string LogoPath)
+        private static async Task<PlatformLogo?> GetObjectFromServer(string WhereClause, string LogoPath)
         {
             // get PlatformLogo metadata
             var results = await igdb.QueryAsync<PlatformLogo>(IGDBClient.Endpoints.PlatformLogos, query: fieldList + " " + WhereClause + ";");
-            var result = results.First();
+            if (results.Length > 0)
+            {
+                var result = results.First();
 
-            GetImageFromServer(result.Url, LogoPath, LogoSize.t_thumb);
-            GetImageFromServer(result.Url, LogoPath, LogoSize.t_logo_med);
+                GetImageFromServer(result.Url, LogoPath, LogoSize.t_thumb);
+                GetImageFromServer(result.Url, LogoPath, LogoSize.t_logo_med);
 
-            return result;
+                return result;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         private static void GetImageFromServer(string Url, string LogoPath, LogoSize logoSize)
