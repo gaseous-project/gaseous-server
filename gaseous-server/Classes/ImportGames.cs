@@ -46,7 +46,7 @@ namespace gaseous_server.Classes
             }
 			else
 			{
-				Logging.Log(Logging.LogType.Information, "Import Game", "Processing item " + GameFileImportPath);
+				//Logging.Log(Logging.LogType.Information, "Import Game", "Processing item " + GameFileImportPath);
 				if (IsDirectory == false)
 				{
 					FileInfo fi = new FileInfo(GameFileImportPath);
@@ -59,7 +59,10 @@ namespace gaseous_server.Classes
 					DataTable importDB = db.ExecuteCMD(sql, dbDict);
 					if ((Int64)importDB.Rows[0]["count"] > 0)
 					{
-						Logging.Log(Logging.LogType.Information, "Import Game", "  " + GameFileImportPath + " already in database - skipping");
+						if (!GameFileImportPath.StartsWith(Config.LibraryConfiguration.LibraryImportDirectory))
+						{
+							Logging.Log(Logging.LogType.Information, "Import Game", "  " + GameFileImportPath + " already in database - skipping");
+						}
 					}
 					else
 					{
