@@ -69,6 +69,11 @@ namespace gaseous_server
                                     Logging.Log(Logging.LogType.Information, "Timered Event", "Starting Title Ingestor");
                                     Classes.ImportGames importGames = new Classes.ImportGames(Config.LibraryConfiguration.LibraryImportDirectory);
                                     break;
+
+                                case QueueItemType.MetadataRefresh:
+                                    Logging.Log(Logging.LogType.Information, "Timered Event", "Starting Metadata Refresher");
+                                    Classes.MetadataManagement.RefreshMetadata();
+                                    break;
                             }
                         }
                         catch (Exception ex)
@@ -95,7 +100,8 @@ namespace gaseous_server
         {
             NotConfigured,
             SignatureIngestor,
-            TitleIngestor
+            TitleIngestor,
+            MetadataRefresh
         }
 
         public enum QueueItemState

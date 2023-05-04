@@ -20,7 +20,7 @@ namespace gaseous_server.Classes.Metadata
                     Config.IGDB.Secret
                 );
 
-        public static Game? GetGame(long Id)
+        public static Game? GetGame(long Id, bool followSubGames)
         {
             if (Id == 0)
             {
@@ -28,18 +28,18 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<Game> RetVal = _GetGame(SearchUsing.id, Id);
+                Task<Game> RetVal = _GetGame(SearchUsing.id, Id, followSubGames);
                 return RetVal.Result;
             }
         }
 
-        public static Game GetGame(string Slug)
+        public static Game GetGame(string Slug, bool followSubGames)
         {
-            Task<Game> RetVal = _GetGame(SearchUsing.slug, Slug);
+            Task<Game> RetVal = _GetGame(SearchUsing.slug, Slug, followSubGames);
             return RetVal.Result;
         }
 
-        private static async Task<Game> _GetGame(SearchUsing searchUsing, object searchValue)
+        private static async Task<Game> _GetGame(SearchUsing searchUsing, object searchValue, bool followSubGames = false)
         {
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
@@ -72,12 +72,12 @@ namespace gaseous_server.Classes.Metadata
                 case Storage.CacheStatus.NotPresent:
                     returnValue = await GetObjectFromServer(WhereClause);
                     Storage.NewCacheValue(returnValue);
-                    UpdateSubClasses(returnValue);
+                    UpdateSubClasses(returnValue, followSubGames);
                     return returnValue;
                 case Storage.CacheStatus.Expired:
                     returnValue = await GetObjectFromServer(WhereClause);
                     Storage.NewCacheValue(returnValue, true);
-                    UpdateSubClasses(returnValue);
+                    UpdateSubClasses(returnValue, followSubGames);
                     return returnValue;
                 case Storage.CacheStatus.Current:
                     return Storage.GetCacheValue<Game>(returnValue, "id", (long)searchValue);
@@ -86,13 +86,29 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        private static void UpdateSubClasses(Game Game)
+        private static void UpdateSubClasses(Game Game, bool followSubGames)
         {
             if (Game.Artworks != null)
             {
                 foreach (long ArtworkId in Game.Artworks.Ids)
                 {
                     Artwork GameArtwork = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
+                }
+            }
+            if (followSubGames)
+            {
+                List<long> gamesToFetch = new List<long>();
+                if (Game.Bundles != null) { gamesToFetch.AddRange(Game.Bundles.Ids); }
+                if (Game.Dlcs != null) { gamesToFetch.AddRange(Game.Dlcs.Ids); }
+                if (Game.Expansions != null) { gamesToFetch.AddRange(Game.Expansions.Ids); }
+                if (Game.ParentGame != null) { gamesToFetch.Add((long)Game.ParentGame.Id); }
+                if (Game.SimilarGames != null) { gamesToFetch.AddRange(Game.SimilarGames.Ids); }
+                if (Game.StandaloneExpansions != null) { gamesToFetch.AddRange(Game.StandaloneExpansions.Ids); }
+                if (Game.VersionParent != null) { gamesToFetch.Add((long)Game.VersionParent.Id); }
+
+                foreach (long gameId in gamesToFetch)
+                {
+                    Game relatedGame = GetGame(gameId, false);
                 }
             }
             if (Game.Cover != null)

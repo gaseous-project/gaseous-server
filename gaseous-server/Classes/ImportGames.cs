@@ -134,7 +134,7 @@ namespace gaseous_server.Classes
 							if (games.Length == 1)
 							{
 								// exact match!
-								determinedGame = Metadata.Games.GetGame((long)games[0].Id);
+								determinedGame = Metadata.Games.GetGame((long)games[0].Id, false);
                                 Logging.Log(Logging.LogType.Information, "Import Game", "  IGDB game: " + determinedGame.Name);
 								break;
 							}
@@ -195,7 +195,7 @@ namespace gaseous_server.Classes
 
 			// get metadata
 			IGDB.Models.Platform platform = gaseous_server.Classes.Metadata.Platforms.GetPlatform(rom.PlatformId);
-			IGDB.Models.Game game = gaseous_server.Classes.Metadata.Games.GetGame(rom.GameId);
+			IGDB.Models.Game game = gaseous_server.Classes.Metadata.Games.GetGame(rom.GameId, false);
 
 			// build path
 			string platformSlug = "Unknown Platform";
@@ -262,7 +262,9 @@ namespace gaseous_server.Classes
 
 		public static void OrganiseLibrary()
 		{
-			// move rom files to their new location
+            Logging.Log(Logging.LogType.Information, "Organise Library", "Starting library organisation");
+
+            // move rom files to their new location
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM games_roms";
             DataTable romDT = db.ExecuteCMD(sql);
@@ -271,13 +273,16 @@ namespace gaseous_server.Classes
 			{
 				foreach (DataRow dr in romDT.Rows)
 				{
-					long RomId = (long)dr["id"];
+					Logging.Log(Logging.LogType.Information, "Organise Library", "Processing ROM " + dr["name"]);
+                    long RomId = (long)dr["id"];
 					MoveGameFile(RomId);
 				}
 			}
 
 			// clean up empty directories
 			processDirectory(Config.LibraryConfiguration.LibraryDataDirectory);
+
+            Logging.Log(Logging.LogType.Information, "Organise Library", "Finsihed library organisation");
         }
 
         private static void processDirectory(string startLocation)

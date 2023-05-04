@@ -44,7 +44,7 @@ namespace gaseous_server.Classes.Metadata
 			}
 			else
 			{
-				DateTime CacheExpiryTime = DateTime.UtcNow.AddHours(-24);
+				DateTime CacheExpiryTime = DateTime.UtcNow.AddHours(-168);
 				if ((DateTime)dt.Rows[0]["lastUpdated"] < CacheExpiryTime)
 				{
 					return CacheStatus.Expired;
