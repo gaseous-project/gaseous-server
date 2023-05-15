@@ -6,7 +6,7 @@ namespace gaseous_server.Classes
 {
 	public class MetadataManagement
 	{
-		public static void RefreshMetadata()
+		public static void RefreshMetadata(bool forceRefresh = false)
 		{
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT id, `name` FROM game;";
@@ -15,7 +15,7 @@ namespace gaseous_server.Classes
 			foreach (DataRow dr in dt.Rows)
 			{
 				Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ")");
-				Metadata.Games.GetGame((long)dr["id"], true);
+				Metadata.Games.GetGame((long)dr["id"], true, forceRefresh);
 			}
         }
 	}

@@ -3,6 +3,7 @@ using System.Data;
 using System.Threading.Tasks;
 using gaseous_tools;
 using Org.BouncyCastle.Utilities.IO.Pem;
+using static gaseous_server.Classes.Metadata.Games;
 
 namespace gaseous_server.Classes
 {
@@ -99,24 +100,48 @@ namespace gaseous_server.Classes
 						}
 						else
 						{
-							// no signature match found - try alternate methods
-							Models.Signatures_Games.GameItem gi = new Models.Signatures_Games.GameItem();
-							Models.Signatures_Games.RomItem ri = new Models.Signatures_Games.RomItem();
+                            // no signature match found - try name search
+                            signatures = sc.GetByTosecName(fi.Name);
 
-							discoveredSignature.Game = gi;
-							discoveredSignature.Rom = ri;
+							if (signatures.Count == 1)
+							{
+								// only 1 signature found!
+								discoveredSignature = signatures.ElementAt(0);
+								gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
+							}
+							else if (signatures.Count > 1)
+							{
+								// more than one signature found - find one with highest score
+								foreach (Models.Signatures_Games Sig in signatures)
+								{
+									if (Sig.Score > discoveredSignature.Score)
+									{
+										discoveredSignature = Sig;
+										gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
+									}
+								}
+							}
+							else
+							{
+								// still no search - try alternate method
+								Models.Signatures_Games.GameItem gi = new Models.Signatures_Games.GameItem();
+								Models.Signatures_Games.RomItem ri = new Models.Signatures_Games.RomItem();
 
-							// game title is the file name without the extension or path
-							gi.Name = Path.GetFileNameWithoutExtension(GameFileImportPath);
+								discoveredSignature.Game = gi;
+								discoveredSignature.Rom = ri;
 
-							// guess platform
-							gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, true);
+								// game title is the file name without the extension or path
+								gi.Name = Path.GetFileNameWithoutExtension(GameFileImportPath);
 
-							// get rom data
-							ri.Name = Path.GetFileName(GameFileImportPath);
-							ri.Md5 = hash.md5hash;
-							ri.Sha1 = hash.sha1hash;
-							ri.Size = fi.Length;
+								// guess platform
+								gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, true);
+
+								// get rom data
+								ri.Name = Path.GetFileName(GameFileImportPath);
+								ri.Md5 = hash.md5hash;
+								ri.Sha1 = hash.sha1hash;
+								ri.Size = fi.Length;
+							}
 						}
 
                         Logging.Log(Logging.LogType.Information, "Import Game", "  Determined import file as: " + discoveredSignature.Game.Name + " (" + discoveredSignature.Game.Year + ") " + discoveredSignature.Game.System);
@@ -125,6 +150,13 @@ namespace gaseous_server.Classes
 						if (determinedPlatform == null)
 						{
 							determinedPlatform = new IGDB.Models.Platform();
+						}
+
+						// remove string ending ", The" if present
+						if (discoveredSignature.Game.Name.Contains(", The"))
+						{
+                            Logging.Log(Logging.LogType.Information, "Import Game", "  Removing ', The' from end of game title for search");
+                            discoveredSignature.Game.Name.Replace(", The", "");
 						}
 
 						// search discovered game - case insensitive exact match first
@@ -137,7 +169,7 @@ namespace gaseous_server.Classes
 							if (games.Length == 1)
 							{
 								// exact match!
-								determinedGame = Metadata.Games.GetGame((long)games[0].Id, false);
+								determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false);
                                 Logging.Log(Logging.LogType.Information, "Import Game", "  IGDB game: " + determinedGame.Name);
 								break;
 							}
@@ -198,7 +230,7 @@ namespace gaseous_server.Classes
 
 			// get metadata
 			IGDB.Models.Platform platform = gaseous_server.Classes.Metadata.Platforms.GetPlatform(rom.PlatformId);
-			IGDB.Models.Game game = gaseous_server.Classes.Metadata.Games.GetGame(rom.GameId, false);
+			IGDB.Models.Game game = gaseous_server.Classes.Metadata.Games.GetGame(rom.GameId, false, false);
 
 			// build path
 			string platformSlug = "Unknown Platform";

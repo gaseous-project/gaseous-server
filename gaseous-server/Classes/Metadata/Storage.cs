@@ -244,6 +244,15 @@ namespace gaseous_server.Classes.Metadata
 									case "[igdb.models.gamestatus":
                                         property.SetValue(EndpointType, (GameStatus)dataRow[property.Name]);
                                         break;
+									case "[igdb.models.ageratingcategory":
+                                        property.SetValue(EndpointType, (AgeRatingCategory)dataRow[property.Name]);
+                                        break;
+                                    case "[igdb.models.ageratingtitle":
+                                        property.SetValue(EndpointType, (AgeRatingTitle)dataRow[property.Name]);
+                                        break;
+                                    case "[igdb.models.externalcategory":
+                                        property.SetValue(EndpointType, (ExternalCategory)dataRow[property.Name]);
+                                        break;
                                     default:
 										property.SetValue(EndpointType, dataRow[property.Name]);
 										break;

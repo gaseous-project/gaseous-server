@@ -20,7 +20,7 @@ namespace gaseous_server.Classes.Metadata
                     Config.IGDB.Secret
                 );
 
-        public static Game? GetGame(long Id, bool followSubGames)
+        public static Game? GetGame(long Id, bool followSubGames, bool forceRefresh)
         {
             if (Id == 0)
             {
@@ -28,18 +28,18 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<Game> RetVal = _GetGame(SearchUsing.id, Id, followSubGames);
+                Task<Game> RetVal = _GetGame(SearchUsing.id, Id, followSubGames, forceRefresh);
                 return RetVal.Result;
             }
         }
 
-        public static Game GetGame(string Slug, bool followSubGames)
+        public static Game GetGame(string Slug, bool followSubGames, bool forceRefresh)
         {
-            Task<Game> RetVal = _GetGame(SearchUsing.slug, Slug, followSubGames);
+            Task<Game> RetVal = _GetGame(SearchUsing.slug, Slug, followSubGames, forceRefresh);
             return RetVal.Result;
         }
 
-        private static async Task<Game> _GetGame(SearchUsing searchUsing, object searchValue, bool followSubGames = false)
+        private static async Task<Game> _GetGame(SearchUsing searchUsing, object searchValue, bool followSubGames = false, bool forceRefresh = false)
         {
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
@@ -50,6 +50,11 @@ namespace gaseous_server.Classes.Metadata
             else
             {
                 cacheStatus = Storage.GetCacheStatus("Game", (string)searchValue);
+            }
+
+            if (forceRefresh == true)
+            {
+                if (cacheStatus == Storage.CacheStatus.Current) { cacheStatus = Storage.CacheStatus.Expired; }
             }
 
             // set up where clause
@@ -88,6 +93,20 @@ namespace gaseous_server.Classes.Metadata
 
         private static void UpdateSubClasses(Game Game, bool followSubGames)
         {
+            if (Game.AgeRatings != null)
+            {
+                foreach (long AgeRatingId in Game.AgeRatings.Ids)
+                {
+                    AgeRating GameAgeRating = AgeRatings.GetAgeRatings(AgeRatingId);
+                }
+            }
+            if (Game.AlternativeNames != null)
+            {
+                foreach (long AlternativeNameId in Game.AlternativeNames.Ids)
+                {
+                    AlternativeName GameAlternativeName = AlternativeNames.GetAlternativeNames(AlternativeNameId);
+                }
+            }
             if (Game.Artworks != null)
             {
                 foreach (long ArtworkId in Game.Artworks.Ids)
@@ -102,18 +121,47 @@ namespace gaseous_server.Classes.Metadata
                 if (Game.Dlcs != null) { gamesToFetch.AddRange(Game.Dlcs.Ids); }
                 if (Game.Expansions != null) { gamesToFetch.AddRange(Game.Expansions.Ids); }
                 if (Game.ParentGame != null) { gamesToFetch.Add((long)Game.ParentGame.Id); }
-                if (Game.SimilarGames != null) { gamesToFetch.AddRange(Game.SimilarGames.Ids); }
+                //if (Game.SimilarGames != null) { gamesToFetch.AddRange(Game.SimilarGames.Ids); }
                 if (Game.StandaloneExpansions != null) { gamesToFetch.AddRange(Game.StandaloneExpansions.Ids); }
                 if (Game.VersionParent != null) { gamesToFetch.Add((long)Game.VersionParent.Id); }
 
                 foreach (long gameId in gamesToFetch)
                 {
-                    Game relatedGame = GetGame(gameId, false);
+                    Game relatedGame = GetGame(gameId, false, false);
                 }
+            }
+            if (Game.Collection != null)
+            {
+                Collection GameCollection = Collections.GetCollections(Game.Collection.Id);
             }
             if (Game.Cover != null)
             {
                 Cover GameCover = Covers.GetCover(Game.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
+            }
+            if (Game.ExternalGames != null)
+            {
+                foreach (long ExternalGameId in Game.ExternalGames.Ids)
+                {
+                    ExternalGame GameExternalGame = ExternalGames.GetExternalGames(ExternalGameId);
+                }
+            }
+            if (Game.Franchise != null)
+            {
+                Franchise GameFranchise = Franchises.GetFranchises(Game.Franchise.Id);
+            }
+            if (Game.Franchises != null)
+            {
+                foreach (long FranchiseId in Game.Franchises.Ids)
+                {
+                    Franchise GameFranchise = Franchises.GetFranchises(FranchiseId);
+                }
+            }
+            if (Game.Genres != null)
+            {
+                foreach (long GenreId in Game.Genres.Ids)
+                {
+                    Genre GameGenre = Genres.GetGenres(GenreId);
+                }
             }
             if (Game.Platforms != null)
             {
@@ -127,6 +175,13 @@ namespace gaseous_server.Classes.Metadata
                 foreach (long ScreenshotId in Game.Screenshots.Ids)
                 {
                     Screenshot GameScreenshot = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
+                }
+            }
+            if (Game.Videos != null)
+            {
+                foreach (long GameVideoId in Game.Videos.Ids)
+                {
+                    GameVideo gameVideo = GamesVideos.GetGame_Videos(GameVideoId);
                 }
             }
         }

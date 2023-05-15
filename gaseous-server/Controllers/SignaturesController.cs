@@ -39,6 +39,19 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public List<Models.Signatures_Games> GetByTosecName(string TosecName = "")
+        {
+            if (TosecName.Length > 0)
+            {
+                return _GetSignature("signatures_roms.name = @searchstring", TosecName);
+            } else
+            {
+                return null;
+            }
+        }
+
         private List<Models.Signatures_Games> _GetSignature(string sqlWhere, string searchString)
         {
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
