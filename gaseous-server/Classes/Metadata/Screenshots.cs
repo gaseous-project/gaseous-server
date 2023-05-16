@@ -135,7 +135,7 @@ namespace gaseous_server.Classes.Metadata
                         extension = "png";
                         break;
                     case LogoSize.t_original:
-                        fileName = "_Original";
+                        fileName = "";
                         extension = "png";
                         break;
                     default:
