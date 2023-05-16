@@ -35,6 +35,7 @@ namespace gaseous_server.Models
 
         public static void GetIGDBPlatformMapping(ref Models.Signatures_Games Signature, FileInfo RomFileInfo, bool SetSystemName)
         {
+            bool PlatformFound = false;
             foreach (Models.PlatformMapping.PlatformMapItem PlatformMapping in Models.PlatformMapping.PlatformMap)
             {
                 if (PlatformMapping.KnownFileExtensions.Contains(RomFileInfo.Extension, StringComparer.OrdinalIgnoreCase))
@@ -45,6 +46,28 @@ namespace gaseous_server.Models
                     }
                     Signature.Flags.IGDBPlatformId = PlatformMapping.IGDBId;
                     Signature.Flags.IGDBPlatformName = PlatformMapping.IGDBName;
+
+                    PlatformFound = true;
+                    break;
+                }
+            }
+
+            if (PlatformFound == false)
+            {
+                foreach (Models.PlatformMapping.PlatformMapItem PlatformMapping in Models.PlatformMapping.PlatformMap)
+                {
+                    if (PlatformMapping.AlternateNames.Contains(Signature.Game.System, StringComparer.OrdinalIgnoreCase))
+                    {
+                        if (SetSystemName == true)
+                        {
+                            if (Signature.Game != null) { Signature.Game.System = PlatformMapping.IGDBName; }
+                        }
+                        Signature.Flags.IGDBPlatformId = PlatformMapping.IGDBId;
+                        Signature.Flags.IGDBPlatformName = PlatformMapping.IGDBName;
+
+                        PlatformFound = true;
+                        break;
+                    }
                 }
             }
         }

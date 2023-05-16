@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using gaseous_tools;
 using Org.BouncyCastle.Utilities.IO.Pem;
@@ -133,6 +134,15 @@ namespace gaseous_server.Classes
 								// game title is the file name without the extension or path
 								gi.Name = Path.GetFileNameWithoutExtension(GameFileImportPath);
 
+								// remove everything after brackets - leaving (hopefully) only the name
+								if (gi.Name.Contains("("))
+								{
+									gi.Name = gi.Name.Substring(0, gi.Name.IndexOf("("));
+								}
+
+								// remove special characters like dashes
+								gi.Name = gi.Name.Replace("-", "");
+
 								// guess platform
 								gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, true);
 
@@ -152,15 +162,14 @@ namespace gaseous_server.Classes
 							determinedPlatform = new IGDB.Models.Platform();
 						}
 
-						// remove string ending ", The" if present
-						if (discoveredSignature.Game.Name.Contains(", The"))
-						{
-                            Logging.Log(Logging.LogType.Information, "Import Game", "  Removing ', The' from end of game title for search");
-                            discoveredSignature.Game.Name.Replace(", The", "");
-						}
-
 						// search discovered game - case insensitive exact match first
 						IGDB.Models.Game determinedGame = new IGDB.Models.Game();
+
+						// remove version numbers from name
+						discoveredSignature.Game.Name = Regex.Replace(discoveredSignature.Game.Name, @"v(\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+                        discoveredSignature.Game.Name = Regex.Replace(discoveredSignature.Game.Name, @"Rev (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+
+                        Logging.Log(Logging.LogType.Information, "Import Game", "  Searching for title: " + discoveredSignature.Game.Name);
 
 						foreach (Metadata.Games.SearchType searchType in Enum.GetValues(typeof(Metadata.Games.SearchType)))
 						{
@@ -172,7 +181,13 @@ namespace gaseous_server.Classes
 								determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false);
                                 Logging.Log(Logging.LogType.Information, "Import Game", "  IGDB game: " + determinedGame.Name);
 								break;
-							}
+							} else if (games.Length > 0)
+							{
+								Logging.Log(Logging.LogType.Information, "Import Game", "  " + games.Length + " search results found");
+                            } else
+							{
+                                Logging.Log(Logging.LogType.Information, "Import Game", "  No search results found");
+                            }
 						}
 						if (determinedGame == null)
 						{
