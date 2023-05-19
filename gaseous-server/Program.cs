@@ -8,6 +8,9 @@ Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server");
 Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 db.InitDB();
 
+// load app settings
+Config.InitSettings();
+
 // set initial values
 Guid APIKey = Guid.NewGuid();
 if (Config.ReadSetting("API Key", "Test API Key") == "Test API Key")

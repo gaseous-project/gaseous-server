@@ -138,32 +138,62 @@ namespace gaseous_tools
             File.WriteAllText(ConfigurationFilePath, configRaw);
         }
 
-        public static string ReadSetting(string SettingName, string DefaultValue)
+        private static Dictionary<string, string> AppSettings = new Dictionary<string, string>();
+
+        public static void InitSettings()
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM settings WHERE setting = @settingname";
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
-            dbDict.Add("settingname", SettingName);
-            dbDict.Add("value", DefaultValue);
+            string sql = "SELECT * FROM settings";
 
-            try
+            DataTable dbResponse = db.ExecuteCMD(sql);
+            foreach (DataRow dataRow in dbResponse.Rows)
             {
-                Logging.Log(Logging.LogType.Debug, "Database", "Reading setting '" + SettingName + "'");
-                DataTable dbResponse = db.ExecuteCMD(sql, dbDict);
-                if (dbResponse.Rows.Count == 0)
+                if (AppSettings.ContainsKey((string)dataRow["setting"]))
                 {
-                    // no value with that name stored - respond with the default value
-                    return DefaultValue;
+                    AppSettings[(string)dataRow["setting"]] = (string)dataRow["value"];
                 }
                 else
                 {
-                    return (string)dbResponse.Rows[0][0];
+                    AppSettings.Add((string)dataRow["setting"], (string)dataRow["value"]);
                 }
             }
-            catch (Exception ex)
+        }
+
+        public static string ReadSetting(string SettingName, string DefaultValue)
+        {
+            if (AppSettings.ContainsKey(SettingName))
             {
-                Logging.Log(Logging.LogType.Critical, "Database", "Failed reading setting " + SettingName, ex);
-                throw;
+                return AppSettings[SettingName];
+            }
+            else
+            {
+                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                string sql = "SELECT * FROM settings WHERE setting = @settingname";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>();
+                dbDict.Add("settingname", SettingName);
+                dbDict.Add("value", DefaultValue);
+
+                try
+                {
+                    Logging.Log(Logging.LogType.Debug, "Database", "Reading setting '" + SettingName + "'");
+                    DataTable dbResponse = db.ExecuteCMD(sql, dbDict);
+                    if (dbResponse.Rows.Count == 0)
+                    {
+                        // no value with that name stored - respond with the default value
+                        SetSetting(SettingName, DefaultValue);
+                        return DefaultValue;
+                    }
+                    else
+                    {
+                        AppSettings.Add(SettingName, (string)dbResponse.Rows[0][0]);
+                        return (string)dbResponse.Rows[0][0];
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Log(Logging.LogType.Critical, "Database", "Failed reading setting " + SettingName, ex);
+                    throw;
+                }
             }
         }
 
@@ -179,6 +209,15 @@ namespace gaseous_tools
             try
             {
                 db.ExecuteCMD(sql, dbDict);
+
+                if (AppSettings.ContainsKey(SettingName))
+                {
+                    AppSettings[SettingName] = Value;
+                }
+                else
+                {
+                    AppSettings.Add(SettingName, Value);
+                }
             }
             catch (Exception ex)
             {
