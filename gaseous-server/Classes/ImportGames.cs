@@ -42,9 +42,13 @@ namespace gaseous_server.Classes
 			string sql = "";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 
-            if (String.Equals(Path.GetFileName(GameFileImportPath),".DS_STORE", StringComparison.OrdinalIgnoreCase))
+			string[] SkippableFiles = {
+				".DS_STORE",
+				"desktop.ini"
+			};
+            if (SkippableFiles.Contains<string>(Path.GetFileName(GameFileImportPath), StringComparer.OrdinalIgnoreCase))
 			{ 
-                Logging.Log(Logging.LogType.Information, "Import Game", "Skipping item " + GameFileImportPath);
+                Logging.Log(Logging.LogType.Debug, "Import Game", "Skipping item " + GameFileImportPath);
             }
 			else
 			{
@@ -63,7 +67,7 @@ namespace gaseous_server.Classes
 					{
 						if (!GameFileImportPath.StartsWith(Config.LibraryConfiguration.LibraryImportDirectory))
 						{
-							Logging.Log(Logging.LogType.Information, "Import Game", "  " + GameFileImportPath + " already in database - skipping");
+							Logging.Log(Logging.LogType.Warning, "Import Game", "  " + GameFileImportPath + " already in database - skipping");
 						}
 					}
 					else
