@@ -187,18 +187,30 @@ namespace gaseous_server.Classes.Metadata
 
 										switch (subObjectTypeName)
 										{
-											case "platformfamily":
-                                                objectToStore = new IdentityOrValue<PlatformFamily>(id: (long)(int)dataRow[property.Name]);
+                                            case "collection":
+                                                objectToStore = new IdentityOrValue<Collection>(id: (long)dataRow[property.Name]);
+                                                break;
+                                            case "cover":
+                                                objectToStore = new IdentityOrValue<Cover>(id: (long)dataRow[property.Name]);
+                                                break;
+                                            case "franchise":
+                                                objectToStore = new IdentityOrValue<Franchise>(id: (long)dataRow[property.Name]);
+                                                break;
+                                            case "game":
+                                                objectToStore = new IdentityOrValue<Game>(id: (long)dataRow[property.Name]);
+                                                break;
+                                            case "platformfamily":
+                                                objectToStore = new IdentityOrValue<PlatformFamily>(id: (long)dataRow[property.Name]);
                                                 break;
                                             case "platformlogo":
-												objectToStore = new IdentityOrValue<PlatformLogo>(id: (long)(int)dataRow[property.Name]);
+												objectToStore = new IdentityOrValue<PlatformLogo>(id: (long)dataRow[property.Name]);
 												break;
                                             case "platformversioncompany":
-                                                objectToStore = new IdentityOrValue<PlatformVersionCompany>(id: (long)(int)dataRow[property.Name]);
+                                                objectToStore = new IdentityOrValue<PlatformVersionCompany>(id: (long)dataRow[property.Name]);
                                                 break;
                                         }
 
-										if (objectToStore != null)
+                                        if (objectToStore != null)
 										{
 											property.SetValue(EndpointType, objectToStore);
 										}
@@ -211,7 +223,46 @@ namespace gaseous_server.Classes.Metadata
 
 										switch (subObjectTypeName)
 										{
-											case "platformversion":
+                                            case "agerating":
+                                                objectToStore = new IdentitiesOrValues<AgeRating>(ids: fromJsonObject);
+                                                break;
+                                            case "alternativename":
+                                                objectToStore = new IdentitiesOrValues<AlternativeName>(ids: fromJsonObject);
+                                                break;
+                                            case "artworks":
+                                                objectToStore = new IdentitiesOrValues<Artwork>(ids: fromJsonObject);
+                                                break;
+                                            case "game":
+                                                objectToStore = new IdentitiesOrValues<Game>(ids: fromJsonObject);
+                                                break;
+                                            case "externalgame":
+                                                objectToStore = new IdentitiesOrValues<ExternalGame>(ids: fromJsonObject);
+                                                break;
+                                            case "franchise":
+                                                objectToStore = new IdentitiesOrValues<Franchise>(ids: fromJsonObject);
+                                                break;
+                                            case "gameengine":
+                                                objectToStore = new IdentitiesOrValues<GameEngine>(ids: fromJsonObject);
+                                                break;
+                                            case "gamemode":
+                                                objectToStore = new IdentitiesOrValues<GameMode>(ids: fromJsonObject);
+                                                break;
+                                            case "gamevideo":
+                                                objectToStore = new IdentitiesOrValues<GameVideo>(ids: fromJsonObject);
+                                                break;
+                                            case "genre":
+                                                objectToStore = new IdentitiesOrValues<Genre>(ids: fromJsonObject);
+                                                break;
+                                            case "involvedcompany":
+                                                objectToStore = new IdentitiesOrValues<InvolvedCompany>(ids: fromJsonObject);
+                                                break;
+                                            case "multiplayermode":
+                                                objectToStore = new IdentitiesOrValues<MultiplayerMode>(ids: fromJsonObject);
+                                                break;
+                                            case "platform":
+                                                objectToStore = new IdentitiesOrValues<Platform>(ids: fromJsonObject);
+                                                break;
+                                            case "platformversion":
 												objectToStore = new IdentitiesOrValues<PlatformVersion>(ids: fromJsonObject);
 												break;
 											case "platformwebsite":
@@ -222,6 +273,21 @@ namespace gaseous_server.Classes.Metadata
                                                 break;
                                             case "platformversionreleasedate":
                                                 objectToStore = new IdentitiesOrValues<PlatformVersionReleaseDate>(ids: fromJsonObject);
+                                                break;
+                                            case "playerperspective":
+                                                objectToStore = new IdentitiesOrValues<PlayerPerspective>(ids: fromJsonObject);
+                                                break;
+                                            case "releasedate":
+                                                objectToStore = new IdentitiesOrValues<ReleaseDate>(ids: fromJsonObject);
+                                                break;
+                                            case "screenshot":
+                                                objectToStore = new IdentitiesOrValues<Screenshot>(ids: fromJsonObject);
+                                                break;
+                                            case "theme":
+                                                objectToStore = new IdentitiesOrValues<Theme>(ids: fromJsonObject);
+                                                break;
+                                            case "website":
+                                                objectToStore = new IdentitiesOrValues<Website>(ids: fromJsonObject);
                                                 break;
                                         }
 
