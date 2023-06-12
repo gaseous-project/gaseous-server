@@ -229,7 +229,7 @@ namespace gaseous_server.Classes.Metadata
                                             case "alternativename":
                                                 objectToStore = new IdentitiesOrValues<AlternativeName>(ids: fromJsonObject);
                                                 break;
-                                            case "artworks":
+                                            case "artwork":
                                                 objectToStore = new IdentitiesOrValues<Artwork>(ids: fromJsonObject);
                                                 break;
                                             case "game":
