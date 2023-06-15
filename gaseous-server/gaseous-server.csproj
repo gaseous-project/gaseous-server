@@ -24,6 +24,30 @@
     <None Remove="Classes\SignatureIngestors\" />
     <None Remove="Support\" />
     <None Remove="Classes\Metadata\" />
+    <None Remove="Assets\" />
+    <None Remove="Assets\Ratings\" />
+    <None Remove="Assets\Ratings\ESRB\" />
+    <None Remove="Assets\Ratings\ACB\" />
+    <None Remove="Assets\Ratings\PEGI\" />
+    <None Remove="Assets\Ratings\ESRB\AO.svg" />
+    <None Remove="Assets\Ratings\ESRB\E.svg" />
+    <None Remove="Assets\Ratings\ESRB\E10plus.svg" />
+    <None Remove="Assets\Ratings\ESRB\M.svg" />
+    <None Remove="Assets\Ratings\ESRB\RP.svg" />
+    <None Remove="Assets\Ratings\ESRB\RP-LM17-English.svg" />
+    <None Remove="Assets\Ratings\ESRB\T.svg" />
+    <None Remove="Assets\Ratings\PEGI\Eighteen.jpg" />
+    <None Remove="Assets\Ratings\PEGI\PEGI_Parental_Guidance_Recommended.png" />
+    <None Remove="Assets\Ratings\PEGI\Seven.jpg" />
+    <None Remove="Assets\Ratings\PEGI\Sixteen.jpg" />
+    <None Remove="Assets\Ratings\PEGI\Three.jpg" />
+    <None Remove="Assets\Ratings\PEGI\Twelve.jpg" />
+    <None Remove="Assets\Ratings\ACB\ACB_G.png" />
+    <None Remove="Assets\Ratings\ACB\ACB_M.png" />
+    <None Remove="Assets\Ratings\ACB\ACB_MA15.png" />
+    <None Remove="Assets\Ratings\ACB\ACB_PG.png" />
+    <None Remove="Assets\Ratings\ACB\ACB_R18.png" />
+    <None Remove="Assets\Ratings\ACB\ACB_RC.png" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Controllers\" />
@@ -33,6 +57,11 @@
     <Folder Include="Support\" />
     <Folder Include="wwwroot\" />
     <Folder Include="Classes\Metadata\" />
+    <Folder Include="Assets\" />
+    <Folder Include="Assets\Ratings\" />
+    <Folder Include="Assets\Ratings\ESRB\" />
+    <Folder Include="Assets\Ratings\ACB\" />
+    <Folder Include="Assets\Ratings\PEGI\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\gaseous-tools\gaseous-tools.csproj">
@@ -55,6 +84,25 @@
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
     </EmbeddedResource>
+    <EmbeddedResource Include="Assets\Ratings\ESRB\AO.svg" />
+    <EmbeddedResource Include="Assets\Ratings\ESRB\E.svg" />
+    <EmbeddedResource Include="Assets\Ratings\ESRB\E10.svg" />
+    <EmbeddedResource Include="Assets\Ratings\ESRB\M.svg" />
+    <EmbeddedResource Include="Assets\Ratings\ESRB\RP.svg" />
+    <EmbeddedResource Include="Assets\Ratings\ESRB\RP-LM17-English.svg" />
+    <EmbeddedResource Include="Assets\Ratings\ESRB\T.svg" />
+    <EmbeddedResource Include="Assets\Ratings\PEGI\Eighteen.jpg" />
+    <EmbeddedResource Include="Assets\Ratings\PEGI\PEGI_Parental_Guidance_Recommended.png" />
+    <EmbeddedResource Include="Assets\Ratings\PEGI\Seven.jpg" />
+    <EmbeddedResource Include="Assets\Ratings\PEGI\Sixteen.jpg" />
+    <EmbeddedResource Include="Assets\Ratings\PEGI\Three.jpg" />
+    <EmbeddedResource Include="Assets\Ratings\PEGI\Twelve.jpg" />
+    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_G.png" />
+    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_M.png" />
+    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_MA15.png" />
+    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_PG.png" />
+    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_R18.png" />
+    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_RC.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="wwwroot\index.html" />

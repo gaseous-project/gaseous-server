@@ -1,13 +1,17 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
 using gaseous_tools;
 using IGDB.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.Scripting;
+using static gaseous_server.Classes.Metadata.AgeRatings;
 
 namespace gaseous_server.Controllers
 {
@@ -154,39 +158,23 @@ namespace gaseous_server.Controllers
         }
 
         [HttpGet]
-        [Route("{GameId}/artwork")]
-        [ProducesResponseType(typeof(List<Artwork>), StatusCodes.Status200OK)]
-        public ActionResult GameArtwork(long GameId)
-        {
-            Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
-
-            List<Artwork> artworks = new List<Artwork>();
-            if (gameObject.Artworks != null)
-            {
-                foreach (long ArtworkId in gameObject.Artworks.Ids)
-                {
-                    Artwork GameArtwork = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
-                    artworks.Add(GameArtwork);
-                }
-            }
-
-            return Ok(artworks);
-        }
-
-        [HttpGet]
-        [Route("{GameId}/artwork/{ArtworkId}")]
-        [ProducesResponseType(typeof(Artwork), StatusCodes.Status200OK)]
+        [Route("{GameId}/agerating")]
+        [ProducesResponseType(typeof(List<AgeRatings.GameAgeRating>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameArtwork(long GameId, long ArtworkId)
+        public ActionResult GameAgeClassification(long GameId)
         {
-            IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
-
             try
             {
-                IGDB.Models.Artwork artworkObject = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
-                if (artworkObject != null)
+                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
+
+                if (gameObject.AgeRatings != null)
                 {
-                    return Ok(artworkObject);
+                    List<AgeRatings.GameAgeRating> ageRatings = new List<AgeRatings.GameAgeRating>();
+                    foreach (long ageRatingId in gameObject.AgeRatings.Ids)
+                    {
+                        ageRatings.Add(AgeRatings.GetConsolidatedAgeRating(ageRatingId));
+                    }
+                    return Ok(ageRatings);
                 }
                 else
                 {
@@ -197,28 +185,50 @@ namespace gaseous_server.Controllers
             {
                 return NotFound();
             }
-            
         }
 
         [HttpGet]
-        [Route("{GameId}/artwork/{ArtworkId}/image")]
-        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
+        [Route("{GameId}/agerating/{RatingId}/image")]
+        [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameCoverImage(long GameId, long ArtworkId)
+        public ActionResult GameAgeClassification(long GameId, long RatingId)
         {
-            IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
-
             try
             {
-                IGDB.Models.Artwork artworkObject = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
-                if (artworkObject != null) {
-                    string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Artwork", artworkObject.ImageId + ".png");
-                    if (System.IO.File.Exists(coverFilePath))
+                GameAgeRating gameAgeRating = GetConsolidatedAgeRating(RatingId);
+
+                string fileExtension = "";
+                string fileType = "";
+                switch (gameAgeRating.RatingBoard)
+                {
+                    case AgeRatingCategory.ESRB:
+                        fileExtension = "svg";
+                        fileType = "image/svg+xml";
+                        break;
+                    case AgeRatingCategory.PEGI:
+                        fileExtension = "jpg";
+                        fileType = "image/jpg";
+                        break;
+                    case AgeRatingCategory.ACB:
+                        fileExtension = "png";
+                        fileType = "image/png";
+                        break;
+                }
+
+                string resourceName = "gaseous_server.Assets.Ratings." + gameAgeRating.RatingBoard.ToString() + "." + gameAgeRating.RatingTitle.ToString() + "." + fileExtension;
+
+                var assembly = Assembly.GetExecutingAssembly();
+                string[] resources = assembly.GetManifestResourceNames();
+                if (resources.Contains(resourceName))
+                {
+                    using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+                    using (StreamReader reader = new StreamReader(stream))
                     {
-                        string filename = artworkObject.ImageId + ".png";
-                        string filepath = coverFilePath;
-                        byte[] filedata = System.IO.File.ReadAllBytes(filepath);
-                        string contentType = "image/png";
+                        byte[] filedata = new byte[stream.Length];
+                        stream.Read(filedata, 0, filedata.Length);
+
+                        string filename = gameAgeRating.RatingBoard.ToString() + "-" + gameAgeRating.RatingTitle.ToString() + "." + fileExtension;
+                        string contentType = fileType;
 
                         var cd = new System.Net.Mime.ContentDisposition
                         {
@@ -230,12 +240,119 @@ namespace gaseous_server.Controllers
 
                         return File(filedata, contentType);
                     }
+                }
+                return NotFound();
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
+        [Route("{GameId}/artwork")]
+        [ProducesResponseType(typeof(List<Artwork>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GameArtwork(long GameId)
+        {
+            try
+            {
+                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
+
+                List<Artwork> artworks = new List<Artwork>();
+                if (gameObject.Artworks != null)
+                {
+                    foreach (long ArtworkId in gameObject.Artworks.Ids)
+                    {
+                        Artwork GameArtwork = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
+                        artworks.Add(GameArtwork);
+                    }
+                }
+
+                return Ok(artworks);
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
+        [Route("{GameId}/artwork/{ArtworkId}")]
+        [ProducesResponseType(typeof(Artwork), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GameArtwork(long GameId, long ArtworkId)
+        {
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
+
+                try
+                {
+                    IGDB.Models.Artwork artworkObject = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
+                    if (artworkObject != null)
+                    {
+                        return Ok(artworkObject);
+                    }
                     else
                     {
                         return NotFound();
                     }
                 }
-                else
+                catch
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
+        [Route("{GameId}/artwork/{ArtworkId}/image")]
+        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GameCoverImage(long GameId, long ArtworkId)
+        {
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
+
+                try
+                {
+                    IGDB.Models.Artwork artworkObject = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
+                    if (artworkObject != null) {
+                        string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Artwork", artworkObject.ImageId + ".png");
+                        if (System.IO.File.Exists(coverFilePath))
+                        {
+                            string filename = artworkObject.ImageId + ".png";
+                            string filepath = coverFilePath;
+                            byte[] filedata = System.IO.File.ReadAllBytes(filepath);
+                            string contentType = "image/png";
+
+                            var cd = new System.Net.Mime.ContentDisposition
+                            {
+                                FileName = filename,
+                                Inline = true,
+                            };
+
+                            Response.Headers.Add("Content-Disposition", cd.ToString());
+
+                            return File(filedata, contentType);
+                        }
+                        else
+                        {
+                            return NotFound();
+                        }
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
+                }
+                catch
                 {
                     return NotFound();
                 }
@@ -284,26 +401,33 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult GameCoverImage(long GameId)
         {
-            IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
 
-            string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Cover.png");
-            if (System.IO.File.Exists(coverFilePath)) {
-                string filename = "Cover.png";
-                string filepath = coverFilePath;
-                byte[] filedata = System.IO.File.ReadAllBytes(filepath);
-                string contentType = "image/png";
+                string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Cover.png");
+                if (System.IO.File.Exists(coverFilePath)) {
+                    string filename = "Cover.png";
+                    string filepath = coverFilePath;
+                    byte[] filedata = System.IO.File.ReadAllBytes(filepath);
+                    string contentType = "image/png";
 
-                var cd = new System.Net.Mime.ContentDisposition
+                    var cd = new System.Net.Mime.ContentDisposition
+                    {
+                        FileName = filename,
+                        Inline = true,
+                    };
+
+                    Response.Headers.Add("Content-Disposition", cd.ToString());
+
+                    return File(filedata, contentType);
+                }
+                else
                 {
-                    FileName = filename,
-                    Inline = true,
-                };
-
-                Response.Headers.Add("Content-Disposition", cd.ToString());
-
-                return File(filedata, contentType);
+                    return NotFound();
+                }
             }
-            else
+            catch
             {
                 return NotFound();
             }
@@ -312,21 +436,29 @@ namespace gaseous_server.Controllers
         [HttpGet]
         [Route("{GameId}/screenshots")]
         [ProducesResponseType(typeof(List<Screenshot>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult GameScreenshot(long GameId)
         {
-            Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
-
-            List<Screenshot> screenshots = new List<Screenshot>();
-            if (gameObject.Screenshots != null)
+            try
             {
-                foreach (long ScreenshotId in gameObject.Screenshots.Ids)
-                {
-                    Screenshot GameScreenshot = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
-                    screenshots.Add(GameScreenshot);
-                }
-            }
+                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
 
-            return Ok(screenshots);
+                List<Screenshot> screenshots = new List<Screenshot>();
+                if (gameObject.Screenshots != null)
+                {
+                    foreach (long ScreenshotId in gameObject.Screenshots.Ids)
+                    {
+                        Screenshot GameScreenshot = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
+                        screenshots.Add(GameScreenshot);
+                    }
+                }
+
+                return Ok(screenshots);
+            }
+            catch
+            {
+                return NotFound();
+            }
         }
 
         [HttpGet]
@@ -366,29 +498,36 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult GameScreenshotImage(long GameId, long ScreenshotId)
         {
-            IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
-
-            IGDB.Models.Screenshot screenshotObject = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
-
-            string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Screenshots", screenshotObject.ImageId + ".png");
-            if (System.IO.File.Exists(coverFilePath))
+            try
             {
-                string filename = screenshotObject.ImageId + ".png";
-                string filepath = coverFilePath;
-                byte[] filedata = System.IO.File.ReadAllBytes(filepath);
-                string contentType = "image/png";
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
 
-                var cd = new System.Net.Mime.ContentDisposition
+                IGDB.Models.Screenshot screenshotObject = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
+
+                string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Screenshots", screenshotObject.ImageId + ".png");
+                if (System.IO.File.Exists(coverFilePath))
                 {
-                    FileName = filename,
-                    Inline = true,
-                };
+                    string filename = screenshotObject.ImageId + ".png";
+                    string filepath = coverFilePath;
+                    byte[] filedata = System.IO.File.ReadAllBytes(filepath);
+                    string contentType = "image/png";
 
-                Response.Headers.Add("Content-Disposition", cd.ToString());
+                    var cd = new System.Net.Mime.ContentDisposition
+                    {
+                        FileName = filename,
+                        Inline = true,
+                    };
 
-                return File(filedata, contentType);
+                    Response.Headers.Add("Content-Disposition", cd.ToString());
+
+                    return File(filedata, contentType);
+                }
+                else
+                {
+                    return NotFound();
+                }
             }
-            else
+            catch
             {
                 return NotFound();
             }
@@ -397,21 +536,29 @@ namespace gaseous_server.Controllers
         [HttpGet]
         [Route("{GameId}/videos")]
         [ProducesResponseType(typeof(List<GameVideo>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult GameVideo(long GameId)
         {
-            Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
-
-            List<GameVideo> videos = new List<GameVideo>();
-            if (gameObject.Videos != null)
+            try
             {
-                foreach (long VideoId in gameObject.Videos.Ids)
-                {
-                    GameVideo gameVideo = GamesVideos.GetGame_Videos(VideoId);
-                    videos.Add(gameVideo);
-                }
-            }
+                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
 
-            return Ok(videos);
+                List<GameVideo> videos = new List<GameVideo>();
+                if (gameObject.Videos != null)
+                {
+                    foreach (long VideoId in gameObject.Videos.Ids)
+                    {
+                        GameVideo gameVideo = GamesVideos.GetGame_Videos(VideoId);
+                        videos.Add(gameVideo);
+                    }
+                }
+
+                return Ok(videos);
+            }
+            catch
+            {
+                return NotFound();
+            }
         }
     }
 }

@@ -232,6 +232,9 @@ namespace gaseous_server.Classes.Metadata
                                             case "artwork":
                                                 objectToStore = new IdentitiesOrValues<Artwork>(ids: fromJsonObject);
                                                 break;
+											case "ageratingcontentdescription":
+                                                objectToStore = new IdentitiesOrValues<AgeRatingContentDescription>(ids: fromJsonObject);
+                                                break;
                                             case "game":
                                                 objectToStore = new IdentitiesOrValues<Game>(ids: fromJsonObject);
                                                 break;
@@ -312,6 +315,9 @@ namespace gaseous_server.Classes.Metadata
                                         break;
 									case "[igdb.models.ageratingcategory":
                                         property.SetValue(EndpointType, (AgeRatingCategory)dataRow[property.Name]);
+                                        break;
+                                    case "[igdb.models.ageratingcontentdescriptioncategory":
+                                        property.SetValue(EndpointType, (AgeRatingContentDescriptionCategory)dataRow[property.Name]);
                                         break;
                                     case "[igdb.models.ageratingtitle":
                                         property.SetValue(EndpointType, (AgeRatingTitle)dataRow[property.Name]);

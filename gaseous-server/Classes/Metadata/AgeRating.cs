@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using gaseous_tools;
 using IGDB;
 using IGDB.Models;
@@ -114,6 +115,37 @@ namespace gaseous_server.Classes.Metadata
             var result = results.First();
 
             return result;
+        }
+
+        public static GameAgeRating GetConsolidatedAgeRating(long RatingId)
+        {
+            GameAgeRating gameAgeRating = new GameAgeRating();
+
+            AgeRating ageRating = GetAgeRatings(RatingId);
+            gameAgeRating.Id = (long)ageRating.Id;
+            gameAgeRating.RatingBoard = (AgeRatingCategory)ageRating.Category;
+            gameAgeRating.RatingTitle = (AgeRatingTitle)ageRating.Rating;
+
+            List<string> descriptions = new List<string>();
+            if (ageRating.ContentDescriptions != null)
+            {
+                foreach (long ContentId in ageRating.ContentDescriptions.Ids)
+                {
+                    AgeRatingContentDescription ageRatingContentDescription = AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(ContentId);
+                    descriptions.Add(ageRatingContentDescription.Description);
+                }
+            }
+            gameAgeRating.Descriptions = descriptions.ToArray();
+
+            return gameAgeRating;
+        }
+
+        public class GameAgeRating
+        {
+            public long Id { get; set; }
+            public AgeRatingCategory RatingBoard { get; set; }
+            public AgeRatingTitle RatingTitle { get; set; }
+            public string[] Descriptions { get; set; }
         }
 	}
 }
