@@ -32,7 +32,7 @@ namespace gaseous_server.Classes.Metadata
                     returnValue = new Platform
                     {
                         Id = 0,
-                        Name = "Unknown"
+                        Name = "Unknown Platform"
                     };
                     Storage.NewCacheValue(returnValue);
 

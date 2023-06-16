@@ -434,6 +434,97 @@ namespace gaseous_server.Controllers
         }
 
         [HttpGet]
+        [Route("{GameId}/roms")]
+        [ProducesResponseType(typeof(List<Classes.Roms.RomItem>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GameRom(long GameId)
+        {
+            try
+            {
+                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
+
+                List<Classes.Roms.RomItem> roms = Classes.Roms.GetRoms(GameId);
+
+                return Ok(roms);
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
+        [Route("{GameId}/roms/{RomId}")]
+        [ProducesResponseType(typeof(Classes.Roms.RomItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GameRom(long GameId, long RomId)
+        {
+            try
+            {
+                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
+
+                Classes.Roms.RomItem rom = Classes.Roms.GetRom(RomId);
+                if (rom.GameId == GameId)
+                {
+                    return Ok(rom);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
+        [Route("{GameId}/roms/{RomId}/file")]
+        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GameRomFile(long GameId, long RomId)
+        {
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
+
+                Classes.Roms.RomItem rom = Classes.Roms.GetRom(RomId);
+                if (rom.GameId != GameId)
+                {
+                    return NotFound();
+                }
+
+                string romFilePath = rom.Path;
+                if (System.IO.File.Exists(romFilePath))
+                {
+                    string filename = Path.GetFileName(romFilePath);
+                    string filepath = romFilePath;
+                    byte[] filedata = System.IO.File.ReadAllBytes(filepath);
+                    string contentType = "application/octet-stream";
+
+                    var cd = new System.Net.Mime.ContentDisposition
+                    {
+                        FileName = filename,
+                        Inline = false,
+                    };
+
+                    Response.Headers.Add("Content-Disposition", cd.ToString());
+
+                    return File(filedata, contentType);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
         [Route("{GameId}/screenshots")]
         [ProducesResponseType(typeof(List<Screenshot>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

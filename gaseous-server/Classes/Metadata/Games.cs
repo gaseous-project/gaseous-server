@@ -30,7 +30,7 @@ namespace gaseous_server.Classes.Metadata
                     returnValue = new Game
                     {
                         Id = 0,
-                        Name = "Unknown"
+                        Name = "Unknown Title"
                     };
                     Storage.NewCacheValue(returnValue);
 
