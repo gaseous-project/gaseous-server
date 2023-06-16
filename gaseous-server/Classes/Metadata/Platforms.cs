@@ -26,7 +26,22 @@ namespace gaseous_server.Classes.Metadata
 		{
             if (Id == 0)
             {
-                return null;
+                Platform returnValue = new Platform();
+                if (Storage.GetCacheStatus("platform", 0) == Storage.CacheStatus.NotPresent)
+                {
+                    returnValue = new Platform
+                    {
+                        Id = 0,
+                        Name = "Unknown"
+                    };
+                    Storage.NewCacheValue(returnValue);
+
+                    return returnValue;
+                }
+                else
+                {
+                    return Storage.GetCacheValue<Platform>(returnValue, "id", 0);
+                }
             }
             else
             {

@@ -24,7 +24,22 @@ namespace gaseous_server.Classes.Metadata
         {
             if (Id == 0)
             {
-                return null;
+                Game returnValue = new Game();
+                if ((Storage.GetCacheStatus("game", 0) == Storage.CacheStatus.NotPresent) || (forceRefresh == true))
+                {
+                    returnValue = new Game
+                    {
+                        Id = 0,
+                        Name = "Unknown"
+                    };
+                    Storage.NewCacheValue(returnValue);
+
+                    return returnValue;
+                }
+                else
+                {
+                    return Storage.GetCacheValue<Game>(returnValue, "id", 0);
+                }
             }
             else
             {

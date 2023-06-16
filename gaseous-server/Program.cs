@@ -59,6 +59,10 @@ app.MapControllers();
 // setup library directories
 Config.LibraryConfiguration.InitLibrary();
 
+// insert unknown platform and game if not present
+gaseous_server.Classes.Metadata.Games.GetGame(0, false, true);
+gaseous_server.Classes.Metadata.Platforms.GetPlatform(0);
+
 // organise library
 //gaseous_server.Classes.ImportGame.OrganiseLibrary();
 
