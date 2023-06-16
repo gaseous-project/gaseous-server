@@ -50,6 +50,40 @@ namespace gaseous_server.Classes
 			}
 		}
 
+		public static RomItem UpdateRom(long RomId, long PlatformId, long GameId)
+		{
+			// ensure metadata for platformid is present
+			IGDB.Models.Platform platform = Classes.Metadata.Platforms.GetPlatform(PlatformId);
+
+			// ensure metadata for gameid is present
+			IGDB.Models.Game game = Classes.Metadata.Games.GetGame(GameId, false, false);
+
+            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "UPDATE games_roms SET platformid=@platformid, gameid=@gameid WHERE id = @id";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            dbDict.Add("id", RomId);
+			dbDict.Add("platformid", PlatformId);
+			dbDict.Add("gameid", GameId);
+			db.ExecuteCMD(sql, dbDict);
+
+			RomItem rom = GetRom(RomId);
+
+			return rom;
+        }
+
+		public static void DeleteRom(long RomId)
+		{
+			RomItem rom = GetRom(RomId);
+			if (File.Exists(rom.Path))
+			{
+				File.Delete(rom.Path);
+			}
+
+            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "DELETE FROM games_roms WHERE id = @id";
+			db.ExecuteCMD(sql);
+        }
+
 		private static RomItem BuildRom(DataRow romDR)
 		{
             RomItem romItem = new RomItem

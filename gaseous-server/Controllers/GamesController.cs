@@ -479,6 +479,60 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [HttpPatch]
+        [Route("{GameId}/roms/{RomId}")]
+        [ProducesResponseType(typeof(Classes.Roms.RomItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GameRomRename(long GameId, long RomId, long NewPlatformId, long NewGameId)
+        {
+            try
+            {
+                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
+
+                Classes.Roms.RomItem rom = Classes.Roms.GetRom(RomId);
+                if (rom.GameId == GameId)
+                {
+                    rom = Classes.Roms.UpdateRom(RomId, NewPlatformId, NewGameId);
+                    return Ok(rom);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpDelete]
+        [Route("{GameId}/roms/{RomId}")]
+        [ProducesResponseType(typeof(Classes.Roms.RomItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GameRomDelete(long GameId, long RomId)
+        {
+            try
+            {
+                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
+
+                Classes.Roms.RomItem rom = Classes.Roms.GetRom(RomId);
+                if (rom.GameId == GameId)
+                {
+                    Classes.Roms.DeleteRom(RomId);
+                    return Ok(rom);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
         [HttpGet]
         [Route("{GameId}/roms/{RomId}/file")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
