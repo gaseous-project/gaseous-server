@@ -6,7 +6,7 @@ namespace gaseous_server.Classes
 {
 	public class Roms
 	{
-		public static List<RomItem> GetRoms(long GameId)
+		public static List<GameRomItem> GetRoms(long GameId)
 		{
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM games_roms WHERE gameid = @id ORDER BY `name`";
@@ -16,7 +16,7 @@ namespace gaseous_server.Classes
 
             if (romDT.Rows.Count > 0)
             {
-				List<RomItem> romItems = new List<RomItem>();
+				List<GameRomItem> romItems = new List<GameRomItem>();
 				foreach (DataRow romDR in romDT.Rows)
 				{
 					romItems.Add(BuildRom(romDR));
@@ -30,7 +30,7 @@ namespace gaseous_server.Classes
             }
         }
 
-		public static RomItem GetRom(long RomId)
+		public static GameRomItem GetRom(long RomId)
 		{
 			Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "SELECT * FROM games_roms WHERE id = @id";
@@ -41,7 +41,7 @@ namespace gaseous_server.Classes
 			if (romDT.Rows.Count > 0)
 			{
 				DataRow romDR = romDT.Rows[0];
-				RomItem romItem = BuildRom(romDR);
+				GameRomItem romItem = BuildRom(romDR);
 				return romItem;
 			}
 			else
@@ -50,7 +50,7 @@ namespace gaseous_server.Classes
 			}
 		}
 
-		public static RomItem UpdateRom(long RomId, long PlatformId, long GameId)
+		public static GameRomItem UpdateRom(long RomId, long PlatformId, long GameId)
 		{
 			// ensure metadata for platformid is present
 			IGDB.Models.Platform platform = Classes.Metadata.Platforms.GetPlatform(PlatformId);
@@ -66,14 +66,14 @@ namespace gaseous_server.Classes
 			dbDict.Add("gameid", GameId);
 			db.ExecuteCMD(sql, dbDict);
 
-			RomItem rom = GetRom(RomId);
+			GameRomItem rom = GetRom(RomId);
 
 			return rom;
         }
 
 		public static void DeleteRom(long RomId)
 		{
-			RomItem rom = GetRom(RomId);
+			GameRomItem rom = GetRom(RomId);
 			if (File.Exists(rom.Path))
 			{
 				File.Delete(rom.Path);
@@ -84,9 +84,9 @@ namespace gaseous_server.Classes
 			db.ExecuteCMD(sql);
         }
 
-		private static RomItem BuildRom(DataRow romDR)
+		private static GameRomItem BuildRom(DataRow romDR)
 		{
-            RomItem romItem = new RomItem
+            GameRomItem romItem = new GameRomItem
             {
                 Id = (long)romDR["id"],
                 PlatformId = (long)romDR["platformid"],
@@ -101,12 +101,13 @@ namespace gaseous_server.Classes
                 RomType = (int)romDR["romtype"],
                 RomTypeMedia = (string)romDR["romtypemedia"],
                 MediaLabel = (string)romDR["medialabel"],
-                Path = (string)romDR["path"]
+                Path = (string)romDR["path"],
+				Source = (GameRomItem.SourceType)(Int32)romDR["metadatasource"]
             };
             return romItem;
         }
 
-		public class RomItem
+		public class GameRomItem
 		{
 			public long Id { get; set; }
 			public long PlatformId { get; set; }
@@ -122,7 +123,14 @@ namespace gaseous_server.Classes
 			public string? RomTypeMedia { get; set; }
 			public string? MediaLabel { get; set; }
 			public string? Path { get; set; }
+            public SourceType Source { get; set; }
+
+            public enum SourceType
+            {
+                None = 0,
+                TOSEC = 1
+            }
         }
-	}
+    }
 }
 

@@ -155,6 +155,7 @@ namespace gaseous_server.Classes
 								ri.Md5 = hash.md5hash;
 								ri.Sha1 = hash.sha1hash;
 								ri.Size = fi.Length;
+								ri.SignatureSource = Models.Signatures_Games.RomItem.SignatureSourceType.None;
 							}
 						}
 
@@ -205,13 +206,14 @@ namespace gaseous_server.Classes
 						}
 
 						// add to database
-						sql = "INSERT INTO games_roms (platformid, gameid, name, size, crc, md5, sha1, developmentstatus, flags, romtype, romtypemedia, medialabel, path) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel, @path); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+						sql = "INSERT INTO games_roms (platformid, gameid, name, size, crc, md5, sha1, developmentstatus, flags, romtype, romtypemedia, medialabel, path, metadatasource) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel, @path, @metadatasource); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
 						dbDict.Add("platformid", Common.ReturnValueIfNull(determinedPlatform.Id, 0));
 						dbDict.Add("gameid", Common.ReturnValueIfNull(determinedGame.Id, 0));
                         dbDict.Add("name", Common.ReturnValueIfNull(discoveredSignature.Rom.Name, ""));
                         dbDict.Add("size", Common.ReturnValueIfNull(discoveredSignature.Rom.Size, 0));
                         dbDict.Add("crc", Common.ReturnValueIfNull(discoveredSignature.Rom.Crc, ""));
                         dbDict.Add("developmentstatus", Common.ReturnValueIfNull(discoveredSignature.Rom.DevelopmentStatus, ""));
+						dbDict.Add("metadatasource", discoveredSignature.Rom.SignatureSource);
 
                         if (discoveredSignature.Rom.flags != null)
                         {
@@ -245,7 +247,7 @@ namespace gaseous_server.Classes
 
 		public static string ComputeROMPath(long RomId)
 		{
-			Classes.Roms.RomItem rom = Classes.Roms.GetRom(RomId);
+			Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
 
 			// get metadata
 			IGDB.Models.Platform platform = gaseous_server.Classes.Metadata.Platforms.GetPlatform(rom.PlatformId);
@@ -275,7 +277,7 @@ namespace gaseous_server.Classes
 
 		public static void MoveGameFile(long RomId)
 		{
-            Classes.Roms.RomItem rom = Classes.Roms.GetRom(RomId);
+            Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
 			string romPath = rom.Path;
 
             if (File.Exists(romPath))

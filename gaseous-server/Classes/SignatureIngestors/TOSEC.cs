@@ -194,12 +194,13 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                                             dbDict.Add("romtype", (int)romObject.RomType);
                                             dbDict.Add("romtypemedia", Common.ReturnValueIfNull(romObject.RomTypeMedia, ""));
                                             dbDict.Add("medialabel", Common.ReturnValueIfNull(romObject.MediaLabel, ""));
+                                            dbDict.Add("metadatasource", Classes.Roms.GameRomItem.SourceType.TOSEC);
 
                                             sigDB = db.ExecuteCMD(sql, dbDict);
                                             if (sigDB.Rows.Count == 0)
                                             {
                                                 // entry not present, insert it
-                                                sql = "INSERT INTO signatures_roms (gameid, name, size, crc, md5, sha1, developmentstatus, flags, romtype, romtypemedia, medialabel) VALUES (@gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+                                                sql = "INSERT INTO signatures_roms (gameid, name, size, crc, md5, sha1, developmentstatus, flags, romtype, romtypemedia, medialabel, metadatasource) VALUES (@gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel, @metadatasource); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
                                                 sigDB = db.ExecuteCMD(sql, dbDict);
 
 

@@ -435,7 +435,7 @@ namespace gaseous_server.Controllers
 
         [HttpGet]
         [Route("{GameId}/roms")]
-        [ProducesResponseType(typeof(List<Classes.Roms.RomItem>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<Classes.Roms.GameRomItem>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult GameRom(long GameId)
         {
@@ -443,7 +443,7 @@ namespace gaseous_server.Controllers
             {
                 Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
 
-                List<Classes.Roms.RomItem> roms = Classes.Roms.GetRoms(GameId);
+                List<Classes.Roms.GameRomItem> roms = Classes.Roms.GetRoms(GameId);
 
                 return Ok(roms);
             }
@@ -455,7 +455,7 @@ namespace gaseous_server.Controllers
 
         [HttpGet]
         [Route("{GameId}/roms/{RomId}")]
-        [ProducesResponseType(typeof(Classes.Roms.RomItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Classes.Roms.GameRomItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult GameRom(long GameId, long RomId)
         {
@@ -463,7 +463,7 @@ namespace gaseous_server.Controllers
             {
                 Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
 
-                Classes.Roms.RomItem rom = Classes.Roms.GetRom(RomId);
+                Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
                 if (rom.GameId == GameId)
                 {
                     return Ok(rom);
@@ -481,7 +481,7 @@ namespace gaseous_server.Controllers
 
         [HttpPatch]
         [Route("{GameId}/roms/{RomId}")]
-        [ProducesResponseType(typeof(Classes.Roms.RomItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Classes.Roms.GameRomItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult GameRomRename(long GameId, long RomId, long NewPlatformId, long NewGameId)
         {
@@ -489,7 +489,7 @@ namespace gaseous_server.Controllers
             {
                 Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
 
-                Classes.Roms.RomItem rom = Classes.Roms.GetRom(RomId);
+                Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
                 if (rom.GameId == GameId)
                 {
                     rom = Classes.Roms.UpdateRom(RomId, NewPlatformId, NewGameId);
@@ -508,7 +508,7 @@ namespace gaseous_server.Controllers
 
         [HttpDelete]
         [Route("{GameId}/roms/{RomId}")]
-        [ProducesResponseType(typeof(Classes.Roms.RomItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Classes.Roms.GameRomItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult GameRomDelete(long GameId, long RomId)
         {
@@ -516,7 +516,7 @@ namespace gaseous_server.Controllers
             {
                 Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
 
-                Classes.Roms.RomItem rom = Classes.Roms.GetRom(RomId);
+                Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
                 if (rom.GameId == GameId)
                 {
                     Classes.Roms.DeleteRom(RomId);
@@ -543,7 +543,7 @@ namespace gaseous_server.Controllers
             {
                 IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
 
-                Classes.Roms.RomItem rom = Classes.Roms.GetRom(RomId);
+                Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
                 if (rom.GameId != GameId)
                 {
                     return NotFound();

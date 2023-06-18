@@ -72,6 +72,14 @@ namespace gaseous_romsignatureobject
                 public string? RomTypeMedia { get; set; }
                 public string? MediaLabel { get; set; }
 
+                public SignatureSourceType SignatureSource { get; set; }
+
+                public enum SignatureSourceType
+                {
+                    None = 0,
+                    TOSEC = 1
+                }
+
                 public enum RomTypes
                 {
                     /// <summary>

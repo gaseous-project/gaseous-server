@@ -35,10 +35,7 @@ builder.Services.AddControllers().AddJsonOptions(x =>
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.CustomSchemaIds(type => type.ToString());
-});
+builder.Services.AddSwaggerGen();
 builder.Services.AddHostedService<TimedHostedService>();
 
 var app = builder.Build();
@@ -63,7 +60,7 @@ app.MapControllers();
 Config.LibraryConfiguration.InitLibrary();
 
 // insert unknown platform and game if not present
-gaseous_server.Classes.Metadata.Games.GetGame(0, false, true);
+gaseous_server.Classes.Metadata.Games.GetGame(0, false, false);
 gaseous_server.Classes.Metadata.Platforms.GetPlatform(0);
 
 // organise library

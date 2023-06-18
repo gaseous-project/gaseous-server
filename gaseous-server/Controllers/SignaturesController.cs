@@ -55,7 +55,7 @@ namespace gaseous_server.Controllers
         private List<Models.Signatures_Games> _GetSignature(string sqlWhere, string searchString)
         {
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT \n    view_signatures_games.*,\n    signatures_roms.id AS romid,\n    signatures_roms.name AS romname,\n    signatures_roms.size,\n    signatures_roms.crc,\n    signatures_roms.md5,\n    signatures_roms.sha1,\n    signatures_roms.developmentstatus,\n    signatures_roms.flags,\n    signatures_roms.romtype,\n    signatures_roms.romtypemedia,\n    signatures_roms.medialabel\nFROM\n    signatures_roms\n        INNER JOIN\n    view_signatures_games ON signatures_roms.gameid = view_signatures_games.id WHERE " + sqlWhere;
+            string sql = "SELECT \n    view_signatures_games.*,\n    signatures_roms.id AS romid,\n    signatures_roms.name AS romname,\n    signatures_roms.size,\n    signatures_roms.crc,\n    signatures_roms.md5,\n    signatures_roms.sha1,\n    signatures_roms.developmentstatus,\n    signatures_roms.flags,\n    signatures_roms.romtype,\n    signatures_roms.romtypemedia,\n    signatures_roms.medialabel,\n    signatures_roms.metadatasource\nFROM\n    signatures_roms\n        INNER JOIN\n    view_signatures_games ON signatures_roms.gameid = view_signatures_games.id WHERE " + sqlWhere;
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("searchString", searchString);
 
@@ -94,7 +94,8 @@ namespace gaseous_server.Controllers
                         flags = Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>((string)sigDbRow["flags"]),
                         RomType = (Models.Signatures_Games.RomItem.RomTypes)(int)sigDbRow["romtype"],
                         RomTypeMedia = (string)sigDbRow["romtypemedia"],
-                        MediaLabel = (string)sigDbRow["medialabel"]
+                        MediaLabel = (string)sigDbRow["medialabel"],
+                        SignatureSource = (Models.Signatures_Games.RomItem.SignatureSourceType)(Int32)sigDbRow["metadatasource"]
                     }
                 };
                 GamesList.Add(gameItem);
