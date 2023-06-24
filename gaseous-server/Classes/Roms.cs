@@ -81,7 +81,9 @@ namespace gaseous_server.Classes
 
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "DELETE FROM games_roms WHERE id = @id";
-			db.ExecuteCMD(sql);
+			Dictionary<string, object> dbDict = new Dictionary<string, object>();
+			dbDict.Add("id", RomId);
+			db.ExecuteCMD(sql, dbDict);
         }
 
 		private static GameRomItem BuildRom(DataRow romDR)

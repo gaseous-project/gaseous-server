@@ -65,7 +65,7 @@ CREATE TABLE `alternativename` (
   `id` bigint NOT NULL,
   `checksum` varchar(45) DEFAULT NULL,
   `comment` longtext,
-  `game` int DEFAULT NULL,
+  `game` bigint DEFAULT NULL,
   `name` varchar(255) DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,

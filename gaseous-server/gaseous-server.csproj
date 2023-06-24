@@ -9,6 +9,10 @@
 
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'https' " />
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'http' " />
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <WarningLevel>4</WarningLevel>
+    <DocumentationFile>bin\Debug\net7.0\gaseous-server.xml</DocumentationFile>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.7" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
@@ -62,6 +66,9 @@
     <Folder Include="Assets\Ratings\ESRB\" />
     <Folder Include="Assets\Ratings\ACB\" />
     <Folder Include="Assets\Ratings\PEGI\" />
+    <Folder Include="wwwroot\scripts\" />
+    <Folder Include="wwwroot\images\" />
+    <Folder Include="wwwroot\styles\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\gaseous-tools\gaseous-tools.csproj">
@@ -78,6 +85,9 @@
     <Content Remove="Support\PlatformMap.json" />
     <Content Remove="wwwroot\" />
     <Content Remove="wwwroot\index.html" />
+    <Content Remove="wwwroot\scripts\" />
+    <Content Remove="wwwroot\images\" />
+    <Content Remove="wwwroot\styles\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Support\PlatformMap.json" Condition="'$(ExcludeConfigFilesFromBuildOutput)'!='true'">

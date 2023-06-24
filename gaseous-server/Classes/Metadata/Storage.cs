@@ -39,7 +39,7 @@ namespace gaseous_server.Classes.Metadata
 			DataTable dt = db.ExecuteCMD(sql, dbDict);
 			if (dt.Rows.Count == 0)
 			{
-				// no data stored for this item, or lastUpdated 
+				// no data stored for this item, or lastUpdated
 				return CacheStatus.NotPresent;
 			}
 			else
@@ -77,13 +77,16 @@ namespace gaseous_server.Classes.Metadata
 				{
 					fieldList = fieldList + ", ";
 					valueList = valueList + ", ";
-					updateFieldValueList = updateFieldValueList + ", ";
 				}
 				fieldList = fieldList + key.Key;
 				valueList = valueList + "@" + key.Key;
 				if ((key.Key != "id") && (key.Key != "dateAdded"))
-				{
-					updateFieldValueList = key.Key + " = @" + key.Key;
+                {
+                    if (updateFieldValueList.Length > 0)
+                    {
+                        updateFieldValueList = updateFieldValueList + ", ";
+                    }
+                    updateFieldValueList += key.Key + " = @" + key.Key;
 				}
 
 				// check property type

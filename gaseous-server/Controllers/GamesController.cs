@@ -136,11 +136,11 @@ namespace gaseous_server.Controllers
         [Route("{GameId}")]
         [ProducesResponseType(typeof(Game), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult Game(long GameId)
+        public ActionResult Game(long GameId, bool forceRefresh = false)
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, forceRefresh);
 
                 if (gameObject != null)
                 {

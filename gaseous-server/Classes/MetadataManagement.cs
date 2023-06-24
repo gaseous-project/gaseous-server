@@ -14,8 +14,15 @@ namespace gaseous_server.Classes
 
 			foreach (DataRow dr in dt.Rows)
 			{
-				Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ")");
-				Metadata.Games.GetGame((long)dr["id"], true, forceRefresh);
+				try
+				{
+					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ")");
+					Metadata.Games.GetGame((long)dr["id"], true, forceRefresh);
+				}
+				catch (Exception ex)
+				{
+					Logging.Log(Logging.LogType.Critical, "Metadata Refresh", "An error occurred while refreshing metadata for " + dr["name"], ex);
+				}
 			}
         }
 	}

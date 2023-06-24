@@ -1,0 +1,121 @@
+﻿body {
+    background-color: #383838;
+    color: white;
+    font-family: "PT Sans", Arial, Helvetica, sans-serif;
+    font-kerning: normal;
+    font-style: normal;
+    font-weight: 100;
+    font-size: 13px;
+}
+
+#banner_icon {
+    background-color: white;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 0px;
+    margin: 0px;
+    display: flex;
+}
+
+#banner_icon_image {
+    width: 30px;
+    height: 30px;
+}
+
+#banner_header {
+    background-color: #001638;
+    position: fixed;
+    top: 0px;
+    left: 40px;
+    height: 40px;
+    right: 0px;
+    align-items: center;
+    display: flex;
+}
+
+#banner_header_label {
+    display: inline;
+    padding: 10px;
+    font-size: 18pt;
+    font-weight: 700;
+    color: #edeffa;
+}
+
+#content {
+    display: flex;
+    padding-top: 45px;
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+#games_filter {
+    width: 200px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #2b2b2b;
+    margin-right: 10px;
+}
+
+.filter_header {
+    padding: 10px;
+    background-color: #2b2b2b;
+}
+
+.filter_panel_box {
+    padding: 10px;
+}
+
+.filter_panel_item {
+    display: flex;
+    padding: 3px;
+}
+
+.filter_panel_item_checkbox {
+    margin-right: 10px;
+}
+
+#games_library {
+    width: 90%;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #2b2b2b;
+    padding: 10px;
+}
+
+.game_tile {
+    padding: 5px;
+    display: inline-block;
+    width: 220px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    vertical-align: top;
+    margin-bottom: 10px;
+}
+
+.game_tile:hover {
+    cursor: pointer;
+    text-decoration: underline;
+    background-color: #2b2b2b;
+}
+
+.game_tile_image {
+    max-width: 200px;
+    max-height: 200px;
+}
+
+.game_tile_image, .unknown {
+    background-color: white;
+}
+
+.rating_image_mini {
+    display: inline-block;
+    max-width: 32px;
+    max-height: 32px;
+    margin-right: 2px;
+}
