@@ -1,16 +1,59 @@
-﻿<div id="mainbody"></div>
+﻿<div id="bgImage"></div>
+<div id="gamepage">
+    
+    <div id="gamesummary">
+        <div id="gamesummary_cover"></div>
+        <div id="gamesummary_ratings">
+            <h3>Age Ratings</h3>
+        </div>
+    </div>
 
-<div id="gamesummary"></div>
+    <div id="mainbody">
+        <div id="gametitle"><h1 id="gametitle_label"></h1></div>
+        <div id="gamescreenshots">
+            <div id="gamescreenshots_main"></div>
+            <div id="gamescreenshots_gallery"></div>
+        </div>
+        <div id="gamesummarytext"><span id="gamesummarytext_label"></span>
+    </div>
 
+    
+</div>
 <script type="text/javascript">
     const urlParams = new URLSearchParams(window.location.search);
     var gameId = urlParams.get('id');
+    var artworks = null;
+    var artworksPosition = 0;
+    var artworksTimer = null;
 
     ajaxCall('/api/v1/Games/' + gameId, 'GET', function (result) {
         // populate games page
-        var gameSummary = document.getElementById('gamesummary');
+        
+        // get name
+        var gameTitleLabel = document.getElementById('gametitle_label');
+        gameTitleLabel.innerHTML = result.name;
+
+        // get summary
+        var gameSummaryLabel = document.getElementById('gamesummarytext_label');
+        if (result.summary || result.storyline) {
+            if (result.summary) {
+                gameSummaryLabel.innerHTML = result.summary;
+            } else {
+                gameSummaryLabel.innerHTML = result.storyline;
+            }
+        } else {
+            gameSummaryLabel.setAttribute('style', 'display: none;');
+        }
+
+        // load artwork
+        if (result.artworks) {
+            artworks = result.artworks.ids;
+            artworksPostition = 0;
+            rotateBackground();
+        }
 
         // load cover
+        var gameSummaryCover = document.getElementById('gamesummary_cover');
         var gameImage = document.createElement('img');
         gameImage.className = 'game_cover_image';
         if (result.cover) {
@@ -19,18 +62,50 @@
             gameImage.src = '/images/unknowngame.png';
             gameImage.className = 'game_cover_image unknown';
         }
-        gameSummary.appendChild(gameImage);
+        gameSummaryCover.appendChild(gameImage);
 
         // load ratings
-        var gameRatings = document.createElement('div');
+        var gameSummaryRatings = document.getElementById('gamesummary_ratings');
         if (result.ageRatings) {
+            var gameRatings = document.createElement('div');
             for (var i = 0; i < result.ageRatings.ids.length; i++) {
                 var ratingImage = document.createElement('img');
                 ratingImage.src = '/api/v1/Games/' + result.id + '/agerating/' + result.ageRatings.ids[i] + '/image';
                 ratingImage.className = 'rating_image';
                 gameRatings.appendChild(ratingImage);
             }
-            gameSummary.appendChild(gameRatings);
+            gameSummaryRatings.appendChild(gameRatings);
+        } else {
+            gameSummaryRatings.setAttribute('style', 'display: none;');
+        }
+
+        // load screenshots
+        var gameScreenshots = document.getElementById('gamescreenshots');
+        if (result.screenshots) {
+            var gameScreenshots_Main = document.getElementById('gamescreenshots_main');
+            gameScreenshots_Main.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/screenshots/' + result.screenshots.ids[0] + '/image"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
+
+            var gameScreenshots_Gallery = document.getElementById('gamescreenshots_gallery');
+            for (var i = 0; i < result.screenshots.ids.length; i++) {
+                var screenshotItem = document.createElement('div');
+                screenshotItem.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/screenshots/' + result.screenshots.ids[i] + '/image"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
+                screenshotItem.className = 'gamescreenshosts_gallery_item';
+                gameScreenshots_Gallery.appendChild(screenshotItem);
+            }
+        } else {
+            gamescreenshots.setAttribute('style', 'display: none;');
         }
     });
+
+    function rotateBackground() {
+        if (artworks) {
+            artworksPosition += 1;
+            if (artworks[artworksPosition] == null) {
+                artworksPosition = 0;
+            }
+            var bg = document.getElementById('bgImage');
+            bg.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/artwork/' + artworks[artworksPosition] + '/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+            artworksTimer = setTimeout(rotateBackground, 2500);
+        }
+    }
 </script>

@@ -30,12 +30,15 @@ function renderGameIcon(gameObject, showTitle, showRatings) {
 
     if (showRatings == true) {
         if (gameObject.ageRatings) {
+            var ratingsSection = document.createElement('div');
+            ratingsSection.id = 'ratings_section';
             for (var i = 0; i < gameObject.ageRatings.ids.length; i++) {
                 var ratingImage = document.createElement('img');
                 ratingImage.src = '/api/v1/Games/' + gameObject.id + '/agerating/' + gameObject.ageRatings.ids[i] + '/image';
                 ratingImage.className = 'rating_image_mini';
-                gameBox.appendChild(ratingImage);
+                ratingsSection.appendChild(ratingImage);
             }
+            gameBox.appendChild(ratingsSection);
         }
     }
 

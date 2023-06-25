@@ -8,6 +8,12 @@
     font-size: 13px;
 }
 
+h3 {
+    text-decoration: underline;
+    text-decoration-color: #916b01;
+    text-decoration-thickness: 3px;
+}
+
 #banner_icon {
     background-color: white;
     position: fixed;
@@ -47,10 +53,11 @@
 }
 
 #content {
-    display: flex;
-    padding-top: 45px;
+    margin-top: 35px;
+    padding-top: 5px;
     padding-left: 5px;
     padding-right: 5px;
+    z-index: -100;
 }
 
 #games_filter {
@@ -87,6 +94,11 @@ input[type='text'] {
 
 input[id='filter_panel_search'] {
     width: 160px;
+}
+
+#games_home {
+    display: flex;
+    margin-top: 20px;
 }
 
 .filter_panel_item {
@@ -132,11 +144,52 @@ input[id='filter_panel_search'] {
     background-color: white;
 }
 
+#bgImage {
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    z-index: -100;
+}
+
+#gamepage {
+    top: 0px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    width: 90%;
+    min-width: 800px;
+    max-width: 1122px;
+
+    padding: 20px;
+    background: rgba(56, 56, 56, 0.7);
+}
+
+#mainbody {
+    margin-right: 300px;
+}
+
+#gamesummary {
+    float: right;
+    margin-left: 30px;
+    width: 280px;
+}
+
+.game_cover_image {
+    display: block;
+    max-width: 250px;
+    max-height: 350px;
+    width: 100%;
+}
+
 .rating_image {
     display: inline-block;
     max-width: 72px;
     max-height: 72px;
-    margin-right: 10px;
+    margin-right: 20px;
+    margin-bottom: 20px;
 }
 
 .rating_image_mini {
@@ -146,8 +199,30 @@ input[id='filter_panel_search'] {
     margin-right: 2px;
 }
 
-.game_cover_image {
-    display: block;
-    max-width: 250px;
-    max-height: 350px;
+#gamescreenshots {
+    background-color: black;
+    padding: 10px;
+    height: 350px;
+    margin-bottom: 20px;
+}
+
+#gamescreenshots_main {
+    width: 100%;
+    height: 290px;
+    margin-bottom: 10px;
+}
+
+#gamescreenshots_gallery {
+    left: 0px;
+    right: 0px;
+    height: 50px;
+    overflow-x: scroll;
+    text-align: center;
+}
+
+.gamescreenshosts_gallery_item {
+    display: inline-block;
+    height: 50px;
+    width: 70px;
+    margin-right: 10px;
 }
