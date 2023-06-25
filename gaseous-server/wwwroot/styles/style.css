@@ -70,6 +70,25 @@
     padding: 10px;
 }
 
+input[type='text'] {
+    background-color: #2b2b2b;
+    color: white;
+    padding: 5px;
+    font-family: "PT Sans", Arial, Helvetica, sans-serif;
+    font-kerning: normal;
+    font-style: normal;
+    font-weight: 100;
+    font-size: 13px;
+    border-radius: 5px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: lightgray;
+}
+
+input[id='filter_panel_search'] {
+    width: 160px;
+}
+
 .filter_panel_item {
     display: flex;
     padding: 3px;

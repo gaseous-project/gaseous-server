@@ -111,22 +111,14 @@ namespace gaseous_server.Controllers
             }
 
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT DISTINCT games_roms.gameid AS ROMGameId, game.ageratings, game.aggregatedrating, game.aggregatedratingcount, game.alternativenames, game.artworks, game.bundles, game.category, game.collection, game.cover, game.dlcs, game.expansions, game.externalgames, game.firstreleasedate, game.`follows`, game.franchise, game.franchises, game.gameengines, game.gamemodes, game.genres, game.hypes, game.involvedcompanies, game.keywords, game.multiplayermodes, (CASE WHEN games_roms.gameid = 0 THEN games_roms.`name` ELSE game.`name` END) AS `name`, game.parentgame, game.platforms, game.playerperspectives, game.rating, game.ratingcount, game.releasedates, game.screenshots, game.similargames, game.slug, game.standaloneexpansions, game.`status`, game.storyline, game.summary, game.tags, game.themes, game.totalrating, game.totalratingcount, game.versionparent, game.versiontitle, game.videos, game.websites FROM gaseous.games_roms LEFT JOIN game ON game.id = games_roms.gameid " + whereClause + " " + havingClause + " " + orderByClause;
+            string sql = "SELECT DISTINCT games_roms.gameid AS ROMGameId, game.ageratings, game.aggregatedrating, game.aggregatedratingcount, game.alternativenames, game.artworks, game.bundles, game.category, game.collection, game.cover, game.dlcs, game.expansions, game.externalgames, game.firstreleasedate, game.`follows`, game.franchise, game.franchises, game.gameengines, game.gamemodes, game.genres, game.hypes, game.involvedcompanies, game.keywords, game.multiplayermodes, game.`name`, game.parentgame, game.platforms, game.playerperspectives, game.rating, game.ratingcount, game.releasedates, game.screenshots, game.similargames, game.slug, game.standaloneexpansions, game.`status`, game.storyline, game.summary, game.tags, game.themes, game.totalrating, game.totalratingcount, game.versionparent, game.versiontitle, game.videos, game.websites FROM gaseous.games_roms LEFT JOIN game ON game.id = games_roms.gameid " + whereClause + " " + havingClause + " " + orderByClause;
 
             List<IGDB.Models.Game> RetVal = new List<IGDB.Models.Game>();
 
             DataTable dbResponse = db.ExecuteCMD(sql, whereParams);
             foreach (DataRow dr in dbResponse.Rows)
             {
-                if ((long)dr["ROMGameId"] == 0)
-                {
-                    // unknown game
-                }
-                else
-                {
-                    // known game
-                    RetVal.Add(Classes.Metadata.Games.GetGame((long)dr["ROMGameId"], false, false));
-                }
+                RetVal.Add(Classes.Metadata.Games.GetGame((long)dr["ROMGameId"], false, false));
             }
 
             return Ok(RetVal);

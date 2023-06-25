@@ -1,4 +1,5 @@
 ﻿function formatGamesPanel(targetElement, result) {
+    targetElement.innerHTML = '';
     for (var i = 0; i < result.length; i++) {
         var game = renderGameIcon(result[i], true, false);
         targetElement.appendChild(game);
