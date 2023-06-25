@@ -40,18 +40,47 @@
     <None Remove="Assets\Ratings\ESRB\RP.svg" />
     <None Remove="Assets\Ratings\ESRB\RP-LM17-English.svg" />
     <None Remove="Assets\Ratings\ESRB\T.svg" />
-    <None Remove="Assets\Ratings\PEGI\Eighteen.jpg" />
-    <None Remove="Assets\Ratings\PEGI\PEGI_Parental_Guidance_Recommended.png" />
-    <None Remove="Assets\Ratings\PEGI\Seven.jpg" />
-    <None Remove="Assets\Ratings\PEGI\Sixteen.jpg" />
-    <None Remove="Assets\Ratings\PEGI\Three.jpg" />
-    <None Remove="Assets\Ratings\PEGI\Twelve.jpg" />
-    <None Remove="Assets\Ratings\ACB\ACB_G.png" />
-    <None Remove="Assets\Ratings\ACB\ACB_M.png" />
-    <None Remove="Assets\Ratings\ACB\ACB_MA15.png" />
-    <None Remove="Assets\Ratings\ACB\ACB_PG.png" />
-    <None Remove="Assets\Ratings\ACB\ACB_R18.png" />
-    <None Remove="Assets\Ratings\ACB\ACB_RC.png" />
+    <None Remove="Assets\Ratings\CERO\" />
+    <None Remove="Assets\Ratings\CERO\CERO_A.png" />
+    <None Remove="Assets\Ratings\CERO\CERO_B.png" />
+    <None Remove="Assets\Ratings\CERO\CERO_C.png" />
+    <None Remove="Assets\Ratings\CERO\CERO_D.png" />
+    <None Remove="Assets\Ratings\CERO\CERO_Z.png" />
+    <None Remove="Assets\Ratings\USK\" />
+    <None Remove="Assets\Ratings\USK\USK_0.svg" />
+    <None Remove="Assets\Ratings\USK\USK_12.svg" />
+    <None Remove="Assets\Ratings\USK\USK_16.svg" />
+    <None Remove="Assets\Ratings\USK\USK_18.svg" />
+    <None Remove="Assets\Ratings\USK\USK_6.svg" />
+    <None Remove="Assets\Ratings\ACB\ACB_G.svg" />
+    <None Remove="Assets\Ratings\ACB\ACB_M.svg" />
+    <None Remove="Assets\Ratings\ACB\ACB_MA15.svg" />
+    <None Remove="Assets\Ratings\ACB\ACB_PG.svg" />
+    <None Remove="Assets\Ratings\ACB\ACB_R18.svg" />
+    <None Remove="Assets\Ratings\ACB\ACB_RC.svg" />
+    <None Remove="Assets\Ratings\CERO\CERO_A.svg" />
+    <None Remove="Assets\Ratings\CERO\CERO_B.svg" />
+    <None Remove="Assets\Ratings\CERO\CERO_C.svg" />
+    <None Remove="Assets\Ratings\CERO\CERO_D.svg" />
+    <None Remove="Assets\Ratings\CERO\CERO_Z.svg" />
+    <None Remove="Assets\Ratings\PEGI\Eighteen.svg" />
+    <None Remove="Assets\Ratings\PEGI\Seven.svg" />
+    <None Remove="Assets\Ratings\PEGI\Sixteen.svg" />
+    <None Remove="Assets\Ratings\PEGI\Three.svg" />
+    <None Remove="Assets\Ratings\PEGI\Twelve.svg" />
+    <None Remove="Assets\Ratings\GRAC\" />
+    <None Remove="Assets\Ratings\GRAC\GRAC_All.svg" />
+    <None Remove="Assets\Ratings\GRAC\GRAC_Eighteen.svg" />
+    <None Remove="Assets\Ratings\GRAC\GRAC_Fifteen.svg" />
+    <None Remove="Assets\Ratings\GRAC\GRAC_Testing.svg" />
+    <None Remove="Assets\Ratings\GRAC\GRAC_Twelve.svg" />
+    <None Remove="Assets\Ratings\CLASS_IND\" />
+    <None Remove="Assets\Ratings\CLASS_IND\CLASS_IND_Eighteen.svg" />
+    <None Remove="Assets\Ratings\CLASS_IND\CLASS_IND_Fourteen.svg" />
+    <None Remove="Assets\Ratings\CLASS_IND\CLASS_IND_L.svg" />
+    <None Remove="Assets\Ratings\CLASS_IND\CLASS_IND_Sixteen.svg" />
+    <None Remove="Assets\Ratings\CLASS_IND\CLASS_IND_Ten.svg" />
+    <None Remove="Assets\Ratings\CLASS_IND\CLASS_IND_Twelve.svg" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Controllers\" />
@@ -69,6 +98,11 @@
     <Folder Include="wwwroot\scripts\" />
     <Folder Include="wwwroot\images\" />
     <Folder Include="wwwroot\styles\" />
+    <Folder Include="wwwroot\pages\" />
+    <Folder Include="Assets\Ratings\CERO\" />
+    <Folder Include="Assets\Ratings\USK\" />
+    <Folder Include="Assets\Ratings\GRAC\" />
+    <Folder Include="Assets\Ratings\CLASS_IND\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\gaseous-tools\gaseous-tools.csproj">
@@ -88,6 +122,7 @@
     <Content Remove="wwwroot\scripts\" />
     <Content Remove="wwwroot\images\" />
     <Content Remove="wwwroot\styles\" />
+    <Content Remove="wwwroot\pages\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Support\PlatformMap.json" Condition="'$(ExcludeConfigFilesFromBuildOutput)'!='true'">
@@ -101,18 +136,38 @@
     <EmbeddedResource Include="Assets\Ratings\ESRB\RP.svg" />
     <EmbeddedResource Include="Assets\Ratings\ESRB\RP-LM17-English.svg" />
     <EmbeddedResource Include="Assets\Ratings\ESRB\T.svg" />
-    <EmbeddedResource Include="Assets\Ratings\PEGI\Eighteen.jpg" />
-    <EmbeddedResource Include="Assets\Ratings\PEGI\PEGI_Parental_Guidance_Recommended.png" />
-    <EmbeddedResource Include="Assets\Ratings\PEGI\Seven.jpg" />
-    <EmbeddedResource Include="Assets\Ratings\PEGI\Sixteen.jpg" />
-    <EmbeddedResource Include="Assets\Ratings\PEGI\Three.jpg" />
-    <EmbeddedResource Include="Assets\Ratings\PEGI\Twelve.jpg" />
-    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_G.png" />
-    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_M.png" />
-    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_MA15.png" />
-    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_PG.png" />
-    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_R18.png" />
-    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_RC.png" />
+    <EmbeddedResource Include="Assets\Ratings\USK\USK_0.svg" />
+    <EmbeddedResource Include="Assets\Ratings\USK\USK_12.svg" />
+    <EmbeddedResource Include="Assets\Ratings\USK\USK_16.svg" />
+    <EmbeddedResource Include="Assets\Ratings\USK\USK_18.svg" />
+    <EmbeddedResource Include="Assets\Ratings\USK\USK_6.svg" />
+    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_G.svg" />
+    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_M.svg" />
+    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_MA15.svg" />
+    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_PG.svg" />
+    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_R18.svg" />
+    <EmbeddedResource Include="Assets\Ratings\ACB\ACB_RC.svg" />
+    <EmbeddedResource Include="Assets\Ratings\CERO\CERO_A.svg" />
+    <EmbeddedResource Include="Assets\Ratings\CERO\CERO_B.svg" />
+    <EmbeddedResource Include="Assets\Ratings\CERO\CERO_C.svg" />
+    <EmbeddedResource Include="Assets\Ratings\CERO\CERO_D.svg" />
+    <EmbeddedResource Include="Assets\Ratings\CERO\CERO_Z.svg" />
+    <EmbeddedResource Include="Assets\Ratings\PEGI\Eighteen.svg" />
+    <EmbeddedResource Include="Assets\Ratings\PEGI\Seven.svg" />
+    <EmbeddedResource Include="Assets\Ratings\PEGI\Sixteen.svg" />
+    <EmbeddedResource Include="Assets\Ratings\PEGI\Three.svg" />
+    <EmbeddedResource Include="Assets\Ratings\PEGI\Twelve.svg" />
+    <EmbeddedResource Include="Assets\Ratings\GRAC\GRAC_All.svg" />
+    <EmbeddedResource Include="Assets\Ratings\GRAC\GRAC_Eighteen.svg" />
+    <EmbeddedResource Include="Assets\Ratings\GRAC\GRAC_Fifteen.svg" />
+    <EmbeddedResource Include="Assets\Ratings\GRAC\GRAC_Testing.svg" />
+    <EmbeddedResource Include="Assets\Ratings\GRAC\GRAC_Twelve.svg" />
+    <EmbeddedResource Include="Assets\Ratings\CLASS_IND\CLASS_IND_Eighteen.svg" />
+    <EmbeddedResource Include="Assets\Ratings\CLASS_IND\CLASS_IND_Fourteen.svg" />
+    <EmbeddedResource Include="Assets\Ratings\CLASS_IND\CLASS_IND_L.svg" />
+    <EmbeddedResource Include="Assets\Ratings\CLASS_IND\CLASS_IND_Sixteen.svg" />
+    <EmbeddedResource Include="Assets\Ratings\CLASS_IND\CLASS_IND_Ten.svg" />
+    <EmbeddedResource Include="Assets\Ratings\CLASS_IND\CLASS_IND_Twelve.svg" />
   </ItemGroup>
   <ItemGroup>
     <None Include="wwwroot\index.html" />

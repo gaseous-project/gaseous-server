@@ -132,9 +132,22 @@ input[id='filter_panel_search'] {
     background-color: white;
 }
 
+.rating_image {
+    display: inline-block;
+    max-width: 72px;
+    max-height: 72px;
+    margin-right: 10px;
+}
+
 .rating_image_mini {
     display: inline-block;
     max-width: 32px;
     max-height: 32px;
     margin-right: 2px;
+}
+
+.game_cover_image {
+    display: block;
+    max-width: 250px;
+    max-height: 350px;
 }

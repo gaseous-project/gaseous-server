@@ -1,0 +1,14 @@
+﻿<div id="games_filter"></div>
+<div id="games_library"></div>
+
+<script type="text/javascript">
+    ajaxCall('/api/v1/Filter', 'GET', function (result) {
+        var filterElement = document.getElementById('games_filter');
+        formatFilterPanel(filterElement, result);
+    });
+
+    ajaxCall('/api/v1/Games', 'GET', function (result) {
+        var gameElement = document.getElementById('games_library');
+        formatGamesPanel(gameElement, result);
+    });
+</script>

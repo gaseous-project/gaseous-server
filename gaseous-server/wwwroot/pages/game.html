@@ -1,0 +1,36 @@
+﻿<div id="mainbody"></div>
+
+<div id="gamesummary"></div>
+
+<script type="text/javascript">
+    const urlParams = new URLSearchParams(window.location.search);
+    var gameId = urlParams.get('id');
+
+    ajaxCall('/api/v1/Games/' + gameId, 'GET', function (result) {
+        // populate games page
+        var gameSummary = document.getElementById('gamesummary');
+
+        // load cover
+        var gameImage = document.createElement('img');
+        gameImage.className = 'game_cover_image';
+        if (result.cover) {
+            gameImage.src = '/api/v1/Games/' + result.id + '/cover/image';
+        } else {
+            gameImage.src = '/images/unknowngame.png';
+            gameImage.className = 'game_cover_image unknown';
+        }
+        gameSummary.appendChild(gameImage);
+
+        // load ratings
+        var gameRatings = document.createElement('div');
+        if (result.ageRatings) {
+            for (var i = 0; i < result.ageRatings.ids.length; i++) {
+                var ratingImage = document.createElement('img');
+                ratingImage.src = '/api/v1/Games/' + result.id + '/agerating/' + result.ageRatings.ids[i] + '/image';
+                ratingImage.className = 'rating_image';
+                gameRatings.appendChild(ratingImage);
+            }
+            gameSummary.appendChild(gameRatings);
+        }
+    });
+</script>

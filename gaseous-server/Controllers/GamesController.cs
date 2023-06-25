@@ -198,12 +198,28 @@ namespace gaseous_server.Controllers
                         fileType = "image/svg+xml";
                         break;
                     case AgeRatingCategory.PEGI:
-                        fileExtension = "jpg";
-                        fileType = "image/jpg";
+                        fileExtension = "svg";
+                        fileType = "image/svg+xml";
                         break;
                     case AgeRatingCategory.ACB:
-                        fileExtension = "png";
-                        fileType = "image/png";
+                        fileExtension = "svg";
+                        fileType = "image/svg+xml";
+                        break;
+                    case AgeRatingCategory.CERO:
+                        fileExtension = "svg";
+                        fileType = "image/svg+xml";
+                        break;
+                    case AgeRatingCategory.USK:
+                        fileExtension = "svg";
+                        fileType = "image/svg+xml";
+                        break;
+                    case AgeRatingCategory.GRAC:
+                        fileExtension = "svg";
+                        fileType = "image/svg+xml";
+                        break;
+                    case AgeRatingCategory.CLASS_IND:
+                        fileExtension = "svg";
+                        fileType = "image/svg+xml";
                         break;
                 }
 

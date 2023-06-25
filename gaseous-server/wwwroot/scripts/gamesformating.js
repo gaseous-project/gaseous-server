@@ -9,6 +9,7 @@
 function renderGameIcon(gameObject, showTitle, showRatings) {
     var gameBox = document.createElement('div');
     gameBox.className = 'game_tile';
+    gameBox.setAttribute('onclick', 'window.location.href = "/index.html?page=game&id=' + gameObject.id + '";');
 
     var gameImage = document.createElement('img');
     gameImage.className = 'game_tile_image';
