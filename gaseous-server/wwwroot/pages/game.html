@@ -1,6 +1,9 @@
 ﻿<div id="bgImage"></div>
+
 <div id="gamepage">
-    
+    <div id="gametitle"><h1 id="gametitle_label"></h1></div>
+
+
     <div id="gamesummary">
         <div id="gamesummary_cover"></div>
         <div id="gamesummary_ratings">
@@ -9,12 +12,22 @@
     </div>
 
     <div id="mainbody">
-        <div id="gametitle"><h1 id="gametitle_label"></h1></div>
         <div id="gamescreenshots">
-            <div id="gamescreenshots_main"></div>
-            <div id="gamescreenshots_gallery"></div>
+            <div id="gamescreenshots_portal">
+                <div id="gamescreenshots_left_arrow" style="float: left; margin-top: 145px;" onclick="selectScreenshot_Prev();" class="gamescreenshots_arrows">&lt;</div>
+                <div id="gamescreenshots_right_arrow" style="float: right; margin-top: 145px;" onclick="selectScreenshot_Next();" class="gamescreenshots_arrows">&gt;</div>
+                <div id="gamescreenshots_main"></div>
+            </div>
+            <div id="gamescreenshots_gallery">
+                <div id="gamescreenshots_gallery_panel"></div>
+            </div>
         </div>
-        <div id="gamesummarytext"><span id="gamesummarytext_label"></span>
+        <div id="gamesummarytext">
+            <span id="gamesummarytext_label" class="line-clamp-4"></span>
+            <p id="gamesummarytext_label_button_expand" class="text_link" style="display: none;" onclick="document.querySelector('#gamesummarytext_label').classList.remove('line-clamp-4'); document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', 'display: none;'); document.querySelector('#gamesummarytext_label_button_contract').setAttribute('style', '');">Read more...</p>
+
+            <p id="gamesummarytext_label_button_contract" class="text_link" style="display: none;" onclick="document.querySelector('#gamesummarytext_label').classList.add('line-clamp-4'); document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', ''); document.querySelector('#gamesummarytext_label_button_contract').setAttribute('style', 'display: none;');">Read less...</p>
+        </div>
     </div>
 
     
@@ -25,6 +38,7 @@
     var artworks = null;
     var artworksPosition = 0;
     var artworksTimer = null;
+    var selectedScreenshot = 0;
 
     ajaxCall('/api/v1/Games/' + gameId, 'GET', function (result) {
         // populate games page
@@ -40,6 +54,15 @@
                 gameSummaryLabel.innerHTML = result.summary;
             } else {
                 gameSummaryLabel.innerHTML = result.storyline;
+            }
+            
+            if (gameSummaryLabel.offsetHeight < gameSummaryLabel.scrollHeight ||
+                gameSummaryLabel.offsetWidth < gameSummaryLabel.scrollWidth) {
+                // your element has overflow and truncated
+                // show read more / read less button
+                document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', '');
+            } else {
+                // your element doesn't overflow (not truncated)
             }
         } else {
             gameSummaryLabel.setAttribute('style', 'display: none;');
@@ -83,15 +106,19 @@
         var gameScreenshots = document.getElementById('gamescreenshots');
         if (result.screenshots) {
             var gameScreenshots_Main = document.getElementById('gamescreenshots_main');
-            gameScreenshots_Main.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/screenshots/' + result.screenshots.ids[0] + '/image"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
+            //gameScreenshots_Main.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/screenshots/' + result.screenshots.ids[0] + '/image"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
 
-            var gameScreenshots_Gallery = document.getElementById('gamescreenshots_gallery');
+            var gameScreenshots_Gallery = document.getElementById('gamescreenshots_gallery_panel');
             for (var i = 0; i < result.screenshots.ids.length; i++) {
                 var screenshotItem = document.createElement('div');
+                screenshotItem.id = 'gamescreenshots_gallery_' + i;
+                screenshotItem.setAttribute('name', 'gamescreenshots_gallery_item');
                 screenshotItem.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/screenshots/' + result.screenshots.ids[i] + '/image"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
                 screenshotItem.className = 'gamescreenshosts_gallery_item';
+                screenshotItem.setAttribute('onclick', 'selectScreenshot(' + i + ');');
                 gameScreenshots_Gallery.appendChild(screenshotItem);
             }
+            selectScreenshot(0);
         } else {
             gamescreenshots.setAttribute('style', 'display: none;');
         }
@@ -105,7 +132,51 @@
             }
             var bg = document.getElementById('bgImage');
             bg.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/artwork/' + artworks[artworksPosition] + '/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
-            artworksTimer = setTimeout(rotateBackground, 2500);
+            artworksTimer = setTimeout(rotateBackground, 60000);
         }
+    }
+
+    function selectScreenshot(index) {
+        var gameScreenshots_Main = document.getElementById('gamescreenshots_main');
+        var gameScreenshots_Selected = document.getElementById('gamescreenshots_gallery_' + index);
+        var gameScreenshots_Items = document.getElementsByName('gamescreenshots_gallery_item');
+
+        // set the selction class
+        for (var i = 0; i < gameScreenshots_Items.length; i++) {
+            if (gameScreenshots_Items[i].id == gameScreenshots_Selected.id) {
+                gameScreenshots_Items[i].classList.add('gamescreenshosts_gallery_item_selected');
+                gameScreenshots_Selected.scrollIntoView();
+            } else {
+                gameScreenshots_Items[i].classList.remove('gamescreenshosts_gallery_item_selected');
+            }
+        }
+
+        // set the screenshot
+        gameScreenshots_Main.setAttribute('style', gameScreenshots_Selected.getAttribute('style'));
+        selectedScreenshot = index;
+    }
+
+    function selectScreenshot_Next() {
+        var gameScreenshots_Items = document.getElementsByName('gamescreenshots_gallery_item');
+
+        selectedScreenshot += 1;
+
+        if (selectedScreenshot >= gameScreenshots_Items.length) {
+            selectedScreenshot = 0;
+        }
+
+        selectScreenshot(selectedScreenshot);
+    }
+
+    function selectScreenshot_Prev() {
+        var gameScreenshots_Items = document.getElementsByName('gamescreenshots_gallery_item');
+
+        selectedScreenshot = selectedScreenshot - 1;
+        
+        if (selectedScreenshot < 0) {
+            selectedScreenshot = gameScreenshots_Items.length - 1;
+        }
+
+        selectScreenshot(selectedScreenshot);
     }
 </script>

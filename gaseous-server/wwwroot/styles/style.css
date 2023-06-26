@@ -96,6 +96,36 @@ input[id='filter_panel_search'] {
     width: 160px;
 }
 
+/* width */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 5px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #383838;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.text_link {
+    
+}
+
+.text_link:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
 #games_home {
     display: flex;
     margin-top: 20px;
@@ -168,13 +198,13 @@ input[id='filter_panel_search'] {
 }
 
 #mainbody {
-    margin-right: 300px;
+    margin-left: 270px;
 }
 
 #gamesummary {
-    float: right;
-    margin-left: 30px;
-    width: 280px;
+    float: left;
+    margin-right: 20px;
+    width: 250px;
 }
 
 .game_cover_image {
@@ -186,8 +216,8 @@ input[id='filter_panel_search'] {
 
 .rating_image {
     display: inline-block;
-    max-width: 72px;
-    max-height: 72px;
+    max-width: 64px;
+    max-height: 64px;
     margin-right: 20px;
     margin-bottom: 20px;
 }
@@ -202,7 +232,7 @@ input[id='filter_panel_search'] {
 #gamescreenshots {
     background-color: black;
     padding: 10px;
-    height: 350px;
+    /*height: 350px;*/
     margin-bottom: 20px;
 }
 
@@ -215,9 +245,17 @@ input[id='filter_panel_search'] {
 #gamescreenshots_gallery {
     left: 0px;
     right: 0px;
-    height: 50px;
+    height: 65px;
     overflow-x: scroll;
-    text-align: center;
+    overflow-y: hidden;
+    white-space: normal;
+}
+
+#gamescreenshots_gallery_panel {
+    display: block;
+    height: 50px;
+    margin-bottom: 10px;
+    white-space: nowrap;
 }
 
 .gamescreenshosts_gallery_item {
@@ -225,4 +263,57 @@ input[id='filter_panel_search'] {
     height: 50px;
     width: 70px;
     margin-right: 10px;
+    white-space: nowrap;
+    border-color: black;
+    border-style: solid;
+    border-width: 2px;
+}
+
+.gamescreenshots_arrows {
+    margin-top: 140px;
+    height: 50px;
+    width: 30px;
+    font-size: 40px;
+    background-color: #383838;
+    color: black;
+    text-align: center;
+
+    user-select: none; /* standard syntax */
+    -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+    -moz-user-select: none; /* mozilla browsers */
+    -khtml-user-select: none; /* webkit (konqueror) browsers */
+    -ms-user-select: none; /* IE10+ */
+}
+
+.gamescreenshots_arrows:hover {
+    cursor: pointer;
+    background-color: #555;
+}
+
+#gamescreenshots_left_arrow {
+    float: left;
+}
+
+#gamescreenshots_right_arrow {
+    float: right;
+}
+
+.gamescreenshosts_gallery_item:hover {
+    border-color: lightblue;
+}
+
+.gamescreenshosts_gallery_item_selected {
+    border-color: white;
+}
+
+#gamesummarytext_label {
+    
+}
+
+.line-clamp-4 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    /* truncate to 4 lines */
+    -webkit-line-clamp: 4;
 }
