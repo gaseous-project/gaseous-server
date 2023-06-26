@@ -92,6 +92,7 @@ namespace gaseous_server.Classes
             {
                 Id = (long)romDR["id"],
                 PlatformId = (long)romDR["platformid"],
+				Platform = Classes.Metadata.Platforms.GetPlatform((long)romDR["platformid"]),
                 GameId = (long)romDR["gameid"],
                 Name = (string)romDR["name"],
                 Size = (long)romDR["size"],
@@ -113,6 +114,7 @@ namespace gaseous_server.Classes
 		{
 			public long Id { get; set; }
 			public long PlatformId { get; set; }
+			public IGDB.Models.Platform Platform { get; set; }
 			public long GameId { get; set; }
 			public string? Name { get; set; }
 			public long Size { get; set; }

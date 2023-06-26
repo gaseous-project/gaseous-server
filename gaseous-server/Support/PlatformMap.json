@@ -18,8 +18,7 @@
             ".G64",
             ".PRG",
             ".T64",
-            ".TAP",
-            ".Z64"
+            ".TAP"
         ]
     },
     {
@@ -61,6 +60,17 @@
             ".MD",
             ".SG",
             ".SMD"
+        ]
+    },
+    {
+        "IGDBId": 4,
+        "IGDBName": "Nintendo 64",
+        "AlternateNames": [
+            "Nintendo 64",
+            "N64"
+        ],
+        "KnownFileExtensions": [
+            ".Z64"
         ]
     }
 ]

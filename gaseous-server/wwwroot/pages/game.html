@@ -1,7 +1,12 @@
 ﻿<div id="bgImage"></div>
 
 <div id="gamepage">
-    <div id="gametitle"><h1 id="gametitle_label"></h1></div>
+    <div id="gametitle">
+        <h1 id="gametitle_label"></h1>
+        <p id="gametitle_alts">
+            <span>Also known as: </span><span id="gametitle_alts_label"></span>
+        </p>
+    </div>
 
 
     <div id="gamesummary">
@@ -28,6 +33,9 @@
 
             <p id="gamesummarytext_label_button_contract" class="text_link" style="display: none;" onclick="document.querySelector('#gamesummarytext_label').classList.add('line-clamp-4'); document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', ''); document.querySelector('#gamesummarytext_label_button_contract').setAttribute('style', 'display: none;');">Read less...</p>
         </div>
+        <div id="gamesummaryroms">
+            <h3>ROM's</h3>
+        </div>
     </div>
 
     
@@ -46,6 +54,24 @@
         // get name
         var gameTitleLabel = document.getElementById('gametitle_label');
         gameTitleLabel.innerHTML = result.name;
+
+        // get alt name
+        var gameTitleAltLabel = document.getElementById('gametitle_alts');
+        if (result.alternativeNames) {
+            ajaxCall('/api/v1/Games/' + gameId + '/alternativename', 'GET', function (result) {
+                var altNames = '';
+                for (var i = 0; i < result.length; i++) {
+                    if (altNames.length > 0) {
+                        altNames += ', ';
+                    }
+                    altNames += result[i].name;
+                }
+                var gameTitleAltLabelText = document.getElementById('gametitle_alts_label');
+                gameTitleAltLabelText.innerHTML = altNames;
+            });
+        } else {
+            gameTitleAltLabel.setAttribute('style', 'display: none;');
+        }
 
         // get summary
         var gameSummaryLabel = document.getElementById('gamesummarytext_label');
@@ -170,6 +196,44 @@
         } else {
             gamescreenshots.setAttribute('style', 'display: none;');
         }
+
+        // load roms
+        var gameRoms = document.getElementById('gamesummaryroms');
+        ajaxCall('/api/v1/Games/' + gameId + '/roms', 'GET', function (result) {
+            if (result) {
+                result.sort((a, b) => a.platform.name.charCodeAt(0) - b.platform.name.charCodeAt(0));
+
+                var newTable = document.createElement('table');
+                newTable.className = 'romtable';
+                newTable.setAttribute('cellspacing', 0);
+                newTable.appendChild(createTableRow(true, ['Name', 'Size', 'Media', '']));
+
+                var lastPlatform = '';
+                for (var i = 0; i < result.length; i++) {
+                    if (result[i].platform.name != lastPlatform) {
+                        lastPlatform = result[i].platform.name;
+                        var platformRow = document.createElement('tr');
+                        var platformHeader = document.createElement('th');
+                        platformHeader.setAttribute('colspan', 4);
+                        platformHeader.innerHTML = result[i].platform.name;
+                        platformRow.appendChild(platformHeader);
+                        newTable.appendChild(platformRow);
+                    }
+
+                    var newRow = [
+                        '<a href="/api/v1/Games/' + gameId + '/roms/' + result[i].id + '/file" class="romlink">' + result[i].name + '</a>',
+                        formatBytes(result[i].size, 2),
+                        result[i].romTypeMedia,
+                        result[i].mediaLabel
+                    ];
+                    newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
+                }
+
+                gameRoms.appendChild(newTable);
+            } else {
+                gameRoms.setAttribute('style', 'display: none;');
+            }
+        });
     });
 
     function rotateBackground() {
@@ -246,5 +310,25 @@
         }
 
         selectScreenshot(selectedScreenshot);
+    }
+
+    function createTableRow(isHeader, row, rowClass, cellClass) {
+        var newRow = document.createElement('tr');
+        newRow.className = rowClass;
+
+        for (var i = 0; i < row.length; i++) {
+            var cellType = 'td';
+            if (isHeader == true) {
+                cellType = 'th';
+            }
+
+            var newCell = document.createElement(cellType);
+            newCell.innerHTML = row[i];
+            newCell.className = cellClass;
+
+            newRow.appendChild(newCell);
+        }
+
+        return newRow;
     }
 </script>

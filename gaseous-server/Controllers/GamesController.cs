@@ -150,6 +150,36 @@ namespace gaseous_server.Controllers
         }
 
         [HttpGet]
+        [Route("{GameId}/alternativename")]
+        [ProducesResponseType(typeof(List<AlternativeName>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GameAlternativeNames(long GameId)
+        {
+            try
+            {
+                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
+
+                if (gameObject.AlternativeNames != null)
+                {
+                    List<AlternativeName> altNames = new List<AlternativeName>();
+                    foreach (long altNameId in gameObject.AlternativeNames.Ids)
+                    {
+                        altNames.Add(AlternativeNames.GetAlternativeNames(altNameId));
+                    }
+                    return Ok(altNames);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
         [Route("{GameId}/agerating")]
         [ProducesResponseType(typeof(List<AgeRatings.GameAgeRating>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
