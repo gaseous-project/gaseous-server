@@ -111,14 +111,15 @@ namespace gaseous_server.Controllers
             }
 
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT DISTINCT games_roms.gameid AS ROMGameId, game.ageratings, game.aggregatedrating, game.aggregatedratingcount, game.alternativenames, game.artworks, game.bundles, game.category, game.collection, game.cover, game.dlcs, game.expansions, game.externalgames, game.firstreleasedate, game.`follows`, game.franchise, game.franchises, game.gameengines, game.gamemodes, game.genres, game.hypes, game.involvedcompanies, game.keywords, game.multiplayermodes, game.`name`, game.parentgame, game.platforms, game.playerperspectives, game.rating, game.ratingcount, game.releasedates, game.screenshots, game.similargames, game.slug, game.standaloneexpansions, game.`status`, game.storyline, game.summary, game.tags, game.themes, game.totalrating, game.totalratingcount, game.versionparent, game.versiontitle, game.videos, game.websites FROM gaseous.games_roms LEFT JOIN game ON game.id = games_roms.gameid " + whereClause + " " + havingClause + " " + orderByClause;
+            string sql = "SELECT DISTINCT games_roms.gameid AS ROMGameId, game.id, game.ageratings, game.aggregatedrating, game.aggregatedratingcount, game.alternativenames, game.artworks, game.bundles, game.category, game.collection, game.cover, game.dlcs, game.expansions, game.externalgames, game.firstreleasedate, game.`follows`, game.franchise, game.franchises, game.gameengines, game.gamemodes, game.genres, game.hypes, game.involvedcompanies, game.keywords, game.multiplayermodes, game.`name`, game.parentgame, game.platforms, game.playerperspectives, game.rating, game.ratingcount, game.releasedates, game.screenshots, game.similargames, game.slug, game.standaloneexpansions, game.`status`, game.storyline, game.summary, game.tags, game.themes, game.totalrating, game.totalratingcount, game.versionparent, game.versiontitle, game.videos, game.websites FROM gaseous.games_roms LEFT JOIN game ON game.id = games_roms.gameid " + whereClause + " " + havingClause + " " + orderByClause;
 
             List<IGDB.Models.Game> RetVal = new List<IGDB.Models.Game>();
 
             DataTable dbResponse = db.ExecuteCMD(sql, whereParams);
             foreach (DataRow dr in dbResponse.Rows)
             {
-                RetVal.Add(Classes.Metadata.Games.GetGame((long)dr["ROMGameId"], false, false));
+                //RetVal.Add(Classes.Metadata.Games.GetGame((long)dr["ROMGameId"], false, false));
+                RetVal.Add(Classes.Metadata.Games.GetGame(dr));
             }
 
             return Ok(RetVal);
@@ -128,6 +129,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}")]
         [ProducesResponseType(typeof(Game), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "5Minute")]
         public ActionResult Game(long GameId, bool forceRefresh = false)
         {
             try
@@ -153,6 +155,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/alternativename")]
         [ProducesResponseType(typeof(List<AlternativeName>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
         public ActionResult GameAlternativeNames(long GameId)
         {
             try
@@ -183,6 +186,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/agerating")]
         [ProducesResponseType(typeof(List<AgeRatings.GameAgeRating>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
         public ActionResult GameAgeClassification(long GameId)
         {
             try
@@ -275,6 +279,7 @@ namespace gaseous_server.Controllers
                         };
 
                         Response.Headers.Add("Content-Disposition", cd.ToString());
+                        Response.Headers.Add("Cache-Control", "public, max-age=604800");
 
                         return File(filedata, contentType);
                     }
@@ -291,6 +296,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/artwork")]
         [ProducesResponseType(typeof(List<Artwork>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
         public ActionResult GameArtwork(long GameId)
         {
             try
@@ -319,6 +325,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/artwork/{ArtworkId}")]
         [ProducesResponseType(typeof(Artwork), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
         public ActionResult GameArtwork(long GameId, long ArtworkId)
         {
             try
@@ -377,6 +384,7 @@ namespace gaseous_server.Controllers
                             };
 
                             Response.Headers.Add("Content-Disposition", cd.ToString());
+                            Response.Headers.Add("Cache-Control", "public, max-age=604800");
 
                             return File(filedata, contentType);
                         }
@@ -405,6 +413,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/cover")]
         [ProducesResponseType(typeof(Cover), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
         public ActionResult GameCover(long GameId)
         {
             try
@@ -457,6 +466,7 @@ namespace gaseous_server.Controllers
                     };
 
                     Response.Headers.Add("Content-Disposition", cd.ToString());
+                    Response.Headers.Add("Cache-Control", "public, max-age=604800");
 
                     return File(filedata, contentType);
                 }
@@ -475,6 +485,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/roms")]
         [ProducesResponseType(typeof(List<Classes.Roms.GameRomItem>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "5Minute")]
         public ActionResult GameRom(long GameId)
         {
             try
@@ -495,6 +506,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/roms/{RomId}")]
         [ProducesResponseType(typeof(Classes.Roms.GameRomItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "5Minute")]
         public ActionResult GameRom(long GameId, long RomId)
         {
             try
@@ -602,6 +614,7 @@ namespace gaseous_server.Controllers
                     };
 
                     Response.Headers.Add("Content-Disposition", cd.ToString());
+                    Response.Headers.Add("Cache-Control", "public, max-age=604800");
 
                     return File(filedata, contentType);
                 }
@@ -620,6 +633,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/screenshots")]
         [ProducesResponseType(typeof(List<Screenshot>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
         public ActionResult GameScreenshot(long GameId)
         {
             try
@@ -648,6 +662,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/screenshots/{ScreenshotId}")]
         [ProducesResponseType(typeof(Screenshot), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
         public ActionResult GameScreenshot(long GameId, long ScreenshotId)
         {
             try
@@ -702,6 +717,7 @@ namespace gaseous_server.Controllers
                     };
 
                     Response.Headers.Add("Content-Disposition", cd.ToString());
+                    Response.Headers.Add("Cache-Control", "public, max-age=604800");
 
                     return File(filedata, contentType);
                 }
@@ -720,6 +736,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/videos")]
         [ProducesResponseType(typeof(List<GameVideo>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
         public ActionResult GameVideo(long GameId)
         {
             try

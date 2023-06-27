@@ -139,17 +139,19 @@
             if (result.videos) {
                 imageIndex = result.videos.ids.length;
             }
-            for (var i = 0; i < result.screenshots.ids.length; i++) {
-                var screenshotItem = document.createElement('div');
-                screenshotItem.id = 'gamescreenshots_gallery_' + imageIndex;
-                screenshotItem.setAttribute('name', 'gamescreenshots_gallery_item');
-                screenshotItem.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/screenshots/' + result.screenshots.ids[i] + '/image"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
-                screenshotItem.setAttribute('imageid', imageIndex);
-                screenshotItem.setAttribute('imagetype', 0);
-                screenshotItem.className = 'gamescreenshosts_gallery_item';
-                screenshotItem.setAttribute('onclick', 'selectScreenshot(' + imageIndex + ');');
-                gameScreenshots_Gallery.appendChild(screenshotItem);
-                imageIndex += 1;
+            if (result.screenshots) {
+                for (var i = 0; i < result.screenshots.ids.length; i++) {
+                    var screenshotItem = document.createElement('div');
+                    screenshotItem.id = 'gamescreenshots_gallery_' + imageIndex;
+                    screenshotItem.setAttribute('name', 'gamescreenshots_gallery_item');
+                    screenshotItem.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/screenshots/' + result.screenshots.ids[i] + '/image"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
+                    screenshotItem.setAttribute('imageid', imageIndex);
+                    screenshotItem.setAttribute('imagetype', 0);
+                    screenshotItem.className = 'gamescreenshots_gallery_item';
+                    screenshotItem.setAttribute('onclick', 'selectScreenshot(' + imageIndex + ');');
+                    gameScreenshots_Gallery.appendChild(screenshotItem);
+                    imageIndex += 1;
+                }
             }
 
             // load videos
@@ -164,8 +166,14 @@
                         vScreenshotItem.setAttribute('imageid', i);
                         vScreenshotItem.setAttribute('imagetype', 1);
                         vScreenshotItem.setAttribute('imageref', result[i].videoId);
-                        vScreenshotItem.className = 'gamescreenshosts_gallery_item';
+                        vScreenshotItem.className = 'gamescreenshots_gallery_item';
                         vScreenshotItem.setAttribute('onclick', 'selectScreenshot(' + i + ');');
+
+                        var youtubeIcon = document.createElement('img');
+                        youtubeIcon.src = '/images/YouTube.svg';
+                        youtubeIcon.className = 'gamescreenshosts_gallery_item_youtube';
+                        vScreenshotItem.appendChild(youtubeIcon);
+
                         gameScreenshots_vGallery.insertBefore(vScreenshotItem, gameScreenshots_vGallery.firstChild);
                     }
 
@@ -206,7 +214,7 @@
                 var newTable = document.createElement('table');
                 newTable.className = 'romtable';
                 newTable.setAttribute('cellspacing', 0);
-                newTable.appendChild(createTableRow(true, ['Name', 'Size', 'Media', '']));
+                newTable.appendChild(createTableRow(true, ['Name', 'Size', 'Media', '', '']));
 
                 var lastPlatform = '';
                 for (var i = 0; i < result.length; i++) {
@@ -224,7 +232,8 @@
                         '<a href="/api/v1/Games/' + gameId + '/roms/' + result[i].id + '/file" class="romlink">' + result[i].name + '</a>',
                         formatBytes(result[i].size, 2),
                         result[i].romTypeMedia,
-                        result[i].mediaLabel
+                        result[i].mediaLabel,
+                        '<a href="#" class="romlink">...</a>'
                     ];
                     newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
                 }

@@ -1,6 +1,7 @@
 ﻿using System.Text.Json.Serialization;
 using gaseous_server;
 using gaseous_tools;
+using Microsoft.AspNetCore.Mvc;
 
 Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server");
 
@@ -32,6 +33,27 @@ builder.Services.AddControllers().AddJsonOptions(x =>
     // suppress nulls
     x.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
 });
+builder.Services.AddResponseCaching();
+builder.Services.AddControllers(options =>
+{
+    options.CacheProfiles.Add("Default30",
+        new CacheProfile()
+        {
+            Duration = 30
+        });
+    options.CacheProfiles.Add("5Minute",
+        new CacheProfile()
+        {
+            Duration = 300,
+            Location = ResponseCacheLocation.Any
+        });
+    options.CacheProfiles.Add("7Days",
+        new CacheProfile()
+        {
+            Duration = 604800,
+            Location = ResponseCacheLocation.Any
+        });
+});
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -48,6 +70,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseResponseCaching();
 
 app.UseAuthorization();
 

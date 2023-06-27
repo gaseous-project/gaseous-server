@@ -8,6 +8,11 @@
     font-size: 13px;
 }
 
+@font-face {
+    font-family: Commodore64;
+    src: url('/fonts/Commodore Pixelized v1.2.ttf');
+}
+
 h3 {
     border-bottom-style: solid;
     /*border-bottom-color: #916b01;*/
@@ -48,11 +53,13 @@ h3 {
 }
 
 #banner_header_label {
+    font-family: Commodore64;
     display: inline;
     padding: 10px;
-    font-size: 18pt;
-    font-weight: 700;
-    color: #edeffa;
+    font-size: 16pt;
+    vertical-align: top;
+    /*color: #edeffa;*/
+    color: #7c70da;
 }
 
 #content {
@@ -193,7 +200,7 @@ input[id='filter_panel_search'] {
     right: 0;
     margin: auto;
     width: 90%;
-    min-width: 800px;
+    min-width: 911px;
     max-width: 1122px;
 
     padding-top: 1px;
@@ -270,7 +277,7 @@ iframe {
     white-space: nowrap;
 }
 
-.gamescreenshosts_gallery_item {
+.gamescreenshots_gallery_item {
     display: inline-block;
     height: 50px;
     width: 70px;
@@ -282,6 +289,14 @@ iframe {
     cursor: pointer;
 }
 
+.gamescreenshosts_gallery_item_youtube {
+    max-height: 20px;
+    max-width: 20px;
+    float: right;
+    margin-top: 30px;
+    margin-right: 5px;
+}
+
 .gamescreenshots_arrows {
     margin-top: 140px;
     height: 50px;
@@ -290,7 +305,6 @@ iframe {
     background-color: #383838;
     color: black;
     text-align: center;
-
     user-select: none; /* standard syntax */
     -webkit-user-select: none; /* webkit (safari, chrome) browsers */
     -moz-user-select: none; /* mozilla browsers */

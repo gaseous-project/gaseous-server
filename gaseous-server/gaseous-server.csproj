@@ -103,6 +103,7 @@
     <Folder Include="Assets\Ratings\USK\" />
     <Folder Include="Assets\Ratings\GRAC\" />
     <Folder Include="Assets\Ratings\CLASS_IND\" />
+    <Folder Include="wwwroot\fonts\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\gaseous-tools\gaseous-tools.csproj">
@@ -123,6 +124,7 @@
     <Content Remove="wwwroot\images\" />
     <Content Remove="wwwroot\styles\" />
     <Content Remove="wwwroot\pages\" />
+    <Content Remove="wwwroot\fonts\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Support\PlatformMap.json" Condition="'$(ExcludeConfigFilesFromBuildOutput)'!='true'">

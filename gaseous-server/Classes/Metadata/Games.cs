@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using gaseous_tools;
 using IGDB;
 using IGDB.Models;
@@ -25,7 +26,7 @@ namespace gaseous_server.Classes.Metadata
             if (Id == 0)
             {
                 Game returnValue = new Game();
-                if ((Storage.GetCacheStatus("game", 0) == Storage.CacheStatus.NotPresent) || (forceRefresh == true))
+                if (Storage.GetCacheStatus("game", 0) == Storage.CacheStatus.NotPresent)
                 {
                     returnValue = new Game
                     {
@@ -53,6 +54,11 @@ namespace gaseous_server.Classes.Metadata
         {
             Task<Game> RetVal = _GetGame(SearchUsing.slug, Slug, followSubGames, forceRefresh);
             return RetVal.Result;
+        }
+
+        public static Game GetGame(DataRow dataRow)
+        {
+            return Storage.BuildCacheObject<Game>(new Game(), dataRow);
         }
 
         private static async Task<Game> _GetGame(SearchUsing searchUsing, object searchValue, bool followSubGames = false, bool forceRefresh = false)
@@ -229,6 +235,9 @@ namespace gaseous_server.Classes.Metadata
             searchBody += "fields id,name,slug,platforms,summary; ";
             switch (searchType)
             {
+                case SearchType.searchNoPlatform:
+                    searchBody += "search \"" + SearchString + "\"; ";
+                    break;
                 case SearchType.search:
                     searchBody += "search \"" + SearchString + "\"; ";
                     searchBody += "where platforms = (" + PlatformId + ");";
@@ -252,7 +261,8 @@ namespace gaseous_server.Classes.Metadata
         {
             where = 0,
             wherefuzzy = 1,
-            search = 2
+            search = 2,
+            searchNoPlatform = 3
         }
     }
 }
