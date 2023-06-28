@@ -199,6 +199,7 @@ namespace gaseous_server.Classes
 
             foreach (string SearchCandidate in SearchCandidates)
             {
+                bool GameFound = false;
 
                 Logging.Log(Logging.LogType.Information, "Import Game", "  Searching for title: " + SearchCandidate);
 
@@ -211,6 +212,7 @@ namespace gaseous_server.Classes
                         // exact match!
                         determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false);
                         Logging.Log(Logging.LogType.Information, "Import Game", "  IGDB game: " + determinedGame.Name);
+                        GameFound = true;
                         break;
                     }
                     else if (games.Length > 0)
@@ -222,6 +224,7 @@ namespace gaseous_server.Classes
                         Logging.Log(Logging.LogType.Information, "Import Game", "  No search results found");
                     }
                 }
+                if (GameFound == true) { break; }
             }
             if (determinedGame == null)
             {
