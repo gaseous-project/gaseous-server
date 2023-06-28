@@ -34,7 +34,7 @@
             <p id="gamesummarytext_label_button_contract" class="text_link" style="display: none;" onclick="document.querySelector('#gamesummarytext_label').classList.add('line-clamp-4'); document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', ''); document.querySelector('#gamesummarytext_label_button_contract').setAttribute('style', 'display: none;');">Read less...</p>
         </div>
         <div id="gamesummaryroms">
-            <h3>ROM's</h3>
+            <h3>ROM's/Images</h3>
         </div>
     </div>
 
@@ -238,7 +238,7 @@
                         formatBytes(result[i].size, 2),
                         result[i].romTypeMedia,
                         result[i].mediaLabel,
-                        '<a href="#" class="romlink">...</a>'
+                        '<span class="romlink" onclick="showDialog(\'rominfo\', ' + result[i].id + ');">...</span>'
                     ];
                     newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
                 }

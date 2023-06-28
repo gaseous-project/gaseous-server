@@ -22,6 +22,53 @@ h3 {
     border-image: linear-gradient(to right, rgba(255,0,0,1) 0%, rgba(251,255,0,1) 16%, rgba(0,255,250,1) 30%, rgba(0,16,255,1) 46%, rgba(250,0,255,1) 62%, rgba(255,0,0,1) 78%, rgba(255,237,0,1) 90%, rgba(20,255,0,1) 100%) 5;
 }
 
+/* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+}
+
+/* Modal Content/Box */
+.modal-content {
+    background-color: #383838;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 10px;
+    border: 1px solid #888;
+    width: 600px; /* Could be more or less, depending on screen size */
+}
+#modal-heading {
+    margin-block: 5px;
+    border-bottom-style: solid;
+    /*border-bottom-color: #916b01;*/
+    border-bottom-width: 3px;
+    /*border-image: linear-gradient(to right, blue 25%, yellow 25%, yellow 50%,red 50%, red 75%, teal 75%) 5;*/
+
+    border-image: linear-gradient(to right, rgba(255,0,0,1) 0%, rgba(251,255,0,1) 16%, rgba(0,255,250,1) 30%, rgba(0,16,255,1) 46%, rgba(250,0,255,1) 62%, rgba(255,0,0,1) 78%, rgba(255,237,0,1) 90%, rgba(20,255,0,1) 100%) 5;
+}
+
+/* The Close Button */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
 #banner_icon {
     background-color: white;
     position: fixed;
@@ -202,6 +249,7 @@ input[id='filter_panel_search'] {
     width: 90%;
     min-width: 911px;
     max-width: 1122px;
+    min-height: 550px;
 
     padding-top: 1px;
     padding-left: 20px;
@@ -351,6 +399,7 @@ iframe {
 
 .romrow:hover {
     background-color: #383838;
+    background: rgba(56, 56, 56, 0.3);
 }
 
 .romcell {

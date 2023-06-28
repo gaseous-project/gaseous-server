@@ -22,10 +22,24 @@
     </div>
 
     <div id="content">
-        
+
+    </div>
+
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div><h1 id="modal-heading">Modal heading</h1></div>
+            <div id="modal-content">Some text in the Modal..</div>
+        </div>
+
     </div>
 
     <script type="text/javascript">
+        var modalVariables = null;
+
         $(document).ready(function () {
             const urlParams = new URLSearchParams(window.location.search);
             var myParam = urlParams.get('page');

@@ -1,0 +1,89 @@
+﻿<table cellspacing="0">
+    <tr>
+        <th>Platform</th>
+        <td id="rominfo_platform"></td>
+    </tr>
+    <tr>
+        <th>File name</th>
+        <td id="rominfo_filename"></td>
+    </tr>
+    <tr>
+        <th>Size</th>
+        <td id="rominfo_size"></td>
+    </tr>
+    <tr>
+        <th>ROM Type</th>
+        <td id="rominfo_type"></td>
+    </tr>
+    <tr>
+        <th>Media Type</th>
+        <td id="rominfo_mediatype"></td>
+    </tr>
+    <tr>
+        <th>Media Label</th>
+        <td id="rominfo_medialabel"></td>
+    </tr>
+    <tr>
+        <th>MD5</th>
+        <td id="rominfo_md5"></td>
+    </tr>
+    <tr>
+        <th>SHA1</th>
+        <td id="rominfo_sha1"></td>
+    </tr>
+    <tr>
+        <th>Signature Matched From</th>
+        <td id="rominfo_signaturematch"></td>
+    </tr>
+    <tr>
+        <th>Signature Source Flags</th>
+        <td id="rominfo_flags"></td>
+    </tr>
+</table>
+
+<script type="text/javascript">
+    document.getElementById('modal-heading').innerHTML = "ROM/Image Info";
+
+    var gameId = urlParams.get('id');
+
+    function getRomType(typeId) {
+        switch (typeId) {
+            
+            case 1:
+                return "Optical media";
+                break;
+            case 2:
+                return "Magnetic media";
+                break;
+            case 3:
+                return "Individual files";
+                break;
+            case 4:
+                return "Individual pars";
+                break;
+            case 5:
+                return "Tape base media";
+                break;
+            case 6:
+                return "Side of the media";
+                break;
+            case 0:
+            default:
+                return "Media type is unknown";
+                break;
+        }
+    }
+
+    ajaxCall('/api/v1/Games/' + gameId + '/roms/' + modalVariables, 'GET', function (result) {
+        document.getElementById('rominfo_platform').innerHTML = result.platform.name;
+        document.getElementById('rominfo_filename').innerHTML = result.name;
+        document.getElementById('rominfo_size').innerHTML = formatBytes(result.size, 2);
+        document.getElementById('rominfo_type').innerHTML = getRomType(result.romType);
+        document.getElementById('rominfo_mediatype').innerHTML = result.romTypeMedia;
+        document.getElementById('rominfo_medialabel').innerHTML = result.mediaLabel;
+        document.getElementById('rominfo_md5').innerHTML = result.mD5;
+        document.getElementById('rominfo_sha1').innerHTML = result.shA1;
+        document.getElementById('rominfo_signaturematch').innerHTML = result.source;
+        document.getElementById('rominfo_flags').innerHTML = result.flags;
+    });
+</script>
