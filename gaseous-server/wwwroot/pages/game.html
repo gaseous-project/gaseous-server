@@ -99,6 +99,11 @@
             artworks = result.artworks.ids;
             artworksPostition = 0;
             rotateBackground();
+        } else {
+            if (result.cover) {
+                var bg = document.getElementById('bgImage');
+                bg.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/cover/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+            }
         }
 
         // load cover

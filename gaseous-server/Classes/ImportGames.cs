@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Data;
+using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using gaseous_tools;
+using MySqlX.XDevAPI;
 using Org.BouncyCastle.Utilities.IO.Pem;
 using static gaseous_server.Classes.Metadata.Games;
 
@@ -75,91 +77,8 @@ namespace gaseous_server.Classes
 						Logging.Log(Logging.LogType.Information, "Import Game", "  " + GameFileImportPath + " not in database - processing");
 
 						// process as a single file
-						// check 1: do we have a signature for it?
-						gaseous_server.Controllers.SignaturesController sc = new Controllers.SignaturesController();
-						List<Models.Signatures_Games> signatures = sc.GetSignature(hash.md5hash);
-						if (signatures.Count == 0)
-						{
-							// no md5 signature found - try sha1
-							signatures = sc.GetSignature("", hash.sha1hash);
-						}
+						Models.Signatures_Games discoveredSignature = GetFileSignature(hash, fi, GameFileImportPath);
 
-						Models.Signatures_Games discoveredSignature = new Models.Signatures_Games();
-						if (signatures.Count == 1)
-						{
-							// only 1 signature found!
-							discoveredSignature = signatures.ElementAt(0);
-							gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
-						}
-						else if (signatures.Count > 1)
-						{
-							// more than one signature found - find one with highest score
-							foreach (Models.Signatures_Games Sig in signatures)
-							{
-								if (Sig.Score > discoveredSignature.Score)
-								{
-									discoveredSignature = Sig;
-									gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
-								}
-							}
-						}
-						else
-						{
-                            // no signature match found - try name search
-                            signatures = sc.GetByTosecName(fi.Name);
-
-							if (signatures.Count == 1)
-							{
-								// only 1 signature found!
-								discoveredSignature = signatures.ElementAt(0);
-								gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
-							}
-							else if (signatures.Count > 1)
-							{
-								// more than one signature found - find one with highest score
-								foreach (Models.Signatures_Games Sig in signatures)
-								{
-									if (Sig.Score > discoveredSignature.Score)
-									{
-										discoveredSignature = Sig;
-										gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
-									}
-								}
-							}
-							else
-							{
-								// still no search - try alternate method
-								Models.Signatures_Games.GameItem gi = new Models.Signatures_Games.GameItem();
-								Models.Signatures_Games.RomItem ri = new Models.Signatures_Games.RomItem();
-
-								discoveredSignature.Game = gi;
-								discoveredSignature.Rom = ri;
-
-								// game title is the file name without the extension or path
-								gi.Name = Path.GetFileNameWithoutExtension(GameFileImportPath);
-
-								// remove everything after brackets - leaving (hopefully) only the name
-								if (gi.Name.Contains("("))
-								{
-									gi.Name = gi.Name.Substring(0, gi.Name.IndexOf("("));
-								}
-
-								// remove special characters like dashes
-								gi.Name = gi.Name.Replace("-", "");
-
-								// guess platform
-								gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, true);
-
-								// get rom data
-								ri.Name = Path.GetFileName(GameFileImportPath);
-								ri.Md5 = hash.md5hash;
-								ri.Sha1 = hash.sha1hash;
-								ri.Size = fi.Length;
-								ri.SignatureSource = Models.Signatures_Games.RomItem.SignatureSourceType.None;
-							}
-						}
-
-                        Logging.Log(Logging.LogType.Information, "Import Game", "  Determined import file as: " + discoveredSignature.Game.Name + " (" + discoveredSignature.Game.Year + ") " + discoveredSignature.Game.System);
 						// get discovered platform
 						IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(discoveredSignature.Flags.IGDBPlatformId);
 						if (determinedPlatform == null)
@@ -167,83 +86,200 @@ namespace gaseous_server.Classes
 							determinedPlatform = new IGDB.Models.Platform();
 						}
 
-						// search discovered game - case insensitive exact match first
-						IGDB.Models.Game determinedGame = new IGDB.Models.Game();
+                        IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature);
 
-						// remove version numbers from name
-						discoveredSignature.Game.Name = Regex.Replace(discoveredSignature.Game.Name, @"v(\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
-                        discoveredSignature.Game.Name = Regex.Replace(discoveredSignature.Game.Name, @"Rev (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
-
-                        Logging.Log(Logging.LogType.Information, "Import Game", "  Searching for title: " + discoveredSignature.Game.Name);
-
-						foreach (Metadata.Games.SearchType searchType in Enum.GetValues(typeof(Metadata.Games.SearchType)))
-						{
-                            Logging.Log(Logging.LogType.Information, "Import Game", "  Search type: " + searchType.ToString());
-							IGDB.Models.Game[] games = Metadata.Games.SearchForGame(discoveredSignature.Game.Name, discoveredSignature.Flags.IGDBPlatformId, searchType);
-							if (games.Length == 1)
-							{
-								// exact match!
-								determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false);
-                                Logging.Log(Logging.LogType.Information, "Import Game", "  IGDB game: " + determinedGame.Name);
-								break;
-							} else if (games.Length > 0)
-							{
-								Logging.Log(Logging.LogType.Information, "Import Game", "  " + games.Length + " search results found");
-                            } else
-							{
-                                Logging.Log(Logging.LogType.Information, "Import Game", "  No search results found");
-                            }
-						}
-						if (determinedGame == null)
-						{
-							determinedGame = new IGDB.Models.Game();
-						}
-
-						string destSlug = "";
-						if (determinedGame.Id == null)
-						{
-                            Logging.Log(Logging.LogType.Information, "Import Game", "  Unable to determine game");
-						}
-
-						// add to database
-						sql = "INSERT INTO games_roms (platformid, gameid, name, size, crc, md5, sha1, developmentstatus, flags, romtype, romtypemedia, medialabel, path, metadatasource) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel, @path, @metadatasource); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
-						dbDict.Add("platformid", Common.ReturnValueIfNull(determinedPlatform.Id, 0));
-						dbDict.Add("gameid", Common.ReturnValueIfNull(determinedGame.Id, 0));
-                        dbDict.Add("name", Common.ReturnValueIfNull(discoveredSignature.Rom.Name, ""));
-                        dbDict.Add("size", Common.ReturnValueIfNull(discoveredSignature.Rom.Size, 0));
-                        dbDict.Add("crc", Common.ReturnValueIfNull(discoveredSignature.Rom.Crc, ""));
-                        dbDict.Add("developmentstatus", Common.ReturnValueIfNull(discoveredSignature.Rom.DevelopmentStatus, ""));
-						dbDict.Add("metadatasource", discoveredSignature.Rom.SignatureSource);
-
-                        if (discoveredSignature.Rom.flags != null)
-                        {
-                            if (discoveredSignature.Rom.flags.Count > 0)
-                            {
-                                dbDict.Add("flags", Newtonsoft.Json.JsonConvert.SerializeObject(discoveredSignature.Rom.flags));
-                            }
-                            else
-                            {
-                                dbDict.Add("flags", "[ ]");
-                            }
-                        }
-                        else
-                        {
-                            dbDict.Add("flags", "[ ]");
-                        }
-                        dbDict.Add("romtype", (int)discoveredSignature.Rom.RomType);
-                        dbDict.Add("romtypemedia", Common.ReturnValueIfNull(discoveredSignature.Rom.RomTypeMedia, ""));
-                        dbDict.Add("medialabel", Common.ReturnValueIfNull(discoveredSignature.Rom.MediaLabel, ""));
-						dbDict.Add("path", GameFileImportPath);
-
-						DataTable romInsert = db.ExecuteCMD(sql, dbDict);
-						long romId = (long)romInsert.Rows[0][0];
-
-                        // move to destination
-						MoveGameFile(romId);
+                        // add to database
+                        StoreROM(hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath);
                     }
                 }
 			}
 		}
+
+		public static Models.Signatures_Games GetFileSignature(Common.hashObject hash, FileInfo fi, string GameFileImportPath)
+		{
+            // check 1: do we have a signature for it?
+            gaseous_server.Controllers.SignaturesController sc = new Controllers.SignaturesController();
+            List<Models.Signatures_Games> signatures = sc.GetSignature(hash.md5hash);
+            if (signatures.Count == 0)
+            {
+                // no md5 signature found - try sha1
+                signatures = sc.GetSignature("", hash.sha1hash);
+            }
+
+            Models.Signatures_Games discoveredSignature = new Models.Signatures_Games();
+            if (signatures.Count == 1)
+            {
+                // only 1 signature found!
+                discoveredSignature = signatures.ElementAt(0);
+                gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
+            }
+            else if (signatures.Count > 1)
+            {
+                // more than one signature found - find one with highest score
+                foreach (Models.Signatures_Games Sig in signatures)
+                {
+                    if (Sig.Score > discoveredSignature.Score)
+                    {
+                        discoveredSignature = Sig;
+                        gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
+                    }
+                }
+            }
+            else
+            {
+                // no signature match found - try name search
+                signatures = sc.GetByTosecName(fi.Name);
+
+                if (signatures.Count == 1)
+                {
+                    // only 1 signature found!
+                    discoveredSignature = signatures.ElementAt(0);
+                    gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
+                }
+                else if (signatures.Count > 1)
+                {
+                    // more than one signature found - find one with highest score
+                    foreach (Models.Signatures_Games Sig in signatures)
+                    {
+                        if (Sig.Score > discoveredSignature.Score)
+                        {
+                            discoveredSignature = Sig;
+                            gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
+                        }
+                    }
+                }
+                else
+                {
+                    // still no search - try alternate method
+                    Models.Signatures_Games.GameItem gi = new Models.Signatures_Games.GameItem();
+                    Models.Signatures_Games.RomItem ri = new Models.Signatures_Games.RomItem();
+
+                    discoveredSignature.Game = gi;
+                    discoveredSignature.Rom = ri;
+
+                    // game title is the file name without the extension or path
+                    gi.Name = Path.GetFileNameWithoutExtension(GameFileImportPath);
+
+                    // remove everything after brackets - leaving (hopefully) only the name
+                    if (gi.Name.Contains("("))
+                    {
+                        gi.Name = gi.Name.Substring(0, gi.Name.IndexOf("("));
+                    }
+
+                    // remove special characters like dashes
+                    gi.Name = gi.Name.Replace("-", "");
+
+                    // guess platform
+                    gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, true);
+
+                    // get rom data
+                    ri.Name = Path.GetFileName(GameFileImportPath);
+                    ri.Md5 = hash.md5hash;
+                    ri.Sha1 = hash.sha1hash;
+                    ri.Size = fi.Length;
+                    ri.SignatureSource = Models.Signatures_Games.RomItem.SignatureSourceType.None;
+                }
+            }
+
+            Logging.Log(Logging.LogType.Information, "Import Game", "  Determined import file as: " + discoveredSignature.Game.Name + " (" + discoveredSignature.Game.Year + ") " + discoveredSignature.Game.System);
+
+            return discoveredSignature;
+        }
+
+        public static IGDB.Models.Game SearchForGame(Models.Signatures_Games discoveredSignature)
+        {
+            // search discovered game - case insensitive exact match first
+            IGDB.Models.Game determinedGame = new IGDB.Models.Game();
+
+            // remove version numbers from name
+            discoveredSignature.Game.Name = Regex.Replace(discoveredSignature.Game.Name, @"v(\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+            discoveredSignature.Game.Name = Regex.Replace(discoveredSignature.Game.Name, @"Rev (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+
+            Logging.Log(Logging.LogType.Information, "Import Game", "  Searching for title: " + discoveredSignature.Game.Name);
+
+            foreach (Metadata.Games.SearchType searchType in Enum.GetValues(typeof(Metadata.Games.SearchType)))
+            {
+                Logging.Log(Logging.LogType.Information, "Import Game", "  Search type: " + searchType.ToString());
+                IGDB.Models.Game[] games = Metadata.Games.SearchForGame(discoveredSignature.Game.Name, discoveredSignature.Flags.IGDBPlatformId, searchType);
+                if (games.Length == 1)
+                {
+                    // exact match!
+                    determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false);
+                    Logging.Log(Logging.LogType.Information, "Import Game", "  IGDB game: " + determinedGame.Name);
+                    break;
+                }
+                else if (games.Length > 0)
+                {
+                    Logging.Log(Logging.LogType.Information, "Import Game", "  " + games.Length + " search results found");
+                }
+                else
+                {
+                    Logging.Log(Logging.LogType.Information, "Import Game", "  No search results found");
+                }
+            }
+            if (determinedGame == null)
+            {
+                determinedGame = new IGDB.Models.Game();
+            }
+
+            string destSlug = "";
+            if (determinedGame.Id == null)
+            {
+                Logging.Log(Logging.LogType.Information, "Import Game", "  Unable to determine game");
+            }
+
+            return determinedGame;
+        }
+
+        public static long StoreROM(Common.hashObject hash, IGDB.Models.Game determinedGame, IGDB.Models.Platform determinedPlatform, Models.Signatures_Games discoveredSignature, string GameFileImportPath, long UpdateId = 0)
+        {
+            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
+            string sql = "";
+
+            if (UpdateId == 0)
+            {
+                sql = "INSERT INTO games_roms (platformid, gameid, name, size, crc, md5, sha1, developmentstatus, flags, romtype, romtypemedia, medialabel, path, metadatasource) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel, @path, @metadatasource); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+            }
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            dbDict.Add("platformid", Common.ReturnValueIfNull(determinedPlatform.Id, 0));
+            dbDict.Add("gameid", Common.ReturnValueIfNull(determinedGame.Id, 0));
+            dbDict.Add("name", Common.ReturnValueIfNull(discoveredSignature.Rom.Name, ""));
+            dbDict.Add("size", Common.ReturnValueIfNull(discoveredSignature.Rom.Size, 0));
+            dbDict.Add("md5", hash.md5hash);
+            dbDict.Add("sha1", hash.sha1hash);
+            dbDict.Add("crc", Common.ReturnValueIfNull(discoveredSignature.Rom.Crc, ""));
+            dbDict.Add("developmentstatus", Common.ReturnValueIfNull(discoveredSignature.Rom.DevelopmentStatus, ""));
+            dbDict.Add("metadatasource", discoveredSignature.Rom.SignatureSource);
+
+            if (discoveredSignature.Rom.flags != null)
+            {
+                if (discoveredSignature.Rom.flags.Count > 0)
+                {
+                    dbDict.Add("flags", Newtonsoft.Json.JsonConvert.SerializeObject(discoveredSignature.Rom.flags));
+                }
+                else
+                {
+                    dbDict.Add("flags", "[ ]");
+                }
+            }
+            else
+            {
+                dbDict.Add("flags", "[ ]");
+            }
+            dbDict.Add("romtype", (int)discoveredSignature.Rom.RomType);
+            dbDict.Add("romtypemedia", Common.ReturnValueIfNull(discoveredSignature.Rom.RomTypeMedia, ""));
+            dbDict.Add("medialabel", Common.ReturnValueIfNull(discoveredSignature.Rom.MediaLabel, ""));
+            dbDict.Add("path", GameFileImportPath);
+
+            DataTable romInsert = db.ExecuteCMD(sql, dbDict);
+            long romId = (long)romInsert.Rows[0][0];
+
+            // move to destination
+            MoveGameFile(romId);
+
+            return romId;
+        }
 
 		public static string ComputeROMPath(long RomId)
 		{
