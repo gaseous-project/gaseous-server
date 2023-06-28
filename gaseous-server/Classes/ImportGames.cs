@@ -86,7 +86,7 @@ namespace gaseous_server.Classes
 							determinedPlatform = new IGDB.Models.Platform();
 						}
 
-                        IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature);
+                        IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature.Game.Name, discoveredSignature.Flags.IGDBPlatformId);
 
                         // add to database
                         StoreROM(hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath);
@@ -186,35 +186,41 @@ namespace gaseous_server.Classes
             return discoveredSignature;
         }
 
-        public static IGDB.Models.Game SearchForGame(Models.Signatures_Games discoveredSignature)
+        public static IGDB.Models.Game SearchForGame(string GameName, long PlatformId)
         {
             // search discovered game - case insensitive exact match first
             IGDB.Models.Game determinedGame = new IGDB.Models.Game();
 
             // remove version numbers from name
-            discoveredSignature.Game.Name = Regex.Replace(discoveredSignature.Game.Name, @"v(\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
-            discoveredSignature.Game.Name = Regex.Replace(discoveredSignature.Game.Name, @"Rev (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+            GameName = Regex.Replace(GameName, @"v(\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+            GameName = Regex.Replace(GameName, @"Rev (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
 
-            Logging.Log(Logging.LogType.Information, "Import Game", "  Searching for title: " + discoveredSignature.Game.Name);
+            List<string> SearchCandidates = GetSearchCandidates(GameName);
 
-            foreach (Metadata.Games.SearchType searchType in Enum.GetValues(typeof(Metadata.Games.SearchType)))
+            foreach (string SearchCandidate in SearchCandidates)
             {
-                Logging.Log(Logging.LogType.Information, "Import Game", "  Search type: " + searchType.ToString());
-                IGDB.Models.Game[] games = Metadata.Games.SearchForGame(discoveredSignature.Game.Name, discoveredSignature.Flags.IGDBPlatformId, searchType);
-                if (games.Length == 1)
+
+                Logging.Log(Logging.LogType.Information, "Import Game", "  Searching for title: " + SearchCandidate);
+
+                foreach (Metadata.Games.SearchType searchType in Enum.GetValues(typeof(Metadata.Games.SearchType)))
                 {
-                    // exact match!
-                    determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false);
-                    Logging.Log(Logging.LogType.Information, "Import Game", "  IGDB game: " + determinedGame.Name);
-                    break;
-                }
-                else if (games.Length > 0)
-                {
-                    Logging.Log(Logging.LogType.Information, "Import Game", "  " + games.Length + " search results found");
-                }
-                else
-                {
-                    Logging.Log(Logging.LogType.Information, "Import Game", "  No search results found");
+                    Logging.Log(Logging.LogType.Information, "Import Game", "  Search type: " + searchType.ToString());
+                    IGDB.Models.Game[] games = Metadata.Games.SearchForGame(SearchCandidate, PlatformId, searchType);
+                    if (games.Length == 1)
+                    {
+                        // exact match!
+                        determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false);
+                        Logging.Log(Logging.LogType.Information, "Import Game", "  IGDB game: " + determinedGame.Name);
+                        break;
+                    }
+                    else if (games.Length > 0)
+                    {
+                        Logging.Log(Logging.LogType.Information, "Import Game", "  " + games.Length + " search results found");
+                    }
+                    else
+                    {
+                        Logging.Log(Logging.LogType.Information, "Import Game", "  No search results found");
+                    }
                 }
             }
             if (determinedGame == null)
@@ -229,6 +235,65 @@ namespace gaseous_server.Classes
             }
 
             return determinedGame;
+        }
+
+        public static List<IGDB.Models.Game> SearchForGame_GetAll(string GameName, long PlatformId)
+        {
+            List<IGDB.Models.Game> searchResults = new List<IGDB.Models.Game>();
+
+            // remove version numbers from name
+            GameName = Regex.Replace(GameName, @"v(\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+            GameName = Regex.Replace(GameName, @"Rev (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+
+            List<string> SearchCandidates = GetSearchCandidates(GameName);
+
+            foreach (string SearchCandidate in SearchCandidates)
+            {
+                foreach (Metadata.Games.SearchType searchType in Enum.GetValues(typeof(Metadata.Games.SearchType)))
+                {
+                    if ((PlatformId == 0 && searchType == SearchType.searchNoPlatform) || (PlatformId != 0 && searchType != SearchType.searchNoPlatform))
+                    {
+                        IGDB.Models.Game[] games = Metadata.Games.SearchForGame(SearchCandidate, PlatformId, searchType);
+                        foreach (IGDB.Models.Game foundGame in games)
+                        {
+                            bool gameInResults = false;
+                            foreach (IGDB.Models.Game searchResult in searchResults)
+                            {
+                                if (searchResult.Id == foundGame.Id)
+                                {
+                                    gameInResults = true;
+                                }
+                            }
+
+                            if (gameInResults == false)
+                            {
+                                searchResults.Add(foundGame);
+                            }
+                        }
+                    }
+                }
+            }
+
+            return searchResults;
+
+        }
+
+        private static List<string> GetSearchCandidates(string GameName)
+        {
+            List<string> SearchCandidates = new List<string>();
+            SearchCandidates.Add(GameName);
+            if (GameName.Contains(":"))
+            {
+                GameName = GameName.Substring(0, GameName.IndexOf(":"));
+                SearchCandidates.Add(GameName.Trim());
+            }
+            if (GameName.Contains("-"))
+            {
+                GameName = GameName.Substring(0, GameName.IndexOf("-"));
+                SearchCandidates.Add(GameName.Trim());
+            }
+
+            return SearchCandidates;
         }
 
         public static long StoreROM(Common.hashObject hash, IGDB.Models.Game determinedGame, IGDB.Models.Platform determinedPlatform, Models.Signatures_Games discoveredSignature, string GameFileImportPath, long UpdateId = 0)

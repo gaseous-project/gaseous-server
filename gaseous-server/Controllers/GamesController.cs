@@ -630,6 +630,43 @@ namespace gaseous_server.Controllers
         }
 
         [HttpGet]
+        [Route("search")]
+        [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GameSearch(long RomId = 0, string SearchString = "")
+        {
+            try
+            {
+                if (RomId > 0)
+                {
+                    Classes.Roms.GameRomItem romItem = Classes.Roms.GetRom(RomId);
+                    Common.hashObject hash = new Common.hashObject(romItem.Path);
+                    Models.Signatures_Games romSig = Classes.ImportGame.GetFileSignature(hash, new FileInfo(romItem.Path), romItem.Path);
+                    List<Game> searchResults = Classes.ImportGame.SearchForGame_GetAll(romSig.Game.Name, romSig.Flags.IGDBPlatformId);
+
+                    return Ok(searchResults);
+                }
+                else
+                {
+                    if (SearchString.Length > 0)
+                    {
+                        List<Game> searchResults = Classes.ImportGame.SearchForGame_GetAll(SearchString, 0);
+
+                        return Ok(searchResults);
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
         [Route("{GameId}/screenshots")]
         [ProducesResponseType(typeof(List<Screenshot>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
