@@ -72,5 +72,22 @@
         "KnownFileExtensions": [
             ".Z64"
         ]
+    },
+    {
+        "IGDBId": 18,
+        "IGDBName": "Nintendo Entertainment System",
+        "AlternateNames": [
+            "Nintendo Entertainment System",
+            "NES"
+        ],
+        "KnownFileExtensions": [
+            ".NES",
+            ".FDS",
+            ".FIG",
+            ".MGD",
+            ".SFC",
+            ".SMC",
+            ".SWC"
+        ]
     }
 ]

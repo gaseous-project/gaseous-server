@@ -191,12 +191,8 @@ namespace gaseous_server.Classes
             // search discovered game - case insensitive exact match first
             IGDB.Models.Game determinedGame = new IGDB.Models.Game();
 
-            // remove version numbers from name
-            GameName = Regex.Replace(GameName, @"v(\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
-            GameName = Regex.Replace(GameName, @"Rev (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
-
             List<string> SearchCandidates = GetSearchCandidates(GameName);
-
+            
             foreach (string SearchCandidate in SearchCandidates)
             {
                 bool GameFound = false;
@@ -244,10 +240,6 @@ namespace gaseous_server.Classes
         {
             List<IGDB.Models.Game> searchResults = new List<IGDB.Models.Game>();
 
-            // remove version numbers from name
-            GameName = Regex.Replace(GameName, @"v(\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
-            GameName = Regex.Replace(GameName, @"Rev (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
-
             List<string> SearchCandidates = GetSearchCandidates(GameName);
 
             foreach (string SearchCandidate in SearchCandidates)
@@ -283,18 +275,23 @@ namespace gaseous_server.Classes
 
         private static List<string> GetSearchCandidates(string GameName)
         {
+            // remove version numbers from name
+            GameName = Regex.Replace(GameName, @"v(\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+            GameName = Regex.Replace(GameName, @"Rev (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+
             List<string> SearchCandidates = new List<string>();
             SearchCandidates.Add(GameName);
-            if (GameName.Contains(":"))
+            if (GameName.Contains(" - "))
             {
-                GameName = GameName.Substring(0, GameName.IndexOf(":"));
-                SearchCandidates.Add(GameName.Trim());
+                SearchCandidates.Add(GameName.Replace(" - ", ": "));
+                SearchCandidates.Add(GameName.Substring(0, GameName.IndexOf(" - ")).Trim());
             }
-            if (GameName.Contains("-"))
+            if (GameName.Contains(": "))
             {
-                GameName = GameName.Substring(0, GameName.IndexOf("-"));
-                SearchCandidates.Add(GameName.Trim());
+                SearchCandidates.Add(GameName.Substring(0, GameName.IndexOf(": ")).Trim());
             }
+
+            Logging.Log(Logging.LogType.Information, "Import Game", "  Search candidates: " + String.Join(", ", SearchCandidates));
 
             return SearchCandidates;
         }
