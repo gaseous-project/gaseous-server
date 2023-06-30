@@ -122,6 +122,7 @@ namespace gaseous_server.Classes.Metadata
                     AgeRating GameAgeRating = AgeRatings.GetAgeRatings(AgeRatingId);
                 }
             }
+
             if (Game.AlternativeNames != null)
             {
                 foreach (long AlternativeNameId in Game.AlternativeNames.Ids)
@@ -129,6 +130,7 @@ namespace gaseous_server.Classes.Metadata
                     AlternativeName GameAlternativeName = AlternativeNames.GetAlternativeNames(AlternativeNameId);
                 }
             }
+
             if (Game.Artworks != null)
             {
                 foreach (long ArtworkId in Game.Artworks.Ids)
@@ -136,6 +138,7 @@ namespace gaseous_server.Classes.Metadata
                     Artwork GameArtwork = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
                 }
             }
+
             if (followSubGames)
             {
                 List<long> gamesToFetch = new List<long>();
@@ -152,14 +155,17 @@ namespace gaseous_server.Classes.Metadata
                     Game relatedGame = GetGame(gameId, false, false);
                 }
             }
+
             if (Game.Collection != null)
             {
                 Collection GameCollection = Collections.GetCollections(Game.Collection.Id);
             }
+
             if (Game.Cover != null)
             {
                 Cover GameCover = Covers.GetCover(Game.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
             }
+
             if (Game.ExternalGames != null)
             {
                 foreach (long ExternalGameId in Game.ExternalGames.Ids)
@@ -167,10 +173,12 @@ namespace gaseous_server.Classes.Metadata
                     ExternalGame GameExternalGame = ExternalGames.GetExternalGames(ExternalGameId);
                 }
             }
+
             if (Game.Franchise != null)
             {
                 Franchise GameFranchise = Franchises.GetFranchises(Game.Franchise.Id);
             }
+
             if (Game.Franchises != null)
             {
                 foreach (long FranchiseId in Game.Franchises.Ids)
@@ -178,6 +186,7 @@ namespace gaseous_server.Classes.Metadata
                     Franchise GameFranchise = Franchises.GetFranchises(FranchiseId);
                 }
             }
+
             if (Game.Genres != null)
             {
                 foreach (long GenreId in Game.Genres.Ids)
@@ -185,6 +194,15 @@ namespace gaseous_server.Classes.Metadata
                     Genre GameGenre = Genres.GetGenres(GenreId);
                 }
             }
+
+            if (Game.InvolvedCompanies != null)
+            {
+                foreach (long involvedCompanyId in Game.InvolvedCompanies.Ids)
+                {
+                    InvolvedCompany involvedCompany = InvolvedCompanies.GetInvolvedCompanies(involvedCompanyId);
+                }
+            }
+
             if (Game.Platforms != null)
             {
                 foreach (long PlatformId in Game.Platforms.Ids)
@@ -192,6 +210,7 @@ namespace gaseous_server.Classes.Metadata
                     Platform GamePlatform = Platforms.GetPlatform(PlatformId);
                 }
             }
+
             if (Game.Screenshots != null)
             {
                 foreach (long ScreenshotId in Game.Screenshots.Ids)
@@ -199,6 +218,7 @@ namespace gaseous_server.Classes.Metadata
                     Screenshot GameScreenshot = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
                 }
             }
+
             if (Game.Videos != null)
             {
                 foreach (long GameVideoId in Game.Videos.Ids)

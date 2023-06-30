@@ -71,3 +71,8 @@ function showDialog(dialogPage, variables) {
 
     $('#modal-content').load('/pages/dialogs/' + dialogPage + '.html');
 }
+
+function randomIntFromInterval(min, max) { // min and max included 
+    var rand = Math.floor(Math.random() * (max - min + 1) + min);
+    return rand;
+}

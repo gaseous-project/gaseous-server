@@ -308,6 +308,13 @@ namespace gaseous_tools
                     return MetadataPath;
                 }
 
+                public string LibraryMetadataDirectory_Company(Company company)
+                {
+                    string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Companies", company.Slug);
+                    if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
+                    return MetadataPath;
+                }
+
                 public string LibrarySignatureImportDirectory
                 {
                     get

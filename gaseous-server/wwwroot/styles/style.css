@@ -240,6 +240,16 @@ input[id='filter_panel_search'] {
     z-index: -100;
 }
 
+#bgImage_Opacity {
+    background: rgba(56, 56, 56, 0.7);
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    z-index: -90;
+}
+
 #gamepage {
     top: 0px;
     bottom: 0;
@@ -255,7 +265,6 @@ input[id='filter_panel_search'] {
     padding-left: 20px;
     padding-right: 20px;
     padding-bottom: 20px;
-    background: rgba(56, 56, 56, 0.7);
 }
 
 #mainbody {
@@ -273,6 +282,11 @@ input[id='filter_panel_search'] {
     max-width: 250px;
     max-height: 350px;
     width: 100%;
+}
+
+.gamegenrelabel {
+    display: block;
+    white-space: pre;
 }
 
 .rating_image {
@@ -420,4 +434,13 @@ th {
     color: white;
     text-decoration: underline;
     cursor: pointer;
+}
+
+#gamedev_logo {
+    float: right;
+    max-height: 48px;
+}
+
+#gamedeveloper_label {
+    font-size: 16px;
 }

@@ -204,6 +204,10 @@ namespace gaseous_server.Classes.Metadata
                         {
                             switch (objectTypeName)
                             {
+                                //case "boolean":
+                                //    Boolean storedBool = Convert.ToBoolean((int)dataRow[property.Name]);
+                                //    property.SetValue(EndpointType, storedBool);
+                                //    break;
                                 case "datetimeoffset":
                                     DateTimeOffset? storedDate = (DateTime?)dataRow[property.Name];
                                     property.SetValue(EndpointType, storedDate);
@@ -218,6 +222,9 @@ namespace gaseous_server.Classes.Metadata
                                     {
                                         case "collection":
                                             objectToStore = new IdentityOrValue<Collection>(id: (long)dataRow[property.Name]);
+                                            break;
+                                        case "company":
+                                            objectToStore = new IdentityOrValue<Company>(id: (long)dataRow[property.Name]);
                                             break;
                                         case "cover":
                                             objectToStore = new IdentityOrValue<Cover>(id: (long)dataRow[property.Name]);
@@ -353,6 +360,9 @@ namespace gaseous_server.Classes.Metadata
                                     break;
                                 case "[igdb.models.externalcategory":
                                     property.SetValue(EndpointType, (ExternalCategory)dataRow[property.Name]);
+                                    break;
+                                case "[igdb.models.startdatecategory":
+                                    property.SetValue(EndpointType, (StartDateCategory)dataRow[property.Name]);
                                     break;
                                 default:
                                     property.SetValue(EndpointType, dataRow[property.Name]);

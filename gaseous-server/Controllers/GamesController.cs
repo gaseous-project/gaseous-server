@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -11,6 +12,7 @@ using IGDB.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Scripting;
+using Org.BouncyCastle.Asn1.X509;
 using static gaseous_server.Classes.Metadata.AgeRatings;
 
 namespace gaseous_server.Controllers
@@ -455,6 +457,169 @@ namespace gaseous_server.Controllers
                 string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Cover.png");
                 if (System.IO.File.Exists(coverFilePath)) {
                     string filename = "Cover.png";
+                    string filepath = coverFilePath;
+                    byte[] filedata = System.IO.File.ReadAllBytes(filepath);
+                    string contentType = "image/png";
+
+                    var cd = new System.Net.Mime.ContentDisposition
+                    {
+                        FileName = filename,
+                        Inline = true,
+                    };
+
+                    Response.Headers.Add("Content-Disposition", cd.ToString());
+                    Response.Headers.Add("Cache-Control", "public, max-age=604800");
+
+                    return File(filedata, contentType);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
+        [Route("{GameId}/genre")]
+        [ProducesResponseType(typeof(List<Genre>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
+        public ActionResult GameGenre(long GameId)
+        {
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
+                if (gameObject != null)
+                {
+                    List<IGDB.Models.Genre> genreObjects = new List<Genre>();
+                    if (gameObject.Genres != null)
+                    {
+                        foreach (long genreId in gameObject.Genres.Ids)
+                        {
+                            genreObjects.Add(Classes.Metadata.Genres.GetGenres(genreId));
+                        }
+                    }
+
+                    List<IGDB.Models.Genre> sortedGenreObjects = genreObjects.OrderBy(o => o.Name).ToList();
+
+                    return Ok(sortedGenreObjects);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
+        [Route("{GameId}/companies")]
+        [ProducesResponseType(typeof(List<Dictionary<string, object>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
+        public ActionResult GameInvolvedCompanies(long GameId)
+        {
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
+                if (gameObject != null)
+                {
+                    List<Dictionary<string, object>> icObjects = new List<Dictionary<string, object>>();
+                    if (gameObject.InvolvedCompanies != null)
+                    {
+                        foreach (long icId in gameObject.InvolvedCompanies.Ids)
+                        {
+                            InvolvedCompany involvedCompany = Classes.Metadata.InvolvedCompanies.GetInvolvedCompanies(icId);
+                            Company company = Classes.Metadata.Companies.GetCompanies(involvedCompany.Company.Id);
+                            company.Developed = null;
+                            company.Published = null;
+
+                            Dictionary<string, object> companyData = new Dictionary<string, object>();
+                            companyData.Add("involvement", involvedCompany);
+                            companyData.Add("company", company);
+
+                            icObjects.Add(companyData);
+                        }
+                    }
+
+                    return Ok(icObjects);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
+        [Route("{GameId}/companies/{CompanyId}")]
+        [ProducesResponseType(typeof(Dictionary<string, object>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
+        public ActionResult GameInvolvedCompanies(long GameId, long CompanyId)
+        {
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
+                if (gameObject != null)
+                {
+                    List<Dictionary<string, object>> icObjects = new List<Dictionary<string, object>>();
+                    if (gameObject.InvolvedCompanies != null)
+                    {
+                        InvolvedCompany involvedCompany = Classes.Metadata.InvolvedCompanies.GetInvolvedCompanies(CompanyId);
+                        Company company = Classes.Metadata.Companies.GetCompanies(involvedCompany.Company.Id);
+                        company.Developed = null;
+                        company.Published = null;
+
+                        Dictionary<string, object> companyData = new Dictionary<string, object>();
+                        companyData.Add("involvement", involvedCompany);
+                        companyData.Add("company", company);
+
+                        return Ok(companyData);
+                    } else
+                    {
+                        return NotFound();
+                    }
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
+        [Route("{GameId}/companies/{CompanyId}/image")]
+        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GameCompanyImage(long GameId, long CompanyId)
+        {
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
+
+                InvolvedCompany involvedCompany = Classes.Metadata.InvolvedCompanies.GetInvolvedCompanies(CompanyId);
+                Company company = Classes.Metadata.Companies.GetCompanies(involvedCompany.Company.Id);
+
+                string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Company(company), "Logo_Medium.png");
+                if (System.IO.File.Exists(coverFilePath))
+                {
+                    string filename = "Logo.png";
                     string filepath = coverFilePath;
                     byte[] filedata = System.IO.File.ReadAllBytes(filepath);
                     string contentType = "image/png";

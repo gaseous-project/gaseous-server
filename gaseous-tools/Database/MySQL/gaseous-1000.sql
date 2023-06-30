@@ -119,6 +119,61 @@ CREATE TABLE `collection` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
+-- Table structure for table `company`
+--
+
+DROP TABLE IF EXISTS `company`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `company` (
+  `id` bigint NOT NULL,
+  `changedate` datetime DEFAULT NULL,
+  `changedatecategory` int DEFAULT NULL,
+  `changedcompanyid` bigint DEFAULT NULL,
+  `checksum` varchar(45) DEFAULT NULL,
+  `country` int DEFAULT NULL,
+  `createdat` datetime DEFAULT NULL,
+  `description` longtext,
+  `developed` json DEFAULT NULL,
+  `logo` bigint DEFAULT NULL,
+  `name` varchar(255) DEFAULT NULL,
+  `parent` bigint DEFAULT NULL,
+  `published` json DEFAULT NULL,
+  `slug` varchar(100) DEFAULT NULL,
+  `startdate` datetime DEFAULT NULL,
+  `startdatecategory` int DEFAULT NULL,
+  `updatedat` datetime DEFAULT NULL,
+  `url` varchar(255) DEFAULT NULL,
+  `websites` json DEFAULT NULL,
+  `dateAdded` datetime DEFAULT NULL,
+  `lastUpdated` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `companylogo`
+--
+
+DROP TABLE IF EXISTS `companylogo`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `companylogo` (
+  `id` bigint NOT NULL,
+  `alphachannel` tinyint(1) DEFAULT NULL,
+  `animated` tinyint(1) DEFAULT NULL,
+  `checksum` varchar(45) DEFAULT NULL,
+  `height` int DEFAULT NULL,
+  `imageid` varchar(45) DEFAULT NULL,
+  `url` varchar(255) DEFAULT NULL,
+  `width` int DEFAULT NULL,
+  `dateAdded` datetime DEFAULT NULL,
+  `lastUpdated` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
 -- Table structure for table `cover`
 --
 
@@ -342,6 +397,30 @@ CREATE TABLE `genre` (
   `name` varchar(255) DEFAULT NULL,
   `slug` varchar(100) DEFAULT NULL,
   `url` varchar(255) DEFAULT NULL,
+  `dateAdded` datetime DEFAULT NULL,
+  `lastUpdated` datetime DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `involvedcompany`
+--
+
+DROP TABLE IF EXISTS `involvedcompany`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `involvedcompany` (
+  `id` bigint NOT NULL,
+  `checksum` varchar(45) DEFAULT NULL,
+  `company` bigint DEFAULT NULL,
+  `createdat` datetime DEFAULT NULL,
+  `developer` tinyint(1) DEFAULT NULL,
+  `game` bigint DEFAULT NULL,
+  `porting` tinyint(1) DEFAULT NULL,
+  `publisher` tinyint(1) DEFAULT NULL,
+  `supporting` tinyint(1) DEFAULT NULL,
+  `updatedat` datetime DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
   PRIMARY KEY (`id`)

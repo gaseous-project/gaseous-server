@@ -1,8 +1,11 @@
-﻿<div id="bgImage"></div>
+﻿<div id="bgImage">
+    <div id="bgImage_Opacity"></div>
+</div>
 
 <div id="gamepage">
     <div id="gametitle">
         <h1 id="gametitle_label"></h1>
+        <p id="gamedeveloper_label"></p>
         <p id="gametitle_alts">
             <span>Also known as: </span><span id="gametitle_alts_label"></span>
         </p>
@@ -11,6 +14,15 @@
 
     <div id="gamesummary">
         <div id="gamesummary_cover"></div>
+        <div id="gamesumarry_genres">
+            <h3>Genres</h3>
+        </div>
+        <div id="gamesummary_developer">
+            <h3>Developers</h3>
+        </div>
+        <div id="gamesummary_publishers">
+            <h3>Publishers</h3>
+        </div>
         <div id="gamesummary_ratings">
             <h3>Age Ratings</h3>
         </div>
@@ -97,13 +109,60 @@
         // load artwork
         if (result.artworks) {
             artworks = result.artworks.ids;
-            artworksPostition = 0;
+            var startPos = randomIntFromInterval(0, result.artworks.ids.length);
+            artworksPosition = startPos;
             rotateBackground();
         } else {
             if (result.cover) {
                 var bg = document.getElementById('bgImage');
                 bg.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/cover/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
             }
+        }
+
+        // load companies
+        var gameHeaderDeveloperLabel = document.getElementById('gamedeveloper_label');
+        var gameHeaderDeveloperLogo = document.getElementById('gamedev_logo');
+        var gameDeveloperLabel = document.getElementById('gamesummary_developer');
+        var gamePublisherLabel = document.getElementById('gamesummary_publishers');
+        var gameDeveloperLoaded = false;
+        var gamePublisherLoaded = false;
+        if (result.involvedCompanies) {
+            ajaxCall('/api/v1/games/' + gameId + '/companies', 'GET', function (result) {
+                for (var i = 0; i < result.length; i++) {
+                    var companyLabel = document.createElement('span');
+                    companyLabel.className = 'gamegenrelabel';
+                    companyLabel.innerHTML = result[i].company.name;
+
+                    if (result[i].involvement.developer == true) {
+                        if (gameHeaderDeveloperLabel.innerHTML.length > 0) {
+                            gameHeaderDeveloperLabel += ", ";
+                        }
+                        gameHeaderDeveloperLabel.innerHTML += result[i].company.name;
+
+                        gameDeveloperLabel.appendChild(companyLabel);
+
+                        gameDeveloperLoaded = true;
+                    } else {
+                        if (result[i].involvement.publisher == true) {
+                            gamePublisherLabel.appendChild(companyLabel);
+                            gamePublisherLoaded = true;
+                        }
+                    }
+                }
+
+                if (gameDeveloperLoaded == false) {
+                    gameHeaderDeveloperLabel.setAttribute('style', 'display: none;');
+                    gameDeveloperLabel.setAttribute('style', 'display: none;');
+                }
+                if (gamePublisherLoaded == false) {
+                    gamePublisherLabel.setAttribute('style', 'display: none;');
+                }
+            });
+        } else {
+            gameHeaderDeveloperLabel.setAttribute('style', 'display: none;');
+            gameHeaderDeveloperLogo.setAttribute('style', 'display: none;');
+            gameDeveloperLabel.setAttribute('style', 'display: none;');
+            gamePublisherLabel.setAttribute('style', 'display: none;');
         }
 
         // load cover
@@ -131,6 +190,22 @@
             gameSummaryRatings.appendChild(gameRatings);
         } else {
             gameSummaryRatings.setAttribute('style', 'display: none;');
+        }
+
+        // load genres
+        var gameSummaryGenres = document.getElementById('gamesumarry_genres');
+        if (result.genres) {
+            ajaxCall('/api/v1/Games/' + gameId + '/genre', 'GET', function (result) {
+                for (var i = 0; i < result.length; i++) {
+                    var genreLabel = document.createElement('span');
+                    genreLabel.className = 'gamegenrelabel';
+                    genreLabel.innerHTML = result[i].name;
+
+                    gameSummaryGenres.appendChild(genreLabel);
+                }
+            });
+        } else {
+            gameSummaryGenres.setAttribute('style', 'display: none;');
         }
 
         // load screenshots
