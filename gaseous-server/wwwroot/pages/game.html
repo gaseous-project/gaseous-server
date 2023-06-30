@@ -128,24 +128,34 @@
         var gamePublisherLoaded = false;
         if (result.involvedCompanies) {
             ajaxCall('/api/v1/games/' + gameId + '/companies', 'GET', function (result) {
+                var lstDevelopers = [];
+                var lstPublishers = [];
+                
                 for (var i = 0; i < result.length; i++) {
                     var companyLabel = document.createElement('span');
                     companyLabel.className = 'gamegenrelabel';
                     companyLabel.innerHTML = result[i].company.name;
 
                     if (result[i].involvement.developer == true) {
-                        if (gameHeaderDeveloperLabel.innerHTML.length > 0) {
-                            gameHeaderDeveloperLabel += ", ";
+                        if (!lstDevelopers.includes(result[i].company.name)) {
+                            if (gameHeaderDeveloperLabel.innerHTML.length > 0) {
+                                gameHeaderDeveloperLabel += ", ";
+                            }
+                            gameHeaderDeveloperLabel.innerHTML += result[i].company.name;
+
+                            gameDeveloperLabel.appendChild(companyLabel);
+
+                            lstDevelopers.push(result[i].company.name);
+
+                            gameDeveloperLoaded = true;
                         }
-                        gameHeaderDeveloperLabel.innerHTML += result[i].company.name;
-
-                        gameDeveloperLabel.appendChild(companyLabel);
-
-                        gameDeveloperLoaded = true;
                     } else {
                         if (result[i].involvement.publisher == true) {
-                            gamePublisherLabel.appendChild(companyLabel);
-                            gamePublisherLoaded = true;
+                            if (!lstPublishers.includes(result[i].company.name)) {
+                                lstPublishers.push(result[i].company.name);
+                                gamePublisherLabel.appendChild(companyLabel);
+                                gamePublisherLoaded = true;
+                            }
                         }
                     }
                 }
@@ -346,7 +356,7 @@
         for (var i = 0; i < gameScreenshots_Items.length; i++) {
             if (gameScreenshots_Items[i].id == gameScreenshots_Selected.id) {
                 gameScreenshots_Items[i].classList.add('gamescreenshosts_gallery_item_selected');
-                gameScreenshots_Selected.scrollIntoView();
+                gameScreenshots_Selected.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
             } else {
                 gameScreenshots_Items[i].classList.remove('gamescreenshosts_gallery_item_selected');
             }

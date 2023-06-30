@@ -16,7 +16,7 @@
 h3 {
     border-bottom-style: solid;
     /*border-bottom-color: #916b01;*/
-    border-bottom-width: 3px;
+    border-bottom-width: 1px;
     /*border-image: linear-gradient(to right, blue 25%, yellow 25%, yellow 50%,red 50%, red 75%, teal 75%) 5;*/
 
     border-image: linear-gradient(to right, rgba(255,0,0,1) 0%, rgba(251,255,0,1) 16%, rgba(0,255,250,1) 30%, rgba(0,16,255,1) 46%, rgba(250,0,255,1) 62%, rgba(255,0,0,1) 78%, rgba(255,237,0,1) 90%, rgba(20,255,0,1) 100%) 5;
@@ -388,7 +388,7 @@ iframe {
 }
 
 .gamescreenshosts_gallery_item:hover {
-    border-color: lightblue;
+    border-color: lightgray;
 }
 
 .gamescreenshosts_gallery_item_selected {
