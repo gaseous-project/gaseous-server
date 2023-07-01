@@ -119,14 +119,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Remove="Support\PlatformMap.json" />
-    <Content Remove="wwwroot\" />
-    <Content Remove="wwwroot\index.html" />
-    <Content Remove="wwwroot\scripts\" />
-    <Content Remove="wwwroot\images\" />
-    <Content Remove="wwwroot\styles\" />
-    <Content Remove="wwwroot\pages\" />
-    <Content Remove="wwwroot\fonts\" />
-    <Content Remove="wwwroot\pages\dialogs\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Support\PlatformMap.json" Condition="'$(ExcludeConfigFilesFromBuildOutput)'!='true'">
@@ -172,8 +164,5 @@
     <EmbeddedResource Include="Assets\Ratings\CLASS_IND\CLASS_IND_Sixteen.svg" />
     <EmbeddedResource Include="Assets\Ratings\CLASS_IND\CLASS_IND_Ten.svg" />
     <EmbeddedResource Include="Assets\Ratings\CLASS_IND\CLASS_IND_Twelve.svg" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="wwwroot\index.html" />
   </ItemGroup>
 </Project>

@@ -9,7 +9,7 @@ namespace gaseous_server.Classes
 		public static void RefreshMetadata(bool forceRefresh = false)
 		{
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT id, `name` FROM game;";
+            string sql = "SELECT Id, `Name` FROM Game;";
 			DataTable dt = db.ExecuteCMD(sql);
 
 			foreach (DataRow dr in dt.Rows)

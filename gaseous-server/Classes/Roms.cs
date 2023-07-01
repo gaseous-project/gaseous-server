@@ -9,7 +9,7 @@ namespace gaseous_server.Classes
 		public static List<GameRomItem> GetRoms(long GameId)
 		{
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM games_roms WHERE gameid = @id ORDER BY `name`";
+            string sql = "SELECT * FROM Games_Roms WHERE GameId = @id ORDER BY `Name`";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", GameId);
             DataTable romDT = db.ExecuteCMD(sql, dbDict);
@@ -33,7 +33,7 @@ namespace gaseous_server.Classes
 		public static GameRomItem GetRom(long RomId)
 		{
 			Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "SELECT * FROM games_roms WHERE id = @id";
+			string sql = "SELECT * FROM Games_Roms WHERE Id = @id";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 			dbDict.Add("id", RomId);
 			DataTable romDT = db.ExecuteCMD(sql, dbDict);
@@ -59,7 +59,7 @@ namespace gaseous_server.Classes
 			IGDB.Models.Game game = Classes.Metadata.Games.GetGame(GameId, false, false);
 
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "UPDATE games_roms SET platformid=@platformid, gameid=@gameid WHERE id = @id";
+            string sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid WHERE Id = @id";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", RomId);
 			dbDict.Add("platformid", PlatformId);
@@ -80,7 +80,7 @@ namespace gaseous_server.Classes
 			}
 
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "DELETE FROM games_roms WHERE id = @id";
+            string sql = "DELETE FROM Games_Roms WHERE Id = @id";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 			dbDict.Add("id", RomId);
 			db.ExecuteCMD(sql, dbDict);

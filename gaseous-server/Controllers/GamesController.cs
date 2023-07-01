@@ -36,14 +36,14 @@ namespace gaseous_server.Controllers
 
             if (name.Length > 0)
             {
-                tempVal = "`name` LIKE @name";
-                whereParams.Add("@name", "%" + name + "%");
+                tempVal = "`Name` LIKE @Name";
+                whereParams.Add("@Name", "%" + name + "%");
                 havingClauses.Add(tempVal);
             }
 
             if (platform.Length > 0)
             {
-                tempVal = "games_roms.platformid IN (";
+                tempVal = "Games_Roms.PlatformId IN (";
                 string[] platformClauseItems = platform.Split(",");
                 for (int i = 0; i < platformClauseItems.Length; i++)
                 {
@@ -51,7 +51,7 @@ namespace gaseous_server.Controllers
                     {
                         tempVal += ", ";
                     }
-                    string platformLabel = "@platform" + i;
+                    string platformLabel = "@Platform" + i;
                     tempVal += platformLabel;
                     whereParams.Add(platformLabel, platformClauseItems[i]);
                 }
@@ -69,8 +69,8 @@ namespace gaseous_server.Controllers
                     {
                         tempVal += " AND ";
                     }
-                    string genreLabel = "@genre" + i;
-                    tempVal += "JSON_CONTAINS(game.genres, " + genreLabel + ", '$')";
+                    string genreLabel = "@Genre" + i;
+                    tempVal += "JSON_CONTAINS(Game.Genres, " + genreLabel + ", '$')";
                     whereParams.Add(genreLabel, genreClauseItems[i]);
                 }
                 tempVal += ")";
@@ -106,14 +106,14 @@ namespace gaseous_server.Controllers
             }
 
             // order by clause
-            string orderByClause = "ORDER BY `name` ASC";
+            string orderByClause = "ORDER BY `Name` ASC";
             if (sortdescending == true)
             {
-                orderByClause = "ORDER BY `name` DESC";
+                orderByClause = "ORDER BY `Name` DESC";
             }
 
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT DISTINCT games_roms.gameid AS ROMGameId, game.id, game.ageratings, game.aggregatedrating, game.aggregatedratingcount, game.alternativenames, game.artworks, game.bundles, game.category, game.collection, game.cover, game.dlcs, game.expansions, game.externalgames, game.firstreleasedate, game.`follows`, game.franchise, game.franchises, game.gameengines, game.gamemodes, game.genres, game.hypes, game.involvedcompanies, game.keywords, game.multiplayermodes, game.`name`, game.parentgame, game.platforms, game.playerperspectives, game.rating, game.ratingcount, game.releasedates, game.screenshots, game.similargames, game.slug, game.standaloneexpansions, game.`status`, game.storyline, game.summary, game.tags, game.themes, game.totalrating, game.totalratingcount, game.versionparent, game.versiontitle, game.videos, game.websites FROM gaseous.games_roms LEFT JOIN game ON game.id = games_roms.gameid " + whereClause + " " + havingClause + " " + orderByClause;
+            string sql = "SELECT DISTINCT Games_Roms.GameId AS ROMGameId, Game.Id, Game.AgeRatings, Game.AggregatedRating, Game.AggregatedRatingCount, Game.AlternativeNames, Game.Artworks, Game.Bundles, Game.Category, Game.Collection, Game.Cover, Game.Dlcs, Game.Expansions, Game.ExternalGames, Game.FirstReleaseDate, Game.`Follows`, Game.Franchise, Game.Franchises, Game.GameEngines, Game.GameModes, Game.Genres, Game.Hypes, Game.InvolvedCompanies, Game.Keywords, Game.MultiplayerModes, Game.`Name`, Game.ParentGame, Game.Platforms, Game.PlayerPerspectives, Game.Rating, Game.RatingCount, Game.ReleaseDates, Game.Screenshots, Game.SimilarGames, Game.Slug, Game.StandaloneExpansions, Game.`Status`, Game.StoryLine, Game.Summary, Game.Tags, Game.Themes, Game.TotalRating, Game.TotalRatingCount, Game.VersionParent, Game.VersionTitle, Game.Videos, Game.Websites FROM gaseous.Games_Roms LEFT JOIN Game ON Game.Id = Games_Roms.GameId " + whereClause + " " + havingClause + " " + orderByClause;
 
             List<IGDB.Models.Game> RetVal = new List<IGDB.Models.Game>();
 

@@ -27,7 +27,7 @@ namespace gaseous_server.Classes.Metadata
             if (Id == 0)
             {
                 Platform returnValue = new Platform();
-                if (Storage.GetCacheStatus("platform", 0) == Storage.CacheStatus.NotPresent)
+                if (Storage.GetCacheStatus("Platform", 0) == Storage.CacheStatus.NotPresent)
                 {
                     returnValue = new Platform
                     {
@@ -63,11 +63,11 @@ namespace gaseous_server.Classes.Metadata
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
             if (searchUsing == SearchUsing.id)
             {
-                cacheStatus = Storage.GetCacheStatus("platform", (long)searchValue);
+                cacheStatus = Storage.GetCacheStatus("Platform", (long)searchValue);
             }
             else
             {
-                cacheStatus = Storage.GetCacheStatus("platform", (string)searchValue);
+                cacheStatus = Storage.GetCacheStatus("Platform", (string)searchValue);
             }
 
             // set up where clause

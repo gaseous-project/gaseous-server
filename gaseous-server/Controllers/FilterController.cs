@@ -25,7 +25,7 @@ namespace gaseous_server.Controllers
 
             // platforms
             List<Platform> platforms = new List<Platform>();
-            string sql = "SELECT platform.id, platform.abbreviation, platform.alternativename, platform.`name`, platform.platformlogo, (SELECT COUNT(games_roms.id) AS RomCount FROM games_roms WHERE games_roms.platformid = platform.id) AS RomCount FROM platform HAVING RomCount > 0 ORDER BY `name`";
+            string sql = "SELECT Platform.Id, Platform.Abbreviation, Platform.AlternativeName, Platform.`Name`, Platform.PlatformLogo, (SELECT COUNT(Games_Roms.Id) AS RomCount FROM Games_Roms WHERE Games_Roms.PlatformId = Platform.Id) AS RomCount FROM Platform HAVING RomCount > 0 ORDER BY `Name`";
             DataTable dbResponse = db.ExecuteCMD(sql);
 
             foreach (DataRow dr in dbResponse.Rows)
@@ -36,7 +36,7 @@ namespace gaseous_server.Controllers
 
             // genres
             List<Genre> genres = new List<Genre>();
-            sql = "SELECT DISTINCT t1.id, t1.`name` FROM genre AS t1 JOIN (SELECT * FROM game WHERE (SELECT COUNT(id) FROM games_roms WHERE gameid = game.id) > 0) AS t2 ON JSON_CONTAINS(t2.genres, CAST(t1.id AS char), '$') ORDER BY t1.`name`";
+            sql = "SELECT DISTINCT t1.Id, t1.`Name` FROM Genre AS t1 JOIN (SELECT * FROM Game WHERE (SELECT COUNT(Id) FROM Games_Roms WHERE GameId = Game.Id) > 0) AS t2 ON JSON_CONTAINS(t2.Genres, CAST(t1.Id AS char), '$') ORDER BY t1.`Name`";
             dbResponse = db.ExecuteCMD(sql);
 
             foreach (DataRow dr in dbResponse.Rows)

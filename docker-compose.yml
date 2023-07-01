@@ -1,0 +1,39 @@
+version: '2'
+services:
+  gaseous-server:
+    container_name: gaseous-server
+    build:
+      context: ./
+    restart: unless-stopped
+    networks:
+      - gaseous
+    depends_on:
+      - gsdb
+    ports:
+      - 5198:80
+    volumes:
+      - /Users/michaelgreen/.gaseous-server:/root/.gaseous-server
+    environment:
+      - dbhost=gsdb
+      - dbuser=root
+      - dbpass=gaseous
+      - igdbclientid=<clientid>
+      - igdbclientsecret=<clientsecret>
+  gsdb:
+    container_name: gsdb
+    image: mysql:8
+    restart: unless-stopped
+    networks:
+      - gaseous
+    volumes:
+      - gsdb:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=gaseous
+      - MYSQL_USER=gaseous
+      - MYSQL_PASSWORD=gaseous
+networks:
+  gaseous:
+    driver: bridge
+volumes:
+  gs:
+  gsdb:

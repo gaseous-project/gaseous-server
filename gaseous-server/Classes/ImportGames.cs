@@ -61,7 +61,7 @@ namespace gaseous_server.Classes
                     Common.hashObject hash = new Common.hashObject(GameFileImportPath);
 
 					// check to make sure we don't already have this file imported
-					sql = "SELECT COUNT(Id) AS count FROM games_roms WHERE md5=@md5 AND sha1=@sha1";
+					sql = "SELECT COUNT(Id) AS count FROM Games_Roms WHERE MD5=@md5 AND SHA1=@sha1";
 					dbDict.Add("md5", hash.md5hash);
 					dbDict.Add("sha1", hash.sha1hash);
 					DataTable importDB = db.ExecuteCMD(sql, dbDict);
@@ -304,7 +304,7 @@ namespace gaseous_server.Classes
 
             if (UpdateId == 0)
             {
-                sql = "INSERT INTO games_roms (platformid, gameid, name, size, crc, md5, sha1, developmentstatus, flags, romtype, romtypemedia, medialabel, path, metadatasource) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel, @path, @metadatasource); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+                sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Flags, RomType, RomTypeMedia, MediaLabel, Path, MetadataSource) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel, @path, @metadatasource); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
             }
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("platformid", Common.ReturnValueIfNull(determinedPlatform.Id, 0));
@@ -402,7 +402,7 @@ namespace gaseous_server.Classes
 
 						// update the db
 						Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-						string sql = "UPDATE games_roms SET path=@path WHERE id=@id";
+						string sql = "UPDATE Games_Roms SET Path=@path WHERE Id=@id";
 						Dictionary<string, object> dbDict = new Dictionary<string, object>();
 						dbDict.Add("id", RomId);
 						dbDict.Add("path", DestinationPath);
@@ -423,7 +423,7 @@ namespace gaseous_server.Classes
 
             // move rom files to their new location
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM games_roms";
+            string sql = "SELECT * FROM Games_Roms";
             DataTable romDT = db.ExecuteCMD(sql);
 
             if (romDT.Rows.Count > 0)

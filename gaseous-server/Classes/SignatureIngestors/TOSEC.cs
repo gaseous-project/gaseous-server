@@ -32,7 +32,7 @@ namespace gaseous_server.SignatureIngestors.TOSEC
 
                     // check tosec file md5
                     Common.hashObject hashObject = new Common.hashObject(tosecXMLFile);
-                    sql = "SELECT * FROM signatures_sources WHERE sourcemd5=@sourcemd5";
+                    sql = "SELECT * FROM Signatures_Sources WHERE SourceMD5=@sourcemd5";
                     dbDict = new Dictionary<string, object>();
                     dbDict.Add("sourcemd5", hashObject.md5hash);
                     sigDB = db.ExecuteCMD(sql, dbDict);
@@ -51,7 +51,7 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                         bool processGames = false;
                         if (tosecObject.SourceMd5 != null)
                         {
-                            sql = "SELECT * FROM signatures_sources WHERE sourcemd5=@sourcemd5";
+                            sql = "SELECT * FROM Signatures_Sources WHERE SourceMD5=@sourcemd5";
                             dbDict = new Dictionary<string, object>();
                             dbDict.Add("name", Common.ReturnValueIfNull(tosecObject.Name, ""));
                             dbDict.Add("description", Common.ReturnValueIfNull(tosecObject.Description, ""));
@@ -69,7 +69,7 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                             if (sigDB.Rows.Count == 0)
                             {
                                 // entry not present, insert it
-                                sql = "INSERT INTO signatures_sources (name, description, category, version, author, email, homepage, url, sourcetype, sourcemd5, sourcesha1) VALUES (@name, @description, @category, @version, @author, @email, @homepage, @uri, @sourcetype, @sourcemd5, @sourcesha1)";
+                                sql = "INSERT INTO Signatures_Sources (Name, Description, Category, Version, Author, Email, Homepage, Url, SourceType, SourceMD5, SourceSHA1) VALUES (@name, @description, @category, @version, @author, @email, @homepage, @uri, @sourcetype, @sourcemd5, @sourcesha1)";
 
                                 db.ExecuteCMD(sql, dbDict);
 
@@ -101,13 +101,13 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                                     int gameSystem = 0;
                                     if (gameObject.System != null)
                                     {
-                                        sql = "SELECT id FROM signatures_platforms WHERE platform=@platform";
+                                        sql = "SELECT Id FROM Signatures_Platforms WHERE Platform=@platform";
 
                                         sigDB = db.ExecuteCMD(sql, dbDict);
                                         if (sigDB.Rows.Count == 0)
                                         {
                                             // entry not present, insert it
-                                            sql = "INSERT INTO signatures_platforms (platform) VALUES (@platform); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+                                            sql = "INSERT INTO Signatures_Platforms (Platform) VALUES (@platform); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
                                             sigDB = db.ExecuteCMD(sql, dbDict);
 
                                             gameSystem = Convert.ToInt32(sigDB.Rows[0][0]);
@@ -123,13 +123,13 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                                     int gamePublisher = 0;
                                     if (gameObject.Publisher != null)
                                     {
-                                        sql = "SELECT * FROM signatures_publishers WHERE publisher=@publisher";
+                                        sql = "SELECT * FROM Signatures_Publishers WHERE Publisher=@publisher";
 
                                         sigDB = db.ExecuteCMD(sql, dbDict);
                                         if (sigDB.Rows.Count == 0)
                                         {
                                             // entry not present, insert it
-                                            sql = "INSERT INTO signatures_publishers (publisher) VALUES (@publisher); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+                                            sql = "INSERT INTO Signatures_Publishers (Publisher) VALUES (@publisher); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
                                             sigDB = db.ExecuteCMD(sql, dbDict);
                                             gamePublisher = Convert.ToInt32(sigDB.Rows[0][0]);
                                         }
@@ -142,14 +142,14 @@ namespace gaseous_server.SignatureIngestors.TOSEC
 
                                     // store game
                                     int gameId = 0;
-                                    sql = "SELECT * FROM signatures_games WHERE name=@name AND year=@year AND publisherid=@publisher AND systemid=@systemid AND country=@country AND language=@language";
+                                    sql = "SELECT * FROM Signatures_Games WHERE Name=@name AND Year=@year AND Publisherid=@publisher AND Systemid=@systemid AND Country=@country AND Language=@language";
 
                                     sigDB = db.ExecuteCMD(sql, dbDict);
                                     if (sigDB.Rows.Count == 0)
                                     {
                                         // entry not present, insert it
-                                        sql = "INSERT INTO signatures_games " +
-                                            "(name, description, year, publisherid, demo, systemid, systemvariant, video, country, language, copyright) VALUES " +
+                                        sql = "INSERT INTO Signatures_Games " +
+                                            "(Name, Description, Year, PublisherId, Demo, SystemId, SystemVariant, Video, Country, Language, Copyright) VALUES " +
                                             "(@name, @description, @year, @publisherid, @demo, @systemid, @systemvariant, @video, @country, @language, @copyright); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
                                         sigDB = db.ExecuteCMD(sql, dbDict);
 
@@ -166,7 +166,7 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                                         if (romObject.Md5 != null)
                                         {
                                             int romId = 0;
-                                            sql = "SELECT * FROM signatures_roms WHERE gameid=@gameid AND md5=@md5";
+                                            sql = "SELECT * FROM Signatures_Roms WHERE GameId=@gameid AND MD5=@md5";
                                             dbDict = new Dictionary<string, object>();
                                             dbDict.Add("gameid", gameId);
                                             dbDict.Add("name", Common.ReturnValueIfNull(romObject.Name, ""));
@@ -200,7 +200,7 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                                             if (sigDB.Rows.Count == 0)
                                             {
                                                 // entry not present, insert it
-                                                sql = "INSERT INTO signatures_roms (gameid, name, size, crc, md5, sha1, developmentstatus, flags, romtype, romtypemedia, medialabel, metadatasource) VALUES (@gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel, @metadatasource); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+                                                sql = "INSERT INTO Signatures_Roms (GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Flags, RomType, RomTypeMedia, MediaLabel, MetadataSource) VALUES (@gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel, @metadatasource); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
                                                 sigDB = db.ExecuteCMD(sql, dbDict);
 
 

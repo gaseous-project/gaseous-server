@@ -7,7 +7,7 @@
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
 /*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!50503 SET NAMES utf8 */;
+/*!50503 SET NameS utf8 */;
 /*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
 /*!40103 SET TIME_ZONE='+00:00' */;
 /*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
@@ -16,659 +16,660 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `agerating`
+-- Table structure for table `AgeRating`
 --
 
-DROP TABLE IF EXISTS `agerating`;
+DROP TABLE IF EXISTS `AgeRating`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `agerating` (
-  `id` bigint NOT NULL,
-  `category` int DEFAULT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `contentdescriptions` json DEFAULT NULL,
-  `rating` int DEFAULT NULL,
-  `ratingcoverurl` varchar(255) DEFAULT NULL,
-  `synopsis` longtext,
+CREATE TABLE `AgeRating` (
+  `Id` bigint NOT NULL,
+  `Category` int DEFAULT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `ContentDescriptions` json DEFAULT NULL,
+  `Rating` int DEFAULT NULL,
+  `RatingCoverUrl` varchar(255) DEFAULT NULL,
+  `Synopsis` longtext,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `ageratingcontentdescription`
+-- Table structure for table `AgeRatingContentDescription`
 --
 
-DROP TABLE IF EXISTS `ageratingcontentdescription`;
+DROP TABLE IF EXISTS `AgeRatingContentDescription`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `ageratingcontentdescription` (
-  `id` bigint NOT NULL,
-  `category` int DEFAULT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `description` varchar(255) DEFAULT NULL,
+CREATE TABLE `AgeRatingContentDescription` (
+  `Id` bigint NOT NULL,
+  `Category` int DEFAULT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `Description` varchar(255) DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `alternativename`
+-- Table structure for table `AlternativeName`
 --
 
-DROP TABLE IF EXISTS `alternativename`;
+DROP TABLE IF EXISTS `AlternativeName`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `alternativename` (
-  `id` bigint NOT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `comment` longtext,
-  `game` bigint DEFAULT NULL,
-  `name` varchar(255) DEFAULT NULL,
+CREATE TABLE `AlternativeName` (
+  `Id` bigint NOT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `Comment` longtext,
+  `Game` bigint DEFAULT NULL,
+  `Name` varchar(255) DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `artwork`
+-- Table structure for table `Artwork`
 --
 
-DROP TABLE IF EXISTS `artwork`;
+DROP TABLE IF EXISTS `Artwork`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `artwork` (
-  `id` bigint NOT NULL,
-  `alphachannel` tinyint(1) DEFAULT NULL,
-  `animated` tinyint(1) DEFAULT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `game` bigint DEFAULT NULL,
-  `height` int DEFAULT NULL,
-  `imageid` varchar(45) DEFAULT NULL,
-  `url` varchar(255) DEFAULT NULL,
-  `width` int DEFAULT NULL,
+CREATE TABLE `Artwork` (
+  `Id` bigint NOT NULL,
+  `AlphaChannel` tinyint(1) DEFAULT NULL,
+  `Animated` tinyint(1) DEFAULT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `Game` bigint DEFAULT NULL,
+  `Height` int DEFAULT NULL,
+  `ImageId` varchar(45) DEFAULT NULL,
+  `Url` varchar(255) DEFAULT NULL,
+  `Width` int DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `collection`
+-- Table structure for table `Collection`
 --
 
-DROP TABLE IF EXISTS `collection`;
+DROP TABLE IF EXISTS `Collection`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `collection` (
-  `id` bigint NOT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `games` json DEFAULT NULL,
-  `name` varchar(255) DEFAULT NULL,
-  `slug` varchar(100) DEFAULT NULL,
-  `createdAt` datetime DEFAULT NULL,
-  `updatedAt` datetime DEFAULT NULL,
-  `url` varchar(255) DEFAULT NULL,
+CREATE TABLE `Collection` (
+  `Id` bigint NOT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `Games` json DEFAULT NULL,
+  `Name` varchar(255) DEFAULT NULL,
+  `Slug` varchar(100) DEFAULT NULL,
+  `CreatedAt` datetime DEFAULT NULL,
+  `UpdatedAt` datetime DEFAULT NULL,
+  `Url` varchar(255) DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `company`
+-- Table structure for table `Company`
 --
 
-DROP TABLE IF EXISTS `company`;
+DROP TABLE IF EXISTS `Company`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `company` (
-  `id` bigint NOT NULL,
-  `changedate` datetime DEFAULT NULL,
-  `changedatecategory` int DEFAULT NULL,
-  `changedcompanyid` bigint DEFAULT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `country` int DEFAULT NULL,
-  `createdat` datetime DEFAULT NULL,
-  `description` longtext,
-  `developed` json DEFAULT NULL,
-  `logo` bigint DEFAULT NULL,
-  `name` varchar(255) DEFAULT NULL,
-  `parent` bigint DEFAULT NULL,
-  `published` json DEFAULT NULL,
-  `slug` varchar(100) DEFAULT NULL,
-  `startdate` datetime DEFAULT NULL,
-  `startdatecategory` int DEFAULT NULL,
-  `updatedat` datetime DEFAULT NULL,
-  `url` varchar(255) DEFAULT NULL,
-  `websites` json DEFAULT NULL,
+CREATE TABLE `Company` (
+  `Id` bigint NOT NULL,
+  `ChangeDate` datetime DEFAULT NULL,
+  `ChangeDateCategory` int DEFAULT NULL,
+  `ChangedCompanyId` bigint DEFAULT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `Country` int DEFAULT NULL,
+  `CreatedAt` datetime DEFAULT NULL,
+  `Description` longtext,
+  `Developed` json DEFAULT NULL,
+  `Logo` bigint DEFAULT NULL,
+  `Name` varchar(255) DEFAULT NULL,
+  `Parent` bigint DEFAULT NULL,
+  `Published` json DEFAULT NULL,
+  `Slug` varchar(100) DEFAULT NULL,
+  `StartDate` datetime DEFAULT NULL,
+  `StartDateCategory` int DEFAULT NULL,
+  `UpdatedAt` datetime DEFAULT NULL,
+  `Url` varchar(255) DEFAULT NULL,
+  `Websites` json DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `companylogo`
+-- Table structure for table `CompanyLogo`
 --
 
-DROP TABLE IF EXISTS `companylogo`;
+DROP TABLE IF EXISTS `CompanyLogo`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `companylogo` (
-  `id` bigint NOT NULL,
-  `alphachannel` tinyint(1) DEFAULT NULL,
-  `animated` tinyint(1) DEFAULT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `height` int DEFAULT NULL,
-  `imageid` varchar(45) DEFAULT NULL,
-  `url` varchar(255) DEFAULT NULL,
-  `width` int DEFAULT NULL,
+CREATE TABLE `CompanyLogo` (
+  `Id` bigint NOT NULL,
+  `AlphaChannel` tinyint(1) DEFAULT NULL,
+  `Animated` tinyint(1) DEFAULT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `Height` int DEFAULT NULL,
+  `ImageId` varchar(45) DEFAULT NULL,
+  `Url` varchar(255) DEFAULT NULL,
+  `Width` int DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `cover`
+-- Table structure for table `Cover`
 --
 
-DROP TABLE IF EXISTS `cover`;
+DROP TABLE IF EXISTS `Cover`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `cover` (
-  `id` bigint NOT NULL,
-  `alphachannel` tinyint(1) DEFAULT NULL,
-  `animated` tinyint(1) DEFAULT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `game` bigint DEFAULT NULL,
-  `height` int DEFAULT NULL,
-  `imageid` varchar(45) DEFAULT NULL,
-  `url` varchar(255) DEFAULT NULL,
-  `width` int DEFAULT NULL,
+CREATE TABLE `Cover` (
+  `Id` bigint NOT NULL,
+  `AlphaChannel` tinyint(1) DEFAULT NULL,
+  `Animated` tinyint(1) DEFAULT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `Game` bigint DEFAULT NULL,
+  `Height` int DEFAULT NULL,
+  `ImageId` varchar(45) DEFAULT NULL,
+  `Url` varchar(255) DEFAULT NULL,
+  `Width` int DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `externalgame`
+-- Table structure for table `ExternalGame`
 --
 
-DROP TABLE IF EXISTS `externalgame`;
+DROP TABLE IF EXISTS `ExternalGame`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `externalgame` (
-  `id` bigint NOT NULL,
-  `category` int DEFAULT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `createdat` datetime DEFAULT NULL,
-  `countries` json DEFAULT NULL,
-  `game` bigint DEFAULT NULL,
-  `media` int DEFAULT NULL,
-  `name` varchar(255) DEFAULT NULL,
-  `platform` bigint DEFAULT NULL,
-  `uid` varchar(255) DEFAULT NULL,
-  `updatedat` datetime DEFAULT NULL,
-  `url` varchar(255) DEFAULT NULL,
-  `year` int DEFAULT NULL,
+CREATE TABLE `ExternalGame` (
+  `Id` bigint NOT NULL,
+  `Category` int DEFAULT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `CreatedAt` datetime DEFAULT NULL,
+  `Countries` json DEFAULT NULL,
+  `Game` bigint DEFAULT NULL,
+  `Media` int DEFAULT NULL,
+  `Name` varchar(255) DEFAULT NULL,
+  `Platform` bigint DEFAULT NULL,
+  `Uid` varchar(255) DEFAULT NULL,
+  `UpdatedAt` datetime DEFAULT NULL,
+  `Url` varchar(255) DEFAULT NULL,
+  `Year` int DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `franchise`
+-- Table structure for table `Franchise`
 --
 
-DROP TABLE IF EXISTS `franchise`;
+DROP TABLE IF EXISTS `Franchise`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `franchise` (
-  `id` bigint NOT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `createdat` datetime DEFAULT NULL,
-  `updatedat` datetime DEFAULT NULL,
-  `games` json DEFAULT NULL,
-  `name` varchar(255) DEFAULT NULL,
-  `slug` varchar(255) DEFAULT NULL,
-  `url` varchar(255) DEFAULT NULL,
+CREATE TABLE `Franchise` (
+  `Id` bigint NOT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `CreatedAt` datetime DEFAULT NULL,
+  `UpdatedAt` datetime DEFAULT NULL,
+  `Games` json DEFAULT NULL,
+  `Name` varchar(255) DEFAULT NULL,
+  `Slug` varchar(255) DEFAULT NULL,
+  `Url` varchar(255) DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `game`
+-- Table structure for table `Game`
 --
 
-DROP TABLE IF EXISTS `game`;
+DROP TABLE IF EXISTS `Game`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `game` (
-  `id` bigint NOT NULL,
-  `ageratings` json DEFAULT NULL,
-  `aggregatedrating` double DEFAULT NULL,
-  `aggregatedratingcount` int DEFAULT NULL,
-  `alternativenames` json DEFAULT NULL,
-  `artworks` json DEFAULT NULL,
-  `bundles` json DEFAULT NULL,
-  `category` int DEFAULT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `collection` bigint DEFAULT NULL,
-  `cover` bigint DEFAULT NULL,
-  `createdat` datetime DEFAULT NULL,
-  `dlcs` json DEFAULT NULL,
-  `expansions` json DEFAULT NULL,
-  `externalgames` json DEFAULT NULL,
-  `firstreleasedate` datetime DEFAULT NULL,
-  `follows` int DEFAULT NULL,
-  `franchise` bigint DEFAULT NULL,
-  `franchises` json DEFAULT NULL,
-  `gameengines` json DEFAULT NULL,
-  `gamemodes` json DEFAULT NULL,
-  `genres` json DEFAULT NULL,
-  `hypes` int DEFAULT NULL,
-  `involvedcompanies` json DEFAULT NULL,
-  `keywords` json DEFAULT NULL,
-  `multiplayermodes` json DEFAULT NULL,
-  `name` varchar(255) DEFAULT NULL,
-  `parentgame` bigint DEFAULT NULL,
-  `platforms` json DEFAULT NULL,
-  `playerperspectives` json DEFAULT NULL,
-  `rating` double DEFAULT NULL,
-  `ratingcount` int DEFAULT NULL,
-  `releasedates` json DEFAULT NULL,
-  `screenshots` json DEFAULT NULL,
-  `similargames` json DEFAULT NULL,
-  `slug` varchar(100) DEFAULT NULL,
-  `standaloneexpansions` json DEFAULT NULL,
-  `status` int DEFAULT NULL,
-  `storyline` longtext,
-  `summary` longtext,
-  `tags` json DEFAULT NULL,
-  `themes` json DEFAULT NULL,
-  `totalrating` double DEFAULT NULL,
-  `totalratingcount` int DEFAULT NULL,
-  `updatedat` datetime DEFAULT NULL,
-  `url` varchar(255) DEFAULT NULL,
-  `versionparent` bigint DEFAULT NULL,
-  `versiontitle` varchar(100) DEFAULT NULL,
-  `videos` json DEFAULT NULL,
-  `websites` json DEFAULT NULL,
+CREATE TABLE `Game` (
+  `Id` bigint NOT NULL,
+  `AgeRatings` json DEFAULT NULL,
+  `AggregatedRating` double DEFAULT NULL,
+  `AggregatedRatingCount` int DEFAULT NULL,
+  `AlternativeNames` json DEFAULT NULL,
+  `Artworks` json DEFAULT NULL,
+  `Bundles` json DEFAULT NULL,
+  `Category` int DEFAULT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `Collection` bigint DEFAULT NULL,
+  `Cover` bigint DEFAULT NULL,
+  `CreatedAt` datetime DEFAULT NULL,
+  `Dlcs` json DEFAULT NULL,
+  `Expansions` json DEFAULT NULL,
+  `ExternalGames` json DEFAULT NULL,
+  `FirstReleaseDate` datetime DEFAULT NULL,
+  `Follows` int DEFAULT NULL,
+  `Franchise` bigint DEFAULT NULL,
+  `Franchises` json DEFAULT NULL,
+  `GameEngines` json DEFAULT NULL,
+  `GameModes` json DEFAULT NULL,
+  `Genres` json DEFAULT NULL,
+  `Hypes` int DEFAULT NULL,
+  `InvolvedCompanies` json DEFAULT NULL,
+  `Keywords` json DEFAULT NULL,
+  `MultiplayerModes` json DEFAULT NULL,
+  `Name` varchar(255) DEFAULT NULL,
+  `ParentGame` bigint DEFAULT NULL,
+  `Platforms` json DEFAULT NULL,
+  `PlayerPerspectives` json DEFAULT NULL,
+  `Rating` double DEFAULT NULL,
+  `RatingCount` int DEFAULT NULL,
+  `ReleaseDates` json DEFAULT NULL,
+  `Screenshots` json DEFAULT NULL,
+  `SimilarGames` json DEFAULT NULL,
+  `Slug` varchar(100) DEFAULT NULL,
+  `StandaloneExpansions` json DEFAULT NULL,
+  `Status` int DEFAULT NULL,
+  `StoryLine` longtext,
+  `Summary` longtext,
+  `Tags` json DEFAULT NULL,
+  `Themes` json DEFAULT NULL,
+  `TotalRating` double DEFAULT NULL,
+  `TotalRatingCount` int DEFAULT NULL,
+  `UpdatedAt` datetime DEFAULT NULL,
+  `Url` varchar(255) DEFAULT NULL,
+  `VersionParent` bigint DEFAULT NULL,
+  `VersionTitle` varchar(100) DEFAULT NULL,
+  `Videos` json DEFAULT NULL,
+  `Websites` json DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
-  KEY `idx_genres` ((cast(`genres` as unsigned array))),
-  KEY `idx_alternativenames` ((cast(`alternativenames` as unsigned array))),
-  KEY `idx_artworks` ((cast(`artworks` as unsigned array))),
-  KEY `idx_bundles` ((cast(`bundles` as unsigned array))),
-  KEY `idx_dlcs` ((cast(`dlcs` as unsigned array))),
-  KEY `idx_expansions` ((cast(`expansions` as unsigned array))),
-  KEY `idx_externalgames` ((cast(`externalgames` as unsigned array))),
-  KEY `idx_franchises` ((cast(`franchises` as unsigned array))),
-  KEY `idx_gameengines` ((cast(`gameengines` as unsigned array))),
-  KEY `idx_gamemodes` ((cast(`gamemodes` as unsigned array))),
-  KEY `idx_involvedcompanies` ((cast(`involvedcompanies` as unsigned array))),
-  KEY `idx_keywords` ((cast(`keywords` as unsigned array))),
-  KEY `idx_multiplayermodes` ((cast(`multiplayermodes` as unsigned array))),
-  KEY `idx_platforms` ((cast(`platforms` as unsigned array))),
-  KEY `idx_playerperspectives` ((cast(`playerperspectives` as unsigned array))),
-  KEY `idx_releasedates` ((cast(`releasedates` as unsigned array))),
-  KEY `idx_screenshots` ((cast(`screenshots` as unsigned array))),
-  KEY `idx_similargames` ((cast(`similargames` as unsigned array))),
-  KEY `idx_standaloneexpansions` ((cast(`standaloneexpansions` as unsigned array))),
-  KEY `idx_tags` ((cast(`tags` as unsigned array))),
-  KEY `idx_themes` ((cast(`themes` as unsigned array))),
-  KEY `idx_videos` ((cast(`videos` as unsigned array))),
-  KEY `idx_websites` ((cast(`websites` as unsigned array)))
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `Id_UNIQUE` (`Id`),
+  KEY `Idx_AgeRatings` ((cast(`AgeRatings` as unsigned array))),
+  KEY `Idx_Genres` ((cast(`Genres` as unsigned array))),
+  KEY `Idx_alternativeNames` ((cast(`AlternativeNames` as unsigned array))),
+  KEY `Idx_artworks` ((cast(`Artworks` as unsigned array))),
+  KEY `Idx_bundles` ((cast(`Bundles` as unsigned array))),
+  KEY `Idx_dlcs` ((cast(`Dlcs` as unsigned array))),
+  KEY `Idx_expansions` ((cast(`Expansions` as unsigned array))),
+  KEY `Idx_ExternalGames` ((cast(`ExternalGames` as unsigned array))),
+  KEY `Idx_franchises` ((cast(`Franchises` as unsigned array))),
+  KEY `Idx_Gameengines` ((cast(`GameEngines` as unsigned array))),
+  KEY `Idx_Gamemodes` ((cast(`GameModes` as unsigned array))),
+  KEY `Idx_involvedcompanies` ((cast(`InvolvedCompanies` as unsigned array))),
+  KEY `Idx_keywords` ((cast(`Keywords` as unsigned array))),
+  KEY `Idx_multiplayermodes` ((cast(`MultiplayerModes` as unsigned array))),
+  KEY `Idx_Platforms` ((cast(`Platforms` as unsigned array))),
+  KEY `Idx_playerperspectives` ((cast(`PlayerPerspectives` as unsigned array))),
+  KEY `Idx_releasedates` ((cast(`ReleaseDates` as unsigned array))),
+  KEY `Idx_Screenshots` ((cast(`Screenshots` as unsigned array))),
+  KEY `Idx_similarGames` ((cast(`SimilarGames` as unsigned array))),
+  KEY `Idx_standaloneexpansions` ((cast(`StandaloneExpansions` as unsigned array))),
+  KEY `Idx_tags` ((cast(`Tags` as unsigned array))),
+  KEY `Idx_themes` ((cast(`Themes` as unsigned array))),
+  KEY `Idx_vIdeos` ((cast(`Videos` as unsigned array))),
+  KEY `Idx_websites` ((cast(`Websites` as unsigned array)))
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `games_roms`
+-- Table structure for table `Games_Roms`
 --
 
-DROP TABLE IF EXISTS `games_roms`;
+DROP TABLE IF EXISTS `Games_Roms`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `games_roms` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `platformid` bigint DEFAULT NULL,
-  `gameid` bigint DEFAULT NULL,
-  `name` varchar(255) DEFAULT NULL,
-  `size` bigint DEFAULT NULL,
-  `crc` varchar(20) DEFAULT NULL,
-  `md5` varchar(100) DEFAULT NULL,
-  `sha1` varchar(100) DEFAULT NULL,
-  `developmentstatus` varchar(100) DEFAULT NULL,
-  `flags` json DEFAULT NULL,
-  `romtype` int DEFAULT NULL,
-  `romtypemedia` varchar(100) DEFAULT NULL,
-  `medialabel` varchar(100) DEFAULT NULL,
-  `path` longtext,
-  `metadatasource` int DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
-  INDEX `gameid` (`gameid` ASC) VISIBLE,
-  INDEX `id_gameid` (`gameid` ASC, `id` ASC) VISIBLE
+CREATE TABLE `Games_Roms` (
+  `Id` bigint NOT NULL AUTO_INCREMENT,
+  `PlatformId` bigint DEFAULT NULL,
+  `GameId` bigint DEFAULT NULL,
+  `Name` varchar(255) DEFAULT NULL,
+  `Size` bigint DEFAULT NULL,
+  `CRC` varchar(20) DEFAULT NULL,
+  `MD5` varchar(100) DEFAULT NULL,
+  `SHA1` varchar(100) DEFAULT NULL,
+  `DevelopmentStatus` varchar(100) DEFAULT NULL,
+  `Flags` json DEFAULT NULL,
+  `RomType` int DEFAULT NULL,
+  `RomTypeMedia` varchar(100) DEFAULT NULL,
+  `MediaLabel` varchar(100) DEFAULT NULL,
+  `Path` longtext,
+  `MetadataSource` int DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `Id_UNIQUE` (`Id`),
+  INDEX `GameId` (`GameId` ASC) VISIBLE,
+  INDEX `Id_GameId` (`GameId` ASC, `Id` ASC) VISIBLE
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `gamevideo`
+-- Table structure for table `GameVideo`
 --
 
-DROP TABLE IF EXISTS `gamevideo`;
+DROP TABLE IF EXISTS `GameVideo`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `gamevideo` (
-  `id` bigint NOT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `game` bigint DEFAULT NULL,
-  `name` varchar(100) DEFAULT NULL,
-  `videoid` varchar(45) DEFAULT NULL,
+CREATE TABLE `GameVideo` (
+  `Id` bigint NOT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `Game` bigint DEFAULT NULL,
+  `Name` varchar(100) DEFAULT NULL,
+  `VideoId` varchar(45) DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `genre`
+-- Table structure for table `Genre`
 --
 
-DROP TABLE IF EXISTS `genre`;
+DROP TABLE IF EXISTS `Genre`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `genre` (
-  `id` bigint NOT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `createdat` datetime DEFAULT NULL,
-  `updatedat` datetime DEFAULT NULL,
-  `name` varchar(255) DEFAULT NULL,
-  `slug` varchar(100) DEFAULT NULL,
-  `url` varchar(255) DEFAULT NULL,
+CREATE TABLE `Genre` (
+  `Id` bigint NOT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `CreatedAt` datetime DEFAULT NULL,
+  `UpdatedAt` datetime DEFAULT NULL,
+  `Name` varchar(255) DEFAULT NULL,
+  `Slug` varchar(100) DEFAULT NULL,
+  `Url` varchar(255) DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `involvedcompany`
+-- Table structure for table `InvolvedCompany`
 --
 
-DROP TABLE IF EXISTS `involvedcompany`;
+DROP TABLE IF EXISTS `InvolvedCompany`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `involvedcompany` (
-  `id` bigint NOT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `company` bigint DEFAULT NULL,
-  `createdat` datetime DEFAULT NULL,
-  `developer` tinyint(1) DEFAULT NULL,
-  `game` bigint DEFAULT NULL,
-  `porting` tinyint(1) DEFAULT NULL,
-  `publisher` tinyint(1) DEFAULT NULL,
-  `supporting` tinyint(1) DEFAULT NULL,
-  `updatedat` datetime DEFAULT NULL,
+CREATE TABLE `InvolvedCompany` (
+  `Id` bigint NOT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `Company` bigint DEFAULT NULL,
+  `CreatedAt` datetime DEFAULT NULL,
+  `Developer` tinyint(1) DEFAULT NULL,
+  `Game` bigint DEFAULT NULL,
+  `Porting` tinyint(1) DEFAULT NULL,
+  `Publisher` tinyint(1) DEFAULT NULL,
+  `Supporting` tinyint(1) DEFAULT NULL,
+  `UpdatedAt` datetime DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `platform`
+-- Table structure for table `Platform`
 --
 
-DROP TABLE IF EXISTS `platform`;
+DROP TABLE IF EXISTS `Platform`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `platform` (
-  `id` bigint NOT NULL,
-  `abbreviation` varchar(45) DEFAULT NULL,
-  `alternativename` varchar(255) DEFAULT NULL,
-  `category` int DEFAULT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `createdat` datetime DEFAULT NULL,
-  `generation` int DEFAULT NULL,
-  `name` varchar(45) DEFAULT NULL,
-  `platformfamily` bigint DEFAULT NULL,
-  `platformlogo` bigint DEFAULT NULL,
-  `slug` varchar(45) DEFAULT NULL,
-  `summary` longtext,
-  `updatedat` datetime DEFAULT NULL,
-  `url` varchar(255) DEFAULT NULL,
-  `versions` json DEFAULT NULL,
-  `websites` json DEFAULT NULL,
+CREATE TABLE `Platform` (
+  `Id` bigint NOT NULL,
+  `Abbreviation` varchar(45) DEFAULT NULL,
+  `AlternativeName` varchar(255) DEFAULT NULL,
+  `Category` int DEFAULT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `CreatedAt` datetime DEFAULT NULL,
+  `Generation` int DEFAULT NULL,
+  `Name` varchar(45) DEFAULT NULL,
+  `PlatformFamily` bigint DEFAULT NULL,
+  `PlatformLogo` bigint DEFAULT NULL,
+  `Slug` varchar(45) DEFAULT NULL,
+  `Summary` longtext,
+  `UpdatedAt` datetime DEFAULT NULL,
+  `Url` varchar(255) DEFAULT NULL,
+  `Versions` json DEFAULT NULL,
+  `Websites` json DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`)
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `Id_UNIQUE` (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `platformlogo`
+-- Table structure for table `PlatformLogo`
 --
 
-DROP TABLE IF EXISTS `platformlogo`;
+DROP TABLE IF EXISTS `PlatformLogo`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `platformlogo` (
-  `id` bigint NOT NULL,
-  `alphachannel` tinyint(1) DEFAULT NULL,
-  `animated` tinyint(1) DEFAULT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `height` int DEFAULT NULL,
-  `imageid` varchar(45) DEFAULT NULL,
-  `url` varchar(255) DEFAULT NULL,
-  `width` int DEFAULT NULL,
+CREATE TABLE `PlatformLogo` (
+  `Id` bigint NOT NULL,
+  `AlphaChannel` tinyint(1) DEFAULT NULL,
+  `Animated` tinyint(1) DEFAULT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `Height` int DEFAULT NULL,
+  `ImageId` varchar(45) DEFAULT NULL,
+  `Url` varchar(255) DEFAULT NULL,
+  `Width` int DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `platformversion`
+-- Table structure for table `Platformversion`
 --
 
-DROP TABLE IF EXISTS `platformversion`;
+DROP TABLE IF EXISTS `PlatformVersion`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `platformversion` (
-  `id` bigint NOT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `companies` json DEFAULT NULL,
-  `connectivity` longtext,
-  `cpu` longtext,
-  `graphics` longtext,
-  `mainmanufacturer` bigint DEFAULT NULL,
-  `media` longtext,
-  `memory` longtext,
-  `name` longtext,
-  `os` longtext,
-  `output` longtext,
-  `platformlogo` int DEFAULT NULL,
-  `platformversionreleasedates` json DEFAULT NULL,
-  `resolutions` longtext,
-  `slug` longtext,
-  `sound` longtext,
-  `storage` longtext,
-  `summary` longtext,
-  `url` varchar(255) DEFAULT NULL,
+CREATE TABLE `PlatformVersion` (
+  `Id` bigint NOT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `Companies` json DEFAULT NULL,
+  `Connectivity` longtext,
+  `CPU` longtext,
+  `Graphics` longtext,
+  `MainManufacturer` bigint DEFAULT NULL,
+  `Media` longtext,
+  `Memory` longtext,
+  `Name` longtext,
+  `OS` longtext,
+  `Output` longtext,
+  `PlatformLogo` int DEFAULT NULL,
+  `PlatformVersionReleaseDates` json DEFAULT NULL,
+  `Resolutions` longtext,
+  `Slug` longtext,
+  `Sound` longtext,
+  `Storage` longtext,
+  `Summary` longtext,
+  `Url` varchar(255) DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `screenshot`
+-- Table structure for table `Screenshot`
 --
 
-DROP TABLE IF EXISTS `screenshot`;
+DROP TABLE IF EXISTS `Screenshot`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `screenshot` (
-  `id` bigint NOT NULL,
-  `alphachannel` tinyint(1) DEFAULT NULL,
-  `animated` tinyint(1) DEFAULT NULL,
-  `checksum` varchar(45) DEFAULT NULL,
-  `game` bigint DEFAULT NULL,
-  `height` int DEFAULT NULL,
-  `imageid` varchar(45) DEFAULT NULL,
-  `url` varchar(255) DEFAULT NULL,
-  `width` int DEFAULT NULL,
+CREATE TABLE `Screenshot` (
+  `Id` bigint NOT NULL,
+  `AlphaChannel` tinyint(1) DEFAULT NULL,
+  `Animated` tinyint(1) DEFAULT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `Game` bigint DEFAULT NULL,
+  `Height` int DEFAULT NULL,
+  `ImageId` varchar(45) DEFAULT NULL,
+  `Url` varchar(255) DEFAULT NULL,
+  `Width` int DEFAULT NULL,
   `dateAdded` datetime DEFAULT NULL,
   `lastUpdated` datetime DEFAULT NULL,
-  PRIMARY KEY (`id`)
+  PRIMARY KEY (`Id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `settings`
+-- Table structure for table `Settings`
 --
 
-DROP TABLE IF EXISTS `settings`;
+DROP TABLE IF EXISTS `Settings`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `settings` (
-  `setting` varchar(45) NOT NULL,
-  `value` longtext,
-  PRIMARY KEY (`setting`),
-  UNIQUE KEY `setting_UNIQUE` (`setting`)
+CREATE TABLE `Settings` (
+  `Setting` varchar(45) NOT NULL,
+  `Value` longtext,
+  PRIMARY KEY (`Setting`),
+  UNIQUE KEY `Setting_UNIQUE` (`Setting`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `signatures_games`
+-- Table structure for table `Signatures_Games`
 --
 
-DROP TABLE IF EXISTS `signatures_games`;
+DROP TABLE IF EXISTS `Signatures_Games`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `signatures_games` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) DEFAULT NULL,
-  `description` varchar(255) DEFAULT NULL,
-  `year` varchar(15) DEFAULT NULL,
-  `publisherid` int DEFAULT NULL,
-  `demo` int DEFAULT NULL,
-  `systemid` int DEFAULT NULL,
-  `systemvariant` varchar(100) DEFAULT NULL,
-  `video` varchar(10) DEFAULT NULL,
-  `country` varchar(5) DEFAULT NULL,
-  `language` varchar(5) DEFAULT NULL,
-  `copyright` varchar(15) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
-  KEY `publisher_idx` (`publisherid`),
-  KEY `system_idx` (`systemid`),
-  KEY `ingest_idx` (`name`,`year`,`publisherid`,`systemid`,`country`,`language`) USING BTREE,
-  CONSTRAINT `publisher` FOREIGN KEY (`publisherid`) REFERENCES `signatures_publishers` (`id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `system` FOREIGN KEY (`systemid`) REFERENCES `signatures_platforms` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+CREATE TABLE `Signatures_Games` (
+  `Id` int NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) DEFAULT NULL,
+  `Description` varchar(255) DEFAULT NULL,
+  `Year` varchar(15) DEFAULT NULL,
+  `PublisherId` int DEFAULT NULL,
+  `Demo` int DEFAULT NULL,
+  `SystemId` int DEFAULT NULL,
+  `SystemVariant` varchar(100) DEFAULT NULL,
+  `Video` varchar(10) DEFAULT NULL,
+  `Country` varchar(5) DEFAULT NULL,
+  `Language` varchar(5) DEFAULT NULL,
+  `Copyright` varchar(15) DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `Id_UNIQUE` (`Id`),
+  KEY `publisher_Idx` (`PublisherId`),
+  KEY `system_Idx` (`SystemId`),
+  KEY `ingest_Idx` (`Name`,`Year`,`PublisherId`,`SystemId`,`Country`,`Language`) USING BTREE,
+  CONSTRAINT `Publisher` FOREIGN KEY (`PublisherId`) REFERENCES `Signatures_Publishers` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `System` FOREIGN KEY (`SystemId`) REFERENCES `Signatures_Platforms` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `signatures_platforms`
+-- Table structure for table `Signatures_Platforms`
 --
 
-DROP TABLE IF EXISTS `signatures_platforms`;
+DROP TABLE IF EXISTS `Signatures_Platforms`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `signatures_platforms` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `platform` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `idsignatures_platforms_UNIQUE` (`id`),
-  KEY `platforms_idx` (`platform`,`id`) USING BTREE
+CREATE TABLE `Signatures_Platforms` (
+  `Id` int NOT NULL AUTO_INCREMENT,
+  `Platform` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `IdSignatures_Platforms_UNIQUE` (`Id`),
+  KEY `Platforms_Idx` (`Platform`,`Id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `signatures_publishers`
+-- Table structure for table `Signatures_Publishers`
 --
 
-DROP TABLE IF EXISTS `signatures_publishers`;
+DROP TABLE IF EXISTS `Signatures_Publishers`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `signatures_publishers` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `publisher` varchar(100) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
-  KEY `publisher_idx` (`publisher`,`id`)
+CREATE TABLE `Signatures_Publishers` (
+  `Id` int NOT NULL AUTO_INCREMENT,
+  `Publisher` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `Id_UNIQUE` (`Id`),
+  KEY `publisher_Idx` (`Publisher`,`Id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `signatures_roms`
+-- Table structure for table `Signatures_Roms`
 --
 
-DROP TABLE IF EXISTS `signatures_roms`;
+DROP TABLE IF EXISTS `Signatures_Roms`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `signatures_roms` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `gameid` int DEFAULT NULL,
-  `name` varchar(255) DEFAULT NULL,
-  `size` bigint DEFAULT NULL,
-  `crc` varchar(20) DEFAULT NULL,
-  `md5` varchar(100) DEFAULT NULL,
-  `sha1` varchar(100) DEFAULT NULL,
-  `developmentstatus` varchar(100) DEFAULT NULL,
-  `flags` json DEFAULT NULL,
-  `romtype` int DEFAULT NULL,
-  `romtypemedia` varchar(100) DEFAULT NULL,
-  `medialabel` varchar(100) DEFAULT NULL,
-  `metadatasource` int DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`,`gameid`) USING BTREE,
-  KEY `gameid_idx` (`gameid`),
-  KEY `md5_idx` (`md5`) USING BTREE,
-  KEY `sha1_idx` (`sha1`) USING BTREE,
-  KEY `flags_idx` ((cast(`flags` as char(255) array))),
-  CONSTRAINT `gameid` FOREIGN KEY (`gameid`) REFERENCES `signatures_games` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
+CREATE TABLE `Signatures_Roms` (
+  `Id` int NOT NULL AUTO_INCREMENT,
+  `GameId` int DEFAULT NULL,
+  `Name` varchar(255) DEFAULT NULL,
+  `Size` bigint DEFAULT NULL,
+  `CRC` varchar(20) DEFAULT NULL,
+  `MD5` varchar(100) DEFAULT NULL,
+  `SHA1` varchar(100) DEFAULT NULL,
+  `DevelopmentStatus` varchar(100) DEFAULT NULL,
+  `Flags` json DEFAULT NULL,
+  `RomType` int DEFAULT NULL,
+  `RomTypeMedia` varchar(100) DEFAULT NULL,
+  `MediaLabel` varchar(100) DEFAULT NULL,
+  `MetadataSource` int DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `Id_UNIQUE` (`Id`,`GameId`) USING BTREE,
+  KEY `GameId_Idx` (`GameId`),
+  KEY `md5_Idx` (`MD5`) USING BTREE,
+  KEY `sha1_Idx` (`SHA1`) USING BTREE,
+  KEY `flags_Idx` ((cast(`Flags` as char(255) array))),
+  CONSTRAINT `GameId` FOREIGN KEY (`GameId`) REFERENCES `Signatures_Games` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
--- Table structure for table `signatures_sources`
+-- Table structure for table `Signatures_Sources`
 --
 
-DROP TABLE IF EXISTS `signatures_sources`;
+DROP TABLE IF EXISTS `Signatures_Sources`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `signatures_sources` (
-  `id` int NOT NULL AUTO_INCREMENT,
-  `name` varchar(255) DEFAULT NULL,
-  `description` varchar(255) DEFAULT NULL,
-  `category` varchar(45) DEFAULT NULL,
-  `version` varchar(45) DEFAULT NULL,
-  `author` varchar(255) DEFAULT NULL,
-  `email` varchar(45) DEFAULT NULL,
-  `homepage` varchar(45) DEFAULT NULL,
-  `url` varchar(45) DEFAULT NULL,
-  `sourcetype` varchar(45) DEFAULT NULL,
-  `sourcemd5` varchar(45) DEFAULT NULL,
-  `sourcesha1` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `id_UNIQUE` (`id`),
-  KEY `sourcemd5_idx` (`sourcemd5`,`id`) USING BTREE,
-  KEY `sourcesha1_idx` (`sourcesha1`,`id`) USING BTREE
+CREATE TABLE `Signatures_Sources` (
+  `Id` int NOT NULL AUTO_INCREMENT,
+  `Name` varchar(255) DEFAULT NULL,
+  `Description` varchar(255) DEFAULT NULL,
+  `Category` varchar(45) DEFAULT NULL,
+  `Version` varchar(45) DEFAULT NULL,
+  `Author` varchar(255) DEFAULT NULL,
+  `Email` varchar(45) DEFAULT NULL,
+  `Homepage` varchar(45) DEFAULT NULL,
+  `Url` varchar(45) DEFAULT NULL,
+  `SourceType` varchar(45) DEFAULT NULL,
+  `SourceMD5` varchar(45) DEFAULT NULL,
+  `SourceSHA1` varchar(45) DEFAULT NULL,
+  PRIMARY KEY (`Id`),
+  UNIQUE KEY `Id_UNIQUE` (`Id`),
+  KEY `sourcemd5_Idx` (`SourceMD5`,`Id`) USING BTREE,
+  KEY `sourcesha1_Idx` (`SourceSHA1`,`Id`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -681,27 +682,27 @@ CREATE TABLE `signatures_sources` (
 --
 
 --
--- Final view structure for view `view_signatures_games`
+-- Final view structure for view `view_Signatures_Games`
 --
 
-DROP VIEW IF EXISTS `view_signatures_games`;
-CREATE VIEW `view_signatures_games` AS
+DROP VIEW IF EXISTS `view_Signatures_Games`;
+CREATE VIEW `view_Signatures_Games` AS
     SELECT 
-        `signatures_games`.`id` AS `id`,
-        `signatures_games`.`name` AS `name`,
-        `signatures_games`.`description` AS `description`,
-        `signatures_games`.`year` AS `year`,
-        `signatures_games`.`publisherid` AS `publisherid`,
-        `signatures_publishers`.`publisher` AS `publisher`,
-        `signatures_games`.`demo` AS `demo`,
-        `signatures_games`.`systemid` AS `platformid`,
-        `signatures_platforms`.`platform` AS `platform`,
-        `signatures_games`.`systemvariant` AS `systemvariant`,
-        `signatures_games`.`video` AS `video`,
-        `signatures_games`.`country` AS `country`,
-        `signatures_games`.`language` AS `language`,
-        `signatures_games`.`copyright` AS `copyright`
+        `Signatures_Games`.`Id` AS `Id`,
+        `Signatures_Games`.`Name` AS `Name`,
+        `Signatures_Games`.`Description` AS `Description`,
+        `Signatures_Games`.`Year` AS `Year`,
+        `Signatures_Games`.`PublisherId` AS `PublisherId`,
+        `Signatures_Publishers`.`Publisher` AS `Publisher`,
+        `Signatures_Games`.`Demo` AS `Demo`,
+        `Signatures_Games`.`SystemId` AS `PlatformId`,
+        `Signatures_Platforms`.`Platform` AS `Platform`,
+        `Signatures_Games`.`SystemVariant` AS `SystemVariant`,
+        `Signatures_Games`.`VIdeo` AS `Video`,
+        `Signatures_Games`.`Country` AS `Country`,
+        `Signatures_Games`.`Language` AS `Language`,
+        `Signatures_Games`.`Copyright` AS `Copyright`
     FROM
-        ((`signatures_games`
-        JOIN `signatures_publishers` ON ((`signatures_games`.`publisherid` = `signatures_publishers`.`id`)))
-        JOIN `signatures_platforms` ON ((`signatures_games`.`systemid` = `signatures_platforms`.`id`)));
+        ((`Signatures_Games`
+        JOIN `Signatures_Publishers` ON ((`Signatures_Games`.`PublisherId` = `Signatures_Publishers`.`Id`)))
+        JOIN `Signatures_Platforms` ON ((`Signatures_Games`.`SystemId` = `Signatures_Platforms`.`Id`)));

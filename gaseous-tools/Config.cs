@@ -127,6 +127,11 @@ namespace gaseous_tools
             serializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
             string configRaw = Newtonsoft.Json.JsonConvert.SerializeObject(_config, serializerSettings);
 
+            if (!Directory.Exists(ConfigurationPath))
+            {
+                Directory.CreateDirectory(ConfigurationPath);
+            }
+
             if (File.Exists(ConfigurationFilePath_Backup))
             {
                 File.Delete(ConfigurationFilePath_Backup);
@@ -143,18 +148,18 @@ namespace gaseous_tools
         public static void InitSettings()
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM settings";
+            string sql = "SELECT * FROM Settings";
 
             DataTable dbResponse = db.ExecuteCMD(sql);
             foreach (DataRow dataRow in dbResponse.Rows)
             {
-                if (AppSettings.ContainsKey((string)dataRow["setting"]))
+                if (AppSettings.ContainsKey((string)dataRow["Setting"]))
                 {
-                    AppSettings[(string)dataRow["setting"]] = (string)dataRow["value"];
+                    AppSettings[(string)dataRow["Setting"]] = (string)dataRow["Value"];
                 }
                 else
                 {
-                    AppSettings.Add((string)dataRow["setting"], (string)dataRow["value"]);
+                    AppSettings.Add((string)dataRow["Setting"], (string)dataRow["Value"]);
                 }
             }
         }
@@ -168,10 +173,10 @@ namespace gaseous_tools
             else
             {
                 Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                string sql = "SELECT * FROM settings WHERE setting = @settingname";
+                string sql = "SELECT * FROM Settings WHERE Setting = @SettingName";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
-                dbDict.Add("settingname", SettingName);
-                dbDict.Add("value", DefaultValue);
+                dbDict.Add("SettingName", SettingName);
+                dbDict.Add("Value", DefaultValue);
 
                 try
                 {
@@ -200,10 +205,10 @@ namespace gaseous_tools
         public static void SetSetting(string SettingName, string Value)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "REPLACE INTO settings (setting, value) VALUES (@settingname, @value)";
+            string sql = "REPLACE INTO Settings (Setting, Value) VALUES (@SettingName, @Value)";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
-            dbDict.Add("settingname", SettingName);
-            dbDict.Add("value", Value);
+            dbDict.Add("SettingName", SettingName);
+            dbDict.Add("Value", Value);
 
             Logging.Log(Logging.LogType.Debug, "Database", "Storing setting '" + SettingName + "' to value: '" + Value + "'");
             try
