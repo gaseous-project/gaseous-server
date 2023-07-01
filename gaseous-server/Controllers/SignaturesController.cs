@@ -90,7 +90,7 @@ namespace gaseous_server.Controllers
                         Crc = (string)sigDbRow["CRC"],
                         Md5 = (string)sigDbRow["MD5"],
                         Sha1 = (string)sigDbRow["SHA1"],
-                        DevelopmentStatus = (string)sigDbRow["SevelopmentStatus"],
+                        DevelopmentStatus = (string)sigDbRow["DevelopmentStatus"],
                         flags = Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>((string)sigDbRow["Flags"]),
                         RomType = (Models.Signatures_Games.RomItem.RomTypes)(int)sigDbRow["RomType"],
                         RomTypeMedia = (string)sigDbRow["RomTypeMedia"],
