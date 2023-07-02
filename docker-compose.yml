@@ -12,7 +12,7 @@ services:
     ports:
       - 5198:80
     volumes:
-      - /Users/michaelgreen/.gaseous-server:/root/.gaseous-server
+      - gs:/root/.gaseous-server
     environment:
       - dbhost=gsdb
       - dbuser=root

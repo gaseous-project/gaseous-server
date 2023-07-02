@@ -244,9 +244,53 @@ namespace gaseous_tools
 
             public class Database
             {
-                public string HostName = "localhost";
-                public string UserName = "gaseous";
-                public string Password = "gaseous";
+                private static string _DefaultHostName {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("dbhost")))
+                        {
+                            return Environment.GetEnvironmentVariable("dbhost");
+                        }
+                        else
+                        {
+                            return "localhost";
+                        }
+                    }
+                }
+
+                private static string _DefaultUserName
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("dbuser")))
+                        {
+                            return Environment.GetEnvironmentVariable("dbuser");
+                        }
+                        else
+                        {
+                            return "gaseous";
+                        }
+                    }
+                }
+
+                private static string _DefaultPassword
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("dbpass")))
+                        {
+                            return Environment.GetEnvironmentVariable("dbpass");
+                        }
+                        else
+                        {
+                            return "gaseous";
+                        }
+                    }
+                }
+
+                public string HostName = _DefaultHostName;
+                public string UserName = _DefaultUserName;
+                public string Password = _DefaultPassword;
                 public string DatabaseName = "gaseous";
                 public int Port = 3306;
 
@@ -349,8 +393,38 @@ namespace gaseous_tools
 
             public class IGDB
             {
-                public string ClientId = "";
-                public string Secret = "";
+                private static string _DefaultIGDBClientId
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("igdbclientid")))
+                        {
+                            return Environment.GetEnvironmentVariable("igdbclientid");
+                        }
+                        else
+                        {
+                            return "";
+                        }
+                    }
+                }
+
+                private static string _DefaultIGDBSecret
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("igdbclientsecret")))
+                        {
+                            return Environment.GetEnvironmentVariable("igdbclientsecret");
+                        }
+                        else
+                        {
+                            return "";
+                        }
+                    }
+                }
+
+                public string ClientId = _DefaultIGDBClientId;
+                public string Secret = _DefaultIGDBSecret;
             }
 
             public class Logging
