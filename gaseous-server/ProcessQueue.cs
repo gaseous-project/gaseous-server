@@ -74,6 +74,11 @@ namespace gaseous_server
                                     Logging.Log(Logging.LogType.Information, "Timered Event", "Starting Metadata Refresher");
                                     Classes.MetadataManagement.RefreshMetadata(true);
                                     break;
+
+                                case QueueItemType.OrganiseLibrary:
+                                    Logging.Log(Logging.LogType.Information, "Timered Event", "Starting Library Organiser");
+                                    Classes.ImportGame.OrganiseLibrary();
+                                    break;
                             }
                         }
                         catch (Exception ex)
@@ -101,7 +106,8 @@ namespace gaseous_server
             NotConfigured,
             SignatureIngestor,
             TitleIngestor,
-            MetadataRefresh
+            MetadataRefresh,
+            OrganiseLibrary
         }
 
         public enum QueueItemState

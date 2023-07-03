@@ -83,9 +83,36 @@ h3 {
     display: flex;
 }
 
+#banner_icon:hover {
+    cursor: pointer;
+}
+
 #banner_icon_image {
     width: 30px;
     height: 30px;
+}
+
+#banner_cog {
+    background-color: white;
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 0px;
+    margin: 0px;
+    display: flex;
+}
+
+#banner_cog:hover {
+    cursor: pointer;
+}
+
+#banner_system_image {
+    height: 30px;
+    width: 30px;
 }
 
 #banner_header {

@@ -408,24 +408,4 @@
 
         selectScreenshot(selectedScreenshot);
     }
-
-    function createTableRow(isHeader, row, rowClass, cellClass) {
-        var newRow = document.createElement('tr');
-        newRow.className = rowClass;
-
-        for (var i = 0; i < row.length; i++) {
-            var cellType = 'td';
-            if (isHeader == true) {
-                cellType = 'th';
-            }
-
-            var newCell = document.createElement(cellType);
-            newCell.innerHTML = row[i];
-            newCell.className = cellClass;
-
-            newRow.appendChild(newCell);
-        }
-
-        return newRow;
-    }
 </script>

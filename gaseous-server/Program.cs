@@ -94,6 +94,7 @@ gaseous_server.Classes.Metadata.Platforms.GetPlatform(0);
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.SignatureIngestor, 60));
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.TitleIngestor, 1));
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.MetadataRefresh, 360));
+ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.OrganiseLibrary, 1440));
 
 // start the app
 app.Run();

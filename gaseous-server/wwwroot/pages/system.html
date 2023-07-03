@@ -1,0 +1,198 @@
+﻿<div id="gamepage">
+    <div id="gametitle">
+        <h1 id="gametitle_label">System</h1>
+    </div>
+
+    <h3>Background Tasks</h3>
+    <div id="system_tasks"></div>
+
+    <h3>Usage</h3>
+    <p><strong>Library</strong></p>
+    <div id="system_disks"></div>
+    <p><strong>Database</strong></p>
+    <div id="system_database"></div>
+
+    <h3>Signatures</h3>
+    <div id="system_signatures"></div>
+</div>
+
+<script type="text/javascript">
+    function SystemLoadStatus() {
+        ajaxCall('/api/v1/BackgroundTasks', 'GET', function (result) {
+            var newTable = document.createElement('table');
+            newTable.className = 'romtable';
+            newTable.setAttribute('cellspacing', 0);
+            newTable.appendChild(createTableRow(true, ['Task', 'Status', 'Interval', 'Last Run Time', 'Next Run Time', '']));
+
+            if (result) {
+                for (var i = 0; i < result.length; i++) {
+                    var itemTypeName;
+                    switch (result[i].itemType) {
+                        case 'SignatureIngestor':
+                            itemTypeName = "Signature import";
+                            break;
+                        case 'TitleIngestor':
+                            itemTypeName = "Title import";
+                            break;
+                        case 'MetadataRefresh':
+                            itemTypeName = "Metadata refresh"
+                            break;
+                        case 'OrganiseLibrary':
+                            itemTypeName = "Organise library";
+                            break;
+                        default:
+                            itemTypeName = result[i].itemType;
+                            break;
+                    }
+
+                    var itemStateName;
+                    switch (result[i].itemState) {
+                        case 'NeverStarted':
+                            itemStateName = "Never started";
+                            break;
+                        case 'Stopped':
+                            itemStateName = "Stopped";
+                            break;
+                        case 'Running':
+                            itemStateName = "Running";
+                            break;
+                        default:
+                            itemStateName = "Unknown status";
+                            break;
+                    }
+
+                    var startButton = '';
+                    if (result[i].itemState != "Running") {
+                        startButton = "<span id='startProcess' class='romlink' onclick='StartProcess(\"" + result[i].itemType + "\");'>Start</span>";
+                    }
+
+                    var newRow = [
+                        itemTypeName,
+                        itemStateName,
+                        result[i].interval,
+                        moment(result[i].lastRunTime).fromNow(),
+                        moment(result[i].nextRunTime).fromNow(),
+                        startButton
+                    ];
+                    newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
+                }
+            }
+
+            var targetDiv = document.getElementById('system_tasks');
+            targetDiv.innerHTML = '';
+            targetDiv.appendChild(newTable);
+        });
+    }
+
+    function SystemLoadSystemStatus() {
+        ajaxCall('/api/v1/System', 'GET', function (result) {
+            if (result) {
+                // disks
+                var newTable = document.createElement('table');
+                newTable.className = 'romtable';
+                newTable.setAttribute('cellspacing', 0);
+                newTable.appendChild(createTableRow(true, ['Path', 'Library Size <div id="disk_LibSize" style="width: 10px; height: 10px; background-color: green;"></div>', 'Other <div id="disk_OtherSize" style="width: 10px; height: 10px; background-color: lightgreen;"></div>', 'Total Size <div id="disk_FreeSize" style="width: 10px; height: 10px; background-color: lightgray;"></div>']));
+
+                for (var i = 0; i < result.Paths.length; i++) {
+                    var spaceUsedByLibrary = result.Paths[i].SpaceUsed;
+                    var spaceUsedByOthers = result.Paths[i].TotalSpace - result.Paths[i].SpaceAvailable;
+
+                    var newRow = [
+                        result.Paths[i].LibraryPath,
+                        formatBytes(spaceUsedByLibrary),
+                        formatBytes(spaceUsedByOthers),
+                        formatBytes(result.Paths[i].TotalSpace)
+                    ];
+                    
+                    newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
+
+                    var spaceRow = document.createElement('tr');
+                    var spaceCell = document.createElement('td');
+                    spaceCell.setAttribute('colspan', 4);
+                    spaceCell.appendChild(BuildSpaceBar(spaceUsedByLibrary, spaceUsedByOthers, result.Paths[i].TotalSpace));
+                    spaceRow.appendChild(spaceCell);
+                    newTable.appendChild(spaceRow);
+                }
+
+                var targetDiv = document.getElementById('system_disks');
+                targetDiv.innerHTML = '';
+                targetDiv.appendChild(newTable);
+
+                // database
+                var newDbTable = document.createElement('table');
+                newDbTable.className = 'romtable';
+                newDbTable.setAttribute('cellspacing', 0);
+                newDbTable.appendChild(createTableRow(false, ['Database Size', formatBytes(result.DatabaseSize)]));
+
+                var targetDbDiv = document.getElementById('system_database');
+                targetDbDiv.innerHTML = '';
+                targetDbDiv.appendChild(newDbTable);
+            }
+        });
+    }
+
+    function BuildSpaceBar(LibrarySize, OtherSize, TotalSize) {
+        var newTable = document.createElement('table');
+        newTable.setAttribute('cellspacing', 0);
+        newTable.setAttribute('style', 'width: 100%; height: 10px;');
+
+        var newRow = document.createElement('tr');
+
+        var LibrarySizePercent = Math.floor(LibrarySize / TotalSize * 100);
+        var OtherSizePercent = Math.floor(OtherSize / TotalSize * 100);
+        var FreeSizePercent = Math.floor((LibrarySize + OtherSize) / TotalSize * 100);
+
+        var LibraryCell = document.createElement('td');
+        LibraryCell.setAttribute('style', 'width: ' + LibrarySizePercent + '%; background-color: green;');
+
+        var OtherCell = document.createElement('td');
+        OtherCell.setAttribute('style', 'width: ' + OtherSizePercent + '%; background-color: lightgreen;');
+
+        var FreeCell = document.createElement('td');
+        FreeCell.setAttribute('style', 'width: ' + FreeSizePercent + '%; background-color: lightgray;');
+
+        newRow.appendChild(LibraryCell);
+        newRow.appendChild(OtherCell);
+        newRow.appendChild(FreeCell);
+
+        newTable.appendChild(newRow);
+
+        return newTable;
+    }
+
+    function SystemSignaturesStatus() {
+        ajaxCall('/api/v1/Signatures/Status', 'GET', function (result) {
+            var newTable = document.createElement('table');
+            newTable.className = 'romtable';
+            newTable.setAttribute('cellspacing', 0);
+            newTable.appendChild(createTableRow(true, ['Sources', 'Platforms', 'Games', 'ROMs']));
+
+            if (result) {
+                var newRow = [
+                    result.sources,
+                    result.platforms,
+                    result.games,
+                    result.roms
+                ];
+                newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
+            }
+
+            var targetDiv = document.getElementById('system_signatures');
+            targetDiv.innerHTML = '';
+            targetDiv.appendChild(newTable);
+        });
+    }
+
+    function StartProcess(itemType) {
+        ajaxCall('/api/v1/BackgroundTasks/' + itemType + '?ForceRun=true', 'GET', function (result) {
+            SystemLoadStatus();
+        });
+    }
+
+    SystemLoadStatus();
+    setInterval(SystemLoadStatus, 30000);
+    SystemLoadSystemStatus();
+    setInterval(SystemLoadStatus, 60000);
+    SystemSignaturesStatus();
+    setInterval(SystemSignaturesStatus, 300000);
+</script>

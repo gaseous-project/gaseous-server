@@ -76,3 +76,27 @@ function randomIntFromInterval(min, max) { // min and max included
     var rand = Math.floor(Math.random() * (max - min + 1) + min);
     return rand;
 }
+
+function createTableRow(isHeader, row, rowClass, cellClass) {
+    var newRow = document.createElement('tr');
+    newRow.className = rowClass;
+
+    for (var i = 0; i < row.length; i++) {
+        var cellType = 'td';
+        if (isHeader == true) {
+            cellType = 'th';
+        }
+
+        var newCell = document.createElement(cellType);
+        if (typeof(row[i]) != "object") {
+            newCell.innerHTML = row[i];
+        } else {
+            newCell.appendChild(row[i]);
+        }
+        newCell.className = cellClass;
+
+        newRow.appendChild(newCell);
+    }
+
+    return newRow;
+}
