@@ -15,6 +15,10 @@ namespace gaseous_server.SignatureIngestors.TOSEC
             // connect to database
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
+            List<Dictionary<string, object>> ImportedPlatforms = new List<Dictionary<string, object>>();
+            List<Dictionary<string, object>> ImportedPublishers = new List<Dictionary<string, object>>();
+            List<Dictionary<string, object>> ImportedGames = new List<Dictionary<string, object>>();
+
             // process provided files
             Logging.Log(Logging.LogType.Information, "Signature Ingestor - TOSEC", "Importing from " + SearchPath);
             if (Directory.Exists(Config.LibraryConfiguration.LibrarySignatureImportDirectory_TOSEC))
@@ -101,20 +105,41 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                                     int gameSystem = 0;
                                     if (gameObject.System != null)
                                     {
-                                        sql = "SELECT Id FROM Signatures_Platforms WHERE Platform=@platform";
-
-                                        sigDB = db.ExecuteCMD(sql, dbDict);
-                                        if (sigDB.Rows.Count == 0)
+                                        bool foundPlatform = false;
+                                        string platformName = (string)dbDict["platform"];
+                                        foreach (Dictionary<string, object> ImportedPlatform in ImportedPlatforms)
                                         {
-                                            // entry not present, insert it
-                                            sql = "INSERT INTO Signatures_Platforms (Platform) VALUES (@platform); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
-                                            sigDB = db.ExecuteCMD(sql, dbDict);
-
-                                            gameSystem = Convert.ToInt32(sigDB.Rows[0][0]);
+                                            string importedPlatformName = (string)ImportedPlatform["Name"];
+                                            if (importedPlatformName == platformName)
+                                            {
+                                                foundPlatform = true;
+                                                gameSystem = (int)ImportedPlatform["Id"];
+                                                break;
+                                            }
                                         }
-                                        else
+
+                                        if (foundPlatform == false)
                                         {
-                                            gameSystem = (int)sigDB.Rows[0][0];
+                                            sql = "SELECT Id FROM Signatures_Platforms WHERE Platform=@platform";
+
+                                            sigDB = db.ExecuteCMD(sql, dbDict);
+                                            if (sigDB.Rows.Count == 0)
+                                            {
+                                                // entry not present, insert it
+                                                sql = "INSERT INTO Signatures_Platforms (Platform) VALUES (@platform); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+                                                sigDB = db.ExecuteCMD(sql, dbDict);
+
+                                                gameSystem = Convert.ToInt32(sigDB.Rows[0][0]);
+                                            }
+                                            else
+                                            {
+                                                gameSystem = (int)sigDB.Rows[0][0];
+                                            }
+
+                                            Dictionary<string, object> platformDetails = new Dictionary<string, object>();
+                                            platformDetails.Add("Id", gameSystem);
+                                            platformDetails.Add("Name", dbDict["platform"]);
+                                            ImportedPlatforms.Add(platformDetails);
                                         }
                                     }
                                     dbDict.Add("systemid", gameSystem);
@@ -123,41 +148,91 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                                     int gamePublisher = 0;
                                     if (gameObject.Publisher != null)
                                     {
-                                        sql = "SELECT * FROM Signatures_Publishers WHERE Publisher=@publisher";
-
-                                        sigDB = db.ExecuteCMD(sql, dbDict);
-                                        if (sigDB.Rows.Count == 0)
+                                        bool foundPublisher = false;
+                                        string publisherName = (string)dbDict["publisher"];
+                                        foreach (Dictionary<string, object> ImportedPublisher in ImportedPublishers)
                                         {
-                                            // entry not present, insert it
-                                            sql = "INSERT INTO Signatures_Publishers (Publisher) VALUES (@publisher); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
-                                            sigDB = db.ExecuteCMD(sql, dbDict);
-                                            gamePublisher = Convert.ToInt32(sigDB.Rows[0][0]);
+                                            string importedPublisherName = (string)ImportedPublisher["Name"];
+                                            if (importedPublisherName == publisherName)
+                                            {
+                                                foundPublisher = true;
+                                                gamePublisher = (int)ImportedPublisher["Id"];
+                                                break;
+                                            }
                                         }
-                                        else
+
+                                        if (foundPublisher == false)
                                         {
-                                            gamePublisher = (int)sigDB.Rows[0][0];
+                                            sql = "SELECT * FROM Signatures_Publishers WHERE Publisher=@publisher";
+
+                                            sigDB = db.ExecuteCMD(sql, dbDict);
+                                            if (sigDB.Rows.Count == 0)
+                                            {
+                                                // entry not present, insert it
+                                                sql = "INSERT INTO Signatures_Publishers (Publisher) VALUES (@publisher); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+                                                sigDB = db.ExecuteCMD(sql, dbDict);
+                                                gamePublisher = Convert.ToInt32(sigDB.Rows[0][0]);
+                                            }
+                                            else
+                                            {
+                                                gamePublisher = (int)sigDB.Rows[0][0];
+                                            }
+
+                                            Dictionary<string, object> publisherDetails = new Dictionary<string, object>();
+                                            publisherDetails.Add("Id", gamePublisher);
+                                            publisherDetails.Add("Name", dbDict["publisher"]);
+                                            ImportedPublishers.Add(publisherDetails);
                                         }
                                     }
                                     dbDict.Add("publisherid", gamePublisher);
 
                                     // store game
                                     int gameId = 0;
-                                    sql = "SELECT * FROM Signatures_Games WHERE Name=@name AND Year=@year AND Publisherid=@publisher AND Systemid=@systemid AND Country=@country AND Language=@language";
-
-                                    sigDB = db.ExecuteCMD(sql, dbDict);
-                                    if (sigDB.Rows.Count == 0)
+                                    bool foundGame = false;
+                                    foreach (Dictionary<string, object> ImportedGame in ImportedGames)
                                     {
-                                        // entry not present, insert it
-                                        sql = "INSERT INTO Signatures_Games " +
-                                            "(Name, Description, Year, PublisherId, Demo, SystemId, SystemVariant, Video, Country, Language, Copyright) VALUES " +
-                                            "(@name, @description, @year, @publisherid, @demo, @systemid, @systemvariant, @video, @country, @language, @copyright); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
-                                        sigDB = db.ExecuteCMD(sql, dbDict);
-
-                                        gameId = Convert.ToInt32(sigDB.Rows[0][0]);
+                                        if (((string)ImportedGame["Name"] == (string)dbDict["name"]) &&
+                                            ((string)ImportedGame["Year"] == (string)dbDict["year"]) &&
+                                            ((int)ImportedGame["PublisherId"] == (int)dbDict["publisherid"]) &&
+                                            ((int)ImportedGame["SystemId"] == (int)dbDict["systemid"]) &&
+                                            ((string)ImportedGame["Country"] == (string)dbDict["country"]) &&
+                                            ((string)ImportedGame["Language"] == (string)dbDict["language"]))
+                                        {
+                                            foundGame = true;
+                                            gameId = (int)ImportedGame["Id"];
+                                            break;
+                                        }
                                     }
-                                    else
+
+                                    if (foundGame == false)
                                     {
-                                        gameId = (int)sigDB.Rows[0][0];
+                                        sql = "SELECT * FROM Signatures_Games WHERE Name=@name AND Year=@year AND Publisherid=@publisher AND Systemid=@systemid AND Country=@country AND Language=@language";
+
+                                        sigDB = db.ExecuteCMD(sql, dbDict);
+                                        if (sigDB.Rows.Count == 0)
+                                        {
+                                            // entry not present, insert it
+                                            sql = "INSERT INTO Signatures_Games " +
+                                                "(Name, Description, Year, PublisherId, Demo, SystemId, SystemVariant, Video, Country, Language, Copyright) VALUES " +
+                                                "(@name, @description, @year, @publisherid, @demo, @systemid, @systemvariant, @video, @country, @language, @copyright); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+                                            sigDB = db.ExecuteCMD(sql, dbDict);
+
+                                            gameId = Convert.ToInt32(sigDB.Rows[0][0]);
+                                        }
+                                        else
+                                        {
+                                            gameId = (int)sigDB.Rows[0][0];
+                                        }
+
+                                        Dictionary<string, object> gameDetails = new Dictionary<string, object>();
+                                        gameDetails.Add("Id", gameId);
+                                        gameDetails.Add("Name", dbDict["name"]);
+                                        gameDetails.Add("Year", dbDict["year"]);
+                                        gameDetails.Add("PublisherId", dbDict["publisherid"]);
+                                        gameDetails.Add("SystemId", dbDict["systemid"]);
+                                        gameDetails.Add("Country", dbDict["country"]);
+                                        gameDetails.Add("Language", dbDict["language"]);
+                                        ImportedGames.Add(gameDetails);
                                     }
 
                                     // store rom
