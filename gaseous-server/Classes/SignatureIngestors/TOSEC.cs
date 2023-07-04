@@ -5,6 +5,7 @@ using gaseous_romsignatureobject;
 using gaseous_signature_parser.parsers;
 using gaseous_tools;
 using MySqlX.XDevAPI;
+using static gaseous_tools.Database;
 
 namespace gaseous_server.SignatureIngestors.TOSEC
 {
@@ -18,6 +19,7 @@ namespace gaseous_server.SignatureIngestors.TOSEC
             List<Dictionary<string, object>> ImportedPlatforms = new List<Dictionary<string, object>>();
             List<Dictionary<string, object>> ImportedPublishers = new List<Dictionary<string, object>>();
             List<Dictionary<string, object>> ImportedGames = new List<Dictionary<string, object>>();
+            List<Dictionary<string, object>> ImportedRoms = new List<Dictionary<string, object>>();
 
             // process provided files
             Logging.Log(Logging.LogType.Information, "Signature Ingestor - TOSEC", "Importing from " + SearchPath);
@@ -236,6 +238,8 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                                     }
 
                                     // store rom
+                                    int transactionCounterMax = 1000;
+                                    List<SQLTransactionItem> sQLTransactionItems = new List<SQLTransactionItem>();
                                     foreach (RomSignatureObject.Game.Rom romObject in gameObject.Roms)
                                     {
                                         if (romObject.Md5 != null)
@@ -271,21 +275,53 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                                             dbDict.Add("medialabel", Common.ReturnValueIfNull(romObject.MediaLabel, ""));
                                             dbDict.Add("metadatasource", Classes.Roms.GameRomItem.SourceType.TOSEC);
 
-                                            sigDB = db.ExecuteCMD(sql, dbDict);
-                                            if (sigDB.Rows.Count == 0)
+                                            bool ImportedRomFound = false;
+                                            foreach (Dictionary<string, object> ImportedRom in ImportedRoms)
                                             {
-                                                // entry not present, insert it
-                                                sql = "INSERT INTO Signatures_Roms (GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Flags, RomType, RomTypeMedia, MediaLabel, MetadataSource) VALUES (@gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel, @metadatasource); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
-                                                sigDB = db.ExecuteCMD(sql, dbDict);
-
-
-                                                romId = Convert.ToInt32(sigDB.Rows[0][0]);
+                                                if (((int)ImportedRom["gameid"] == gameId) && ((string)ImportedRom["md5"] == romObject.Md5))
+                                                {
+                                                    ImportedRomFound = true;
+                                                    break;
+                                                }
                                             }
-                                            else
+
+                                            if (ImportedRomFound == false)
                                             {
-                                                romId = (int)sigDB.Rows[0][0];
+                                                sigDB = db.ExecuteCMD(sql, dbDict);
+                                                if (sigDB.Rows.Count == 0)
+                                                {
+                                                    if (sQLTransactionItems.Count == transactionCounterMax)
+                                                    {
+                                                        db.ExecuteTransactionCMD(sQLTransactionItems);
+                                                    }
+
+                                                    // entry not present, insert it
+                                                    sql = "INSERT INTO Signatures_Roms (GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Flags, RomType, RomTypeMedia, MediaLabel, MetadataSource) VALUES (@gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel, @metadatasource); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+
+                                                    SQLTransactionItem sQLTransactionItem = new SQLTransactionItem(
+                                                            SQLCommand: sql,
+                                                            Parameters: dbDict
+                                                        );
+
+                                                    sQLTransactionItems.Add(sQLTransactionItem);
+                                                }
+                                                else
+                                                {
+                                                    romId = (int)sigDB.Rows[0][0];
+                                                }
+
+                                                Dictionary<string, object> romDetails = new Dictionary<string, object>();
+                                                romDetails.Add("gameid", dbDict["gameid"]);
+                                                romDetails.Add("md5", dbDict["md5"]);
+                                                romDetails.Add("name", dbDict["name"]);
+                                                ImportedRoms.Add(romDetails);
                                             }
                                         }
+                                    }
+
+                                    if (sQLTransactionItems.Count > 0)
+                                    {
+                                        db.ExecuteTransactionCMD(sQLTransactionItems);
                                     }
                                 }
                             }

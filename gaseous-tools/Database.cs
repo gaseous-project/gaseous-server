@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Reflection;
 using MySql.Data.MySqlClient;
+using static gaseous_tools.Database;
 
 namespace gaseous_tools
 {
@@ -154,6 +155,46 @@ namespace gaseous_tools
             }
         }
 
+        public void ExecuteTransactionCMD(List<SQLTransactionItem> CommandList, int Timeout = 60)
+        {
+            object conn;
+            switch (_ConnectorType)
+            {
+                case databaseType.MySql:
+                    {
+                        var commands = new List<Dictionary<string, object>>();
+                        foreach (SQLTransactionItem CommandItem in CommandList)
+                        {
+                            var nCmd = new Dictionary<string, object>();
+                            nCmd.Add("sql", CommandItem.SQLCommand);
+                            nCmd.Add("values", CommandItem.Parameters);
+                            commands.Add(nCmd);
+                        }
+
+                        conn = new MySQLServerConnector(_ConnectionString);
+                        ((MySQLServerConnector)conn).TransactionExecCMD(commands, Timeout);
+                        break;
+                    }
+            }
+        }
+
+        public class SQLTransactionItem
+        {
+			public SQLTransactionItem()
+			{
+
+			}
+
+			public SQLTransactionItem(string SQLCommand, Dictionary<string, object> Parameters)
+			{
+				this.SQLCommand = SQLCommand;
+				this.Parameters = Parameters;
+			}
+
+            public string? SQLCommand;
+            public Dictionary<string, object>? Parameters = new Dictionary<string, object>();
+        }
+
         private partial class MySQLServerConnector
 		{
 			private string DBConn = "";
@@ -203,7 +244,49 @@ namespace gaseous_tools
 
 				return RetTable;
 			}
-		}
-	}
+
+            public void TransactionExecCMD(List<Dictionary<string, object>> Parameters, int Timeout)
+            {
+                var conn = new MySqlConnection(DBConn);
+                conn.Open();
+                var command = conn.CreateCommand();
+                MySqlTransaction transaction;
+                transaction = conn.BeginTransaction();
+                command.Connection = conn;
+                command.Transaction = transaction;
+                foreach (Dictionary<string, object> Parameter in Parameters)
+                {
+                    var cmd = buildcommand(conn, Parameter["sql"].ToString(), (Dictionary<string, object>)Parameter["values"], Timeout);
+                    cmd.Transaction = transaction;
+                    cmd.ExecuteNonQuery();
+                }
+
+                transaction.Commit();
+                conn.Close();
+            }
+
+            private MySqlCommand buildcommand(MySqlConnection Conn, string SQL, Dictionary<string, object> Parameters, int Timeout)
+            {
+                var cmd = new MySqlCommand();
+                cmd.Connection = Conn;
+                cmd.CommandText = SQL;
+                cmd.CommandTimeout = Timeout;
+                {
+                    var withBlock = cmd.Parameters;
+                    if (Parameters is object)
+                    {
+                        if (Parameters.Count > 0)
+                        {
+                            foreach (string param in Parameters.Keys)
+                                withBlock.AddWithValue(param, Parameters[param]);
+                        }
+                    }
+                }
+
+                return cmd;
+            }
+
+        }
+    }
 }
 
