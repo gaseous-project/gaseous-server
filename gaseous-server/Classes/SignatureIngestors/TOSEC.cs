@@ -6,16 +6,16 @@ using gaseous_signature_parser.parsers;
 using gaseous_tools;
 using MySqlX.XDevAPI;
 using static gaseous_tools.Database;
+using System.Data;
 
 namespace gaseous_server.SignatureIngestors.TOSEC
 {
     public class TOSECIngestor
     {
+        private Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
         public void Import(string SearchPath)
         {
-            // connect to database
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-
             List<Dictionary<string, object>> ImportedPlatforms = new List<Dictionary<string, object>>();
             List<Dictionary<string, object>> ImportedPublishers = new List<Dictionary<string, object>>();
             List<Dictionary<string, object>> ImportedGames = new List<Dictionary<string, object>>();
@@ -94,6 +94,7 @@ namespace gaseous_server.SignatureIngestors.TOSEC
 
                                     if (processGames == true)
                                     {
+                                        Console.WriteLine("Games to process: " + tosecObject.Games.Count);
                                         for (int x = 0; x < tosecObject.Games.Count; ++x)
                                         {
                                             RomSignatureObject.Game gameObject = tosecObject.Games[x];
@@ -199,7 +200,7 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                                             dbDict.Add("publisherid", gamePublisher);
 
                                             // store game
-                                            int gameId = 0;
+                                            ulong gameId = 0;
                                             bool foundGame = false;
                                             foreach (Dictionary<string, object> ImportedGame in ImportedGames)
                                             {
@@ -211,7 +212,7 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                                                     ((string)ImportedGame["Language"] == (string)dbDict["language"]))
                                                 {
                                                     foundGame = true;
-                                                    gameId = (int)ImportedGame["Id"];
+                                                    gameId = (ulong)ImportedGame["Id"];
                                                     break;
                                                 }
                                             }
@@ -224,16 +225,46 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                                                 if (sigDB.Rows.Count == 0)
                                                 {
                                                     // entry not present, insert it
-                                                    sql = "INSERT INTO Signatures_Games " +
-                                                        "(Name, Description, Year, PublisherId, Demo, SystemId, SystemVariant, Video, Country, Language, Copyright) VALUES " +
-                                                        "(@name, @description, @year, @publisherid, @demo, @systemid, @systemvariant, @video, @country, @language, @copyright); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
-                                                    sigDB = db.ExecuteCMD(sql, dbDict);
 
-                                                    gameId = Convert.ToInt32(sigDB.Rows[0][0]);
+                                                    sql = "SELECT Id FROM Signatures_Games ORDER BY Id DESC LIMIT 0,1;";
+                                                    DataTable gameQuery = db.ExecuteCMD(sql);
+                                                    if (gameQuery.Rows.Count > 0)
+                                                    {
+                                                        gameId = ((ulong)(int)gameQuery.Rows[0][0]) + 1;
+                                                    }
+                                                    else
+                                                    {
+                                                        gameId = 1;
+                                                    }
+
+                                                    if (dbDict.ContainsKey("id"))
+                                                    {
+                                                        dbDict["id"] = gameId;
+                                                    }
+                                                    else
+                                                    {
+                                                        dbDict.Add("id", gameId);
+                                                    }
+
+                                                    //sql = "INSERT INTO Signatures_Games " +
+                                                    //    "(Name, Description, Year, PublisherId, Demo, SystemId, SystemVariant, Video, Country, Language, Copyright) VALUES " +
+                                                    //    "(@name, @description, @year, @publisherid, @demo, @systemid, @systemvariant, @video, @country, @language, @copyright); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+                                                    sql = "INSERT INTO Signatures_Games " +
+                                                        "(Id, Name, Description, Year, PublisherId, Demo, SystemId, SystemVariant, Video, Country, Language, Copyright) VALUES " +
+                                                        "(@id, @name, @description, @year, @publisherid, @demo, @systemid, @systemvariant, @video, @country, @language, @copyright);";
+                                                    //sigDB = db.ExecuteCMD(sql, dbDict);
+
+                                                    //gameId = Convert.ToInt32(sigDB.Rows[0][0]);
+
+                                                    SaveTransaction(new SQLTransactionItem
+                                                    {
+                                                        SQLCommand = sql,
+                                                        Parameters = dbDict
+                                                    });
                                                 }
                                                 else
                                                 {
-                                                    gameId = (int)sigDB.Rows[0][0];
+                                                    gameId = (ulong)sigDB.Rows[0][0];
                                                 }
 
                                                 Dictionary<string, object> gameDetails = new Dictionary<string, object>();
@@ -248,8 +279,8 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                                             }
 
                                             // store rom
-                                            int transactionCounterMax = 1000;
-                                            List<SQLTransactionItem> sQLTransactionItems = new List<SQLTransactionItem>();
+                                            //int transactionCounterMax = 1000;
+                                            //List<SQLTransactionItem> sQLTransactionItems = new List<SQLTransactionItem>();
                                             foreach (RomSignatureObject.Game.Rom romObject in gameObject.Roms)
                                             {
                                                 if (romObject.Md5 != null)
@@ -288,7 +319,7 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                                                     bool ImportedRomFound = false;
                                                     foreach (Dictionary<string, object> ImportedRom in ImportedRoms)
                                                     {
-                                                        if (((int)ImportedRom["gameid"] == gameId) && ((string)ImportedRom["md5"] == romObject.Md5))
+                                                        if (((ulong)ImportedRom["gameid"] == gameId) && ((string)ImportedRom["md5"] == romObject.Md5))
                                                         {
                                                             ImportedRomFound = true;
                                                             break;
@@ -300,20 +331,26 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                                                         sigDB = db.ExecuteCMD(sql, dbDict);
                                                         if (sigDB.Rows.Count == 0)
                                                         {
-                                                            if (sQLTransactionItems.Count == transactionCounterMax)
-                                                            {
-                                                                db.ExecuteTransactionCMD(sQLTransactionItems);
-                                                            }
+                                                            //if (sQLTransactionItems.Count == transactionCounterMax)
+                                                            //{
+                                                            //    db.ExecuteTransactionCMD(sQLTransactionItems);
+                                                            //}
 
                                                             // entry not present, insert it
                                                             sql = "INSERT INTO Signatures_Roms (GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Flags, RomType, RomTypeMedia, MediaLabel, MetadataSource) VALUES (@gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel, @metadatasource); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
 
-                                                            SQLTransactionItem sQLTransactionItem = new SQLTransactionItem(
-                                                                    SQLCommand: sql,
-                                                                    Parameters: dbDict
-                                                                );
+                                                            //SQLTransactionItem sQLTransactionItem = new SQLTransactionItem(
+                                                            //        SQLCommand: sql,
+                                                            //        Parameters: dbDict
+                                                            //    );
 
-                                                            sQLTransactionItems.Add(sQLTransactionItem);
+                                                            //sQLTransactionItems.Add(sQLTransactionItem);
+
+                                                            SaveTransaction(new SQLTransactionItem
+                                                            {
+                                                                SQLCommand = sql,
+                                                                Parameters = dbDict
+                                                            });
                                                         }
                                                         else
                                                         {
@@ -331,7 +368,8 @@ namespace gaseous_server.SignatureIngestors.TOSEC
 
                                             if (sQLTransactionItems.Count > 0)
                                             {
-                                                db.ExecuteTransactionCMD(sQLTransactionItems);
+                                                //db.ExecuteTransactionCMD(sQLTransactionItems);
+                                                SaveTransaction();
                                             }
                                         }
                                     }
@@ -348,6 +386,27 @@ namespace gaseous_server.SignatureIngestors.TOSEC
                         }
                     }
                 }
+            }
+        }
+
+        private List<SQLTransactionItem> sQLTransactionItems = new List<SQLTransactionItem>();
+
+        private void SaveTransaction()
+        {
+            if (sQLTransactionItems.Count > 0)
+            {
+                db.ExecuteTransactionCMD(sQLTransactionItems);
+                sQLTransactionItems.Clear();
+            }
+        }
+
+        private void SaveTransaction(SQLTransactionItem sQLTransactionItem)
+        {
+            sQLTransactionItems.Add(sQLTransactionItem);
+            if (sQLTransactionItems.Count > 1000)
+            {
+                db.ExecuteTransactionCMD(sQLTransactionItems);
+                sQLTransactionItems.Clear();
             }
         }
     }
