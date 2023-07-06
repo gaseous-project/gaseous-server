@@ -577,9 +577,7 @@ CREATE TABLE `Signatures_Games` (
   UNIQUE KEY `Id_UNIQUE` (`Id`),
   KEY `publisher_Idx` (`PublisherId`),
   KEY `system_Idx` (`SystemId`),
-  KEY `ingest_Idx` (`Name`,`Year`,`PublisherId`,`SystemId`,`Country`,`Language`) USING BTREE,
-  CONSTRAINT `Publisher` FOREIGN KEY (`PublisherId`) REFERENCES `Signatures_Publishers` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE,
-  CONSTRAINT `System` FOREIGN KEY (`SystemId`) REFERENCES `Signatures_Platforms` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE
+  KEY `ingest_Idx` (`Name`,`Year`,`PublisherId`,`SystemId`,`Country`,`Language`) USING BTREE
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -641,8 +639,7 @@ CREATE TABLE `Signatures_Roms` (
   KEY `GameId_Idx` (`GameId`),
   KEY `md5_Idx` (`MD5`) USING BTREE,
   KEY `sha1_Idx` (`SHA1`) USING BTREE,
-  KEY `flags_Idx` ((cast(`Flags` as char(255) array))),
-  CONSTRAINT `GameId` FOREIGN KEY (`GameId`) REFERENCES `Signatures_Games` (`Id`) ON DELETE CASCADE ON UPDATE CASCADE
+  KEY `flags_Idx` ((cast(`Flags` as char(255) array)))
 ) ENGINE=InnoDB AUTO_INCREMENT=0 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
