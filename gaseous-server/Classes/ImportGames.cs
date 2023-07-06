@@ -36,9 +36,7 @@ namespace gaseous_server.Classes
 
 	public class ImportGame
 	{
-        private Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-
-		public static void ImportGameFile(string GameFileImportPath, bool IsDirectory = false, bool ForceImport = false)
+        public static void ImportGameFile(string GameFileImportPath, bool IsDirectory = false, bool ForceImport = false)
 		{
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
@@ -302,11 +300,16 @@ namespace gaseous_server.Classes
 
             string sql = "";
 
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+
             if (UpdateId == 0)
             {
                 sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Flags, RomType, RomTypeMedia, MediaLabel, Path, MetadataSource) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel, @path, @metadatasource); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+            } else
+            {
+                sql = "UPDATE Games_Roms SET PlatformId=platformid, GameId=@gameid, Name=@name, Size=@size, DevelopmentStatus=@developmentstatus, Flags=@flags, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource WHERE Id=@id;";
+                dbDict.Add("id", UpdateId);
             }
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("platformid", Common.ReturnValueIfNull(determinedPlatform.Id, 0));
             dbDict.Add("gameid", Common.ReturnValueIfNull(determinedGame.Id, 0));
             dbDict.Add("name", Common.ReturnValueIfNull(discoveredSignature.Rom.Name, ""));
@@ -338,7 +341,14 @@ namespace gaseous_server.Classes
             dbDict.Add("path", GameFileImportPath);
 
             DataTable romInsert = db.ExecuteCMD(sql, dbDict);
-            long romId = (long)romInsert.Rows[0][0];
+            long romId = 0;
+            if (UpdateId == 0)
+            {
+                romId = (long)romInsert.Rows[0][0];
+            } else
+            {
+                romId = UpdateId;
+            }
 
             // move to destination
             MoveGameFile(romId);
@@ -437,22 +447,131 @@ namespace gaseous_server.Classes
 			}
 
 			// clean up empty directories
-			processDirectory(Config.LibraryConfiguration.LibraryDataDirectory);
+			DeleteOrphanedDirectories(Config.LibraryConfiguration.LibraryDataDirectory);
 
             Logging.Log(Logging.LogType.Information, "Organise Library", "Finsihed library organisation");
         }
 
-        private static void processDirectory(string startLocation)
+        private static void DeleteOrphanedDirectories(string startLocation)
         {
             foreach (var directory in Directory.GetDirectories(startLocation))
             {
-                processDirectory(directory);
+                DeleteOrphanedDirectories(directory);
                 if (Directory.GetFiles(directory).Length == 0 &&
                     Directory.GetDirectories(directory).Length == 0)
                 {
                     Directory.Delete(directory, false);
                 }
             }
+        }
+
+        public static void LibraryScan()
+        {
+            Logging.Log(Logging.LogType.Information, "Library Scan", "Starting library scan");
+
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
+            // check all roms to see if their local file still exists
+            string sql = "SELECT * FROM Games_Roms ORDER BY `name`";
+
+            DataTable dtRoms = db.ExecuteCMD(sql);
+
+            if (dtRoms.Rows.Count > 0)
+            {
+                for (var i = 0; i < dtRoms.Rows.Count; i++)
+                {
+                    long romId = (long)dtRoms.Rows[i]["Id"];
+                    string romPath = (string)dtRoms.Rows[i]["Path"];
+                    Classes.Roms.GameRomItem.SourceType romMetadataSource = (Classes.Roms.GameRomItem.SourceType)(int)dtRoms.Rows[i]["MetadataSource"];
+
+                    Logging.Log(Logging.LogType.Information, "Library Scan", " Processing ROM at path " + romPath);
+
+                    if (File.Exists(romPath))
+                    {
+                        // file exists, so lets check to make sure the signature was matched, and update if a signature can be found
+                        if (romMetadataSource == Roms.GameRomItem.SourceType.None)
+                        {
+                            Common.hashObject hash = new Common.hashObject
+                            {
+                                md5hash = "",
+                                sha1hash = ""
+                            };
+                            FileInfo fi = new FileInfo(romPath);
+
+                            Models.Signatures_Games sig = GetFileSignature(hash, fi, romPath);
+                            if (sig.Rom.SignatureSource != Models.Signatures_Games.RomItem.SignatureSourceType.None)
+                            {
+                                Logging.Log(Logging.LogType.Information, "Library Scan", " Update signature found for " + romPath);
+
+                                // get discovered platform
+                                IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(sig.Flags.IGDBPlatformId);
+                                if (determinedPlatform == null)
+                                {
+                                    determinedPlatform = new IGDB.Models.Platform();
+                                }
+
+                                IGDB.Models.Game determinedGame = SearchForGame(sig.Game.Name, sig.Flags.IGDBPlatformId);
+
+                                StoreROM(hash, determinedGame, determinedPlatform, sig, romPath);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // file doesn't exist where it's supposed to be! delete it from the db
+                        Logging.Log(Logging.LogType.Warning, "Library Scan", " Deleting orphaned database entry for " + romPath);
+
+                        string deleteSql = "DELETE FROM Games_Roms WHERE Id = @id";
+                        Dictionary<string, object> deleteDict = new Dictionary<string, object>();
+                        deleteDict.Add("id", romId);
+                        db.ExecuteCMD(deleteSql, deleteDict);
+                    }
+                }
+            }
+
+            // search for files in the library that aren't in the database
+            Logging.Log(Logging.LogType.Information, "Library Scan", "Looking for orphaned library files to add");
+            string[] LibraryFiles = Directory.GetFiles(Config.LibraryConfiguration.LibraryDataDirectory, "*.*", SearchOption.AllDirectories);
+            foreach (string LibraryFile in LibraryFiles)
+            {
+                // check if file is in database
+                bool romFound = false;
+                for (var i = 0; i < dtRoms.Rows.Count; i++)
+                {
+                    long romId = (long)dtRoms.Rows[i]["Id"];
+                    string romPath = (string)dtRoms.Rows[i]["Path"];
+
+                    if (LibraryFile == romPath)
+                    {
+                        romFound = true;
+                        break;
+                    }
+                }
+
+                if (romFound == false)
+                {
+                    // file is not in database - process it
+                    Common.hashObject hash = new Common.hashObject(LibraryFile);
+                    FileInfo fi = new FileInfo(LibraryFile);
+
+                    Models.Signatures_Games sig = GetFileSignature(hash, fi, LibraryFile);
+                    
+                    Logging.Log(Logging.LogType.Information, "Library Scan", " Orphaned file found in library: " + LibraryFile);
+
+                    // get discovered platform
+                    IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(sig.Flags.IGDBPlatformId);
+                    if (determinedPlatform == null)
+                    {
+                        determinedPlatform = new IGDB.Models.Platform();
+                    }
+
+                    IGDB.Models.Game determinedGame = SearchForGame(sig.Game.Name, sig.Flags.IGDBPlatformId);
+
+                    StoreROM(hash, determinedGame, determinedPlatform, sig, LibraryFile);
+                }
+            }
+
+            Logging.Log(Logging.LogType.Information, "Library Scan", "Library scan completed");
         }
     }
 }

@@ -31,6 +31,11 @@ namespace gaseous_tools
 
 		public class hashObject
 		{
+			public hashObject()
+			{
+
+			}
+
 			public hashObject(string FileName)
 			{
                 var xmlStream = File.OpenRead(FileName);
@@ -56,6 +61,10 @@ namespace gaseous_tools
 				{
 					return _md5hash;
 				}
+				set
+				{
+					_md5hash = value;
+				}
 			}
 
 			public string sha1hash
@@ -63,6 +72,10 @@ namespace gaseous_tools
 				get
 				{
 					return _sha1hash;
+				}
+				set
+				{
+					_sha1hash = value;
 				}
 			}
 		}
