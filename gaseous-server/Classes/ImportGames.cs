@@ -512,7 +512,7 @@ namespace gaseous_server.Classes
 
                                 IGDB.Models.Game determinedGame = SearchForGame(sig.Game.Name, sig.Flags.IGDBPlatformId);
 
-                                StoreROM(hash, determinedGame, determinedPlatform, sig, romPath);
+                                StoreROM(hash, determinedGame, determinedPlatform, sig, romPath, romId);
                             }
                         }
                     }
@@ -570,6 +570,10 @@ namespace gaseous_server.Classes
                     StoreROM(hash, determinedGame, determinedPlatform, sig, LibraryFile);
                 }
             }
+
+            Logging.Log(Logging.LogType.Information, "Library Scan", "Looking for duplicate library files to clean up");
+            string duplicateSql = "DELETE r1 FROM Games_Roms r1 INNER JOIN Games_Roms r2 WHERE r1.Id > r2.Id AND r1.MD5 = r2.MD5;";
+            db.ExecuteCMD(duplicateSql);
 
             Logging.Log(Logging.LogType.Information, "Library Scan", "Library scan completed");
         }
