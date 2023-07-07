@@ -509,14 +509,17 @@ namespace gaseous_server.Classes
             string[] LibraryFiles = Directory.GetFiles(Config.LibraryConfiguration.LibraryDataDirectory, "*.*", SearchOption.AllDirectories);
             foreach (string LibraryFile in LibraryFiles)
             {
+                Common.hashObject LibraryFileHash = new Common.hashObject(LibraryFile);
+
                 // check if file is in database
                 bool romFound = false;
                 for (var i = 0; i < dtRoms.Rows.Count; i++)
                 {
                     long romId = (long)dtRoms.Rows[i]["Id"];
                     string romPath = (string)dtRoms.Rows[i]["Path"];
+                    string romMd5 = (string)dtRoms.Rows[i]["MD5"];
 
-                    if (LibraryFile == romPath)
+                    if ((LibraryFile == romPath) || (LibraryFileHash.md5hash == romMd5))
                     {
                         romFound = true;
                         break;
@@ -550,6 +553,7 @@ namespace gaseous_server.Classes
             dtRoms = db.ExecuteCMD(sql);
 
             // check all roms to see if their local file still exists
+            Logging.Log(Logging.LogType.Information, "Library Scan", "Checking library files exist on disk");
             if (dtRoms.Rows.Count > 0)
             {
                 for (var i = 0; i < dtRoms.Rows.Count; i++)
