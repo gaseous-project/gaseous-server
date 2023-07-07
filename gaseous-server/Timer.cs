@@ -34,7 +34,7 @@ namespace gaseous_server
             //    "Timed Hosted Service is working. Count: {Count}", count);
 
             foreach (ProcessQueue.QueueItem qi in ProcessQueue.QueueItems) {
-                if (DateTime.UtcNow > qi.NextRunTime || qi.Force == true) {
+                if ((DateTime.UtcNow > qi.NextRunTime || qi.Force == true) && CheckProcessBlockList(qi) == true) {
                     qi.Execute();
                 }
             }
@@ -53,6 +53,26 @@ namespace gaseous_server
         public void Dispose()
         {
             _timer?.Dispose();
+        }
+
+        private bool CheckProcessBlockList(ProcessQueue.QueueItem queueItem)
+        {
+            if (queueItem.Blocks.Count > 0)
+            {
+                foreach (ProcessQueue.QueueItem qi in ProcessQueue.QueueItems)
+                {
+                    if (queueItem.Blocks.Contains(qi.ItemType) && qi.ItemState == ProcessQueue.QueueItemState.Running)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+            else
+            {
+                return true;
+            }
         }
     }
 }

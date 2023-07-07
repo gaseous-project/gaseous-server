@@ -65,8 +65,8 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 //if (app.Environment.IsDevelopment())
 //{
-    app.UseSwagger();
-    app.UseSwaggerUI();
+app.UseSwagger();
+app.UseSwaggerUI();
 //}
 
 //app.UseHttpsRedirection();
@@ -92,10 +92,29 @@ gaseous_server.Classes.Metadata.Platforms.GetPlatform(0);
 
 // add background tasks
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.SignatureIngestor, 60));
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.TitleIngestor, 1));
+ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.TitleIngestor, 1,
+    new List<ProcessQueue.QueueItemType>
+    {
+        ProcessQueue.QueueItemType.OrganiseLibrary,
+        ProcessQueue.QueueItemType.LibraryScan
+    })
+    );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.MetadataRefresh, 360));
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.OrganiseLibrary, 2040));
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.LibraryScan, 30));
+ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.OrganiseLibrary, 2040, new List<ProcessQueue.QueueItemType>
+    {
+        ProcessQueue.QueueItemType.LibraryScan,
+        ProcessQueue.QueueItemType.TitleIngestor
+    })
+    );
+ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.LibraryScan, 30, new List<ProcessQueue.QueueItemType>
+    {
+        ProcessQueue.QueueItemType.TitleIngestor,
+        ProcessQueue.QueueItemType.OrganiseLibrary
+    })
+    );
 
 // start the app
 app.Run();

@@ -17,6 +17,15 @@ namespace gaseous_server
                 _Interval = ExecutionInterval;
             }
 
+            public QueueItem(QueueItemType ItemType, int ExecutionInterval, List<QueueItemType> Blocks)
+            {
+                _ItemType = ItemType;
+                _ItemState = QueueItemState.NeverStarted;
+                _LastRunTime = DateTime.UtcNow.AddMinutes(ExecutionInterval);
+                _Interval = ExecutionInterval;
+                _Blocks = Blocks;
+            }
+
             private QueueItemType _ItemType = QueueItemType.NotConfigured;
             private QueueItemState _ItemState = QueueItemState.NeverStarted;
             private DateTime _LastRunTime = DateTime.UtcNow;
@@ -25,6 +34,7 @@ namespace gaseous_server
             private string _LastResult = "";
             private string? _LastError = null;
             private bool _ForceExecute = false;
+            private List<QueueItemType> _Blocks = new List<QueueItemType>();
 
             public QueueItemType ItemType => _ItemType;
             public QueueItemState ItemState => _ItemState;
@@ -40,6 +50,7 @@ namespace gaseous_server
             public string LastResult => _LastResult;
             public string? LastError => _LastError;
             public bool Force => _ForceExecute;
+            public List<QueueItemType> Blocks => _Blocks;
 
             public void Execute()
             {
