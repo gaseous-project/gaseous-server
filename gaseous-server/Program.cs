@@ -112,7 +112,16 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.LibraryScan, 30, new List<ProcessQueue.QueueItemType>
     {
         ProcessQueue.QueueItemType.TitleIngestor,
-        ProcessQueue.QueueItemType.OrganiseLibrary
+        ProcessQueue.QueueItemType.OrganiseLibrary,
+        ProcessQueue.QueueItemType.LibraryScanFull
+    })
+    );
+ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.LibraryScanFull, 10080, new List<ProcessQueue.QueueItemType>
+    {
+        ProcessQueue.QueueItemType.TitleIngestor,
+        ProcessQueue.QueueItemType.OrganiseLibrary,
+        ProcessQueue.QueueItemType.LibraryScan
     })
     );
 

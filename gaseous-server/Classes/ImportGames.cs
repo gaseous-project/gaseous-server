@@ -469,7 +469,7 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static void LibraryScan()
+        public static void LibraryScan(bool FullSignatureScan = false)
         {
             Logging.Log(Logging.LogType.Information, "Library Scan", "Starting library scan");
 
@@ -577,7 +577,7 @@ namespace gaseous_server.Classes
                             FileInfo fi = new FileInfo(romPath);
 
                             Models.Signatures_Games sig = GetFileSignature(hash, fi, romPath);
-                            if (sig.Rom.SignatureSource != Models.Signatures_Games.RomItem.SignatureSourceType.None)
+                            if (sig.Rom.SignatureSource != Models.Signatures_Games.RomItem.SignatureSourceType.None || FullSignatureScan == true)
                             {
                                 Logging.Log(Logging.LogType.Information, "Library Scan", " Update signature found for " + romPath);
 

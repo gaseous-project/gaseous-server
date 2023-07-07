@@ -93,9 +93,13 @@ namespace gaseous_server
 
                                 case QueueItemType.LibraryScan:
                                     Logging.Log(Logging.LogType.Information, "Timered Event", "Starting Library Scanner");
-                                    Classes.ImportGame.LibraryScan();
+                                    Classes.ImportGame.LibraryScan(false);
                                     break;
 
+                                case QueueItemType.LibraryScanFull:
+                                    Logging.Log(Logging.LogType.Information, "Timered Event", "Starting Full Library Scanner");
+                                    Classes.ImportGame.LibraryScan(true);
+                                    break;
                             }
                         }
                         catch (Exception ex)
@@ -125,7 +129,8 @@ namespace gaseous_server
             TitleIngestor,
             MetadataRefresh,
             OrganiseLibrary,
-            LibraryScan
+            LibraryScan,
+            LibraryScanFull
         }
 
         public enum QueueItemState
