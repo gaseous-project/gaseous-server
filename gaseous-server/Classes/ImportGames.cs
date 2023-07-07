@@ -482,6 +482,28 @@ namespace gaseous_server.Classes
             string sql = "SELECT * FROM Games_Roms ORDER BY `name`";
             DataTable dtRoms = db.ExecuteCMD(sql);
 
+            // clean out database entries in the import folder
+            if (dtRoms.Rows.Count > 0)
+            {
+                for (var i = 0; i < dtRoms.Rows.Count; i++)
+                {
+                    long romId = (long)dtRoms.Rows[i]["Id"];
+                    string romPath = (string)dtRoms.Rows[i]["Path"];
+
+                    if (!romPath.StartsWith(Config.LibraryConfiguration.LibraryDataDirectory))
+                    {
+                        Logging.Log(Logging.LogType.Information, "Library Scan", " Deleting database entry for files with incorrect directory " + romPath);
+                        string deleteSql = "DELETE FROM Games_Roms WHERE Id=@id";
+                        Dictionary<string, object> deleteDict = new Dictionary<string, object>();
+                        deleteDict.Add("Id", romId);
+                        db.ExecuteCMD(deleteSql, deleteDict);
+                    }
+                }
+            }
+
+            sql = "SELECT * FROM Games_Roms ORDER BY `name`";
+            dtRoms = db.ExecuteCMD(sql);
+
             // search for files in the library that aren't in the database
             Logging.Log(Logging.LogType.Information, "Library Scan", "Looking for orphaned library files to add");
             string[] LibraryFiles = Directory.GetFiles(Config.LibraryConfiguration.LibraryDataDirectory, "*.*", SearchOption.AllDirectories);
@@ -524,23 +546,8 @@ namespace gaseous_server.Classes
                 }
             }
 
-            // clean out database entries in the import folder
-            if (dtRoms.Rows.Count > 0)
-            {
-                for (var i = 0; i < dtRoms.Rows.Count; i++)
-                {
-                    long romId = (long)dtRoms.Rows[i]["Id"];
-                    string romPath = (string)dtRoms.Rows[i]["Path"];
-
-                    if (romPath.StartsWith(Config.LibraryConfiguration.LibraryImportDirectory)) {
-                        Logging.Log(Logging.LogType.Information, "Library Scan", " Deleting database entry for file in import directory " + romPath);
-                        string deleteSql = "DELETE FROM Games_Roms WHERE Id=@id";
-                        Dictionary<string, object> deleteDict = new Dictionary<string, object>();
-                        deleteDict.Add("Id", romId);
-                        db.ExecuteCMD(deleteSql, deleteDict);
-                    }
-                }
-            }
+            sql = "SELECT * FROM Games_Roms ORDER BY `name`";
+            dtRoms = db.ExecuteCMD(sql);
 
             // check all roms to see if their local file still exists
             if (dtRoms.Rows.Count > 0)
