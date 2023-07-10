@@ -16,7 +16,7 @@ namespace gaseous_server.Controllers
     {
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ResponseCache(CacheProfileName = "5Minute")]
+        //[ResponseCache(CacheProfileName = "5Minute")]
         public Dictionary<string, object> Filter()
         {
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);

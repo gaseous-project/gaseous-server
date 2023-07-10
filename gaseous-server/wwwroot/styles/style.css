@@ -558,3 +558,16 @@ button:disabled {
     background-color: #555;
     cursor: not-allowed;
 }
+
+.redbutton {
+    background-color: darkred;
+    border-color: darkred;
+}
+
+.redbutton:hover {
+    background-color: red;
+}
+
+.redbutton:disabled {
+    background-color: #555;
+}

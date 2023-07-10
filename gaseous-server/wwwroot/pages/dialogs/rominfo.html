@@ -1,11 +1,11 @@
 ﻿<div id="properties_toc">
     <div id="properties_toc_general" name="properties_toc_item" onclick="SelectTab('general');">General</div>
     <div id="properties_toc_match" name="properties_toc_item" onclick="SelectTab('match');">Title Match</div>
-    <div id="properties_toc_manage" name="properties_toc_item" onclick="SelectTab('manage');">Manage</div>
+    <!--<div id="properties_toc_manage" name="properties_toc_item" onclick="SelectTab('manage');">Manage</div>-->
 </div>
 <div id="properties_bodypanel">
     <div id="properties_bodypanel_general" name="properties_tab" style="display: none;">
-        <table cellspacing="0">
+        <table cellspacing="0" style="width: 100%;">
             <tr>
                 <th>Platform</th>
                 <td id="rominfo_platform"></td>
@@ -42,6 +42,9 @@
                 <th>Signature Source Flags</th>
                 <td id="rominfo_flags"></td>
             </tr>
+            <tr>
+                <td colspan="2" style="text-align: right;"><button class="redbutton">Delete</button></td>
+            </tr>
         </table>
     </div>
 
@@ -67,7 +70,7 @@
     </div>
 
     <div id="properties_bodypanel_manage" name="properties_tab" style="display: none;">
-
+        
     </div>
 </div>
 

@@ -650,7 +650,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/roms")]
         [ProducesResponseType(typeof(List<Classes.Roms.GameRomItem>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ResponseCache(CacheProfileName = "5Minute")]
+        //[ResponseCache(CacheProfileName = "5Minute")]
         public ActionResult GameRom(long GameId)
         {
             try
@@ -671,7 +671,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/roms/{RomId}")]
         [ProducesResponseType(typeof(Classes.Roms.GameRomItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ResponseCache(CacheProfileName = "5Minute")]
+        //[ResponseCache(CacheProfileName = "5Minute")]
         public ActionResult GameRom(long GameId, long RomId)
         {
             try
