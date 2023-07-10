@@ -1,0 +1,413 @@
+﻿<div id="bgImage">
+    <div id="bgImage_Opacity"></div>
+</div>
+
+<div id="gamepage">
+    <div id="gametitle">
+        <h1 id="gametitle_label"></h1>
+        <p id="gamedeveloper_label"></p>
+        <p id="gametitle_alts">
+            <span>Also known as: </span><span id="gametitle_alts_label"></span>
+        </p>
+    </div>
+
+
+    <div id="gamesummary">
+        <div id="gamesummary_cover"></div>
+        <div id="gamesumarry_genres">
+            <h3>Genres</h3>
+        </div>
+        <div id="gamesummary_developer">
+            <h3>Developers</h3>
+        </div>
+        <div id="gamesummary_publishers">
+            <h3>Publishers</h3>
+        </div>
+        <div id="gamesummary_ratings">
+            <h3>Age Ratings</h3>
+        </div>
+    </div>
+
+    <div id="mainbody">
+        <div id="gamescreenshots">
+            <div id="gamescreenshots_portal">
+                <div id="gamescreenshots_left_arrow" onclick="selectScreenshot_Prev();" class="gamescreenshots_arrows">&lt;</div>
+                <div id="gamescreenshots_right_arrow" onclick="selectScreenshot_Next();" class="gamescreenshots_arrows">&gt;</div>
+                <div id="gamescreenshots_main"></div>
+            </div>
+            <div id="gamescreenshots_gallery">
+                <div id="gamescreenshots_gallery_panel"></div>
+            </div>
+        </div>
+        <div id="gamesummarytext">
+            <span id="gamesummarytext_label" class="line-clamp-4"></span>
+            <p id="gamesummarytext_label_button_expand" class="text_link" style="display: none;" onclick="document.querySelector('#gamesummarytext_label').classList.remove('line-clamp-4'); document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', 'display: none;'); document.querySelector('#gamesummarytext_label_button_contract').setAttribute('style', '');">Read more...</p>
+
+            <p id="gamesummarytext_label_button_contract" class="text_link" style="display: none;" onclick="document.querySelector('#gamesummarytext_label').classList.add('line-clamp-4'); document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', ''); document.querySelector('#gamesummarytext_label_button_contract').setAttribute('style', 'display: none;');">Read less...</p>
+        </div>
+        <div id="gamesummaryroms">
+            <h3>ROM's/Images</h3>
+        </div>
+    </div>
+
+    
+</div>
+<script type="text/javascript">
+    const urlParams = new URLSearchParams(window.location.search);
+    var gameId = urlParams.get('id');
+    var gameData;
+    var artworks = null;
+    var artworksPosition = 0;
+    var artworksTimer = null;
+    var selectedScreenshot = 0;
+
+    ajaxCall('/api/v1/Games/' + gameId, 'GET', function (result) {
+        // populate games page
+        gameData = result;
+
+        // get name
+        var gameTitleLabel = document.getElementById('gametitle_label');
+        gameTitleLabel.innerHTML = result.name;
+
+        // get alt name
+        var gameTitleAltLabel = document.getElementById('gametitle_alts');
+        if (result.alternativeNames) {
+            ajaxCall('/api/v1/Games/' + gameId + '/alternativename', 'GET', function (result) {
+                var altNames = '';
+                for (var i = 0; i < result.length; i++) {
+                    if (altNames.length > 0) {
+                        altNames += ', ';
+                    }
+                    altNames += result[i].name;
+                }
+                var gameTitleAltLabelText = document.getElementById('gametitle_alts_label');
+                gameTitleAltLabelText.innerHTML = altNames;
+            });
+        } else {
+            gameTitleAltLabel.setAttribute('style', 'display: none;');
+        }
+
+        // get summary
+        var gameSummaryLabel = document.getElementById('gamesummarytext_label');
+        if (result.summary || result.storyline) {
+            if (result.summary) {
+                gameSummaryLabel.innerHTML = result.summary;
+            } else {
+                gameSummaryLabel.innerHTML = result.storyline;
+            }
+            
+            if (gameSummaryLabel.offsetHeight < gameSummaryLabel.scrollHeight ||
+                gameSummaryLabel.offsetWidth < gameSummaryLabel.scrollWidth) {
+                // your element has overflow and truncated
+                // show read more / read less button
+                document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', '');
+            } else {
+                // your element doesn't overflow (not truncated)
+            }
+        } else {
+            gameSummaryLabel.setAttribute('style', 'display: none;');
+        }
+
+        // load artwork
+        if (result.artworks) {
+            artworks = result.artworks.ids;
+            var startPos = randomIntFromInterval(0, result.artworks.ids.length);
+            artworksPosition = startPos;
+            rotateBackground();
+        } else {
+            if (result.cover) {
+                var bg = document.getElementById('bgImage');
+                bg.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/cover/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+            }
+        }
+
+        // load companies
+        var gameHeaderDeveloperLabel = document.getElementById('gamedeveloper_label');
+        var gameDeveloperLabel = document.getElementById('gamesummary_developer');
+        var gamePublisherLabel = document.getElementById('gamesummary_publishers');
+        var gameDeveloperLoaded = false;
+        var gamePublisherLoaded = false;
+        if (result.involvedCompanies) {
+            ajaxCall('/api/v1/games/' + gameId + '/companies', 'GET', function (result) {
+                var lstDevelopers = [];
+                var lstPublishers = [];
+                
+                for (var i = 0; i < result.length; i++) {
+                    var companyLabel = document.createElement('span');
+                    companyLabel.className = 'gamegenrelabel';
+                    companyLabel.innerHTML = result[i].company.name;
+
+                    if (result[i].involvement.developer == true) {
+                        if (!lstDevelopers.includes(result[i].company.name)) {
+                            if (gameHeaderDeveloperLabel.innerHTML.length > 0) {
+                                gameHeaderDeveloperLabel += ", ";
+                            }
+                            gameHeaderDeveloperLabel.innerHTML += result[i].company.name;
+
+                            gameDeveloperLabel.appendChild(companyLabel);
+
+                            lstDevelopers.push(result[i].company.name);
+
+                            gameDeveloperLoaded = true;
+                        }
+                    } else {
+                        if (result[i].involvement.publisher == true) {
+                            if (!lstPublishers.includes(result[i].company.name)) {
+                                lstPublishers.push(result[i].company.name);
+                                gamePublisherLabel.appendChild(companyLabel);
+                                gamePublisherLoaded = true;
+                            }
+                        }
+                    }
+                }
+
+                if (gameDeveloperLoaded == false) {
+                    gameHeaderDeveloperLabel.setAttribute('style', 'display: none;');
+                    gameDeveloperLabel.setAttribute('style', 'display: none;');
+                }
+                if (gamePublisherLoaded == false) {
+                    gamePublisherLabel.setAttribute('style', 'display: none;');
+                }
+            });
+        } else {
+            gameHeaderDeveloperLabel.setAttribute('style', 'display: none;');
+            gameDeveloperLabel.setAttribute('style', 'display: none;');
+            gamePublisherLabel.setAttribute('style', 'display: none;');
+        }
+
+        // load cover
+        var gameSummaryCover = document.getElementById('gamesummary_cover');
+        var gameImage = document.createElement('img');
+        gameImage.className = 'game_cover_image';
+        if (result.cover) {
+            gameImage.src = '/api/v1/Games/' + result.id + '/cover/image';
+        } else {
+            gameImage.src = '/images/unknowngame.png';
+            gameImage.className = 'game_cover_image unknown';
+        }
+        gameSummaryCover.appendChild(gameImage);
+
+        // load ratings
+        var gameSummaryRatings = document.getElementById('gamesummary_ratings');
+        if (result.ageRatings) {
+            var gameRatings = document.createElement('div');
+            for (var i = 0; i < result.ageRatings.ids.length; i++) {
+                var ratingImage = document.createElement('img');
+                ratingImage.src = '/api/v1/Games/' + result.id + '/agerating/' + result.ageRatings.ids[i] + '/image';
+                ratingImage.className = 'rating_image';
+                gameRatings.appendChild(ratingImage);
+            }
+            gameSummaryRatings.appendChild(gameRatings);
+        } else {
+            gameSummaryRatings.setAttribute('style', 'display: none;');
+        }
+
+        // load genres
+        var gameSummaryGenres = document.getElementById('gamesumarry_genres');
+        if (result.genres) {
+            ajaxCall('/api/v1/Games/' + gameId + '/genre', 'GET', function (result) {
+                for (var i = 0; i < result.length; i++) {
+                    var genreLabel = document.createElement('span');
+                    genreLabel.className = 'gamegenrelabel';
+                    genreLabel.innerHTML = result[i].name;
+
+                    gameSummaryGenres.appendChild(genreLabel);
+                }
+            });
+        } else {
+            gameSummaryGenres.setAttribute('style', 'display: none;');
+        }
+
+        // load screenshots
+        var gameScreenshots = document.getElementById('gamescreenshots');
+        if (result.screenshots || result.videos) {
+            var gameScreenshots_Main = document.getElementById('gamescreenshots_main');
+            
+            // load static screenshots
+            var gameScreenshots_Gallery = document.getElementById('gamescreenshots_gallery_panel');
+            var imageIndex = 0;
+            if (result.videos) {
+                imageIndex = result.videos.ids.length;
+            }
+            if (result.screenshots) {
+                for (var i = 0; i < result.screenshots.ids.length; i++) {
+                    var screenshotItem = document.createElement('div');
+                    screenshotItem.id = 'gamescreenshots_gallery_' + imageIndex;
+                    screenshotItem.setAttribute('name', 'gamescreenshots_gallery_item');
+                    screenshotItem.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/screenshots/' + result.screenshots.ids[i] + '/image"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
+                    screenshotItem.setAttribute('imageid', imageIndex);
+                    screenshotItem.setAttribute('imagetype', 0);
+                    screenshotItem.className = 'gamescreenshots_gallery_item';
+                    screenshotItem.setAttribute('onclick', 'selectScreenshot(' + imageIndex + ');');
+                    gameScreenshots_Gallery.appendChild(screenshotItem);
+                    imageIndex += 1;
+                }
+            }
+
+            // load videos
+            if (result.videos) {
+                ajaxCall('/api/v1/Games/' + gameId + '/videos', 'GET', function (result) {
+                    var gameScreenshots_vGallery = document.getElementById('gamescreenshots_gallery_panel');
+                    for (var i = 0; i < result.length; i++) {
+                        var vScreenshotItem = document.createElement('div');
+                        vScreenshotItem.id = 'gamescreenshots_gallery_' + i;
+                        vScreenshotItem.setAttribute('name', 'gamescreenshots_gallery_item');
+                        vScreenshotItem.setAttribute('style', 'background-image: url("https://i.ytimg.com/vi/' + result[i].videoId + '/hqdefault.jpg"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
+                        vScreenshotItem.setAttribute('imageid', i);
+                        vScreenshotItem.setAttribute('imagetype', 1);
+                        vScreenshotItem.setAttribute('imageref', result[i].videoId);
+                        vScreenshotItem.className = 'gamescreenshots_gallery_item';
+                        vScreenshotItem.setAttribute('onclick', 'selectScreenshot(' + i + ');');
+
+                        var youtubeIcon = document.createElement('img');
+                        youtubeIcon.src = '/images/YouTube.svg';
+                        youtubeIcon.className = 'gamescreenshosts_gallery_item_youtube';
+                        vScreenshotItem.appendChild(youtubeIcon);
+
+                        gameScreenshots_vGallery.insertBefore(vScreenshotItem, gameScreenshots_vGallery.firstChild);
+                    }
+
+                    // sort items
+                    var items = gameScreenshots_vGallery.childNodes;
+                    var itemsArr = [];
+                    for (var i in items) {
+                        if (items[i].nodeType == 1) { // get rid of the whitespace text nodes
+                            itemsArr.push(items[i]);
+                        }
+                    }
+
+                    itemsArr.sort(function (a, b) {
+                        return Number(a.getAttribute('imageid')) == Number(b.getAttribute('imageid'))
+                            ? 0
+                            : (Number(a.getAttribute('imageid')) > Number(b.getAttribute('imageid')) ? 1 : -1);
+                    });
+
+                    for (i = 0; i < itemsArr.length; ++i) {
+                        gameScreenshots_vGallery.appendChild(itemsArr[i]);
+                    }
+
+                    selectScreenshot(0);
+                });
+            } else {
+                selectScreenshot(0);
+            }
+        } else {
+            gamescreenshots.setAttribute('style', 'display: none;');
+        }
+
+        // load roms
+        var gameRoms = document.getElementById('gamesummaryroms');
+        ajaxCall('/api/v1/Games/' + gameId + '/roms', 'GET', function (result) {
+            if (result) {
+                result.sort((a, b) => a.platform.name.charCodeAt(0) - b.platform.name.charCodeAt(0));
+
+                var newTable = document.createElement('table');
+                newTable.className = 'romtable';
+                newTable.setAttribute('cellspacing', 0);
+                newTable.appendChild(createTableRow(true, ['Name', 'Size', 'Media', '', '']));
+
+                var lastPlatform = '';
+                for (var i = 0; i < result.length; i++) {
+                    if (result[i].platform.name != lastPlatform) {
+                        lastPlatform = result[i].platform.name;
+                        var platformRow = document.createElement('tr');
+                        var platformHeader = document.createElement('th');
+                        platformHeader.setAttribute('colspan', 4);
+                        platformHeader.innerHTML = result[i].platform.name;
+                        platformRow.appendChild(platformHeader);
+                        newTable.appendChild(platformRow);
+                    }
+
+                    var newRow = [
+                        '<a href="/api/v1/Games/' + gameId + '/roms/' + result[i].id + '/file" class="romlink">' + result[i].name + '</a>',
+                        formatBytes(result[i].size, 2),
+                        result[i].romTypeMedia,
+                        result[i].mediaLabel,
+                        '<span class="romlink" onclick="showDialog(\'rominfo\', ' + result[i].id + ');">...</span>'
+                    ];
+                    newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
+                }
+
+                gameRoms.appendChild(newTable);
+            } else {
+                gameRoms.setAttribute('style', 'display: none;');
+            }
+        });
+    });
+
+    function rotateBackground() {
+        if (artworks) {
+            artworksPosition += 1;
+            if (artworks[artworksPosition] == null) {
+                artworksPosition = 0;
+            }
+            var bg = document.getElementById('bgImage');
+            bg.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/artwork/' + artworks[artworksPosition] + '/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+            artworksTimer = setTimeout(rotateBackground, 60000);
+        }
+    }
+
+    function selectScreenshot(index) {
+        var gameScreenshots_Main = document.getElementById('gamescreenshots_main');
+        var gameScreenshots_Selected = document.getElementById('gamescreenshots_gallery_' + index);
+        var gameScreenshots_Items = document.getElementsByName('gamescreenshots_gallery_item');
+
+        // set the selction class
+        for (var i = 0; i < gameScreenshots_Items.length; i++) {
+            if (gameScreenshots_Items[i].id == gameScreenshots_Selected.id) {
+                gameScreenshots_Items[i].classList.add('gamescreenshosts_gallery_item_selected');
+                gameScreenshots_Selected.scrollIntoView({ behavior: "smooth", block: "end", inline: "nearest" });
+            } else {
+                gameScreenshots_Items[i].classList.remove('gamescreenshosts_gallery_item_selected');
+            }
+        }
+
+        // set the screenshot
+        gameScreenshots_Main.innerHTML = '';
+        switch (gameScreenshots_Selected.getAttribute('imagetype')) {
+            case "0":
+                // screenshot
+                gameScreenshots_Main.setAttribute('style', gameScreenshots_Selected.getAttribute('style'));
+                break;
+            case "1":
+                // video
+                gameScreenshots_Main.setAttribute('style', '');
+
+                var videoIFrame = document.createElement('iframe');
+                videoIFrame.setAttribute('height', '290');
+                videoIFrame.setAttribute('width', '515');
+                videoIFrame.setAttribute('frameBorder', '0');
+                videoIFrame.setAttribute('src', 'https://www.youtube.com/embed/' + gameScreenshots_Selected.getAttribute('imageref') + '?autoplay=1&mute=1');
+
+                gameScreenshots_Main.appendChild(videoIFrame);
+
+                break;
+        }
+
+        selectedScreenshot = index;
+    }
+
+    function selectScreenshot_Next() {
+        var gameScreenshots_Items = document.getElementsByName('gamescreenshots_gallery_item');
+
+        selectedScreenshot += 1;
+
+        if (selectedScreenshot >= gameScreenshots_Items.length) {
+            selectedScreenshot = 0;
+        }
+
+        selectScreenshot(selectedScreenshot);
+    }
+
+    function selectScreenshot_Prev() {
+        var gameScreenshots_Items = document.getElementsByName('gamescreenshots_gallery_item');
+
+        selectedScreenshot = selectedScreenshot - 1;
+        
+        if (selectedScreenshot < 0) {
+            selectedScreenshot = gameScreenshots_Items.length - 1;
+        }
+
+        selectScreenshot(selectedScreenshot);
+    }
+</script>

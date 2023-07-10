@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Text.Json.Serialization;
 using static gaseous_romsignatureobject.RomSignatureObject.Game;
 
 namespace gaseous_server.Models
@@ -11,6 +12,29 @@ namespace gaseous_server.Models
 
         public GameItem? Game { get; set; }
         public RomItem? Rom { get; set; }
+
+        //[JsonIgnore]
+        public int Score
+        {
+            get
+            {
+                int _score = 0;
+
+                if (Game != null)
+                {
+                    _score = _score + Game.Score;
+                }
+
+                if (Rom != null)
+                {
+                    _score = _score + Rom.Score;
+                }
+
+                return _score;
+            }
+        }
+
+        public SignatureFlags Flags = new SignatureFlags();
 
 		public class GameItem
 		{
@@ -36,6 +60,60 @@ namespace gaseous_server.Models
                 demo_rolling = 4,
                 demo_slideshow = 5
             }
+
+            [JsonIgnore]
+            public int Score
+            {
+                get
+                {
+                    // calculate a score based on the availablility of data
+                    int _score = 0;
+                    var properties = this.GetType().GetProperties();
+                    foreach (var prop in properties)
+                    {
+                        if (prop.GetGetMethod() != null)
+                        {
+                            switch (prop.Name.ToLower())
+                            {
+                                case "id":
+                                case "score":
+                                    break;
+                                case "name":
+                                case "year":
+                                case "publisher":
+                                case "system":
+                                    if (prop.PropertyType == typeof(string))
+                                    {
+                                        if (prop.GetValue(this) != null)
+                                        {
+                                            string propVal = prop.GetValue(this).ToString();
+                                            if (propVal.Length > 0)
+                                            {
+                                                _score = _score + 10;
+                                            }
+                                        }
+                                    }
+                                    break;
+                                default:
+                                    if (prop.PropertyType == typeof(string))
+                                    {
+                                        if (prop.GetValue(this) != null)
+                                        {
+                                            string propVal = prop.GetValue(this).ToString();
+                                            if (propVal.Length > 0)
+                                            {
+                                                _score = _score + 1;
+                                            }
+                                        }
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+
+                    return _score;
+                }
+            }
         }
 
         public class RomItem
@@ -54,6 +132,14 @@ namespace gaseous_server.Models
             public RomTypes RomType { get; set; }
             public string? RomTypeMedia { get; set; }
             public string? MediaLabel { get; set; }
+
+            public SignatureSourceType SignatureSource { get; set; }
+
+            public enum SignatureSourceType
+            {
+                None = 0,
+                TOSEC = 1
+            }
 
             public enum RomTypes
             {
@@ -92,6 +178,66 @@ namespace gaseous_server.Models
                 /// </summary>
                 Side = 6
             }
+
+            [JsonIgnore]
+            public int Score
+            {
+                get
+                {
+                    // calculate a score based on the availablility of data
+                    int _score = 0;
+                    var properties = this.GetType().GetProperties();
+                    foreach (var prop in properties)
+                    {
+                        if (prop.GetGetMethod() != null)
+                        {
+                            switch (prop.Name.ToLower())
+                            {
+                                case "name":
+                                case "size":
+                                case "crc":
+                                case "developmentstatus":
+                                case "flags":
+                                case "romtypemedia":
+                                case "medialabel":
+                                    if (prop.PropertyType == typeof(string) || prop.PropertyType == typeof(Int64) || prop.PropertyType == typeof(List<string>))
+                                    {
+                                        if (prop.GetValue(this) != null)
+                                        {
+                                            string propVal = prop.GetValue(this).ToString();
+                                            if (propVal.Length > 0)
+                                            {
+                                                _score = _score + 10;
+                                            }
+                                        }
+                                    }
+                                    break;
+                                default:
+                                    if (prop.PropertyType == typeof(string))
+                                    {
+                                        if (prop.GetValue(this) != null)
+                                        {
+                                            string propVal = prop.GetValue(this).ToString();
+                                            if (propVal.Length > 0)
+                                            {
+                                                _score = _score + 1;
+                                            }
+                                        }
+                                    }
+                                    break;
+                            }
+                        }
+                    }
+
+                    return _score;
+                }
+            }
+        }
+
+        public class SignatureFlags
+        {
+            public int IGDBPlatformId { get; set; }
+            public string IGDBPlatformName { get; set; }
         }
     }
 }

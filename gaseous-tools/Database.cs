@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Reflection;
 using MySql.Data.MySqlClient;
+using static gaseous_tools.Database;
 
 namespace gaseous_tools
 {
@@ -64,6 +65,7 @@ namespace gaseous_tools
 					// check if the database exists first - first run must have permissions to create a database
 					string sql = "CREATE DATABASE IF NOT EXISTS `" + Config.DatabaseConfiguration.DatabaseName + "`;";
 					Dictionary<string, object> dbDict = new Dictionary<string, object>();
+					Logging.Log(Logging.LogType.Information, "Database", "Creating database if it doesn't exist");
 					ExecuteCMD(sql, dbDict, 30, "server=" + Config.DatabaseConfiguration.HostName + ";port=" + Config.DatabaseConfiguration.Port + ";userid=" + Config.DatabaseConfiguration.UserName + ";password=" + Config.DatabaseConfiguration.Password);
 
 					// check if schema version table is in place - if not, create the schema version table
@@ -71,8 +73,9 @@ namespace gaseous_tools
 					DataTable SchemaVersionPresent = ExecuteCMD(sql, dbDict);
 					if (SchemaVersionPresent.Rows.Count == 0)
 					{
-						// no schema table present - create it
-						sql = "CREATE TABLE `schema_version` (`schema_version` INT NOT NULL, PRIMARY KEY (`schema_version`)); INSERT INTO `schema_version` (`schema_version`) VALUES (0);";
+                        // no schema table present - create it
+                        Logging.Log(Logging.LogType.Information, "Database", "Schema version table doesn't exist. Creating it.");
+                        sql = "CREATE TABLE `schema_version` (`schema_version` INT NOT NULL, PRIMARY KEY (`schema_version`)); INSERT INTO `schema_version` (`schema_version`) VALUES (0);";
 						ExecuteCMD(sql, dbDict);
 					}
 
@@ -87,25 +90,30 @@ namespace gaseous_tools
 							using (Stream stream = assembly.GetManifestResourceStream(resourceName))
 							using (StreamReader reader = new StreamReader(stream))
 							{
-								dbScript = reader.ReadToEnd();
+                                dbScript = reader.ReadToEnd();
 
 								// apply script
 								sql = "SELECT schema_version FROM schema_version;";
+								dbDict = new Dictionary<string, object>();
 								DataTable SchemaVersion = ExecuteCMD(sql, dbDict);
 								if (SchemaVersion.Rows.Count == 0)
 								{
-									// something is broken here... where's the table?
-									throw new Exception("schema_version table is missing!");
+                                    // something is broken here... where's the table?
+                                    Logging.Log(Logging.LogType.Critical, "Database", "Schema table missing! This shouldn't happen!");
+                                    throw new Exception("schema_version table is missing!");
 								}
 								else
 								{
 									int SchemaVer = (int)SchemaVersion.Rows[0][0];
-									if (SchemaVer < i)
+                                    Logging.Log(Logging.LogType.Information, "Database", "Schema version is " + SchemaVer);
+                                    if (SchemaVer < i)
 									{
-										// apply schema!
-										ExecuteCMD(dbScript, dbDict);
+                                        // apply schema!
+                                        Logging.Log(Logging.LogType.Information, "Database", "Schema update available - applying");
+                                        ExecuteCMD(dbScript, dbDict);
 
 										sql = "UPDATE schema_version SET schema_version=@schemaver";
+										dbDict = new Dictionary<string, object>();
 										dbDict.Add("schemaver", i);
 										ExecuteCMD(sql, dbDict);
 									}
@@ -113,7 +121,8 @@ namespace gaseous_tools
 							}
 						}
                     }
-					break;
+                    Logging.Log(Logging.LogType.Information, "Database", "Database setup complete");
+                    break;
 			}
 		}
 
@@ -146,6 +155,46 @@ namespace gaseous_tools
             }
         }
 
+        public void ExecuteTransactionCMD(List<SQLTransactionItem> CommandList, int Timeout = 60)
+        {
+            object conn;
+            switch (_ConnectorType)
+            {
+                case databaseType.MySql:
+                    {
+                        var commands = new List<Dictionary<string, object>>();
+                        foreach (SQLTransactionItem CommandItem in CommandList)
+                        {
+                            var nCmd = new Dictionary<string, object>();
+                            nCmd.Add("sql", CommandItem.SQLCommand);
+                            nCmd.Add("values", CommandItem.Parameters);
+                            commands.Add(nCmd);
+                        }
+
+                        conn = new MySQLServerConnector(_ConnectionString);
+                        ((MySQLServerConnector)conn).TransactionExecCMD(commands, Timeout);
+                        break;
+                    }
+            }
+        }
+
+        public class SQLTransactionItem
+        {
+			public SQLTransactionItem()
+			{
+
+			}
+
+			public SQLTransactionItem(string SQLCommand, Dictionary<string, object> Parameters)
+			{
+				this.SQLCommand = SQLCommand;
+				this.Parameters = Parameters;
+			}
+
+            public string? SQLCommand;
+            public Dictionary<string, object>? Parameters = new Dictionary<string, object>();
+        }
+
         private partial class MySQLServerConnector
 		{
 			private string DBConn = "";
@@ -159,6 +208,7 @@ namespace gaseous_tools
 			{
 				DataTable RetTable = new DataTable();
 
+                Logging.Log(Logging.LogType.Debug, "Database", "Connecting to database");
                 MySqlConnection conn = new MySqlConnection(DBConn);
 				conn.Open();
 
@@ -176,17 +226,67 @@ namespace gaseous_tools
 
 				try
 				{
-					RetTable.Load(cmd.ExecuteReader());
+                    Logging.Log(Logging.LogType.Debug, "Database", "Executing sql: '" + SQL + "'");
+					if (Parameters.Count > 0)
+					{
+						string dictValues = string.Join(";", Parameters.Select(x => string.Join("=", x.Key, x.Value)));
+						Logging.Log(Logging.LogType.Debug, "Database", "Parameters: " + dictValues);
+					}
+                    RetTable.Load(cmd.ExecuteReader());
 				} catch (Exception ex) {
+					Logging.Log(Logging.LogType.Critical, "Database", "Error while executing '" + SQL + "'", ex);
 					Trace.WriteLine("Error executing " + SQL);
 					Trace.WriteLine("Full exception: " + ex.ToString());
 				}
 
+				Logging.Log(Logging.LogType.Debug, "Database", "Closing database connection");
 				conn.Close();
 
 				return RetTable;
 			}
-		}
-	}
+
+            public void TransactionExecCMD(List<Dictionary<string, object>> Parameters, int Timeout)
+            {
+                var conn = new MySqlConnection(DBConn);
+                conn.Open();
+                var command = conn.CreateCommand();
+                MySqlTransaction transaction;
+                transaction = conn.BeginTransaction();
+                command.Connection = conn;
+                command.Transaction = transaction;
+                foreach (Dictionary<string, object> Parameter in Parameters)
+                {
+                    var cmd = buildcommand(conn, Parameter["sql"].ToString(), (Dictionary<string, object>)Parameter["values"], Timeout);
+                    cmd.Transaction = transaction;
+                    cmd.ExecuteNonQuery();
+                }
+
+                transaction.Commit();
+                conn.Close();
+            }
+
+            private MySqlCommand buildcommand(MySqlConnection Conn, string SQL, Dictionary<string, object> Parameters, int Timeout)
+            {
+                var cmd = new MySqlCommand();
+                cmd.Connection = Conn;
+                cmd.CommandText = SQL;
+                cmd.CommandTimeout = Timeout;
+                {
+                    var withBlock = cmd.Parameters;
+                    if (Parameters is object)
+                    {
+                        if (Parameters.Count > 0)
+                        {
+                            foreach (string param in Parameters.Keys)
+                                withBlock.AddWithValue(param, Parameters[param]);
+                        }
+                    }
+                }
+
+                return cmd;
+            }
+
+        }
+    }
 }
 

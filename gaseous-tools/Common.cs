@@ -22,8 +22,20 @@ namespace gaseous_tools
 			}
 		}
 
+		static public DateTime ConvertUnixToDateTime(double UnixTimeStamp)
+		{
+            DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+            dateTime = dateTime.AddSeconds(UnixTimeStamp).ToLocalTime();
+            return dateTime;
+        }
+
 		public class hashObject
 		{
+			public hashObject()
+			{
+
+			}
+
 			public hashObject(string FileName)
 			{
                 var xmlStream = File.OpenRead(FileName);
@@ -31,12 +43,15 @@ namespace gaseous_tools
                 var md5 = MD5.Create();
                 byte[] md5HashByte = md5.ComputeHash(xmlStream);
                 string md5Hash = BitConverter.ToString(md5HashByte).Replace("-", "").ToLowerInvariant();
-				_md5hash = md5hash;
+				_md5hash = md5Hash;
 
                 var sha1 = SHA1.Create();
+				xmlStream.Position = 0;
                 byte[] sha1HashByte = sha1.ComputeHash(xmlStream);
                 string sha1Hash = BitConverter.ToString(sha1HashByte).Replace("-", "").ToLowerInvariant();
-				_sha1hash = sha1hash;
+				_sha1hash = sha1Hash;
+
+				xmlStream.Close();
             }
 
 			string _md5hash = "";
@@ -48,6 +63,10 @@ namespace gaseous_tools
 				{
 					return _md5hash;
 				}
+				set
+				{
+					_md5hash = value;
+				}
 			}
 
 			public string sha1hash
@@ -56,8 +75,30 @@ namespace gaseous_tools
 				{
 					return _sha1hash;
 				}
+				set
+				{
+					_sha1hash = value;
+				}
 			}
 		}
-	}
+
+        public static long DirSize(DirectoryInfo d)
+        {
+            long size = 0;
+            // Add file sizes.
+            FileInfo[] fis = d.GetFiles();
+            foreach (FileInfo fi in fis)
+            {
+                size += fi.Length;
+            }
+            // Add subdirectory sizes.
+            DirectoryInfo[] dis = d.GetDirectories();
+            foreach (DirectoryInfo di in dis)
+            {
+                size += DirSize(di);
+            }
+            return size;
+        }
+    }
 }
 

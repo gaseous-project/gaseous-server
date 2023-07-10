@@ -1,0 +1,93 @@
+﻿[
+    {
+        "IGDBId": 15,
+        "IGDBName": "Commodore C64/128/MAX",
+        "AlternateNames": [
+            "C64",
+            "Commodore C64",
+            "Commodore C128",
+            "Commodore C64DTV",
+            "Commodore C64/128/MAX"
+        ],
+        "KnownFileExtensions": [
+            ".C64",
+            ".CRT",
+            ".D64",
+            ".D71",
+            ".D81",
+            ".G64",
+            ".PRG",
+            ".T64",
+            ".TAP"
+        ]
+    },
+    {
+        "IGDBId": 16,
+        "IGDBName": "Amiga",
+        "AlternateNames": [
+            "Amiga",
+            "Commodore Amiga"
+        ],
+        "KnownFileExtensions": [
+            ".ADF",
+            ".ADZ",
+            ".DMS"
+        ]
+    },
+    {
+        "IGDBId": 64,
+        "IGDBName": "Sega Master System/Mark III",
+        "AlternateNames": [
+            "Sega Master System/Mark III",
+            "Sega Master System",
+            "Sega Mark III & Master System"
+        ],
+        "KnownFileExtensions": [
+            ".SMS"
+        ]
+    },
+    {
+        "IGDBId": 29,
+        "IGDBName": "Sega Mega Drive/Genesis",
+        "AlternateNames": [
+            "Sega Mega Drive/Genesis",
+            "Sega Mega Drive",
+            "Sega Genesis",
+            "Sega Mega Drive & Genesis"
+        ],
+        "KnownFileExtensions": [
+            ".GEN",
+            ".MD",
+            ".SG",
+            ".SMD"
+        ]
+    },
+    {
+        "IGDBId": 4,
+        "IGDBName": "Nintendo 64",
+        "AlternateNames": [
+            "Nintendo 64",
+            "N64"
+        ],
+        "KnownFileExtensions": [
+            ".Z64"
+        ]
+    },
+    {
+        "IGDBId": 18,
+        "IGDBName": "Nintendo Entertainment System",
+        "AlternateNames": [
+            "Nintendo Entertainment System",
+            "NES"
+        ],
+        "KnownFileExtensions": [
+            ".NES",
+            ".FDS",
+            ".FIG",
+            ".MGD",
+            ".SFC",
+            ".SMC",
+            ".SWC"
+        ]
+    }
+]

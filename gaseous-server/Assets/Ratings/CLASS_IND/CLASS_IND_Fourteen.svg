@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   version="1.1"
+   width="400"
+   height="400"
+   id="svg3105">
+  <defs
+     id="defs3107" />
+  <g
+     transform="translate(0,-652.36218)"
+     id="layer1">
+    <g
+       transform="matrix(0.2951006,0,0,0.2951006,-3138.8375,-2336.2691)"
+       id="g3115"
+       style="fill-rule:evenodd">
+      <rect
+         width="1355.47"
+         height="1355.47"
+         rx="116.97"
+         ry="116.97"
+         x="10636.5"
+         y="10127.5"
+         id="rect58"
+         style="fill:#ff6600;fill-opacity:1" />
+      <g
+         id="text70"
+         style="font-size:966.48999023px;font-weight:normal;fill:#ffffff;font-family:Zurich BdXCn BT">
+        <path
+           d="m 11074.291,10448.072 114.205,0 0,673.428 -130.25,0 0,-500.706 c -11.326,11.641 -23.596,21.709 -36.81,30.203 -13.214,8.495 -27.686,15.574 -43.416,21.236 l 0,-120.811 c 23.281,-13.213 43.023,-28.472 59.226,-45.776 16.202,-17.303 28.551,-36.495 37.045,-57.574 z"
+           id="path2892"
+           style="font-size:966.48999023px;font-weight:normal;fill:#ffffff;font-family:Zurich BdXCn BT" />
+      </g>
+      <g
+         id="text72"
+         style="font-size:966.48999023px;font-weight:normal;fill:#ffffff;font-family:Zurich BdXCn BT">
+        <path
+           d="m 11464.892,10546.231 -86.362,327.04 87.305,0 7.551,-327.04 z m -59.934,-98.159 184.52,0 0,425.199 81.17,0 0,100.518 -81.17,0 0,147.711 -127.89,0 0,-147.711 -182.632,0 0,-115.148 z"
+           id="path2889"
+           style="font-size:966.48999023px;font-weight:normal;fill:#ffffff;font-family:Zurich BdXCn BT" />
+      </g>
+    </g>
+  </g>
+</svg>

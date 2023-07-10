@@ -1,0 +1,581 @@
+﻿body {
+    background-color: #383838;
+    color: white;
+    font-family: "PT Sans", Arial, Helvetica, sans-serif;
+    font-kerning: normal;
+    font-style: normal;
+    font-weight: 100;
+    font-size: 13px;
+}
+
+@font-face {
+    font-family: Commodore64;
+    src: url('/fonts/Commodore Pixelized v1.2.ttf');
+}
+
+h3 {
+    border-bottom-style: solid;
+    /*border-bottom-color: #916b01;*/
+    border-bottom-width: 1px;
+    /*border-image: linear-gradient(to right, blue 25%, yellow 25%, yellow 50%,red 50%, red 75%, teal 75%) 5;*/
+
+    border-image: linear-gradient(to right, rgba(255,0,0,1) 0%, rgba(251,255,0,1) 16%, rgba(0,255,250,1) 30%, rgba(0,16,255,1) 46%, rgba(250,0,255,1) 62%, rgba(255,0,0,1) 78%, rgba(255,237,0,1) 90%, rgba(20,255,0,1) 100%) 5;
+}
+
+/* The Modal (background) */
+.modal {
+    display: none; /* Hidden by default */
+    position: fixed; /* Stay in place */
+    z-index: 1; /* Sit on top */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    background-color: rgb(0,0,0); /* Fallback color */
+    background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    filter: drop-shadow(5px 5px 10px #000);
+    -webkit-filter: drop-shadow(5px 5px 10px #000);
+}
+
+/* Modal Content/Box */
+.modal-content {
+    background-color: #383838;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 10px;
+    border: 1px solid #888;
+    width: 700px; /* Could be more or less, depending on screen size */
+    min-height: 358px;
+}
+.modal-content-sub {
+    background-color: #383838;
+    margin: 20% auto; /* 20% from the top and centered */
+    padding: 10px;
+    border: 1px solid #888;
+    width: 300px; /* Could be more or less, depending on screen size */
+    min-height: 110px;
+}
+#modal-heading {
+    margin-block: 5px;
+    border-bottom-style: solid;
+    /*border-bottom-color: #916b01;*/
+    border-bottom-width: 3px;
+    /*border-image: linear-gradient(to right, blue 25%, yellow 25%, yellow 50%,red 50%, red 75%, teal 75%) 5;*/
+
+    border-image: linear-gradient(to right, rgba(255,0,0,1) 0%, rgba(251,255,0,1) 16%, rgba(0,255,250,1) 30%, rgba(0,16,255,1) 46%, rgba(250,0,255,1) 62%, rgba(255,0,0,1) 78%, rgba(255,237,0,1) 90%, rgba(20,255,0,1) 100%) 5;
+}
+
+/* The Close Button */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#banner_icon {
+    background-color: white;
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 0px;
+    margin: 0px;
+    display: flex;
+}
+
+#banner_icon:hover {
+    cursor: pointer;
+}
+
+#banner_icon_image {
+    width: 30px;
+    height: 30px;
+}
+
+#banner_cog {
+    background-color: white;
+    position: fixed;
+    top: 0px;
+    right: 0px;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 0px;
+    margin: 0px;
+    display: flex;
+}
+
+#banner_cog:hover {
+    cursor: pointer;
+}
+
+#banner_system_image {
+    height: 30px;
+    width: 30px;
+}
+
+#banner_header {
+    background-color: rgba(0, 22, 56, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    position: fixed;
+    top: 0px;
+    left: 40px;
+    height: 40px;
+    right: 0px;
+    align-items: center;
+    display: flex;
+}
+
+#banner_header_label {
+    font-family: Commodore64;
+    display: inline;
+    padding: 10px;
+    font-size: 16pt;
+    vertical-align: top;
+    /*color: #edeffa;*/
+    color: #7c70da;
+}
+
+#content {
+    margin-top: 35px;
+    padding-top: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+    z-index: -100;
+}
+
+#games_filter {
+    width: 200px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #2b2b2b;
+    margin-right: 10px;
+}
+
+.filter_header {
+    padding: 10px;
+    background-color: #2b2b2b;
+}
+
+.filter_panel_box {
+    padding: 10px;
+}
+
+input[type='text'] {
+    background-color: #2b2b2b;
+    color: white;
+    padding: 5px;
+    font-family: "PT Sans", Arial, Helvetica, sans-serif;
+    font-kerning: normal;
+    font-style: normal;
+    font-weight: 100;
+    font-size: 13px;
+    border-radius: 5px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: lightgray;
+}
+
+input[id='filter_panel_search'] {
+    width: 160px;
+}
+
+/* width */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 5px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: #383838;
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #888;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+.text_link {
+    
+}
+
+.text_link:hover {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+#games_home {
+    display: flex;
+    margin-top: 20px;
+}
+
+.filter_panel_item {
+    display: flex;
+    padding: 3px;
+}
+
+.filter_panel_item_checkbox {
+    margin-right: 10px;
+}
+
+#games_library {
+    width: 90%;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #2b2b2b;
+    padding: 10px;
+}
+
+.game_tile {
+    padding: 5px;
+    display: inline-block;
+    width: 220px;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    vertical-align: top;
+    margin-bottom: 10px;
+}
+
+.game_tile:hover {
+    cursor: pointer;
+    text-decoration: underline;
+    background-color: #2b2b2b;
+}
+
+.game_tile_image {
+    max-width: 200px;
+    max-height: 200px;
+}
+
+.game_tile_image, .unknown {
+    background-color: white;
+}
+
+#bgImage {
+    position: fixed;
+    top: -30px;
+    left: -30px;
+    right: -30px;
+    bottom: -30px;
+    z-index: -100;
+}
+
+#bgImage_Opacity {
+    background: rgba(56, 56, 56, 0.7);
+    position: fixed;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    z-index: -90;
+}
+
+#gamepage {
+    top: 0px;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    margin: auto;
+    width: 90%;
+    min-width: 911px;
+    max-width: 1122px;
+    min-height: 550px;
+
+    padding-top: 1px;
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-bottom: 20px;
+}
+
+#mainbody {
+    margin-left: 270px;
+}
+
+#gamesummary {
+    float: left;
+    margin-right: 20px;
+    width: 250px;
+}
+
+.game_cover_image {
+    display: block;
+    max-width: 250px;
+    max-height: 350px;
+    width: 100%;
+}
+
+.gamegenrelabel {
+    display: block;
+    white-space: pre;
+}
+
+.rating_image {
+    display: inline-block;
+    max-width: 64px;
+    max-height: 64px;
+    margin-right: 20px;
+    margin-bottom: 20px;
+}
+
+.rating_image_mini {
+    display: inline-block;
+    max-width: 32px;
+    max-height: 32px;
+    margin-right: 2px;
+}
+
+#gamescreenshots {
+    background-color: black;
+    padding: 10px;
+    /*height: 350px;*/
+    margin-bottom: 20px;
+}
+
+#gamescreenshots_main {
+    display: block;
+    width: 100%;
+    height: 290px;
+    margin-bottom: 10px;
+}
+
+iframe {
+    display: block;
+    margin: 0 auto;
+}
+
+#gamescreenshots_gallery {
+    left: 0px;
+    right: 0px;
+    height: 65px;
+    overflow-x: scroll;
+    overflow-y: hidden;
+    white-space: normal;
+}
+
+#gamescreenshots_gallery_panel {
+    display: block;
+    height: 50px;
+    margin-bottom: 10px;
+    white-space: nowrap;
+}
+
+.gamescreenshots_gallery_item {
+    display: inline-block;
+    height: 50px;
+    width: 70px;
+    margin-right: 10px;
+    white-space: nowrap;
+    border-color: black;
+    border-style: solid;
+    border-width: 2px;
+    cursor: pointer;
+}
+
+.gamescreenshosts_gallery_item_youtube {
+    max-height: 20px;
+    max-width: 20px;
+    float: right;
+    margin-top: 30px;
+    margin-right: 5px;
+}
+
+.gamescreenshots_arrows {
+    margin-top: 140px;
+    height: 50px;
+    width: 30px;
+    font-size: 40px;
+    background-color: #383838;
+    color: black;
+    text-align: center;
+    user-select: none; /* standard syntax */
+    -webkit-user-select: none; /* webkit (safari, chrome) browsers */
+    -moz-user-select: none; /* mozilla browsers */
+    -khtml-user-select: none; /* webkit (konqueror) browsers */
+    -ms-user-select: none; /* IE10+ */
+}
+
+.gamescreenshots_arrows:hover {
+    cursor: pointer;
+    background-color: #555;
+}
+
+#gamescreenshots_left_arrow {
+    float: left;
+}
+
+#gamescreenshots_right_arrow {
+    float: right;
+}
+
+.gamescreenshosts_gallery_item:hover {
+    border-color: lightgray;
+}
+
+.gamescreenshosts_gallery_item_selected {
+    border-color: white;
+}
+
+#gamesummarytext_label {
+    
+}
+
+.line-clamp-4 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    /* truncate to 4 lines */
+    -webkit-line-clamp: 4;
+}
+
+.romtable {
+    width: 100%;
+}
+
+.romrow:hover {
+    background-color: #383838;
+    background: rgba(56, 56, 56, 0.3);
+}
+
+.romcell {
+    padding: 5px;
+}
+
+th {
+    text-align: left;
+    padding: 5px;
+}
+
+.romlink {
+    color: white;
+    text-decoration: none;
+}
+
+.romlink:hover {
+    color: white;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+#gamedev_logo {
+    float: right;
+    max-height: 48px;
+}
+
+#gamedeveloper_label {
+    font-size: 16px;
+}
+
+#properties_toc {
+    float: left;
+    display: block;
+    width: 150px;
+    min-width: 150px;
+}
+
+div[name="properties_toc_item"] {
+    padding: 10px;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: #2b2b2b;
+}
+
+div[name="properties_toc_item"]:hover {
+    background-color: #2b2b2b;
+    cursor: pointer;
+}
+
+.properties_toc_item_selected {
+    background-color: #2b2b2b;
+}
+
+#properties_bodypanel {
+    border-left-width: 1px;
+    border-left-style: solid;
+    border-left-color: #2b2b2b;
+    margin-left: 150px;
+    padding-left: 10px;
+}
+
+.select2-container--open .select2-dropdown--below,
+.select2-container--open .select2-dropdown--above {
+    background: #2b2b2b;
+}
+
+.select2-container--flat .select2-container--focus .select2-selection--multiple {
+    border: 1px solid #2b2b2b;
+}
+
+.dropdown-div {
+    width: 100%;
+}
+
+.dropdown-cover {
+    width: 85px;
+    max-width: 85px;
+}
+
+.dropdown-label {
+    padding-left: 20px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    padding-right: 20px;
+    font-weight: bold;
+    text-align: left;
+}
+
+button {
+    background-color: #888;
+    color: white;
+    border-width: 1px;
+    border-color: #555;
+    border-style: solid;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+button:hover {
+    background-color: #555;
+    cursor: pointer;
+}
+
+button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+}
+
+.redbutton {
+    background-color: darkred;
+    border-color: darkred;
+}
+
+.redbutton:hover {
+    background-color: red;
+}
+
+.redbutton:disabled {
+    background-color: #555;
+}

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition=" '$(RunConfiguration)' == 'Default' ">
+    <StartAction>Project</StartAction>
+    <StartArguments>-tosecpath ~/Downloads/TOSEC\ -\ DAT\ Pack\ -\ Complete\ \(3764\)\ \(TOSEC-v2023-01-23\)/TOSEC/</StartArguments>
+    <ExternalConsole>true</ExternalConsole>
+  </PropertyGroup>
+</Project>
