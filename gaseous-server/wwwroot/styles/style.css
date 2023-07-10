@@ -49,6 +49,14 @@ h3 {
     width: 700px; /* Could be more or less, depending on screen size */
     min-height: 358px;
 }
+.modal-content-sub {
+    background-color: #383838;
+    margin: 20% auto; /* 20% from the top and centered */
+    padding: 10px;
+    border: 1px solid #888;
+    width: 300px; /* Could be more or less, depending on screen size */
+    min-height: 110px;
+}
 #modal-heading {
     margin-block: 5px;
     border-bottom-style: solid;
