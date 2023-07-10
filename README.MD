@@ -2,6 +2,10 @@
 
 This is the server for the Gaseous system. All your games and metadata are stored within.
 
+## Screenshots
+![Library](./screenshots/Library.png)
+![Game](./screenshots/Game.png)
+
 ## Requirements
 * MySQL Server 8+
 * Internet Game Database API Key. See: https://api-docs.igdb.com/#account-creation
