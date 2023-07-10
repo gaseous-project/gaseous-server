@@ -55,6 +55,7 @@
 <script type="text/javascript">
     const urlParams = new URLSearchParams(window.location.search);
     var gameId = urlParams.get('id');
+    var gameData;
     var artworks = null;
     var artworksPosition = 0;
     var artworksTimer = null;
@@ -62,7 +63,8 @@
 
     ajaxCall('/api/v1/Games/' + gameId, 'GET', function (result) {
         // populate games page
-        
+        gameData = result;
+
         // get name
         var gameTitleLabel = document.getElementById('gametitle_label');
         gameTitleLabel.innerHTML = result.name;

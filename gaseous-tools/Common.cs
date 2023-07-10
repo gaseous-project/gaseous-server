@@ -50,6 +50,8 @@ namespace gaseous_tools
                 byte[] sha1HashByte = sha1.ComputeHash(xmlStream);
                 string sha1Hash = BitConverter.ToString(sha1HashByte).Replace("-", "").ToLowerInvariant();
 				_sha1hash = sha1Hash;
+
+				xmlStream.Close();
             }
 
 			string _md5hash = "";

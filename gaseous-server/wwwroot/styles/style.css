@@ -34,6 +34,10 @@ h3 {
     overflow: auto; /* Enable scroll if needed */
     background-color: rgb(0,0,0); /* Fallback color */
     background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    filter: drop-shadow(5px 5px 10px #000);
+    -webkit-filter: drop-shadow(5px 5px 10px #000);
 }
 
 /* Modal Content/Box */
@@ -42,7 +46,8 @@ h3 {
     margin: 15% auto; /* 15% from the top and centered */
     padding: 10px;
     border: 1px solid #888;
-    width: 600px; /* Could be more or less, depending on screen size */
+    width: 700px; /* Could be more or less, depending on screen size */
+    min-height: 358px;
 }
 #modal-heading {
     margin-block: 5px;
@@ -116,7 +121,9 @@ h3 {
 }
 
 #banner_header {
-    background-color: #001638;
+    background-color: rgba(0, 22, 56, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     position: fixed;
     top: 0px;
     left: 40px;
@@ -470,4 +477,84 @@ th {
 
 #gamedeveloper_label {
     font-size: 16px;
+}
+
+#properties_toc {
+    float: left;
+    display: block;
+    width: 150px;
+    min-width: 150px;
+}
+
+div[name="properties_toc_item"] {
+    padding: 10px;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: #2b2b2b;
+}
+
+div[name="properties_toc_item"]:hover {
+    background-color: #2b2b2b;
+    cursor: pointer;
+}
+
+.properties_toc_item_selected {
+    background-color: #2b2b2b;
+}
+
+#properties_bodypanel {
+    border-left-width: 1px;
+    border-left-style: solid;
+    border-left-color: #2b2b2b;
+    margin-left: 150px;
+    padding-left: 10px;
+}
+
+.select2-container--open .select2-dropdown--below,
+.select2-container--open .select2-dropdown--above {
+    background: #2b2b2b;
+}
+
+.select2-container--flat .select2-container--focus .select2-selection--multiple {
+    border: 1px solid #2b2b2b;
+}
+
+.dropdown-div {
+    width: 100%;
+}
+
+.dropdown-cover {
+    width: 85px;
+    max-width: 85px;
+}
+
+.dropdown-label {
+    padding-left: 20px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    padding-right: 20px;
+    font-weight: bold;
+    text-align: left;
+}
+
+button {
+    background-color: #888;
+    color: white;
+    border-width: 1px;
+    border-color: #555;
+    border-style: solid;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+button:hover {
+    background-color: #555;
+    cursor: pointer;
+}
+
+button:disabled {
+    background-color: #555;
+    cursor: not-allowed;
 }

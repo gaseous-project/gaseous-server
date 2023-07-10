@@ -54,7 +54,7 @@ namespace gaseous_server.Controllers
         private static async Task<List<Game>> _SearchForGame(long PlatformId, string SearchString)
         {
             string searchBody = "";
-            searchBody += "fields cover,first_release_date,name,platforms,slug; ";
+            searchBody += "fields cover.*,first_release_date,name,platforms,slug; ";
             searchBody += "search \"" + SearchString + "\";";
             searchBody += "where platforms = (" + PlatformId + ");";
 
