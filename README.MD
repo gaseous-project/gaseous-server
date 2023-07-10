@@ -55,10 +55,9 @@ When Gaseous-Server is started for the first time, it creates a configuration fi
 Dockerfile and docker-compose.yml files have been provided to make deployment of the server as easy as possible.
 1. Clone the repo with "git clone https://github.com/gaseous-project/gaseous-server.git"
 2. Change into the gaseous-server directory
-3. Switch to the develop branch with "git checkout develop"
-4. Open the docker-compose.yml file and edit the igdbclientid and igdbclientsecret to the values retrieved from your IGDB account
-5. Run the command "docker-compose up -d"
-6. Connect to the host on port 5198
+3. Open the docker-compose.yml file and edit the igdbclientid and igdbclientsecret to the values retrieved from your IGDB account
+4. Run the command "docker-compose up -d"
+5. Connect to the host on port 5198
 
 ## Adding Content
 While games can be added to the server without them, it is recommended adding some signature DAT files beforehand to allow for better matching of ROM to game.
