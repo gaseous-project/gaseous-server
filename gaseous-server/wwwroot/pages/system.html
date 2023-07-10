@@ -49,18 +49,23 @@
                     }
 
                     var itemStateName;
+                    var itemLastStart;
                     switch (result[i].itemState) {
                         case 'NeverStarted':
                             itemStateName = "Never started";
+                            itemLastStart = '-';
                             break;
                         case 'Stopped':
                             itemStateName = "Stopped";
+                            itemLastStart = moment(result[i].lastRunTime).fromNow();
                             break;
                         case 'Running':
                             itemStateName = "Running";
+                            itemLastStart = moment(result[i].lastRunTime).fromNow();
                             break;
                         default:
                             itemStateName = "Unknown status";
+                            itemLastStart = moment(result[i].lastRunTime).fromNow();
                             break;
                     }
 
@@ -73,7 +78,7 @@
                         itemTypeName,
                         itemStateName,
                         result[i].interval,
-                        moment(result[i].lastRunTime).fromNow(),
+                        itemLastStart,
                         moment(result[i].nextRunTime).fromNow(),
                         startButton
                     ];
