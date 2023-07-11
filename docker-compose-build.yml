@@ -2,7 +2,8 @@ version: '2'
 services:
   gaseous-server:
     container_name: gaseous-server
-    image: gaseousgames/gaseousserver:latest
+    build:
+      context: ./
     restart: unless-stopped
     networks:
       - gaseous
