@@ -57,10 +57,17 @@ When Gaseous-Server is started for the first time, it creates a configuration fi
 
 ## Deploy with Docker
 Dockerfile and docker-compose.yml files have been provided to make deployment of the server as easy as possible.
+1. Download the docker-compose.yml file
+2. Open the docker-compose.yml file and edit the igdbclientid and igdbclientsecret to the values retrieved from your IGDB account
+3. Run the command "docker-compose up -d"
+4. Connect to the host on port 5198
+
+## Build and Deploy with Docker
+Dockerfile and docker-compose-build.yml files have been provided to make deployment of the server as easy as possible.
 1. Clone the repo with "git clone https://github.com/gaseous-project/gaseous-server.git"
 2. Change into the gaseous-server directory
-3. Open the docker-compose.yml file and edit the igdbclientid and igdbclientsecret to the values retrieved from your IGDB account
-4. Run the command "docker-compose up -d"
+3. Open the docker-compose-build.yml file and edit the igdbclientid and igdbclientsecret to the values retrieved from your IGDB account
+4. Run the command "docker-compose up --file docker-compose-build.yml -d"
 5. Connect to the host on port 5198
 
 ## Adding Content
