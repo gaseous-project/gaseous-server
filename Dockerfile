@@ -7,7 +7,7 @@ COPY . ./
 # Restore as distinct layers
 RUN dotnet restore "gaseous-server/gaseous-server.csproj"
 # Build and publish a release
-RUN dotnet publish "gaseous-server/gaseous-server.csproj" -c Release -o out
+RUN dotnet publish "gaseous-server/gaseous-server.csproj" --use-current-runtime --self-contained false -c Release -o out
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:7.0
