@@ -304,7 +304,7 @@
                 var newTable = document.createElement('table');
                 newTable.className = 'romtable';
                 newTable.setAttribute('cellspacing', 0);
-                newTable.appendChild(createTableRow(true, ['Name', 'Size', 'Media', '', '']));
+                newTable.appendChild(createTableRow(true, ['Name', 'Size', 'Media', '', '', '']));
 
                 var lastPlatform = '';
                 for (var i = 0; i < result.length; i++) {
@@ -318,11 +318,17 @@
                         newTable.appendChild(platformRow);
                     }
 
+                    var launchButton = '';
+                    if (result[i].emulator) {
+                        launchButton = '<a href="/index.html?page=emulator&engine=' + result[i].emulator.Type + '&core=' + result[i].emulator.Core + '&gameid=' + gameId + '&rompath=' + encodeURIComponent('/api/v1/Games/' + gameId + '/roms/' + result[i].id + '/file') + '" class="romlink">Start</a>';
+                    }
+
                     var newRow = [
                         '<a href="/api/v1/Games/' + gameId + '/roms/' + result[i].id + '/file" class="romlink">' + result[i].name + '</a>',
                         formatBytes(result[i].size, 2),
                         result[i].romTypeMedia,
                         result[i].mediaLabel,
+                        launchButton,
                         '<span class="romlink" onclick="showDialog(\'rominfo\', ' + result[i].id + ');">...</span>'
                     ];
                     newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));

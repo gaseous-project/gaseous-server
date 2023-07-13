@@ -1,0 +1,48 @@
+﻿<div id="bgImage">
+    <div id="bgImage_Opacity"></div>
+</div>
+
+<div id="emulator"></div>
+
+<script type="text/javascript">
+    const urlParams = new URLSearchParams(window.location.search);
+
+    var gameId = urlParams.get('gameid');
+    var gameData;
+    var artworks = null;
+    var artworksPosition = 0;
+
+    ajaxCall('/api/v1/Games/' + gameId, 'GET', function (result) {
+        gameData = result;
+
+        // load artwork
+        if (result.artworks) {
+            artworks = result.artworks.ids;
+            var startPos = randomIntFromInterval(0, result.artworks.ids.length);
+            artworksPosition = startPos;
+            rotateBackground();
+        } else {
+            if (result.cover) {
+                var bg = document.getElementById('bgImage');
+                bg.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/cover/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+            }
+        }
+    });
+
+    function rotateBackground() {
+        if (artworks) {
+            artworksPosition += 1;
+            if (artworks[artworksPosition] == null) {
+                artworksPosition = 0;
+            }
+            var bg = document.getElementById('bgImage');
+            bg.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/artwork/' + artworks[artworksPosition] + '/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+        }
+    }
+
+    switch (urlParams.get('engine')) {
+        case 'EmulatorJS':
+            $('#emulator').load('/pages/EmulatorJS.html');
+            break;
+    }
+</script>

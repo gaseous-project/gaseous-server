@@ -1,0 +1,3 @@
+[submodule "gaseous-server/wwwroot/EmulatorJS"]
+	path = gaseous-server/wwwroot/EmulatorJS
+	url = https://github.com/EmulatorJS/EmulatorJS.git

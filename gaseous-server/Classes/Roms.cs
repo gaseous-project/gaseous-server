@@ -107,6 +107,19 @@ namespace gaseous_server.Classes
                 Path = (string)romDR["path"],
 				Source = (GameRomItem.SourceType)(Int32)romDR["metadatasource"]
             };
+
+			// check for a web emulator and update the romItem
+			foreach (Models.PlatformMapping.PlatformMapItem platformMapping in Models.PlatformMapping.PlatformMap)
+			{
+				if (platformMapping.IGDBId == romItem.PlatformId)
+				{
+					if (platformMapping.WebEmulator != null)
+					{
+						romItem.Emulator = platformMapping.WebEmulator;
+					}
+				}
+			}
+
             return romItem;
         }
 
@@ -115,6 +128,7 @@ namespace gaseous_server.Classes
 			public long Id { get; set; }
 			public long PlatformId { get; set; }
 			public IGDB.Models.Platform Platform { get; set; }
+			public Dictionary<string, string>? Emulator { get; set; }
 			public long GameId { get; set; }
 			public string? Name { get; set; }
 			public long Size { get; set; }

@@ -749,6 +749,7 @@ namespace gaseous_server.Controllers
         }
 
         [HttpGet]
+        [HttpHead]
         [Route("{GameId}/roms/{RomId}/file")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

@@ -119,6 +119,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Remove="Support\PlatformMap.json" />
+    <Content Remove="wwwroot\styles\select2.min.css" />
+    <Content Remove="wwwroot\scripts\select2.min.js" />
+    <Content Remove="wwwroot\scripts\moment.js" />
+    <Content Remove="wwwroot\scripts\jquery-3.6.0.min.js" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Support\PlatformMap.json" Condition="'$(ExcludeConfigFilesFromBuildOutput)'!='true'">
@@ -164,5 +168,10 @@
     <EmbeddedResource Include="Assets\Ratings\CLASS_IND\CLASS_IND_Sixteen.svg" />
     <EmbeddedResource Include="Assets\Ratings\CLASS_IND\CLASS_IND_Ten.svg" />
     <EmbeddedResource Include="Assets\Ratings\CLASS_IND\CLASS_IND_Twelve.svg" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Update="wwwroot\EmulatorJS\data\old\sega-old-wasm.data">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 </Project>
