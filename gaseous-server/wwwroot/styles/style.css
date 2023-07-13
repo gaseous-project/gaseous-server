@@ -579,3 +579,9 @@ button:disabled {
 .redbutton:disabled {
     background-color: #555;
 }
+
+#emulator {
+    margin: 0 auto;
+    width: 640px;
+    padding-top: 100px;
+}

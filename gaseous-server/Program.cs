@@ -76,7 +76,11 @@ app.UseResponseCaching();
 app.UseAuthorization();
 
 app.UseDefaultFiles();
-app.UseStaticFiles();
+app.UseStaticFiles(new StaticFileOptions
+{
+    ServeUnknownFileTypes = true, //allow unkown file types also to be served
+    DefaultContentType = "plain/text" //content type to returned if fileType is not known.
+});
 
 app.MapControllers();
 

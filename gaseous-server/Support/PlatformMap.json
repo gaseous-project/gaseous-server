@@ -60,7 +60,11 @@
             ".MD",
             ".SG",
             ".SMD"
-        ]
+        ],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "segaMD"
+        }
     },
     {
         "IGDBId": 4,
@@ -71,7 +75,11 @@
         ],
         "KnownFileExtensions": [
             ".Z64"
-        ]
+        ],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "n64"
+        }
     },
     {
         "IGDBId": 18,
@@ -88,6 +96,10 @@
             ".SFC",
             ".SMC",
             ".SWC"
-        ]
+        ],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "nes"
+        }
     }
 ]

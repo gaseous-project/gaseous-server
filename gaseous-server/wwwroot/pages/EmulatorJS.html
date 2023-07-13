@@ -1,0 +1,25 @@
+﻿<div style='width:640px;height:480px;max-width:100%'>
+    <div id='game'></div>
+</div>
+
+<script type='text/javascript'>
+    EJS_player = '#game';
+
+    // Can also be fceumm or nestopia
+    EJS_core = urlParams.get('core');
+
+    // Lightgun
+    EJS_lightgun = false; // can be true or false
+
+    // URL to BIOS file
+    EJS_biosUrl = ''; // example: https://dl.dropboxusercontent.com/s/[random-code]/bios.bin
+
+    // URL to Game rom
+    EJS_gameUrl = decodeURIComponent(urlParams.get('rompath'));
+
+    // Path to the data directory
+    EJS_pathtodata = '/EmulatorJS/data/';
+
+    EJS_DEBUG_XX = false;
+</script>
+<script src='/EmulatorJS/data/loader.js'></script>

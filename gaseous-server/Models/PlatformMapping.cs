@@ -78,6 +78,8 @@ namespace gaseous_server.Models
             public string IGDBName { get; set; }
             public List<string> AlternateNames { get; set; } = new List<string>();
             public List<string> KnownFileExtensions { get; set; } = new List<string>();
+            public Dictionary<string, string>? WebEmulator { get; set; }
+
         }
 	}
 }
