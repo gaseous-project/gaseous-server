@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Reflection;
+using System.Text.Json.Serialization;
+using gaseous_server.Classes;
 
 namespace gaseous_server.Models
 {
@@ -10,23 +12,21 @@ namespace gaseous_server.Models
 
         }
 
-        private static List<PlatformMapItem> _PlatformMaps = new List<PlatformMapItem>();
+        //private static List<PlatformMapItem> _PlatformMaps = new List<PlatformMapItem>();
         public static List<PlatformMapItem> PlatformMap
         {
             get
             {
-                if (_PlatformMaps.Count == 0)
+                // load platform maps from: gaseous_server.Support.PlatformMap.json
+                List<PlatformMapItem> _PlatformMaps = new List<PlatformMapItem>();
+                var assembly = Assembly.GetExecutingAssembly();
+                var resourceName = "gaseous_server.Support.PlatformMap.json";
+                using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+                using (StreamReader reader = new StreamReader(stream))
                 {
-                    // load platform maps from: gaseous_server.Support.PlatformMap.json
-                    var assembly = Assembly.GetExecutingAssembly();
-                    var resourceName = "gaseous_server.Support.PlatformMap.json";
-                    using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-                    using (StreamReader reader = new StreamReader(stream))
-                    {
-                        string rawJson = reader.ReadToEnd();
-                        _PlatformMaps.Clear();
-                        _PlatformMaps = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PlatformMapItem>>(rawJson);
-                    }
+                    string rawJson = reader.ReadToEnd();
+                    _PlatformMaps.Clear();
+                    _PlatformMaps = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PlatformMapItem>>(rawJson);
                 }
 
                 return _PlatformMaps;
@@ -73,13 +73,27 @@ namespace gaseous_server.Models
         }
 
         public class PlatformMapItem
-		{
+        {
             public int IGDBId { get; set; }
             public string IGDBName { get; set; }
             public List<string> AlternateNames { get; set; } = new List<string>();
             public List<string> KnownFileExtensions { get; set; } = new List<string>();
-            public Dictionary<string, string>? WebEmulator { get; set; }
+            //public Dictionary<string, object>? WebEmulator { get; set; }
+            public WebEmulatorItem? WebEmulator { get; set; }
 
+            public class WebEmulatorItem
+            {
+                public string Type { get; set; }
+                public string Core { get; set; }
+                public List<EmulatorBiosItem> Bios { get; set; }
+
+                public class EmulatorBiosItem
+                {
+                    public string hash { get; set; }
+                    public string description { get; set; }
+                    public string filename { get; set; }
+                }
+            }
         }
 	}
 }

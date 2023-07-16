@@ -32,6 +32,9 @@ builder.Services.AddControllers().AddJsonOptions(x =>
 
     // suppress nulls
     x.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+
+    // set max depth
+    x.JsonSerializerOptions.MaxDepth = 64;
 });
 builder.Services.AddResponseCaching();
 builder.Services.AddControllers(options =>

@@ -236,7 +236,7 @@ namespace gaseous_server.Models
 
         public class SignatureFlags
         {
-            public int IGDBPlatformId { get; set; }
+            public long IGDBPlatformId { get; set; }
             public string IGDBPlatformName { get; set; }
         }
     }

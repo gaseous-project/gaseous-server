@@ -52,42 +52,82 @@ namespace gaseous_server.Classes
             }
 			else
 			{
-				//Logging.Log(Logging.LogType.Information, "Import Game", "Processing item " + GameFileImportPath);
+				Logging.Log(Logging.LogType.Information, "Import Game", "Processing item " + GameFileImportPath);
 				if (IsDirectory == false)
 				{
 					FileInfo fi = new FileInfo(GameFileImportPath);
                     Common.hashObject hash = new Common.hashObject(GameFileImportPath);
 
-					// check to make sure we don't already have this file imported
-					sql = "SELECT COUNT(Id) AS count FROM Games_Roms WHERE MD5=@md5 AND SHA1=@sha1";
-					dbDict.Add("md5", hash.md5hash);
-					dbDict.Add("sha1", hash.sha1hash);
-					DataTable importDB = db.ExecuteCMD(sql, dbDict);
-					if ((Int64)importDB.Rows[0]["count"] > 0)
-					{
-						if (!GameFileImportPath.StartsWith(Config.LibraryConfiguration.LibraryImportDirectory))
-						{
-							Logging.Log(Logging.LogType.Warning, "Import Game", "  " + GameFileImportPath + " already in database - skipping");
-						}
-					}
-					else
-					{
-						Logging.Log(Logging.LogType.Information, "Import Game", "  " + GameFileImportPath + " not in database - processing");
+                    Models.PlatformMapping.PlatformMapItem? IsBios = Classes.Bios.BiosHashSignatureLookup(hash.md5hash);
 
-						// process as a single file
-						Models.Signatures_Games discoveredSignature = GetFileSignature(hash, fi, GameFileImportPath);
+                    if (IsBios == null)
+                    {
+                        // file is a rom
+                        // check to make sure we don't already have this file imported
+                        sql = "SELECT COUNT(Id) AS count FROM Games_Roms WHERE MD5=@md5 AND SHA1=@sha1";
+                        dbDict.Add("md5", hash.md5hash);
+                        dbDict.Add("sha1", hash.sha1hash);
+                        DataTable importDB = db.ExecuteCMD(sql, dbDict);
+                        if ((Int64)importDB.Rows[0]["count"] > 0)
+                        {
+                            if (!GameFileImportPath.StartsWith(Config.LibraryConfiguration.LibraryImportDirectory))
+                            {
+                                Logging.Log(Logging.LogType.Warning, "Import Game", "  " + GameFileImportPath + " already in database - skipping");
+                            }
+                        }
+                        else
+                        {
+                            Logging.Log(Logging.LogType.Information, "Import Game", "  " + GameFileImportPath + " not in database - processing");
 
-						// get discovered platform
-						IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(discoveredSignature.Flags.IGDBPlatformId);
-						if (determinedPlatform == null)
-						{
-							determinedPlatform = new IGDB.Models.Platform();
-						}
+                            // process as a single file
+                            Models.Signatures_Games discoveredSignature = GetFileSignature(hash, fi, GameFileImportPath);
 
-                        IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature.Game.Name, discoveredSignature.Flags.IGDBPlatformId);
+                            // get discovered platform
+                            IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(discoveredSignature.Flags.IGDBPlatformId);
+                            if (determinedPlatform == null)
+                            {
+                                determinedPlatform = new IGDB.Models.Platform();
+                            }
 
-                        // add to database
-                        StoreROM(hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath);
+                            IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature.Game.Name, discoveredSignature.Flags.IGDBPlatformId);
+
+                            // add to database
+                            StoreROM(hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath);
+                        }
+                    }
+                    else
+                    {
+                        // file is a bios
+                        if (IsBios.WebEmulator != null)
+                        {
+                            IGDB.Models.Platform biosPlatform = Classes.Metadata.Platforms.GetPlatform(IsBios.IGDBId);
+                            string biosPath = Path.Combine(Config.LibraryConfiguration.LibraryBIOSDirectory, biosPlatform.Slug);
+
+                            bool copyBios = false;
+                            string biosName = "";
+                            foreach (Models.PlatformMapping.PlatformMapItem.WebEmulatorItem.EmulatorBiosItem emulatorBiosItem in IsBios.WebEmulator.Bios)
+                            {
+                                if ((emulatorBiosItem.hash == hash.md5hash) && (File.Exists(Path.Combine(biosPath, emulatorBiosItem.filename)) == false))
+                                {
+                                    copyBios = true;
+                                    biosName = emulatorBiosItem.filename;
+                                    break;
+                                }
+                            }
+
+                            if (copyBios == true)
+                            {
+                                string biosFilePath = Path.Combine(biosPath, biosName);
+
+                                if (!Directory.Exists(biosPath))
+                                {
+                                    Directory.CreateDirectory(biosPath);
+                                }
+
+                                // move file
+                                File.Move(GameFileImportPath, biosFilePath, true);
+                            }
+                        }
                     }
                 }
 			}
