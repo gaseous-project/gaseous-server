@@ -92,6 +92,7 @@ namespace gaseous_server.Models
                     public string hash { get; set; }
                     public string description { get; set; }
                     public string filename { get; set; }
+                    public string region { get; set; }
                 }
             }
         }

@@ -52,7 +52,7 @@ namespace gaseous_server.Classes
             }
 			else
 			{
-				Logging.Log(Logging.LogType.Information, "Import Game", "Processing item " + GameFileImportPath);
+				//Logging.Log(Logging.LogType.Information, "Import Game", "Processing item " + GameFileImportPath);
 				if (IsDirectory == false)
 				{
 					FileInfo fi = new FileInfo(GameFileImportPath);
@@ -100,32 +100,20 @@ namespace gaseous_server.Classes
                         // file is a bios
                         if (IsBios.WebEmulator != null)
                         {
-                            IGDB.Models.Platform biosPlatform = Classes.Metadata.Platforms.GetPlatform(IsBios.IGDBId);
-                            string biosPath = Path.Combine(Config.LibraryConfiguration.LibraryBIOSDirectory, biosPlatform.Slug);
-
-                            bool copyBios = false;
-                            string biosName = "";
-                            foreach (Models.PlatformMapping.PlatformMapItem.WebEmulatorItem.EmulatorBiosItem emulatorBiosItem in IsBios.WebEmulator.Bios)
+                            foreach (Classes.Bios.BiosItem biosItem in Classes.Bios.GetBios())
                             {
-                                if ((emulatorBiosItem.hash == hash.md5hash) && (File.Exists(Path.Combine(biosPath, emulatorBiosItem.filename)) == false))
+                                if (biosItem.Available == false && biosItem.hash == hash.md5hash)
                                 {
-                                    copyBios = true;
-                                    biosName = emulatorBiosItem.filename;
+                                    string biosPath = biosItem.biosPath.Replace(biosItem.filename, "");
+                                    if (!Directory.Exists(biosPath))
+                                    {
+                                        Directory.CreateDirectory(biosPath);
+                                    }
+
+                                    File.Move(GameFileImportPath, biosItem.biosPath, true);
+
                                     break;
                                 }
-                            }
-
-                            if (copyBios == true)
-                            {
-                                string biosFilePath = Path.Combine(biosPath, biosName);
-
-                                if (!Directory.Exists(biosPath))
-                                {
-                                    Directory.CreateDirectory(biosPath);
-                                }
-
-                                // move file
-                                File.Move(GameFileImportPath, biosFilePath, true);
                             }
                         }
                     }
