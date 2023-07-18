@@ -108,7 +108,8 @@ namespace gaseous_server.Classes
             public bool Available {
                 get
                 {
-                    return File.Exists(biosPath);
+                    bool fileExists = File.Exists(biosPath);
+                    return fileExists;
                 }
             }
         }

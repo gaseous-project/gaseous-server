@@ -478,6 +478,29 @@ th {
     cursor: pointer;
 }
 
+.romstart {
+    padding-left: 7px;
+    padding-right: 7px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    background-color: #02B01B;
+    color: white;
+    text-shadow: 2px 2px 6px #003506;
+    text-decoration: none;
+    border-radius: 5px 5px 5px 5px;
+    -webkit-border-radius: 5px 5px 5px 5px;
+    -moz-border-radius: 5px 5px 5px 5px;
+    border: 1px solid #19d348;
+    box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -webkit-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -moz-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+}
+
+.romstart:hover {
+    background-color: #003506;
+    border-color: #129834;
+}
+
 #gamedev_logo {
     float: right;
     max-height: 48px;
@@ -584,4 +607,10 @@ button:disabled {
     margin: 0 auto;
     width: 640px;
     padding-top: 100px;
+}
+
+#emulatorbios {
+    margin: 0 auto;
+    width: 640px;
+    padding-top: 20px;
 }

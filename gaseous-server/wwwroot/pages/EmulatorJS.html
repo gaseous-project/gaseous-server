@@ -12,7 +12,7 @@
     EJS_lightgun = false; // can be true or false
 
     // URL to BIOS file
-    EJS_biosUrl = ''; // example: https://dl.dropboxusercontent.com/s/[random-code]/bios.bin
+    EJS_biosUrl = emuBios;
 
     // URL to Game rom
     EJS_gameUrl = decodeURIComponent(urlParams.get('rompath'));
@@ -20,6 +20,6 @@
     // Path to the data directory
     EJS_pathtodata = '/EmulatorJS/data/';
 
-    EJS_DEBUG_XX = false;
+    EJS_DEBUG_XX = true;
 </script>
 <script src='/EmulatorJS/data/loader.js'></script>

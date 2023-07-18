@@ -176,5 +176,16 @@
                 }
             ]
         }
+    },
+    {
+        "IGDBId": 52,
+        "IGDBName": "Arcade",
+        "AlternateNames": [],
+        "KnownFileExtensions": [],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "arcade",
+            "Bios": []
+        }
     }
 ]
