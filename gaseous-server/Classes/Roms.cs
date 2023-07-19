@@ -128,8 +128,9 @@ namespace gaseous_server.Classes
 			public long Id { get; set; }
 			public long PlatformId { get; set; }
 			public IGDB.Models.Platform Platform { get; set; }
-			public Dictionary<string, string>? Emulator { get; set; }
-			public long GameId { get; set; }
+			//public Dictionary<string, object>? Emulator { get; set; }
+            public Models.PlatformMapping.PlatformMapItem.WebEmulatorItem? Emulator { get; set; }
+            public long GameId { get; set; }
 			public string? Name { get; set; }
 			public long Size { get; set; }
 			public string? CRC { get; set; }

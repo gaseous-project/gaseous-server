@@ -14,7 +14,7 @@
     <DocumentationFile>bin\Debug\net7.0\gaseous-server.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.9" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.8" />
     <PackageReference Include="IGDB" Version="2.3.2" />
@@ -105,6 +105,7 @@
     <Folder Include="Assets\Ratings\CLASS_IND\" />
     <Folder Include="wwwroot\fonts\" />
     <Folder Include="wwwroot\pages\dialogs\" />
+    <Folder Include="wwwroot\pages\settings\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\gaseous-tools\gaseous-tools.csproj">
@@ -119,6 +120,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Remove="Support\PlatformMap.json" />
+    <Content Remove="wwwroot\pages\settings\" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Support\PlatformMap.json" Condition="'$(ExcludeConfigFilesFromBuildOutput)'!='true'">

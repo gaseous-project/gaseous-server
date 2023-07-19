@@ -1,0 +1,48 @@
+﻿<div id="bgImage" style="background-image: url('/images/SettingsWallpaper.jpg'); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);">
+    <div id="bgImage_Opacity"></div>
+</div>
+
+<div id="gamepage">
+    <div id="properties_toc" class="settings_toc">
+        <div class="filter_header">Settings</div>
+        <div id="properties_toc_system" name="properties_toc_item" onclick="SelectTab('system');">System</div>
+        <div id="properties_toc_bios" name="properties_toc_item" onclick="SelectTab('bios');">Firmware</div>
+        <div id="properties_toc_about" name="properties_toc_item" onclick="SelectTab('about');">About</div>
+    </div>
+    <div id="properties_bodypanel">
+    </div>
+
+    
+</div>
+
+<div id="settings_photocredit">
+    Wallpaper by <a href="https://unsplash.com/@lorenzoherrera" class="romlink">Lorenzo Herrera</a> / <a href="https://unsplash.com/photos/p0j-mE6mGo4" class="romlink">Unsplash</a>
+</div>
+
+<script type="text/javascript">
+    const urlParams = new URLSearchParams(window.location.search);
+    var myParam = urlParams.get('sub');
+
+    var selectedTab = '';
+
+    if (myParam) {
+        selectedTab = myParam;
+    } else {
+        selectedTab = 'system';
+    }
+
+    SelectTab(selectedTab);
+
+    function SelectTab(TabName) {
+        var tocs = document.getElementsByName('properties_toc_item');
+        for (var i = 0; i < tocs.length; i++) {
+            if ((tocs[i].id) == ("properties_toc_" + TabName)) {
+                tocs[i].className = "properties_toc_item_selected";
+            } else {
+                tocs[i].className = '';
+            }
+        }
+
+        $('#properties_bodypanel').load('/pages/settings/' + TabName + '.html');
+    }
+</script>
