@@ -1,23 +1,20 @@
-﻿<div id="gamepage">
-    <div id="gametitle">
-        <h1 id="gametitle_label">System</h1>
-    </div>
-
-    <h3>Background Tasks</h3>
-    <div id="system_tasks"></div>
-
-    <h3>Usage</h3>
-    <p><strong>Library</strong></p>
-    <div id="system_disks"></div>
-    <p><strong>Database</strong></p>
-    <div id="system_database"></div>
-
-    <h3>Signatures</h3>
-    <div id="system_signatures"></div>
+﻿<div id="gametitle">
+    <h1 id="gametitle_label">System</h1>
 </div>
 
-<script type="text/javascript">
-    function SystemLoadStatus() {
+<h3>Background Tasks</h3>
+<div id="system_tasks"></div>
+
+<h3>Usage</h3>
+<p><strong>Library</strong></p>
+<div id="system_disks"></div>
+<p><strong>Database</strong></p>
+<div id="system_database"></div>
+
+<h3>Signatures</h3>
+<div id="system_signatures"></div>
+
+<script type="text/javascript">function SystemLoadStatus() {
         ajaxCall('/api/v1/BackgroundTasks', 'GET', function (result) {
             var newTable = document.createElement('table');
             newTable.className = 'romtable';
@@ -71,7 +68,7 @@
 
                     var startButton = '';
                     if (result[i].itemState != "Running") {
-                        startButton = "<span id='startProcess' class='romlink' onclick='StartProcess(\"" + result[i].itemType + "\");'>Start</span>";
+                        startButton = "<span id='startProcess' class='romstart' onclick='StartProcess(\"" + result[i].itemType + "\");'>Start</span>";
                     }
 
                     var newRow = [
@@ -111,7 +108,7 @@
                         formatBytes(spaceUsedByOthers),
                         formatBytes(result.Paths[i].TotalSpace)
                     ];
-                    
+
                     newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
 
                     var spaceRow = document.createElement('tr');
@@ -202,5 +199,4 @@
     SystemLoadSystemStatus();
     setInterval(SystemLoadStatus, 60000);
     SystemSignaturesStatus();
-    setInterval(SystemSignaturesStatus, 300000);
-</script>
+    setInterval(SystemSignaturesStatus, 300000);</script>

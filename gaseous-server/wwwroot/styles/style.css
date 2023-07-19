@@ -168,6 +168,7 @@ h3 {
 }
 
 .filter_header {
+    font-weight: bold;
     padding: 10px;
     background-color: #2b2b2b;
 }
@@ -469,13 +470,63 @@ th {
 
 .romlink {
     color: white;
-    text-decoration: none;
+    /*text-decoration: none;*/
 }
 
 .romlink:hover {
     color: white;
     text-decoration: underline;
     cursor: pointer;
+}
+
+.romstart {
+    padding-left: 7px;
+    padding-right: 7px;
+    padding-top: 3px;
+    padding-bottom: 3px;
+    background-color: #02B01B;
+    color: white;
+    text-shadow: 2px 2px 6px #003506;
+    text-decoration: none;
+    border-radius: 5px 5px 5px 5px;
+    -webkit-border-radius: 5px 5px 5px 5px;
+    -moz-border-radius: 5px 5px 5px 5px;
+    border: 1px solid #19d348;
+    box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -webkit-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -moz-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+}
+
+.romstart:hover {
+    background-color: #003506;
+    border-color: #129834;
+    cursor: pointer;
+}
+
+.properties_button {
+    width: 15px;
+    height: 15px;
+    border-radius: 15px;
+    font-size: 13px;
+    font-weight: bold;
+    color: blue;
+    line-height: 17px;
+    text-align: center;
+    border-color: blue;
+    border-width: 2px;
+    border-style: solid;
+    background-color: white;
+    outline-color: white;
+    outline-width: 1px;
+    outline-style: solid;
+}
+
+.properties_button:hover {
+    cursor: pointer;
+    color: white;
+    border-color: white;
+    background-color: blue;
+    outline-color: blue;
 }
 
 #gamedev_logo {
@@ -492,6 +543,8 @@ th {
     display: block;
     width: 150px;
     min-width: 150px;
+    background-color: #383838;
+    height: 100%;
 }
 
 div[name="properties_toc_item"] {
@@ -516,6 +569,10 @@ div[name="properties_toc_item"]:hover {
     border-left-color: #2b2b2b;
     margin-left: 150px;
     padding-left: 10px;
+}
+
+.settings_toc {
+    margin-top: 20px;
 }
 
 .select2-container--open .select2-dropdown--below,
@@ -584,4 +641,30 @@ button:disabled {
     margin: 0 auto;
     width: 640px;
     padding-top: 100px;
+}
+
+#emulatorbios {
+    margin: 0 auto;
+    width: 640px;
+    padding-top: 20px;
+}
+
+.greentext {
+    color: lightgreen;
+}
+
+.redtext {
+    color: red;
+}
+
+#settings_photocredit {
+    position: fixed;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    height: 20px;
+    background-color: rgba(0, 22, 56, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 5px;
 }

@@ -312,7 +312,7 @@
                         lastPlatform = result[i].platform.name;
                         var platformRow = document.createElement('tr');
                         var platformHeader = document.createElement('th');
-                        platformHeader.setAttribute('colspan', 4);
+                        platformHeader.setAttribute('colspan', 6);
                         platformHeader.innerHTML = result[i].platform.name;
                         platformRow.appendChild(platformHeader);
                         newTable.appendChild(platformRow);
@@ -320,7 +320,7 @@
 
                     var launchButton = '';
                     if (result[i].emulator) {
-                        launchButton = '<a href="/index.html?page=emulator&engine=' + result[i].emulator.Type + '&core=' + result[i].emulator.Core + '&gameid=' + gameId + '&rompath=' + encodeURIComponent('/api/v1/Games/' + gameId + '/roms/' + result[i].id + '/file') + '" class="romlink">Start</a>';
+                        launchButton = '<a href="/index.html?page=emulator&engine=' + result[i].emulator.type + '&core=' + result[i].emulator.core + '&platformid=' + result[i].platform.id + '&gameid=' + gameId + '&rompath=' + encodeURIComponent('/api/v1/Games/' + gameId + '/roms/' + result[i].id + '/file') + '" class="romstart">Launch</a>';
                     }
 
                     var newRow = [
@@ -329,7 +329,7 @@
                         result[i].romTypeMedia,
                         result[i].mediaLabel,
                         launchButton,
-                        '<span class="romlink" onclick="showDialog(\'rominfo\', ' + result[i].id + ');">...</span>'
+                        '<div class="properties_button" onclick="showDialog(\'rominfo\', ' + result[i].id + ');">i</div>'
                     ];
                     newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
                 }
