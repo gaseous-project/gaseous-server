@@ -105,6 +105,25 @@ h3 {
     height: 30px;
 }
 
+#banner_upload {
+    background-color: white;
+    position: fixed;
+    top: 0px;
+    right: 41px;
+    width: 40px;
+    height: 40px;
+    align-items: center;
+    justify-content: center;
+    padding: 0px;
+    margin: 0px;
+    display: flex;
+}
+
+#banner_upload:hover {
+    cursor: pointer;
+    background-color: lightgrey;
+}
+
 #banner_cog {
     background-color: white;
     position: fixed;
@@ -121,9 +140,15 @@ h3 {
 
 #banner_cog:hover {
     cursor: pointer;
+    background-color: lightgrey;
 }
 
 #banner_system_image {
+    height: 30px;
+    width: 30px;
+}
+
+#banner_upload_image {
     height: 30px;
     width: 30px;
 }
