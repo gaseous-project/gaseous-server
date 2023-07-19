@@ -81,6 +81,7 @@ namespace gaseous_server.Classes
                             {
                                 platformid = platformMapping.IGDBId,
                                 platformslug = platform.Slug,
+                                platformname = platform.Name,
                                 description = emulatorBios.description,
                                 filename = emulatorBios.filename,
                                 region = emulatorBios.region,
@@ -98,6 +99,7 @@ namespace gaseous_server.Classes
         {
             public long platformid { get; set; }
             public string platformslug { get; set; }
+            public string platformname { get; set; }
             public string biosPath
             {
                 get
