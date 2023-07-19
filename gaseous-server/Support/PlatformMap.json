@@ -44,7 +44,31 @@
         ],
         "KnownFileExtensions": [
             ".SMS"
-        ]
+        ],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "segaMS",
+            "Bios": [
+                {
+                    "hash": "840481177270d5642a14ca71ee72844c",
+                    "description": "MasterSystem EU BIOS",
+                    "filename": "bios_E.sms",
+                    "region": "EU"
+                },
+                {
+                    "hash": "840481177270d5642a14ca71ee72844c",
+                    "description": "MasterSystem US BIOS",
+                    "filename": "bios_U.sms",
+                    "region": "US"
+                },
+                {
+                    "hash": "24a519c53f67b00640d0048ef7089105",
+                    "description": "MasterSystem JP BIOS",
+                    "filename": "bios_J.sms",
+                    "region": "JP"
+                }
+            ]
+        }
     },
     {
         "IGDBId": 29,
@@ -100,6 +124,68 @@
         "WebEmulator": {
             "Type": "EmulatorJS",
             "Core": "nes"
+        }
+    },
+    {
+        "IGDBId": 19,
+        "IGDBName": "Super Nintendo Entertainment System",
+        "AlternateNames": [
+            "Nintendo Super Famicom & Super Entertainment System",
+            "Super Nintendo Entertainment System",
+            "Super Nintendo",
+            "SNES"
+        ],
+        "KnownFileExtensions": [],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "snes"
+        }
+    },
+    {
+        "IGDBId": 7,
+        "IGDBName": "PlayStation",
+        "AlternateNames": [
+            "Sony PlayStation",
+            "PS1",
+            "PSX",
+            "PSOne",
+            "PS"
+        ],
+        "KnownFileExtensions": [],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "psx",
+            "Bios": [
+                {
+                    "hash": "8dd7d5296a650fac7319bce665a6a53c",
+                    "description": "PS1 JP BIOS - Required for JP games",
+                    "filename": "scph5500.bin",
+                    "region": "JP"
+                },
+                {
+                    "hash": "490f666e1afb15b7362b406ed1cea246",
+                    "description": "PS1 US BIOS - Required for US games",
+                    "filename": "scph5501.bin",
+                    "region": "US"
+                },
+                {
+                    "hash": "32736f17079d0b2b7024407c39bd3050",
+                    "description": "PS1 EU BIOS - Required for EU games",
+                    "filename": "scph5502.bin",
+                    "region": "EU"
+                }
+            ]
+        }
+    },
+    {
+        "IGDBId": 52,
+        "IGDBName": "Arcade",
+        "AlternateNames": [],
+        "KnownFileExtensions": [],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "arcade",
+            "Bios": []
         }
     }
 ]

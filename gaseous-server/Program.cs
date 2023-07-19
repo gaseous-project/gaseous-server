@@ -20,6 +20,11 @@ if (Config.ReadSetting("API Key", "Test API Key") == "Test API Key")
     Logging.Log(Logging.LogType.Information, "Startup", "Setting initial API key");
     Config.SetSetting("API Key", APIKey.ToString());
 }
+if (Config.ReadSetting("Emulator: Default BIOS Region", "Default Value") == "Default Value")
+{
+    Logging.Log(Logging.LogType.Information, "Startup", "Setting default BIOS region to US");
+    Config.SetSetting("Emulator: Default BIOS Region", "US");
+}
 
 // set up server
 var builder = WebApplication.CreateBuilder(args);
@@ -32,6 +37,9 @@ builder.Services.AddControllers().AddJsonOptions(x =>
 
     // suppress nulls
     x.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+
+    // set max depth
+    x.JsonSerializerOptions.MaxDepth = 64;
 });
 builder.Services.AddResponseCaching();
 builder.Services.AddControllers(options =>

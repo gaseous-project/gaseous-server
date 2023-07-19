@@ -58,36 +58,64 @@ namespace gaseous_server.Classes
 					FileInfo fi = new FileInfo(GameFileImportPath);
                     Common.hashObject hash = new Common.hashObject(GameFileImportPath);
 
-					// check to make sure we don't already have this file imported
-					sql = "SELECT COUNT(Id) AS count FROM Games_Roms WHERE MD5=@md5 AND SHA1=@sha1";
-					dbDict.Add("md5", hash.md5hash);
-					dbDict.Add("sha1", hash.sha1hash);
-					DataTable importDB = db.ExecuteCMD(sql, dbDict);
-					if ((Int64)importDB.Rows[0]["count"] > 0)
-					{
-						if (!GameFileImportPath.StartsWith(Config.LibraryConfiguration.LibraryImportDirectory))
-						{
-							Logging.Log(Logging.LogType.Warning, "Import Game", "  " + GameFileImportPath + " already in database - skipping");
-						}
-					}
-					else
-					{
-						Logging.Log(Logging.LogType.Information, "Import Game", "  " + GameFileImportPath + " not in database - processing");
+                    Models.PlatformMapping.PlatformMapItem? IsBios = Classes.Bios.BiosHashSignatureLookup(hash.md5hash);
 
-						// process as a single file
-						Models.Signatures_Games discoveredSignature = GetFileSignature(hash, fi, GameFileImportPath);
+                    if (IsBios == null)
+                    {
+                        // file is a rom
+                        // check to make sure we don't already have this file imported
+                        sql = "SELECT COUNT(Id) AS count FROM Games_Roms WHERE MD5=@md5 AND SHA1=@sha1";
+                        dbDict.Add("md5", hash.md5hash);
+                        dbDict.Add("sha1", hash.sha1hash);
+                        DataTable importDB = db.ExecuteCMD(sql, dbDict);
+                        if ((Int64)importDB.Rows[0]["count"] > 0)
+                        {
+                            if (!GameFileImportPath.StartsWith(Config.LibraryConfiguration.LibraryImportDirectory))
+                            {
+                                Logging.Log(Logging.LogType.Warning, "Import Game", "  " + GameFileImportPath + " already in database - skipping");
+                            }
+                        }
+                        else
+                        {
+                            Logging.Log(Logging.LogType.Information, "Import Game", "  " + GameFileImportPath + " not in database - processing");
 
-						// get discovered platform
-						IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(discoveredSignature.Flags.IGDBPlatformId);
-						if (determinedPlatform == null)
-						{
-							determinedPlatform = new IGDB.Models.Platform();
-						}
+                            // process as a single file
+                            Models.Signatures_Games discoveredSignature = GetFileSignature(hash, fi, GameFileImportPath);
 
-                        IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature.Game.Name, discoveredSignature.Flags.IGDBPlatformId);
+                            // get discovered platform
+                            IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(discoveredSignature.Flags.IGDBPlatformId);
+                            if (determinedPlatform == null)
+                            {
+                                determinedPlatform = new IGDB.Models.Platform();
+                            }
 
-                        // add to database
-                        StoreROM(hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath);
+                            IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature.Game.Name, discoveredSignature.Flags.IGDBPlatformId);
+
+                            // add to database
+                            StoreROM(hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath);
+                        }
+                    }
+                    else
+                    {
+                        // file is a bios
+                        if (IsBios.WebEmulator != null)
+                        {
+                            foreach (Classes.Bios.BiosItem biosItem in Classes.Bios.GetBios())
+                            {
+                                if (biosItem.Available == false && biosItem.hash == hash.md5hash)
+                                {
+                                    string biosPath = biosItem.biosPath.Replace(biosItem.filename, "");
+                                    if (!Directory.Exists(biosPath))
+                                    {
+                                        Directory.CreateDirectory(biosPath);
+                                    }
+
+                                    File.Move(GameFileImportPath, biosItem.biosPath, true);
+
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
 			}
