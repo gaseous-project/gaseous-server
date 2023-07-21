@@ -1,7 +1,9 @@
 ﻿using System.Text.Json.Serialization;
 using gaseous_server;
 using gaseous_tools;
+using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
 
 Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server");
 
@@ -61,6 +63,22 @@ builder.Services.AddControllers(options =>
             Duration = 604800,
             Location = ResponseCacheLocation.Any
         });
+});
+
+// set max upload size
+builder.Services.Configure<IISServerOptions>(options =>
+{
+    options.MaxRequestBodySize = int.MaxValue;
+});
+builder.Services.Configure<KestrelServerOptions>(options =>
+{
+    options.Limits.MaxRequestBodySize = int.MaxValue;
+});
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.ValueLengthLimit = int.MaxValue;
+    options.MultipartBodyLengthLimit = int.MaxValue;
+    options.MultipartHeadersLengthLimit = int.MaxValue;
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle

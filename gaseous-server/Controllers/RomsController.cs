@@ -23,7 +23,8 @@ namespace gaseous_server.Controllers
     {
         [HttpPost]
         [ProducesResponseType(typeof(List<IFormFile>), StatusCodes.Status200OK)]
-        [DisableRequestSizeLimit, RequestFormLimits(MultipartBodyLengthLimit = int.MaxValue, ValueLengthLimit = int.MaxValue)]
+        [RequestSizeLimit(long.MaxValue)]
+        [DisableRequestSizeLimit, RequestFormLimits(MultipartBodyLengthLimit = long.MaxValue, ValueLengthLimit = int.MaxValue)]
         public async Task<IActionResult> UploadRom(List<IFormFile> files)
         {
             Guid sessionid = Guid.NewGuid();
@@ -68,7 +69,10 @@ namespace gaseous_server.Controllers
                 Classes.ImportGame.ImportGameFile((string)UploadedFile["fullpath"]);
             }
 
-            Directory.Delete(workPath, true);
+            if (Directory.Exists(workPath))
+            {
+                Directory.Delete(workPath, true);
+            }
 
             return Ok(new { count = files.Count, size });
         }
