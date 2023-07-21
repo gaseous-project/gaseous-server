@@ -1,0 +1,72 @@
+﻿<!-- The Modal -->
+<div id="myModalSub" class="modal">
+
+    <!-- Modal content -->
+    <div class="modal-content-sub">
+        <span id="modal-close-sub" class="close">&times;</span>
+        <div id="modal-content-sub">Some text in the Modal..</div>
+    </div>
+
+</div>
+
+<div>
+    <div id="upload_target" class="dropzone"></div>
+</div>
+
+<script type="text/javascript">
+    document.getElementById('modal-heading').innerHTML = "Upload";
+
+    var myDropzone = new Dropzone("div#upload_target", {
+        url: "/api/v1/Roms",
+        autoProcessQueue: true,
+        uploadMultiple: true,
+        paramName: myParamName,
+        maxFilesize: 60000,
+        createImageThumbnails: false,
+        disablePreviews: false
+    });
+
+    function myParamName() {
+        return "files";
+    }
+
+    function showSubDialog(dialogPage, variables) {
+        // Get the modal
+        var submodal = document.getElementById("myModalSub");
+
+        // Get the modal content
+        var subModalContent = document.getElementById("modal-content-sub");
+
+        // Get the button that opens the modal
+        var subbtn = document.getElementById("romDelete");
+
+        // Get the <span> element that closes the modal
+        var subspan = document.getElementById("modal-close-sub");
+
+        // When the user clicks on the button, open the modal 
+        submodal.style.display = "block";
+
+        // When the user clicks on <span> (x), close the modal
+        subspan.onclick = function () {
+            submodal.style.display = "none";
+            subModalContent.innerHTML = "";
+            subModalVariables = null;
+        }
+
+        subModalVariables = modalVariables;
+
+        $('#modal-content-sub').load('/pages/dialogs/' + dialogPage + '.html');
+    }
+
+    function closeSubDialog() {
+        // Get the modal
+        var submodal = document.getElementById("myModalSub");
+
+        // Get the modal content
+        var subModalContent = document.getElementById("modal-content-sub");
+
+        submodal.style.display = "none";
+        subModalContent.innerHTML = "";
+        subModalVariables = null;
+    }
+</script>

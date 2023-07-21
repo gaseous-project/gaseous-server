@@ -86,7 +86,7 @@
     function loadEmulator() {
         if (availableEmuBios.length > 0) {
             var emulatorbiosselect = document.getElementById('emulatorbiosselector');
-            emuBios = emulatorbiosselect.value;
+            emuBios = '/api/v1/Bios/' + platformId + '/' + emulatorbiosselect.value;
         } else {
             emuBios = '';
         }

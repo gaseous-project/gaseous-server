@@ -768,21 +768,9 @@ namespace gaseous_server.Controllers
                 string romFilePath = rom.Path;
                 if (System.IO.File.Exists(romFilePath))
                 {
-                    string filename = Path.GetFileName(romFilePath);
-                    string filepath = romFilePath;
-                    byte[] filedata = System.IO.File.ReadAllBytes(filepath);
-                    string contentType = "application/octet-stream";
-
-                    var cd = new System.Net.Mime.ContentDisposition
-                    {
-                        FileName = filename,
-                        Inline = false,
-                    };
-
-                    Response.Headers.Add("Content-Disposition", cd.ToString());
-                    Response.Headers.Add("Cache-Control", "public, max-age=604800");
-
-                    return File(filedata, contentType);
+                    FileStream content = new FileStream(romFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    FileStreamResult response = File(content, "application/octet-stream", rom.Name);
+                    return response;
                 }
                 else
                 {

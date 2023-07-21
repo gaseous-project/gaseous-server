@@ -6,7 +6,9 @@
     <script src="/scripts/jquery-3.6.0.min.js"></script>
     <script src="/scripts/moment.js"></script>
     <link href="/styles/select2.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles/dropzone.min.css" type="text/css" />
     <script src="/scripts/select2.min.js"></script>
+    <script src="/scripts/dropzone.min.js"></script>
     <script src="/scripts/main.js" type="text/javascript"></script>
     <script src="/scripts/filterformating.js" type="text/javascript"></script>
     <script src="/scripts/gamesformating.js" type="text/javascript"></script>
@@ -23,8 +25,12 @@
     <div id="banner_header">
         <div id="banner_header_label">Gaseous Games</div>
     </div>
+    <div id="banner_upload" onclick="showDialog('upload');">
+        <img src="/images/upload.svg" alt="Upload" title="Upload" id="banner_upload_image" />
+        <span id="banner_upload_label">Upload Games</span>
+    </div>
     <div id="banner_cog" onclick="window.location.href = '/index.html?page=settings';">
-        <img src="/images/cog.jpg" alt="System" id="banner_system_image" />
+        <img src="/images/settings.svg" alt="Settings" title="Settings" id="banner_system_image" />
     </div>
 
     <div id="content">
