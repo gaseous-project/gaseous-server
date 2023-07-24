@@ -4,15 +4,6 @@
 
 <div id="emulator"></div>
 
-<div id="emulatorbios">
-    <table style="width: 100%;">
-        <tr>
-            <td>Firmware:</td>
-            <td><select id="emulatorbiosselector" onchange="loadEmulator();"></select></td>
-        </tr>
-    </table>
-</div>
-
 <script type="text/javascript">
     const urlParams = new URLSearchParams(window.location.search);
 
@@ -23,7 +14,6 @@
     var artworksPosition = 0;
 
     var emuBios = '';
-    var availableEmuBios = [];
 
     ajaxCall('/api/v1/Games/' + gameId, 'GET', function (result) {
         gameData = result;
@@ -43,33 +33,17 @@
     });
 
     ajaxCall('/api/v1/Bios/' + platformId, 'GET', function (result) {
-        var emulatorbiosDiv = document.getElementById('emulatorbios');
-
-        availableEmuBios = result;
-
         if (result.length == 0) {
             emuBios = '';
-            emulatorbiosDiv.setAttribute('style', 'display: none;');
         } else {
-            emuBios = '/api/v1/Bios/' + platformId + '/' + availableEmuBios[0].filename;
-
-            var emulatorbiosselect = document.getElementById('emulatorbiosselector');
-
-            for (var i = 0; i < availableEmuBios.length; i++) {
-                var biosOption = document.createElement('option');
-                biosOption.value = availableEmuBios[i].filename;
-                biosOption.innerHTML = availableEmuBios[i].description + ' (' + availableEmuBios[i].filename + ')';
-
-                if (availableEmuBios[i].region == "US") {
-                    emuBios = '/api/v1/Bios/' + platformId + '/' + availableEmuBios[i].filename;
-                    biosOption.setAttribute('selected', 'selected');
-                }
-
-                emulatorbiosselect.appendChild(biosOption);
-            }
+            emuBios = '/api/v1/Bios/zip/' + platformId;
         }
 
-        loadEmulator();
+        switch (urlParams.get('engine')) {
+            case 'EmulatorJS':
+                $('#emulator').load('/pages/EmulatorJS.html');
+                break;
+        }
     });
 
     function rotateBackground() {
@@ -80,21 +54,6 @@
             }
             var bg = document.getElementById('bgImage');
             bg.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/artwork/' + artworks[artworksPosition] + '/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
-        }
-    }
-
-    function loadEmulator() {
-        if (availableEmuBios.length > 0) {
-            var emulatorbiosselect = document.getElementById('emulatorbiosselector');
-            emuBios = '/api/v1/Bios/' + platformId + '/' + emulatorbiosselect.value;
-        } else {
-            emuBios = '';
-        }
-
-        switch (urlParams.get('engine')) {
-            case 'EmulatorJS':
-                $('#emulator').load('/pages/EmulatorJS.html');
-                break;
         }
     }
 </script>
