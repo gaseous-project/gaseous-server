@@ -6,8 +6,19 @@
 <div id="system_tasks"></div>
 
 <h3>Usage</h3>
-<p><strong>Library</strong></p>
+<p><strong>Disk</strong></p>
 <div id="system_disks"></div>
+<p><strong>Library</strong></p>
+<div>
+    <table cellspacing="0" style="width: 100%;">
+        <tr>
+            <td id="system_platforms"></td>
+        </tr>
+        <tr>
+            <td id="system_platforms_legend"></td>
+        </tr>
+    </table>
+</div>
 <p><strong>Database</strong></p>
 <div id="system_database"></div>
 
@@ -92,21 +103,24 @@
     function SystemLoadSystemStatus() {
         ajaxCall('/api/v1/System', 'GET', function (result) {
             if (result) {
+                var totalLibrarySpace = 0;
+
                 // disks
                 var newTable = document.createElement('table');
                 newTable.className = 'romtable';
                 newTable.setAttribute('cellspacing', 0);
                 newTable.appendChild(createTableRow(true, ['Path', 'Library Size <div id="disk_LibSize" style="width: 10px; height: 10px; background-color: green;"></div>', 'Other <div id="disk_OtherSize" style="width: 10px; height: 10px; background-color: lightgreen;"></div>', 'Total Size <div id="disk_FreeSize" style="width: 10px; height: 10px; background-color: lightgray;"></div>']));
 
-                for (var i = 0; i < result.Paths.length; i++) {
-                    var spaceUsedByLibrary = result.Paths[i].SpaceUsed;
-                    var spaceUsedByOthers = result.Paths[i].TotalSpace - result.Paths[i].SpaceAvailable;
+                for (var i = 0; i < result.paths.length; i++) {
+                    var spaceUsedByLibrary = result.paths[i].spaceUsed;
+                    totalLibrarySpace += spaceUsedByLibrary;
+                    var spaceUsedByOthers = result.paths[i].totalSpace - result.paths[i].spaceAvailable;
 
                     var newRow = [
-                        result.Paths[i].LibraryPath,
+                        result.paths[i].libraryPath,
                         formatBytes(spaceUsedByLibrary),
                         formatBytes(spaceUsedByOthers),
-                        formatBytes(result.Paths[i].TotalSpace)
+                        formatBytes(result.paths[i].totalSpace)
                     ];
 
                     newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
@@ -114,7 +128,7 @@
                     var spaceRow = document.createElement('tr');
                     var spaceCell = document.createElement('td');
                     spaceCell.setAttribute('colspan', 4);
-                    spaceCell.appendChild(BuildSpaceBar(spaceUsedByLibrary, spaceUsedByOthers, result.Paths[i].TotalSpace));
+                    spaceCell.appendChild(BuildSpaceBar(spaceUsedByLibrary, spaceUsedByOthers, result.paths[i].totalSpace));
                     spaceRow.appendChild(spaceCell);
                     newTable.appendChild(spaceRow);
                 }
@@ -123,11 +137,13 @@
                 targetDiv.innerHTML = '';
                 targetDiv.appendChild(newTable);
 
+                BuildLibraryStatisticsBar(document.getElementById('system_platforms'), document.getElementById('system_platforms_legend'), result.platformStatistics, totalLibrarySpace);
+
                 // database
                 var newDbTable = document.createElement('table');
                 newDbTable.className = 'romtable';
                 newDbTable.setAttribute('cellspacing', 0);
-                newDbTable.appendChild(createTableRow(false, ['Database Size', formatBytes(result.DatabaseSize)]));
+                newDbTable.appendChild(createTableRow(false, ['Database Size', formatBytes(result.databaseSize)]));
 
                 var targetDbDiv = document.getElementById('system_database');
                 targetDbDiv.innerHTML = '';
@@ -163,6 +179,40 @@
         newTable.appendChild(newRow);
 
         return newTable;
+    }
+
+    function BuildLibraryStatisticsBar(TargetObject, TargetObjectLegend, LibraryStatistics, LibrarySize) {
+        var newTable = document.createElement('table');
+        newTable.setAttribute('cellspacing', 0);
+        newTable.setAttribute('style', 'width: 100%; height: 10px;');
+
+        var newRow = document.createElement('tr');
+
+        for (var i = 0; i < LibraryStatistics.length; i++) {
+            var platformSizePercent = LibraryStatistics[i].totalSize / LibrarySize * 100;
+            var platformSizeColour = intToRGB(hashCode(LibraryStatistics[i].platform));
+            var newCell = document.createElement('td');
+            newCell.setAttribute('style', 'min-width: 2px; width: ' + platformSizePercent + '%; background-color: #' + platformSizeColour);
+            newRow.appendChild(newCell);
+
+            var legend = document.createElement('div');
+            legend.className = 'legend_box';
+
+            var legendColour = document.createElement('div');
+            legendColour.className = 'legend_colour';
+            legendColour.setAttribute('style', 'background-color: #' + platformSizeColour + ';');
+
+            var legendLabel = document.createElement('div');
+            legendLabel.className = 'legend_label';
+            legendLabel.innerHTML = LibraryStatistics[i].platform + '<br />' + formatBytes(LibraryStatistics[i].totalSize);
+
+            legend.appendChild(legendColour);
+            legend.appendChild(legendLabel);
+            TargetObjectLegend.appendChild(legend);
+        }
+
+        newTable.appendChild(newRow);
+        TargetObject.appendChild(newTable);
     }
 
     function SystemSignaturesStatus() {
