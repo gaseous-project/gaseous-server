@@ -706,3 +706,25 @@ button:disabled {
     margin-top: 10px;
     overflow: auto;
 }
+
+.legend_box {
+    display: inline-block;
+    width: 145px;
+    height: 50px;
+    vertical-align: top;
+    margin-right: 5px;
+    padding-right: 5px;
+    margin-top: 10px;
+}
+
+.legend_colour {
+    float: left;
+    width: 10px;
+    height: 10px;
+    margin-top: 3px;
+    margin-bottom: 10px;
+}
+
+.legend_label {
+    margin-left: 15px;
+}
