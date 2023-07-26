@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.IO.Compression;
 using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -79,8 +80,36 @@ namespace gaseous_server.Classes
                         {
                             Logging.Log(Logging.LogType.Information, "Import Game", "  " + GameFileImportPath + " not in database - processing");
 
-                            // process as a single file
                             Models.Signatures_Games discoveredSignature = GetFileSignature(hash, fi, GameFileImportPath);
+
+                            bool isZip = false;
+                            if ((Path.GetExtension(GameFileImportPath) == ".zip") && (fi.Length < 1073741824))
+                            {
+                                // file is a zip and less than 1 GiB
+                                // extract the zip file and search the contents
+                                isZip = true;
+
+                                string ExtractPath = Path.Combine(Config.LibraryConfiguration.LibraryRootDirectory, "Temp", Path.GetRandomFileName());
+                                if (!Directory.Exists(ExtractPath)) { Directory.CreateDirectory(ExtractPath); }
+                                ZipFile.ExtractToDirectory(GameFileImportPath, ExtractPath);
+
+                                // loop through contents until we find the first signature match
+                                foreach (string file in Directory.GetFiles(ExtractPath))
+                                {
+                                    FileInfo zfi = new FileInfo(file);
+                                    Common.hashObject zhash = new Common.hashObject(file);
+
+                                    Models.Signatures_Games zDiscoveredSignature = GetFileSignature(zhash, zfi, file);
+
+                                    if (zDiscoveredSignature.Score > discoveredSignature.Score)
+                                    {
+                                        discoveredSignature = zDiscoveredSignature;
+                                        break;
+                                    }
+                                }
+
+                                if (Directory.Exists(ExtractPath)) { Directory.Delete(ExtractPath, true); }
+                            }
 
                             // get discovered platform
                             IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(discoveredSignature.Flags.IGDBPlatformId);
@@ -92,7 +121,7 @@ namespace gaseous_server.Classes
                             IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature.Game.Name, discoveredSignature.Flags.IGDBPlatformId);
 
                             // add to database
-                            StoreROM(hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath);
+                            StoreROM(hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath, isZip);
                         }
                     }
                     else
@@ -322,7 +351,7 @@ namespace gaseous_server.Classes
             return SearchCandidates;
         }
 
-        public static long StoreROM(Common.hashObject hash, IGDB.Models.Game determinedGame, IGDB.Models.Platform determinedPlatform, Models.Signatures_Games discoveredSignature, string GameFileImportPath, long UpdateId = 0)
+        public static long StoreROM(Common.hashObject hash, IGDB.Models.Game determinedGame, IGDB.Models.Platform determinedPlatform, Models.Signatures_Games discoveredSignature, string GameFileImportPath, bool isZip, long UpdateId = 0)
         {
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
@@ -340,7 +369,12 @@ namespace gaseous_server.Classes
             }
             dbDict.Add("platformid", Common.ReturnValueIfNull(determinedPlatform.Id, 0));
             dbDict.Add("gameid", Common.ReturnValueIfNull(determinedGame.Id, 0));
-            dbDict.Add("name", Common.ReturnValueIfNull(discoveredSignature.Rom.Name, ""));
+            string fileName = discoveredSignature.Rom.Name;
+            if (isZip == true)
+            {
+                fileName = Path.ChangeExtension(discoveredSignature.Rom.Name, ".zip");
+            }
+            dbDict.Add("name", Common.ReturnValueIfNull(fileName, ""));
             dbDict.Add("size", Common.ReturnValueIfNull(discoveredSignature.Rom.Size, 0));
             dbDict.Add("md5", hash.md5hash);
             dbDict.Add("sha1", hash.sha1hash);
@@ -573,7 +607,7 @@ namespace gaseous_server.Classes
 
                     IGDB.Models.Game determinedGame = SearchForGame(sig.Game.Name, sig.Flags.IGDBPlatformId);
 
-                    StoreROM(hash, determinedGame, determinedPlatform, sig, LibraryFile);
+                    StoreROM(hash, determinedGame, determinedPlatform, sig, LibraryFile, false);
                 }
             }
 
@@ -618,7 +652,7 @@ namespace gaseous_server.Classes
 
                                 IGDB.Models.Game determinedGame = SearchForGame(sig.Game.Name, sig.Flags.IGDBPlatformId);
 
-                                StoreROM(hash, determinedGame, determinedPlatform, sig, romPath, romId);
+                                StoreROM(hash, determinedGame, determinedPlatform, sig, romPath, false, romId);
                             }
                         }
 
