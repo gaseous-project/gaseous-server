@@ -297,6 +297,9 @@ input[id='filter_panel_search'] {
 .game_tile_image {
     max-width: 200px;
     max-height: 200px;
+    box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -webkit-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -moz-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
 }
 
 .game_tile_image, .unknown {
@@ -354,6 +357,9 @@ input[id='filter_panel_search'] {
     max-width: 250px;
     max-height: 350px;
     width: 100%;
+    box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -webkit-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -moz-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
 }
 
 .gamegenrelabel {
@@ -367,6 +373,9 @@ input[id='filter_panel_search'] {
     max-height: 64px;
     margin-right: 20px;
     margin-bottom: 20px;
+    box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -webkit-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -moz-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
 }
 
 .rating_image_mini {
@@ -381,6 +390,9 @@ input[id='filter_panel_search'] {
     padding: 10px;
     /*height: 350px;*/
     margin-bottom: 20px;
+    box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -webkit-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -moz-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
 }
 
 #gamescreenshots_main {
@@ -538,24 +550,27 @@ th {
     border-radius: 15px;
     font-size: 13px;
     font-weight: bold;
-    color: blue;
+    color: white;
     line-height: 17px;
     text-align: center;
-    border-color: blue;
     border-width: 2px;
     border-style: solid;
-    background-color: white;
-    outline-color: white;
     outline-width: 1px;
     outline-style: solid;
+    border-color: white;
+    background-color: blue;
+    outline-color: blue;
+    box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -webkit-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -moz-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
 }
 
 .properties_button:hover {
     cursor: pointer;
-    color: white;
-    border-color: white;
-    background-color: blue;
-    outline-color: blue;
+    color: blue;
+    border-color: blue;
+    background-color: white;
+    outline-color: white;
 }
 
 #gamedev_logo {
