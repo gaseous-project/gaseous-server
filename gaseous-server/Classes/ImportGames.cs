@@ -139,7 +139,7 @@ namespace gaseous_server.Classes
                     FileInfo zfi = new FileInfo(file);
                     Common.hashObject zhash = new Common.hashObject(file);
 
-                    Models.Signatures_Games zDiscoveredSignature = GetFileSignature(zhash, zfi, file);
+                    Models.Signatures_Games zDiscoveredSignature = _GetFileSignature(zhash, zfi, file);
                     zDiscoveredSignature.Rom.Name = Path.ChangeExtension(zDiscoveredSignature.Rom.Name, ".zip");
 
                     if (zDiscoveredSignature.Score > discoveredSignature.Score)
