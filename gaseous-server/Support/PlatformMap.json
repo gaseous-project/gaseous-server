@@ -187,5 +187,55 @@
             "Core": "arcade",
             "Bios": []
         }
+    },
+    {
+        "IGDBId": 30,
+        "IGDBName": "Sega 32X",
+        "AlternateNames": [
+            "Sega 32X",
+            "Sega32",
+            "Sega32X"
+        ],
+        "KnownFileExtensions": [],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "sega32x",
+            "Bios": []
+        }
+    },
+    {
+        "IGDBId": 78,
+        "IGDBName": "Sega CD",
+        "AlternateNames": [
+            "Sega CD",
+            "Mega CD",
+            "segacd",
+            "Sega Mega-CD & Sega CD"
+        ],
+        "KnownFileExtensions": [],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "segaCD",
+            "Bios": [
+                {
+                    "hash": "e66fa1dc5820d254611fdcdba0662372",
+                    "description": "MegaCD EU BIOS - Required",
+                    "filename": "bios_CD_E.bin",
+                    "region": "EU"
+                },
+                {
+                    "hash": "2efd74e3232ff260e371b99f84024f7f",
+                    "description": "SegaCD US BIOS - Required",
+                    "filename": "bios_CD_U.bin",
+                    "region": "US"
+                },
+                {
+                    "hash": "278a9397d192149e84e820ac621a8edd",
+                    "description": "MegaCD JP BIOS - Required",
+                    "filename": "bios_CD_J.bin",
+                    "region": "JP"
+                }
+            ]
+        }
     }
 ]
