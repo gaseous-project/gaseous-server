@@ -4,6 +4,12 @@
         var game = renderGameIcon(result[i], true, false);
         targetElement.appendChild(game);
     }
+
+    $('.lazy').Lazy({
+        scrollDirection: 'vertical',
+        effect: 'fadeIn',
+        visibleOnly: true
+    });
 }
 
 function renderGameIcon(gameObject, showTitle, showRatings) {
@@ -12,9 +18,9 @@ function renderGameIcon(gameObject, showTitle, showRatings) {
     gameBox.setAttribute('onclick', 'window.location.href = "/index.html?page=game&id=' + gameObject.id + '";');
 
     var gameImage = document.createElement('img');
-    gameImage.className = 'game_tile_image';
+    gameImage.className = 'game_tile_image lazy';
     if (gameObject.cover) {
-        gameImage.src = '/api/v1/Games/' + gameObject.id + '/cover/image';
+        gameImage.setAttribute('data-src', '/api/v1/Games/' + gameObject.id + '/cover/image');
     } else {
         gameImage.src = '/images/unknowngame.png';
         gameImage.className = 'game_tile_image unknown';
