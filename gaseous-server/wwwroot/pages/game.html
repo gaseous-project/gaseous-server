@@ -47,6 +47,8 @@
         </div>
         <div id="gamesummaryroms">
             <h3>ROM's/Images</h3>
+            <button id="rom_edit" onclick="DisplayROMCheckboxes(true);" style="display: none;">Edit</button>
+            <button id="rom_edit_delete" onclick="DisplayROMCheckboxes(true);" class="redbutton" style="display: none;">Delete</button>
         </div>
     </div>
 
@@ -304,7 +306,7 @@
                 var newTable = document.createElement('table');
                 newTable.className = 'romtable';
                 newTable.setAttribute('cellspacing', 0);
-                newTable.appendChild(createTableRow(true, ['Name', 'Size', 'Media', '', '', '']));
+                newTable.appendChild(createTableRow(true, [['<input id="rom_mastercheck" type="checkbox" onclick="selectAllChecks();"/>', 'rom_checkbox_box_hidden', 'rom_edit_checkbox'], 'Name', 'Size', 'Media', '', '', '']));
 
                 var lastPlatform = '';
                 for (var i = 0; i < result.length; i++) {
@@ -320,11 +322,12 @@
 
                     var launchButton = '';
                     if (result[i].emulator) {
-                        launchButton = '<a href="/index.html?page=emulator&engine=' + result[i].emulator.type + '&core=' + result[i].emulator.core + '&platformid=' + result[i].platform.id + '&gameid=' + gameId + '&rompath=' + encodeURIComponent('/api/v1/Games/' + gameId + '/roms/' + result[i].id + '/file') + '" class="romstart">Launch</a>';
+                        launchButton = '<a href="/index.html?page=emulator&engine=' + result[i].emulator.type + '&core=' + result[i].emulator.core + '&platformid=' + result[i].platform.id + '&gameid=' + gameId + '&rompath=' + encodeURIComponent('/api/v1/Games/' + gameId + '/roms/' + result[i].id + '/' + encodeURIComponent(result[i].name)) + '" class="romstart">Launch</a>';
                     }
 
                     var newRow = [
-                        '<a href="/api/v1/Games/' + gameId + '/roms/' + result[i].id + '/file" class="romlink">' + result[i].name + '</a>',
+                        ['<input type="checkbox" name="rom_checkbox" />', 'rom_checkbox_box_hidden', 'rom_edit_checkbox'],
+                        '<a href="/api/v1/Games/' + gameId + '/roms/' + result[i].id + '/' + encodeURIComponent(result[i].name) +'" class="romlink">' + result[i].name + '</a>',
                         formatBytes(result[i].size, 2),
                         result[i].romTypeMedia,
                         result[i].mediaLabel,
@@ -415,5 +418,42 @@
         }
 
         selectScreenshot(selectedScreenshot);
+    }
+
+    function DisplayROMCheckboxes(visible) {
+        var checkbox_boxes = document.getElementsByName('rom_edit_checkbox');
+
+        for (var i = 0; i < checkbox_boxes.length; i++) {
+            if (visible == true) {
+                checkbox_boxes[i].className = 'rom_checkbox_box';
+            } else {
+                checkbox_boxes[i].className = 'rom_checkbox_box_hidden';
+            }
+        }
+
+        var editButton = document.getElementById('rom_edit');
+        var deleteButton = document.getElementById('rom_edit_delete');
+        if (visible == true) {
+            editButton.innerHTML = 'Cancel';
+            deleteButton.style.display = '';
+        } else {
+            editButton.innerHTML = 'Edit';
+            document.getElementById('rom_mastercheck').checked = false;
+            deleteButton.style.display = 'none';
+            selectAllChecks(false);
+        }
+        editButton.setAttribute('onclick', 'DisplayROMCheckboxes(' + !visible + ');');
+    }
+
+    function selectAllChecks(value) {
+        var mastercheckbox = document.getElementById('rom_mastercheck');
+        var checkboxes = document.getElementsByName('rom_checkbox');
+        for (var i = 0; i < checkboxes.length; i++) {
+            if (value) {
+                checkboxes[i].checked = value;
+            } else {
+                checkboxes[i].checked = mastercheckbox.checked;
+            }
+        }
     }
 </script>
