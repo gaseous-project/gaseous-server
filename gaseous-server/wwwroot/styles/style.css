@@ -647,7 +647,7 @@ div[name="properties_toc_item"]:hover {
 }
 
 button {
-    background-color: #888;
+    background-color: #555;
     color: white;
     border-width: 1px;
     border-color: #555;
@@ -656,10 +656,12 @@ button {
     padding-bottom: 5px;
     padding-left: 10px;
     padding-right: 10px;
+    margin-right: 3px;
+    margin-bottom: 3px;
 }
 
 button:hover {
-    background-color: #555;
+    background-color: #888;
     cursor: pointer;
 }
 
@@ -742,4 +744,30 @@ button:disabled {
 
 .legend_label {
     margin-left: 15px;
+}
+
+.rom_checkbox_box {
+    
+}
+
+.rom_checkbox_box_hidden {
+    display: none;
+}
+
+#rom_edit, #rom_edit_delete {
+    float: right;
+}
+
+#rom_edit_panel {
+    background-color: rgba(56, 56, 56, 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    padding: 15px;
+    margin-bottom: 10px;
+}
+
+#game {
+    box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -webkit-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -moz-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
 }

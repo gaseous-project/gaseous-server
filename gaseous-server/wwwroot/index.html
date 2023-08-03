@@ -51,8 +51,18 @@
 
     </div>
 
-    <script type="text/javascript">
-        var modalVariables = null;
+    <!-- The Modal -->
+    <div id="myModalSub" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content-sub">
+            <span id="modal-close-sub" class="close">&times;</span>
+            <div id="modal-content-sub">Some text in the Modal..</div>
+        </div>
+
+    </div>
+
+    <script type="text/javascript">var modalVariables = null;
 
         $(document).ready(function () {
             const urlParams = new URLSearchParams(window.location.search);
@@ -63,7 +73,6 @@
             }
 
             $('#content').load('/pages/' + myParam + '.html');
-        });
-    </script>
+        });</script>
 </body>
 </html>
