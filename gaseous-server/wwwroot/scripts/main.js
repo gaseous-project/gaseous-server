@@ -23,6 +23,30 @@
     });
 }
 
+function getQueryString(stringName, type) {
+    const urlParams = new URLSearchParams(window.location.search);
+    var myParam =  urlParams.get(stringName);
+
+    switch (type) {
+        case "int":
+            if (typeof (Number(myParam)) == 'number') {
+                return myParam;
+            } else {
+                return null;
+            }
+            break;
+        case "string":
+            if (typeof (myParam) == 'string') {
+                return encodeURIComponent(myParam);
+            } else {
+                return null;
+            }
+        default:
+            return null;
+            break;
+    }
+}
+
 function formatBytes(bytes, decimals = 2) {
     if (!+bytes) return '0 Bytes'
 

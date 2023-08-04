@@ -77,7 +77,7 @@
 <script type="text/javascript">
     document.getElementById('modal-heading').innerHTML = "Properties";
 
-    var gameId = urlParams.get('id');
+    var gameId = getQueryString('id', 'int');
 
     var romData;
 

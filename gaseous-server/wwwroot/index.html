@@ -65,8 +65,7 @@
     <script type="text/javascript">var modalVariables = null;
 
         $(document).ready(function () {
-            const urlParams = new URLSearchParams(window.location.search);
-            var myParam = urlParams.get('page');
+            var myParam = getQueryString('page', 'string');
 
             if (!myParam) {
                 myParam = 'home';

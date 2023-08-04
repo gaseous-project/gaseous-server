@@ -20,8 +20,7 @@
 </div>
 
 <script type="text/javascript">
-    const urlParams = new URLSearchParams(window.location.search);
-    var myParam = urlParams.get('sub');
+    var myParam = getQueryString('sub', 'string');
 
     var selectedTab = '';
 

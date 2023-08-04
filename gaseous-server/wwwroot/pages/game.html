@@ -63,8 +63,7 @@
     
 </div>
 <script type="text/javascript">
-    const urlParams = new URLSearchParams(window.location.search);
-    var gameId = urlParams.get('id');
+    var gameId = getQueryString('id', 'int');
     var gameData;
     var artworks = null;
     var artworksPosition = 0;
