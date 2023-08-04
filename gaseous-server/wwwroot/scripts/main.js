@@ -30,7 +30,7 @@ function getQueryString(stringName, type) {
     switch (type) {
         case "int":
             if (typeof (Number(myParam)) == 'number') {
-                return myParam;
+                return Number(myParam);
             } else {
                 return null;
             }
