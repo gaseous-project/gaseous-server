@@ -1,15 +1,4 @@
-﻿<!-- The Modal -->
-<div id="myModalSub" class="modal">
-
-    <!-- Modal content -->
-    <div class="modal-content-sub">
-        <span id="modal-close-sub" class="close">&times;</span>
-       <div id="modal-content-sub">Some text in the Modal..</div>
-    </div>
-
-</div>
-
-<div id="properties_toc">
+﻿<div id="properties_toc">
     <div id="properties_toc_general" name="properties_toc_item" onclick="SelectTab('general');">General</div>
     <div id="properties_toc_match" name="properties_toc_item" onclick="SelectTab('match');">Title Match</div>
     <!--<div id="properties_toc_manage" name="properties_toc_item" onclick="SelectTab('manage');">Manage</div>-->
@@ -88,7 +77,7 @@
 <script type="text/javascript">
     document.getElementById('modal-heading').innerHTML = "Properties";
 
-    var gameId = urlParams.get('id');
+    var gameId = getQueryString('id', 'int');
 
     var romData;
 
@@ -222,27 +211,6 @@
         }
     });
 
-    function DropDownRenderGameOption(state) {
-        console.log(JSON.stringify(state));
-
-        if (state.loading) {
-            return state;
-        }
-
-        var response;
-
-        if (state.cover) {
-            response = $(
-                '<table class="dropdown-div"><tr><td class="dropdown-cover"><img src="https://images.igdb.com/igdb/image/upload/t_cover_small/' + state.cover.value.imageId + '.jpg" /></td><td class="dropdown-label"><span>' + state.text + '</span></td></tr></table>'
-            );
-        } else {
-            response = $(
-                '<table class="dropdown-div"><tr><td class="dropdown-cover"><img src="/images/unknowngame.png" /></td><td class="dropdown-label"><span>' + state.text + '</span></td></tr></table>'
-            );
-        }
-        return response;
-    }
-
     function SaveFixedGame() {
         var fixplatform = $('#properties_fixplatform').select2('data');
         var fixgame = $('#properties_fixgame').select2('data');
@@ -252,48 +220,6 @@
         ajaxCall('/api/v1/Games/' + gameId + '/roms/' + modalVariables + '?NewPlatformId=' + fixplatform[0].id + '&NewGameId=' + fixgame[0].id, 'PATCH', function (result) {
             window.location.reload();
         });
-    }
-
-    var subModalVariables;
-
-    function showSubDialog(dialogPage, variables) {
-        // Get the modal
-        var submodal = document.getElementById("myModalSub");
-
-        // Get the modal content
-        var subModalContent = document.getElementById("modal-content-sub");
-
-        // Get the button that opens the modal
-        var subbtn = document.getElementById("romDelete");
-
-        // Get the <span> element that closes the modal
-        var subspan = document.getElementById("modal-close-sub");
-
-        // When the user clicks on the button, open the modal 
-        submodal.style.display = "block";
-
-        // When the user clicks on <span> (x), close the modal
-        subspan.onclick = function () {
-            submodal.style.display = "none";
-            subModalContent.innerHTML = "";
-            subModalVariables = null;
-        }
-
-        subModalVariables = modalVariables;
-
-        $('#modal-content-sub').load('/pages/dialogs/' + dialogPage + '.html');
-    }
-
-    function closeSubDialog() {
-        // Get the modal
-        var submodal = document.getElementById("myModalSub");
-
-        // Get the modal content
-        var subModalContent = document.getElementById("modal-content-sub");
-
-        submodal.style.display = "none";
-        subModalContent.innerHTML = "";
-        subModalVariables = null;
     }
 
     SelectTab('general');

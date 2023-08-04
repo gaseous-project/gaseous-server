@@ -5,10 +5,8 @@
 <div id="emulator"></div>
 
 <script type="text/javascript">
-    const urlParams = new URLSearchParams(window.location.search);
-
-    var gameId = urlParams.get('gameid');
-    var platformId = urlParams.get('platformid');
+    var gameId = getQueryString('gameid', 'int');
+    var platformId = getQueryString('platformid', 'int');
     var gameData;
     var artworks = null;
     var artworksPosition = 0;
@@ -39,7 +37,7 @@
             emuBios = '/api/v1/Bios/zip/' + platformId;
         }
 
-        switch (urlParams.get('engine')) {
+        switch (getQueryString('engine', 'string')) {
             case 'EmulatorJS':
                 $('#emulator').load('/pages/EmulatorJS.html');
                 break;

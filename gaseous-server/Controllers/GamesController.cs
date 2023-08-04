@@ -784,6 +784,41 @@ namespace gaseous_server.Controllers
         }
 
         [HttpGet]
+        [HttpHead]
+        [Route("{GameId}/roms/{RomId}/{FileName}")]
+        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GameRomFile(long GameId, long RomId, string FileName)
+        {
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false);
+
+                Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
+                if (rom.GameId != GameId || rom.Name != FileName)
+                {
+                    return NotFound();
+                }
+
+                string romFilePath = rom.Path;
+                if (System.IO.File.Exists(romFilePath))
+                {
+                    FileStream content = new FileStream(romFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    FileStreamResult response = File(content, "application/octet-stream", rom.Name);
+                    return response;
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
         [Route("search")]
         [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
