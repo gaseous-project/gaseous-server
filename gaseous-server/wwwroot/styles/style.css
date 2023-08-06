@@ -206,7 +206,7 @@ h3 {
     padding: 10px;
 }
 
-input[type='text'] {
+input[type='text'], input[type='number'] {
     background-color: #2b2b2b;
     color: white;
     padding: 5px;
@@ -223,6 +223,15 @@ input[type='text'] {
 
 input[id='filter_panel_search'] {
     width: 160px;
+}
+
+input[id='filter_panel_userrating_min'] {
+    width: 50px;
+    margin-right: 5px;
+}
+
+input[id='filter_panel_userrating_max'] {
+    width: 50px;
 }
 
 /* width */
@@ -770,4 +779,20 @@ button:disabled {
     box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
     -webkit-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
     -moz-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+}
+
+#gametitle_criticrating {
+    float: right;
+}
+
+#gametitle_criticrating_value {
+    display: inline-block;
+    font-size: 36px;
+    text-align: center;
+    margin-right: 2px;
+}
+
+#gametitle_criticrating_label {
+    display: inline-block;
+    text-align: left;
 }

@@ -23,7 +23,7 @@ namespace gaseous_server.Controllers
     {
         [HttpGet]
         [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]
-        public ActionResult Game(string name = "", string platform = "", string genre = "", bool sortdescending = false)
+        public ActionResult Game(string name = "", string platform = "", string genre = "", int minrating = 0, int maxrating = 100, bool sortdescending = false)
         {
             string whereClause = "";
             string havingClause = "";
@@ -40,6 +40,14 @@ namespace gaseous_server.Controllers
                 whereParams.Add("@Name", "%" + name + "%");
                 havingClauses.Add(tempVal);
             }
+
+            string ratingTempMinVal = "totalRating >= @totalMinRating";
+            whereParams.Add("@totalMinRating", minrating);
+            havingClauses.Add(ratingTempMinVal);
+
+            string ratingTempMaxVal = "totalRating <= @totalMaxRating";
+            whereParams.Add("@totalMaxRating", maxrating);
+            havingClauses.Add(ratingTempMaxVal);
 
             if (platform.Length > 0)
             {

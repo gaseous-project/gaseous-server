@@ -15,6 +15,31 @@
 
     panel.appendChild(containerPanelSearch);
 
+    panel.appendChild(buildFilterPanelHeader('userrating', 'User Rating'));
+    var containerPanelUserRating = document.createElement('div');
+    containerPanelUserRating.className = 'filter_panel_box';
+    var containerPanelUserRatingMinField = document.createElement('input');
+    containerPanelUserRatingMinField.id = 'filter_panel_userrating_min';
+    containerPanelUserRatingMinField.type = 'number';
+    containerPanelUserRatingMinField.placeholder = '0';
+    containerPanelUserRatingMinField.setAttribute('onchange', 'executeFilterDelayed();');
+    containerPanelUserRatingMinField.setAttribute('onkeydown', 'executeFilterDelayed();');
+    containerPanelUserRatingMinField.setAttribute('min', '0');
+    containerPanelUserRatingMinField.setAttribute('max', '100');
+    containerPanelUserRating.appendChild(containerPanelUserRatingMinField);
+
+    var containerPanelUserRatingMaxField = document.createElement('input');
+    containerPanelUserRatingMaxField.id = 'filter_panel_userrating_max';
+    containerPanelUserRatingMaxField.type = 'number';
+    containerPanelUserRatingMaxField.placeholder = '100';
+    containerPanelUserRatingMaxField.setAttribute('onchange', 'executeFilterDelayed();');
+    containerPanelUserRatingMaxField.setAttribute('onkeydown', 'executeFilterDelayed();');
+    containerPanelUserRatingMaxField.setAttribute('min', '0');
+    containerPanelUserRatingMaxField.setAttribute('max', '100');
+    containerPanelUserRating.appendChild(containerPanelUserRatingMaxField);
+
+    panel.appendChild(containerPanelUserRating);
+
     if (result.platforms) {
         panel.appendChild(buildFilterPanelHeader('platforms', 'Platforms'));
 
@@ -96,6 +121,18 @@ function executeFilter() {
     var genres = '';
 
     var searchString = document.getElementById('filter_panel_search').value;
+    var minUserRating = 0;
+    var minUserRatingInput = document.getElementById('filter_panel_userrating_min').value;
+    if (minUserRatingInput) {
+        minUserRating = minUserRatingInput;
+    }
+    console.log('Min User Rating: ' + minUserRating);
+    var maxUserRating = 0;
+    var maxUserRatingInput = document.getElementById('filter_panel_userrating_max').value;
+    if (maxUserRatingInput) {
+        maxUserRating = maxUserRatingInput;
+    }
+    console.log('Max User Rating: ' + maxUserRating);
     var platformFilters = document.getElementsByName('filter_platforms');
     var genreFilters = document.getElementsByName('filter_genres');
 
@@ -117,7 +154,7 @@ function executeFilter() {
         }
     }
 
-    ajaxCall('/api/v1/Games?name=' + searchString + '&platform=' + platforms + '&genre=' + genres, 'GET', function (result) {
+    ajaxCall('/api/v1/Games?name=' + searchString + '&minrating=' + minUserRating + '&maxrating=' + maxUserRating + '&platform=' + platforms + '&genre=' + genres, 'GET', function (result) {
         var gameElement = document.getElementById('games_library');
         formatGamesPanel(gameElement, result);
     });
