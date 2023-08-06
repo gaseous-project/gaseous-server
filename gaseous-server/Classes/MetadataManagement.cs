@@ -17,7 +17,7 @@ namespace gaseous_server.Classes
 				try
 				{
 					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ")");
-					Metadata.Games.GetGame((long)dr["id"], true, forceRefresh);
+					Metadata.Games.GetGame((long)dr["id"], true, true, forceRefresh);
 				}
 				catch (Exception ex)
 				{

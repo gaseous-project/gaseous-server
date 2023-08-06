@@ -21,7 +21,7 @@ namespace gaseous_server.Classes.Metadata
                     Config.IGDB.Secret
                 );
 
-        public static Game? GetGame(long Id, bool followSubGames, bool forceRefresh)
+        public static Game? GetGame(long Id, bool getAllMetadata, bool followSubGames, bool forceRefresh)
         {
             if (Id == 0)
             {
@@ -45,14 +45,14 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<Game> RetVal = _GetGame(SearchUsing.id, Id, followSubGames, forceRefresh);
+                Task<Game> RetVal = _GetGame(SearchUsing.id, Id, getAllMetadata, followSubGames, forceRefresh);
                 return RetVal.Result;
             }
         }
 
-        public static Game GetGame(string Slug, bool followSubGames, bool forceRefresh)
+        public static Game GetGame(string Slug, bool getAllMetadata, bool followSubGames, bool forceRefresh)
         {
-            Task<Game> RetVal = _GetGame(SearchUsing.slug, Slug, followSubGames, forceRefresh);
+            Task<Game> RetVal = _GetGame(SearchUsing.slug, Slug, getAllMetadata, followSubGames, forceRefresh);
             return RetVal.Result;
         }
 
@@ -61,7 +61,7 @@ namespace gaseous_server.Classes.Metadata
             return Storage.BuildCacheObject<Game>(new Game(), dataRow);
         }
 
-        private static async Task<Game> _GetGame(SearchUsing searchUsing, object searchValue, bool followSubGames = false, bool forceRefresh = false)
+        private static async Task<Game> _GetGame(SearchUsing searchUsing, object searchValue, bool getAllMetadata = true, bool followSubGames = false, bool forceRefresh = false)
         {
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
@@ -99,12 +99,12 @@ namespace gaseous_server.Classes.Metadata
                 case Storage.CacheStatus.NotPresent:
                     returnValue = await GetObjectFromServer(WhereClause);
                     Storage.NewCacheValue(returnValue);
-                    UpdateSubClasses(returnValue, followSubGames);
+                    UpdateSubClasses(returnValue, getAllMetadata, followSubGames);
                     return returnValue;
                 case Storage.CacheStatus.Expired:
                     returnValue = await GetObjectFromServer(WhereClause);
                     Storage.NewCacheValue(returnValue, true);
-                    UpdateSubClasses(returnValue, followSubGames);
+                    UpdateSubClasses(returnValue, getAllMetadata, followSubGames);
                     return returnValue;
                 case Storage.CacheStatus.Current:
                     return Storage.GetCacheValue<Game>(returnValue, "id", (long)searchValue);
@@ -113,117 +113,120 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        private static void UpdateSubClasses(Game Game, bool followSubGames)
+        private static void UpdateSubClasses(Game Game, bool getAllMetadata, bool followSubGames)
         {
-            if (Game.AgeRatings != null)
-            {
-                foreach (long AgeRatingId in Game.AgeRatings.Ids)
-                {
-                    AgeRating GameAgeRating = AgeRatings.GetAgeRatings(AgeRatingId);
-                }
-            }
-
-            if (Game.AlternativeNames != null)
-            {
-                foreach (long AlternativeNameId in Game.AlternativeNames.Ids)
-                {
-                    AlternativeName GameAlternativeName = AlternativeNames.GetAlternativeNames(AlternativeNameId);
-                }
-            }
-
-            if (Game.Artworks != null)
-            {
-                foreach (long ArtworkId in Game.Artworks.Ids)
-                {
-                    Artwork GameArtwork = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
-                }
-            }
-
-            if (followSubGames)
-            {
-                List<long> gamesToFetch = new List<long>();
-                if (Game.Bundles != null) { gamesToFetch.AddRange(Game.Bundles.Ids); }
-                if (Game.Dlcs != null) { gamesToFetch.AddRange(Game.Dlcs.Ids); }
-                if (Game.Expansions != null) { gamesToFetch.AddRange(Game.Expansions.Ids); }
-                if (Game.ParentGame != null) { gamesToFetch.Add((long)Game.ParentGame.Id); }
-                //if (Game.SimilarGames != null) { gamesToFetch.AddRange(Game.SimilarGames.Ids); }
-                if (Game.StandaloneExpansions != null) { gamesToFetch.AddRange(Game.StandaloneExpansions.Ids); }
-                if (Game.VersionParent != null) { gamesToFetch.Add((long)Game.VersionParent.Id); }
-
-                foreach (long gameId in gamesToFetch)
-                {
-                    Game relatedGame = GetGame(gameId, false, false);
-                }
-            }
-
-            if (Game.Collection != null)
-            {
-                Collection GameCollection = Collections.GetCollections(Game.Collection.Id);
-            }
-
             if (Game.Cover != null)
             {
                 Cover GameCover = Covers.GetCover(Game.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
             }
 
-            if (Game.ExternalGames != null)
+            if (getAllMetadata == true)
             {
-                foreach (long ExternalGameId in Game.ExternalGames.Ids)
+                if (Game.AgeRatings != null)
                 {
-                    ExternalGame GameExternalGame = ExternalGames.GetExternalGames(ExternalGameId);
+                    foreach (long AgeRatingId in Game.AgeRatings.Ids)
+                    {
+                        AgeRating GameAgeRating = AgeRatings.GetAgeRatings(AgeRatingId);
+                    }
                 }
-            }
 
-            if (Game.Franchise != null)
-            {
-                Franchise GameFranchise = Franchises.GetFranchises(Game.Franchise.Id);
-            }
-
-            if (Game.Franchises != null)
-            {
-                foreach (long FranchiseId in Game.Franchises.Ids)
+                if (Game.AlternativeNames != null)
                 {
-                    Franchise GameFranchise = Franchises.GetFranchises(FranchiseId);
+                    foreach (long AlternativeNameId in Game.AlternativeNames.Ids)
+                    {
+                        AlternativeName GameAlternativeName = AlternativeNames.GetAlternativeNames(AlternativeNameId);
+                    }
                 }
-            }
 
-            if (Game.Genres != null)
-            {
-                foreach (long GenreId in Game.Genres.Ids)
+                if (Game.Artworks != null)
                 {
-                    Genre GameGenre = Genres.GetGenres(GenreId);
+                    foreach (long ArtworkId in Game.Artworks.Ids)
+                    {
+                        Artwork GameArtwork = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
+                    }
                 }
-            }
 
-            if (Game.InvolvedCompanies != null)
-            {
-                foreach (long involvedCompanyId in Game.InvolvedCompanies.Ids)
+                if (followSubGames)
                 {
-                    InvolvedCompany involvedCompany = InvolvedCompanies.GetInvolvedCompanies(involvedCompanyId);
+                    List<long> gamesToFetch = new List<long>();
+                    if (Game.Bundles != null) { gamesToFetch.AddRange(Game.Bundles.Ids); }
+                    if (Game.Dlcs != null) { gamesToFetch.AddRange(Game.Dlcs.Ids); }
+                    if (Game.Expansions != null) { gamesToFetch.AddRange(Game.Expansions.Ids); }
+                    if (Game.ParentGame != null) { gamesToFetch.Add((long)Game.ParentGame.Id); }
+                    //if (Game.SimilarGames != null) { gamesToFetch.AddRange(Game.SimilarGames.Ids); }
+                    if (Game.StandaloneExpansions != null) { gamesToFetch.AddRange(Game.StandaloneExpansions.Ids); }
+                    if (Game.VersionParent != null) { gamesToFetch.Add((long)Game.VersionParent.Id); }
+
+                    foreach (long gameId in gamesToFetch)
+                    {
+                        Game relatedGame = GetGame(gameId, false, true, false);
+                    }
                 }
-            }
 
-            if (Game.Platforms != null)
-            {
-                foreach (long PlatformId in Game.Platforms.Ids)
+                if (Game.Collection != null)
                 {
-                    Platform GamePlatform = Platforms.GetPlatform(PlatformId);
+                    Collection GameCollection = Collections.GetCollections(Game.Collection.Id);
                 }
-            }
 
-            if (Game.Screenshots != null)
-            {
-                foreach (long ScreenshotId in Game.Screenshots.Ids)
+                if (Game.ExternalGames != null)
                 {
-                    Screenshot GameScreenshot = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
+                    foreach (long ExternalGameId in Game.ExternalGames.Ids)
+                    {
+                        ExternalGame GameExternalGame = ExternalGames.GetExternalGames(ExternalGameId);
+                    }
                 }
-            }
 
-            if (Game.Videos != null)
-            {
-                foreach (long GameVideoId in Game.Videos.Ids)
+                if (Game.Franchise != null)
                 {
-                    GameVideo gameVideo = GamesVideos.GetGame_Videos(GameVideoId);
+                    Franchise GameFranchise = Franchises.GetFranchises(Game.Franchise.Id);
+                }
+
+                if (Game.Franchises != null)
+                {
+                    foreach (long FranchiseId in Game.Franchises.Ids)
+                    {
+                        Franchise GameFranchise = Franchises.GetFranchises(FranchiseId);
+                    }
+                }
+
+                if (Game.Genres != null)
+                {
+                    foreach (long GenreId in Game.Genres.Ids)
+                    {
+                        Genre GameGenre = Genres.GetGenres(GenreId);
+                    }
+                }
+
+                if (Game.InvolvedCompanies != null)
+                {
+                    foreach (long involvedCompanyId in Game.InvolvedCompanies.Ids)
+                    {
+                        InvolvedCompany involvedCompany = InvolvedCompanies.GetInvolvedCompanies(involvedCompanyId);
+                    }
+                }
+
+                if (Game.Platforms != null)
+                {
+                    foreach (long PlatformId in Game.Platforms.Ids)
+                    {
+                        Platform GamePlatform = Platforms.GetPlatform(PlatformId);
+                    }
+                }
+
+                if (Game.Screenshots != null)
+                {
+                    foreach (long ScreenshotId in Game.Screenshots.Ids)
+                    {
+                        Screenshot GameScreenshot = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
+                    }
+                }
+
+                if (Game.Videos != null)
+                {
+                    foreach (long GameVideoId in Game.Videos.Ids)
+                    {
+                        GameVideo gameVideo = GamesVideos.GetGame_Videos(GameVideoId);
+                    }
                 }
             }
         }
