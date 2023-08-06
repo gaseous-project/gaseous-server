@@ -121,6 +121,9 @@
   <ItemGroup>
     <Content Remove="Support\PlatformMap.json" />
     <Content Remove="wwwroot\pages\settings\" />
+    <Content Remove="wwwroot\scripts\jquery.lazy.plugins.min.js" />
+    <Content Remove="wwwroot\scripts\jquery.lazy.min.js" />
+    <Content Remove="wwwroot\pages\dialogs\romsdelete.html" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Support\PlatformMap.json" Condition="'$(ExcludeConfigFilesFromBuildOutput)'!='true'">
