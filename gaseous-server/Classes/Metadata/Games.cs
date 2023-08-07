@@ -205,6 +205,22 @@ namespace gaseous_server.Classes.Metadata
                     }
                 }
 
+                if (Game.GameModes != null)
+                {
+                    foreach (long gameModeId in Game.GameModes.Ids)
+                    {
+                        GameMode gameMode = GameModes.GetGame_Modes(gameModeId);
+                    }
+                }
+
+                if (Game.MultiplayerModes != null)
+                {
+                    foreach (long multiplayerModeId in Game.MultiplayerModes.Ids)
+                    {
+                        MultiplayerMode multiplayerMode = MultiplayerModes.GetGame_MultiplayerModes(multiplayerModeId);
+                    }
+                }
+
                 if (Game.Platforms != null)
                 {
                     foreach (long PlatformId in Game.Platforms.Ids)
