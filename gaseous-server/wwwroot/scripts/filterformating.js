@@ -121,16 +121,22 @@ function executeFilter() {
     var genres = '';
 
     var searchString = document.getElementById('filter_panel_search').value;
+
     var minUserRating = 0;
+    var minUserRatingQuery = '';
     var minUserRatingInput = document.getElementById('filter_panel_userrating_min').value;
     if (minUserRatingInput) {
         minUserRating = minUserRatingInput;
+        minUserRatingQuery = '&minrating=' + minUserRating;
     }
     console.log('Min User Rating: ' + minUserRating);
-    var maxUserRating = 0;
+
+    var maxUserRating = 100;
+    var maxUserRatingQuery = '';
     var maxUserRatingInput = document.getElementById('filter_panel_userrating_max').value;
     if (maxUserRatingInput) {
         maxUserRating = maxUserRatingInput;
+        maxUserRatingQuery = '&maxrating=' + maxUserRating;
     }
     console.log('Max User Rating: ' + maxUserRating);
     var platformFilters = document.getElementsByName('filter_platforms');
@@ -154,7 +160,7 @@ function executeFilter() {
         }
     }
 
-    ajaxCall('/api/v1/Games?name=' + searchString + '&minrating=' + minUserRating + '&maxrating=' + maxUserRating + '&platform=' + platforms + '&genre=' + genres, 'GET', function (result) {
+    ajaxCall('/api/v1/Games?name=' + searchString + minUserRatingQuery + maxUserRatingQuery + '&platform=' + platforms + '&genre=' + genres, 'GET', function (result) {
         var gameElement = document.getElementById('games_library');
         formatGamesPanel(gameElement, result);
     });
