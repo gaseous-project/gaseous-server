@@ -229,6 +229,14 @@ namespace gaseous_server.Classes.Metadata
                     }
                 }
 
+                if (Game.PlayerPerspectives != null)
+                {
+                    foreach (long PerspectiveId in Game.PlayerPerspectives.Ids)
+                    {
+                        PlayerPerspective GamePlayPerspective = PlayerPerspectives.GetGame_PlayerPerspectives(PerspectiveId);
+                    }
+                }
+
                 if (Game.Screenshots != null)
                 {
                     foreach (long ScreenshotId in Game.Screenshots.Ids)
