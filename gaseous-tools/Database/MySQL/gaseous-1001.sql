@@ -49,3 +49,17 @@ CREATE TABLE `PlayerPerspective` (
   `lastUpdated` datetime DEFAULT NULL,
   PRIMARY KEY (`Id`)
 );
+
+DROP TABLE IF EXISTS `Theme`;
+CREATE TABLE `Theme` (
+  `Id` bigint NOT NULL,
+  `CreatedAt` datetime DEFAULT NULL,
+  `Checksum` varchar(45) DEFAULT NULL,
+  `Name` varchar(100) DEFAULT NULL,
+  `Slug` varchar(45) DEFAULT NULL,
+  `UpdatedAt` datetime DEFAULT NULL,
+  `Url` varchar(255) DEFAULT NULL,
+  `dateAdded` datetime DEFAULT NULL,
+  `lastUpdated` datetime DEFAULT NULL,
+  PRIMARY KEY (`Id`)
+);

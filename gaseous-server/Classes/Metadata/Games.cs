@@ -245,6 +245,14 @@ namespace gaseous_server.Classes.Metadata
                     }
                 }
 
+                if (Game.Themes != null)
+                {
+                    foreach (long ThemeId in Game.Themes.Ids)
+                    {
+                        Theme GameTheme = Themes.GetGame_Themes(ThemeId);
+                    }
+                }
+
                 if (Game.Videos != null)
                 {
                     foreach (long GameVideoId in Game.Videos.Ids)
