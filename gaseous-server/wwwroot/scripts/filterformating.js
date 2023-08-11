@@ -41,32 +41,37 @@
     panel.appendChild(containerPanelUserRating);
 
     if (result.platforms) {
-        panel.appendChild(buildFilterPanelHeader('platforms', 'Platforms'));
-
-        var containerPanelPlatform = document.createElement('div');
-        containerPanelPlatform.className = 'filter_panel_box';
-        for (var i = 0; i < result.platforms.length; i++) {
-            containerPanelPlatform.appendChild(buildFilterPanelItem('platforms', result.platforms[i].id, result.platforms[i].name));
-        }
-        panel.appendChild(containerPanelPlatform);
-
-        targetElement.appendChild(panel);
+        buildFilterPanel(panel, 'platform', 'Platforms', result.platforms);
     }
 
     if (result.genres) {
-        panel.appendChild(buildFilterPanelHeader('genres', 'Genres'));
-
-        var containerPanelGenres = document.createElement('div');
-        containerPanelGenres.className = 'filter_panel_box';
-        for (var i = 0; i < result.genres.length; i++) {
-            containerPanelGenres.appendChild(buildFilterPanelItem('genres', result.genres[i].id, result.genres[i].name));
-        }
-        panel.appendChild(containerPanelGenres);
-
-        targetElement.appendChild(panel);
+        buildFilterPanel(panel, 'genre', 'Genres', result.genres);
     }
 
-    
+    if (result.gamemodes) {
+        buildFilterPanel(panel, 'gamemode', 'Players', result.gamemodes);
+    }
+
+    if (result.playerperspectives) {
+        buildFilterPanel(panel, 'playerperspective', 'Player Perspectives', result.playerperspectives);
+    }
+
+    if (result.themes) {
+        buildFilterPanel(panel, 'theme', 'Themes', result.themes);
+    }
+
+    targetElement.appendChild(panel);
+}
+
+function buildFilterPanel(targetElement, headerString, friendlyHeaderString, valueList) {
+    targetElement.appendChild(buildFilterPanelHeader(headerString, friendlyHeaderString));
+
+    var containerPanel = document.createElement('div');
+    containerPanel.className = 'filter_panel_box';
+    for (var i = 0; i < valueList.length; i++) {
+        containerPanel.appendChild(buildFilterPanelItem(headerString, valueList[i].id, valueList[i].name));
+    }
+    targetElement.appendChild(containerPanel);
 }
 
 function buildFilterPanelHeader(headerString, friendlyHeaderString) {
@@ -86,7 +91,7 @@ function buildFilterPanelItem(filterType, itemString, friendlyItemString) {
     var filterPanelItemCheckBox = document.createElement('div');
 
     var filterPanelItemCheckBoxItem = document.createElement('input');
-    filterPanelItemCheckBoxItem.id = 'filter_panel_item_checkbox_' + itemString;
+    filterPanelItemCheckBoxItem.id = 'filter_panel_item_' + filterType + '_checkbox_' + itemString;
     filterPanelItemCheckBoxItem.type = 'checkbox';
     filterPanelItemCheckBoxItem.className = 'filter_panel_item_checkbox';
     filterPanelItemCheckBoxItem.name = 'filter_' + filterType;
@@ -117,51 +122,73 @@ function executeFilterDelayed() {
 
 function executeFilter() {
     // build filter lists
+    var queries = [];
+
     var platforms = '';
     var genres = '';
 
     var searchString = document.getElementById('filter_panel_search').value;
+    if (searchString.length > 0) {
+        queries.push('name=' + searchString);
+    }
 
     var minUserRating = 0;
-    var minUserRatingQuery = '';
     var minUserRatingInput = document.getElementById('filter_panel_userrating_min').value;
     if (minUserRatingInput) {
         minUserRating = minUserRatingInput;
-        minUserRatingQuery = '&minrating=' + minUserRating;
+        queries.push('minrating=' + minUserRating);
     }
-    console.log('Min User Rating: ' + minUserRating);
 
     var maxUserRating = 100;
-    var maxUserRatingQuery = '';
     var maxUserRatingInput = document.getElementById('filter_panel_userrating_max').value;
     if (maxUserRatingInput) {
         maxUserRating = maxUserRatingInput;
-        maxUserRatingQuery = '&maxrating=' + maxUserRating;
+        queries.push('maxrating=' + maxUserRating);
     }
-    console.log('Max User Rating: ' + maxUserRating);
-    var platformFilters = document.getElementsByName('filter_platforms');
-    var genreFilters = document.getElementsByName('filter_genres');
 
-    for (var i = 0; i < platformFilters.length; i++) {
-        if (platformFilters[i].checked) {
-            if (platforms.length > 0) {
-                platforms += ',';
+    queries.push(GetFilterQuery('platform'));
+    queries.push(GetFilterQuery('genre'));
+    queries.push(GetFilterQuery('gamemode'));
+    queries.push(GetFilterQuery('playerperspective'));
+    queries.push(GetFilterQuery('theme'));
+
+    var queryString = '';
+    for (var i = 0; i < queries.length; i++) {
+        if (queries[i].length > 0) {
+            if (queryString.length == 0) {
+                queryString = '?';
+            } else {
+                queryString += '&';
             }
-            platforms += platformFilters[i].getAttribute('filter_id');
+
+            queryString += queries[i];
         }
     }
 
-    for (var i = 0; i < genreFilters.length; i++) {
-        if (genreFilters[i].checked) {
-            if (genres.length > 0) {
-                genres += ',';
-            }
-            genres += genreFilters[i].getAttribute('filter_id');
-        }
-    }
+    console.log('Query string = ' + queryString);
 
-    ajaxCall('/api/v1/Games?name=' + searchString + minUserRatingQuery + maxUserRatingQuery + '&platform=' + platforms + '&genre=' + genres, 'GET', function (result) {
+    ajaxCall('/api/v1/Games' + queryString, 'GET', function (result) {
         var gameElement = document.getElementById('games_library');
         formatGamesPanel(gameElement, result);
     });
+}
+
+function GetFilterQuery(filterName) {
+    var Filters = document.getElementsByName('filter_' + filterName);
+    var queryString = '';
+
+    for (var i = 0; i < Filters.length; i++) {
+        if (Filters[i].checked) {
+            if (queryString.length > 0) {
+                queryString += ',';
+            }
+            queryString += Filters[i].getAttribute('filter_id');
+        }
+    }
+
+    if (queryString.length > 0) {
+        queryString = filterName + '=' + queryString;
+    }
+
+    return queryString;
 }

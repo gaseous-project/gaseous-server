@@ -295,12 +295,20 @@ input[id='filter_panel_userrating_max'] {
     text-align: center;
     vertical-align: top;
     margin-bottom: 10px;
+    border-radius: 10px 10px 10px 10px;
+    -webkit-border-radius: 10px 10px 10px 10px;
+    -moz-border-radius: 10px 10px 10px 10px;
+    border: 1px solid transparent;
 }
 
 .game_tile:hover {
     cursor: pointer;
     text-decoration: underline;
     background-color: #2b2b2b;
+    border-radius: 10px 10px 10px 10px;
+    -webkit-border-radius: 10px 10px 10px 10px;
+    -moz-border-radius: 10px 10px 10px 10px;
+    border: 1px solid #2b2b2b;
 }
 
 .game_tile_image {

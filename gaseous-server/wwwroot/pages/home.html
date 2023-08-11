@@ -7,10 +7,12 @@
     ajaxCall('/api/v1/Filter', 'GET', function (result) {
         var filterElement = document.getElementById('games_filter');
         formatFilterPanel(filterElement, result);
+
+        executeFilter();
     });
 
-    ajaxCall('/api/v1/Games', 'GET', function (result) {
-        var gameElement = document.getElementById('games_library');
-        formatGamesPanel(gameElement, result);
-    });
+    //ajaxCall('/api/v1/Games', 'GET', function (result) {
+    //    var gameElement = document.getElementById('games_library');
+    //    formatGamesPanel(gameElement, result);
+    //});
 </script>

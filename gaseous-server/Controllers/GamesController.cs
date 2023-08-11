@@ -23,7 +23,16 @@ namespace gaseous_server.Controllers
     {
         [HttpGet]
         [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]
-        public ActionResult Game(string name = "", string platform = "", string genre = "", int minrating = -1, int maxrating = -1, bool includeunrated = true, bool sortdescending = false)
+        public ActionResult Game(
+            string name = "",
+            string platform = "",
+            string genre = "",
+            string gamemode = "",
+            string playerperspective = "",
+            string theme = "",
+            int minrating = -1,
+            int maxrating = -1,
+            bool sortdescending = false)
         {
             string whereClause = "";
             string havingClause = "";
@@ -86,6 +95,60 @@ namespace gaseous_server.Controllers
                     string genreLabel = "@Genre" + i;
                     tempVal += "JSON_CONTAINS(Game.Genres, " + genreLabel + ", '$')";
                     whereParams.Add(genreLabel, genreClauseItems[i]);
+                }
+                tempVal += ")";
+                whereClauses.Add(tempVal);
+            }
+
+            if (gamemode.Length > 0)
+            {
+                tempVal = "(";
+                string[] gameModeClauseItems = gamemode.Split(",");
+                for (int i = 0; i < gameModeClauseItems.Length; i++)
+                {
+                    if (i > 0)
+                    {
+                        tempVal += " AND ";
+                    }
+                    string gameModeLabel = "@GameMode" + i;
+                    tempVal += "JSON_CONTAINS(Game.GameModes, " + gameModeLabel + ", '$')";
+                    whereParams.Add(gameModeLabel, gameModeClauseItems[i]);
+                }
+                tempVal += ")";
+                whereClauses.Add(tempVal);
+            }
+
+            if (playerperspective.Length > 0)
+            {
+                tempVal = "(";
+                string[] playerPerspectiveClauseItems = playerperspective.Split(",");
+                for (int i = 0; i < playerPerspectiveClauseItems.Length; i++)
+                {
+                    if (i > 0)
+                    {
+                        tempVal += " AND ";
+                    }
+                    string playerPerspectiveLabel = "@PlayerPerspective" + i;
+                    tempVal += "JSON_CONTAINS(Game.PlayerPerspectives, " + playerPerspectiveLabel + ", '$')";
+                    whereParams.Add(playerPerspectiveLabel, playerPerspectiveClauseItems[i]);
+                }
+                tempVal += ")";
+                whereClauses.Add(tempVal);
+            }
+
+            if (theme.Length > 0)
+            {
+                tempVal = "(";
+                string[] themeClauseItems = theme.Split(",");
+                for (int i = 0; i < themeClauseItems.Length; i++)
+                {
+                    if (i > 0)
+                    {
+                        tempVal += " AND ";
+                    }
+                    string themeLabel = "@Theme" + i;
+                    tempVal += "JSON_CONTAINS(Game.Themes, " + themeLabel + ", '$')";
+                    whereParams.Add(themeLabel, themeClauseItems[i]);
                 }
                 tempVal += ")";
                 whereClauses.Add(tempVal);
