@@ -41,46 +41,83 @@
     panel.appendChild(containerPanelUserRating);
 
     if (result.platforms) {
-        buildFilterPanel(panel, 'platform', 'Platforms', result.platforms);
+        buildFilterPanel(panel, 'platform', 'Platforms', result.platforms, true, true);
     }
 
     if (result.genres) {
-        buildFilterPanel(panel, 'genre', 'Genres', result.genres);
+        buildFilterPanel(panel, 'genre', 'Genres', result.genres, true, false);
     }
 
     if (result.gamemodes) {
-        buildFilterPanel(panel, 'gamemode', 'Players', result.gamemodes);
+        buildFilterPanel(panel, 'gamemode', 'Players', result.gamemodes, true, false);
     }
 
     if (result.playerperspectives) {
-        buildFilterPanel(panel, 'playerperspective', 'Player Perspectives', result.playerperspectives);
+        buildFilterPanel(panel, 'playerperspective', 'Player Perspectives', result.playerperspectives, true, false);
     }
 
     if (result.themes) {
-        buildFilterPanel(panel, 'theme', 'Themes', result.themes);
+        buildFilterPanel(panel, 'theme', 'Themes', result.themes, true, false);
     }
 
     targetElement.appendChild(panel);
 }
 
-function buildFilterPanel(targetElement, headerString, friendlyHeaderString, valueList) {
-    targetElement.appendChild(buildFilterPanelHeader(headerString, friendlyHeaderString));
+function buildFilterPanel(targetElement, headerString, friendlyHeaderString, valueList, showToggle, initialDisplay) {
+    if (showToggle == false) { initialDisplay = true; }
+    targetElement.appendChild(buildFilterPanelHeader(headerString, friendlyHeaderString, showToggle, initialDisplay));
 
     var containerPanel = document.createElement('div');
     containerPanel.className = 'filter_panel_box';
+    containerPanel.id = 'filter_panel_box_' + headerString;
+    if (initialDisplay == false) {
+        containerPanel.setAttribute('style', 'display: none;');
+    }
     for (var i = 0; i < valueList.length; i++) {
         containerPanel.appendChild(buildFilterPanelItem(headerString, valueList[i].id, valueList[i].name));
     }
     targetElement.appendChild(containerPanel);
 }
 
-function buildFilterPanelHeader(headerString, friendlyHeaderString) {
+function buildFilterPanelHeader(headerString, friendlyHeaderString, showVisibleToggle, toggleInitialValue) {
+    var headerToggle = document.createElement('div');
+    headerToggle.setAttribute('style', 'float: right;');
+    headerToggle.id = 'filter_panel_header_toggle_' + headerString;
+    if (toggleInitialValue == true) {
+        headerToggle.innerHTML = '-';
+    } else {
+        headerToggle.innerHTML = '+';
+    }
+    
+    var headerLabel = document.createElement('span');
+    headerLabel.innerHTML = friendlyHeaderString;
+
     var header = document.createElement('div');
     header.id = 'filter_panel_header_' + headerString;
     header.className = 'filter_header';
-    header.innerHTML = friendlyHeaderString;
+
+    if (showVisibleToggle == true) {
+        header.appendChild(headerToggle);
+        header.setAttribute('onclick', 'toggleFilterPanel("' + headerString + '");');
+        header.style.cursor = 'pointer';
+    }
+
+    header.appendChild(headerLabel);
 
     return header;
+}
+
+function toggleFilterPanel(panelName) {
+    var filterPanel = document.getElementById('filter_panel_box_' + panelName);
+    var filterPanelToggle = document.getElementById('filter_panel_header_toggle_' + panelName);
+
+    if (filterPanel.style.display == 'none') {
+        filterPanelToggle.innerHTML = '-';
+        filterPanel.style.display = '';
+    } else {
+        filterPanelToggle.innerHTML = '+';
+        filterPanel.style.display = 'none';
+    }
 }
 
 function buildFilterPanelItem(filterType, itemString, friendlyItemString) {
