@@ -13,6 +13,10 @@
     src: url('/fonts/Commodore Pixelized v1.2.ttf');
 }
 
+h1 {
+    margin-bottom: unset;
+}
+
 h3 {
     border-bottom-style: solid;
     /*border-bottom-color: #916b01;*/
@@ -793,8 +797,13 @@ button:disabled {
     float: right;
 }
 
+#gametitle_alts {
+    margin-top: -2px;
+}
+
 #gametitle_criticrating_value {
     display: inline-block;
+    font-family: Commodore64;
     font-size: 36px;
     text-align: center;
     margin-right: 2px;
