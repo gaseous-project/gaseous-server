@@ -13,6 +13,10 @@
     src: url('/fonts/Commodore Pixelized v1.2.ttf');
 }
 
+h1 {
+    margin-bottom: unset;
+}
+
 h3 {
     border-bottom-style: solid;
     /*border-bottom-color: #916b01;*/
@@ -206,7 +210,7 @@ h3 {
     padding: 10px;
 }
 
-input[type='text'] {
+input[type='text'], input[type='number'] {
     background-color: #2b2b2b;
     color: white;
     padding: 5px;
@@ -223,6 +227,15 @@ input[type='text'] {
 
 input[id='filter_panel_search'] {
     width: 160px;
+}
+
+input[id='filter_panel_userrating_min'] {
+    width: 50px;
+    margin-right: 5px;
+}
+
+input[id='filter_panel_userrating_max'] {
+    width: 50px;
 }
 
 /* width */
@@ -286,12 +299,20 @@ input[id='filter_panel_search'] {
     text-align: center;
     vertical-align: top;
     margin-bottom: 10px;
+    border-radius: 10px 10px 10px 10px;
+    -webkit-border-radius: 10px 10px 10px 10px;
+    -moz-border-radius: 10px 10px 10px 10px;
+    border: 1px solid transparent;
 }
 
 .game_tile:hover {
     cursor: pointer;
     text-decoration: underline;
     background-color: #2b2b2b;
+    border-radius: 10px 10px 10px 10px;
+    -webkit-border-radius: 10px 10px 10px 10px;
+    -moz-border-radius: 10px 10px 10px 10px;
+    border: 1px solid #2b2b2b;
 }
 
 .game_tile_image {
@@ -770,4 +791,25 @@ button:disabled {
     box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
     -webkit-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
     -moz-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+}
+
+#gametitle_criticrating {
+    float: right;
+}
+
+#gametitle_alts {
+    margin-top: -2px;
+}
+
+#gametitle_criticrating_value {
+    display: inline-block;
+    font-family: Commodore64;
+    font-size: 36px;
+    text-align: center;
+    margin-right: 2px;
+}
+
+#gametitle_criticrating_label {
+    display: inline-block;
+    text-align: left;
 }

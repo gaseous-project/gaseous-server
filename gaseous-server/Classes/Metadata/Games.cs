@@ -205,6 +205,22 @@ namespace gaseous_server.Classes.Metadata
                     }
                 }
 
+                if (Game.GameModes != null)
+                {
+                    foreach (long gameModeId in Game.GameModes.Ids)
+                    {
+                        GameMode gameMode = GameModes.GetGame_Modes(gameModeId);
+                    }
+                }
+
+                if (Game.MultiplayerModes != null)
+                {
+                    foreach (long multiplayerModeId in Game.MultiplayerModes.Ids)
+                    {
+                        MultiplayerMode multiplayerMode = MultiplayerModes.GetGame_MultiplayerModes(multiplayerModeId);
+                    }
+                }
+
                 if (Game.Platforms != null)
                 {
                     foreach (long PlatformId in Game.Platforms.Ids)
@@ -213,11 +229,27 @@ namespace gaseous_server.Classes.Metadata
                     }
                 }
 
+                if (Game.PlayerPerspectives != null)
+                {
+                    foreach (long PerspectiveId in Game.PlayerPerspectives.Ids)
+                    {
+                        PlayerPerspective GamePlayPerspective = PlayerPerspectives.GetGame_PlayerPerspectives(PerspectiveId);
+                    }
+                }
+
                 if (Game.Screenshots != null)
                 {
                     foreach (long ScreenshotId in Game.Screenshots.Ids)
                     {
                         Screenshot GameScreenshot = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
+                    }
+                }
+
+                if (Game.Themes != null)
+                {
+                    foreach (long ThemeId in Game.Themes.Ids)
+                    {
+                        Theme GameTheme = Themes.GetGame_Themes(ThemeId);
                     }
                 }
 

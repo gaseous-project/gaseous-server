@@ -45,6 +45,39 @@ namespace gaseous_server.Controllers
             }
             FilterSet.Add("genres", genres);
 
+            // game modes
+            List<GameMode> gameModes = new List<GameMode>();
+            sql = "SELECT DISTINCT t1.Id, t1.`Name` FROM GameMode AS t1 JOIN (SELECT * FROM Game WHERE (SELECT COUNT(Id) FROM Games_Roms WHERE GameId = Game.Id) > 0) AS t2 ON JSON_CONTAINS(t2.GameModes, CAST(t1.Id AS char), '$') ORDER BY t1.Id";
+            dbResponse = db.ExecuteCMD(sql);
+
+            foreach (DataRow dr in dbResponse.Rows)
+            {
+                gameModes.Add(Classes.Metadata.GameModes.GetGame_Modes((long)dr["id"]));
+            }
+            FilterSet.Add("gamemodes", gameModes);
+
+            // player perspectives
+            List<PlayerPerspective> playerPerspectives = new List<PlayerPerspective>();
+            sql = "SELECT DISTINCT t1.Id, t1.`Name` FROM PlayerPerspective AS t1 JOIN (SELECT * FROM Game WHERE (SELECT COUNT(Id) FROM Games_Roms WHERE GameId = Game.Id) > 0) AS t2 ON JSON_CONTAINS(t2.PlayerPerspectives, CAST(t1.Id AS char), '$') ORDER BY t1.`Name`";
+            dbResponse = db.ExecuteCMD(sql);
+
+            foreach (DataRow dr in dbResponse.Rows)
+            {
+                playerPerspectives.Add(Classes.Metadata.PlayerPerspectives.GetGame_PlayerPerspectives((long)dr["id"]));
+            }
+            FilterSet.Add("playerperspectives", playerPerspectives);
+
+            // themes
+            List<Theme> themes = new List<Theme>();
+            sql = "SELECT DISTINCT t1.Id, t1.`Name` FROM Theme AS t1 JOIN (SELECT * FROM Game WHERE (SELECT COUNT(Id) FROM Games_Roms WHERE GameId = Game.Id) > 0) AS t2 ON JSON_CONTAINS(t2.Themes, CAST(t1.Id AS char), '$') ORDER BY t1.`Name`";
+            dbResponse = db.ExecuteCMD(sql);
+
+            foreach (DataRow dr in dbResponse.Rows)
+            {
+                themes.Add(Classes.Metadata.Themes.GetGame_Themes((long)dr["id"]));
+            }
+            FilterSet.Add("themes", themes);
+
             return FilterSet;
         }
     }

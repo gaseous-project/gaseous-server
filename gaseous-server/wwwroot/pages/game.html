@@ -4,11 +4,17 @@
 
 <div id="gamepage">
     <div id="gametitle">
+        <div id="gametitle_criticrating">
+            <span id="gametitle_criticrating_value"></span>
+            <span id="gametitle_criticrating_label"></span>
+        </div>
         <h1 id="gametitle_label"></h1>
-        <p id="gamedeveloper_label"></p>
+
         <p id="gametitle_alts">
             <span>Also known as: </span><span id="gametitle_alts_label"></span>
         </p>
+
+        <p id="gamedeveloper_label"></p>
     </div>
 
 
@@ -77,6 +83,17 @@
         // get name
         var gameTitleLabel = document.getElementById('gametitle_label');
         gameTitleLabel.innerHTML = result.name;
+
+        // get critic rating
+        if (gameData.totalRating) {
+            var criticscoreval = document.getElementById('gametitle_criticrating_value');
+            criticscoreval.innerHTML = Math.floor(gameData.totalRating) + '%';
+
+            if (gameData.totalRatingCount) {
+                var criticscorelabel = document.getElementById('gametitle_criticrating_label');
+                criticscorelabel.innerHTML = "based on <br />" + gameData.totalRatingCount + " votes"
+            }
+        }
 
         // get alt name
         var gameTitleAltLabel = document.getElementById('gametitle_alts');
