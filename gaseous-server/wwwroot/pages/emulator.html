@@ -12,6 +12,7 @@
     var artworksPosition = 0;
 
     var emuBios = '';
+    var emuBackground = '';
 
     ajaxCall('/api/v1/Games/' + gameId, 'GET', function (result) {
         gameData = result;
@@ -27,6 +28,10 @@
                 var bg = document.getElementById('bgImage');
                 bg.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/cover/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
             }
+        }
+
+        if (result.cover) {
+            emuBackground = '/api/v1/Games/' + gameId + '/cover/image';
         }
     });
 
