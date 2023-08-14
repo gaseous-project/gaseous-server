@@ -813,3 +813,15 @@ button:disabled {
     display: inline-block;
     text-align: left;
 }
+
+#rom_edit_progressbar {
+    width: 100%;
+    height: 10px;
+    background-color: lightgray;
+    margin-top: 10px;
+}
+
+#rom_edit_progressbar_progress {
+    height: 10px;
+    background-color: cyan;
+}
