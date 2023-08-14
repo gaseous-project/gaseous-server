@@ -571,18 +571,20 @@
                 }
             }
 
-            showProgress();
+            if (remapCallCounterMax > 0) {
+                showProgress();
 
-            for (var i = 0; i < rom_checks.length; i++) {
-                if (rom_checks[i].checked == true) {
-                    var romId = rom_checks[i].getAttribute('data-romid');
-                    remapCallCounter += 1;
+                for (var i = 0; i < rom_checks.length; i++) {
+                    if (rom_checks[i].checked == true) {
+                        var romId = rom_checks[i].getAttribute('data-romid');
+                        remapCallCounter += 1;
 
-                    ajaxCall('/api/v1/Games/' + gameId + '/roms/' + romId + '?NewPlatformId=' + fixplatform[0].id + '&NewGameId=' + fixgame[0].id, 'PATCH', function (result) {
-                        remapTitlesCallback();
-                    }, function (result) {
-                        remapTitlesCallback();
-                    });
+                        ajaxCall('/api/v1/Games/' + gameId + '/roms/' + romId + '?NewPlatformId=' + fixplatform[0].id + '&NewGameId=' + fixgame[0].id, 'PATCH', function (result) {
+                            remapTitlesCallback();
+                        }, function (result) {
+                            remapTitlesCallback();
+                        });
+                    }
                 }
             }
         }
