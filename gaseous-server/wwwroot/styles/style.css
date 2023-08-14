@@ -771,3 +771,15 @@ button:disabled {
     -webkit-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
     -moz-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
 }
+
+#rom_edit_progressbar {
+    width: 100%;
+    height: 10px;
+    background-color: lightgray;
+    margin-top: 10px;
+}
+
+#rom_edit_progressbar_progress {
+    height: 10px;
+    background-color: cyan;
+}

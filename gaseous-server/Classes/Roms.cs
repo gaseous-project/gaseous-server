@@ -56,7 +56,7 @@ namespace gaseous_server.Classes
 			IGDB.Models.Platform platform = Classes.Metadata.Platforms.GetPlatform(PlatformId);
 
 			// ensure metadata for gameid is present
-			IGDB.Models.Game game = Classes.Metadata.Games.GetGame(GameId, false, false);
+			IGDB.Models.Game game = Classes.Metadata.Games.GetGame(GameId, false, false, false);
 
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid WHERE Id = @id";

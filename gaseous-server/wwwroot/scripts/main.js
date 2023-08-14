@@ -1,4 +1,4 @@
-﻿function ajaxCall(endpoint, method, successFunction) {
+﻿function ajaxCall(endpoint, method, successFunction, errorFunction) {
     $.ajax({
 
         // Our sample url to make request
@@ -11,14 +11,18 @@
         // Function to call when to
         // request is ok
         success: function (data) {
-            var x = JSON.stringify(data);
-            console.log(x);
+            //var x = JSON.stringify(data);
+            //console.log(x);
             successFunction(data);
         },
 
         // Error handling
         error: function (error) {
             console.log(`Error ${error}`);
+
+            if (errorFunction) {
+                errorFunction(error);
+            }
         }
     });
 }
@@ -210,4 +214,8 @@ function DropDownRenderGameOption(state) {
         );
     }
     return response;
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
 }

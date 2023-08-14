@@ -267,7 +267,7 @@ namespace gaseous_server.Classes
                     if (games.Length == 1)
                     {
                         // exact match!
-                        determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false);
+                        determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false, false);
                         Logging.Log(Logging.LogType.Information, "Import Game", "  IGDB game: " + determinedGame.Name);
                         GameFound = true;
                         break;
@@ -425,7 +425,7 @@ namespace gaseous_server.Classes
 
 			// get metadata
 			IGDB.Models.Platform platform = gaseous_server.Classes.Metadata.Platforms.GetPlatform(rom.PlatformId);
-			IGDB.Models.Game game = gaseous_server.Classes.Metadata.Games.GetGame(rom.GameId, false, false);
+			IGDB.Models.Game game = gaseous_server.Classes.Metadata.Games.GetGame(rom.GameId, false, false, false);
 
 			// build path
 			string platformSlug = "Unknown Platform";
