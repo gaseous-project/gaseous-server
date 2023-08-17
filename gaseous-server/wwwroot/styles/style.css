@@ -109,11 +109,10 @@ h3 {
     height: 30px;
 }
 
-#banner_upload {
-    background-color: white;
-    position: fixed;
+.banner_button {
+    background-color: transparent;
+    float: right;
     top: 0px;
-    right: 41px;
     height: 40px;
     align-items: center;
     justify-content: center;
@@ -121,44 +120,24 @@ h3 {
     padding-right: 10px;
     padding-top: 0px;
     padding-bottom: 0px;
-    margin: 0px;
+    margin: 0px 0px 0px 0px;
     display: flex;
-    color: black;
+    color: white;
+    border-left-color: black;
+    border-left-width: 1px;
+    border-left-style: solid;
 }
 
-#banner_upload:hover {
+.banner_button:hover {
     cursor: pointer;
-    background-color: lightgrey;
+    background-color: black;
 }
 
-#banner_cog {
-    background-color: white;
-    position: fixed;
-    top: 0px;
-    right: 0px;
-    width: 40px;
-    height: 40px;
-    align-items: center;
-    justify-content: center;
-    padding: 0px;
-    margin: 0px;
-    display: flex;
-}
-
-#banner_cog:hover {
-    cursor: pointer;
-    background-color: lightgrey;
-}
-
-#banner_system_image {
-    height: 20px;
-    width: 20px;
-}
-
-#banner_upload_image {
+.banner_button_image {
     height: 20px;
     width: 20px;
     margin-right: 5px;
+    filter: invert(100%);
 }
 
 #banner_header {
@@ -171,17 +150,20 @@ h3 {
     height: 40px;
     right: 0px;
     align-items: center;
-    display: flex;
 }
 
 #banner_header_label {
     font-family: Commodore64;
-    display: inline;
+    display: inline-block;
     padding: 10px;
     font-size: 16pt;
     vertical-align: top;
     /*color: #edeffa;*/
     color: #7c70da;
+}
+
+#banner_header_label {
+    cursor: pointer;
 }
 
 #content {

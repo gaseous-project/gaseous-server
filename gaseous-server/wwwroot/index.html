@@ -25,15 +25,29 @@
         <img src="/images/logo.png" alt="Gaseous" id="banner_icon_image" />
     </div>
     <div id="banner_header">
-        <div id="banner_header_label">Gaseous Games</div>
+        <div id="banner_cog" onclick="window.location.href = '/index.html?page=settings';" class="banner_button">
+            <img src="/images/settings.svg" alt="Settings" title="Settings" id="banner_system_image" class="banner_button_image" />
+            <span id="banner_system_label">Settings</span>
+        </div>
+
+        <div id="banner_upload" onclick="showDialog('upload');" class="banner_button">
+            <img src="/images/upload.svg" alt="Upload" title="Upload" id="banner_upload_image" class="banner_button_image" />
+            <span id="banner_upload_label">Upload</span>
+        </div>
+
+        <div id="banner_collections" onclick="showDialog('collections');" class="banner_button">
+            <img src="/images/collections.svg" alt="Collections" title="Collections" id="banner_collections_image" class="banner_button_image" />
+            <span id="banner_collections_label">Collections</span>
+        </div>
+
+        <div id="banner_library" onclick="window.location.href = '/index.html';" class="banner_button">
+            <img src="/images/library.svg" alt="Library" title="Library" id="banner_library_image" class="banner_button_image" />
+            <span id="banner_library_label">Library</span>
+        </div>
+
+        <div id="banner_header_label" onclick="window.location.href = '/index.html';">Gaseous Games</div>
     </div>
-    <div id="banner_upload" onclick="showDialog('upload');">
-        <img src="/images/upload.svg" alt="Upload" title="Upload" id="banner_upload_image" />
-        <span id="banner_upload_label">Upload Games</span>
-    </div>
-    <div id="banner_cog" onclick="window.location.href = '/index.html?page=settings';">
-        <img src="/images/settings.svg" alt="Settings" title="Settings" id="banner_system_image" />
-    </div>
+    
 
     <div id="content">
 

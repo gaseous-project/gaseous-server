@@ -155,9 +155,12 @@
             artworksPosition = startPos;
             rotateBackground();
         } else {
+            var bg = document.getElementById('bgImage');
             if (result.cover) {
-                var bg = document.getElementById('bgImage');
                 bg.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/cover/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+            } else {
+                var randomInt = randomIntFromInterval(1, 3);
+                bg.setAttribute('style', 'background-image: url("/images/gamebg' + randomInt + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
             }
         }
 
