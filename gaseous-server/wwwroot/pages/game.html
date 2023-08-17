@@ -18,8 +18,10 @@
 <div id="gamepage">
     <div id="gametitle">
         <div id="gametitle_criticrating">
-            <span id="gametitle_criticrating_value"></span>
-            <span id="gametitle_criticrating_label"></span>
+            <div>
+                <span id="gametitle_criticrating_value"></span>
+                <span id="gametitle_criticrating_label"></span>
+            </div>
         </div>
         <h1 id="gametitle_label"></h1>
 
@@ -103,7 +105,7 @@
 
             if (gameData.totalRatingCount) {
                 var criticscorelabel = document.getElementById('gametitle_criticrating_label');
-                criticscorelabel.innerHTML = "based on <br />" + gameData.totalRatingCount + " votes"
+                criticscorelabel.innerHTML = '<img src="/images/IGDB_logo.svg" style="filter: invert(100%); height: 13px; margin-bottom: -5px;" /><span style="font-size: 10px;"> User Rating<br />' + "based on " + gameData.totalRatingCount + " votes</span>"
             }
         }
 
@@ -324,6 +326,8 @@
                         gameScreenshots_vGallery.appendChild(itemsArr[i]);
                     }
 
+                    selectScreenshot(0);
+                }, function(error) {
                     selectScreenshot(0);
                 });
             } else {
