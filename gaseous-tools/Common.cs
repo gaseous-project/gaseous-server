@@ -13,7 +13,7 @@ namespace gaseous_tools
 		/// <returns></returns>
 		static public object ReturnValueIfNull(object? ObjectToCheck, object IfNullValue)
 		{
-			if (ObjectToCheck == null)
+			if (ObjectToCheck == null || ObjectToCheck == System.DBNull.Value)
 			{
 				return IfNullValue;
 			} else

@@ -63,3 +63,21 @@ CREATE TABLE `Theme` (
   `lastUpdated` datetime DEFAULT NULL,
   PRIMARY KEY (`Id`)
 );
+
+DROP TABLE IF EXISTS `RomCollections`;
+CREATE TABLE `RomCollections` (
+  `Id` BIGINT NOT NULL AUTO_INCREMENT,
+  `Name` VARCHAR(255) NULL,
+  `Description` LONGTEXT NULL,
+  `Platforms` JSON NULL,
+  `Genres` JSON NULL,
+  `Players` JSON NULL,
+  `PlayerPerspectives` JSON NULL,
+  `Themes` JSON NULL,
+  `MinimumRating` INT NULL,
+  `MaximumRating` INT NULL,
+  `MaximumRomsPerPlatform` INT NULL,
+  `MaximumBytesPerPlatform` BIGINT NULL,
+  `MaximumCollectionSizeInBytes` BIGINT NULL,
+  `BuiltStatus` INT NULL,
+  PRIMARY KEY (`Id`));
