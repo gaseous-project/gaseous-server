@@ -81,3 +81,6 @@ CREATE TABLE `RomCollections` (
   `MaximumCollectionSizeInBytes` BIGINT NULL,
   `BuiltStatus` INT NULL,
   PRIMARY KEY (`Id`));
+
+ALTER TABLE `gaseous`.`Signatures_Sources` 
+CHANGE COLUMN `Author` `Author` LONGTEXT NULL DEFAULT NULL ;
