@@ -69,7 +69,7 @@ namespace gaseous_server.Classes
             }
 
             // build collection
-            List<CollectionItem.PlatformItem> platformItems = new List<CollectionItem.PlatformItem>();
+            List<CollectionItem.CollectionPlatformItem> platformItems = new List<CollectionItem.CollectionPlatformItem>();
 
             foreach (Platform platform in platforms) {
                 long TotalRomSize = 0;
@@ -110,20 +110,20 @@ namespace gaseous_server.Classes
 
                         // add platform if not present
                         bool AddPlatform = true;
-                        foreach (CollectionItem.PlatformItem platformItem in platformItems) {
+                        foreach (CollectionItem.CollectionPlatformItem platformItem in platformItems) {
                             if (platformItem.Id == platform.Id) {
                                 AddPlatform = false;
                                 break;
                             }
                         }
                         if (AddPlatform == true) {
-                            CollectionItem.PlatformItem item = new CollectionItem.PlatformItem(platform);
-                            item.Games = new List<CollectionItem.PlatformItem.GameItem>();
+                            CollectionItem.CollectionPlatformItem item = new CollectionItem.CollectionPlatformItem(platform);
+                            item.Games = new List<CollectionItem.CollectionPlatformItem.CollectionGameItem>();
                             platformItems.Add(item);
                         }
 
                         // add game to platform
-                        foreach (CollectionItem.PlatformItem platformItem1 in platformItems) {
+                        foreach (CollectionItem.CollectionPlatformItem platformItem1 in platformItems) {
                             bool AddRoms = false;
 
                             if (collectionItem.MaximumRomsPerPlatform > 0) { 
@@ -138,7 +138,7 @@ namespace gaseous_server.Classes
 
                             if (AddRoms == true) {
                                 TotalGameCount += 1;
-                                CollectionItem.PlatformItem.GameItem gameItem = new CollectionItem.PlatformItem.GameItem(game);
+                                CollectionItem.CollectionPlatformItem.CollectionGameItem gameItem = new CollectionItem.CollectionPlatformItem.CollectionGameItem(game);
                                 gameItem.Roms = gameRoms;
                                 platformItem1.Games.Add(gameItem);
                             }
@@ -148,7 +148,7 @@ namespace gaseous_server.Classes
 
                 if (platformItems.Count > 0) {
                     if (collectionItem.Collection == null) {
-                        collectionItem.Collection = new List<CollectionItem.PlatformItem>();
+                        collectionItem.Collection = new List<CollectionItem.CollectionPlatformItem>();
                     }
                     collectionItem.Collection.AddRange(platformItems);
                 }
@@ -212,7 +212,7 @@ namespace gaseous_server.Classes
                 get
                 {
                     long CollectionSize = 0;
-                    foreach (CollectionItem.PlatformItem platformItem in Collection) {
+                    foreach (CollectionItem.CollectionPlatformItem platformItem in Collection) {
                         CollectionSize += platformItem.RomSize;
                     }
 
@@ -222,12 +222,12 @@ namespace gaseous_server.Classes
 
             public CollectionSortField CollectionSortedField = CollectionSortField.Name;
 
-            public List<PlatformItem> Collection { get; set; }
+            public List<CollectionPlatformItem> Collection { get; set; }
 
-            public class PlatformItem : IGDB.Models.Platform {
-                public PlatformItem(IGDB.Models.Platform platform) {
+            public class CollectionPlatformItem : IGDB.Models.Platform {
+                public CollectionPlatformItem(IGDB.Models.Platform platform) {
                     PropertyInfo[] srcProperties = typeof(IGDB.Models.Platform).GetProperties();
-                    PropertyInfo[] dstProperties = typeof(PlatformItem).GetProperties();
+                    PropertyInfo[] dstProperties = typeof(CollectionPlatformItem).GetProperties();
                     foreach (PropertyInfo srcProperty in srcProperties) {
                         foreach (PropertyInfo dstProperty in dstProperties) {
                             if (srcProperty.Name == dstProperty.Name) {
@@ -237,12 +237,12 @@ namespace gaseous_server.Classes
                     }
                 }
 
-                public List<GameItem> Games { get; set; }
+                public List<CollectionGameItem> Games { get; set; }
 
                 public int RomCount {
                     get {
                         int Counter = 0;
-                        foreach (GameItem Game in Games) {
+                        foreach (CollectionGameItem Game in Games) {
                             Counter += 1;
                         }
 
@@ -253,7 +253,7 @@ namespace gaseous_server.Classes
                 public long RomSize {
                     get {
                         long Size = 0;
-                        foreach (GameItem Game in Games) {
+                        foreach (CollectionGameItem Game in Games) {
                             foreach (Roms.GameRomItem Rom in Game.Roms) {
                                 Size += Rom.Size;
                             }
@@ -263,10 +263,10 @@ namespace gaseous_server.Classes
                     }
                 }
 
-                public class GameItem : IGDB.Models.Game {
-                    public GameItem(IGDB.Models.Game game) {
+                public class CollectionGameItem : IGDB.Models.Game {
+                    public CollectionGameItem(IGDB.Models.Game game) {
                     PropertyInfo[] srcProperties = typeof(IGDB.Models.Game).GetProperties();
-                    PropertyInfo[] dstProperties = typeof(PlatformItem.GameItem).GetProperties();
+                    PropertyInfo[] dstProperties = typeof(CollectionPlatformItem.CollectionGameItem).GetProperties();
                     foreach (PropertyInfo srcProperty in srcProperties) {
                         foreach (PropertyInfo dstProperty in dstProperties) {
                             if (srcProperty.Name == dstProperty.Name) {
