@@ -5,6 +5,7 @@ This is the server for the Gaseous system. All your games and metadata are store
 ## Screenshots
 ![Library](./screenshots/Library.png)
 ![Game](./screenshots/Game.png)
+![Emulator](./screenshots/Emulator.png)
 
 ## Requirements
 * MySQL Server 8+
@@ -17,6 +18,9 @@ The following projects are used by Gaseous
 * https://www.nuget.org/packages/MySql.Data/8.0.32.1
 * https://github.com/kamranayub/igdb-dotnet
 * https://github.com/EmulatorJS/EmulatorJS
+
+## Discord Server
+[![Join our Discord server!](https://invite.casperiv.dev/?inviteCode=Nhu7wpT3k4&format=svg)](https://discord.gg/Nhu7wpT3k4)
 
 ## Configuration File
 When Gaseous-Server is started for the first time, it creates a configuration file at ~/.gaseous-server/config.json if it doesn't exist. Some values can be filled in using environment variables (such as in the case of using docker).
