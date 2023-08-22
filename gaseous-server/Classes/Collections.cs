@@ -1,7 +1,9 @@
 using System;
 using System.Data;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
 using gaseous_tools;
 using IGDB.Models;
@@ -54,17 +56,102 @@ namespace gaseous_server.Classes
         public static CollectionItem GetCollectionContent(long Id) {
             CollectionItem collectionItem = GetCollection(Id);
 
-            List<Game> games = GamesController.GetGames(
-                    "",
-                    String.Join(",", collectionItem.Platforms)
-            );
-            collectionItem.GameData = new List<CollectionItem.GameDataItem>();
-            foreach (Game game in games) {
-                CollectionItem.GameDataItem gameDataItem = new CollectionItem.GameDataItem();
-                gameDataItem.GameData = game;
-                gameDataItem.RomItems = Roms.GetRoms((long)game.Id);
+            // get platforms
+            List<Platform> platforms = new List<Platform>();
+            if (collectionItem.Platforms.Count > 0) {
+                foreach (long PlatformId in collectionItem.Platforms) {
+                    platforms.Add(Platforms.GetPlatform(PlatformId));
+                }
+            } else {
+                // get all platforms to pull from
+                FilterController filterController = new FilterController();
+                platforms.AddRange((List<Platform>)filterController.Filter()["platforms"]);
+            }
 
-                collectionItem.GameData.Add(gameDataItem);
+            // build collection
+            List<CollectionItem.PlatformItem> platformItems = new List<CollectionItem.PlatformItem>();
+
+            foreach (Platform platform in platforms) {
+                long TotalRomSize = 0;
+                long TotalGameCount = 0;
+
+                List<Game> games = GamesController.GetGames("",
+                    platform.Id.ToString(),
+                    string.Join(",", collectionItem.Genres),
+                    string.Join(",", collectionItem.Players),
+                    string.Join(",", collectionItem.PlayerPerspectives),
+                    string.Join(",", collectionItem.Themes),
+                    collectionItem.MinimumRating,
+                    collectionItem.MaximumRating
+                );
+
+                foreach (Game game in games) {
+                    List<Roms.GameRomItem> gameRoms = Roms.GetRoms((long)game.Id, (long)platform.Id);
+                    
+                    bool AddGame = false;
+
+                    // calculate total rom size for the game
+                    long GameRomSize = 0;
+                    foreach (Roms.GameRomItem gameRom in gameRoms) {
+                        GameRomSize += gameRom.Size;
+                    }
+                    if (collectionItem.MaximumBytesPerPlatform > 0) {
+                        if ((TotalRomSize + GameRomSize) < collectionItem.MaximumBytesPerPlatform) {
+                            AddGame = true;
+                        }
+                    }
+                    else 
+                    {
+                        AddGame = true;
+                    }
+
+                    if (AddGame == true) {
+                        TotalRomSize += GameRomSize;
+
+                        // add platform if not present
+                        bool AddPlatform = true;
+                        foreach (CollectionItem.PlatformItem platformItem in platformItems) {
+                            if (platformItem.Id == platform.Id) {
+                                AddPlatform = false;
+                                break;
+                            }
+                        }
+                        if (AddPlatform == true) {
+                            CollectionItem.PlatformItem item = new CollectionItem.PlatformItem(platform);
+                            item.Games = new List<CollectionItem.PlatformItem.GameItem>();
+                            platformItems.Add(item);
+                        }
+
+                        // add game to platform
+                        foreach (CollectionItem.PlatformItem platformItem1 in platformItems) {
+                            bool AddRoms = false;
+
+                            if (collectionItem.MaximumRomsPerPlatform > 0) { 
+                                if (TotalGameCount < collectionItem.MaximumRomsPerPlatform) {
+                                    AddRoms = true;
+                                }
+                            }
+                            else
+                            {
+                                AddRoms = true;
+                            }
+
+                            if (AddRoms == true) {
+                                TotalGameCount += 1;
+                                CollectionItem.PlatformItem.GameItem gameItem = new CollectionItem.PlatformItem.GameItem(game);
+                                gameItem.Roms = gameRoms;
+                                platformItem1.Games.Add(gameItem);
+                            }
+                        }
+                    }
+                }
+
+                if (platformItems.Count > 0) {
+                    if (collectionItem.Collection == null) {
+                        collectionItem.Collection = new List<CollectionItem.PlatformItem>();
+                    }
+                    collectionItem.Collection.AddRange(platformItems);
+                }
             }
 
             return collectionItem;
@@ -108,8 +195,8 @@ namespace gaseous_server.Classes
             public List<long>? Players { get; set; }
             public List<long>? PlayerPerspectives { get; set; }
             public List<long>? Themes { get; set; }
-            public int? MinimumRating { get; set; }
-            public int? MaximumRating { get; set; }
+            public int MinimumRating { get; set; }
+            public int MaximumRating { get; set; }
             public int? MaximumRomsPerPlatform { get; set; }
             public long? MaximumBytesPerPlatform { get; set; }
             public long? MaximumCollectionSizeInBytes { get; set; }
@@ -121,20 +208,42 @@ namespace gaseous_server.Classes
             public long CollectionBuiltSizeBytes { get; set; }
 
             [JsonIgnore]
-            public long CollectionProjectedSizeBytes { get; set; }
+            public long CollectionProjectedSizeBytes { 
+                get
+                {
+                    long CollectionSize = 0;
+                    foreach (CollectionItem.PlatformItem platformItem in Collection) {
+                        CollectionSize += platformItem.RomSize;
+                    }
+
+                    return CollectionSize;
+                }
+            }
 
             public CollectionSortField CollectionSortedField = CollectionSortField.Name;
 
+            public List<PlatformItem> Collection { get; set; }
+
             public class PlatformItem : IGDB.Models.Platform {
+                public PlatformItem(IGDB.Models.Platform platform) {
+                    PropertyInfo[] srcProperties = typeof(IGDB.Models.Platform).GetProperties();
+                    PropertyInfo[] dstProperties = typeof(PlatformItem).GetProperties();
+                    foreach (PropertyInfo srcProperty in srcProperties) {
+                        foreach (PropertyInfo dstProperty in dstProperties) {
+                            if (srcProperty.Name == dstProperty.Name) {
+                                dstProperty.SetValue(this, srcProperty.GetValue(platform));
+                            }
+                        }
+                    }
+                }
+
                 public List<GameItem> Games { get; set; }
 
                 public int RomCount {
                     get {
                         int Counter = 0;
                         foreach (GameItem Game in Games) {
-                            foreach (Roms.GameRomItem Rom in Game.Roms) {
-                                Counter += 1;
-                            }
+                            Counter += 1;
                         }
 
                         return Counter;
@@ -155,7 +264,30 @@ namespace gaseous_server.Classes
                 }
 
                 public class GameItem : IGDB.Models.Game {
+                    public GameItem(IGDB.Models.Game game) {
+                    PropertyInfo[] srcProperties = typeof(IGDB.Models.Game).GetProperties();
+                    PropertyInfo[] dstProperties = typeof(PlatformItem.GameItem).GetProperties();
+                    foreach (PropertyInfo srcProperty in srcProperties) {
+                        foreach (PropertyInfo dstProperty in dstProperties) {
+                            if (srcProperty.Name == dstProperty.Name) {
+                                dstProperty.SetValue(this, srcProperty.GetValue(game));
+                            }
+                        }
+                    }
+                }
+
                     public List<Roms.GameRomItem> Roms { get; set; }
+
+                    public long RomSize {
+                    get {
+                        long Size = 0;
+                        foreach (Roms.GameRomItem Rom in Roms) {
+                            Size += Rom.Size;
+                        }
+                    
+                        return Size;
+                    }
+                }
                 }
             }
 
