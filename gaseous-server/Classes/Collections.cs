@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
@@ -159,6 +160,108 @@ namespace gaseous_server.Classes
             return collectionPlatformItems;
         }
 
+        public static void CompileCollections()
+        {
+            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
+            List<CollectionItem> collectionItems = GetCollections();
+            foreach (CollectionItem collectionItem in collectionItems)
+            {
+                if (collectionItem.BuildStatus == CollectionItem.CollectionBuildStatus.WaitingForBuild)
+                {
+                    // set starting
+                    string sql = "UPDATE RomCollections SET BuiltStatus=@bs WHERE Id=@id";
+                    Dictionary<string, object> dbDict = new Dictionary<string, object>();
+                    dbDict.Add("id", collectionItem.Id);
+                    dbDict.Add("bs", CollectionItem.CollectionBuildStatus.Building);
+                    db.ExecuteCMD(sql, dbDict);
+
+                    List<CollectionItem.CollectionPlatformItem> collectionPlatformItems = GetCollectionContent(collectionItem.Id);
+                    string ZipFilePath = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, collectionItem.Id + ".zip");
+                    string ZipFileTempPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, collectionItem.Id.ToString());
+
+                    try
+                    {
+                        
+                        // clean up if needed
+                        if (File.Exists(ZipFilePath))
+                        {
+                            File.Delete(ZipFilePath);
+                        }
+
+                        if (Directory.Exists(ZipFileTempPath))
+                        {
+                            Directory.Delete(ZipFileTempPath, true);
+                        }
+
+                        // gather collection files
+                        Directory.CreateDirectory(ZipFileTempPath);
+
+                        foreach (CollectionItem.CollectionPlatformItem collectionPlatformItem in collectionPlatformItems)
+                        {
+                            // create platform directory
+                            string ZipPlatformPath = Path.Combine(ZipFileTempPath, collectionPlatformItem.Slug);
+                            if (!Directory.Exists(ZipPlatformPath))
+                            {
+                                Directory.CreateDirectory(ZipPlatformPath);
+                            }
+
+                            foreach (CollectionItem.CollectionPlatformItem.CollectionGameItem collectionGameItem in collectionPlatformItem.Games)
+                            {
+                                // create game directory
+                                string ZipGamePath = Path.Combine(ZipPlatformPath, collectionGameItem.Slug);
+                                if (!Directory.Exists(ZipGamePath))
+                                {
+                                    Directory.CreateDirectory(ZipGamePath);
+                                }
+
+                                // copy in roms
+                                foreach (Roms.GameRomItem gameRomItem in collectionGameItem.Roms)
+                                {
+                                    if (File.Exists(gameRomItem.Path))
+                                    {
+                                        File.Copy(gameRomItem.Path, Path.Combine(ZipGamePath, gameRomItem.Name));
+                                    }
+                                }
+                            }
+                        }
+
+                        // compress to zip
+                        ZipFile.CreateFromDirectory(ZipFileTempPath, ZipFilePath, CompressionLevel.SmallestSize, false);
+
+                        // clean up
+                        if (Directory.Exists(ZipFileTempPath))
+                        {
+                            Directory.Delete(ZipFileTempPath, true);
+                        }
+
+                        // set completed
+                        dbDict["bs"] = CollectionItem.CollectionBuildStatus.Completed;
+                        db.ExecuteCMD(sql, dbDict);
+                    }
+                    catch (Exception ex)
+                    {
+                        // clean up
+                        if (Directory.Exists(ZipFileTempPath))
+                        {
+                            Directory.Delete(ZipFileTempPath, true);
+                        }
+
+                        if (File.Exists(ZipFilePath))
+                        {
+                            File.Delete(ZipFilePath);
+                        }
+
+                        // set failed
+                        dbDict["bs"] = CollectionItem.CollectionBuildStatus.Failed;
+                        db.ExecuteCMD(sql, dbDict);
+
+                        Logging.Log(Logging.LogType.Critical, "Collection Builder", "Collection building has failed", ex);
+                    }
+                }
+            }
+        }
+
         private static CollectionItem BuildCollectionItem(DataRow row) {
             string strPlatforms = (string)Common.ReturnValueIfNull(row["Platforms"], "[ ]");
             string strGenres = (string)Common.ReturnValueIfNull(row["Genres"], "[ ]");
@@ -180,6 +283,7 @@ namespace gaseous_server.Classes
             item.MaximumRomsPerPlatform = (int)Common.ReturnValueIfNull(row["MaximumRomsPerPlatform"], (int)-1);
             item.MaximumBytesPerPlatform = (long)Common.ReturnValueIfNull(row["MaximumBytesPerPlatform"], (long)-1);
             item.MaximumCollectionSizeInBytes = (long)Common.ReturnValueIfNull(row["MaximumCollectionSizeInBytes"], (long)-1);
+            item.BuildStatus = (CollectionItem.CollectionBuildStatus)(int)Common.ReturnValueIfNull(row["BuiltStatus"], 0);
 
             return item;
         }
@@ -235,13 +339,11 @@ namespace gaseous_server.Classes
                 }
             }
 
-            public CollectionSortField CollectionSortedField = CollectionSortField.Name;
-
             public List<CollectionPlatformItem> Collection { get; set; }
 
             public class CollectionPlatformItem {
                 public CollectionPlatformItem(IGDB.Models.Platform platform) {
-                    string[] PropertyWhitelist = new string[] { "Id", "Name" };
+                    string[] PropertyWhitelist = new string[] { "Id", "Name", "Slug" };
 
                     PropertyInfo[] srcProperties = typeof(IGDB.Models.Platform).GetProperties();
                     PropertyInfo[] dstProperties = typeof(CollectionPlatformItem).GetProperties();
@@ -261,6 +363,7 @@ namespace gaseous_server.Classes
 
                 public long Id { get; set; }
                 public string Name { get; set; }
+                public string Slug { get; set; }
 
                 public List<CollectionGameItem> Games { get; set; }
 
@@ -290,7 +393,7 @@ namespace gaseous_server.Classes
 
                 public class CollectionGameItem {
                     public CollectionGameItem(IGDB.Models.Game game) {
-                        string[] PropertyWhitelist = new string[] { "Id", "Name" };
+                        string[] PropertyWhitelist = new string[] { "Id", "Name", "Slug" };
                         PropertyInfo[] srcProperties = typeof(IGDB.Models.Game).GetProperties();
                         PropertyInfo[] dstProperties = typeof(CollectionPlatformItem.CollectionGameItem).GetProperties();
                         foreach (PropertyInfo srcProperty in srcProperties) {
@@ -309,6 +412,7 @@ namespace gaseous_server.Classes
 
                     public long Id { get; set; }
                     public string Name { get; set; }
+                    public string Slug { get; set; }
 
                     public List<Roms.GameRomItem> Roms { get; set; }
 
@@ -327,14 +431,10 @@ namespace gaseous_server.Classes
 
             public enum CollectionBuildStatus {
                 NoStatus = 0,
-                NotBuilt = 1,
+                WaitingForBuild = 1,
                 Building = 2,
-                Completed = 3
-            }
-
-            public enum CollectionSortField {
-                Name = 0,
-                Size = 1
+                Completed = 3,
+                Failed = 4
             }
         }
     }

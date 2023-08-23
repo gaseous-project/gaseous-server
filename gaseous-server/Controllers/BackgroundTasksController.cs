@@ -25,13 +25,16 @@ namespace gaseous_server.Controllers
         {
             foreach (ProcessQueue.QueueItem qi in ProcessQueue.QueueItems)
             {
-                if (TaskType == qi.ItemType)
+                if (qi.AllowManualStart == true)
                 {
-                    if (ForceRun == true)
+                    if (TaskType == qi.ItemType)
                     {
-                        qi.ForceExecute();
+                        if (ForceRun == true)
+                        {
+                            qi.ForceExecute();
+                        }
+                        return qi;
                     }
-                    return qi;
                 }
             }
 
