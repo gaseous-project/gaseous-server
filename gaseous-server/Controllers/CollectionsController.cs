@@ -29,7 +29,7 @@ namespace gaseous_server.Controllers
         [HttpGet]
         [Route("{CollectionId}/Roms")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public Classes.Collections.CollectionItem GetCollectionRoms(long CollectionId)
+        public List<Classes.Collections.CollectionItem.CollectionPlatformItem> GetCollectionRoms(long CollectionId)
         {
             return Classes.Collections.GetCollectionContent(CollectionId);
         }

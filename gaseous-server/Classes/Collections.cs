@@ -53,8 +53,9 @@ namespace gaseous_server.Classes
 			}
         }
 
-        public static CollectionItem GetCollectionContent(long Id) {
+        public static List<CollectionItem.CollectionPlatformItem> GetCollectionContent(long Id) {
             CollectionItem collectionItem = GetCollection(Id);
+            List<CollectionItem.CollectionPlatformItem> collectionPlatformItems = new List<CollectionItem.CollectionPlatformItem>();
 
             // get platforms
             List<Platform> platforms = new List<Platform>();
@@ -85,7 +86,12 @@ namespace gaseous_server.Classes
                     collectionItem.MaximumRating
                 );
 
+                CollectionItem.CollectionPlatformItem collectionPlatformItem = new CollectionItem.CollectionPlatformItem(platform);
+                collectionPlatformItem.Games = new List<CollectionItem.CollectionPlatformItem.CollectionGameItem>();
+
                 foreach (Game game in games) {
+                    CollectionItem.CollectionPlatformItem.CollectionGameItem collectionGameItem = new CollectionItem.CollectionPlatformItem.CollectionGameItem(game);
+
                     List<Roms.GameRomItem> gameRoms = Roms.GetRoms((long)game.Id, (long)platform.Id);
                     
                     bool AddGame = false;
@@ -108,53 +114,49 @@ namespace gaseous_server.Classes
                     if (AddGame == true) {
                         TotalRomSize += GameRomSize;
 
-                        // add platform if not present
-                        bool AddPlatform = true;
-                        foreach (CollectionItem.CollectionPlatformItem platformItem in platformItems) {
-                            if (platformItem.Id == platform.Id) {
-                                AddPlatform = false;
-                                break;
-                            }
-                        }
-                        if (AddPlatform == true) {
-                            CollectionItem.CollectionPlatformItem item = new CollectionItem.CollectionPlatformItem(platform);
-                            item.Games = new List<CollectionItem.CollectionPlatformItem.CollectionGameItem>();
-                            platformItems.Add(item);
-                        }
+                        bool AddRoms = false;
 
-                        // add game to platform
-                        foreach (CollectionItem.CollectionPlatformItem platformItem1 in platformItems) {
-                            bool AddRoms = false;
-
-                            if (collectionItem.MaximumRomsPerPlatform > 0) { 
-                                if (TotalGameCount < collectionItem.MaximumRomsPerPlatform) {
-                                    AddRoms = true;
-                                }
-                            }
-                            else
-                            {
+                        if (collectionItem.MaximumRomsPerPlatform > 0) { 
+                            if (TotalGameCount < collectionItem.MaximumRomsPerPlatform) {
                                 AddRoms = true;
                             }
+                        }
+                        else
+                        {
+                            AddRoms = true;
+                        }
 
-                            if (AddRoms == true) {
-                                TotalGameCount += 1;
-                                CollectionItem.CollectionPlatformItem.CollectionGameItem gameItem = new CollectionItem.CollectionPlatformItem.CollectionGameItem(game);
-                                gameItem.Roms = gameRoms;
-                                platformItem1.Games.Add(gameItem);
-                            }
+                        if (AddRoms == true) {
+                            TotalGameCount += 1;
+                            collectionGameItem.Roms = gameRoms;
+                            collectionPlatformItem.Games.Add(collectionGameItem);
                         }
                     }
                 }
 
-                if (platformItems.Count > 0) {
-                    if (collectionItem.Collection == null) {
-                        collectionItem.Collection = new List<CollectionItem.CollectionPlatformItem>();
+                if (collectionPlatformItem.Games.Count > 0)
+                {
+                    bool AddPlatform = false;
+                    if (collectionItem.MaximumCollectionSizeInBytes > 0)
+                    {
+                        if (TotalRomSize < collectionItem.MaximumCollectionSizeInBytes)
+                        {
+                            AddPlatform = true;
+                        }
                     }
-                    collectionItem.Collection.AddRange(platformItems);
+                    else
+                    {
+                        AddPlatform = true;
+                    }
+
+                    if (AddPlatform == true)
+                    {
+                        collectionPlatformItems.Add(collectionPlatformItem);
+                    }
                 }
             }
 
-            return collectionItem;
+            return collectionPlatformItems;
         }
 
         private static CollectionItem BuildCollectionItem(DataRow row) {
@@ -212,7 +214,20 @@ namespace gaseous_server.Classes
                 get
                 {
                     long CollectionSize = 0;
-                    foreach (CollectionItem.CollectionPlatformItem platformItem in Collection) {
+
+                    List<CollectionItem.CollectionPlatformItem> collectionPlatformItems = new List<CollectionPlatformItem>();
+
+                    if (Collection == null)
+                    {
+                        collectionPlatformItems = GetCollectionContent(Id);
+                    }
+                    else
+                    {
+                        collectionPlatformItems = Collection;
+                    }
+
+                    foreach (CollectionItem.CollectionPlatformItem platformItem in collectionPlatformItems)
+                    {
                         CollectionSize += platformItem.RomSize;
                     }
 
@@ -224,18 +239,28 @@ namespace gaseous_server.Classes
 
             public List<CollectionPlatformItem> Collection { get; set; }
 
-            public class CollectionPlatformItem : IGDB.Models.Platform {
+            public class CollectionPlatformItem {
                 public CollectionPlatformItem(IGDB.Models.Platform platform) {
+                    string[] PropertyWhitelist = new string[] { "Id", "Name" };
+
                     PropertyInfo[] srcProperties = typeof(IGDB.Models.Platform).GetProperties();
                     PropertyInfo[] dstProperties = typeof(CollectionPlatformItem).GetProperties();
                     foreach (PropertyInfo srcProperty in srcProperties) {
-                        foreach (PropertyInfo dstProperty in dstProperties) {
-                            if (srcProperty.Name == dstProperty.Name) {
-                                dstProperty.SetValue(this, srcProperty.GetValue(platform));
+                        if (PropertyWhitelist.Contains<string>(srcProperty.Name))
+                        {
+                            foreach (PropertyInfo dstProperty in dstProperties)
+                            {
+                                if (srcProperty.Name == dstProperty.Name)
+                                {
+                                    dstProperty.SetValue(this, srcProperty.GetValue(platform));
+                                }
                             }
                         }
                     }
                 }
+
+                public long Id { get; set; }
+                public string Name { get; set; }
 
                 public List<CollectionGameItem> Games { get; set; }
 
@@ -263,18 +288,27 @@ namespace gaseous_server.Classes
                     }
                 }
 
-                public class CollectionGameItem : IGDB.Models.Game {
+                public class CollectionGameItem {
                     public CollectionGameItem(IGDB.Models.Game game) {
-                    PropertyInfo[] srcProperties = typeof(IGDB.Models.Game).GetProperties();
-                    PropertyInfo[] dstProperties = typeof(CollectionPlatformItem.CollectionGameItem).GetProperties();
-                    foreach (PropertyInfo srcProperty in srcProperties) {
-                        foreach (PropertyInfo dstProperty in dstProperties) {
-                            if (srcProperty.Name == dstProperty.Name) {
-                                dstProperty.SetValue(this, srcProperty.GetValue(game));
+                        string[] PropertyWhitelist = new string[] { "Id", "Name" };
+                        PropertyInfo[] srcProperties = typeof(IGDB.Models.Game).GetProperties();
+                        PropertyInfo[] dstProperties = typeof(CollectionPlatformItem.CollectionGameItem).GetProperties();
+                        foreach (PropertyInfo srcProperty in srcProperties) {
+                            if (PropertyWhitelist.Contains<string>(srcProperty.Name))
+                            {
+                                foreach (PropertyInfo dstProperty in dstProperties)
+                                {
+                                    if (srcProperty.Name == dstProperty.Name)
+                                    {
+                                        dstProperty.SetValue(this, srcProperty.GetValue(game));
+                                    }
+                                }
                             }
                         }
                     }
-                }
+
+                    public long Id { get; set; }
+                    public string Name { get; set; }
 
                     public List<Roms.GameRomItem> Roms { get; set; }
 
