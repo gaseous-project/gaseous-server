@@ -54,6 +54,104 @@ namespace gaseous_server.Classes
 			}
         }
 
+        public static CollectionItem NewCollection(CollectionItem item)
+        {
+            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "INSERT INTO RomCollections (`Name`, Description, Platforms, Genres, Players, PlayerPerspectives, Themes, MinimumRating, MaximumRating, MaximumRomsPerPlatform, MaximumBytesPerPlatform, MaximumCollectionSizeInBytes, BuiltStatus) VALUES (@name, @description, @platforms, @genres, @players, @playerperspectives, @themes, @minimumrating, @maximumrating, @maximumromsperplatform, @maximumbytesperplatform, @maximumcollectionsizeinbytes, @builtstatus); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            dbDict.Add("name", item.Name);
+            dbDict.Add("description", item.Description);
+            dbDict.Add("platforms", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Platforms, new List<long>())));
+            dbDict.Add("genres", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Genres, new List<long>())));
+            dbDict.Add("players", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Players, new List<long>())));
+            dbDict.Add("playerperspectives", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.PlayerPerspectives, new List<long>())));
+            dbDict.Add("themes", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Themes, new List<long>())));
+            dbDict.Add("minimumrating", Common.ReturnValueIfNull(item.MinimumRating, -1));
+            dbDict.Add("maximumrating", Common.ReturnValueIfNull(item.MaximumRating, -1));
+            dbDict.Add("maximumromsperplatform", Common.ReturnValueIfNull(item.MaximumRomsPerPlatform, -1));
+            dbDict.Add("maximumbytesperplatform", Common.ReturnValueIfNull(item.MaximumBytesPerPlatform, -1));
+            dbDict.Add("maximumcollectionsizeinbytes", Common.ReturnValueIfNull(item.MaximumCollectionSizeInBytes, -1));
+            dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.NoStatus);
+            DataTable romDT = db.ExecuteCMD(sql, dbDict);
+            long CollectionId = (long)romDT.Rows[0][0];
+
+            CollectionItem collectionItem = GetCollection(CollectionId);
+
+            return collectionItem;
+        }
+
+        public static CollectionItem EditCollection(long Id, CollectionItem item)
+        {
+            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "UPDATE RomCollections SET `Name`=@name, Description=@description, Platforms=@platforms, Genres=@genres, Players=@players, PlayerPerspectives=@playerperspectives, Themes=@themes, MinimumRating=@minimumrating, MaximumRating=@maximumrating, MaximumRomsPerPlatform=@maximumromsperplatform, MaximumBytesPerPlatform=@maximumbytesperplatform, MaximumCollectionSizeInBytes=@maximumcollectionsizeinbytes, BuiltStatus=@builtstatus WHERE Id=@id";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            dbDict.Add("id", Id);
+            dbDict.Add("name", item.Name);
+            dbDict.Add("description", item.Description);
+            dbDict.Add("platforms", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Platforms, new List<long>())));
+            dbDict.Add("genres", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Genres, new List<long>())));
+            dbDict.Add("players", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Players, new List<long>())));
+            dbDict.Add("playerperspectives", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.PlayerPerspectives, new List<long>())));
+            dbDict.Add("themes", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Themes, new List<long>())));
+            dbDict.Add("minimumrating", Common.ReturnValueIfNull(item.MinimumRating, -1));
+            dbDict.Add("maximumrating", Common.ReturnValueIfNull(item.MaximumRating, -1));
+            dbDict.Add("maximumromsperplatform", Common.ReturnValueIfNull(item.MaximumRomsPerPlatform, -1));
+            dbDict.Add("maximumbytesperplatform", Common.ReturnValueIfNull(item.MaximumBytesPerPlatform, -1));
+            dbDict.Add("maximumcollectionsizeinbytes", Common.ReturnValueIfNull(item.MaximumCollectionSizeInBytes, -1));
+            dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.NoStatus);
+            db.ExecuteCMD(sql, dbDict);
+
+            string CollectionZipFile = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, Id + ".zip");
+            if (File.Exists(CollectionZipFile))
+            {
+                File.Delete(CollectionZipFile);
+            }
+
+            CollectionItem collectionItem = GetCollection(Id);
+
+            return collectionItem;
+        }
+
+        public static void DeleteCollection(long Id)
+        {
+            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "DELETE FROM RomCollections WHERE Id=@id";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            dbDict.Add("id", Id);
+            db.ExecuteCMD(sql, dbDict);
+
+            string CollectionZipFile = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, Id + ".zip");
+            if (File.Exists(CollectionZipFile))
+            {
+                File.Delete(CollectionZipFile);
+            }
+        }
+
+        public static void StartCollectionItemBuild(long Id)
+        {
+            CollectionItem collectionItem = GetCollection(Id);
+
+            if (collectionItem.BuildStatus != CollectionItem.CollectionBuildStatus.Building)
+            {
+                // set collection item to waitingforbuild
+                Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                string sql = "UPDATE RomCollections SET BuiltStatus=@bs WHERE Id=@id";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>();
+                dbDict.Add("id", Id);
+                dbDict.Add("bs", CollectionItem.CollectionBuildStatus.WaitingForBuild);
+                db.ExecuteCMD(sql, dbDict);
+
+                // start background task
+                foreach (ProcessQueue.QueueItem qi in ProcessQueue.QueueItems)
+                {
+                    if (qi.ItemType == ProcessQueue.QueueItemType.CollectionCompiler) { 
+                        qi.ForceExecute();
+                        break;
+                    }
+                }
+            }
+        }
+
         public static List<CollectionItem.CollectionPlatformItem> GetCollectionContent(long Id) {
             CollectionItem collectionItem = GetCollection(Id);
             List<CollectionItem.CollectionPlatformItem> collectionPlatformItems = new List<CollectionItem.CollectionPlatformItem>();
@@ -339,7 +437,8 @@ namespace gaseous_server.Classes
                 }
             }
 
-            public List<CollectionPlatformItem> Collection { get; set; }
+            [JsonIgnore]
+            internal List<CollectionPlatformItem> Collection { get; set; }
 
             public class CollectionPlatformItem {
                 public CollectionPlatformItem(IGDB.Models.Platform platform) {

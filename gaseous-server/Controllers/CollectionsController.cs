@@ -11,6 +11,10 @@ namespace gaseous_server.Controllers
     [Route("api/v1/[controller]")]
     public class CollectionsController : Controller
     {
+        /// <summary>
+        /// Gets all ROM collections
+        /// </summary>
+        /// <returns></returns>
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public List<Classes.Collections.CollectionItem> GetCollections()
@@ -18,20 +22,148 @@ namespace gaseous_server.Controllers
             return Classes.Collections.GetCollections();
         }
 
+        /// <summary>
+        /// Gets a specific ROM collection
+        /// </summary>
+        /// <param name="CollectionId"></param>
+        /// <param name="Build">Set to true to begin the collection build process</param>
+        /// <returns></returns>
         [HttpGet]
         [Route("{CollectionId}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public Classes.Collections.CollectionItem GetCollections(long CollectionId)
+        [ProducesResponseType(typeof(Classes.Collections.CollectionItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GetCollection(long CollectionId, bool Build = false)
         {
-            return Classes.Collections.GetCollection(CollectionId);
+            try
+            {
+                if (Build == true)
+                {
+                    Classes.Collections.StartCollectionItemBuild(CollectionId);
+                }
+
+                return Ok(Classes.Collections.GetCollection(CollectionId));
+            }
+            catch
+            {
+                return NotFound();
+            }
         }
 
+        /// <summary>
+        /// Gets the contents of the specified ROM collection
+        /// </summary>
+        /// <param name="CollectionId"></param>
+        /// <returns></returns>
         [HttpGet]
         [Route("{CollectionId}/Roms")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public List<Classes.Collections.CollectionItem.CollectionPlatformItem> GetCollectionRoms(long CollectionId)
+        [ProducesResponseType(typeof(List<Classes.Collections.CollectionItem.CollectionPlatformItem>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GetCollectionRoms(long CollectionId)
         {
-            return Classes.Collections.GetCollectionContent(CollectionId);
+            try
+            {
+                return Ok(Classes.Collections.GetCollectionContent(CollectionId));
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        /// <summary>
+        /// Gets ROM collection in zip format
+        /// </summary>
+        /// <param name="CollectionId"></param>
+        /// <returns></returns>
+        [HttpGet]
+        [Route("{CollectionId}/Roms/Zip")]
+        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GetCollectionRomsZip(long CollectionId)
+        {
+            try
+            {
+                Classes.Collections.CollectionItem collectionItem = Classes.Collections.GetCollection(CollectionId);
+
+                string ZipFilePath = Path.Combine(gaseous_tools.Config.LibraryConfiguration.LibraryCollectionsDirectory, CollectionId + ".zip");
+
+                if (System.IO.File.Exists(ZipFilePath))
+                {
+                    var stream = new FileStream(ZipFilePath, FileMode.Open);
+                    return File(stream, "application/zip", collectionItem.Name + ".zip");
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        /// <summary>
+        /// Creates a new ROM collection
+        /// </summary>
+        /// <param name="Item"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [ProducesResponseType(typeof(Classes.Collections.CollectionItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public ActionResult NewCollection(Classes.Collections.CollectionItem Item)
+        {
+            try
+            {
+                return Ok(Classes.Collections.NewCollection(Item));
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ex);
+            }
+        }
+
+        /// <summary>
+        /// Edits an existing collection
+        /// </summary>
+        /// <param name="CollectionId"></param>
+        /// <param name="Item"></param>
+        /// <returns></returns>
+        [HttpPatch]
+        [Route("{CollectionId}")]
+        [ProducesResponseType(typeof(Classes.Collections.CollectionItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult EditCollection(long CollectionId, Classes.Collections.CollectionItem Item)
+        {
+            try
+            {
+                return Ok(Classes.Collections.EditCollection(CollectionId, Item));
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        /// <summary>
+        /// Deletes the specified ROM collection
+        /// </summary>
+        /// <param name="CollectionId"></param>
+        [HttpDelete]
+        [Route("{CollectionId}")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult DeleteCollection(long CollectionId)
+        {
+            try
+            {
+                Classes.Collections.DeleteCollection(CollectionId);
+                return Ok();
+            }
+            catch
+            {
+                return NotFound();
+            }
         }
     }
 }
