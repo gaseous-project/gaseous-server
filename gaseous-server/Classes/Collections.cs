@@ -406,10 +406,56 @@ namespace gaseous_server.Classes
             public long? MaximumCollectionSizeInBytes { get; set; }
 
             [JsonIgnore]
-            public CollectionBuildStatus BuildStatus { get; set; }
+            public CollectionBuildStatus BuildStatus
+            {
+                get
+                {
+                    if (_BuildStatus == CollectionBuildStatus.Completed)
+                    {
+                        if (File.Exists(Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, Id + ".zip")))
+                        {
+                            return CollectionBuildStatus.Completed;
+                        }
+                        else
+                        {
+                            return CollectionBuildStatus.NoStatus;
+                        }
+                    }
+                    else
+                    {
+                        return _BuildStatus;
+                    }
+                }
+                set
+                {
+                    _BuildStatus = value;
+                }
+            }
+            private CollectionBuildStatus _BuildStatus { get; set; }
 
             [JsonIgnore]
-            public long CollectionBuiltSizeBytes { get; set; }
+            public long CollectionBuiltSizeBytes {
+                get
+                {
+                    if (BuildStatus == CollectionBuildStatus.Completed)
+                    {
+                        string ZipFilePath = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, Id + ".zip");
+                        if (File.Exists(ZipFilePath))
+                        {
+                            FileInfo fi = new FileInfo(ZipFilePath);
+                            return fi.Length;
+                        }
+                        else
+                        {
+                            return 0;
+                        }
+                    }
+                    else
+                    {
+                        return 0;
+                    }
+                }
+            }
 
             [JsonIgnore]
             public long CollectionProjectedSizeBytes { 
