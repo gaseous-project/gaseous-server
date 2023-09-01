@@ -71,11 +71,13 @@ namespace gaseous_server.Classes
             dbDict.Add("maximumromsperplatform", Common.ReturnValueIfNull(item.MaximumRomsPerPlatform, -1));
             dbDict.Add("maximumbytesperplatform", Common.ReturnValueIfNull(item.MaximumBytesPerPlatform, -1));
             dbDict.Add("maximumcollectionsizeinbytes", Common.ReturnValueIfNull(item.MaximumCollectionSizeInBytes, -1));
-            dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.NoStatus);
+            dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.WaitingForBuild);
             DataTable romDT = db.ExecuteCMD(sql, dbDict);
             long CollectionId = (long)romDT.Rows[0][0];
 
             CollectionItem collectionItem = GetCollection(CollectionId);
+
+            StartCollectionItemBuild(CollectionId);
 
             return collectionItem;
         }
@@ -98,7 +100,7 @@ namespace gaseous_server.Classes
             dbDict.Add("maximumromsperplatform", Common.ReturnValueIfNull(item.MaximumRomsPerPlatform, -1));
             dbDict.Add("maximumbytesperplatform", Common.ReturnValueIfNull(item.MaximumBytesPerPlatform, -1));
             dbDict.Add("maximumcollectionsizeinbytes", Common.ReturnValueIfNull(item.MaximumCollectionSizeInBytes, -1));
-            dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.NoStatus);
+            dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.WaitingForBuild);
             db.ExecuteCMD(sql, dbDict);
 
             string CollectionZipFile = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, Id + ".zip");
@@ -108,6 +110,8 @@ namespace gaseous_server.Classes
             }
 
             CollectionItem collectionItem = GetCollection(Id);
+
+            StartCollectionItemBuild(Id);
 
             return collectionItem;
         }
@@ -152,9 +156,8 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static List<CollectionItem.CollectionPlatformItem> GetCollectionContent(long Id) {
-            CollectionItem collectionItem = GetCollection(Id);
-            List<CollectionItem.CollectionPlatformItem> collectionPlatformItems = new List<CollectionItem.CollectionPlatformItem>();
+        public static CollectionContents GetCollectionContent(CollectionItem collectionItem) {
+            List<CollectionContents.CollectionPlatformItem> collectionPlatformItems = new List<CollectionContents.CollectionPlatformItem>();
 
             // get platforms
             List<Platform> platforms = new List<Platform>();
@@ -169,7 +172,7 @@ namespace gaseous_server.Classes
             }
 
             // build collection
-            List<CollectionItem.CollectionPlatformItem> platformItems = new List<CollectionItem.CollectionPlatformItem>();
+            List<CollectionContents.CollectionPlatformItem> platformItems = new List<CollectionContents.CollectionPlatformItem>();
 
             foreach (Platform platform in platforms) {
                 long TotalRomSize = 0;
@@ -185,11 +188,11 @@ namespace gaseous_server.Classes
                     collectionItem.MaximumRating
                 );
 
-                CollectionItem.CollectionPlatformItem collectionPlatformItem = new CollectionItem.CollectionPlatformItem(platform);
-                collectionPlatformItem.Games = new List<CollectionItem.CollectionPlatformItem.CollectionGameItem>();
+                CollectionContents.CollectionPlatformItem collectionPlatformItem = new CollectionContents.CollectionPlatformItem(platform);
+                collectionPlatformItem.Games = new List<CollectionContents.CollectionPlatformItem.CollectionGameItem>();
 
                 foreach (Game game in games) {
-                    CollectionItem.CollectionPlatformItem.CollectionGameItem collectionGameItem = new CollectionItem.CollectionPlatformItem.CollectionGameItem(game);
+                    CollectionContents.CollectionPlatformItem.CollectionGameItem collectionGameItem = new CollectionContents.CollectionPlatformItem.CollectionGameItem(game);
 
                     List<Roms.GameRomItem> gameRoms = Roms.GetRoms((long)game.Id, (long)platform.Id);
                     
@@ -255,7 +258,9 @@ namespace gaseous_server.Classes
                 }
             }
 
-            return collectionPlatformItems;
+            CollectionContents collectionContents = new CollectionContents();
+            collectionContents.Collection = collectionPlatformItems;
+            return collectionContents;
         }
 
         public static void CompileCollections()
@@ -274,7 +279,7 @@ namespace gaseous_server.Classes
                     dbDict.Add("bs", CollectionItem.CollectionBuildStatus.Building);
                     db.ExecuteCMD(sql, dbDict);
 
-                    List<CollectionItem.CollectionPlatformItem> collectionPlatformItems = GetCollectionContent(collectionItem.Id);
+                    List<CollectionContents.CollectionPlatformItem> collectionPlatformItems = GetCollectionContent(collectionItem).Collection;
                     string ZipFilePath = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, collectionItem.Id + ".zip");
                     string ZipFileTempPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, collectionItem.Id.ToString());
 
@@ -295,7 +300,7 @@ namespace gaseous_server.Classes
                         // gather collection files
                         Directory.CreateDirectory(ZipFileTempPath);
 
-                        foreach (CollectionItem.CollectionPlatformItem collectionPlatformItem in collectionPlatformItems)
+                        foreach (CollectionContents.CollectionPlatformItem collectionPlatformItem in collectionPlatformItems)
                         {
                             // create platform directory
                             string ZipPlatformPath = Path.Combine(ZipFileTempPath, collectionPlatformItem.Slug);
@@ -304,7 +309,7 @@ namespace gaseous_server.Classes
                                 Directory.CreateDirectory(ZipPlatformPath);
                             }
 
-                            foreach (CollectionItem.CollectionPlatformItem.CollectionGameItem collectionGameItem in collectionPlatformItem.Games)
+                            foreach (CollectionContents.CollectionPlatformItem.CollectionGameItem collectionGameItem in collectionPlatformItem.Games)
                             {
                                 // create game directory
                                 string ZipGamePath = Path.Combine(ZipPlatformPath, collectionGameItem.Slug);
@@ -386,8 +391,10 @@ namespace gaseous_server.Classes
             return item;
         }
 
-        public class CollectionItem {
-            public CollectionItem() {
+        public class CollectionItem
+        {
+            public CollectionItem()
+            {
 
             }
 
@@ -434,7 +441,8 @@ namespace gaseous_server.Classes
             private CollectionBuildStatus _BuildStatus { get; set; }
 
             [JsonIgnore]
-            public long CollectionBuiltSizeBytes {
+            public long CollectionBuiltSizeBytes
+            {
                 get
                 {
                     if (BuildStatus == CollectionBuildStatus.Completed)
@@ -457,24 +465,35 @@ namespace gaseous_server.Classes
                 }
             }
 
+            public enum CollectionBuildStatus
+            {
+                NoStatus = 0,
+                WaitingForBuild = 1,
+                Building = 2,
+                Completed = 3,
+                Failed = 4
+            }
+        }
+
+        public class CollectionContents {
             [JsonIgnore]
-            public long CollectionProjectedSizeBytes { 
+            public List<CollectionPlatformItem> Collection { get; set; }
+
+            [JsonIgnore]
+            public long CollectionProjectedSizeBytes
+            {
                 get
                 {
                     long CollectionSize = 0;
 
-                    List<CollectionItem.CollectionPlatformItem> collectionPlatformItems = new List<CollectionPlatformItem>();
+                    List<CollectionPlatformItem> collectionPlatformItems = new List<CollectionPlatformItem>();
 
-                    if (Collection == null)
-                    {
-                        collectionPlatformItems = GetCollectionContent(Id);
-                    }
-                    else
+                    if (Collection != null)
                     {
                         collectionPlatformItems = Collection;
                     }
 
-                    foreach (CollectionItem.CollectionPlatformItem platformItem in collectionPlatformItems)
+                    foreach (CollectionPlatformItem platformItem in collectionPlatformItems)
                     {
                         CollectionSize += platformItem.RomSize;
                     }
@@ -482,9 +501,6 @@ namespace gaseous_server.Classes
                     return CollectionSize;
                 }
             }
-
-            [JsonIgnore]
-            internal List<CollectionPlatformItem> Collection { get; set; }
 
             public class CollectionPlatformItem {
                 public CollectionPlatformItem(IGDB.Models.Platform platform) {
@@ -538,7 +554,7 @@ namespace gaseous_server.Classes
 
                 public class CollectionGameItem {
                     public CollectionGameItem(IGDB.Models.Game game) {
-                        string[] PropertyWhitelist = new string[] { "Id", "Name", "Slug" };
+                        string[] PropertyWhitelist = new string[] { "Id", "Name", "Slug", "Cover" };
                         PropertyInfo[] srcProperties = typeof(IGDB.Models.Game).GetProperties();
                         PropertyInfo[] dstProperties = typeof(CollectionPlatformItem.CollectionGameItem).GetProperties();
                         foreach (PropertyInfo srcProperty in srcProperties) {
@@ -548,7 +564,19 @@ namespace gaseous_server.Classes
                                 {
                                     if (srcProperty.Name == dstProperty.Name)
                                     {
-                                        dstProperty.SetValue(this, srcProperty.GetValue(game));
+                                        if (srcProperty.GetValue(game) != null) {
+                                            string compareName = srcProperty.PropertyType.Name.ToLower().Split("`")[0];
+                                            switch(compareName) {
+                                                case "identityorvalue":
+                                                    string newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(srcProperty.GetValue(game));
+                                                    Dictionary<string, object> newDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(newObjectValue);
+                                                    dstProperty.SetValue(this, newDict["Id"]);
+                                                    break;
+                                                default:
+                                                    dstProperty.SetValue(this, srcProperty.GetValue(game));
+                                                    break;
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -558,6 +586,7 @@ namespace gaseous_server.Classes
                     public long Id { get; set; }
                     public string Name { get; set; }
                     public string Slug { get; set; }
+                    public long Cover { get; set;}
 
                     public List<Roms.GameRomItem> Roms { get; set; }
 
@@ -572,14 +601,6 @@ namespace gaseous_server.Classes
                     }
                 }
                 }
-            }
-
-            public enum CollectionBuildStatus {
-                NoStatus = 0,
-                WaitingForBuild = 1,
-                Building = 2,
-                Completed = 3,
-                Failed = 4
             }
         }
     }

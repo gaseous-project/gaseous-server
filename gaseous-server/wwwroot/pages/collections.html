@@ -1,0 +1,75 @@
+﻿<div id="bgImage" style="background-image: url('/images/CollectionsWallpaper.jpg'); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);">
+    <div id="bgImage_Opacity"></div>
+</div>
+
+<div id="gamepage">
+    <div id="gametitle">
+        <h1 id="gametitle_label">Collections</h1>
+    </div>
+    <button id="collection_new" style="float: right;" onclick="showDialog('collectionedit');">New Collection</button>
+    <div id="collection_table_location">
+
+    </div>
+</div>
+
+<div id="settings_photocredit">
+    Wallpaper by <a href="https://wallpapercave.com/u/andrea16" class="romlink">andrea16</a> / <a href="https://wallpapercave.com/w/wp5206111" class="romlink">Wallpaper Cave</a>
+</div>
+
+<script type="text/javascript">
+    ajaxCall('/api/v1/Collections', 'GET', function (result) {
+        if (result) {
+            var targetDiv = document.getElementById('collection_table_location');
+
+            var newTable = document.createElement('table');
+            newTable.id = 'romtable';
+            newTable.className = 'romtable';
+            newTable.setAttribute('cellspacing', 0);
+            newTable.appendChild(createTableRow(true, [ 'Name', 'Description', 'Download Status', 'Size', '' ]));
+
+            for (var i = 0; i < result.length; i++) {
+                var statusText = result[i].buildStatus;
+                var downloadLink = '';
+                var packageSize = '-';
+                switch (result[i].buildStatus) {
+                    case 'NoStatus':
+                        statusText = '-';
+                        break;
+                    case "WaitingForBuild":
+                        statusText = 'Build pending';
+                        break;
+                    case "Building":
+                        statusText = 'Building';
+                        break;
+                    case "Completed":
+                        statusText = 'Available';
+                        downloadLink = '<a href="/api/v1/Collections/' + result[i].id + '/Roms/Zip" class="romlink"><img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" /></a>';
+                        packageSize = formatBytes(result[i].collectionBuiltSizeBytes);
+                        break;
+                    case "Failed":
+                        statusText = 'Build error';
+                        break;
+                    default:
+                        statusText = result[i].buildStatus;
+                        break;
+                }
+
+                var editButton = '<a href="#" onclick="showDialog(\'collectionedit\', ' + result[i].id + ');" class="romlink"><img src="/images/edit.svg" class="banner_button_image" alt="Edit" title="Edit" /></a>';
+
+                var deleteButton = '<a href="/api/v1/Collections/' + result[i].id + '/Roms/Zip" class="romlink"><img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" /></a>';
+
+                var newRow = [
+                    result[i].name,
+                    result[i].description,
+                    statusText,
+                    packageSize,
+                    '<div style="text-align: right;">' + downloadLink + editButton + deleteButton + '</div>'
+                ];
+
+                newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
+            }
+
+            targetDiv.appendChild(newTable);
+        }
+    });
+</script>

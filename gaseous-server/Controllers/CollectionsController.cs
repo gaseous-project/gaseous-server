@@ -56,18 +56,40 @@ namespace gaseous_server.Controllers
         /// <returns></returns>
         [HttpGet]
         [Route("{CollectionId}/Roms")]
-        [ProducesResponseType(typeof(List<Classes.Collections.CollectionItem.CollectionPlatformItem>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<Classes.Collections.CollectionContents.CollectionPlatformItem>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult GetCollectionRoms(long CollectionId)
         {
             try
             {
-                return Ok(Classes.Collections.GetCollectionContent(CollectionId));
+                Classes.Collections.CollectionItem collectionItem = Classes.Collections.GetCollection(CollectionId);
+                return Ok(Classes.Collections.GetCollectionContent(collectionItem));
             }
             catch
             {
                 return NotFound();
             }
+        }
+
+        /// <summary>
+        /// Gets a preview of the provided collection item
+        /// </summary>
+        /// <param name="Item"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("Preview")]
+        [ProducesResponseType(typeof(List<Classes.Collections.CollectionContents.CollectionPlatformItem>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GetCollectionRomsPreview(Classes.Collections.CollectionItem Item)
+        {
+            //try
+            //{
+                return Ok(Classes.Collections.GetCollectionContent(Item));
+            //}
+            //catch (Exception ex)
+            //{
+            //    return NotFound(ex);
+            //}
         }
 
         /// <summary>

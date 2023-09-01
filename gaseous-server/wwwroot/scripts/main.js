@@ -1,4 +1,4 @@
-﻿function ajaxCall(endpoint, method, successFunction, errorFunction) {
+﻿function ajaxCall(endpoint, method, successFunction, errorFunction, body) {
     $.ajax({
 
         // Our sample url to make request
@@ -7,6 +7,12 @@
 
         // Type of Request
         type: method,
+
+        // data to send to the server
+        data: body,
+
+        dataType: 'json',
+        contentType: 'application/json',
 
         // Function to call when to
         // request is ok
@@ -98,6 +104,18 @@ function showDialog(dialogPage, variables) {
     modalVariables = variables;
 
     $('#modal-content').load('/pages/dialogs/' + dialogPage + '.html');
+}
+
+function closeDialog() {
+    // Get the modal
+    var modal = document.getElementById("myModal");
+
+    // Get the modal content
+    var modalContent = document.getElementById("modal-content");
+
+    modal.style.display = "none";
+    modalContent.innerHTML = "";
+    modalVariables = null;
 }
 
 var subModalVariables;
