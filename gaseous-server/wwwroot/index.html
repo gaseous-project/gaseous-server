@@ -2,23 +2,42 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <link type="text/css" rel="stylesheet" href="/styles/style.css" />
+    <script src="/api/v1/System/VersionFile"></script>
+    <link type="text/css" rel="stylesheet" dat-href="/styles/style.css" />
     <script src="/scripts/jquery-3.6.0.min.js"></script>
     <script src="/scripts/moment.js"></script>
     <link href="/styles/select2.min.css" rel="stylesheet" />
-    <link rel="stylesheet" href="/styles/dropzone.min.css" type="text/css" />
+    <link href="/styles/dropzone.min.css" rel="stylesheet" type="text/css" />
     <script src="/scripts/jquery.lazy.min.js"></script>
     <script src="/scripts/jquery.lazy.plugins.min.js"></script>
     <script src="/scripts/select2.min.js"></script>
     <script src="/scripts/dropzone.min.js"></script>
-    <script src="/scripts/main.js" type="text/javascript"></script>
-    <script src="/scripts/filterformating.js" type="text/javascript"></script>
-    <script src="/scripts/gamesformating.js" type="text/javascript"></script>
+    <script dat-src="/scripts/main.js" type="text/javascript"></script>
+    <script dat-src="/scripts/filterformating.js" type="text/javascript"></script>
+    <script dat-src="/scripts/gamesformating.js" type="text/javascript"></script>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
     <title>Gaseous Games</title>
+
+    <script type="text/javascript">
+        // update links
+        var headLinks = document.getElementsByTagName('link');
+        for (var i = 0; i < headLinks.length; i++) {
+            if (headLinks[i].getAttribute('dat-href')) {
+                headLinks[i].setAttribute('href', headLinks[i].getAttribute('dat-href') + '?v=' + AppVersion);
+            }
+        }
+
+        // update script src
+        var headLinks = document.getElementsByTagName('script');
+        for (var i = 0; i < headLinks.length; i++) {
+            if (headLinks[i].getAttribute('dat-src')) {
+                headLinks[i].setAttribute('src', headLinks[i].getAttribute('dat-src') + '?v=' + AppVersion);
+            }
+        }
+    </script>
 </head>
 <body>
     <div id="banner_icon" onclick="window.location.href = '/index.html';">
@@ -77,6 +96,7 @@
     </div>
 
     <script type="text/javascript">var modalVariables = null;
+        
 
         $(document).ready(function () {
             var myParam = getQueryString('page', 'string');
@@ -85,7 +105,8 @@
                 myParam = 'home';
             }
 
-            $('#content').load('/pages/' + myParam + '.html');
-        });</script>
+            $('#content').load('/pages/' + myParam + '.html?v=' + AppVersion);
+        });
+    </script>
 </body>
 </html>

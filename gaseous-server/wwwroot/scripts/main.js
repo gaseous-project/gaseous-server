@@ -103,7 +103,7 @@ function showDialog(dialogPage, variables) {
 
     modalVariables = variables;
 
-    $('#modal-content').load('/pages/dialogs/' + dialogPage + '.html');
+    $('#modal-content').load('/pages/dialogs/' + dialogPage + '.html?v=' + AppVersion);
 }
 
 function closeDialog() {
@@ -145,7 +145,7 @@ function showSubDialog(dialogPage, variables) {
 
     subModalVariables = variables;
 
-    $('#modal-content-sub').load('/pages/dialogs/' + dialogPage + '.html');
+    $('#modal-content-sub').load('/pages/dialogs/' + dialogPage + '.html?v=' + AppVersion);
 }
 
 function closeSubDialog() {
