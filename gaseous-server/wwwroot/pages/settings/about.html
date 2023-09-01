@@ -12,6 +12,10 @@
         <td><a href="https://github.com/gaseous-project/gaseous-server/issues" class="romlink">https://github.com/gaseous-project/gaseous-server/issues</a></td>
     </tr>
     <tr>
+        <th>Server Version</th>
+        <td id="settings_appversion"></td>
+    </tr>
+    <tr>
         <td colspan="2">
             <h3>Data Sources</h2>
             <h4>Game data</h4>
@@ -39,3 +43,12 @@
         </td>
     </tr>
 </table>
+
+<script type="text/javascript">
+    ajaxCall('/api/v1/System/Version', 'GET', function (result) {
+        if (result) {
+            var versionBox = document.getElementById('settings_appversion');
+            versionBox.innerHTML = result;
+        }
+    });
+</script>

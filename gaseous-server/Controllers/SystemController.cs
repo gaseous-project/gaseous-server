@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
+using System.Reflection;
+using System.Text;
 using System.Threading.Tasks;
 using gaseous_tools;
 using Microsoft.AspNetCore.Mvc;
@@ -49,6 +51,22 @@ namespace gaseous_server.Controllers
             return ReturnValue;
         }
 
+        [HttpGet]
+        [Route("Version")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public Version GetSystemVersion() {
+            return Assembly.GetExecutingAssembly().GetName().Version;
+        }
+
+        [HttpGet]
+        [Route("VersionFile")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public FileContentResult GetSystemVersionAsFile() {
+            string ver = "var AppVersion = \"" + Assembly.GetExecutingAssembly().GetName().Version.ToString() + "\"";
+            byte[] bytes = Encoding.UTF8.GetBytes(ver);
+            return File(bytes, "text/javascript");
+        }
+
         private SystemInfo.PathItem GetDisk(string Path)
         {
             SystemInfo.PathItem pathItem = new SystemInfo.PathItem {
@@ -63,6 +81,12 @@ namespace gaseous_server.Controllers
 
         public class SystemInfo
         {
+            public Version ApplicationVersion { 
+                get
+                    {
+                        return Assembly.GetExecutingAssembly().GetName().Version;
+                    }
+            }
             public List<PathItem>? Paths { get; set; }
             public long DatabaseSize { get; set; }
             public List<PlatformStatisticsItem>? PlatformStatistics { get; set; }
