@@ -33,6 +33,21 @@ namespace gaseous_server.Controllers
             int minrating = -1,
             int maxrating = -1,
             bool sortdescending = false)
+            {
+
+            return Ok(GetGames(name, platform, genre, gamemode, playerperspective, theme, minrating, maxrating, sortdescending));
+        }
+
+        public static List<Game> GetGames(
+            string name = "",
+            string platform = "",
+            string genre = "",
+            string gamemode = "",
+            string playerperspective = "",
+            string theme = "",
+            int minrating = -1,
+            int maxrating = -1,
+            bool sortdescending = false)
         {
             string whereClause = "";
             string havingClause = "";
@@ -201,7 +216,7 @@ namespace gaseous_server.Controllers
                 RetVal.Add(Classes.Metadata.Games.GetGame(dr));
             }
 
-            return Ok(RetVal);
+            return RetVal;
         }
 
         [HttpGet]

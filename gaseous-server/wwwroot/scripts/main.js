@@ -1,4 +1,4 @@
-﻿function ajaxCall(endpoint, method, successFunction) {
+﻿function ajaxCall(endpoint, method, successFunction, errorFunction, body) {
     $.ajax({
 
         // Our sample url to make request
@@ -8,17 +8,27 @@
         // Type of Request
         type: method,
 
+        // data to send to the server
+        data: body,
+
+        dataType: 'json',
+        contentType: 'application/json',
+
         // Function to call when to
         // request is ok
         success: function (data) {
-            var x = JSON.stringify(data);
-            console.log(x);
+            //var x = JSON.stringify(data);
+            //console.log(x);
             successFunction(data);
         },
 
         // Error handling
         error: function (error) {
-            console.log(`Error ${error}`);
+            console.log(`Error ${JSON.stringify(error)}`);
+
+            if (errorFunction) {
+                errorFunction(error);
+            }
         }
     });
 }
@@ -96,6 +106,18 @@ function showDialog(dialogPage, variables) {
     $('#modal-content').load('/pages/dialogs/' + dialogPage + '.html');
 }
 
+function closeDialog() {
+    // Get the modal
+    var modal = document.getElementById("myModal");
+
+    // Get the modal content
+    var modalContent = document.getElementById("modal-content");
+
+    modal.style.display = "none";
+    modalContent.innerHTML = "";
+    modalVariables = null;
+}
+
 var subModalVariables;
 
 function showSubDialog(dialogPage, variables) {
@@ -121,7 +143,7 @@ function showSubDialog(dialogPage, variables) {
         subModalVariables = null;
     }
 
-    subModalVariables = modalVariables;
+    subModalVariables = variables;
 
     $('#modal-content-sub').load('/pages/dialogs/' + dialogPage + '.html');
 }

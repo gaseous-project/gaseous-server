@@ -359,6 +359,22 @@ namespace gaseous_tools
                     }
                 }
 
+                public string LibraryTempDirectory
+                {
+                    get
+                    {
+                        return Path.Combine(LibraryRootDirectory, "Temp");
+                    }
+                }
+
+                public string LibraryCollectionsDirectory
+                {
+                    get
+                    {
+                        return Path.Combine(LibraryRootDirectory, "Collections");
+                    }
+                }
+
                 public string LibraryMetadataDirectory_Platform(Platform platform)
                 {
                     string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Platforms", platform.Slug);
@@ -404,6 +420,8 @@ namespace gaseous_tools
                     if (!Directory.Exists(LibraryBIOSDirectory)) { Directory.CreateDirectory(LibraryBIOSDirectory); }
                     if (!Directory.Exists(LibraryUploadDirectory)) { Directory.CreateDirectory(LibraryUploadDirectory); }
                     if (!Directory.Exists(LibraryMetadataDirectory)) { Directory.CreateDirectory(LibraryMetadataDirectory); }
+                    if (!Directory.Exists(LibraryTempDirectory)) { Directory.CreateDirectory(LibraryTempDirectory); }
+                    if (!Directory.Exists(LibraryCollectionsDirectory)) { Directory.CreateDirectory(LibraryCollectionsDirectory); }
                     if (!Directory.Exists(LibrarySignatureImportDirectory)) { Directory.CreateDirectory(LibrarySignatureImportDirectory); }
                     if (!Directory.Exists(LibrarySignatureImportDirectory_TOSEC)) { Directory.CreateDirectory(LibrarySignatureImportDirectory_TOSEC); }
                 }

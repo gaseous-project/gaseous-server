@@ -6,12 +6,19 @@ namespace gaseous_server.Classes
 {
 	public class Roms
 	{
-		public static List<GameRomItem> GetRoms(long GameId)
+		public static List<GameRomItem> GetRoms(long GameId, long PlatformId = -1)
 		{
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM Games_Roms WHERE GameId = @id ORDER BY `Name`";
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            string sql = "";
+			Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", GameId);
+            
+			if (PlatformId == -1) {
+				sql = "SELECT * FROM Games_Roms WHERE GameId = @id ORDER BY `Name`";
+			} else {
+				sql = "SELECT * FROM Games_Roms WHERE GameId = @id AND PlatformId = @platformid ORDER BY `Name`";
+				dbDict.Add("platformid", PlatformId);
+			}
             DataTable romDT = db.ExecuteCMD(sql, dbDict);
 
             if (romDT.Rows.Count > 0)

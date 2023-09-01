@@ -1,0 +1,494 @@
+﻿<input id="collection_name" type="text" placeholder="Collection Name" style="width: 80%; font-size: 2em;" />
+<input id="collection_description" type="text" placeholder="Description" style="width: 80%; margin-top: 5px;" />
+
+<div style="position: absolute; top: 90px; right: 5px; left: 10px; bottom: 5px;">
+    <div style="position: relative; width: 100%; height: 100%;">
+        <table style="position: absolute; top: 0px; left: 0px; bottom: 0px; width: 40%;">
+            <tr>
+                <td>
+                    <h3>Filter</h3>
+                </td>
+            </tr>
+        </table>
+        <div id="collection_filter_box" style="position: absolute; top: 40px; left: 0px; bottom: 5px; width: 40%; max-width: 40%; overflow-x: scroll;">
+            <table style="width: 100%;">
+                <tr>
+                    <th style="width: 25%;">Platforms</th>
+                    <td><select id="collection_platform" style="width: 100%;" multiple="multiple"></select></td>
+                </tr>
+                <tr>
+                    <th>Genres</th>
+                    <td><select id="collection_genres" style="width: 100%;" multiple="multiple"></select></td>
+                </tr>
+                <tr>
+                    <th>Players</th>
+                    <td><select id="collection_players" style="width: 100%;" multiple="multiple"></select></td>
+                </tr>
+                <tr>
+                    <th>Player Perspectives</th>
+                    <td><select id="collection_playerperspectives" style="width: 100%;" multiple="multiple"></select></td>
+                </tr>
+                <tr>
+                    <th>Themes</th>
+                    <td><select id="collection_themes" style="width: 100%;" multiple="multiple"></select></td>
+                </tr>
+                <tr>
+                    <th>Rating</th>
+                    <td>
+                        <input id="collection_userrating_min" type="number" placeholder="0" min="0" max="100">
+                        <input id="collection_userrating_max" type="number" placeholder="100" min="0" max="100">
+                    </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <h3>Options</h3>
+                    </td>
+                </tr>
+                <tr>
+                    <th>Maximum ROMs per platform</th>
+                    <td><input id="collection_maxroms" type="number" placeholder="0"></td>
+                </tr>
+                <tr>
+                    <th>Maximum size per platform (bytes)</th>
+                    <td><input id="collection_maxplatformsize" type="number" placeholder="0" step="1048576" oninput="DisplayFormattedBytes('collection_maxplatformsize', 'maxplatformsize_label');"><span id="maxplatformsize_label" style="margin-left: 10px;"></span></td>
+                </tr>
+                <tr>
+                    <th>Maximum collection size (bytes)</th>
+                    <td><input id="collection_maxcollectionsize" type="number" placeholder="0" step="1048576" oninput="DisplayFormattedBytes('collection_maxcollectionsize', 'maxcollectionsize_label');"><span id="maxcollectionsize_label" style="margin-left: 10px;"></span></td></td>
+                </tr>
+            </table>
+        </div>
+        <table style="position: absolute; top: 0px; right: 0px; bottom: 0px; width: 60%;">
+            <tr>
+                <td>
+                    <h3>Collection</h3>
+                </td>
+            </tr>
+        </table>
+        <div id="collectionedit_previewbox" style="position: absolute; top: 40px; right: 0px; bottom: 60px; width: 60%; overflow-x: scroll;">
+            <div id="collectionedit_previewbox_content" style="margin: 5px;">
+                
+            </div>
+        </div>
+        <div id="collectionedit_previewbox_size" style="position: absolute; right: 10px; bottom: 30px; width: 60%; height: 20px; text-align: right;">
+        
+        </div>
+        <div id="collectionedit_previewbox_controls" style="position: absolute; right: 10px; bottom: 0px; width: 60%; height: 25px; text-align: right;">
+            <button id="collectionedit_preview" onclick="GetPreview();">Preview</button>
+            <button id="collectionedit_cancel" onclick="closeDialog();">Cancel</button>
+            <button id="collectionedit_ok" onclick="SaveCollection();">Ok</button>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var headerToRemove = document.getElementById('modal-heading');
+    if (headerToRemove) {
+        headerToRemove.parentNode.removeChild(headerToRemove);
+    }
+
+    var modalContent = document.getElementsByClassName('modal-content');
+    if (!modalContent[0].classList.contains('collections_modal')) {
+        modalContent[0].classList.add('collections_modal');
+    }
+
+    // setup dropdowns
+    $('#collection_platform').select2({
+        ajax: {
+            url: '/api/v1/Filter',
+            processResults: function (data) {
+                var filter = data['platforms'];
+                
+                var arr = [];
+                
+                for (var i = 0; i < filter.length; i++) {
+                    arr.push({
+                        id: filter[i].id,
+                        text: filter[i].name
+                    });
+                }
+
+                return {
+                    results: arr
+                };
+
+            }
+        }
+    });
+
+    $('#collection_genres').select2({
+        ajax: {
+            url: '/api/v1/Filter',
+            processResults: function (data) {
+                var filter = data['genres'];
+
+                var arr = [];
+
+                for (var i = 0; i < filter.length; i++) {
+                    arr.push({
+                        id: filter[i].id,
+                        text: filter[i].name
+                    });
+                }
+
+                return {
+                    results: arr
+                };
+
+            }
+        }
+    });
+
+    $('#collection_players').select2({
+        ajax: {
+            url: '/api/v1/Filter',
+            processResults: function (data) {
+                var filter = data['gamemodes'];
+
+                var arr = [];
+
+                for (var i = 0; i < filter.length; i++) {
+                    arr.push({
+                        id: filter[i].id,
+                        text: filter[i].name
+                    });
+                }
+
+                return {
+                    results: arr
+                };
+
+            }
+        }
+    });
+
+    $('#collection_playerperspectives').select2({
+        ajax: {
+            url: '/api/v1/Filter',
+            processResults: function (data) {
+                var filter = data['playerperspectives'];
+
+                var arr = [];
+
+                for (var i = 0; i < filter.length; i++) {
+                    arr.push({
+                        id: filter[i].id,
+                        text: filter[i].name
+                    });
+                }
+
+                return {
+                    results: arr
+                };
+
+            }
+        }
+    });
+
+    $('#collection_themes').select2({
+        ajax: {
+            url: '/api/v1/Filter',
+            processResults: function (data) {
+                var filter = data['themes'];
+
+                var arr = [];
+
+                for (var i = 0; i < filter.length; i++) {
+                    arr.push({
+                        id: filter[i].id,
+                        text: filter[i].name
+                    });
+                }
+
+                return {
+                    results: arr
+                };
+
+            }
+        }
+    });
+
+    if (modalVariables) {
+        // edit mode
+        ajaxCall(
+            '/api/v1/Collections/' + modalVariables,
+            'GET',
+            function(result) {
+                if (result.name) { document.getElementById('collection_name').value = result.name; }
+                if (result.description) { document.getElementById('collection_description').value = result.description; }
+                if (result.minimumRating != -1) { document.getElementById('collection_userrating_min').value = result.minimumRating; }
+                if (result.maximumRating != -1) { document.getElementById('collection_userrating_max').value = result.maximumRating; }
+                if (result.maximumRomsPerPlatform != -1) { document.getElementById('collection_maxroms').value = result.maximumRomsPerPlatform; }
+                if (result.maximumBytesPerPlatform != -1) { document.getElementById('collection_maxplatformsize').value = result.maximumBytesPerPlatform; }
+                if (result.maximumCollectionSizeInBytes != -1) { document.getElementById('collection_maxcollectionsize').value = result.maximumCollectionSizeInBytes; }
+
+                // fill select2 controls
+                $.ajax(
+                    {
+                        url: '/api/v1/Filter',
+                        type: 'GET',
+                        indexValue: result,
+                        dataType: 'json',
+                        contentType: 'application/json',
+                        success: function (data) {
+                            // platforms
+                            for (var i = 0; i < data.platforms.length; i++) {
+                                if (this.indexValue.platforms.includes(data.platforms[i].id)) {
+                                    var newOption = new Option(data.platforms[i].name, data.platforms[i].id, true, true);
+                                    $('#collection_platform').append(newOption).trigger('change');
+                                }
+                            }
+
+                            // genres
+                            for (var i = 0; i < data.genres.length; i++) {
+                                if (this.indexValue.genres.includes(data.genres[i].id)) {
+                                    var newOption = new Option(data.genres[i].name, data.genres[i].id, true, true);
+                                    $('#collection_genres').append(newOption).trigger('change');
+                                }
+                            }
+
+                            // players
+                            for (var i = 0; i < data.gamemodes.length; i++) {
+                                if (this.indexValue.players.includes(data.gamemodes[i].id)) {
+                                    var newOption = new Option(data.gamemodes[i].name, data.gamemodes[i].id, true, true);
+                                    $('#collection_players').append(newOption).trigger('change');
+                                }
+                            }
+
+                            // playerperspectives
+                            for (var i = 0; i < data.playerperspectives.length; i++) {
+                                if (this.indexValue.playerPerspectives.includes(data.playerperspectives[i].id)) {
+                                    var newOption = new Option(data.playerperspectives[i].name, data.playerperspectives[i].id, true, true);
+                                    $('#collection_playerperspectives').append(newOption).trigger('change');
+                                }
+                            }
+
+                            // themes
+                            for (var i = 0; i < data.themes.length; i++) {
+                                if (this.indexValue.themes.includes(data.themes[i].id)) {
+                                    var newOption = new Option(data.themes[i].name, data.themes[i].id, true, true);
+                                    $('#collection_themes').append(newOption).trigger('change');
+                                }
+                            }
+
+                            // generate preview
+                            GetPreview();
+                        },
+                        error: function (error) {
+                            console.log(`Error ${error}`);
+                        }
+                    }
+                );
+            }
+        );
+    } else {
+        // new mode
+    }
+
+    function SaveCollection() {
+        var item = GenerateCollectionItem();
+        if (modalVariables) {
+            // existing object - save over the top
+            item.id = modalVariables;
+            ajaxCall(
+                '/api/v1/Collections/' + modalVariables,
+                'PATCH',
+                function(result) {
+                    location.reload();
+                },
+                function(error) {
+                    alert(error);
+                },
+                JSON.stringify(item)
+            );
+        } else {
+            // new object
+            ajaxCall(
+                '/api/v1/Collections',
+                'POST',
+                function(result) {
+                    location.reload();
+                },
+                function(error) {
+                    alert(error);
+                },
+                JSON.stringify(item)
+            );
+        }
+    }
+
+    function GenerateCollectionItem() {
+        var platforms = GetDropDownIds('#collection_platform');
+        var genres = GetDropDownIds('#collection_genres');
+        var players = GetDropDownIds('#collection_players');
+        var playerperspectives = GetDropDownIds('#collection_playerperspectives');
+        var themes = GetDropDownIds('#collection_themes');
+
+        var item = {
+            "name": document.getElementById('collection_name').value,
+            "description": document.getElementById('collection_description').value,
+            "platforms": platforms,
+            "genres": genres,
+            "players": players,
+            "playerPerspectives": playerperspectives,
+            "themes": themes,
+            "minimumRating": GetNumberFieldValue('collection_userrating_min'),
+            "maximumRating": GetNumberFieldValue('collection_userrating_max'),
+            "maximumRomsPerPlatform": GetNumberFieldValue('collection_maxroms'),
+            "maximumBytesPerPlatform": GetNumberFieldValue('collection_maxplatformsize'),
+            "maximumCollectionSizeInBytes": GetNumberFieldValue('collection_maxcollectionsize')
+        }
+
+        return item;
+    }
+
+    function GetPreview() {
+        var item = GenerateCollectionItem();
+
+        console.log(JSON.stringify(item));
+
+        ajaxCall(
+            '/api/v1/Collections/Preview',
+            'POST',
+            function(result) {
+                DisplayPreview(result, 'collectionedit_previewbox_content');
+            },
+            function(error) {
+                console.log(JSON.stringify(error));
+            },
+            JSON.stringify(item)
+        );
+    }
+
+    function GetDropDownIds(objectName) {
+        var obj = $(objectName).select2('data');
+
+        if (obj.length > 0) {
+            var ids = [];
+            for (var i = 0; i < obj.length; i++) {
+                ids.push(obj[i].id);
+            }
+
+            return ids;
+        } else {
+            return [];
+        }
+    }
+
+    function GetNumberFieldValue(objectName) {
+        var obj = document.getElementById(objectName);
+        var objVal = obj.value;
+
+        if (objVal) {
+            return objVal;
+        } else {
+            return -1;
+        }
+    }
+
+    function DisplayPreview(data, targetDiv) {
+        var container = document.getElementById(targetDiv);
+        container.innerHTML = '';
+
+        if (data.collection) {
+            var collectionTable = document.createElement('table');
+            collectionTable.setAttribute('cellspacing', 0);
+            collectionTable.style.width = '100%';
+
+            // loop the platforms
+            for (var p = 0; p < data.collection.length; p++) {
+                var platformItem = data.collection[p];
+
+                var platformLabelRow = document.createElement('tr');
+                var platformLabelCell = document.createElement('th');
+                platformLabelCell.setAttribute('colspan', 2);
+                platformLabelCell.className = 'collections_preview_platform_header';
+                platformLabelCell.innerHTML = '<span style="float: right;">' + formatBytes(platformItem.romSize) + '</span>' + platformItem.name;
+
+                platformLabelRow.appendChild(platformLabelCell);
+                collectionTable.appendChild(platformLabelRow);
+
+                var bgaltindex = 0;
+
+                // loop the games
+                for (var g = 0; g < platformItem.games.length; g++) {
+                    var gameItem = platformItem.games[g];
+
+                    var bgalt = '';
+                    if (bgaltindex == 1) {
+                        bgaltindex = 0;
+                        bgalt = 'bgalt1';
+                    } else {
+                        bgaltindex = 1;
+                        bgalt = 'bgalt0';
+                    }
+
+                    var gameItemRow = document.createElement('tr');
+                    gameItemRow.className = bgalt;
+                    
+                    // game title
+                    var gameTitleCell = document.createElement('th');
+                    gameTitleCell.setAttribute('colspan', 2);
+                    gameTitleCell.className = 'collections_preview_gametitlecell';
+                    gameTitleCell.innerHTML = gameItem.name;
+
+                    gameItemRow.appendChild(gameTitleCell);
+
+                    // game cover
+                    var gameDetailRow = document.createElement('tr');
+                    gameDetailRow.className = bgalt;
+                    
+                    var gameCoverCell = document.createElement('td');
+                    gameCoverCell.className = 'collections_preview_gamecovercell';
+                    
+                    var gameImage = document.createElement('img');
+                    gameImage.className = 'game_tile_image game_tile_image_small';
+                    if (gameItem.cover) {
+                        gameImage.src = '/api/v1/Games/' + gameItem.id + '/cover/image';
+                    } else {
+                        gameImage.src = '/images/unknowngame.png';
+                        gameImage.className = 'game_tile_image game_tile_image_small unknown';
+                    }
+                    gameCoverCell.appendChild(gameImage);
+
+                    gameDetailRow.appendChild(gameCoverCell);
+
+                    // game detail
+                    var gameDetailCell = document.createElement('td');
+                    gameDetailCell.className = 'collections_preview_gamedetailcell';
+                    
+                    // loop roms
+                    for (var r = 0; r < gameItem.roms.length; r++) {
+                        var romItem = gameItem.roms[r];
+
+                        var romLabel = document.createElement('p');
+                        romLabel.innerHTML = romItem.name;
+
+                        gameDetailCell.appendChild(romLabel);
+                    }
+
+                    gameDetailRow.appendChild(gameDetailCell);
+
+                    collectionTable.appendChild(gameItemRow);
+                    collectionTable.appendChild(gameDetailRow);
+                }
+            }
+
+            container.appendChild(collectionTable);
+
+            var collectionSize = document.getElementById('collectionedit_previewbox_size');
+            collectionSize.innerHTML = "Collection size: " + formatBytes(data.collectionProjectedSizeBytes);
+        }
+    }
+
+    function DisplayFormattedBytes(inputElement, labelElement) {
+        var src = document.getElementById(inputElement);
+        var label = document.getElementById(labelElement);
+
+        if (src.value) {
+            label.innerHTML = formatBytes(src.value);
+        } else {
+            label.innerHTML = '';
+        }
+    }
+</script>

@@ -70,6 +70,9 @@ h3 {
 
     border-image: linear-gradient(to right, rgba(255,0,0,1) 0%, rgba(251,255,0,1) 16%, rgba(0,255,250,1) 30%, rgba(0,16,255,1) 46%, rgba(250,0,255,1) 62%, rgba(255,0,0,1) 78%, rgba(255,237,0,1) 90%, rgba(20,255,0,1) 100%) 5;
 }
+#modal-content {
+    height: 100%;
+}
 
 /* The Close Button */
 .close {
@@ -109,11 +112,10 @@ h3 {
     height: 30px;
 }
 
-#banner_upload {
-    background-color: white;
-    position: fixed;
+.banner_button {
+    background-color: transparent;
+    float: right;
     top: 0px;
-    right: 41px;
     height: 40px;
     align-items: center;
     justify-content: center;
@@ -121,44 +123,24 @@ h3 {
     padding-right: 10px;
     padding-top: 0px;
     padding-bottom: 0px;
-    margin: 0px;
+    margin: 0px 0px 0px 0px;
     display: flex;
-    color: black;
+    color: white;
+    border-left-color: black;
+    border-left-width: 1px;
+    border-left-style: solid;
 }
 
-#banner_upload:hover {
+.banner_button:hover {
     cursor: pointer;
-    background-color: lightgrey;
+    background-color: black;
 }
 
-#banner_cog {
-    background-color: white;
-    position: fixed;
-    top: 0px;
-    right: 0px;
-    width: 40px;
-    height: 40px;
-    align-items: center;
-    justify-content: center;
-    padding: 0px;
-    margin: 0px;
-    display: flex;
-}
-
-#banner_cog:hover {
-    cursor: pointer;
-    background-color: lightgrey;
-}
-
-#banner_system_image {
-    height: 20px;
-    width: 20px;
-}
-
-#banner_upload_image {
+.banner_button_image {
     height: 20px;
     width: 20px;
     margin-right: 5px;
+    filter: invert(100%);
 }
 
 #banner_header {
@@ -171,17 +153,20 @@ h3 {
     height: 40px;
     right: 0px;
     align-items: center;
-    display: flex;
 }
 
 #banner_header_label {
     font-family: Commodore64;
-    display: inline;
+    display: inline-block;
     padding: 10px;
     font-size: 16pt;
     vertical-align: top;
     /*color: #edeffa;*/
     color: #7c70da;
+}
+
+#banner_header_label {
+    cursor: pointer;
 }
 
 #content {
@@ -325,6 +310,11 @@ input[id='filter_panel_userrating_max'] {
 
 .game_tile_image, .unknown {
     background-color: white;
+}
+
+.game_tile_image_small {
+    max-width: 100px;
+    max-height: 100px;
 }
 
 #bgImage {
@@ -640,6 +630,11 @@ div[name="properties_toc_item"]:hover {
     margin-top: 20px;
 }
 
+.select2-container--default .select2-selection--multiple {
+    background-color: #2b2b2b !important;
+    color: white !important;
+}
+
 .select2-container--open .select2-dropdown--below,
 .select2-container--open .select2-dropdown--above {
     background: #2b2b2b;
@@ -647,6 +642,29 @@ div[name="properties_toc_item"]:hover {
 
 .select2-container--flat .select2-container--focus .select2-selection--multiple {
     border: 1px solid #2b2b2b;
+}
+
+.select2-selection__choice {
+    background-color: #2b2b2b !important;
+}
+
+.select2-selection__choice__display {
+    color: white;
+}
+
+.select2-results__option--selected {
+    background-color: black !important;
+}
+
+.select2-selection--single .select2-selection__rendered {
+    background-color: #2b2b2b;
+    color: white !important;
+    border: 1px solid #2b2b2b;
+}
+
+.select2-search__field {
+    background-color: #2b2b2b;
+    color: white;
 }
 
 .dropdown-div {
@@ -812,4 +830,51 @@ button:disabled {
 #gametitle_criticrating_label {
     display: inline-block;
     text-align: left;
+}
+
+#rom_edit_progressbar {
+    width: 100%;
+    height: 10px;
+    background-color: lightgray;
+    margin-top: 10px;
+}
+
+#rom_edit_progressbar_progress {
+    height: 10px;
+    background-color: cyan;
+}
+
+.collections_modal {
+    width: 1000px;
+    height: 90%;
+    margin: 25px auto;
+/*    overflow-x: scroll;*/
+    position: relative;
+}
+
+.collections_preview_platform_header {
+    background-color: #2b2b2b;
+}
+
+.collections_preview_gamecovercell {
+    text-align: center;
+    width: 110px;
+    vertical-align: top;
+    padding-bottom: 10px;
+}
+
+.collections_preview_gametitlecell {
+    font-weight: bold;
+}
+
+.collections_preview_gamedetailcell {
+    vertical-align: top;
+}
+
+.bgalt0 {
+    background-color: #414040;
+}
+
+.bgalt1 {
+    background-color: transparent;;
 }

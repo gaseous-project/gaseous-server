@@ -2,11 +2,26 @@
     <div id="bgImage_Opacity"></div>
 </div>
 
+<!-- The Modal -->
+<div id="myModalProgress" class="modal">
+
+    <!-- Modal content -->
+    <div class="modal-content-sub">
+        <div id="modal-content-sub-progress">
+            <h1>In Progress...</h1>
+            <progress style="width: 100%;"></progress>
+        </div>
+    </div>
+
+</div>
+
 <div id="gamepage">
     <div id="gametitle">
         <div id="gametitle_criticrating">
-            <span id="gametitle_criticrating_value"></span>
-            <span id="gametitle_criticrating_label"></span>
+            <div>
+                <span id="gametitle_criticrating_value"></span>
+                <span id="gametitle_criticrating_label"></span>
+            </div>
         </div>
         <h1 id="gametitle_label"></h1>
 
@@ -65,9 +80,8 @@
             </div>
         </div>
     </div>
-
-    
 </div>
+
 <script type="text/javascript">
     var gameId = getQueryString('id', 'int');
     var gameData;
@@ -91,7 +105,7 @@
 
             if (gameData.totalRatingCount) {
                 var criticscorelabel = document.getElementById('gametitle_criticrating_label');
-                criticscorelabel.innerHTML = "based on <br />" + gameData.totalRatingCount + " votes"
+                criticscorelabel.innerHTML = '<img src="/images/IGDB_logo.svg" style="filter: invert(100%); height: 13px; margin-bottom: -5px;" /><span style="font-size: 10px;"> User Rating<br />' + "based on " + gameData.totalRatingCount + " votes</span>"
             }
         }
 
@@ -121,7 +135,7 @@
             } else {
                 gameSummaryLabel.innerHTML = result.storyline;
             }
-            
+
             if (gameSummaryLabel.offsetHeight < gameSummaryLabel.scrollHeight ||
                 gameSummaryLabel.offsetWidth < gameSummaryLabel.scrollWidth) {
                 // your element has overflow and truncated
@@ -141,9 +155,12 @@
             artworksPosition = startPos;
             rotateBackground();
         } else {
+            var bg = document.getElementById('bgImage');
             if (result.cover) {
-                var bg = document.getElementById('bgImage');
                 bg.setAttribute('style', 'background-image: url("/api/v1/Games/' + gameId + '/cover/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+            } else {
+                var randomInt = randomIntFromInterval(1, 3);
+                bg.setAttribute('style', 'background-image: url("/images/gamebg' + randomInt + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
             }
         }
 
@@ -157,7 +174,7 @@
             ajaxCall('/api/v1/games/' + gameId + '/companies', 'GET', function (result) {
                 var lstDevelopers = [];
                 var lstPublishers = [];
-                
+
                 for (var i = 0; i < result.length; i++) {
                     var companyLabel = document.createElement('span');
                     companyLabel.className = 'gamegenrelabel';
@@ -248,7 +265,7 @@
         var gameScreenshots = document.getElementById('gamescreenshots');
         if (result.screenshots || result.videos) {
             var gameScreenshots_Main = document.getElementById('gamescreenshots_main');
-            
+
             // load static screenshots
             var gameScreenshots_Gallery = document.getElementById('gamescreenshots_gallery_panel');
             var imageIndex = 0;
@@ -313,6 +330,8 @@
                     }
 
                     selectScreenshot(0);
+                }, function(error) {
+                    selectScreenshot(0);
                 });
             } else {
                 selectScreenshot(0);
@@ -361,7 +380,7 @@
 
                     var newRow = [
                         ['<input type="checkbox" name="rom_checkbox" data-romid="' + result[i].id + '" />', 'rom_checkbox_box_hidden', 'rom_edit_checkbox'],
-                        '<a href="/api/v1/Games/' + gameId + '/roms/' + result[i].id + '/' + encodeURIComponent(result[i].name) +'" class="romlink">' + result[i].name + '</a>',
+                        '<a href="/api/v1/Games/' + gameId + '/roms/' + result[i].id + '/' + encodeURIComponent(result[i].name) + '" class="romlink">' + result[i].name + '</a>',
                         formatBytes(result[i].size, 2),
                         result[i].romTypeMedia,
                         result[i].mediaLabel,
@@ -450,7 +469,7 @@
         var gameScreenshots_Items = document.getElementsByName('gamescreenshots_gallery_item');
 
         selectedScreenshot = selectedScreenshot - 1;
-        
+
         if (selectedScreenshot < 0) {
             selectedScreenshot = gameScreenshots_Items.length - 1;
         }
@@ -562,19 +581,34 @@
     });
 
     var remapCallCounter = 0;
+    var remapCallCounterMax = 0;
+
     function remapTitles() {
         var fixplatform = $('#rom_edit_fixplatform').select2('data');
         var fixgame = $('#rom_edit_fixgame').select2('data');
 
         if (fixplatform[0] && fixgame[0]) {
             var rom_checks = document.getElementsByName('rom_checkbox');
+
             for (var i = 0; i < rom_checks.length; i++) {
                 if (rom_checks[i].checked == true) {
-                    var romId = rom_checks[i].getAttribute('data-romid');
-                    remapCallCounter += 1;
-                    ajaxCall('/api/v1/Games/' + gameId + '/roms/' + romId + '?NewPlatformId=' + fixplatform[0].id + '&NewGameId=' + fixgame[0].id, 'PATCH', function (result) {
-                        remapTitlesCallback();
-                    });
+                    remapCallCounterMax += 1;
+                }
+            }
+
+            if (remapCallCounterMax > 0) {
+                showProgress();
+
+                for (var i = 0; i < rom_checks.length; i++) {
+                    if (rom_checks[i].checked == true) {
+                        var romId = rom_checks[i].getAttribute('data-romid');
+                        remapCallCounter += 1;
+                        ajaxCall('/api/v1/Games/' + gameId + '/roms/' + romId + '?NewPlatformId=' + fixplatform[0].id + '&NewGameId=' + fixgame[0].id, 'PATCH', function (result) {
+                            remapTitlesCallback();
+                        }, function (result) {
+                            remapTitlesCallback();
+                        });
+                    }
                 }
             }
         }
@@ -582,9 +616,12 @@
 
     function remapTitlesCallback() {
         remapCallCounter = remapCallCounter - 1;
+
         if (remapCallCounter <= 0) {
+            closeProgress();
             loadRoms(true);
             remapCallCounter = 0;
+            remapCallCounterMax = 0;
         }
     }
 
@@ -613,5 +650,20 @@
                 });
             }
         }
+    }
+
+    function showProgress() {
+        // Get the modal
+        var submodal = document.getElementById("myModalProgress");
+
+        // When the user clicks on the button, open the modal 
+        submodal.style.display = "block";
+    }
+
+    function closeProgress() {
+        // Get the modal
+        var submodal = document.getElementById("myModalProgress");
+
+        submodal.style.display = "none";
     }
 </script>

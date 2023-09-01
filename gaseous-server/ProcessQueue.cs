@@ -9,20 +9,22 @@ namespace gaseous_server
 
         public class QueueItem
         {
-            public QueueItem(QueueItemType ItemType, int ExecutionInterval)
+            public QueueItem(QueueItemType ItemType, int ExecutionInterval, bool AllowManualStart = true)
             {
                 _ItemType = ItemType;
                 _ItemState = QueueItemState.NeverStarted;
                 _LastRunTime = DateTime.UtcNow.AddMinutes(ExecutionInterval);
                 _Interval = ExecutionInterval;
+                _AllowManualStart = AllowManualStart;
             }
 
-            public QueueItem(QueueItemType ItemType, int ExecutionInterval, List<QueueItemType> Blocks)
+            public QueueItem(QueueItemType ItemType, int ExecutionInterval, List<QueueItemType> Blocks, bool AllowManualStart = true)
             {
                 _ItemType = ItemType;
                 _ItemState = QueueItemState.NeverStarted;
                 _LastRunTime = DateTime.UtcNow.AddMinutes(ExecutionInterval);
                 _Interval = ExecutionInterval;
+                _AllowManualStart = AllowManualStart;
                 _Blocks = Blocks;
             }
 
@@ -34,6 +36,7 @@ namespace gaseous_server
             private string _LastResult = "";
             private string? _LastError = null;
             private bool _ForceExecute = false;
+            private bool _AllowManualStart = true;
             private List<QueueItemType> _Blocks = new List<QueueItemType>();
 
             public QueueItemType ItemType => _ItemType;
@@ -50,6 +53,7 @@ namespace gaseous_server
             public string LastResult => _LastResult;
             public string? LastError => _LastError;
             public bool Force => _ForceExecute;
+            public bool AllowManualStart => _AllowManualStart;
             public List<QueueItemType> Blocks => _Blocks;
 
             public void Execute()
@@ -96,6 +100,10 @@ namespace gaseous_server
                                     Classes.ImportGame.LibraryScan();
                                     break;
 
+                                case QueueItemType.CollectionCompiler:
+                                    Logging.Log(Logging.LogType.Information, "Timered Event", "Starting Collection Compiler");
+                                    Classes.Collections.CompileCollections();
+                                    break;
                             }
                         }
                         catch (Exception ex)
@@ -125,7 +133,8 @@ namespace gaseous_server
             TitleIngestor,
             MetadataRefresh,
             OrganiseLibrary,
-            LibraryScan
+            LibraryScan,
+            CollectionCompiler
         }
 
         public enum QueueItemState

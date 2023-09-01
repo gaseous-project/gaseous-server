@@ -14,9 +14,9 @@
     <DocumentationFile>bin\Debug\net7.0\gaseous-server.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.9" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.10" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.8" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.9" />
     <PackageReference Include="IGDB" Version="2.3.2" />
   </ItemGroup>
 
@@ -88,24 +88,21 @@
     <Folder Include="Classes\" />
     <Folder Include="Classes\SignatureIngestors\" />
     <Folder Include="Support\" />
-    <Folder Include="wwwroot\" />
     <Folder Include="Classes\Metadata\" />
     <Folder Include="Assets\" />
     <Folder Include="Assets\Ratings\" />
     <Folder Include="Assets\Ratings\ESRB\" />
     <Folder Include="Assets\Ratings\ACB\" />
     <Folder Include="Assets\Ratings\PEGI\" />
-    <Folder Include="wwwroot\scripts\" />
-    <Folder Include="wwwroot\images\" />
-    <Folder Include="wwwroot\styles\" />
-    <Folder Include="wwwroot\pages\" />
     <Folder Include="Assets\Ratings\CERO\" />
     <Folder Include="Assets\Ratings\USK\" />
     <Folder Include="Assets\Ratings\GRAC\" />
     <Folder Include="Assets\Ratings\CLASS_IND\" />
-    <Folder Include="wwwroot\fonts\" />
-    <Folder Include="wwwroot\pages\dialogs\" />
-    <Folder Include="wwwroot\pages\settings\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="wwwroot\**">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\gaseous-tools\gaseous-tools.csproj">
@@ -117,13 +114,6 @@
     <ProjectReference Include="..\gaseous-signature-parser\gaseous-signature-parser.csproj">
       <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
     </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <Content Remove="Support\PlatformMap.json" />
-    <Content Remove="wwwroot\pages\settings\" />
-    <Content Remove="wwwroot\scripts\jquery.lazy.plugins.min.js" />
-    <Content Remove="wwwroot\scripts\jquery.lazy.min.js" />
-    <Content Remove="wwwroot\pages\dialogs\romsdelete.html" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Support\PlatformMap.json" Condition="'$(ExcludeConfigFilesFromBuildOutput)'!='true'">

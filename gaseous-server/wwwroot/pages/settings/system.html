@@ -51,6 +51,9 @@
                         case 'LibraryScan':
                             itemTypeName = "Library scan";
                             break;
+                        case 'CollectionCompiler':
+                            itemTypeName = "Compress collections";
+                            break;
                         default:
                             itemTypeName = result[i].itemType;
                             break;
@@ -78,7 +81,7 @@
                     }
 
                     var startButton = '';
-                    if (result[i].itemState != "Running") {
+                    if (result[i].allowManualStart == true && result[i].itemState != "Running") {
                         startButton = "<span id='startProcess' class='romstart' onclick='StartProcess(\"" + result[i].itemType + "\");'>Start</span>";
                     }
 

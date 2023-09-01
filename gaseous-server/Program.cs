@@ -1,9 +1,11 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.Reflection;
+using System.Text.Json.Serialization;
 using gaseous_server;
 using gaseous_tools;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.OpenApi.Models;
 
 Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server");
 
@@ -83,7 +85,31 @@ builder.Services.Configure<FormOptions>(options =>
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(options =>
+    {
+        options.SwaggerDoc("v1", new OpenApiInfo
+        {
+            Version = "v1",
+            Title = "Gaseous Server API",
+            Description = "An API for managing the Gaseous Server",
+            TermsOfService = new Uri("https://github.com/gaseous-project/gaseous-server"),
+            Contact = new OpenApiContact
+            {
+                Name = "GitHub Repository",
+                Url = new Uri("https://github.com/gaseous-project/gaseous-server")
+            },
+            License = new OpenApiLicense
+            {
+                Name = "Gaseous Server License",
+                Url = new Uri("https://github.com/gaseous-project/gaseous-server/blob/main/LICENSE")
+            }
+        });
+
+        // using System.Reflection;
+        var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+    }
+);
 builder.Services.AddHostedService<TimedHostedService>();
 
 var app = builder.Build();
@@ -145,6 +171,7 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
         ProcessQueue.QueueItemType.OrganiseLibrary
     })
     );
+ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.CollectionCompiler, 5, false));
 
 // start the app
 app.Run();

@@ -129,7 +129,7 @@ namespace gaseous_server.Classes
             {
                 // file is a zip and less than 1 GiB
                 // extract the zip file and search the contents
-                string ExtractPath = Path.Combine(Config.LibraryConfiguration.LibraryRootDirectory, "Temp", Path.GetRandomFileName());
+                string ExtractPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, Path.GetRandomFileName());
                 if (!Directory.Exists(ExtractPath)) { Directory.CreateDirectory(ExtractPath); }
                 ZipFile.ExtractToDirectory(GameFileImportPath, ExtractPath);
 
