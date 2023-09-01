@@ -12,9 +12,9 @@
     <script src="/scripts/jquery.lazy.plugins.min.js"></script>
     <script src="/scripts/select2.min.js"></script>
     <script src="/scripts/dropzone.min.js"></script>
-    <script dat-src="/scripts/main.js" type="text/javascript"></script>
-    <script dat-src="/scripts/filterformating.js" type="text/javascript"></script>
-    <script dat-src="/scripts/gamesformating.js" type="text/javascript"></script>
+    <script src="/scripts/main.js" type="text/javascript"></script>
+    <script src="/scripts/filterformating.js" type="text/javascript"></script>
+    <script src="/scripts/gamesformating.js" type="text/javascript"></script>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -22,19 +22,19 @@
     <title>Gaseous Games</title>
 
     <script type="text/javascript">
+        var head = document.getElementsByTagName('head')[0];
+
         // update links
         var headLinks = document.getElementsByTagName('link');
         for (var i = 0; i < headLinks.length; i++) {
-            if (headLinks[i].getAttribute('dat-href')) {
-                headLinks[i].setAttribute('href', headLinks[i].getAttribute('dat-href') + '?v=' + AppVersion);
-            }
-        }
+            if (headLinks[i].getAttribute('dat-href') && headLinks[i].rel == "stylesheet") {
+                var newLink = document.createElement('link');
+                newLink.rel = "stylesheet";
+                newLink.href = headLinks[i].getAttribute('dat-href') + '?v=' + AppVersion;
+                newLink.type = "text/css";
 
-        // update script src
-        var headLinks = document.getElementsByTagName('script');
-        for (var i = 0; i < headLinks.length; i++) {
-            if (headLinks[i].getAttribute('dat-src')) {
-                headLinks[i].setAttribute('src', headLinks[i].getAttribute('dat-src') + '?v=' + AppVersion);
+                headLinks[i].parentElement.removeChild(headLinks[i]);
+                head.appendChild(newLink);
             }
         }
     </script>

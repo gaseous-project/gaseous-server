@@ -7,6 +7,10 @@
     var containerPanelSearch = document.createElement('div');
     containerPanelSearch.className = 'filter_panel_box';
     var containerPanelSearchField = document.createElement('input');
+    var searchCookie = getCookie('filter_panel_search');
+    if (searchCookie) {
+        containerPanelSearchField.value = searchCookie;
+    }
     containerPanelSearchField.id = 'filter_panel_search';
     containerPanelSearchField.type = 'text';
     containerPanelSearchField.placeholder = 'Search';
@@ -19,6 +23,10 @@
     var containerPanelUserRating = document.createElement('div');
     containerPanelUserRating.className = 'filter_panel_box';
     var containerPanelUserRatingMinField = document.createElement('input');
+    var minRatingCookie = getCookie('filter_panel_userrating_min');
+    if (minRatingCookie) {
+        containerPanelUserRatingMinField.value = minRatingCookie;
+    }
     containerPanelUserRatingMinField.id = 'filter_panel_userrating_min';
     containerPanelUserRatingMinField.type = 'number';
     containerPanelUserRatingMinField.placeholder = '0';
@@ -29,6 +37,10 @@
     containerPanelUserRating.appendChild(containerPanelUserRatingMinField);
 
     var containerPanelUserRatingMaxField = document.createElement('input');
+    var maxRatingCookie = getCookie('filter_panel_userrating_max');
+    if (maxRatingCookie) {
+        containerPanelUserRatingMaxField.value = maxRatingCookie;
+    }
     containerPanelUserRatingMaxField.id = 'filter_panel_userrating_max';
     containerPanelUserRatingMaxField.type = 'number';
     containerPanelUserRatingMaxField.placeholder = '100';
@@ -65,6 +77,11 @@
 
 function buildFilterPanel(targetElement, headerString, friendlyHeaderString, valueList, showToggle, initialDisplay) {
     if (showToggle == false) { initialDisplay = true; }
+    var displayCookie = getCookie('filter_panel_box_' + headerString);
+    if (displayCookie) {
+        initialDisplay = (displayCookie === 'true');
+        console.log(displayCookie);
+    }
     targetElement.appendChild(buildFilterPanelHeader(headerString, friendlyHeaderString, showToggle, initialDisplay));
 
     var containerPanel = document.createElement('div');
@@ -111,16 +128,27 @@ function toggleFilterPanel(panelName) {
     var filterPanel = document.getElementById('filter_panel_box_' + panelName);
     var filterPanelToggle = document.getElementById('filter_panel_header_toggle_' + panelName);
 
+    var cookieVal = '';
     if (filterPanel.style.display == 'none') {
         filterPanelToggle.innerHTML = '-';
         filterPanel.style.display = '';
+        cookieVal = "true";
     } else {
         filterPanelToggle.innerHTML = '+';
         filterPanel.style.display = 'none';
+        cookieVal = "false";
     }
+
+    setCookie("filter_panel_box_" + panelName, cookieVal);
 }
 
 function buildFilterPanelItem(filterType, itemString, friendlyItemString) {
+    var checkCookie = getCookie('filter_panel_item_' + filterType + '_checkbox_' + itemString);
+    var checkState = false;
+    if (checkCookie) {
+        checkState = (checkCookie === 'true');
+    }
+
     var filterPanelItem = document.createElement('div');
     filterPanelItem.id = 'filter_panel_item_' + itemString;
     filterPanelItem.className = 'filter_panel_item';
@@ -134,6 +162,9 @@ function buildFilterPanelItem(filterType, itemString, friendlyItemString) {
     filterPanelItemCheckBoxItem.name = 'filter_' + filterType;
     filterPanelItemCheckBoxItem.setAttribute('filter_id', itemString);
     filterPanelItemCheckBoxItem.setAttribute('oninput' , 'executeFilter();');
+    if (checkState == true) {
+        filterPanelItemCheckBoxItem.checked = true;
+    }
     filterPanelItemCheckBox.appendChild(filterPanelItemCheckBoxItem);
 
     var filterPanelItemLabel = document.createElement('label');
@@ -164,24 +195,27 @@ function executeFilter() {
     var platforms = '';
     var genres = '';
 
-    var searchString = document.getElementById('filter_panel_search').value;
-    if (searchString.length > 0) {
-        queries.push('name=' + searchString);
+    var searchString = document.getElementById('filter_panel_search');
+    if (searchString.value.length > 0) {
+        queries.push('name=' + searchString.value);
     }
+    setCookie(searchString.id, searchString.value);
 
     var minUserRating = 0;
-    var minUserRatingInput = document.getElementById('filter_panel_userrating_min').value;
-    if (minUserRatingInput) {
-        minUserRating = minUserRatingInput;
+    var minUserRatingInput = document.getElementById('filter_panel_userrating_min');
+    if (minUserRatingInput.value) {
+        minUserRating = minUserRatingInput.value;
         queries.push('minrating=' + minUserRating);
     }
+    setCookie(minUserRatingInput.id, minUserRatingInput.value);
 
     var maxUserRating = 100;
-    var maxUserRatingInput = document.getElementById('filter_panel_userrating_max').value;
-    if (maxUserRatingInput) {
-        maxUserRating = maxUserRatingInput;
+    var maxUserRatingInput = document.getElementById('filter_panel_userrating_max');
+    if (maxUserRatingInput.value) {
+        maxUserRating = maxUserRatingInput.value;
         queries.push('maxrating=' + maxUserRating);
     }
+    setCookie(maxUserRatingInput.id, maxUserRatingInput.value);
 
     queries.push(GetFilterQuery('platform'));
     queries.push(GetFilterQuery('genre'));
@@ -216,10 +250,13 @@ function GetFilterQuery(filterName) {
 
     for (var i = 0; i < Filters.length; i++) {
         if (Filters[i].checked) {
+            setCookie(Filters[i].id, true);
             if (queryString.length > 0) {
                 queryString += ',';
             }
             queryString += Filters[i].getAttribute('filter_id');
+        } else {
+            setCookie(Filters[i].id, false);
         }
     }
 
