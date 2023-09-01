@@ -44,7 +44,7 @@
 
         switch (getQueryString('engine', 'string')) {
             case 'EmulatorJS':
-                $('#emulator').load('/pages/EmulatorJS.html');
+                $('#emulator').load('/pages/EmulatorJS.html?v=' + AppVersion);
                 break;
         }
     });
