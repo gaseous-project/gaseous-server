@@ -1,8 +1,8 @@
 ﻿using System;
 using System.IO;
 using MySql.Data.MySqlClient;
-using gaseous_romsignatureobject;
-using gaseous_signature_parser.parsers;
+using gaseous_signature_parser.models.RomSignatureObject;
+using gaseous_signature_parser.classes.parsers;
 using gaseous_tools;
 using MySqlX.XDevAPI;
 

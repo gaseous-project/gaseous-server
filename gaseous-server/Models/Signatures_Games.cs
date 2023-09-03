@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Text.Json.Serialization;
-using static gaseous_romsignatureobject.RomSignatureObject.Game;
 
 namespace gaseous_server.Models
 {
