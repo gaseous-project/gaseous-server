@@ -1,16 +1,8 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 25.0.1704.4
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-identifier-testapp", "gaseous-identifier\gaseous-identifier-testapp.csproj", "{F5C42134-5372-430A-A9AE-1871981850DB}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-signature-parser", "gaseous-signature-parser\gaseous-signature-parser.csproj", "{DAEBBB82-5051-43FD-A406-F9D64A38F468}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-romsignatureobject", "gaseous-romsignatureobject\gaseous-romsignatureobject.csproj", "{9DCD243D-37CE-4562-8411-B5242B687D4F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-signature-ingestor", "gaseous-signature-ingestor\gaseous-signature-ingestor.csproj", "{86DF6E45-2C2B-4C30-AEC1-E7EF8C5CEA7D}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-tools", "gaseous-tools\gaseous-tools.csproj", "{08FE408A-5EC1-4110-ABD8-D19A1155B8CE}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-server", "gaseous-server\gaseous-server.csproj", "{A01D2EFF-C82E-473B-84D7-7C25E736F5D2}"
@@ -37,30 +29,14 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F5C42134-5372-430A-A9AE-1871981850DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F5C42134-5372-430A-A9AE-1871981850DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F5C42134-5372-430A-A9AE-1871981850DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F5C42134-5372-430A-A9AE-1871981850DB}.Release|Any CPU.Build.0 = Release|Any CPU
 		{08699C93-15CD-4E39-9053-D3C8056CE938}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{08699C93-15CD-4E39-9053-D3C8056CE938}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{08699C93-15CD-4E39-9053-D3C8056CE938}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{08699C93-15CD-4E39-9053-D3C8056CE938}.Release|Any CPU.Build.0 = Release|Any CPU
-		{DAEBBB82-5051-43FD-A406-F9D64A38F468}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{DAEBBB82-5051-43FD-A406-F9D64A38F468}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{DAEBBB82-5051-43FD-A406-F9D64A38F468}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{DAEBBB82-5051-43FD-A406-F9D64A38F468}.Release|Any CPU.Build.0 = Release|Any CPU
 		{FFCEC386-033F-4772-A45B-D33579F2E5EE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{FFCEC386-033F-4772-A45B-D33579F2E5EE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FFCEC386-033F-4772-A45B-D33579F2E5EE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FFCEC386-033F-4772-A45B-D33579F2E5EE}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9DCD243D-37CE-4562-8411-B5242B687D4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9DCD243D-37CE-4562-8411-B5242B687D4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9DCD243D-37CE-4562-8411-B5242B687D4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9DCD243D-37CE-4562-8411-B5242B687D4F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{86DF6E45-2C2B-4C30-AEC1-E7EF8C5CEA7D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{86DF6E45-2C2B-4C30-AEC1-E7EF8C5CEA7D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{86DF6E45-2C2B-4C30-AEC1-E7EF8C5CEA7D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{86DF6E45-2C2B-4C30-AEC1-E7EF8C5CEA7D}.Release|Any CPU.Build.0 = Release|Any CPU
 		{08FE408A-5EC1-4110-ABD8-D19A1155B8CE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{08FE408A-5EC1-4110-ABD8-D19A1155B8CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{08FE408A-5EC1-4110-ABD8-D19A1155B8CE}.Release|Any CPU.ActiveCfg = Release|Any CPU

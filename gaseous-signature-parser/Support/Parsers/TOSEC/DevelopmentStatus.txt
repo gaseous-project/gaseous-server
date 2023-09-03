@@ -1,5 +1,0 @@
-﻿alpha,Early test build
-beta,Later; feature complete test build
-preview,Near complete build
-pre-release,Near complete build
-proto,Unreleased; prototype software
