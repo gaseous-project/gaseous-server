@@ -55,7 +55,7 @@ namespace gaseous_server.Controllers
         private List<Models.Signatures_Games> _GetSignature(string sqlWhere, string searchString)
         {
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT     view_Signatures_Games.*,    Signatures_Roms.Id AS romid,    Signatures_Roms.Name AS romname,    Signatures_Roms.Size,    Signatures_Roms.CRC,    Signatures_Roms.MD5,    Signatures_Roms.SHA1,    Signatures_Roms.DevelopmentStatus,    Signatures_Roms.Flags,    Signatures_Roms.Attributes,    Signatures_Roms.RomType,    Signatures_Roms.RomTypeMedia,    Signatures_Roms.MediaLabel,    Signatures_Roms.MetadataSource FROM    Signatures_Roms        INNER JOIN    view_Signatures_Games ON Signatures_Roms.GameId = view_Signatures_Games.Id WHERE " + sqlWhere;
+            string sql = "SELECT     view_Signatures_Games.*,    Signatures_Roms.Id AS romid,    Signatures_Roms.Name AS romname,    Signatures_Roms.Size,    Signatures_Roms.CRC,    Signatures_Roms.MD5,    Signatures_Roms.SHA1,    Signatures_Roms.DevelopmentStatus,    Signatures_Roms.Attributes,    Signatures_Roms.RomType,    Signatures_Roms.RomTypeMedia,    Signatures_Roms.MediaLabel,    Signatures_Roms.MetadataSource FROM    Signatures_Roms        INNER JOIN    view_Signatures_Games ON Signatures_Roms.GameId = view_Signatures_Games.Id WHERE " + sqlWhere;
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("searchString", searchString);
 
@@ -91,7 +91,7 @@ namespace gaseous_server.Controllers
                         Md5 = (string)sigDbRow["MD5"],
                         Sha1 = (string)sigDbRow["SHA1"],
                         DevelopmentStatus = (string)sigDbRow["DevelopmentStatus"],
-                        Attributes = Newtonsoft.Json.JsonConvert.DeserializeObject<List<KeyValuePair<string, object>>>((string)sigDbRow["Attributes"]),
+                        Attributes = Newtonsoft.Json.JsonConvert.DeserializeObject<List<KeyValuePair<string, object>>>((string)Common.ReturnValueIfNull(sigDbRow["Attributes"], "[]")),
                         RomType = (Models.Signatures_Games.RomItem.RomTypes)(int)sigDbRow["RomType"],
                         RomTypeMedia = (string)sigDbRow["RomTypeMedia"],
                         MediaLabel = (string)sigDbRow["MediaLabel"],

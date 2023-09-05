@@ -130,7 +130,11 @@
         document.getElementById('properties_fixplatform').innerHTML = "<option value='" + result.platform.id + "' selected='selected'>" + result.platform.name + "</option>";
         document.getElementById('properties_fixgame').innerHTML = "<option value='" + gameData.id + "' selected='selected'>" + gameData.name + "</option>";
 
-        document.getElementById('properties_bodypanel_attributes').appendChild(BuildAttributesTable(result.attributes, result.source));
+        if (result.attributes.length > 0) {
+            document.getElementById('properties_bodypanel_attributes').appendChild(BuildAttributesTable(result.attributes, result.source));
+        } else {
+            document.getElementById('properties_toc_attributes').style.display = 'none';
+        }
     });
 
     function SelectTab(TabName) {

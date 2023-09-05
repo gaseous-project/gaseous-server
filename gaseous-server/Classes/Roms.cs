@@ -95,7 +95,7 @@ namespace gaseous_server.Classes
 
 		private static GameRomItem BuildRom(DataRow romDR)
 		{
-            GameRomItem romItem = new GameRomItem
+			GameRomItem romItem = new GameRomItem
             {
                 Id = (long)romDR["id"],
                 PlatformId = (long)romDR["platformid"],
@@ -107,13 +107,13 @@ namespace gaseous_server.Classes
                 MD5 = (string)romDR["md5"],
                 SHA1 = (string)romDR["sha1"],
                 DevelopmentStatus = (string)romDR["developmentstatus"],
-                Attributes = Newtonsoft.Json.JsonConvert.DeserializeObject<List<KeyValuePair<string, object>>>((string)romDR["attributes"]),
+                Attributes = Newtonsoft.Json.JsonConvert.DeserializeObject<List<KeyValuePair<string, object>>>((string)Common.ReturnValueIfNull(romDR["attributes"], "[ ]")),
                 RomType = (int)romDR["romtype"],
                 RomTypeMedia = (string)romDR["romtypemedia"],
                 MediaLabel = (string)romDR["medialabel"],
                 Path = (string)romDR["path"],
 				Source = (gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType)(Int32)romDR["metadatasource"],
-				SignatureSourceGameTitle = (string)romDR["MetadataGameName"]
+				SignatureSourceGameTitle = (string)Common.ReturnValueIfNull(romDR["MetadataGameName"], "")
             };
 
 			// check for a web emulator and update the romItem
@@ -146,7 +146,7 @@ namespace gaseous_server.Classes
 			public string? SHA1 { get; set; }
 			public string? DevelopmentStatus { get; set; }
 			public string[]? Flags { get; set; }
-			public List<KeyValuePair<string, object>> Attributes { get; set;}
+			public List<KeyValuePair<string, object>>? Attributes { get; set;}
 			public int RomType { get; set; }
 			public string? RomTypeMedia { get; set; }
 			public string? MediaLabel { get; set; }

@@ -667,8 +667,8 @@ namespace gaseous_server.Classes
                         {
                             Common.hashObject hash = new Common.hashObject
                             {
-                                md5hash = "",
-                                sha1hash = ""
+                                md5hash = (string)dtRoms.Rows[i]["MD5"],
+                                sha1hash = (string)dtRoms.Rows[i]["SHA1"]
                             };
                             FileInfo fi = new FileInfo(romPath);
 
