@@ -5,6 +5,7 @@ using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using gaseous_tools;
+using IGDB.Models;
 using MySqlX.XDevAPI;
 using Org.BouncyCastle.Utilities.IO.Pem;
 using static gaseous_server.Classes.Metadata.Games;
@@ -43,11 +44,7 @@ namespace gaseous_server.Classes
 			string sql = "";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 
-			string[] SkippableFiles = {
-				".DS_STORE",
-				"desktop.ini"
-			};
-            if (SkippableFiles.Contains<string>(Path.GetFileName(GameFileImportPath), StringComparer.OrdinalIgnoreCase))
+            if (Common.SkippableFiles.Contains<string>(Path.GetFileName(GameFileImportPath), StringComparer.OrdinalIgnoreCase))
 			{ 
                 Logging.Log(Logging.LogType.Debug, "Import Game", "Skipping item " + GameFileImportPath);
             }
@@ -144,6 +141,17 @@ namespace gaseous_server.Classes
 
                     if (zDiscoveredSignature.Score > discoveredSignature.Score)
                     {
+                        if (
+                            zDiscoveredSignature.Rom.SignatureSource == gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType.MAMEArcade || 
+                            zDiscoveredSignature.Rom.SignatureSource == gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType.MAMEMess
+                        )
+                        {
+                            zDiscoveredSignature.Rom.Name = zDiscoveredSignature.Game.Description + ".zip";
+                        }
+                        zDiscoveredSignature.Rom.Crc = discoveredSignature.Rom.Crc;
+                        zDiscoveredSignature.Rom.Md5 = discoveredSignature.Rom.Md5;
+                        zDiscoveredSignature.Rom.Sha1 = discoveredSignature.Rom.Sha1;
+                        zDiscoveredSignature.Rom.Size = discoveredSignature.Rom.Size;
                         discoveredSignature = zDiscoveredSignature;
 
                         break;
@@ -238,7 +246,7 @@ namespace gaseous_server.Classes
                     ri.Md5 = hash.md5hash;
                     ri.Sha1 = hash.sha1hash;
                     ri.Size = fi.Length;
-                    ri.SignatureSource = Models.Signatures_Games.RomItem.SignatureSourceType.None;
+                    ri.SignatureSource = gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType.None;
                 }
             }
 
@@ -275,6 +283,17 @@ namespace gaseous_server.Classes
                     else if (games.Length > 0)
                     {
                         Logging.Log(Logging.LogType.Information, "Import Game", "  " + games.Length + " search results found");
+
+                        // quite likely we've found sequels and alternate types
+                        foreach (Game game in games) {
+                            if (game.Name == SearchCandidate) {
+                                // found game title matches the search candidate
+                                determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false, false);
+                                Logging.Log(Logging.LogType.Information, "Import Game", "Found exact match!");
+                                GameFound = true;
+                                break;
+                            }
+                        }
                     }
                     else
                     {
@@ -340,11 +359,17 @@ namespace gaseous_server.Classes
             GameName = Regex.Replace(GameName, @"v(\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
             GameName = Regex.Replace(GameName, @"Rev (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
 
+            // assumption: no games have () in their titles so we'll remove them
+            int idx = GameName.IndexOf('(');
+            if (idx >= 0) {
+                GameName = GameName.Substring(0, idx);
+            }
+
             List<string> SearchCandidates = new List<string>();
-            SearchCandidates.Add(GameName);
+            SearchCandidates.Add(GameName.Trim());
             if (GameName.Contains(" - "))
             {
-                SearchCandidates.Add(GameName.Replace(" - ", ": "));
+                SearchCandidates.Add(GameName.Replace(" - ", ": ").Trim());
                 SearchCandidates.Add(GameName.Substring(0, GameName.IndexOf(" - ")).Trim());
             }
             if (GameName.Contains(": "))
@@ -367,10 +392,10 @@ namespace gaseous_server.Classes
 
             if (UpdateId == 0)
             {
-                sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Flags, RomType, RomTypeMedia, MediaLabel, Path, MetadataSource) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @flags, @romtype, @romtypemedia, @medialabel, @path, @metadatasource); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+                sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, Path, MetadataSource, MetadataGameName, MetadataVersion) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @Attributes, @romtype, @romtypemedia, @medialabel, @path, @metadatasource, @metadatagamename, @metadataversion); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
             } else
             {
-                sql = "UPDATE Games_Roms SET PlatformId=platformid, GameId=@gameid, Name=@name, Size=@size, DevelopmentStatus=@developmentstatus, Flags=@flags, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource WHERE Id=@id;";
+                sql = "UPDATE Games_Roms SET PlatformId=platformid, GameId=@gameid, Name=@name, Size=@size, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion WHERE Id=@id;";
                 dbDict.Add("id", UpdateId);
             }
             dbDict.Add("platformid", Common.ReturnValueIfNull(determinedPlatform.Id, 0));
@@ -382,21 +407,23 @@ namespace gaseous_server.Classes
             dbDict.Add("crc", Common.ReturnValueIfNull(discoveredSignature.Rom.Crc, ""));
             dbDict.Add("developmentstatus", Common.ReturnValueIfNull(discoveredSignature.Rom.DevelopmentStatus, ""));
             dbDict.Add("metadatasource", discoveredSignature.Rom.SignatureSource);
+            dbDict.Add("metadatagamename", discoveredSignature.Game.Name);
+            dbDict.Add("metadataversion", 2);
 
-            if (discoveredSignature.Rom.flags != null)
+            if (discoveredSignature.Rom.Attributes != null)
             {
-                if (discoveredSignature.Rom.flags.Count > 0)
+                if (discoveredSignature.Rom.Attributes.Count > 0)
                 {
-                    dbDict.Add("flags", Newtonsoft.Json.JsonConvert.SerializeObject(discoveredSignature.Rom.flags));
+                    dbDict.Add("attributes", Newtonsoft.Json.JsonConvert.SerializeObject(discoveredSignature.Rom.Attributes));
                 }
                 else
                 {
-                    dbDict.Add("flags", "[ ]");
+                    dbDict.Add("attributes", "[ ]");
                 }
             }
             else
             {
-                dbDict.Add("flags", "[ ]");
+                dbDict.Add("attributes", "[ ]");
             }
             dbDict.Add("romtype", (int)discoveredSignature.Rom.RomType);
             dbDict.Add("romtypemedia", Common.ReturnValueIfNull(discoveredSignature.Rom.RomTypeMedia, ""));
@@ -572,43 +599,46 @@ namespace gaseous_server.Classes
             string[] LibraryFiles = Directory.GetFiles(Config.LibraryConfiguration.LibraryDataDirectory, "*.*", SearchOption.AllDirectories);
             foreach (string LibraryFile in LibraryFiles)
             {
-                Common.hashObject LibraryFileHash = new Common.hashObject(LibraryFile);
-
-                // check if file is in database
-                bool romFound = false;
-                for (var i = 0; i < dtRoms.Rows.Count; i++)
+                if (!Common.SkippableFiles.Contains<string>(Path.GetFileName(LibraryFile), StringComparer.OrdinalIgnoreCase))
                 {
-                    long romId = (long)dtRoms.Rows[i]["Id"];
-                    string romPath = (string)dtRoms.Rows[i]["Path"];
-                    string romMd5 = (string)dtRoms.Rows[i]["MD5"];
+                    Common.hashObject LibraryFileHash = new Common.hashObject(LibraryFile);
 
-                    if ((LibraryFile == romPath) || (LibraryFileHash.md5hash == romMd5))
+                    // check if file is in database
+                    bool romFound = false;
+                    for (var i = 0; i < dtRoms.Rows.Count; i++)
                     {
-                        romFound = true;
-                        break;
-                    }
-                }
+                        long romId = (long)dtRoms.Rows[i]["Id"];
+                        string romPath = (string)dtRoms.Rows[i]["Path"];
+                        string romMd5 = (string)dtRoms.Rows[i]["MD5"];
 
-                if (romFound == false)
-                {
-                    // file is not in database - process it
-                    Common.hashObject hash = new Common.hashObject(LibraryFile);
-                    FileInfo fi = new FileInfo(LibraryFile);
-
-                    Models.Signatures_Games sig = GetFileSignature(hash, fi, LibraryFile);
-
-                    Logging.Log(Logging.LogType.Information, "Library Scan", " Orphaned file found in library: " + LibraryFile);
-
-                    // get discovered platform
-                    IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(sig.Flags.IGDBPlatformId);
-                    if (determinedPlatform == null)
-                    {
-                        determinedPlatform = new IGDB.Models.Platform();
+                        if ((LibraryFile == romPath) || (LibraryFileHash.md5hash == romMd5))
+                        {
+                            romFound = true;
+                            break;
+                        }
                     }
 
-                    IGDB.Models.Game determinedGame = SearchForGame(sig.Game.Name, sig.Flags.IGDBPlatformId);
+                    if (romFound == false)
+                    {
+                        // file is not in database - process it
+                        Common.hashObject hash = new Common.hashObject(LibraryFile);
+                        FileInfo fi = new FileInfo(LibraryFile);
 
-                    StoreROM(hash, determinedGame, determinedPlatform, sig, LibraryFile);
+                        Models.Signatures_Games sig = GetFileSignature(hash, fi, LibraryFile);
+
+                        Logging.Log(Logging.LogType.Information, "Library Scan", " Orphaned file found in library: " + LibraryFile);
+
+                        // get discovered platform
+                        IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(sig.Flags.IGDBPlatformId);
+                        if (determinedPlatform == null)
+                        {
+                            determinedPlatform = new IGDB.Models.Platform();
+                        }
+
+                        IGDB.Models.Game determinedGame = SearchForGame(sig.Game.Name, sig.Flags.IGDBPlatformId);
+
+                        StoreROM(hash, determinedGame, determinedPlatform, sig, LibraryFile);
+                    }
                 }
             }
 
@@ -623,14 +653,17 @@ namespace gaseous_server.Classes
                 {
                     long romId = (long)dtRoms.Rows[i]["Id"];
                     string romPath = (string)dtRoms.Rows[i]["Path"];
-                    Classes.Roms.GameRomItem.SourceType romMetadataSource = (Classes.Roms.GameRomItem.SourceType)(int)dtRoms.Rows[i]["MetadataSource"];
+                    gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType romMetadataSource = (gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType)(int)dtRoms.Rows[i]["MetadataSource"];
 
                     Logging.Log(Logging.LogType.Information, "Library Scan", " Processing ROM at path " + romPath);
 
                     if (File.Exists(romPath))
                     {
                         // file exists, so lets check to make sure the signature was matched, and update if a signature can be found
-                        if (romMetadataSource == Roms.GameRomItem.SourceType.None)
+                        if (
+                            romMetadataSource == gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType.None ||
+                            (int)dtRoms.Rows[i]["MetadataVersion"] == 1
+                        )
                         {
                             Common.hashObject hash = new Common.hashObject
                             {
@@ -640,7 +673,7 @@ namespace gaseous_server.Classes
                             FileInfo fi = new FileInfo(romPath);
 
                             Models.Signatures_Games sig = GetFileSignature(hash, fi, romPath);
-                            if (sig.Rom.SignatureSource != Models.Signatures_Games.RomItem.SignatureSourceType.None)
+                            if (sig.Rom.SignatureSource != gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType.None)
                             {
                                 Logging.Log(Logging.LogType.Information, "Library Scan", " Update signature found for " + romPath);
 

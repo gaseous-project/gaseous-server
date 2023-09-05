@@ -1,5 +1,6 @@
 ﻿<div id="properties_toc">
     <div id="properties_toc_general" name="properties_toc_item" onclick="SelectTab('general');">General</div>
+    <div id="properties_toc_attributes" name="properties_toc_item" onclick="SelectTab('attributes');">Attributes</div>
     <div id="properties_toc_match" name="properties_toc_item" onclick="SelectTab('match');">Title Match</div>
     <!--<div id="properties_toc_manage" name="properties_toc_item" onclick="SelectTab('manage');">Manage</div>-->
 </div>
@@ -39,13 +40,17 @@
                 <td id="rominfo_signaturematch"></td>
             </tr>
             <tr>
-                <th>Signature Source Flags</th>
-                <td id="rominfo_flags"></td>
+                <th>Signature Game Title</th>
+                <td id="rominfo_signaturetitle"></td>
             </tr>
             <tr>
                 <td colspan="2" style="text-align: right;"><button id="romDelete" class="redbutton">Delete</button></td>
             </tr>
         </table>
+    </div>
+
+    <div id="properties_bodypanel_attributes" name="properties_tab" style="display: none;">
+        
     </div>
 
     <div id="properties_bodypanel_match" name="properties_tab" style="display: none;">
@@ -113,7 +118,6 @@
         romData = result;
         document.getElementById('modal-heading').innerHTML = result.name;
         document.getElementById('rominfo_platform').innerHTML = result.platform.name;
-        //document.getElementById('rominfo_filename').innerHTML = result.name;
         document.getElementById('rominfo_size').innerHTML = formatBytes(result.size, 2);
         document.getElementById('rominfo_type').innerHTML = getRomType(result.romType);
         document.getElementById('rominfo_mediatype').innerHTML = result.romTypeMedia;
@@ -121,10 +125,12 @@
         document.getElementById('rominfo_md5').innerHTML = result.mD5;
         document.getElementById('rominfo_sha1').innerHTML = result.shA1;
         document.getElementById('rominfo_signaturematch').innerHTML = result.source;
-        document.getElementById('rominfo_flags').innerHTML = result.flags;
+        document.getElementById('rominfo_signaturetitle').innerHTML = result.signatureSourceGameTitle;
 
         document.getElementById('properties_fixplatform').innerHTML = "<option value='" + result.platform.id + "' selected='selected'>" + result.platform.name + "</option>";
         document.getElementById('properties_fixgame').innerHTML = "<option value='" + gameData.id + "' selected='selected'>" + gameData.name + "</option>";
+
+        document.getElementById('properties_bodypanel_attributes').appendChild(BuildAttributesTable(result.attributes, result.source));
     });
 
     function SelectTab(TabName) {
@@ -220,6 +226,57 @@
         ajaxCall('/api/v1/Games/' + gameId + '/roms/' + modalVariables + '?NewPlatformId=' + fixplatform[0].id + '&NewGameId=' + fixgame[0].id, 'PATCH', function (result) {
             window.location.reload();
         });
+    }
+
+    function BuildAttributesTable(attributes, sourceName) {
+        var aTable = document.createElement('table');
+        aTable.style.width = '100%';
+
+        for (var i = 0; i < attributes.length; i++) {
+            var aRow = document.createElement('tr');
+
+            var aTitleCell = document.createElement('th');
+            aTitleCell.width = "25%";
+            if (sourceName == "TOSEC") {
+                aTitleCell.innerHTML = ConvertTOSECAttributeName(attributes[i].key);
+            } else {
+                aTitleCell.innerHTML = attributes[i].key;
+            }
+            aRow.appendChild(aTitleCell);
+
+            var aValueCell = document.createElement('td');
+            aValueCell.width = "75%";
+            aValueCell.innerHTML = attributes[i].value;
+            aRow.appendChild(aValueCell);
+
+            aTable.appendChild(aRow);
+        }
+
+        return aTable;
+    }
+
+    function ConvertTOSECAttributeName(attributeName) {
+        var tosecAttributeNames = {
+            "cr": "Cracked",
+            "f" : "Fixed",
+            "h" : "Hacked",
+            "m" : "Modified",
+            "p" : "Pirated",
+            "t" : "Trained",
+            "tr": "Translated",
+            "o" : "Over Dump",
+            "u" : "Under Dump",
+            "v" : "Virus",
+            "b" : "Bad Dump",
+            "a" : "Alternate",
+            "!" : "Known Verified Dump"
+        };
+
+        if (attributeName in tosecAttributeNames) {
+            return tosecAttributeNames[attributeName];
+        } else {
+            return attributeName;
+        }
     }
 
     SelectTab('general');

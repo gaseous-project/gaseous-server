@@ -76,8 +76,17 @@ namespace gaseous_server
                             {
                                 case QueueItemType.SignatureIngestor:
                                     Logging.Log(Logging.LogType.Information, "Timered Event", "Starting Signature Ingestor");
-                                    SignatureIngestors.TOSEC.TOSECIngestor tIngest = new SignatureIngestors.TOSEC.TOSECIngestor();
-                                    tIngest.Import(Config.LibraryConfiguration.LibrarySignatureImportDirectory_TOSEC);
+                                    SignatureIngestors.XML.XMLIngestor tIngest = new SignatureIngestors.XML.XMLIngestor();
+                                    
+                                    Logging.Log(Logging.LogType.Information, "Signature Import", "Processing TOSEC files");
+                                    tIngest.Import(Path.Combine(Config.LibraryConfiguration.LibrarySignatureImportDirectory, "TOSEC"), gaseous_signature_parser.parser.SignatureParser.TOSEC);
+                                    
+                                    Logging.Log(Logging.LogType.Information, "Signature Import", "Processing MAME Arcade files");
+                                    tIngest.Import(Path.Combine(Config.LibraryConfiguration.LibrarySignatureImportDirectory, "MAME Arcade"), gaseous_signature_parser.parser.SignatureParser.MAMEArcade);
+
+                                    Logging.Log(Logging.LogType.Information, "Signature Import", "Processing MAME MESS files");
+                                    tIngest.Import(Path.Combine(Config.LibraryConfiguration.LibrarySignatureImportDirectory, "MAME MESS"), gaseous_signature_parser.parser.SignatureParser.MAMEMess);
+                                    
                                     break;
 
                                 case QueueItemType.TitleIngestor:

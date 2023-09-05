@@ -56,7 +56,10 @@ namespace gaseous_server.Models
             {
                 foreach (Models.PlatformMapping.PlatformMapItem PlatformMapping in Models.PlatformMapping.PlatformMap)
                 {
-                    if (PlatformMapping.AlternateNames.Contains(Signature.Game.System, StringComparer.OrdinalIgnoreCase))
+                    if (
+                        PlatformMapping.IGDBName == Signature.Game.System ||
+                        PlatformMapping.AlternateNames.Contains(Signature.Game.System, StringComparer.OrdinalIgnoreCase)
+                        )
                     {
                         if (SetSystemName == true)
                         {

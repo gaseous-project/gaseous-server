@@ -1,5 +1,5 @@
 ﻿DROP TABLE IF EXISTS `GameMode`;
-CREATE TABLE `gaseous`.`GameMode` (
+CREATE TABLE `GameMode` (
   `Id` BIGINT NOT NULL,
   `CreatedAt` DATETIME NULL,
   `Checksum` VARCHAR(45) NULL,
@@ -82,5 +82,5 @@ CREATE TABLE `RomCollections` (
   `BuiltStatus` INT NULL,
   PRIMARY KEY (`Id`));
 
-ALTER TABLE `gaseous`.`Signatures_Sources` 
+ALTER TABLE `Signatures_Sources` 
 CHANGE COLUMN `Author` `Author` LONGTEXT NULL DEFAULT NULL ;
