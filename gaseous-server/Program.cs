@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
 using gaseous_server;
+using gaseous_server.SignatureIngestors.XML;
 using gaseous_tools;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
@@ -145,6 +146,10 @@ gaseous_server.Classes.Metadata.Platforms.GetPlatform(0);
 
 // organise library
 //gaseous_server.Classes.ImportGame.OrganiseLibrary();
+
+// Migrate signature data if needed
+XMLIngestor ingestor = new XMLIngestor();
+ingestor.MigrateMetadatVersion();
 
 // add background tasks
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.SignatureIngestor, 60));

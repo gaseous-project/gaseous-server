@@ -126,19 +126,13 @@ namespace gaseous_server.Models
 
             public string? DevelopmentStatus { get; set; }
 
-            public List<string> flags { get; set; } = new List<string>();
+            public List<KeyValuePair<string, object>> Attributes { get; set; } = new List<KeyValuePair<string, object>>();
 
             public RomTypes RomType { get; set; }
             public string? RomTypeMedia { get; set; }
             public string? MediaLabel { get; set; }
 
-            public SignatureSourceType SignatureSource { get; set; }
-
-            public enum SignatureSourceType
-            {
-                None = 0,
-                TOSEC = 1
-            }
+            public gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType SignatureSource { get; set; }
 
             public enum RomTypes
             {
@@ -197,6 +191,7 @@ namespace gaseous_server.Models
                                 case "crc":
                                 case "developmentstatus":
                                 case "flags":
+                                case "attributes":
                                 case "romtypemedia":
                                 case "medialabel":
                                     if (prop.PropertyType == typeof(string) || prop.PropertyType == typeof(Int64) || prop.PropertyType == typeof(List<string>))

@@ -99,6 +99,11 @@ namespace gaseous_tools
             }
             return size;
         }
+
+		public static string[] SkippableFiles = {
+				".DS_STORE",
+				"desktop.ini"
+			};
     }
 }
 

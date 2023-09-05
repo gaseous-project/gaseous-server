@@ -404,14 +404,6 @@ namespace gaseous_tools
                     }
                 }
 
-                public string LibrarySignatureImportDirectory_TOSEC
-                {
-                    get
-                    {
-                        return Path.Combine(LibrarySignatureImportDirectory, "TOSEC");
-                    }
-                }
-
                 public void InitLibrary()
                 {
                     if (!Directory.Exists(LibraryRootDirectory)) { Directory.CreateDirectory(LibraryRootDirectory); }
@@ -423,7 +415,6 @@ namespace gaseous_tools
                     if (!Directory.Exists(LibraryTempDirectory)) { Directory.CreateDirectory(LibraryTempDirectory); }
                     if (!Directory.Exists(LibraryCollectionsDirectory)) { Directory.CreateDirectory(LibraryCollectionsDirectory); }
                     if (!Directory.Exists(LibrarySignatureImportDirectory)) { Directory.CreateDirectory(LibrarySignatureImportDirectory); }
-                    if (!Directory.Exists(LibrarySignatureImportDirectory_TOSEC)) { Directory.CreateDirectory(LibrarySignatureImportDirectory_TOSEC); }
                 }
             }
 

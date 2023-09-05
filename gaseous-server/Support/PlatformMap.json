@@ -205,7 +205,9 @@
     {
         "IGDBId": 52,
         "IGDBName": "Arcade",
-        "AlternateNames": [],
+        "AlternateNames": [
+            "Arcade"
+        ],
         "KnownFileExtensions": [],
         "WebEmulator": {
             "Type": "EmulatorJS",
