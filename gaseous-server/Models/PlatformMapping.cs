@@ -88,15 +88,16 @@ namespace gaseous_server.Models
             {
                 public string Type { get; set; }
                 public string Core { get; set; }
-                public List<EmulatorBiosItem> Bios { get; set; }
+            }
 
-                public class EmulatorBiosItem
-                {
-                    public string hash { get; set; }
-                    public string description { get; set; }
-                    public string filename { get; set; }
-                    public string region { get; set; }
-                }
+            public List<EmulatorBiosItem> Bios { get; set; }
+
+            public class EmulatorBiosItem
+            {
+                public string hash { get; set; }
+                public string description { get; set; }
+                public string filename { get; set; }
+                public string region { get; set; }
             }
         }
 	}

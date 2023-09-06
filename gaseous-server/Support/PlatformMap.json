@@ -1,7 +1,300 @@
 ﻿[
     {
+        "IGDBId": 50,
+        "IGDBName": "3DO Interactive Multiplayer",
+        "RetroPieDirectoryName": "3do",
+        "AlternateNames": [
+            "3DO",
+            "3DO Interactive Multiplayer"
+        ],
+        "KnownFileExtensions": [
+            
+        ],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "3do"
+        },
+        "Bios": [
+            {
+                "hash": "f47264dd47fe30f73ab3c010015c155b",
+                "description": "Panasonic FZ-1",
+                "filename": "panafz1.bin",
+                "region": ""
+            },
+            {
+                "hash": "51f2f43ae2f3508a14d9f56597e2d3ce",
+                "description": "Panasonic FZ-10",
+                "filename": "panafz10.bin",
+                "region": ""
+            },
+            {
+                "hash": "1477bda80dc33731a65468c1f5bcbee9",
+                "description": "Panasonic FZ-10 [RSA Patch]",
+                "filename": "panafz10-norsa.bin",
+                "region": ""
+            },
+            {
+                "hash": "a48e6746bd7edec0f40cff078f0bb19f",
+                "description": "Panasonic FZ-10-E [Anvil]",
+                "filename": "panafz10e-anvil.bin",
+                "region": ""
+            },
+            {
+                "hash": "cf11bbb5a16d7af9875cca9de9a15e09",
+                "description": "Panasonic FZ-10-E [Anvil RSA Patch]",
+                "filename": "panafz10e-anvil-norsa.bin",
+                "region": ""
+            },
+            {
+                "hash": "a496cfdded3da562759be3561317b605",
+                "description": "Panasonic FZ-1J",
+                "filename": "panafz1j.bin",
+                "region": ""
+            },
+            {
+                "hash": "f6c71de7470d16abe4f71b1444883dc8",
+                "description": "Panasonic FZ-1J [RSA Patch]",
+                "filename": "panafz1j-norsa.bin",
+                "region": ""
+            },
+            {
+                "hash": "8639fd5e549bd6238cfee79e3e749114",
+                "description": "Goldstar GDO-101M",
+                "filename": "goldstar.bin",
+                "region": ""
+            },
+            {
+                "hash": "35fa1a1ebaaeea286dc5cd15487c13ea",
+                "description": "Sanyo IMP-21J TRY",
+                "filename": "sanyotry.bin",
+                "region": ""
+            },
+            {
+                "hash": "8970fc987ab89a7f64da9f8a8c4333ff",
+                "description": "Shootout At Old Tucson",
+                "filename": "3do_arcade_saot.bin",
+                "region": ""
+            }
+        ]
+    },
+    {
+        "IGDBId": 16,
+        "IGDBName": "Amiga",
+        "RetroPieDirectoryName": "amiga",
+        "AlternateNames": [
+            "Amiga",
+            "Commodore Amiga"
+        ],
+        "KnownFileExtensions": [
+            ".ADF",
+            ".ADZ",
+            ".DMS",
+            ".UAE",
+            ".HDF",
+            ".HDZ"
+        ],
+        "Bios": [
+            {
+                "hash": "85ad74194e87c08904327de1a9443b7a",
+                "description": "Kickstart v1.2 rev 33.180",
+                "filename": "kick33180.A500",
+                "region": ""
+            },
+            {
+                "hash": "82a21c1890cae844b3df741f2762d48d",
+                "description": "Kickstart v1.3 rev 34.005",
+                "filename": "kick34005.A500",
+                "region": ""
+            },
+            {
+                "hash": "dc10d7bdd1b6f450773dfb558477c230",
+                "description": "Kickstart v2.04 rev 37.175",
+                "filename": "kick37175.A500",
+                "region": ""
+            },
+            {
+                "hash": "e40a5dfb3d017ba8779faba30cbd1c8e",
+                "description": "Kickstart v3.1 rev 40.063",
+                "filename": "kick40063.A600",
+                "region": ""
+            },
+            {
+                "hash": "646773759326fbac3b2311fd8c8793ee",
+                "description": "Kickstart v3.1 rev 40.068",
+                "filename": "kick40068.A1200",
+                "region": ""
+            },
+            {
+                "hash": "9bdedde6a4f33555b4a270c8ca53297d",
+                "description": "Kickstart v3.1 rev 40.068",
+                "filename": "kick40068.A4000",
+                "region": ""
+            },
+            {
+                "hash": "89da1838a24460e4b93f4f0c5d92d48d",
+                "description": "CDTV extended ROM v1.00",
+                "filename": "kick34005.CDTV",
+                "region": ""
+            },
+            {
+                "hash": "5f8924d013dd57a89cf349f4cdedc6b1",
+                "description": "CD32 Kickstart v3.1 rev 40.060",
+                "filename": "kick40060.CD32",
+                "region": ""
+            },
+            {
+                "hash": "bb72565701b1b6faece07d68ea5da639",
+                "description": "CD32 extended ROM rev 40.060",
+                "filename": "kick40060.CD32.ext",
+                "region": ""
+            },
+            {
+                "hash": "f2f241bf094168cfb9e7805dc2856433",
+                "description": "CD32 KS + extended v3.1 rev 40.060",
+                "filename": "kick40060.CD32",
+                "region": ""
+            }
+        ]
+    },
+    {
+        "IGDBId": 25,
+        "IGDBName": "Amstrad CPC",
+        "RetroPieDirectoryName": "amstradcpc",
+        "AlternateNames": [
+            "Amstrad CPC"
+        ],
+        "KnownFileExtensions": [
+            ".CPC"
+        ],
+        "Bios": [
+        ]
+    },
+    {
+        "IGDBId": 75,
+        "IGDBName": "Apple II",
+        "RetroPieDirectoryName": "apple2",
+        "AlternateNames": [
+            "Apple II",
+            "Apple ][",
+            "Apple 2"
+        ],
+        "KnownFileExtensions": [
+        ],
+        "Bios": [
+        ]
+    },
+    {
+        "IGDBId": 59,
+        "IGDBName": "Atari 2600",
+        "RetroPieDirectoryName": "atari2600",
+        "AlternateNames": [
+            "Atari 2600",
+            "Atari VCS"
+        ],
+        "KnownFileExtensions": [
+            ".A26"
+        ],
+        "Bios": [
+        ]
+    },
+    {
+        "IGDBId": 60,
+        "IGDBName": "Atari 7800",
+        "RetroPieDirectoryName": "atari7800",
+        "AlternateNames": [
+            "Atari 7800 ProSystem",
+            "Atari VCS"
+        ],
+        "KnownFileExtensions": [
+            ".A78"
+        ],
+        "Bios": [
+            {
+                "hash": "0763f1ffb006ddbe32e52d497ee848ae",
+                "description": "7800 BIOS - Optional",
+                "filename": "7800 BIOS (U).rom"
+            }
+        ]
+    },
+    {
+        "IGDBId": 66,
+        "IGDBName": "Atari 5200",
+        "RetroPieDirectoryName": "atari5200",
+        "AlternateNames": [
+            "Atari 5200",
+            "Atari 5200 SuperSystem"
+        ],
+        "KnownFileExtensions": [
+            ".A52"
+        ],
+        "Bios": [
+            {
+                "hash": "281f20ea4320404ec820fb7ec0693b38",
+                "description": "BIOS for the Atari 5200",
+                "filename": "5200.rom"
+            }
+        ]
+    },
+    {
+        "IGDBId": 62,
+        "IGDBName": "Atari Jaguar",
+        "RetroPieDirectoryName": "atarijaguar",
+        "AlternateNames": [
+            "Atari Jaguar",
+            "Jaguar"
+        ],
+        "KnownFileExtensions": [
+            ".J64",
+            ".JAG"
+        ],
+        "Bios": [
+        ]
+    },
+    {
+        "IGDBId": 61,
+        "IGDBName": "Atari Lynx",
+        "RetroPieDirectoryName": "atarilynx",
+        "AlternateNames": [
+            "Atari Lynx",
+            "Lynx"
+        ],
+        "KnownFileExtensions": [
+            ".LNX"
+        ],
+        "Bios": [
+            {
+                "hash": "fcd403db69f54290b51035d82f835e7b",
+                "description": "BIOS for the Atari Lynx",
+                "filename": "lynxboot.img"
+            }
+        ]
+    },
+    {
+        "IGDBId": 63,
+        "IGDBName": "Atari ST/STE",
+        "RetroPieDirectoryName": "atarist",
+        "AlternateNames": [
+            "Atari ST/STE",
+            "Atari ST",
+            "Atari STE"
+        ],
+        "KnownFileExtensions": [
+            ".ST",
+            ".STX",
+            ".MSA"
+        ],
+        "Bios": [
+            {
+                "hash": "C1C57CE48E8EE4135885CEE9E63A68A2",
+                "description": "TOS",
+                "filename": "tos.img"
+            }
+        ]
+    },
+    {
         "IGDBId": 15,
         "IGDBName": "Commodore C64/128/MAX",
+        "RetroPieDirectoryName": "c64",
         "AlternateNames": [
             "C64",
             "Commodore C64",
@@ -19,19 +312,86 @@
             ".PRG",
             ".T64",
             ".TAP"
+        ],
+        "Bios": [
+            {
+                "hash": "be09394f0576cf81fa8bacf634daf9a2",
+                "description": "JiffyDOS C64 Kernal",
+                "filename": "JiffyDOS_C64.bin"
+            },
+            {
+                "hash": "1b1e985ea5325a1f46eb7fd9681707bf",
+                "description": "JiffyDOS 1541 drive BIOS",
+                "filename": "JiffyDOS_1541-II.bin"
+            },
+            {
+                "hash": "41c6cc528e9515ffd0ed9b180f8467c0",
+                "description": "JiffyDOS 1571 drive BIOS",
+                "filename": "JiffyDOS_1571_repl310654.bin"
+            },
+            {
+                "hash": "20b6885c6dc2d42c38754a365b043d71",
+                "description": "JiffyDOS 1581 drive BIOS",
+                "filename": "JiffyDOS_1581.bin"
+            }
         ]
     },
     {
-        "IGDBId": 16,
-        "IGDBName": "Amiga",
+        "IGDBId": 24,
+        "IGDBName": "Game Boy Advance",
+        "RetroPieDirectoryName": "gba",
         "AlternateNames": [
-            "Amiga",
-            "Commodore Amiga"
+            "GBA",
+            "Game Boy Advance"
         ],
         "KnownFileExtensions": [
-            ".ADF",
-            ".ADZ",
-            ".DMS"
+            ".GBA"
+        ],
+        "Bios": [
+            {
+                "hash": "a860e8c0b6d573d191e4ec7db1b1e4f6",
+                "description": "[BIOS] Game Boy Advance (World).gba",
+                "filename": "gba_bios.bin"
+            },
+            {
+                "hash": "32FBBD84168D3482956EB3C5051637F5",
+                "description": "[BIOS] Nintendo Game Boy Boot ROM (World) (Rev 1).gb",
+                "filename": "gb_bios.bin"
+            },
+            {
+                "hash": "DBFCE9DB9DEAA2567F6A84FDE55F9680",
+                "description": "[BIOS] Nintendo Game Boy Color Boot ROM (World).gbc",
+                "filename": "gbc_bios.bin"
+            },
+            {
+                "hash": "D574D4F9C12F305074798F54C091A8B4",
+                "description": "SGB-CPU (World) (Enhancement Chip).bin",
+                "filename": "sgb_bios.bin"
+            }
+        ]
+    },
+    {
+        "IGDBId": 22,
+        "IGDBName": "Game Boy Color",
+        "RetroPieDirectoryName": "gbc",
+        "AlternateNames": [
+            "GBC",
+            "Game Boy Color"
+        ],
+        "KnownFileExtensions": [
+            ".GBC"
+        ],
+        "Bios": [
+            {
+                "hash": "dbfce9db9deaa2567f6a84fde55f9680",
+                "description": "BIOS for Game Boy Color",
+                "filename": "gbc_bios.bin"
+            },
+            {
+                "hash": "d574d4f9c12f305074798f54c091a8b4",
+                "description": "Super Game Boy",
+                "filename": "sgb_bios.bin"
+            }
         ]
     },
     {
@@ -47,28 +407,28 @@
         ],
         "WebEmulator": {
             "Type": "EmulatorJS",
-            "Core": "segaMS",
-            "Bios": [
-                {
-                    "hash": "840481177270d5642a14ca71ee72844c",
-                    "description": "MasterSystem EU BIOS",
-                    "filename": "bios_E.sms",
-                    "region": "EU"
-                },
-                {
-                    "hash": "840481177270d5642a14ca71ee72844c",
-                    "description": "MasterSystem US BIOS",
-                    "filename": "bios_U.sms",
-                    "region": "US"
-                },
-                {
-                    "hash": "24a519c53f67b00640d0048ef7089105",
-                    "description": "MasterSystem JP BIOS",
-                    "filename": "bios_J.sms",
-                    "region": "JP"
-                }
-            ]
-        }
+            "Core": "segaMS"
+        },
+        "Bios": [
+            {
+                "hash": "840481177270d5642a14ca71ee72844c",
+                "description": "MasterSystem EU BIOS",
+                "filename": "bios_E.sms",
+                "region": "EU"
+            },
+            {
+                "hash": "840481177270d5642a14ca71ee72844c",
+                "description": "MasterSystem US BIOS",
+                "filename": "bios_U.sms",
+                "region": "US"
+            },
+            {
+                "hash": "24a519c53f67b00640d0048ef7089105",
+                "description": "MasterSystem JP BIOS",
+                "filename": "bios_J.sms",
+                "region": "JP"
+            }
+        ]
     },
     {
         "IGDBId": 29,
@@ -87,16 +447,16 @@
         ],
         "WebEmulator": {
             "Type": "EmulatorJS",
-            "Core": "segaMD",
-            "Bios": [
-                {
-                    "hash": "45e298905a08f9cfb38fd504cd6dbc84",
-                    "description": "MegaDrive TMSS startup ROM",
-                    "filename": "bios_MD.bin",
-                    "region": ""
-                }
-            ]
-        }
+            "Core": "segaMD"
+        },
+        "Bios": [
+            {
+                "hash": "45e298905a08f9cfb38fd504cd6dbc84",
+                "description": "MegaDrive TMSS startup ROM",
+                "filename": "bios_MD.bin",
+                "region": ""
+            }
+        ]
     },
     {
         "IGDBId": 4,
@@ -131,22 +491,22 @@
         ],
         "WebEmulator": {
             "Type": "EmulatorJS",
-            "Core": "nes",
-            "Bios": [
-                {
-                    "hash": "ca30b50f880eb660a320674ed365ef7a",
-                    "description": "Family Computer Disk System BIOS - Required for Famicom Disk System emulation",
-                    "filename": "disksys.rom",
-                    "region": ""
-                },
-                {
-                    "hash": "7f98d77d7a094ad7d069b74bd553ec98",
-                    "description": "Game Genie add-on cartridge - Required for Game Genei Add-on emulation (Only supported on the fceumm core)",
-                    "filename": "gamegenie.nes",
-                    "region": ""
-                }
-            ]
-        }
+            "Core": "nes"
+        },
+        "Bios": [
+            {
+                "hash": "ca30b50f880eb660a320674ed365ef7a",
+                "description": "Family Computer Disk System BIOS - Required for Famicom Disk System emulation",
+                "filename": "disksys.rom",
+                "region": ""
+            },
+            {
+                "hash": "7f98d77d7a094ad7d069b74bd553ec98",
+                "description": "Game Genie add-on cartridge - Required for Game Genei Add-on emulation (Only supported on the fceumm core)",
+                "filename": "gamegenie.nes",
+                "region": ""
+            }
+        ]
     },
     {
         "IGDBId": 19,
@@ -179,28 +539,28 @@
         "KnownFileExtensions": [],
         "WebEmulator": {
             "Type": "EmulatorJS",
-            "Core": "psx",
-            "Bios": [
-                {
-                    "hash": "8dd7d5296a650fac7319bce665a6a53c",
-                    "description": "PS1 JP BIOS - Required for JP games",
-                    "filename": "scph5500.bin",
-                    "region": "JP"
-                },
-                {
-                    "hash": "490f666e1afb15b7362b406ed1cea246",
-                    "description": "PS1 US BIOS - Required for US games",
-                    "filename": "scph5501.bin",
-                    "region": "US"
-                },
-                {
-                    "hash": "32736f17079d0b2b7024407c39bd3050",
-                    "description": "PS1 EU BIOS - Required for EU games",
-                    "filename": "scph5502.bin",
-                    "region": "EU"
-                }
-            ]
-        }
+            "Core": "psx"
+        },
+        "Bios": [
+            {
+                "hash": "8dd7d5296a650fac7319bce665a6a53c",
+                "description": "PS1 JP BIOS - Required for JP games",
+                "filename": "scph5500.bin",
+                "region": "JP"
+            },
+            {
+                "hash": "490f666e1afb15b7362b406ed1cea246",
+                "description": "PS1 US BIOS - Required for US games",
+                "filename": "scph5501.bin",
+                "region": "US"
+            },
+            {
+                "hash": "32736f17079d0b2b7024407c39bd3050",
+                "description": "PS1 EU BIOS - Required for EU games",
+                "filename": "scph5502.bin",
+                "region": "EU"
+            }
+        ]
     },
     {
         "IGDBId": 52,
@@ -211,9 +571,9 @@
         "KnownFileExtensions": [],
         "WebEmulator": {
             "Type": "EmulatorJS",
-            "Core": "arcade",
-            "Bios": []
-        }
+            "Core": "arcade"
+        },
+        "Bios": []
     },
     {
         "IGDBId": 30,
@@ -226,9 +586,9 @@
         "KnownFileExtensions": [],
         "WebEmulator": {
             "Type": "EmulatorJS",
-            "Core": "sega32x",
-            "Bios": []
-        }
+            "Core": "sega32x"
+        },
+        "Bios": []
     },
     {
         "IGDBId": 78,
@@ -242,27 +602,27 @@
         "KnownFileExtensions": [],
         "WebEmulator": {
             "Type": "EmulatorJS",
-            "Core": "segaCD",
-            "Bios": [
-                {
-                    "hash": "e66fa1dc5820d254611fdcdba0662372",
-                    "description": "MegaCD EU BIOS - Required",
-                    "filename": "bios_CD_E.bin",
-                    "region": "EU"
-                },
-                {
-                    "hash": "2efd74e3232ff260e371b99f84024f7f",
-                    "description": "SegaCD US BIOS - Required",
-                    "filename": "bios_CD_U.bin",
-                    "region": "US"
-                },
-                {
-                    "hash": "278a9397d192149e84e820ac621a8edd",
-                    "description": "MegaCD JP BIOS - Required",
-                    "filename": "bios_CD_J.bin",
-                    "region": "JP"
-                }
-            ]
-        }
+            "Core": "segaCD"
+        },
+        "Bios": [
+            {
+                "hash": "e66fa1dc5820d254611fdcdba0662372",
+                "description": "MegaCD EU BIOS - Required",
+                "filename": "bios_CD_E.bin",
+                "region": "EU"
+            },
+            {
+                "hash": "2efd74e3232ff260e371b99f84024f7f",
+                "description": "SegaCD US BIOS - Required",
+                "filename": "bios_CD_U.bin",
+                "region": "US"
+            },
+            {
+                "hash": "278a9397d192149e84e820ac621a8edd",
+                "description": "MegaCD JP BIOS - Required",
+                "filename": "bios_CD_J.bin",
+                "region": "JP"
+            }
+        ]
     }
 ]

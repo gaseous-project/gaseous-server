@@ -36,9 +36,17 @@
             if (result[i].available == true) {
                 availableText.innerHTML = 'Available';
                 availableText.className = 'greentext';
+
+                biosFilename = document.createElement('a');
+                biosFilename.href = '/api/v1/Bios/' + result[i].platformid + '/' + result[i].filename;
+                biosFilename.innerHTML = result[i].filename;
+                biosFilename.className = 'romlink';
             } else {
                 availableText.innerHTML = 'Unavailable';
                 availableText.className = 'redtext';
+
+                biosFilename = document.createElement('span');
+                biosFilename.innerHTML = result[i].filename;
             }
 
             var newRow = [
