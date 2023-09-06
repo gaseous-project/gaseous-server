@@ -194,6 +194,10 @@
         "KnownFileExtensions": [
             ".A26"
         ],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "atari2600"
+        },
         "Bios": [
         ]
     },
@@ -208,6 +212,10 @@
         "KnownFileExtensions": [
             ".A78"
         ],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "atari7800"
+        },
         "Bios": [
             {
                 "hash": "0763f1ffb006ddbe32e52d497ee848ae",
@@ -227,6 +235,10 @@
         "KnownFileExtensions": [
             ".A52"
         ],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "a5200"
+        },
         "Bios": [
             {
                 "hash": "281f20ea4320404ec820fb7ec0693b38",
@@ -247,6 +259,10 @@
             ".J64",
             ".JAG"
         ],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "jaguar"
+        },
         "Bios": [
         ]
     },
@@ -261,6 +277,10 @@
         "KnownFileExtensions": [
             ".LNX"
         ],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "lynx"
+        },
         "Bios": [
             {
                 "hash": "fcd403db69f54290b51035d82f835e7b",
@@ -395,8 +415,97 @@
         ]
     },
     {
+        "IGDBId": 33,
+        "IGDBName": "Game Boy",
+        "RetroPieDirectoryName": "gb",
+        "AlternateNames": [
+            "GB",
+            "Game Boy"
+        ],
+        "KnownFileExtensions": [
+            ".GB"
+        ],
+        "Bios": [
+            {
+                "hash": "32fbbd84168d3482956eb3c5051637f5and",
+                "description": "BIOS for Game Boy",
+                "filename": "gb_bios.bin"
+            },
+            {
+                "hash": "d574d4f9c12f305074798f54c091a8b4",
+                "description": "Super Game Boy",
+                "filename": "sgb_bios.bin"
+            }
+        ]
+    },
+    {
+        "IGDBId": 21,
+        "IGDBName": "Nintendo GameCube",
+        "RetroPieDirectoryName": "gc",
+        "AlternateNames": [
+            "GC",
+            "GameCube",
+            "Nintendo GameCube"
+        ],
+        "KnownFileExtensions": [
+            ".GC"
+        ],
+        "Bios": [
+        ]
+    },
+    {
+        "IGDBId": 35,
+        "IGDBName": "Sega Game Gear",
+        "RetroPieDirectoryName": "gamegear",
+        "AlternateNames": [
+            "GG",
+            "Game Gear",
+            "Sega Game Gear"
+        ],
+        "KnownFileExtensions": [
+            ".GG"
+        ],
+        "Bios": [
+            {
+                "hash": "672e104c3be3a238301aceffc3b23fd6",
+                "description": "GameGear BIOS (bootrom) - Optional",
+                "filename": "bios.gg"
+            }
+        ]
+    },
+    {
+        "IGDBId": 29,
+        "IGDBName": "Sega Mega Drive/Genesis",
+        "RetroPieDirectoryName": "megadrive",
+        "AlternateNames": [
+            "Sega Mega Drive/Genesis",
+            "Sega Mega Drive",
+            "Sega Genesis",
+            "Sega Mega Drive & Genesis"
+        ],
+        "KnownFileExtensions": [
+            ".GEN",
+            ".MD",
+            ".SG",
+            ".SMD"
+        ],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "segaMD"
+        },
+        "Bios": [
+            {
+                "hash": "45e298905a08f9cfb38fd504cd6dbc84",
+                "description": "MegaDrive TMSS startup ROM",
+                "filename": "bios_MD.bin",
+                "region": ""
+            }
+        ]
+    },
+    {
         "IGDBId": 64,
         "IGDBName": "Sega Master System/Mark III",
+        "RetroPieDirectoryName": "mastersystem",
         "AlternateNames": [
             "Sega Master System/Mark III",
             "Sega Master System",
@@ -431,36 +540,9 @@
         ]
     },
     {
-        "IGDBId": 29,
-        "IGDBName": "Sega Mega Drive/Genesis",
-        "AlternateNames": [
-            "Sega Mega Drive/Genesis",
-            "Sega Mega Drive",
-            "Sega Genesis",
-            "Sega Mega Drive & Genesis"
-        ],
-        "KnownFileExtensions": [
-            ".GEN",
-            ".MD",
-            ".SG",
-            ".SMD"
-        ],
-        "WebEmulator": {
-            "Type": "EmulatorJS",
-            "Core": "segaMD"
-        },
-        "Bios": [
-            {
-                "hash": "45e298905a08f9cfb38fd504cd6dbc84",
-                "description": "MegaDrive TMSS startup ROM",
-                "filename": "bios_MD.bin",
-                "region": ""
-            }
-        ]
-    },
-    {
         "IGDBId": 4,
         "IGDBName": "Nintendo 64",
+        "RetroPieDirectoryName": "n64",
         "AlternateNames": [
             "Nintendo 64",
             "N64"
@@ -478,6 +560,7 @@
     {
         "IGDBId": 18,
         "IGDBName": "Nintendo Entertainment System",
+        "RetroPieDirectoryName": "nes",
         "AlternateNames": [
             "Nintendo Entertainment System",
             "NES",
@@ -509,26 +592,9 @@
         ]
     },
     {
-        "IGDBId": 19,
-        "IGDBName": "Super Nintendo Entertainment System",
-        "AlternateNames": [
-            "Nintendo Super Famicom & Super Entertainment System",
-            "Super Nintendo Entertainment System",
-            "Super Nintendo",
-            "SNES"
-        ],
-        "KnownFileExtensions": [
-            ".SFC",
-            ".SMC"
-        ],
-        "WebEmulator": {
-            "Type": "EmulatorJS",
-            "Core": "snes"
-        }
-    },
-    {
         "IGDBId": 7,
         "IGDBName": "PlayStation",
+        "RetroPieDirectoryName": "psx",
         "AlternateNames": [
             "Sony PlayStation",
             "PS1",
@@ -563,21 +629,34 @@
         ]
     },
     {
-        "IGDBId": 52,
-        "IGDBName": "Arcade",
+        "IGDBId": 32,
+        "IGDBName": "Sega Saturn",
+        "RetroPieDirectoryName": "saturn",
         "AlternateNames": [
-            "Arcade"
+            "Sega Saturn",
+            "JVC Saturn",
+            "Hi-Saturn",
+            "Samsung Saturn",
+            "V-Saturn",
+            "Saturn"
         ],
         "KnownFileExtensions": [],
         "WebEmulator": {
             "Type": "EmulatorJS",
-            "Core": "arcade"
+            "Core": "segaSaturn"
         },
-        "Bios": []
+        "Bios": [
+            {
+                "hash": "af5828fdff51384f99b3c4926be27762",
+                "description": "Saturn BIOS",
+                "filename": "saturn_bios.bin"
+            }
+        ]
     },
     {
         "IGDBId": 30,
         "IGDBName": "Sega 32X",
+        "RetroPieDirectoryName": "sega32x",
         "AlternateNames": [
             "Sega 32X",
             "Sega32",
@@ -593,6 +672,7 @@
     {
         "IGDBId": 78,
         "IGDBName": "Sega CD",
+        "RetroPieDirectoryName": "segacd",
         "AlternateNames": [
             "Sega CD",
             "Mega CD",
@@ -624,5 +704,53 @@
                 "region": "JP"
             }
         ]
+    },
+    {
+        "IGDBId": 19,
+        "IGDBName": "Super Nintendo Entertainment System",
+        "RetroPieDirectoryName": "snes",
+        "AlternateNames": [
+            "Nintendo Super Famicom & Super Entertainment System",
+            "Super Nintendo Entertainment System",
+            "Super Nintendo",
+            "SNES"
+        ],
+        "KnownFileExtensions": [
+            ".SFC",
+            ".SMC"
+        ],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "snes"
+        }
+    },
+    {
+        "IGDBId": 26,
+        "IGDBName": "ZX Spectrum",
+        "RetroPieDirectoryName": "zxspectrum",
+        "AlternateNames": [
+            "ZX Spectrum",
+            "Sinclair ZX",
+            "Sinclair ZX Spectrum"
+        ],
+        "KnownFileExtensions": [
+            ".SNA",
+            ".SZX",
+            ".Z80",
+            ".SCL"
+        ]
+    },
+    {
+        "IGDBId": 52,
+        "IGDBName": "Arcade",
+        "AlternateNames": [
+            "Arcade"
+        ],
+        "KnownFileExtensions": [],
+        "WebEmulator": {
+            "Type": "EmulatorJS",
+            "Core": "arcade"
+        },
+        "Bios": []
     }
 ]
