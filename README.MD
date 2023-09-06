@@ -146,7 +146,7 @@ Currently supported DAT's:
    * Click the Upload button in the top right of the main Gaseous web page, and drag the files into the modal. The files will be uploaded and analyzed.
    * Copy the file to ~/.gaseous-server/Data/Import
 
-# Game Image Title Machine
+# Game Image Title Matching
 Image to game matching follows the following order of operations, stopping the process at the first match:
 ### Get the file signature
 1. Attempt a hash search
