@@ -89,7 +89,7 @@ Dockerfile and docker-compose-build.yml files have been provided to make deploym
 5. Change into the gaseous-server directory
 6. As the main branch is the development branch, you might want to change to a stable version - these are tagged with a version number. For example to change to the 1.5.0 release, use the command ```git checkout v1.5.0```
     * Check the releases page for the version you would like to run: https://github.com/gaseous-project/gaseous-server/releases
-7. Clone the submodules with the command ```git submodule update --init```
+7. Clone the submodules with the command ```git submodule update --init --recursive```
     * This command will clone the code that the server uses from other projects (currently only EmulatorJS)
 8. Create a directory in the home directory of the user that will run the server. For example, if running as the user ```gaseous```, create the directory ```/home/gaseous/.gaseous-server```
 9. Change into the ```.gaseous-server``` directory created in the previous step
@@ -110,7 +110,7 @@ Dockerfile and docker-compose-build.yml files have been provided to make deploym
     * If running from another branch or tag, run:
       * ```git fetch```
       * ```git checkout <branch or tag name>```
-4. Update the submodules with ```git submodule update --init```
+4. Update the submodules with ```git submodule update --recursive```
 5. Run steps 12 and 13 from the above Build guide
 
 # Adding Content
