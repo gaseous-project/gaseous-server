@@ -74,7 +74,19 @@ namespace gaseous_tools
         {
             get
             {
-                string logPathName = Path.Combine(LogPath, "Log " + DateTime.Now.ToUniversalTime().ToString("yyyyMMdd") + ".txt");
+                string logFileExtension = "";
+                switch(LoggingConfiguration.LogFormat)
+                {
+                    case ConfigFile.Logging.LoggingFormat.Text:
+                        logFileExtension = "txt";
+                        break;
+
+                    case ConfigFile.Logging.LoggingFormat.Json:
+                        logFileExtension = "json";
+                        break;
+
+                }
+                string logPathName = Path.Combine(LogPath, "Log " + DateTime.Now.ToUniversalTime().ToString("yyyyMMdd") + "." + logFileExtension);
                 return logPathName;
             }
         }
