@@ -56,6 +56,47 @@
                     <th>Maximum collection size (bytes)</th>
                     <td><input id="collection_maxcollectionsize" type="number" placeholder="0" step="1048576" oninput="DisplayFormattedBytes('collection_maxcollectionsize', 'maxcollectionsize_label');"><span id="maxcollectionsize_label" style="margin-left: 10px;"></span></td></td>
                 </tr>
+                <tr>
+                    <th>Directory Layout</th>
+                    <td>
+                        <select id="collection_directorylayout" style="width: 100%;" onchange="DisplayDirectoryLabel();">
+                            <option id="collection_directorylayout_gaseous" selected="selected" value="Gaseous">Standard</option>
+                            <option id="collection_directorylayout_retropie" value="RetroPie">RetroPie</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+
+                    </td>
+                    <td>
+                        <span id="collection_directorylayout_gaseous_label" name="collection_directorylayout_label">
+                            <p>Standard layout: /&lt;IGDB Platform Slug&gt;/&lt;IGDB Game Slug&gt;/Game ROM's</p>
+                            <p>Example: /genesis-slash-megadrive/sonic-the-hedgehog/Sonic the Hedgehog.smd</p>
+                        </span>
+                        <span id="collection_directorylayout_retropie_label" style="display: none;" name="collection_directorylayout_label">
+                            <p>RetroPie layout: /roms/&lt;RetroPie Platform Label&gt;/Game ROM's</p>
+                            <p>Example: /roms/megadrive/Sonic the Hedgehog.smd</p>
+                        </span>
+                    </td>
+                </tr>
+                <tr>
+                    <th>
+                        Include BIOS files (if available)
+                    </th>
+                    <td>
+                        <select id="collection_includebios" style="width: 100%;">
+                            <option id="collection_includebios_yes" selected="selected" value="true">Yes</option>
+                            <option id="collection_includebios_no" value="false">No</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr id="collection_includebios_label">
+                    <td></td>
+                    <td>
+                        BIOS files for each platform will be stored in /BIOS
+                    </td>
+                </tr>
             </table>
         </div>
         <table style="position: absolute; top: 0px; right: 0px; bottom: 0px; width: 60%;">
@@ -208,6 +249,10 @@
         }
     });
 
+    $('#collection_directorylayout').select2();
+
+    $('#collection_includebios').select2();
+
     if (modalVariables) {
         // edit mode
         ajaxCall(
@@ -221,6 +266,10 @@
                 if (result.maximumRomsPerPlatform != -1) { document.getElementById('collection_maxroms').value = result.maximumRomsPerPlatform; }
                 if (result.maximumBytesPerPlatform != -1) { document.getElementById('collection_maxplatformsize').value = result.maximumBytesPerPlatform; }
                 if (result.maximumCollectionSizeInBytes != -1) { document.getElementById('collection_maxcollectionsize').value = result.maximumCollectionSizeInBytes; }
+                if (result.folderStructure) {
+                    $('#collection_directorylayout').val(result.folderStructure).trigger('change');
+                }
+                $('#collection_includebios').val(result.includeBIOSFiles.toString()).trigger('change');
 
                 // fill select2 controls
                 $.ajax(
@@ -336,7 +385,9 @@
             "maximumRating": GetNumberFieldValue('collection_userrating_max'),
             "maximumRomsPerPlatform": GetNumberFieldValue('collection_maxroms'),
             "maximumBytesPerPlatform": GetNumberFieldValue('collection_maxplatformsize'),
-            "maximumCollectionSizeInBytes": GetNumberFieldValue('collection_maxcollectionsize')
+            "maximumCollectionSizeInBytes": GetNumberFieldValue('collection_maxcollectionsize'),
+            "folderStructure": GetNumberFieldValue('collection_directorylayout', "Standard"),
+            "includeBIOSFiles": GetBooleanFieldValue('collection_includebios')
         }
 
         return item;
@@ -344,8 +395,6 @@
 
     function GetPreview() {
         var item = GenerateCollectionItem();
-
-        console.log(JSON.stringify(item));
 
         ajaxCall(
             '/api/v1/Collections/Preview',
@@ -375,14 +424,29 @@
         }
     }
 
-    function GetNumberFieldValue(objectName) {
+    function GetNumberFieldValue(objectName, defaultValue) {
         var obj = document.getElementById(objectName);
         var objVal = obj.value;
 
         if (objVal) {
             return objVal;
         } else {
-            return -1;
+            if (defaultValue) {
+                return defaultValue;
+            } else {
+                return -1;
+            }
+        }
+    }
+
+    function GetBooleanFieldValue(objectName) {
+        var obj = document.getElementById(objectName);
+        var objVal = obj.value;
+
+        if (objVal == "false") {
+            return false;
+        } else {
+            return true;
         }
     }
 
@@ -489,6 +553,34 @@
             label.innerHTML = formatBytes(src.value);
         } else {
             label.innerHTML = '';
+        }
+    }
+
+    function DisplayDirectoryLabel() {
+        // hide all labels
+        var directoryLayoutLabels = document.getElementsByName('collection_directorylayout_label');
+        for (var i = 0; i < directoryLayoutLabels.length; i++) {
+            directoryLayoutLabels[i].style.display = 'none';
+        }
+
+        // display the label associated with the selection
+        var directoryLayoutMode = document.getElementById('collection_directorylayout').value;
+
+        var labelToDisplay = '';
+        if (directoryLayoutMode) {
+            switch(directoryLayoutMode) {
+                case "Gaseous":
+                    // standard mode
+                    labelToDisplay = 'collection_directorylayout_gaseous_label';
+                    break;
+
+                case "RetroPie":
+                    labelToDisplay = 'collection_directorylayout_retropie_label'
+                    break;
+
+            }
+            
+            document.getElementById(labelToDisplay).style.display = '';
         }
     }
 </script>
