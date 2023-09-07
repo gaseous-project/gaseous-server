@@ -16,16 +16,13 @@ namespace gaseous_server.Classes
         {
             foreach (Models.PlatformMapping.PlatformMapItem platformMapping in Models.PlatformMapping.PlatformMap)
             {
-                if (platformMapping.WebEmulator != null)
+                if (platformMapping.Bios != null)
                 {
-                    if (platformMapping.WebEmulator.Bios != null)
+                    foreach (Models.PlatformMapping.PlatformMapItem.EmulatorBiosItem emulatorBiosItem in platformMapping.Bios)
                     {
-                        foreach (Models.PlatformMapping.PlatformMapItem.WebEmulatorItem.EmulatorBiosItem emulatorBiosItem in platformMapping.WebEmulator.Bios)
+                        if (emulatorBiosItem.hash.ToLower() == MD5.ToLower())
                         {
-                            if (emulatorBiosItem.hash.ToLower() == MD5.ToLower())
-                            {
-                                return platformMapping;
-                            }
+                            return platformMapping;
                         }
                     }
                 }
@@ -69,33 +66,29 @@ namespace gaseous_server.Classes
 
             foreach (Models.PlatformMapping.PlatformMapItem platformMapping in Models.PlatformMapping.PlatformMap)
             {
-                if (platformMapping.WebEmulator != null)
-                    {
-                    if (platformMapping.WebEmulator.Bios != null)
-                    {
-                        IGDB.Models.Platform platform = Metadata.Platforms.GetPlatform(platformMapping.IGDBId);
+                if (platformMapping.Bios != null)
+                {
+                    IGDB.Models.Platform platform = Metadata.Platforms.GetPlatform(platformMapping.IGDBId);
 
-                        foreach (Models.PlatformMapping.PlatformMapItem.WebEmulatorItem.EmulatorBiosItem emulatorBios in platformMapping.WebEmulator.Bios)
+                    foreach (Models.PlatformMapping.PlatformMapItem.EmulatorBiosItem emulatorBios in platformMapping.Bios)
+                    {
+                        BiosItem biosItem = new BiosItem
                         {
-                            BiosItem biosItem = new BiosItem
-                            {
-                                platformid = platformMapping.IGDBId,
-                                platformslug = platform.Slug,
-                                platformname = platform.Name,
-                                description = emulatorBios.description,
-                                filename = emulatorBios.filename,
-                                region = emulatorBios.region,
-                                hash = emulatorBios.hash
-                            };
-                            biosItems.Add(biosItem);
-                        }
+                            platformid = platformMapping.IGDBId,
+                            platformslug = platform.Slug,
+                            platformname = platform.Name,
+                            description = emulatorBios.description,
+                            filename = emulatorBios.filename,
+                            hash = emulatorBios.hash
+                        };
+                        biosItems.Add(biosItem);
                     }
                 }
             }
             return biosItems;
         }
 
-        public class BiosItem : Models.PlatformMapping.PlatformMapItem.WebEmulatorItem.EmulatorBiosItem
+        public class BiosItem : Models.PlatformMapping.PlatformMapItem.EmulatorBiosItem
         {
             public long platformid { get; set; }
             public string platformslug { get; set; }

@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
+using gaseous_server.Models;
 using gaseous_tools;
 using IGDB.Models;
 using Newtonsoft.Json;
@@ -57,7 +58,7 @@ namespace gaseous_server.Classes
         public static CollectionItem NewCollection(CollectionItem item)
         {
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "INSERT INTO RomCollections (`Name`, Description, Platforms, Genres, Players, PlayerPerspectives, Themes, MinimumRating, MaximumRating, MaximumRomsPerPlatform, MaximumBytesPerPlatform, MaximumCollectionSizeInBytes, BuiltStatus) VALUES (@name, @description, @platforms, @genres, @players, @playerperspectives, @themes, @minimumrating, @maximumrating, @maximumromsperplatform, @maximumbytesperplatform, @maximumcollectionsizeinbytes, @builtstatus); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+            string sql = "INSERT INTO RomCollections (`Name`, Description, Platforms, Genres, Players, PlayerPerspectives, Themes, MinimumRating, MaximumRating, MaximumRomsPerPlatform, MaximumBytesPerPlatform, MaximumCollectionSizeInBytes, FolderStructure, IncludeBIOSFiles, BuiltStatus) VALUES (@name, @description, @platforms, @genres, @players, @playerperspectives, @themes, @minimumrating, @maximumrating, @maximumromsperplatform, @maximumbytesperplatform, @maximumcollectionsizeinbytes, @folderstructure, @includebiosfiles, @builtstatus); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("name", item.Name);
             dbDict.Add("description", item.Description);
@@ -71,6 +72,8 @@ namespace gaseous_server.Classes
             dbDict.Add("maximumromsperplatform", Common.ReturnValueIfNull(item.MaximumRomsPerPlatform, -1));
             dbDict.Add("maximumbytesperplatform", Common.ReturnValueIfNull(item.MaximumBytesPerPlatform, -1));
             dbDict.Add("maximumcollectionsizeinbytes", Common.ReturnValueIfNull(item.MaximumCollectionSizeInBytes, -1));
+            dbDict.Add("folderstructure", Common.ReturnValueIfNull(item.FolderStructure, CollectionItem.FolderStructures.Gaseous));
+            dbDict.Add("includebiosfiles", Common.ReturnValueIfNull(item.IncludeBIOSFiles, 0));
             dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.WaitingForBuild);
             DataTable romDT = db.ExecuteCMD(sql, dbDict);
             long CollectionId = (long)romDT.Rows[0][0];
@@ -85,7 +88,7 @@ namespace gaseous_server.Classes
         public static CollectionItem EditCollection(long Id, CollectionItem item)
         {
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "UPDATE RomCollections SET `Name`=@name, Description=@description, Platforms=@platforms, Genres=@genres, Players=@players, PlayerPerspectives=@playerperspectives, Themes=@themes, MinimumRating=@minimumrating, MaximumRating=@maximumrating, MaximumRomsPerPlatform=@maximumromsperplatform, MaximumBytesPerPlatform=@maximumbytesperplatform, MaximumCollectionSizeInBytes=@maximumcollectionsizeinbytes, BuiltStatus=@builtstatus WHERE Id=@id";
+            string sql = "UPDATE RomCollections SET `Name`=@name, Description=@description, Platforms=@platforms, Genres=@genres, Players=@players, PlayerPerspectives=@playerperspectives, Themes=@themes, MinimumRating=@minimumrating, MaximumRating=@maximumrating, MaximumRomsPerPlatform=@maximumromsperplatform, MaximumBytesPerPlatform=@maximumbytesperplatform, MaximumCollectionSizeInBytes=@maximumcollectionsizeinbytes, FolderStructure=@folderstructure, IncludeBIOSFiles=@includebiosfiles, BuiltStatus=@builtstatus WHERE Id=@id";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", Id);
             dbDict.Add("name", item.Name);
@@ -100,6 +103,8 @@ namespace gaseous_server.Classes
             dbDict.Add("maximumromsperplatform", Common.ReturnValueIfNull(item.MaximumRomsPerPlatform, -1));
             dbDict.Add("maximumbytesperplatform", Common.ReturnValueIfNull(item.MaximumBytesPerPlatform, -1));
             dbDict.Add("maximumcollectionsizeinbytes", Common.ReturnValueIfNull(item.MaximumCollectionSizeInBytes, -1));
+            dbDict.Add("folderstructure", Common.ReturnValueIfNull(item.FolderStructure, CollectionItem.FolderStructures.Gaseous));
+            dbDict.Add("includebiosfiles", Common.ReturnValueIfNull(item.IncludeBIOSFiles, 0));
             dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.WaitingForBuild);
             db.ExecuteCMD(sql, dbDict);
 
@@ -299,11 +304,50 @@ namespace gaseous_server.Classes
 
                         // gather collection files
                         Directory.CreateDirectory(ZipFileTempPath);
+                        string ZipBiosPath = Path.Combine(ZipFileTempPath, "BIOS");
 
+                        // get the games
                         foreach (CollectionContents.CollectionPlatformItem collectionPlatformItem in collectionPlatformItems)
                         {
+                            // get platform bios files if present
+                            if (collectionItem.IncludeBIOSFiles == true)
+                            {
+                                List<Bios.BiosItem> bios = Bios.GetBios(collectionPlatformItem.Id, true);
+                                if (!Directory.Exists(ZipBiosPath)) {
+                                    Directory.CreateDirectory(ZipBiosPath);
+                                }
+
+                                foreach (Bios.BiosItem biosItem in bios) 
+                                {
+                                    if (File.Exists(biosItem.biosPath))
+                                    {
+                                        File.Copy(biosItem.biosPath, Path.Combine(ZipBiosPath, biosItem.filename));
+                                    }
+                                }
+                            }
+
                             // create platform directory
-                            string ZipPlatformPath = Path.Combine(ZipFileTempPath, collectionPlatformItem.Slug);
+                            string ZipPlatformPath = "";
+                            switch (collectionItem.FolderStructure)
+                            {
+                                case CollectionItem.FolderStructures.Gaseous:
+                                    ZipPlatformPath = Path.Combine(ZipFileTempPath, collectionPlatformItem.Slug);
+                                    break;
+
+                                case CollectionItem.FolderStructures.RetroPie:
+                                    try
+                                    {
+                                        PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMappingByIGDBid(collectionPlatformItem.Id);
+                                        ZipPlatformPath = Path.Combine(ZipFileTempPath, "roms", platformMapItem.RetroPieDirectoryName);
+                                    }
+                                    catch
+                                    {
+                                        ZipPlatformPath = Path.Combine(ZipFileTempPath, collectionPlatformItem.Slug);
+                                    }
+
+                                    break;
+
+                            }
                             if (!Directory.Exists(ZipPlatformPath))
                             {
                                 Directory.CreateDirectory(ZipPlatformPath);
@@ -311,13 +355,23 @@ namespace gaseous_server.Classes
 
                             foreach (CollectionContents.CollectionPlatformItem.CollectionGameItem collectionGameItem in collectionPlatformItem.Games)
                             {
-                                // create game directory
-                                string ZipGamePath = Path.Combine(ZipPlatformPath, collectionGameItem.Slug);
-                                if (!Directory.Exists(ZipGamePath))
+                                string ZipGamePath = "";
+                                switch (collectionItem.FolderStructure)
                                 {
-                                    Directory.CreateDirectory(ZipGamePath);
-                                }
+                                    case CollectionItem.FolderStructures.Gaseous:
+                                        // create game directory
+                                        ZipGamePath = Path.Combine(ZipPlatformPath, collectionGameItem.Slug);
+                                        if (!Directory.Exists(ZipGamePath))
+                                        {
+                                            Directory.CreateDirectory(ZipGamePath);
+                                        }
+                                        break;
 
+                                    case CollectionItem.FolderStructures.RetroPie:
+                                        ZipGamePath = ZipPlatformPath;
+                                        break;
+                                }                                    
+                                
                                 // copy in roms
                                 foreach (Roms.GameRomItem gameRomItem in collectionGameItem.Roms)
                                 {
@@ -386,6 +440,8 @@ namespace gaseous_server.Classes
             item.MaximumRomsPerPlatform = (int)Common.ReturnValueIfNull(row["MaximumRomsPerPlatform"], (int)-1);
             item.MaximumBytesPerPlatform = (long)Common.ReturnValueIfNull(row["MaximumBytesPerPlatform"], (long)-1);
             item.MaximumCollectionSizeInBytes = (long)Common.ReturnValueIfNull(row["MaximumCollectionSizeInBytes"], (long)-1);
+            item.FolderStructure = (CollectionItem.FolderStructures)(int)Common.ReturnValueIfNull(row["FolderStructure"], 0);
+            item.IncludeBIOSFiles = (bool)row["IncludeBIOSFiles"];
             item.BuildStatus = (CollectionItem.CollectionBuildStatus)(int)Common.ReturnValueIfNull(row["BuiltStatus"], 0);
 
             return item;
@@ -411,6 +467,8 @@ namespace gaseous_server.Classes
             public int? MaximumRomsPerPlatform { get; set; }
             public long? MaximumBytesPerPlatform { get; set; }
             public long? MaximumCollectionSizeInBytes { get; set; }
+            public FolderStructures FolderStructure { get; set; } = FolderStructures.Gaseous;
+            public bool IncludeBIOSFiles { get; set; } = true;
 
             [JsonIgnore]
             public CollectionBuildStatus BuildStatus
@@ -472,6 +530,12 @@ namespace gaseous_server.Classes
                 Building = 2,
                 Completed = 3,
                 Failed = 4
+            }
+
+            public enum FolderStructures
+            {
+                Gaseous = 0,
+                RetroPie = 1
             }
         }
 
