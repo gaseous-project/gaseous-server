@@ -338,7 +338,7 @@ namespace gaseous_server.Classes
                                     try
                                     {
                                         PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMappingByIGDBid(collectionPlatformItem.Id);
-                                        ZipPlatformPath = Path.Combine(ZipFileTempPath, platformMapItem.RetroPieDirectoryName);
+                                        ZipPlatformPath = Path.Combine(ZipFileTempPath, "roms", platformMapItem.RetroPieDirectoryName);
                                     }
                                     catch
                                     {
