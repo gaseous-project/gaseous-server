@@ -11,6 +11,7 @@
     var artworks = null;
     var artworksPosition = 0;
 
+    var emuGameTitle = '';
     var emuBios = '';
     var emuBackground = '';
 
@@ -33,6 +34,8 @@
         if (result.cover) {
             emuBackground = '/api/v1/Games/' + gameId + '/cover/image';
         }
+
+        emuGameTitle = gameData.name;
     });
 
     ajaxCall('/api/v1/Bios/' + platformId, 'GET', function (result) {
