@@ -33,6 +33,19 @@ namespace gaseous_server.Models
             }
         }
 
+        public static PlatformMapItem GetPlatformMappingByIGDBid(long Id)
+        {
+            foreach (Models.PlatformMapping.PlatformMapItem platformMapping in PlatformMap)
+            {
+                if (platformMapping.IGDBId == Id)
+                {
+                    return platformMapping;
+                }
+            }
+
+            throw new Exception("Platform id not found");
+        }
+
         public static void GetIGDBPlatformMapping(ref Models.Signatures_Games Signature, FileInfo RomFileInfo, bool SetSystemName)
         {
             bool PlatformFound = false;
@@ -81,7 +94,7 @@ namespace gaseous_server.Models
             public string IGDBName { get; set; }
             public List<string> AlternateNames { get; set; } = new List<string>();
             public List<string> KnownFileExtensions { get; set; } = new List<string>();
-            //public Dictionary<string, object>? WebEmulator { get; set; }
+            public string RetroPieDirectoryName { get; set; }
             public WebEmulatorItem? WebEmulator { get; set; }
 
             public class WebEmulatorItem
@@ -97,7 +110,6 @@ namespace gaseous_server.Models
                 public string hash { get; set; }
                 public string description { get; set; }
                 public string filename { get; set; }
-                public string region { get; set; }
             }
         }
 	}

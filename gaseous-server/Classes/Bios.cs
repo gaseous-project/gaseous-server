@@ -79,7 +79,6 @@ namespace gaseous_server.Classes
                             platformname = platform.Name,
                             description = emulatorBios.description,
                             filename = emulatorBios.filename,
-                            region = emulatorBios.region,
                             hash = emulatorBios.hash
                         };
                         biosItems.Add(biosItem);

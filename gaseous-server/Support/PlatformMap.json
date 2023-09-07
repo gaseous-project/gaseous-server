@@ -18,62 +18,52 @@
             {
                 "hash": "f47264dd47fe30f73ab3c010015c155b",
                 "description": "Panasonic FZ-1",
-                "filename": "panafz1.bin",
-                "region": ""
+                "filename": "panafz1.bin"
             },
             {
                 "hash": "51f2f43ae2f3508a14d9f56597e2d3ce",
                 "description": "Panasonic FZ-10",
-                "filename": "panafz10.bin",
-                "region": ""
+                "filename": "panafz10.bin"
             },
             {
                 "hash": "1477bda80dc33731a65468c1f5bcbee9",
                 "description": "Panasonic FZ-10 [RSA Patch]",
-                "filename": "panafz10-norsa.bin",
-                "region": ""
+                "filename": "panafz10-norsa.bin"
             },
             {
                 "hash": "a48e6746bd7edec0f40cff078f0bb19f",
                 "description": "Panasonic FZ-10-E [Anvil]",
-                "filename": "panafz10e-anvil.bin",
-                "region": ""
+                "filename": "panafz10e-anvil.bin"
             },
             {
                 "hash": "cf11bbb5a16d7af9875cca9de9a15e09",
                 "description": "Panasonic FZ-10-E [Anvil RSA Patch]",
-                "filename": "panafz10e-anvil-norsa.bin",
-                "region": ""
+                "filename": "panafz10e-anvil-norsa.bin"
             },
             {
                 "hash": "a496cfdded3da562759be3561317b605",
                 "description": "Panasonic FZ-1J",
-                "filename": "panafz1j.bin",
-                "region": ""
+                "filename": "panafz1j.bin"
             },
             {
                 "hash": "f6c71de7470d16abe4f71b1444883dc8",
                 "description": "Panasonic FZ-1J [RSA Patch]",
-                "filename": "panafz1j-norsa.bin",
-                "region": ""
+                "filename": "panafz1j-norsa.bin"
             },
             {
                 "hash": "8639fd5e549bd6238cfee79e3e749114",
                 "description": "Goldstar GDO-101M",
-                "filename": "goldstar.bin",
-                "region": ""
+                "filename": "goldstar.bin"
             },
             {
                 "hash": "35fa1a1ebaaeea286dc5cd15487c13ea",
                 "description": "Sanyo IMP-21J TRY",
-                "filename": "sanyotry.bin",
-                "region": ""
+                "filename": "sanyotry.bin"
             },
             {
                 "hash": "8970fc987ab89a7f64da9f8a8c4333ff",
                 "description": "Shootout At Old Tucson",
-                "filename": "3do_arcade_saot.bin",
-                "region": ""
+                "filename": "3do_arcade_saot.bin"
             }
         ]
     },
@@ -97,62 +87,52 @@
             {
                 "hash": "85ad74194e87c08904327de1a9443b7a",
                 "description": "Kickstart v1.2 rev 33.180",
-                "filename": "kick33180.A500",
-                "region": ""
+                "filename": "kick33180.A500"
             },
             {
                 "hash": "82a21c1890cae844b3df741f2762d48d",
                 "description": "Kickstart v1.3 rev 34.005",
-                "filename": "kick34005.A500",
-                "region": ""
+                "filename": "kick34005.A500"
             },
             {
                 "hash": "dc10d7bdd1b6f450773dfb558477c230",
                 "description": "Kickstart v2.04 rev 37.175",
-                "filename": "kick37175.A500",
-                "region": ""
+                "filename": "kick37175.A500"
             },
             {
                 "hash": "e40a5dfb3d017ba8779faba30cbd1c8e",
                 "description": "Kickstart v3.1 rev 40.063",
-                "filename": "kick40063.A600",
-                "region": ""
+                "filename": "kick40063.A600"
             },
             {
                 "hash": "646773759326fbac3b2311fd8c8793ee",
                 "description": "Kickstart v3.1 rev 40.068",
-                "filename": "kick40068.A1200",
-                "region": ""
+                "filename": "kick40068.A1200"
             },
             {
                 "hash": "9bdedde6a4f33555b4a270c8ca53297d",
                 "description": "Kickstart v3.1 rev 40.068",
-                "filename": "kick40068.A4000",
-                "region": ""
+                "filename": "kick40068.A4000"
             },
             {
                 "hash": "89da1838a24460e4b93f4f0c5d92d48d",
                 "description": "CDTV extended ROM v1.00",
-                "filename": "kick34005.CDTV",
-                "region": ""
+                "filename": "kick34005.CDTV"
             },
             {
                 "hash": "5f8924d013dd57a89cf349f4cdedc6b1",
                 "description": "CD32 Kickstart v3.1 rev 40.060",
-                "filename": "kick40060.CD32",
-                "region": ""
+                "filename": "kick40060.CD32"
             },
             {
                 "hash": "bb72565701b1b6faece07d68ea5da639",
                 "description": "CD32 extended ROM rev 40.060",
-                "filename": "kick40060.CD32.ext",
-                "region": ""
+                "filename": "kick40060.CD32.ext"
             },
             {
                 "hash": "f2f241bf094168cfb9e7805dc2856433",
                 "description": "CD32 KS + extended v3.1 rev 40.060",
-                "filename": "kick40060.CD32",
-                "region": ""
+                "filename": "kick40060.CD32"
             }
         ]
     },
@@ -497,8 +477,7 @@
             {
                 "hash": "45e298905a08f9cfb38fd504cd6dbc84",
                 "description": "MegaDrive TMSS startup ROM",
-                "filename": "bios_MD.bin",
-                "region": ""
+                "filename": "bios_MD.bin"
             }
         ]
     },
@@ -580,14 +559,12 @@
             {
                 "hash": "ca30b50f880eb660a320674ed365ef7a",
                 "description": "Family Computer Disk System BIOS - Required for Famicom Disk System emulation",
-                "filename": "disksys.rom",
-                "region": ""
+                "filename": "disksys.rom"
             },
             {
                 "hash": "7f98d77d7a094ad7d069b74bd553ec98",
                 "description": "Game Genie add-on cartridge - Required for Game Genei Add-on emulation (Only supported on the fceumm core)",
-                "filename": "gamegenie.nes",
-                "region": ""
+                "filename": "gamegenie.nes"
             }
         ]
     },
