@@ -35,7 +35,26 @@ namespace gaseous_tools
                 {
                     TraceOutput += Environment.NewLine + logItem.ExceptionValue.ToString();
                 }
+                switch(logItem.EventType) {
+                    case LogType.Information:
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                        break;
+
+                    case LogType.Warning:
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        break;
+
+                    case LogType.Critical:
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        break;
+
+                    case LogType.Debug:
+                        Console.ForegroundColor = ConsoleColor.Magenta;
+                        break;
+
+                }
                 Console.WriteLine(TraceOutput);
+                Console.ResetColor();
 
                 StreamWriter LogFile = File.AppendText(Config.LogFilePath);
                 switch (Config.LoggingConfiguration.LogFormat)

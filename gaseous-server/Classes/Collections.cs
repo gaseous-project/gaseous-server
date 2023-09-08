@@ -111,6 +111,7 @@ namespace gaseous_server.Classes
             string CollectionZipFile = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, Id + ".zip");
             if (File.Exists(CollectionZipFile))
             {
+                Logging.Log(Logging.LogType.Warning, "Collections", "Deleting existing build of collection: " + item.Name);
                 File.Delete(CollectionZipFile);
             }
 
@@ -265,6 +266,7 @@ namespace gaseous_server.Classes
 
             CollectionContents collectionContents = new CollectionContents();
             collectionContents.Collection = collectionPlatformItems;
+
             return collectionContents;
         }
 
@@ -277,6 +279,8 @@ namespace gaseous_server.Classes
             {
                 if (collectionItem.BuildStatus == CollectionItem.CollectionBuildStatus.WaitingForBuild)
                 {
+                    Logging.Log(Logging.LogType.Information, "Collections", "Beginning build of collection: " + collectionItem.Name);
+
                     // set starting
                     string sql = "UPDATE RomCollections SET BuiltStatus=@bs WHERE Id=@id";
                     Dictionary<string, object> dbDict = new Dictionary<string, object>();
@@ -294,6 +298,7 @@ namespace gaseous_server.Classes
                         // clean up if needed
                         if (File.Exists(ZipFilePath))
                         {
+                            Logging.Log(Logging.LogType.Warning, "Collections", "Deleting existing build of collection: " + collectionItem.Name);
                             File.Delete(ZipFilePath);
                         }
 
@@ -321,6 +326,7 @@ namespace gaseous_server.Classes
                                 {
                                     if (File.Exists(biosItem.biosPath))
                                     {
+                                        Logging.Log(Logging.LogType.Information, "Collections", "Copying BIOS file: " + biosItem.filename);
                                         File.Copy(biosItem.biosPath, Path.Combine(ZipBiosPath, biosItem.filename));
                                     }
                                 }
@@ -377,6 +383,7 @@ namespace gaseous_server.Classes
                                 {
                                     if (File.Exists(gameRomItem.Path))
                                     {
+                                        Logging.Log(Logging.LogType.Information, "Collections", "Copying ROM: " + gameRomItem.Name);
                                         File.Copy(gameRomItem.Path, Path.Combine(ZipGamePath, gameRomItem.Name));
                                     }
                                 }
@@ -384,11 +391,13 @@ namespace gaseous_server.Classes
                         }
 
                         // compress to zip
+                        Logging.Log(Logging.LogType.Information, "Collections", "Compressing collection");
                         ZipFile.CreateFromDirectory(ZipFileTempPath, ZipFilePath, CompressionLevel.SmallestSize, false);
 
                         // clean up
                         if (Directory.Exists(ZipFileTempPath))
                         {
+                            Logging.Log(Logging.LogType.Information, "Collections", "Cleaning up");
                             Directory.Delete(ZipFileTempPath, true);
                         }
 
