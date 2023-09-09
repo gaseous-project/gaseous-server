@@ -62,7 +62,9 @@ namespace gaseous_server.Controllers
         [Route("VersionFile")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public FileContentResult GetSystemVersionAsFile() {
-            string ver = "var AppVersion = \"" + Assembly.GetExecutingAssembly().GetName().Version.ToString() + "\"";
+            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string ver = "var AppVersion = \"" + Assembly.GetExecutingAssembly().GetName().Version.ToString() + "\";" + Environment.NewLine +
+                "var DBSchemaVersion = \"" + db.GetDatabaseSchemaVersion() + "\";";
             byte[] bytes = Encoding.UTF8.GetBytes(ver);
             return File(bytes, "text/javascript");
         }

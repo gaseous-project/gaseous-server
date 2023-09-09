@@ -16,6 +16,10 @@
         <td id="settings_appversion"></td>
     </tr>
     <tr>
+        <th>Database Schema Version</th>
+        <td id="settings_dbversion"></td>
+    </tr>
+    <tr>
         <td colspan="2">
             <h3>Data Sources</h2>
             <h4>Game data</h4>
@@ -42,13 +46,20 @@
             The Old School Emulation Center
         </td>
     </tr>
+    <tr>
+        <td>
+            <a href="https://www.progettosnaps.net/index.php" target="_blank"><img src="/images/ProgettoSnaps.gif" style="height: 36px;" /></a>
+        </td>
+        <td>
+            Progetto-Snaps
+        </td>
+    </tr>
 </table>
 
 <script type="text/javascript">
-    ajaxCall('/api/v1/System/Version', 'GET', function (result) {
-        if (result) {
-            var versionBox = document.getElementById('settings_appversion');
-            versionBox.innerHTML = result;
-        }
-    });
+    var versionBox = document.getElementById('settings_appversion');
+    versionBox.innerHTML = AppVersion;
+
+    var versionBox = document.getElementById('settings_dbversion');
+    versionBox.innerHTML = DBSchemaVersion;
 </script>
