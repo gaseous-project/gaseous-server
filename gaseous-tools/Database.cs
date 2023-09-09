@@ -108,14 +108,20 @@ namespace gaseous_tools
                                     Logging.Log(Logging.LogType.Information, "Database", "Schema version is " + SchemaVer);
                                     if (SchemaVer < i)
 									{
+										// run pre-upgrade code
+										gaseous_tools.DatabaseMigration.PreUpgradeScript(i, _ConnectorType);
+										
                                         // apply schema!
-                                        Logging.Log(Logging.LogType.Information, "Database", "Schema update available - applying");
+                                        Logging.Log(Logging.LogType.Information, "Database", "Updating schema to version " + i);
                                         ExecuteCMD(dbScript, dbDict);
 
 										sql = "UPDATE schema_version SET schema_version=@schemaver";
 										dbDict = new Dictionary<string, object>();
 										dbDict.Add("schemaver", i);
 										ExecuteCMD(sql, dbDict);
+
+										// run post-upgrade code
+										gaseous_tools.DatabaseMigration.PostUpgradeScript(i, _ConnectorType);
 									}
 								}
 							}
@@ -177,6 +183,28 @@ namespace gaseous_tools
                     }
             }
         }
+
+		public int GetDatabaseSchemaVersion()
+		{
+			switch (_ConnectorType)
+			{
+				case databaseType.MySql:
+					string sql = "SELECT schema_version FROM schema_version;";
+					DataTable SchemaVersion = ExecuteCMD(sql);
+					if (SchemaVersion.Rows.Count == 0)
+					{
+						return 0;
+					}
+					else
+					{
+						return (int)SchemaVersion.Rows[0][0];
+					}
+					
+				default:
+					return 0;
+
+			}
+		}
 
         public class SQLTransactionItem
         {
