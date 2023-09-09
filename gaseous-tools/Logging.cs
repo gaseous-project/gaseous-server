@@ -1,15 +1,24 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Reflection;
+using System.Reflection.Metadata.Ecma335;
+using Org.BouncyCastle.Utilities;
 namespace gaseous_tools
 {
 	public class Logging
 	{
-        static public void Log(LogType EventType, string Section, string Message, Exception? ExceptionValue = null)
+        // when was the last clean
+        static DateTime LastRetentionClean = DateTime.UtcNow;
+        // how often to clean in hours
+        const int RetentionCleanInterval = 1;
+
+        static public void Log(LogType EventType, string ServerProcess, string Message, Exception? ExceptionValue = null)
         {
             LogItem logItem = new LogItem
             {
                 EventTime = DateTime.UtcNow,
                 EventType = EventType,
-                Section = Section,
+                Process = ServerProcess,
                 Message = Message,
                 ExceptionValue = ExceptionValue
             };
@@ -30,32 +39,85 @@ namespace gaseous_tools
             if (AllowWrite == true)
             {
                 // console output
-                string TraceOutput = logItem.EventTime.ToString("yyyyMMdd HHmmss") + ": " + logItem.EventType.ToString() + ": " + logItem.Section + ": " + logItem.Message;
+                string TraceOutput = logItem.EventTime.ToString("yyyyMMdd HHmmss") + ": " + logItem.EventType.ToString() + ": " + logItem.Process + ": " + logItem.Message;
                 if (logItem.ExceptionValue != null)
                 {
                     TraceOutput += Environment.NewLine + logItem.ExceptionValue.ToString();
                 }
-                Console.WriteLine(TraceOutput);
-
-                StreamWriter LogFile = File.AppendText(Config.LogFilePath);
-                switch (Config.LoggingConfiguration.LogFormat)
-                {
-                    case Config.ConfigFile.Logging.LoggingFormat.Text:
-                        LogFile.WriteLine(TraceOutput);
+                switch(logItem.EventType) {
+                    case LogType.Information:
+                        Console.ForegroundColor = ConsoleColor.Blue;
                         break;
 
-                    case Config.ConfigFile.Logging.LoggingFormat.Json:
-                        Newtonsoft.Json.JsonSerializerSettings serializerSettings = new Newtonsoft.Json.JsonSerializerSettings
-                        {
-                            NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
-                            Formatting = Newtonsoft.Json.Formatting.Indented
-                        };
-                        serializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
-                        string JsonOutput = Newtonsoft.Json.JsonConvert.SerializeObject(logItem, serializerSettings);
-                        LogFile.WriteLine(JsonOutput);
+                    case LogType.Warning:
+                        Console.ForegroundColor = ConsoleColor.Yellow;
                         break;
+
+                    case LogType.Critical:
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        break;
+
+                    case LogType.Debug:
+                        Console.ForegroundColor = ConsoleColor.Magenta;
+                        break;
+
                 }
-                LogFile.Close();
+                Console.WriteLine(TraceOutput);
+                Console.ResetColor();
+
+                Newtonsoft.Json.JsonSerializerSettings serializerSettings = new Newtonsoft.Json.JsonSerializerSettings
+                {
+                    NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+                    Formatting = Newtonsoft.Json.Formatting.None
+                };
+                serializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+
+                // write log file
+                string JsonOutput = Newtonsoft.Json.JsonConvert.SerializeObject(logItem, serializerSettings);
+                StreamWriter jsonLogFile = File.AppendText(Config.LogFilePath);
+                jsonLogFile.WriteLine(JsonOutput);
+                jsonLogFile.Close();
+            }
+
+            // quick clean before we go
+            if (LastRetentionClean.AddHours(RetentionCleanInterval) < DateTime.UtcNow)
+            {
+                LogCleanup();
+            }
+        }
+
+        static public List<LogItem> GetLogs() {
+            string logData = File.ReadAllText(Config.LogFilePath);
+
+            List<LogItem> logs = new List<LogItem>();
+            if (File.Exists(Config.LogFilePath))
+            {
+                StreamReader sr = new StreamReader(Config.LogFilePath);
+                while (!sr.EndOfStream)
+                {
+                    LogItem logItem = Newtonsoft.Json.JsonConvert.DeserializeObject<LogItem>(sr.ReadLine());
+                    logs.Add(logItem);
+                }
+                logs.Reverse();
+            }
+
+            return logs;
+        }
+
+        static public void LogCleanup()
+        {
+            Log(LogType.Information, "Log Cleanup", "Purging log files older than " + Config.LoggingConfiguration.LogRetention + " days");
+            LastRetentionClean = DateTime.UtcNow;
+
+            string[] files = Directory.GetFiles(Config.LogPath, "Server Log *.json");
+
+            foreach (string file in files)
+            {
+                FileInfo fi = new FileInfo(file);
+                if (fi.LastAccessTime.AddDays(Config.LoggingConfiguration.LogRetention) < DateTime.Now)
+                {
+                    fi.Delete();
+                }
             }
         }
 
@@ -70,19 +132,8 @@ namespace gaseous_tools
         public class LogItem
         {
             public DateTime EventTime { get; set; }
-            public LogType EventType { get; set; }
-            private string _Section = "";
-            public string Section
-            {
-                get
-                {
-                    return _Section;
-                }
-                set
-                {
-                    _Section = value;
-                }
-            }
+            public LogType? EventType { get; set; }
+            public string Process { get; set; } = "";
             private string _Message = "";
             public string Message
             {

@@ -260,3 +260,26 @@ function DropDownRenderGameOption(state) {
     }
     return response;
 }
+
+function syntaxHighlight(json) {
+    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?|(\{|\})?|(\[|\])?\b)/g, function (match) {
+        var cls = 'number';
+        if (/^"/.test(match)) {
+            if (/:$/.test(match)) {
+                cls = 'key';
+            } else {
+                cls = 'string';
+            }
+        } else if (/true|false/.test(match)) {
+            cls = 'boolean';
+        } else if (/null/.test(match)) {
+            cls = 'null';
+        } else if (/\{|\}/.test(match)) {
+            cls = 'brace';
+        } else if (/\[|\]/.test(match)) {
+            cls = 'square';
+        }
+        return '<span class="' + cls + '">' + match + '</span>';
+    });
+}

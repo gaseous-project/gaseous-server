@@ -16,6 +16,8 @@ db.InitDB();
 
 // load app settings
 Config.InitSettings();
+// write updated settings back to the config file
+Config.UpdateConfig();
 
 // set initial values
 Guid APIKey = Guid.NewGuid();
@@ -158,7 +160,7 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.MetadataRefresh, 360));
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.OrganiseLibrary, 2040, new List<ProcessQueue.QueueItemType>
+    ProcessQueue.QueueItemType.OrganiseLibrary, 1440, new List<ProcessQueue.QueueItemType>
     {
         ProcessQueue.QueueItemType.LibraryScan,
         ProcessQueue.QueueItemType.TitleIngestor
