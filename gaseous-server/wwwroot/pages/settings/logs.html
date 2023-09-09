@@ -1,0 +1,50 @@
+<div id="gametitle">
+    <h1 id="gametitle_label">Logs</h1>
+</div>
+
+<a href="#" class="romlink" onclick="loadLogs();" style="float: right;"><img src="/images/refresh.svg" alt="Refresh" title="Refresh" class="banner_button_image" /></a>
+<table id="settings_events_table" style="width: 100%;" cellspacing="0">
+    
+</table>
+
+<script type="text/javascript">
+    function loadLogs() {
+        ajaxCall(
+            '/api/v1/Logs',
+            'GET',
+            function (result) {
+                var newTable = document.getElementById('settings_events_table');
+                newTable.innerHTML = '';
+                newTable.appendChild(
+                    createTableRow(
+                        true, 
+                        [ 
+                            ['Event Time', 'logs_table_cell_150px'],
+                            ['Severity', 'logs_table_cell_150px'],
+                            'Message'
+                        ],
+                        '',
+                        ''
+                        )
+                    );
+
+                for (var i = 0; i < result.length; i++) {
+                    var exceptionString = '';
+                    if (result[i].exceptionValue) {
+                        exceptionString = "<h3>Exception</h3><pre class='logs_table_exception'>" + syntaxHighlight(JSON.stringify(result[i].exceptionValue, null, 2)) + "</pre>";
+                    }
+
+                    var newRow = [
+                        moment(result[i].eventTime).fromNow(),
+                        result[i].eventType,
+                        result[i].process + " - " + result[i].message + exceptionString
+                    ];
+
+                    newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell logs_table_cell'));
+                }
+            }
+        );
+    }
+
+    loadLogs();
+</script>
