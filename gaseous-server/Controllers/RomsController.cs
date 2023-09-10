@@ -25,7 +25,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<IFormFile>), StatusCodes.Status200OK)]
         [RequestSizeLimit(long.MaxValue)]
         [DisableRequestSizeLimit, RequestFormLimits(MultipartBodyLengthLimit = long.MaxValue, ValueLengthLimit = int.MaxValue)]
-        public async Task<IActionResult> UploadRom(List<IFormFile> files)
+        public async Task<IActionResult> UploadRom(List<IFormFile> files, long? OverridePlatformId = null)
         {
             Guid sessionid = Guid.NewGuid();
 
@@ -61,12 +61,17 @@ namespace gaseous_server.Controllers
                 }
             }
 
-            // Process uploaded files
-            // Don't rely on or trust the FileName property without validation.
+            // get override platform if specified
+            IGDB.Models.Platform? OverridePlatform = null;
+            if (OverridePlatformId != null)
+            {
+                OverridePlatform = Platforms.GetPlatform((long)OverridePlatformId);
+            }
 
+            // Process uploaded files
             foreach (Dictionary<string, object> UploadedFile in UploadedFiles)
             {
-                Classes.ImportGame.ImportGameFile((string)UploadedFile["fullpath"]);
+                Classes.ImportGame.ImportGameFile((string)UploadedFile["fullpath"], OverridePlatform, false);
             }
 
             if (Directory.Exists(workPath))
