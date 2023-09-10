@@ -878,3 +878,28 @@ button:disabled {
 .bgalt1 {
     background-color: transparent;;
 }
+
+.logs_table_cell_150px {
+    width: 150px;
+}
+
+.logs_table_cell {
+    vertical-align: top;
+}
+
+.logs_table_exception {
+    margin-right: 10px;
+    padding: 5px;
+    border-radius: 10px;
+    border-color: #383838;
+    border-width: 1px;
+    background-color: #383838;
+}
+
+.string { color: lightblue; }
+.number { color: lightblue; }
+.boolean { color: lightblue; }
+.null { color: magenta; }
+.key { color: greenyellow; }
+.brace { color: #888; }
+.square { color: #fff000; }

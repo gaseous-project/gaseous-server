@@ -16,6 +16,8 @@ db.InitDB();
 
 // load app settings
 Config.InitSettings();
+// write updated settings back to the config file
+Config.UpdateConfig();
 
 // set initial values
 Guid APIKey = Guid.NewGuid();
@@ -142,10 +144,6 @@ gaseous_server.Classes.Metadata.Platforms.GetPlatform(0);
 // organise library
 //gaseous_server.Classes.ImportGame.OrganiseLibrary();
 
-// Migrate signature data if needed
-XMLIngestor ingestor = new XMLIngestor();
-ingestor.MigrateMetadatVersion();
-
 // add background tasks
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.SignatureIngestor, 60));
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
@@ -158,7 +156,7 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.MetadataRefresh, 360));
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.OrganiseLibrary, 2040, new List<ProcessQueue.QueueItemType>
+    ProcessQueue.QueueItemType.OrganiseLibrary, 1440, new List<ProcessQueue.QueueItemType>
     {
         ProcessQueue.QueueItemType.LibraryScan,
         ProcessQueue.QueueItemType.TitleIngestor

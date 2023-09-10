@@ -23,7 +23,7 @@ namespace gaseous_server.Classes
 
 				// import files first
 				foreach (string importContent in importContents_Files) {
-					ImportGame.ImportGameFile(importContent);
+					ImportGame.ImportGameFile(importContent, null, false);
 				}
             }
 			else
@@ -38,7 +38,7 @@ namespace gaseous_server.Classes
 
 	public class ImportGame
 	{
-        public static void ImportGameFile(string GameFileImportPath, bool IsDirectory = false, bool ForceImport = false)
+        public static void ImportGameFile(string GameFileImportPath, IGDB.Models.Platform? OverridePlatform, bool IsDirectory = false)
 		{
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
@@ -50,7 +50,6 @@ namespace gaseous_server.Classes
             }
 			else
 			{
-				//Logging.Log(Logging.LogType.Information, "Import Game", "Processing item " + GameFileImportPath);
 				if (IsDirectory == false)
 				{
 					FileInfo fi = new FileInfo(GameFileImportPath);
@@ -80,10 +79,20 @@ namespace gaseous_server.Classes
                             Models.Signatures_Games discoveredSignature = GetFileSignature(hash, fi, GameFileImportPath);
 
                             // get discovered platform
-                            IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(discoveredSignature.Flags.IGDBPlatformId);
-                            if (determinedPlatform == null)
+                            IGDB.Models.Platform? determinedPlatform = null;
+                            if (OverridePlatform == null)
                             {
-                                determinedPlatform = new IGDB.Models.Platform();
+                                determinedPlatform = Metadata.Platforms.GetPlatform(discoveredSignature.Flags.IGDBPlatformId);
+                                if (determinedPlatform == null)
+                                {
+                                    determinedPlatform = new IGDB.Models.Platform();
+                                }
+                            }
+                            else
+                            {
+                                determinedPlatform = OverridePlatform;
+                                discoveredSignature.Flags.IGDBPlatformId = (long)determinedPlatform.Id;
+                                discoveredSignature.Flags.IGDBPlatformName = determinedPlatform.Name;
                             }
 
                             IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature.Game.Name, discoveredSignature.Flags.IGDBPlatformId);
