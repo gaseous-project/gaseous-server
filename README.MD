@@ -102,6 +102,13 @@ Dockerfile and docker-compose-build.yml files have been provided to make deploym
 13. The server can then be started by executing ```dotnet /opt/gaseous-server/gaseous-server.dll```
     * If you would like the server to run on a different ip address and port (for example 0.0.0.0:8080), add the --urls argument: ```dotnet /opt/gaseous-server/gaseous-server.dll --urls http://0.0.0.0:8080```
 
+**Note**: The above instructions were tested on macOS Ventura, and Ubuntu 22.04.3. There was a report that Debian 11 had an issue with the git submodule commands (see: https://github.com/gaseous-project/gaseous-server/issues/71). This was possibly due to an older git package.
+
+If the git submodule commands aren't working, you can:
+1. change to the ```gaseous-server/wwwroot/emulators``` directory
+2. delete the ```EmulatorJS``` directory
+3. clone the EmulatorJS repository with ```git clone https://github.com/EmulatorJS/EmulatorJS.git```
+
 ### Updating from source
 1. Stop the server
 2. Switch to the source directory
