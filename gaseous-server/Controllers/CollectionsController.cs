@@ -82,14 +82,14 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult GetCollectionRomsPreview(Classes.Collections.CollectionItem Item)
         {
-            //try
-            //{
+            try
+            {
                 return Ok(Classes.Collections.GetCollectionContent(Item));
-            //}
-            //catch (Exception ex)
-            //{
-            //    return NotFound(ex);
-            //}
+            }
+            catch (Exception ex)
+            {
+               return NotFound(ex);
+            }
         }
 
         /// <summary>

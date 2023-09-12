@@ -254,6 +254,8 @@
     $('#collection_includebios').select2();
 
     if (modalVariables) {
+        var modalAlwaysInclude = [];
+
         // edit mode
         ajaxCall(
             '/api/v1/Collections/' + modalVariables,
@@ -270,6 +272,8 @@
                     $('#collection_directorylayout').val(result.folderStructure).trigger('change');
                 }
                 $('#collection_includebios').val(result.includeBIOSFiles.toString()).trigger('change');
+                modalAlwaysInclude = result.alwaysInclude;
+                console.log(JSON.stringify(modalAlwaysInclude));
 
                 // fill select2 controls
                 $.ajax(
@@ -372,6 +376,25 @@
         var players = GetDropDownIds('#collection_players');
         var playerperspectives = GetDropDownIds('#collection_playerperspectives');
         var themes = GetDropDownIds('#collection_themes');
+        var alwaysInclude = [];
+        var alwaysIncludeSelections = document.getElementsByName('collections_preview_always');
+        if (alwaysIncludeSelections.length > 0) {
+            for (var i = 0; i < alwaysIncludeSelections.length; i++) {
+                if (alwaysIncludeSelections[i].value != "None") {
+                    var alwaysIncludeItem = {
+                        "platformId": Number(alwaysIncludeSelections[i].getAttribute('data-platform')),
+                        "gameId": Number(alwaysIncludeSelections[i].getAttribute('data-game')),
+                        "inclusionState": alwaysIncludeSelections[i].value
+                    };
+                    alwaysInclude.push(alwaysIncludeItem);
+                }
+            }
+        } else {
+            alwaysInclude = modalAlwaysInclude;
+        }
+
+        modalAlwaysInclude = alwaysInclude;
+        console.log(JSON.stringify(modalAlwaysInclude));
 
         var item = {
             "name": document.getElementById('collection_name').value,
@@ -387,7 +410,8 @@
             "maximumBytesPerPlatform": GetNumberFieldValue('collection_maxplatformsize'),
             "maximumCollectionSizeInBytes": GetNumberFieldValue('collection_maxcollectionsize'),
             "folderStructure": GetNumberFieldValue('collection_directorylayout', "Standard"),
-            "includeBIOSFiles": GetBooleanFieldValue('collection_includebios')
+            "includeBIOSFiles": GetBooleanFieldValue('collection_includebios'),
+            "alwaysInclude": alwaysInclude
         }
 
         return item;
@@ -451,6 +475,7 @@
     }
 
     function DisplayPreview(data, targetDiv) {
+        console.log(JSON.stringify(data));
         var container = document.getElementById(targetDiv);
         container.innerHTML = '';
 
@@ -494,7 +519,48 @@
                     var gameTitleCell = document.createElement('th');
                     gameTitleCell.setAttribute('colspan', 2);
                     gameTitleCell.className = 'collections_preview_gametitlecell';
-                    gameTitleCell.innerHTML = gameItem.name;
+                    
+                    // game always include popup
+                    var gameTitleInclusion = document.createElement('select');
+                    gameTitleInclusion.id = 'collections_preview_always_' + platformItem.id + '_' + gameItem.id;
+                    gameTitleInclusion.name = 'collections_preview_always';
+                    gameTitleInclusion.setAttribute('data-platform', platformItem.id);
+                    gameTitleInclusion.setAttribute('data-game', gameItem.id);
+                    gameTitleInclusion.style.float = 'right';
+
+                    var gameTitleInclusionOptions = [
+                        {
+                            "value": "None",
+                            "text": "Automatic"
+                        },
+                        {
+                            "value": "AlwaysInclude",
+                            "text": "Always Include"
+                        },
+                        {
+                            "value": "AlwaysExclude",
+                            "text": "Always Exclude"
+                        }
+                    ];
+                    for (var i = 0; i < gameTitleInclusionOptions.length; i++) {
+                        var gameTitleInclusionOption = document.createElement('option');
+                        gameTitleInclusionOption.value = gameTitleInclusionOptions[i].value;
+                        gameTitleInclusionOption.innerHTML = gameTitleInclusionOptions[i].text;
+
+                        if (gameItem.inclusionStatus) {
+                            if (gameItem.inclusionStatus.inclusionState == gameTitleInclusionOptions[i].value) {
+                                gameTitleInclusionOption.selected = 'selected';
+                            }
+                        }
+
+                        gameTitleInclusion.appendChild(gameTitleInclusionOption);
+                    }
+                    gameTitleCell.appendChild(gameTitleInclusion);
+
+                    // game title label
+                    var gameTitleLabel = document.createElement('span');
+                    gameTitleLabel.innerHTML = gameItem.name;
+                    gameTitleCell.appendChild(gameTitleLabel);
 
                     gameItemRow.appendChild(gameTitleCell);
 
@@ -541,7 +607,7 @@
             container.appendChild(collectionTable);
 
             var collectionSize = document.getElementById('collectionedit_previewbox_size');
-            collectionSize.innerHTML = "Collection size: " + formatBytes(data.collectionProjectedSizeBytes);
+            collectionSize.innerHTML = "Estimated uncompressed collection size: " + formatBytes(data.collectionProjectedSizeBytes);
         }
     }
 
