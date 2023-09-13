@@ -3,7 +3,7 @@ name: Build Docker Image on New Tag
 on:
   push:
     tags:
-      - '*'
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
 jobs:
   docker:
@@ -17,6 +17,8 @@ jobs:
         run: dotnet tool install -g dotnetCampus.TagToVersion
       - name: Set tag to version  
         run: dotnet TagToVersion -t ${{ github.ref }}
+      - name: Sign in to Nuget
+        run: dotnet nuget add source --username michael-j-green --password ${{ secrets.NUGETKEY }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/gaseous-project/index.json"
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
