@@ -12,4 +12,5 @@ ADD COLUMN `MetadataVersion` INT NULL DEFAULT 1;
 
 ALTER TABLE `RomCollections` 
 ADD COLUMN `FolderStructure` INT NULL DEFAULT 0 AFTER `MaximumCollectionSizeInBytes`,
-ADD COLUMN `IncludeBIOSFiles` BOOLEAN NULL DEFAULT 0 AFTER `FolderStructure`;
+ADD COLUMN `IncludeBIOSFiles` BOOLEAN NULL DEFAULT 0 AFTER `FolderStructure`,
+ADD COLUMN `AlwaysInclude` JSON NULL AFTER `IncludeBIOSFiles`;

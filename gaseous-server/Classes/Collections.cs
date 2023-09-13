@@ -58,7 +58,7 @@ namespace gaseous_server.Classes
         public static CollectionItem NewCollection(CollectionItem item)
         {
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "INSERT INTO RomCollections (`Name`, Description, Platforms, Genres, Players, PlayerPerspectives, Themes, MinimumRating, MaximumRating, MaximumRomsPerPlatform, MaximumBytesPerPlatform, MaximumCollectionSizeInBytes, FolderStructure, IncludeBIOSFiles, BuiltStatus) VALUES (@name, @description, @platforms, @genres, @players, @playerperspectives, @themes, @minimumrating, @maximumrating, @maximumromsperplatform, @maximumbytesperplatform, @maximumcollectionsizeinbytes, @folderstructure, @includebiosfiles, @builtstatus); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+            string sql = "INSERT INTO RomCollections (`Name`, Description, Platforms, Genres, Players, PlayerPerspectives, Themes, MinimumRating, MaximumRating, MaximumRomsPerPlatform, MaximumBytesPerPlatform, MaximumCollectionSizeInBytes, FolderStructure, IncludeBIOSFiles, AlwaysInclude, BuiltStatus) VALUES (@name, @description, @platforms, @genres, @players, @playerperspectives, @themes, @minimumrating, @maximumrating, @maximumromsperplatform, @maximumbytesperplatform, @maximumcollectionsizeinbytes, @folderstructure, @includebiosfiles, @alwaysinclude, @builtstatus); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("name", item.Name);
             dbDict.Add("description", item.Description);
@@ -74,6 +74,7 @@ namespace gaseous_server.Classes
             dbDict.Add("maximumcollectionsizeinbytes", Common.ReturnValueIfNull(item.MaximumCollectionSizeInBytes, -1));
             dbDict.Add("folderstructure", Common.ReturnValueIfNull(item.FolderStructure, CollectionItem.FolderStructures.Gaseous));
             dbDict.Add("includebiosfiles", Common.ReturnValueIfNull(item.IncludeBIOSFiles, 0));
+            dbDict.Add("alwaysinclude", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.AlwaysInclude, new List<CollectionItem.AlwaysIncludeItem>())));
             dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.WaitingForBuild);
             DataTable romDT = db.ExecuteCMD(sql, dbDict);
             long CollectionId = (long)romDT.Rows[0][0];
@@ -85,10 +86,10 @@ namespace gaseous_server.Classes
             return collectionItem;
         }
 
-        public static CollectionItem EditCollection(long Id, CollectionItem item)
+        public static CollectionItem EditCollection(long Id, CollectionItem item, bool ForceRebuild = true)
         {
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "UPDATE RomCollections SET `Name`=@name, Description=@description, Platforms=@platforms, Genres=@genres, Players=@players, PlayerPerspectives=@playerperspectives, Themes=@themes, MinimumRating=@minimumrating, MaximumRating=@maximumrating, MaximumRomsPerPlatform=@maximumromsperplatform, MaximumBytesPerPlatform=@maximumbytesperplatform, MaximumCollectionSizeInBytes=@maximumcollectionsizeinbytes, FolderStructure=@folderstructure, IncludeBIOSFiles=@includebiosfiles, BuiltStatus=@builtstatus WHERE Id=@id";
+            string sql = "UPDATE RomCollections SET `Name`=@name, Description=@description, Platforms=@platforms, Genres=@genres, Players=@players, PlayerPerspectives=@playerperspectives, Themes=@themes, MinimumRating=@minimumrating, MaximumRating=@maximumrating, MaximumRomsPerPlatform=@maximumromsperplatform, MaximumBytesPerPlatform=@maximumbytesperplatform, MaximumCollectionSizeInBytes=@maximumcollectionsizeinbytes, FolderStructure=@folderstructure, IncludeBIOSFiles=@includebiosfiles, AlwaysInclude=@alwaysinclude, BuiltStatus=@builtstatus WHERE Id=@id";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", Id);
             dbDict.Add("name", item.Name);
@@ -105,19 +106,37 @@ namespace gaseous_server.Classes
             dbDict.Add("maximumcollectionsizeinbytes", Common.ReturnValueIfNull(item.MaximumCollectionSizeInBytes, -1));
             dbDict.Add("folderstructure", Common.ReturnValueIfNull(item.FolderStructure, CollectionItem.FolderStructures.Gaseous));
             dbDict.Add("includebiosfiles", Common.ReturnValueIfNull(item.IncludeBIOSFiles, 0));
-            dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.WaitingForBuild);
-            db.ExecuteCMD(sql, dbDict);
-
+            dbDict.Add("alwaysinclude", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.AlwaysInclude, new List<CollectionItem.AlwaysIncludeItem>())));
+            
             string CollectionZipFile = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, Id + ".zip");
-            if (File.Exists(CollectionZipFile))
+            if (ForceRebuild == true) 
             {
-                Logging.Log(Logging.LogType.Warning, "Collections", "Deleting existing build of collection: " + item.Name);
-                File.Delete(CollectionZipFile);
+                dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.WaitingForBuild);
+                if (File.Exists(CollectionZipFile))
+                {
+                    Logging.Log(Logging.LogType.Warning, "Collections", "Deleting existing build of collection: " + item.Name);
+                    File.Delete(CollectionZipFile);
+                }
             }
-
+            else
+            {
+                if (File.Exists(CollectionZipFile))
+                {
+                    dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.Completed);
+                }
+                else
+                {
+                    dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.NoStatus);
+                }
+            }
+            db.ExecuteCMD(sql, dbDict);
+            
             CollectionItem collectionItem = GetCollection(Id);
 
-            StartCollectionItemBuild(Id);
+            if (collectionItem.BuildStatus == CollectionItem.CollectionBuildStatus.WaitingForBuild)
+            {
+                StartCollectionItemBuild(Id);
+            }
 
             return collectionItem;
         }
@@ -166,9 +185,32 @@ namespace gaseous_server.Classes
             List<CollectionContents.CollectionPlatformItem> collectionPlatformItems = new List<CollectionContents.CollectionPlatformItem>();
 
             // get platforms
+            List<long> platformids = new List<long>();
+            platformids.AddRange(collectionItem.Platforms);
+
+            List<long>? DynamicPlatforms = new List<long>();
+            DynamicPlatforms.AddRange(collectionItem.Platforms);
+
             List<Platform> platforms = new List<Platform>();
-            if (collectionItem.Platforms.Count > 0) {
-                foreach (long PlatformId in collectionItem.Platforms) {
+
+            // add platforms with an inclusion status
+            foreach (CollectionItem.AlwaysIncludeItem alwaysIncludeItem in collectionItem.AlwaysInclude) 
+            {
+                if (
+                        alwaysIncludeItem.InclusionState == CollectionItem.AlwaysIncludeStatus.AlwaysInclude ||
+                        alwaysIncludeItem.InclusionState == CollectionItem.AlwaysIncludeStatus.AlwaysExclude
+                    )
+                    {
+                        if (!platformids.Contains(alwaysIncludeItem.PlatformId))
+                        {
+                            platformids.Add(alwaysIncludeItem.PlatformId);
+                        }
+                }
+            }
+
+            // add dynamic platforms
+            if (DynamicPlatforms.Count > 0) {
+                foreach (long PlatformId in platformids) {
                     platforms.Add(Platforms.GetPlatform(PlatformId));
                 }
             } else {
@@ -184,63 +226,113 @@ namespace gaseous_server.Classes
                 long TotalRomSize = 0;
                 long TotalGameCount = 0;
 
-                List<Game> games = GamesController.GetGames("",
-                    platform.Id.ToString(),
-                    string.Join(",", collectionItem.Genres),
-                    string.Join(",", collectionItem.Players),
-                    string.Join(",", collectionItem.PlayerPerspectives),
-                    string.Join(",", collectionItem.Themes),
-                    collectionItem.MinimumRating,
-                    collectionItem.MaximumRating
-                );
+                bool isDynamic = false;
+                if (DynamicPlatforms.Contains((long)platform.Id))
+                {
+                    isDynamic = true;
+                }
+                else if (DynamicPlatforms.Count == 0)
+                {
+                    isDynamic = true;
+                }
+
+                List<Game> games = new List<Game>();
+                if (isDynamic == true)
+                {
+                    games = GamesController.GetGames("",
+                        platform.Id.ToString(),
+                        string.Join(",", collectionItem.Genres),
+                        string.Join(",", collectionItem.Players),
+                        string.Join(",", collectionItem.PlayerPerspectives),
+                        string.Join(",", collectionItem.Themes),
+                        collectionItem.MinimumRating,
+                        collectionItem.MaximumRating
+                    );
+                }
 
                 CollectionContents.CollectionPlatformItem collectionPlatformItem = new CollectionContents.CollectionPlatformItem(platform);
                 collectionPlatformItem.Games = new List<CollectionContents.CollectionPlatformItem.CollectionGameItem>();
 
-                foreach (Game game in games) {
-                    CollectionContents.CollectionPlatformItem.CollectionGameItem collectionGameItem = new CollectionContents.CollectionPlatformItem.CollectionGameItem(game);
+                // add titles with an inclusion status
+                foreach (CollectionItem.AlwaysIncludeItem alwaysIncludeItem in collectionItem.AlwaysInclude) 
+                {
+                    if (
+                        (
+                            alwaysIncludeItem.InclusionState == CollectionItem.AlwaysIncludeStatus.AlwaysInclude ||
+                            alwaysIncludeItem.InclusionState == CollectionItem.AlwaysIncludeStatus.AlwaysExclude
+                        ) && alwaysIncludeItem.PlatformId == platform.Id
+                        ) 
+                        {
+                            Game AlwaysIncludeGame = Games.GetGame(alwaysIncludeItem.GameId, false, false, false);
+                            CollectionContents.CollectionPlatformItem.CollectionGameItem gameItem = new CollectionContents.CollectionPlatformItem.CollectionGameItem(AlwaysIncludeGame);
+                            gameItem.InclusionStatus = new CollectionItem.AlwaysIncludeItem();
+                            gameItem.InclusionStatus.PlatformId = alwaysIncludeItem.PlatformId;
+                            gameItem.InclusionStatus.GameId = alwaysIncludeItem.GameId;
+                            gameItem.InclusionStatus.InclusionState = alwaysIncludeItem.InclusionState;
+                            gameItem.Roms = Roms.GetRoms((long)gameItem.Id, (long)platform.Id);
 
-                    List<Roms.GameRomItem> gameRoms = Roms.GetRoms((long)game.Id, (long)platform.Id);
-                    
-                    bool AddGame = false;
-
-                    // calculate total rom size for the game
-                    long GameRomSize = 0;
-                    foreach (Roms.GameRomItem gameRom in gameRoms) {
-                        GameRomSize += gameRom.Size;
+                            collectionPlatformItem.Games.Add(gameItem);
                     }
-                    if (collectionItem.MaximumBytesPerPlatform > 0) {
-                        if ((TotalRomSize + GameRomSize) < collectionItem.MaximumBytesPerPlatform) {
-                            AddGame = true;
+                }
+
+                foreach (Game game in games) {
+                    bool gameAlreadyInList = false;
+                    foreach (CollectionContents.CollectionPlatformItem.CollectionGameItem existingGame in collectionPlatformItem.Games) 
+                    {
+                        if (existingGame.Id == game.Id) 
+                        {
+                            gameAlreadyInList = true;
                         }
                     }
-                    else 
+
+                    if (gameAlreadyInList == false)
                     {
-                        AddGame = true;
-                    }
+                        CollectionContents.CollectionPlatformItem.CollectionGameItem collectionGameItem = new CollectionContents.CollectionPlatformItem.CollectionGameItem(game);
 
-                    if (AddGame == true) {
-                        TotalRomSize += GameRomSize;
+                        List<Roms.GameRomItem> gameRoms = Roms.GetRoms((long)game.Id, (long)platform.Id);
+                        
+                        bool AddGame = false;
 
-                        bool AddRoms = false;
-
-                        if (collectionItem.MaximumRomsPerPlatform > 0) { 
-                            if (TotalGameCount < collectionItem.MaximumRomsPerPlatform) {
-                                AddRoms = true;
+                        // calculate total rom size for the game
+                        long GameRomSize = 0;
+                        foreach (Roms.GameRomItem gameRom in gameRoms) {
+                            GameRomSize += gameRom.Size;
+                        }
+                        if (collectionItem.MaximumBytesPerPlatform > 0) {
+                            if ((TotalRomSize + GameRomSize) < collectionItem.MaximumBytesPerPlatform) {
+                                AddGame = true;
                             }
                         }
-                        else
+                        else 
                         {
-                            AddRoms = true;
+                            AddGame = true;
                         }
 
-                        if (AddRoms == true) {
-                            TotalGameCount += 1;
-                            collectionGameItem.Roms = gameRoms;
-                            collectionPlatformItem.Games.Add(collectionGameItem);
+                        if (AddGame == true) {
+                            TotalRomSize += GameRomSize;
+
+                            bool AddRoms = false;
+
+                            if (collectionItem.MaximumRomsPerPlatform > 0) { 
+                                if (TotalGameCount < collectionItem.MaximumRomsPerPlatform) {
+                                    AddRoms = true;
+                                }
+                            }
+                            else
+                            {
+                                AddRoms = true;
+                            }
+
+                            if (AddRoms == true) {
+                                TotalGameCount += 1;
+                                collectionGameItem.Roms = gameRoms;
+                                collectionPlatformItem.Games.Add(collectionGameItem);
+                            }
                         }
                     }
                 }
+
+                collectionPlatformItem.Games.Sort((x, y) => x.Name.CompareTo(y.Name));
 
                 if (collectionPlatformItem.Games.Count > 0)
                 {
@@ -263,6 +355,8 @@ namespace gaseous_server.Classes
                     }
                 }
             }
+
+            collectionPlatformItems.Sort((x, y) => x.Name.CompareTo(y.Name));
 
             CollectionContents collectionContents = new CollectionContents();
             collectionContents.Collection = collectionPlatformItems;
@@ -361,30 +455,46 @@ namespace gaseous_server.Classes
 
                             foreach (CollectionContents.CollectionPlatformItem.CollectionGameItem collectionGameItem in collectionPlatformItem.Games)
                             {
-                                string ZipGamePath = "";
-                                switch (collectionItem.FolderStructure)
+                                bool includeGame = false;
+                                if (collectionGameItem.InclusionStatus == null)
                                 {
-                                    case CollectionItem.FolderStructures.Gaseous:
-                                        // create game directory
-                                        ZipGamePath = Path.Combine(ZipPlatformPath, collectionGameItem.Slug);
-                                        if (!Directory.Exists(ZipGamePath))
-                                        {
-                                            Directory.CreateDirectory(ZipGamePath);
-                                        }
-                                        break;
-
-                                    case CollectionItem.FolderStructures.RetroPie:
-                                        ZipGamePath = ZipPlatformPath;
-                                        break;
-                                }                                    
-                                
-                                // copy in roms
-                                foreach (Roms.GameRomItem gameRomItem in collectionGameItem.Roms)
+                                    includeGame = true;
+                                }
+                                else
                                 {
-                                    if (File.Exists(gameRomItem.Path))
+                                    if (collectionGameItem.InclusionStatus.InclusionState == CollectionItem.AlwaysIncludeStatus.AlwaysInclude)
                                     {
-                                        Logging.Log(Logging.LogType.Information, "Collections", "Copying ROM: " + gameRomItem.Name);
-                                        File.Copy(gameRomItem.Path, Path.Combine(ZipGamePath, gameRomItem.Name));
+                                        includeGame = true;
+                                    }
+                                }
+
+                                if (includeGame == true)
+                                {
+                                    string ZipGamePath = "";
+                                    switch (collectionItem.FolderStructure)
+                                    {
+                                        case CollectionItem.FolderStructures.Gaseous:
+                                            // create game directory
+                                            ZipGamePath = Path.Combine(ZipPlatformPath, collectionGameItem.Slug);
+                                            if (!Directory.Exists(ZipGamePath))
+                                            {
+                                                Directory.CreateDirectory(ZipGamePath);
+                                            }
+                                            break;
+
+                                        case CollectionItem.FolderStructures.RetroPie:
+                                            ZipGamePath = ZipPlatformPath;
+                                            break;
+                                    }                                    
+                                    
+                                    // copy in roms
+                                    foreach (Roms.GameRomItem gameRomItem in collectionGameItem.Roms)
+                                    {
+                                        if (File.Exists(gameRomItem.Path))
+                                        {
+                                            Logging.Log(Logging.LogType.Information, "Collections", "Copying ROM: " + gameRomItem.Name);
+                                            File.Copy(gameRomItem.Path, Path.Combine(ZipGamePath, gameRomItem.Name));
+                                        }
                                     }
                                 }
                             }
@@ -434,6 +544,7 @@ namespace gaseous_server.Classes
             string strPlayers = (string)Common.ReturnValueIfNull(row["Players"], "[ ]");
             string strPlayerPerspectives = (string)Common.ReturnValueIfNull(row["PlayerPerspectives"], "[ ]");
             string strThemes = (string)Common.ReturnValueIfNull(row["Themes"], "[ ]");
+            string strAlwaysInclude = (string)Common.ReturnValueIfNull(row["AlwaysInclude"], "[ ]");
 
             CollectionItem item = new CollectionItem();
             item.Id = (long)row["Id"];
@@ -451,6 +562,7 @@ namespace gaseous_server.Classes
             item.MaximumCollectionSizeInBytes = (long)Common.ReturnValueIfNull(row["MaximumCollectionSizeInBytes"], (long)-1);
             item.FolderStructure = (CollectionItem.FolderStructures)(int)Common.ReturnValueIfNull(row["FolderStructure"], 0);
             item.IncludeBIOSFiles = (bool)row["IncludeBIOSFiles"];
+            item.AlwaysInclude = Newtonsoft.Json.JsonConvert.DeserializeObject<List<CollectionItem.AlwaysIncludeItem>>(strAlwaysInclude);
             item.BuildStatus = (CollectionItem.CollectionBuildStatus)(int)Common.ReturnValueIfNull(row["BuiltStatus"], 0);
 
             return item;
@@ -478,6 +590,7 @@ namespace gaseous_server.Classes
             public long? MaximumCollectionSizeInBytes { get; set; }
             public FolderStructures FolderStructure { get; set; } = FolderStructures.Gaseous;
             public bool IncludeBIOSFiles { get; set; } = true;
+            public List<AlwaysIncludeItem> AlwaysInclude { get; set; }
 
             [JsonIgnore]
             public CollectionBuildStatus BuildStatus
@@ -545,6 +658,20 @@ namespace gaseous_server.Classes
             {
                 Gaseous = 0,
                 RetroPie = 1
+            }
+
+            public class AlwaysIncludeItem
+            {
+                public long PlatformId { get; set; }
+                public long GameId { get; set; }
+                public AlwaysIncludeStatus InclusionState { get; set; }
+            }
+
+            public enum AlwaysIncludeStatus
+            {
+                None = 0,
+                AlwaysInclude = 1,
+                AlwaysExclude = 2
             }
         }
 
@@ -660,6 +787,8 @@ namespace gaseous_server.Classes
                     public string Name { get; set; }
                     public string Slug { get; set; }
                     public long Cover { get; set;}
+
+                    public CollectionItem.AlwaysIncludeItem InclusionStatus { get; set; }
 
                     public List<Roms.GameRomItem> Roms { get; set; }
 

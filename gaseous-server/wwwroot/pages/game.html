@@ -368,7 +368,7 @@
                         var platformRow = document.createElement('tr');
                         var platformHeader = document.createElement('th');
                         platformHeader.setAttribute('colspan', 6);
-                        platformHeader.innerHTML = result[i].platform.name;
+                        platformHeader.innerHTML = '<a href="#" onclick="ShowCollectionDialog(' + result[i].platform.id + ');" style="float: right; text-decoration: none;" class="romlink"><img src="/images/collections.svg" class="banner_button_image banner_button_image_smaller" alt="Add to collection" title="Add to collection" /></a>' + result[i].platform.name;
                         platformRow.appendChild(platformHeader);
                         newTable.appendChild(platformRow);
                     }
@@ -665,5 +665,10 @@
         var submodal = document.getElementById("myModalProgress");
 
         submodal.style.display = "none";
+    }
+
+    function ShowCollectionDialog(platformId) {
+        modalVariables = platformId;
+        showSubDialog("collectionaddgame");
     }
 </script>
