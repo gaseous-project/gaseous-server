@@ -8,9 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="gaseous.IGDB" Version="1.0.0" />
     <PackageReference Include="MySql.Data" Version="8.1.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
-    <PackageReference Include="IGDB" Version="2.3.2" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Database\" />
