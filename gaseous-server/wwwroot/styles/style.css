@@ -143,6 +143,12 @@ h3 {
     filter: invert(100%);
 }
 
+.banner_button_image_smaller {
+    height: 16px;
+    width: 16px;
+    margin: unset;
+}
+
 #banner_header {
     background-color: rgba(0, 22, 56, 0.8);
     backdrop-filter: blur(8px);

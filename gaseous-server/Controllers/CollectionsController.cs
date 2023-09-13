@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using gaseous_server.Classes;
 using Microsoft.AspNetCore.Mvc;
 
 namespace gaseous_server.Controllers
@@ -159,7 +160,43 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                return Ok(Classes.Collections.EditCollection(CollectionId, Item));
+                return Ok(Classes.Collections.EditCollection(CollectionId, Item, true));
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        /// <summary>
+        /// Edits an existing collection
+        /// </summary>
+        /// <param name="CollectionId"></param>
+        /// <param name="Item"></param>
+        /// <returns></returns>
+        [HttpPatch]
+        [Route("{CollectionId}/AlwaysInclude")]
+        [ProducesResponseType(typeof(Classes.Collections.CollectionItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult EditCollectionAlwaysInclude(long CollectionId, [FromQuery]bool Rebuild, [FromBody]Collections.CollectionItem.AlwaysIncludeItem Inclusion)
+        {
+            try
+            {
+                Collections.CollectionItem collectionItem = Classes.Collections.GetCollection(CollectionId);
+                bool ItemFound = false;
+                foreach (Collections.CollectionItem.AlwaysIncludeItem includeItem in collectionItem.AlwaysInclude)
+                {
+                    if (includeItem.PlatformId == Inclusion.PlatformId && includeItem.GameId == Inclusion.GameId)
+                    {
+                        ItemFound = true;
+                    }
+                }
+                if (ItemFound == false)
+                {
+                    collectionItem.AlwaysInclude.Add(Inclusion);
+                }
+
+                return Ok(Classes.Collections.EditCollection(CollectionId, collectionItem, Rebuild));
             }
             catch
             {

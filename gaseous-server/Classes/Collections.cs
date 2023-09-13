@@ -86,7 +86,7 @@ namespace gaseous_server.Classes
             return collectionItem;
         }
 
-        public static CollectionItem EditCollection(long Id, CollectionItem item)
+        public static CollectionItem EditCollection(long Id, CollectionItem item, bool ForceRebuild = true)
         {
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "UPDATE RomCollections SET `Name`=@name, Description=@description, Platforms=@platforms, Genres=@genres, Players=@players, PlayerPerspectives=@playerperspectives, Themes=@themes, MinimumRating=@minimumrating, MaximumRating=@maximumrating, MaximumRomsPerPlatform=@maximumromsperplatform, MaximumBytesPerPlatform=@maximumbytesperplatform, MaximumCollectionSizeInBytes=@maximumcollectionsizeinbytes, FolderStructure=@folderstructure, IncludeBIOSFiles=@includebiosfiles, AlwaysInclude=@alwaysinclude, BuiltStatus=@builtstatus WHERE Id=@id";
@@ -107,19 +107,36 @@ namespace gaseous_server.Classes
             dbDict.Add("folderstructure", Common.ReturnValueIfNull(item.FolderStructure, CollectionItem.FolderStructures.Gaseous));
             dbDict.Add("includebiosfiles", Common.ReturnValueIfNull(item.IncludeBIOSFiles, 0));
             dbDict.Add("alwaysinclude", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.AlwaysInclude, new List<CollectionItem.AlwaysIncludeItem>())));
-            dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.WaitingForBuild);
-            db.ExecuteCMD(sql, dbDict);
-
+            
             string CollectionZipFile = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, Id + ".zip");
-            if (File.Exists(CollectionZipFile))
+            if (ForceRebuild == true) 
             {
-                Logging.Log(Logging.LogType.Warning, "Collections", "Deleting existing build of collection: " + item.Name);
-                File.Delete(CollectionZipFile);
+                dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.WaitingForBuild);
+                if (File.Exists(CollectionZipFile))
+                {
+                    Logging.Log(Logging.LogType.Warning, "Collections", "Deleting existing build of collection: " + item.Name);
+                    File.Delete(CollectionZipFile);
+                }
             }
-
+            else
+            {
+                if (File.Exists(CollectionZipFile))
+                {
+                    dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.Completed);
+                }
+                else
+                {
+                    dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.NoStatus);
+                }
+            }
+            db.ExecuteCMD(sql, dbDict);
+            
             CollectionItem collectionItem = GetCollection(Id);
 
-            StartCollectionItemBuild(Id);
+            if (collectionItem.BuildStatus == CollectionItem.CollectionBuildStatus.WaitingForBuild)
+            {
+                StartCollectionItemBuild(Id);
+            }
 
             return collectionItem;
         }
