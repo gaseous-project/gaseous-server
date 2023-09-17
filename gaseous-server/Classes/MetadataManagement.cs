@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using gaseous_server.Models;
 using gaseous_tools;
 
 namespace gaseous_server.Classes
@@ -9,8 +10,29 @@ namespace gaseous_server.Classes
 		public static void RefreshMetadata(bool forceRefresh = false)
 		{
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT Id, `Name` FROM Game;";
-			DataTable dt = db.ExecuteCMD(sql);
+            string sql = "";
+			DataTable dt = new DataTable();
+			
+			// update platforms
+			sql = "SELECT Id, `Name` FROM Platform;";
+			dt = db.ExecuteCMD(sql);
+
+			foreach (DataRow dr in dt.Rows)
+			{
+				try
+				{
+					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing metadata for platform " + dr["name"] + " (" + dr["id"] + ")");
+					Metadata.Platforms.GetPlatform((long)dr["id"], true);
+				}
+				catch (Exception ex)
+				{
+					Logging.Log(Logging.LogType.Critical, "Metadata Refresh", "An error occurred while refreshing metadata for " + dr["name"], ex);
+				}
+			}
+
+			// update games
+			sql = "SELECT Id, `Name` FROM Game;";
+			dt = db.ExecuteCMD(sql);
 
 			foreach (DataRow dr in dt.Rows)
 			{

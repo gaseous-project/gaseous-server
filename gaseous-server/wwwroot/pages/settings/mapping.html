@@ -1,0 +1,87 @@
+<div id="gametitle">
+    <h1 id="gametitle_label">Platform Mapping</h1>
+</div>
+
+<p>When determining the platform of a ROM or image (which is later used when determining the game title), only the "Unique File Extensions" are used. All other extensions are ignored as they will limit the ability of Gaseous to determine the game title (see <a href="https://github.com/gaseous-project/gaseous-server#game-image-title-matching" class="romlink">https://github.com/gaseous-project/gaseous-server#game-image-title-matching</a> for more information on how matching works).</p>
+
+<p>This list is pre-populated with some of the more common platforms. New platforms will appear in this list as titles are added.</p>
+
+<p><button value="Export to JSON" onclick="DownloadJSON();">Export to JSON</button><button id="importjson" value="Import JSON">Import JSON</button><button value="Reset to Default" onclick="loadPlatformMapping(true);">Reset to Default</button></p>
+
+<input id='uploadjson' type='file' name='files' hidden/>
+
+<table id="settings_mapping_table" style="width: 100%;" cellspacing="0">
+    
+</table>
+
+<script type="text/javascript">
+    function loadPlatformMapping(Overwrite) {
+        var queryString = '';
+        if (Overwrite == true) {
+            queryString = '?ResetToDefault=true';
+        }
+
+        ajaxCall(
+            '/api/v1/PlatformMaps' + queryString,
+            'GET',
+            function (result) {
+                var newTable = document.getElementById('settings_mapping_table');
+                newTable.innerHTML = '';
+                newTable.appendChild(
+                    createTableRow(
+                        true, 
+                        [ 
+                            'Platform',
+                            'Supported File Extensions',
+                            'Unique File Extensions',
+                            'Has Web Emulator'
+                        ],
+                        '',
+                        ''
+                        )
+                    );
+
+                for (var i = 0; i < result.length; i++) {
+                    var hasWebEmulator = '';
+                    if (result[i].webEmulator.type.length > 0) {
+                        hasWebEmulator = 'Yes';
+                    }
+
+                    var newRow = [
+                        '<span onclick="ShowPlatformMappingDialog(' + result[i].igdbId + ');" class="romlink">' + result[i].igdbName + '</span>',
+                        result[i].extensions.supportedFileExtensions.join(', '),
+                        result[i].extensions.uniqueFileExtensions.join(', '),
+                        hasWebEmulator
+                    ];
+
+                    newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell logs_table_cell'));
+                }
+            }
+        );
+    }
+
+    function DownloadJSON() {
+        window.open('/api/v1/PlatformMaps', '_blank');
+    }
+
+    document.getElementById('importjson').addEventListener('click', openDialog);
+
+    function openDialog() {
+        document.getElementById('uploadjson').click();
+    }
+
+    $('#uploadjson').change(function () {
+        $(this).simpleUpload("/api/v1/PlatformMaps", {
+            start: function (file) {
+                //upload started
+                console.log("JSON upload started");
+            },
+            success: function(data){
+                //upload successful
+                window.location.reload();
+            }
+        });
+    });
+
+    loadPlatformMapping();
+</script>

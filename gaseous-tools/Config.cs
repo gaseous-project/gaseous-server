@@ -34,6 +34,14 @@ namespace gaseous_tools
             }
         }
 
+        public static string PlatformMappingFile
+        {
+            get
+            {
+                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".gaseous-server", "platformmap.json");
+            }
+        }
+
         public static ConfigFile.Database DatabaseConfiguration
         {
             get

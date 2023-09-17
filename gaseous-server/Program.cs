@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
 using gaseous_server;
+using gaseous_server.Models;
 using gaseous_server.SignatureIngestors.XML;
 using gaseous_tools;
 using Microsoft.AspNetCore.Http.Features;
@@ -141,8 +142,8 @@ Config.LibraryConfiguration.InitLibrary();
 gaseous_server.Classes.Metadata.Games.GetGame(0, false, false, false);
 gaseous_server.Classes.Metadata.Platforms.GetPlatform(0);
 
-// organise library
-//gaseous_server.Classes.ImportGame.OrganiseLibrary();
+// extract platform map if not present
+PlatformMapping.ExtractPlatformMap();
 
 // add background tasks
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.SignatureIngestor, 60));

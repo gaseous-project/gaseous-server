@@ -22,7 +22,7 @@ namespace gaseous_server.Classes.Metadata
                     Config.IGDB.Secret
                 );
 
-        public static Platform? GetPlatform(long Id)
+        public static Platform? GetPlatform(long Id, bool forceRefresh = false)
 		{
             if (Id == 0)
             {
@@ -46,18 +46,18 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<Platform> RetVal = _GetPlatform(SearchUsing.id, Id);
+                Task<Platform> RetVal = _GetPlatform(SearchUsing.id, Id, forceRefresh);
                 return RetVal.Result;
             }
         }
 
-		public static Platform GetPlatform(string Slug)
+		public static Platform GetPlatform(string Slug, bool forceRefresh = false)
 		{
-			Task<Platform> RetVal = _GetPlatform(SearchUsing.slug, Slug);
+			Task<Platform> RetVal = _GetPlatform(SearchUsing.slug, Slug, forceRefresh);
 			return RetVal.Result;
 		}
 
-		private static async Task<Platform> _GetPlatform(SearchUsing searchUsing, object searchValue)
+		private static async Task<Platform> _GetPlatform(SearchUsing searchUsing, object searchValue, bool forceRefresh)
 		{
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
@@ -68,6 +68,11 @@ namespace gaseous_server.Classes.Metadata
             else
             {
                 cacheStatus = Storage.GetCacheStatus("Platform", (string)searchValue);
+            }
+
+            if (forceRefresh == true)
+            {
+                if (cacheStatus == Storage.CacheStatus.Current) { cacheStatus = Storage.CacheStatus.Expired; }
             }
 
             // set up where clause
@@ -91,11 +96,13 @@ namespace gaseous_server.Classes.Metadata
                     returnValue = await GetObjectFromServer(WhereClause);
                     Storage.NewCacheValue(returnValue);
                     UpdateSubClasses(returnValue);
+                    AddPlatformMapping(returnValue);
                     return returnValue;
                 case Storage.CacheStatus.Expired:
                     returnValue = await GetObjectFromServer(WhereClause);
                     Storage.NewCacheValue(returnValue, true);
                     UpdateSubClasses(returnValue);
+                    AddPlatformMapping(returnValue);
                     return returnValue;
                 case Storage.CacheStatus.Current:
                     return Storage.GetCacheValue<Platform>(returnValue, "id", (long)searchValue);
@@ -117,6 +124,31 @@ namespace gaseous_server.Classes.Metadata
             if (platform.PlatformLogo != null)
             {
                 PlatformLogo platformLogo = PlatformLogos.GetPlatformLogo(platform.PlatformLogo.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platform));
+            }
+        }
+
+        private static void AddPlatformMapping(Platform platform)
+        {
+            // ensure a mapping item exists for this platform
+            Models.PlatformMapping.PlatformMapItem item = new Models.PlatformMapping.PlatformMapItem();
+            try
+            {
+                Logging.Log(Logging.LogType.Information, "Platform Map", "Checking if " + platform.Name + " is in database.");
+                item = Models.PlatformMapping.GetPlatformMap((long)platform.Id);
+                // exists - skip
+                Logging.Log(Logging.LogType.Information, "Platform Map", "Skipping import of " + platform.Name + " - already in database.");
+            }
+            catch
+            {
+                Logging.Log(Logging.LogType.Information, "Platform Map", "Importing " + platform.Name + " from predefined data.");
+                // doesn't exist - add it
+                item = new Models.PlatformMapping.PlatformMapItem{
+                    IGDBId = (long)platform.Id,
+                    IGDBName = platform.Name,
+                    IGDBSlug = platform.Slug,
+                    AlternateNames = new List<string>{ platform.AlternativeName }
+                };
+                Models.PlatformMapping.WritePlatformMap(item, false);
             }
         }
 

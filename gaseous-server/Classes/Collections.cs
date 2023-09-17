@@ -437,7 +437,7 @@ namespace gaseous_server.Classes
                                 case CollectionItem.FolderStructures.RetroPie:
                                     try
                                     {
-                                        PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMappingByIGDBid(collectionPlatformItem.Id);
+                                        PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(collectionPlatformItem.Id);
                                         ZipPlatformPath = Path.Combine(ZipFileTempPath, "roms", platformMapItem.RetroPieDirectoryName);
                                     }
                                     catch
