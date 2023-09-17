@@ -146,7 +146,7 @@ h3 {
 .banner_button_image_smaller {
     height: 16px;
     width: 16px;
-    margin: unset;
+    margin-left: 5px;
 }
 
 #banner_header {

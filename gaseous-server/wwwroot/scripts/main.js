@@ -283,3 +283,94 @@ function syntaxHighlight(json) {
         return '<span class="' + cls + '">' + match + '</span>';
     });
 }
+
+function ShowPlatformMappingDialog(platformId) {
+    showDialog('platformmapedit', platformId);
+}
+
+function CreateEditableTable(TableName, Headers) {
+    var eDiv = document.createElement('div');
+
+    var eTable = document.createElement('table');
+    eTable.id = 'EditableTable_' + TableName;
+    eTable.style.width = '100%';
+
+    var headRow = document.createElement('tr');
+    for (var i = 0; i < Headers.length; i++) {
+        var headCell = document.createElement('th');
+        headCell.id = 'EditableTable_' + TableName + '_' + Headers[i].name;
+        headCell.innerHTML = Headers[i].label;
+        headRow.appendChild(headCell);
+    }
+    eTable.appendChild(headRow);
+
+    eDiv.appendChild(eTable);
+
+    // add more button
+    var addButton = document.createElement('button');
+    addButton.value = 'Add Row';
+    addButton.innerHTML = 'Add Row';
+    
+    $(addButton).click(function() {
+        eTable.appendChild(AddEditableTableRow(Headers));
+    });
+
+    eDiv.appendChild(addButton);
+
+    return eDiv;
+}
+
+function AddEditableTableRow(Headers) {
+    var uniqueId = Math.floor(Math.random() * Date.now());
+
+    var row = document.createElement('tr');
+    row.setAttribute('id', uniqueId);
+    for (var i = 0; i < Headers.length; i++) {
+        var cell = document.createElement('td');
+
+        var input = document.createElement('input');
+        input.type = 'text';
+        input.setAttribute('data-cell', Headers[i].name);
+        input.style.width = '95%';
+
+        cell.appendChild(input);
+        row.appendChild(cell);
+    }
+
+    // delete button
+    var delButtonCell = document.createElement('td');
+    delButtonCell.style.textAlign = 'right';
+    var delButton = document.createElement('button');
+    delButton.value = 'Delete';
+    delButton.innerHTML = 'Delete';
+    delButton.setAttribute('onclick', 'document.getElementById("' + uniqueId + '").remove();');
+
+    delButtonCell.appendChild(delButton);
+    row.appendChild(delButtonCell);
+
+    return row;
+}
+
+function LoadEditableTableData(TableName, Headers, Values) {
+    var eTable = document.getElementById('EditableTable_' + TableName);
+
+    for (var i = 0; i < Values.length; i++) {
+        // get new row
+        var row = AddEditableTableRow(Headers);
+        for (var v = 0; v < row.childNodes.length; v++) {
+            // looking at the cells here
+            var cell = row.childNodes[v];
+            for (var c = 0; c < cell.childNodes.length; c++) {
+                if (cell.childNodes[c].getAttribute('data-cell')) {
+                    var nodeName = cell.childNodes[c].getAttribute('data-cell');
+                    if (Values[i][nodeName]) {
+                        row.childNodes[v].childNodes[c].value = Values[i][nodeName];
+                    }
+                    break;
+                }
+            }
+        }
+
+        eTable.appendChild(row);
+    }
+}

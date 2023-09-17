@@ -74,9 +74,7 @@ namespace gaseous_tools
 
                 // write log file
                 string JsonOutput = Newtonsoft.Json.JsonConvert.SerializeObject(logItem, serializerSettings);
-                StreamWriter jsonLogFile = File.AppendText(Config.LogFilePath);
-                jsonLogFile.WriteLine(JsonOutput);
-                jsonLogFile.Close();
+                File.AppendAllText(Config.LogFilePath, JsonOutput);
             }
 
             // quick clean before we go
@@ -116,7 +114,14 @@ namespace gaseous_tools
                 FileInfo fi = new FileInfo(file);
                 if (fi.LastAccessTime.AddDays(Config.LoggingConfiguration.LogRetention) < DateTime.Now)
                 {
-                    fi.Delete();
+                    try
+                    {
+                        fi.Delete();
+                    }
+                    catch
+                    {
+                        Log(LogType.Warning, "Log Cleanup", "Failed purging log " + fi.FullName);
+                    }
                 }
             }
         }

@@ -31,7 +31,7 @@
                 for (var i = 0; i < result.length; i++) {
                     var exceptionString = '';
                     if (result[i].exceptionValue) {
-                        exceptionString = "<h3>Exception</h3><pre class='logs_table_exception'>" + syntaxHighlight(JSON.stringify(result[i].exceptionValue, null, 2)) + "</pre>";
+                        exceptionString = "<h3>Exception</h3><pre class='logs_table_exception'>" + syntaxHighlight(JSON.stringify(result[i].exceptionValue, null, 2)).replace(/\\n/g, "<br />    ") + "</pre>";
                     }
 
                     var newRow = [

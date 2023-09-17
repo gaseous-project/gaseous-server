@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
+using gaseous_server.Models;
 using gaseous_tools;
 using IGDB.Models;
 using Microsoft.AspNetCore.Http;
@@ -22,6 +23,11 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<Platform>), StatusCodes.Status200OK)]
         public ActionResult Platform()
         {
+            return Ok(PlatformsController.GetPlatforms());
+        }
+
+        public static List<Platform> GetPlatforms()
+        {
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
             string sql = "SELECT * FROM gaseous.Platform WHERE Id IN (SELECT DISTINCT PlatformId FROM Games_Roms) ORDER BY `Name` ASC;";
@@ -34,7 +40,7 @@ namespace gaseous_server.Controllers
                 RetVal.Add(Classes.Metadata.Platforms.GetPlatform((long)dr["id"]));
             }
 
-            return Ok(RetVal);
+            return RetVal;
         }
 
         [HttpGet]

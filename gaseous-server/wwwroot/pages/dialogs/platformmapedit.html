@@ -1,0 +1,257 @@
+<div style="position: absolute; top: 60px; left: 10px; right: 10px; bottom: 40px; overflow-x: scroll;">
+    <div style="width: 985px;">
+        <h3>Title Matching</h3>
+        <table style="width: 100%;">
+            <tr>
+                <td style="width: 25%; vertical-align: top;">
+                    <h4>Alternative Names</h4>
+                </td>
+                <td>
+                    <select id="mapping_edit_alternativenames" multiple="multiple" style="width: 100%;"></select>
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 25%; vertical-align: top;">
+                    <h4>Supported File Extensions</h4>
+                </td>
+                <td>
+                    <select id="mapping_edit_supportedfileextensions" multiple="multiple" style="width: 100%;"></select>
+                </td>
+            </tr>
+        </table>
+
+        <h3>Collections</h3>
+        <table style="width: 100%;">
+            <tr>
+                <td style="width: 25%;">
+                    <h4>Standard Directory Naming</h4>
+                </td>
+                <td style="text-align: right;">
+                    <input id="mapping_edit_igdbslug" readonly="readonly" type="text" style="width: 95%;"/>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2"><strong>Note</strong>: Standard directory naming uses the IGDB slug for the platform is not editable.</td>
+            </tr>
+            <tr>
+                <td>
+                    <h4>RetroPie Directory Naming</h4>
+                </td>
+                <td style="text-align: right;">
+                    <input id="mapping_edit_retropie" type="text" style="width: 95%;"/>
+                </td>
+            </tr>
+        </table>
+
+        <h3>Web Emulator</h3>
+        <table style="width: 100%;">
+            <tr>
+                <td style="width: 25%;">
+                    <h4>Web Emulator</h4>
+                </td>
+                <td>
+                    <input id="mapping_edit_enablewebemulator" type="checkbox"><label for="mapping_edit_enablewebemulator" style="margin-left: 5px;">Enabled</label>
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 25%;">
+                    <h4>Engine</h4>
+                </td>
+                <td>
+                    <select id="mapping_edit_webemulatorengine" style="width: 100%;">
+                        <option value="">-</option>
+                        <option value="EmulatorJS">EmulatorJS</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 25%;">
+                    <h4>Core</h4>
+                </td>
+                <td style="text-align: right;">
+                    <input id="mapping_edit_webemulatorcore" type="text" style="width: 95%;"/>
+                </td>
+            </tr>
+        </table>
+
+        <h3>BIOS/Firmware</h3>
+        <div id="mapping_edit_bios"></div>
+    </div>
+</div>
+
+<div style="position: absolute; height: 35px; left: 10px; right: 10px; bottom: 0px; text-align: right;">
+    <button value="Ok" onclick="SubmitMappingItem();">Ok</button>
+</div>
+
+
+
+<script type="text/javascript">
+    var modalContent = document.getElementsByClassName('modal-content');
+    if (!modalContent[0].classList.contains('collections_modal')) {
+        modalContent[0].classList.add('collections_modal');
+    }
+
+    ajaxCall(
+        '/api/v1/PlatformMaps/' + modalVariables,
+        'GET',
+        function (result) {
+            // set heading
+            document.getElementById('modal-heading').innerHTML = result.igdbName;
+
+            // populate page
+            $('#mapping_edit_alternativenames').select2 ({
+                tags: true,
+                tokenSeparators: [',']
+            });
+            AddTokensFromList('#mapping_edit_alternativenames', result.alternateNames);
+
+            $('#mapping_edit_supportedfileextensions').select2 ({
+                tags: true,
+                tokenSeparators: [','],
+                createTag: function (params) {
+                    if (params.term.indexOf('.') === -1) {
+                        // Return null to disable tag creation
+                        return null;
+                    }
+
+                    return {
+                        id: params.term.toUpperCase(),
+                        text: params.term.toUpperCase()
+                    }
+                }
+            });
+            AddTokensFromList('#mapping_edit_supportedfileextensions', result.extensions.supportedFileExtensions);
+
+            document.getElementById('mapping_edit_igdbslug').value = result.igdbSlug;
+            document.getElementById('mapping_edit_retropie').value = result.retroPieDirectoryName;
+
+            $('#mapping_edit_webemulatorengine').select2();
+            if (result.webEmulator.type.length > 0) {
+                document.getElementById('mapping_edit_enablewebemulator').checked = true;
+                $('#mapping_edit_webemulatorengine').val(result.webEmulator.type);
+                $('#mapping_edit_webemulatorengine').trigger('change');
+                document.getElementById('mapping_edit_webemulatorcore').value = result.webEmulator.core;
+            } else {
+                document.getElementById('mapping_edit_enablewebemulator').checked = false;
+            }
+
+            var biosTableHeaders = [
+                        {
+                            "name": "filename",
+                            "label": "Filename"
+                        },
+                        {
+                            "name": "description",
+                            "label": "Description"
+                        },
+                        {
+                            "name": "hash",
+                            "label": "MD5 Hash"
+                        }
+                    ];
+            document.getElementById('mapping_edit_bios').appendChild(
+                CreateEditableTable(
+                    'bios',
+                    biosTableHeaders
+                )
+            );
+
+            LoadEditableTableData('bios', biosTableHeaders, result.bios);
+        }
+    );
+
+    function AddTokensFromList(selectObj, tagList) {
+        for (var i = 0; i < tagList.length; i++) {
+            var data = {
+                id: tagList[i],
+                text: tagList[i]
+            }
+
+            var newOption = new Option(data.text, data.id, true, true);
+            $(selectObj).append(newOption).trigger('change');
+        }
+    }
+
+    function SubmitMappingItem() {
+        var alternateNames = [];
+        for (var i = 0; i < document.getElementById('mapping_edit_alternativenames').childNodes.length; i++) {
+            var optionObj = document.getElementById('mapping_edit_alternativenames').childNodes[i];
+            alternateNames.push(optionObj.innerHTML);
+        }
+
+        var knownExtensions = $('#mapping_edit_supportedfileextensions').val();
+        
+        var extensions = {
+            "IGDBId": modalVariables,
+            "supportedFileExtensions": knownExtensions,
+            "uniqueFileExtensions": knownExtensions
+        };
+
+        var emulator = null;
+        if (document.getElementById('mapping_edit_enablewebemulator').checked == true) {
+            emulator = {
+                "type": document.getElementById('mapping_edit_webemulatorengine').value,
+                "core": document.getElementById('mapping_edit_webemulatorcore').value
+            };
+        }
+
+        var bios = [];
+        var biosTable = document.getElementById('EditableTable_bios');
+        // get rows
+        for (var i = 0; i < biosTable.childNodes.length; i++) {
+            var rowObj = biosTable.childNodes[i];
+            var biosObj = {};
+            var addBiosObj = false;
+
+            // get cells
+            for (var v = 0; v < rowObj.childNodes.length; v++) {
+                var cell = rowObj.childNodes[v];
+                if (cell.tagName.toLowerCase() != 'th') {
+                    // get input boxes
+                    for (var c = 0; c < cell.childNodes.length; c++) {
+                        var element = cell.childNodes[c];
+                        if (element) {
+                            if (element.getAttribute('data-cell')) {
+                                var nodeName = element.getAttribute('data-cell');
+                                biosObj[nodeName] = element.value;
+                                addBiosObj = true;
+                                
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (addBiosObj == true) {
+                bios.push(biosObj);
+            }
+        }
+
+        var item = {
+            "igdbId": Number(modalVariables),
+            "igdbName": document.getElementById('modal-heading').innerHTML,
+            "igdbSlug": document.getElementById('mapping_edit_igdbslug').value,
+            "alternateNames": alternateNames,
+            "extensions": extensions,
+            "retroPieDirectoryName": document.getElementById('mapping_edit_retropie').value,
+            "webEmulator": emulator,
+            "bios": bios
+        };
+
+        console.log(JSON.stringify(item));
+
+        ajaxCall(
+            '/api/v1/PlatformMaps/' + modalVariables,
+            'PATCH',
+            function (result) {
+                loadPlatformMapping();
+                closeDialog();
+            },
+            function (error) {
+                console.error(JSON.stringify(error));
+            },
+            JSON.stringify(item)
+        );
+    }
+</script>
