@@ -15,7 +15,10 @@ namespace gaseous_server.Models
 {
 	public class PlatformMapping
 	{
-        public static void ExtractPlatformMap()
+        /// <summary>
+        /// Updates the platform map from the embedded platform map resource
+        /// </summary>
+        public static void ExtractPlatformMap(bool ResetToDefault = false)
         {
             using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("gaseous_server.Support.PlatformMap.json"))
             using (StreamReader reader = new StreamReader(stream))
@@ -31,8 +34,16 @@ namespace gaseous_server.Models
                     {
                         Logging.Log(Logging.LogType.Information, "Platform Map", "Checking if " + mapItem.IGDBName + " is in database.");
                         PlatformMapItem item = GetPlatformMap(mapItem.IGDBId);
-                        // exists - skip
-                        Logging.Log(Logging.LogType.Information, "Platform Map", "Skipping import of " + mapItem.IGDBName + " - already in database.");
+                        // exists
+                        if (ResetToDefault == false)
+                        {
+                            Logging.Log(Logging.LogType.Information, "Platform Map", "Skipping import of " + mapItem.IGDBName + " - already in database.");
+                        }
+                        else
+                        {
+                            WritePlatformMap(mapItem, true);
+                            Logging.Log(Logging.LogType.Information, "Platform Map", "Overwriting " + mapItem.IGDBName + " with default values.");
+                        }
                     }
                     catch
                     {
@@ -40,6 +51,35 @@ namespace gaseous_server.Models
                         // doesn't exist - add it
                         WritePlatformMap(mapItem, false);
                     }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Updates the platform map from the provided file - existing items are overwritten
+        /// </summary>
+        /// <param name="ImportFile"></param>
+        public static void ExtractPlatformMap(string ImportFile)
+        {
+            string rawJson = File.ReadAllText(ImportFile);
+            List<PlatformMapItem> platforms = new List<PlatformMapItem>();
+            platforms = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PlatformMapItem>>(rawJson);
+
+            foreach (PlatformMapItem mapItem in platforms)
+            {
+                try
+                {
+                    PlatformMapItem item = GetPlatformMap(mapItem.IGDBId);
+
+                    // still here? we must have found the item we're looking for! overwrite it
+                    Logging.Log(Logging.LogType.Information, "Platform Map", "Replacing " + mapItem.IGDBName + " from external JSON file.");
+                    WritePlatformMap(mapItem, true);
+                }
+                catch
+                {
+                    // we caught a not found error, insert a new record
+                    Logging.Log(Logging.LogType.Information, "Platform Map", "Importing " + mapItem.IGDBName + " from external JSON file.");
+                    WritePlatformMap(mapItem, false);
                 }
             }
         }

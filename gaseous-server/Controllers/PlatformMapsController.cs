@@ -21,8 +21,13 @@ namespace gaseous_server.Controllers
     {
         [HttpGet]
         [ProducesResponseType(typeof(List<PlatformMapping.PlatformMapItem>), StatusCodes.Status200OK)]
-        public ActionResult GetPlatformMap()
+        public ActionResult GetPlatformMap(bool ResetToDefault = false)
         {
+            if (ResetToDefault == true)
+            {
+                PlatformMapping.ExtractPlatformMap(true);
+            }
+
             return Ok(PlatformMapping.PlatformMap);
         }
 
@@ -49,6 +54,60 @@ namespace gaseous_server.Controllers
             {
                 return NotFound();
             }
+        }
+
+        [HttpPost]
+        [ProducesResponseType(typeof(List<IFormFile>), StatusCodes.Status200OK)]
+        [RequestSizeLimit(long.MaxValue)]
+        [DisableRequestSizeLimit, RequestFormLimits(MultipartBodyLengthLimit = long.MaxValue, ValueLengthLimit = int.MaxValue)]
+        public async Task<IActionResult> UploadPlatformMap(List<IFormFile> files)
+        {
+            Guid sessionid = Guid.NewGuid();
+
+            string workPath = Path.Combine(Config.LibraryConfiguration.LibraryUploadDirectory, sessionid.ToString());
+
+            long size = files.Sum(f => f.Length);
+
+            List<Dictionary<string, object>> UploadedFiles = new List<Dictionary<string, object>>();
+
+            foreach (IFormFile formFile in files)
+            {
+                if (formFile.Length > 0)
+                {
+                    Guid FileId = Guid.NewGuid();
+
+                    string filePath = Path.Combine(workPath, Path.GetFileName(formFile.FileName));
+
+                    if (!Directory.Exists(workPath))
+                    {
+                        Directory.CreateDirectory(workPath);
+                    }
+
+                    using (var stream = System.IO.File.Create(filePath))
+                    {
+                        await formFile.CopyToAsync(stream);
+
+                        Dictionary<string, object> UploadedFile = new Dictionary<string, object>();
+                        UploadedFile.Add("id", FileId.ToString());
+                        UploadedFile.Add("originalname", Path.GetFileName(formFile.FileName));
+                        UploadedFile.Add("fullpath", filePath);
+                        UploadedFiles.Add(UploadedFile);
+                    }
+                }
+            }
+
+            // Process uploaded files
+            foreach (Dictionary<string, object> UploadedFile in UploadedFiles)
+            {
+                Models.PlatformMapping.ExtractPlatformMap((string)UploadedFile["fullpath"]);
+            }
+
+            if (Directory.Exists(workPath))
+            {
+                Directory.Delete(workPath, true);
+            }
+
+            return Ok(new { count = files.Count, size });
         }
 
         [HttpPost]
