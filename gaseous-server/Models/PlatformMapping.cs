@@ -178,12 +178,12 @@ namespace gaseous_server.Models
                     sql = "INSERT INTO PlatformMap_Extensions (Id, Extension) VALUES (@Id, @Extension);";
                     dbDict.Clear();
                     dbDict.Add("Id", item.IGDBId);
-                    dbDict.Add("Extension", extension);
+                    dbDict.Add("Extension", extension.Trim().ToUpper());
                     db.ExecuteCMD(sql, dbDict);
                 }
 
                 // delete duplicates
-                sql = "DELETE FROM PlatformMap_UniqueExtensions; INSERT INTO PlatformMap_UniqueExtensions SELECT * FROM PlatformMap_Extensions WHERE Extension IN (SELECT Extension FROM PlatformMap_Extensions GROUP BY Extension HAVING COUNT(Extension) = 1);";
+                sql = "DELETE FROM PlatformMap_UniqueExtensions; INSERT INTO PlatformMap_UniqueExtensions SELECT * FROM PlatformMap_Extensions WHERE Extension <> '.ZIP' AND Extension IN (SELECT Extension FROM PlatformMap_Extensions GROUP BY Extension HAVING COUNT(Extension) = 1);";
                 db.ExecuteCMD(sql);
             }
 
