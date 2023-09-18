@@ -82,7 +82,7 @@ namespace gaseous_tools
         {
             get
             {
-                string logFileExtension = "json";
+                string logFileExtension = "txt";
                 
                 string logPathName = Path.Combine(LogPath, "Server Log " + DateTime.Now.ToUniversalTime().ToString("yyyyMMdd") + "." + logFileExtension);
                 return logPathName;
@@ -468,7 +468,8 @@ namespace gaseous_tools
             {
                 public bool DebugLogging = false;
 
-                public int LogRetention = 30;
+                // log retention in days
+                public int LogRetention = 7;
 
                 public enum LoggingFormat
                 {

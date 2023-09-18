@@ -236,7 +236,7 @@ namespace gaseous_tools
 			{
 				DataTable RetTable = new DataTable();
 
-                Logging.Log(Logging.LogType.Debug, "Database", "Connecting to database");
+                Logging.Log(Logging.LogType.Debug, "Database", "Connecting to database", null, true);
                 MySqlConnection conn = new MySqlConnection(DBConn);
 				conn.Open();
 
@@ -254,11 +254,11 @@ namespace gaseous_tools
 
 				try
 				{
-                    Logging.Log(Logging.LogType.Debug, "Database", "Executing sql: '" + SQL + "'");
+                    Logging.Log(Logging.LogType.Debug, "Database", "Executing sql: '" + SQL + "'", null, true);
 					if (Parameters.Count > 0)
 					{
 						string dictValues = string.Join(";", Parameters.Select(x => string.Join("=", x.Key, x.Value)));
-						Logging.Log(Logging.LogType.Debug, "Database", "Parameters: " + dictValues);
+						Logging.Log(Logging.LogType.Debug, "Database", "Parameters: " + dictValues, null, true);
 					}
                     RetTable.Load(cmd.ExecuteReader());
 				} catch (Exception ex) {
@@ -267,7 +267,7 @@ namespace gaseous_tools
 					Trace.WriteLine("Full exception: " + ex.ToString());
 				}
 
-				Logging.Log(Logging.LogType.Debug, "Database", "Closing database connection");
+				Logging.Log(Logging.LogType.Debug, "Database", "Closing database connection", null, true);
 				conn.Close();
 
 				return RetTable;

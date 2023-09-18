@@ -68,49 +68,49 @@ namespace gaseous_server
                         _LastResult = "";
                         _LastError = null;
 
-                        Logging.Log(Logging.LogType.Information, "Timered Event", "Executing " + _ItemType);
+                        Logging.Log(Logging.LogType.Debug, "Timered Event", "Executing " + _ItemType);
 
                         try
                         {
                             switch (_ItemType)
                             {
                                 case QueueItemType.SignatureIngestor:
-                                    Logging.Log(Logging.LogType.Information, "Timered Event", "Starting Signature Ingestor");
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Signature Ingestor");
                                     SignatureIngestors.XML.XMLIngestor tIngest = new SignatureIngestors.XML.XMLIngestor();
                                     
-                                    Logging.Log(Logging.LogType.Information, "Signature Import", "Processing TOSEC files");
+                                    Logging.Log(Logging.LogType.Debug, "Signature Import", "Processing TOSEC files");
                                     tIngest.Import(Path.Combine(Config.LibraryConfiguration.LibrarySignatureImportDirectory, "TOSEC"), gaseous_signature_parser.parser.SignatureParser.TOSEC);
                                     
-                                    Logging.Log(Logging.LogType.Information, "Signature Import", "Processing MAME Arcade files");
+                                    Logging.Log(Logging.LogType.Debug, "Signature Import", "Processing MAME Arcade files");
                                     tIngest.Import(Path.Combine(Config.LibraryConfiguration.LibrarySignatureImportDirectory, "MAME Arcade"), gaseous_signature_parser.parser.SignatureParser.MAMEArcade);
 
-                                    Logging.Log(Logging.LogType.Information, "Signature Import", "Processing MAME MESS files");
+                                    Logging.Log(Logging.LogType.Debug, "Signature Import", "Processing MAME MESS files");
                                     tIngest.Import(Path.Combine(Config.LibraryConfiguration.LibrarySignatureImportDirectory, "MAME MESS"), gaseous_signature_parser.parser.SignatureParser.MAMEMess);
                                     
                                     break;
 
                                 case QueueItemType.TitleIngestor:
-                                    Logging.Log(Logging.LogType.Information, "Timered Event", "Starting Title Ingestor");
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Title Ingestor");
                                     Classes.ImportGames importGames = new Classes.ImportGames(Config.LibraryConfiguration.LibraryImportDirectory);
                                     break;
 
                                 case QueueItemType.MetadataRefresh:
-                                    Logging.Log(Logging.LogType.Information, "Timered Event", "Starting Metadata Refresher");
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Metadata Refresher");
                                     Classes.MetadataManagement.RefreshMetadata(true);
                                     break;
 
                                 case QueueItemType.OrganiseLibrary:
-                                    Logging.Log(Logging.LogType.Information, "Timered Event", "Starting Library Organiser");
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Library Organiser");
                                     Classes.ImportGame.OrganiseLibrary();
                                     break;
 
                                 case QueueItemType.LibraryScan:
-                                    Logging.Log(Logging.LogType.Information, "Timered Event", "Starting Library Scanner");
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Library Scanner");
                                     Classes.ImportGame.LibraryScan();
                                     break;
 
                                 case QueueItemType.CollectionCompiler:
-                                    Logging.Log(Logging.LogType.Information, "Timered Event", "Starting Collection Compiler");
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Collection Compiler");
                                     Classes.Collections.CompileCollections();
                                     break;
                             }
