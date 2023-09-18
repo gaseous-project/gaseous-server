@@ -3,7 +3,8 @@ name: Build Pre-release Docker Image
 on:
   push:
     tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+(-[preview|rc]+.[0-9])'
+      - 'v[0-9]+.[0-9]+.[0-9]+-preview.[0-9]'
+      - 'v[0-9]+.[0-9]+.[0-9]+-rc.[0-9]'
 
 jobs:
   docker:
