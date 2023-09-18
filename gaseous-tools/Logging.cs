@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
@@ -7,12 +8,7 @@ namespace gaseous_tools
 {
 	public class Logging
 	{
-        // when was the last clean
-        static DateTime LastRetentionClean = DateTime.UtcNow;
-        // how often to clean in hours
-        const int RetentionCleanInterval = 1;
-
-        static public void Log(LogType EventType, string ServerProcess, string Message, Exception? ExceptionValue = null)
+        static public void Log(LogType EventType, string ServerProcess, string Message, Exception? ExceptionValue = null, bool LogToDiskOnly = false)
         {
             LogItem logItem = new LogItem
             {
@@ -20,7 +16,7 @@ namespace gaseous_tools
                 EventType = EventType,
                 Process = ServerProcess,
                 Message = Message,
-                ExceptionValue = ExceptionValue
+                ExceptionValue = Common.ReturnValueIfNull(ExceptionValue, "").ToString()
             };
 
             bool AllowWrite = false;
@@ -65,65 +61,71 @@ namespace gaseous_tools
                 Console.WriteLine(TraceOutput);
                 Console.ResetColor();
 
-                Newtonsoft.Json.JsonSerializerSettings serializerSettings = new Newtonsoft.Json.JsonSerializerSettings
+                if (LogToDiskOnly == false)
                 {
-                    NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
-                    Formatting = Newtonsoft.Json.Formatting.None
-                };
-                serializerSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+                    Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                    string sql = "DELETE FROM ServerLogs WHERE EventTime < @EventRententionDate; INSERT INTO ServerLogs (EventTime, EventType, Process, Message, Exception) VALUES (@EventTime, @EventType, @Process, @Message, @Exception);";
+                    Dictionary<string, object> dbDict = new Dictionary<string, object>();
+                    dbDict.Add("EventRententionDate", DateTime.UtcNow.AddDays(Config.LoggingConfiguration.LogRetention * -1));
+                    dbDict.Add("EventTime", logItem.EventTime);
+                    dbDict.Add("EventType", logItem.EventType);
+                    dbDict.Add("Process", logItem.Process);
+                    dbDict.Add("Message", logItem.Message);
+                    dbDict.Add("Exception", Common.ReturnValueIfNull(logItem.ExceptionValue, "").ToString());
 
-                // write log file
-                string JsonOutput = Newtonsoft.Json.JsonConvert.SerializeObject(logItem, serializerSettings);
-                File.AppendAllText(Config.LogFilePath, JsonOutput);
-            }
-
-            // quick clean before we go
-            if (LastRetentionClean.AddHours(RetentionCleanInterval) < DateTime.UtcNow)
-            {
-                LogCleanup();
+                    try
+                    {
+                        db.ExecuteCMD(sql, dbDict);
+                    }
+                    catch (Exception ex)
+                    {   
+                        LogToDisk(logItem, TraceOutput, ex);
+                    }
+                }
+                else
+                {
+                    LogToDisk(logItem, TraceOutput, null);
+                }
             }
         }
 
-        static public List<LogItem> GetLogs() {
-            string logData = File.ReadAllText(Config.LogFilePath);
+        static void LogToDisk(LogItem logItem, string TraceOutput, Exception? exception)
+        {
+            if (exception != null)
+            {
+                // dump the error
+                File.AppendAllText(Config.LogFilePath, logItem.EventTime.ToString("yyyyMMdd HHmmss") + ": " + logItem.EventType.ToString() + ": " + logItem.Process + ": " + logItem.Message + Environment.NewLine + exception.ToString());
+            
+
+                // something went wrong writing to the db
+                File.AppendAllText(Config.LogFilePath, logItem.EventTime.ToString("yyyyMMdd HHmmss") + ": The following event was unable to be written to the log database:");
+            }
+
+            File.AppendAllText(Config.LogFilePath, TraceOutput);
+        }
+
+        static public List<LogItem> GetLogs() 
+        {
+            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT * FROM ServerLogs ORDER BY Id DESC";
+            DataTable dataTable = db.ExecuteCMD(sql);
 
             List<LogItem> logs = new List<LogItem>();
-            if (File.Exists(Config.LogFilePath))
+            foreach (DataRow row in dataTable.Rows)
             {
-                StreamReader sr = new StreamReader(Config.LogFilePath);
-                while (!sr.EndOfStream)
+                LogItem log = new LogItem
                 {
-                    LogItem logItem = Newtonsoft.Json.JsonConvert.DeserializeObject<LogItem>(sr.ReadLine());
-                    logs.Add(logItem);
-                }
-                logs.Reverse();
+                    EventTime = DateTime.Parse(((DateTime)row["EventTime"]).ToString("yyyy-MM-ddThh:mm:ss") + 'Z'),
+                    EventType = (LogType)row["EventType"],
+                    Process = (string)row["Process"],
+                    Message = (string)row["Message"],
+                    ExceptionValue = (string)row["Exception"]
+                };
+
+                logs.Add(log);
             }
 
             return logs;
-        }
-
-        static public void LogCleanup()
-        {
-            Log(LogType.Information, "Log Cleanup", "Purging log files older than " + Config.LoggingConfiguration.LogRetention + " days");
-            LastRetentionClean = DateTime.UtcNow;
-
-            string[] files = Directory.GetFiles(Config.LogPath, "Server Log *.json");
-
-            foreach (string file in files)
-            {
-                FileInfo fi = new FileInfo(file);
-                if (fi.LastAccessTime.AddDays(Config.LoggingConfiguration.LogRetention) < DateTime.Now)
-                {
-                    try
-                    {
-                        fi.Delete();
-                    }
-                    catch
-                    {
-                        Log(LogType.Warning, "Log Cleanup", "Failed purging log " + fi.FullName);
-                    }
-                }
-            }
         }
 
         public enum LogType
@@ -151,7 +153,7 @@ namespace gaseous_tools
                     _Message = value;
                 }
             }
-            public Exception? ExceptionValue { get; set; }
+            public string? ExceptionValue { get; set; }
         }
     }
 }

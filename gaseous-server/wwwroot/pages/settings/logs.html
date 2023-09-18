@@ -3,7 +3,7 @@
 </div>
 
 <a href="#" class="romlink" onclick="loadLogs();" style="float: right;"><img src="/images/refresh.svg" alt="Refresh" title="Refresh" class="banner_button_image" /></a>
-<table id="settings_events_table" style="width: 100%;" cellspacing="0">
+<table id="settings_events_table" style="width: 960px; max-width: 960px;" cellspacing="0">
     
 </table>
 
@@ -21,6 +21,7 @@
                         [ 
                             ['Event Time', 'logs_table_cell_150px'],
                             ['Severity', 'logs_table_cell_150px'],
+                            'Process',
                             'Message'
                         ],
                         '',
@@ -29,18 +30,26 @@
                     );
 
                 for (var i = 0; i < result.length; i++) {
-                    var exceptionString = '';
-                    if (result[i].exceptionValue) {
-                        exceptionString = "<h3>Exception</h3><pre class='logs_table_exception'>" + syntaxHighlight(JSON.stringify(result[i].exceptionValue, null, 2)).replace(/\\n/g, "<br />    ") + "</pre>";
-                    }
-
                     var newRow = [
                         moment(result[i].eventTime).fromNow(),
                         result[i].eventType,
-                        result[i].process + " - " + result[i].message + exceptionString
+                        result[i].process,
+                        result[i].message
                     ];
 
-                    newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell logs_table_cell'));
+                    newTable.appendChild(createTableRow(false, newRow, 'romrow logs_table_row_' + result[i].eventType, 'romcell logs_table_cell'));
+
+                    if (result[i].exceptionValue) {
+                        var exceptionString = "<h3>Exception</h3><pre class='logs_table_exception' style='width: 795px; word-wrap: break-word; overflow-wrap: break-word; overflow-y: scroll;'>" + syntaxHighlight(JSON.stringify(result[i].exceptionValue, null, 2)).replace(/\\n/g, "<br />    ") + "</pre>";
+                        var exRow = document.createElement('tr');
+                        var leadCell = document.createElement('td');
+                        exRow.appendChild(leadCell);
+                        var exCell = document.createElement('td');
+                        exCell.colSpan = '3';
+                        exCell.innerHTML = exceptionString;
+                        exRow.appendChild(exCell);
+                        newTable.appendChild(exRow);
+                    }
                 }
             }
         );
