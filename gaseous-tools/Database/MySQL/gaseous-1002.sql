@@ -44,3 +44,15 @@ CREATE TABLE `PlatformMap_Bios` (
   `Description` LONGTEXT NOT NULL,
   `Hash` VARCHAR(45) NOT NULL,
   PRIMARY KEY (`Id`, `Filename`, `Hash`));
+
+CREATE TABLE `ServerLogs` (
+  `Id` BIGINT NOT NULL AUTO_INCREMENT,
+  `EventTime` DATETIME NOT NULL,
+  `EventType` INT NOT NULL,
+  `Process` VARCHAR(100) NOT NULL,
+  `Message` LONGTEXT NOT NULL,
+  `Exception` LONGTEXT NULL,
+  PRIMARY KEY (`Id`));
+
+ALTER TABLE `PlatformVersion` 
+CHANGE COLUMN `PlatformLogo` `PlatformLogo` BIGINT NULL DEFAULT NULL ;

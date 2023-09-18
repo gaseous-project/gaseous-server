@@ -893,6 +893,22 @@ button:disabled {
     vertical-align: top;
 }
 
+.logs_table_row_Information:hover {
+    background: rgba(42, 41, 150, 0.3);
+}
+
+.logs_table_row_Warning:hover {
+    background: rgba(139, 150, 41, 0.3);
+}
+
+.logs_table_row_Critical:hover {
+    background: rgba(150, 41, 41, 0.3);
+}
+
+.logs_table_row_Debug:hover {
+    background: rgba(150, 41, 135, 0.3);
+}
+
 .logs_table_exception {
     margin-right: 10px;
     padding: 5px;
