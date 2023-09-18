@@ -120,7 +120,9 @@ namespace gaseous_server.Models
             }
             else
             {
-                throw new Exception("");
+                Exception exception = new Exception("Platform Map Id " + Id + " does not exist.");
+                Logging.Log(Logging.LogType.Critical, "Platform Map", "Platform Map Id " + Id + " does not exist.", exception);
+                throw exception;
             }
         }
 
@@ -162,11 +164,14 @@ namespace gaseous_server.Models
             {
                 foreach (string alternateName in item.AlternateNames)
                 {
-                    sql = "INSERT INTO PlatformMap_AlternateNames (Id, Name) VALUES (@Id, @Name);";
-                    dbDict.Clear();
-                    dbDict.Add("Id", item.IGDBId);
-                    dbDict.Add("Name", alternateName);
-                    db.ExecuteCMD(sql, dbDict);
+                    if (alternateName != null)
+                    {
+                        sql = "INSERT INTO PlatformMap_AlternateNames (Id, Name) VALUES (@Id, @Name);";
+                        dbDict.Clear();
+                        dbDict.Add("Id", item.IGDBId);
+                        dbDict.Add("Name", alternateName);
+                        db.ExecuteCMD(sql, dbDict);
+                    }
                 }
             }
 
