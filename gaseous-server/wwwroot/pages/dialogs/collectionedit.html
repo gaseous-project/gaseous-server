@@ -394,7 +394,10 @@
         }
 
         modalAlwaysInclude = alwaysInclude;
-        console.log(JSON.stringify(modalAlwaysInclude));
+
+        if (!alwaysInclude) {
+            alwaysInclude = [];
+        }
 
         var item = {
             "name": document.getElementById('collection_name').value,
@@ -413,6 +416,8 @@
             "includeBIOSFiles": GetBooleanFieldValue('collection_includebios'),
             "alwaysInclude": alwaysInclude
         }
+
+        console.log("Item: " + JSON.stringify(item));
 
         return item;
     }
