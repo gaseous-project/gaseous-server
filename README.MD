@@ -2,6 +2,14 @@
 
 This is the server for the Gaseous system. It offers ROM and title management, as well as some basic in browser emulation of those ROM's.
 
+## Warning
+
+This project is currently not suitable for being exposed to the internet.
+1. there is currently no authentication support, meaning anyone could trash your library
+2. the server has not been hardened for exposure to the internet - so there maybe unknown vulnerabilities
+
+If you expose the server to the internet, **you do so at your own risk**.
+
 ## Screenshots
 ![Library](./screenshots/Library.png)
 ![Game](./screenshots/Game.png)
