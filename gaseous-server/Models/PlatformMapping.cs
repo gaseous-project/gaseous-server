@@ -286,7 +286,7 @@ namespace gaseous_server.Models
                 {
                     filename = (string)Common.ReturnValueIfNull(biosRow["Filename"], ""),
                     description = (string)Common.ReturnValueIfNull(biosRow["Description"], ""),
-                    hash = (string)Common.ReturnValueIfNull(biosRow["Hash"], "")
+                    hash = ((string)Common.ReturnValueIfNull(biosRow["Hash"], "")).ToLower()
                 };
                 bioss.Add(bios);
             }
