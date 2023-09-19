@@ -171,5 +171,13 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     })
     );
 
+// kick off any delayed upgrade tasks
+// run 1002 background updates in the background on every start
+DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1002);
+// start the task
+ProcessQueue.QueueItem queueItem = new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade, 1, false, true);
+queueItem.ForceExecute();
+ProcessQueue.QueueItems.Add(queueItem);
+
 // start the app
 app.Run();

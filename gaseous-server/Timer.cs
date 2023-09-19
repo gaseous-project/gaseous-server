@@ -38,7 +38,7 @@ namespace gaseous_server
             foreach (ProcessQueue.QueueItem qi in ActiveList) {
                 if ((DateTime.UtcNow > qi.NextRunTime || qi.Force == true) && CheckProcessBlockList(qi) == true) {
                     qi.Execute();
-                    if (qi.RemoveWhenStopped == true)
+                    if (qi.RemoveWhenStopped == true && qi.ItemState == ProcessQueue.QueueItemState.Stopped)
                     {
                         ProcessQueue.QueueItems.Remove(qi);
                     }

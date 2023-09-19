@@ -13,7 +13,7 @@ namespace gaseous_server
             {
                 _ItemType = ItemType;
                 _ItemState = QueueItemState.NeverStarted;
-                _LastRunTime = DateTime.UtcNow.AddMinutes(ExecutionInterval);
+                _LastRunTime = DateTime.Parse(Config.ReadSetting("LastRun_" + _ItemType.ToString(), DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:ssZ")));
                 _Interval = ExecutionInterval;
                 _AllowManualStart = AllowManualStart;
                 _RemoveWhenStopped = RemoveWhenStopped;
@@ -23,7 +23,7 @@ namespace gaseous_server
             {
                 _ItemType = ItemType;
                 _ItemState = QueueItemState.NeverStarted;
-                _LastRunTime = DateTime.UtcNow.AddMinutes(ExecutionInterval);
+                _LastRunTime = DateTime.Parse(Config.ReadSetting("LastRun_" + _ItemType.ToString(), DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:ssZ")));
                 _Interval = ExecutionInterval;
                 _AllowManualStart = AllowManualStart;
                 _RemoveWhenStopped = RemoveWhenStopped;
@@ -33,7 +33,21 @@ namespace gaseous_server
             private QueueItemType _ItemType = QueueItemType.NotConfigured;
             private QueueItemState _ItemState = QueueItemState.NeverStarted;
             private DateTime _LastRunTime = DateTime.UtcNow;
-            private DateTime _LastFinishTime = DateTime.UtcNow;
+            private DateTime _LastFinishTime
+            {
+                get
+                {
+                    return DateTime.Parse(Config.ReadSetting("LastRun_" + _ItemType.ToString(), DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:ssZ")));
+                }
+                set
+                {
+                    if (_SaveLastRunTime == true)
+                    {
+                        Config.SetSetting("LastRun_" + _ItemType.ToString(), value.ToString("yyyy-MM-ddThh:mm:ssZ"));
+                    }
+                }
+            }
+            private bool _SaveLastRunTime = false;
             private int _Interval = 0;
             private string _LastResult = "";
             private string? _LastError = null;
@@ -92,26 +106,40 @@ namespace gaseous_server
                                     Logging.Log(Logging.LogType.Debug, "Signature Import", "Processing MAME MESS files");
                                     tIngest.Import(Path.Combine(Config.LibraryConfiguration.LibrarySignatureImportDirectory, "MAME MESS"), gaseous_signature_parser.parser.SignatureParser.MAMEMess);
                                     
+                                    _SaveLastRunTime = true;
+
                                     break;
 
                                 case QueueItemType.TitleIngestor:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Title Ingestor");
                                     Classes.ImportGames importGames = new Classes.ImportGames(Config.LibraryConfiguration.LibraryImportDirectory);
+
+                                    _SaveLastRunTime = true;
+
                                     break;
 
                                 case QueueItemType.MetadataRefresh:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Metadata Refresher");
                                     Classes.MetadataManagement.RefreshMetadata(true);
+
+                                    _SaveLastRunTime = true;
+
                                     break;
 
                                 case QueueItemType.OrganiseLibrary:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Library Organiser");
                                     Classes.ImportGame.OrganiseLibrary();
+
+                                    _SaveLastRunTime = true;
+
                                     break;
 
                                 case QueueItemType.LibraryScan:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Library Scanner");
                                     Classes.ImportGame.LibraryScan();
+
+                                    _SaveLastRunTime = true;
+
                                     break;
 
                                 case QueueItemType.CollectionCompiler:
@@ -121,7 +149,7 @@ namespace gaseous_server
 
                                 case QueueItemType.BackgroundDatabaseUpgrade:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Background Upgrade");
-                                    
+                                    gaseous_tools.DatabaseMigration.UpgradeScriptBackgroundTasks();
                                     break;
 
                             }

@@ -5,22 +5,39 @@ namespace gaseous_tools
 {
 	public static class DatabaseMigration
 	{
-        public static void PreUpgradeScript(int TargetSchemaVersion, gaseous_tools.Database.databaseType? DatabaseType) {
+        public static List<int> BackgroundUpgradeTargetSchemaVersions = new List<int>();
+
+        public static void PreUpgradeScript(int TargetSchemaVersion, gaseous_tools.Database.databaseType? DatabaseType) 
+        {
 
         }
 
-        public static void PostUpgradeScript(int TargetSchemaVersion, gaseous_tools.Database.databaseType? DatabaseType) {
+        public static void PostUpgradeScript(int TargetSchemaVersion, gaseous_tools.Database.databaseType? DatabaseType) 
+        {
             switch(DatabaseType)
             {
-                case gaseous_tools.Database.databaseType.MySql:
+                case Database.databaseType.MySql:
                     switch (TargetSchemaVersion)
                     {
                         case 1002:
-                            MySql_1002_MigrateMetadataVersion();
+                            // this is a safe background task
+                            BackgroundUpgradeTargetSchemaVersions.Add(1002);
                             break;
                     }
                     break;
+            }
+        }
 
+        public static void UpgradeScriptBackgroundTasks()
+        {
+            foreach (int TargetSchemaVersion in BackgroundUpgradeTargetSchemaVersions)
+            {
+                switch (TargetSchemaVersion)
+                {
+                    case 1002:
+                        MySql_1002_MigrateMetadataVersion();
+                        break;
+                }
             }
         }
 

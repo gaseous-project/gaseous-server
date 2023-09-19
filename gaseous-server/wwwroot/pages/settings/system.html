@@ -54,6 +54,9 @@
                         case 'CollectionCompiler':
                             itemTypeName = "Compress collection id: " + result[i].options;
                             break;
+                        case 'BackgroundDatabaseUpgrade':
+                            itemTypeName = "Background database upgrade";
+                            break;
                         default:
                             itemTypeName = result[i].itemType;
                             break;
