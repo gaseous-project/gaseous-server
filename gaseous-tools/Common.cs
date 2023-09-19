@@ -61,7 +61,7 @@ namespace gaseous_tools
 			{
 				get
 				{
-					return _md5hash;
+					return _md5hash.ToLower();
 				}
 				set
 				{
@@ -73,7 +73,7 @@ namespace gaseous_tools
 			{
 				get
 				{
-					return _sha1hash;
+					return _sha1hash.ToLower();
 				}
 				set
 				{
