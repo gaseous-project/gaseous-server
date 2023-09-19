@@ -171,13 +171,10 @@ namespace gaseous_server.Classes
                 db.ExecuteCMD(sql, dbDict);
 
                 // start background task
-                foreach (ProcessQueue.QueueItem qi in ProcessQueue.QueueItems)
-                {
-                    if (qi.ItemType == ProcessQueue.QueueItemType.CollectionCompiler) { 
-                        qi.ForceExecute();
-                        break;
-                    }
-                }
+                ProcessQueue.QueueItem queueItem = new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.CollectionCompiler, 1, false, true);
+                queueItem.Options = Id;
+                queueItem.ForceExecute();
+                ProcessQueue.QueueItems.Add(queueItem);
             }
         }
 
@@ -364,176 +361,173 @@ namespace gaseous_server.Classes
             return collectionContents;
         }
 
-        public static void CompileCollections()
+        public static void CompileCollections(long CollectionId)
         {
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
-            List<CollectionItem> collectionItems = GetCollections();
-            foreach (CollectionItem collectionItem in collectionItems)
+            CollectionItem collectionItem = GetCollection(CollectionId);
+            if (collectionItem.BuildStatus == CollectionItem.CollectionBuildStatus.WaitingForBuild)
             {
-                if (collectionItem.BuildStatus == CollectionItem.CollectionBuildStatus.WaitingForBuild)
+                Logging.Log(Logging.LogType.Information, "Collections", "Beginning build of collection: " + collectionItem.Name);
+
+                // set starting
+                string sql = "UPDATE RomCollections SET BuiltStatus=@bs WHERE Id=@id";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>();
+                dbDict.Add("id", collectionItem.Id);
+                dbDict.Add("bs", CollectionItem.CollectionBuildStatus.Building);
+                db.ExecuteCMD(sql, dbDict);
+
+                List<CollectionContents.CollectionPlatformItem> collectionPlatformItems = GetCollectionContent(collectionItem).Collection;
+                string ZipFilePath = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, collectionItem.Id + ".zip");
+                string ZipFileTempPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, collectionItem.Id.ToString());
+
+                try
                 {
-                    Logging.Log(Logging.LogType.Information, "Collections", "Beginning build of collection: " + collectionItem.Name);
-
-                    // set starting
-                    string sql = "UPDATE RomCollections SET BuiltStatus=@bs WHERE Id=@id";
-                    Dictionary<string, object> dbDict = new Dictionary<string, object>();
-                    dbDict.Add("id", collectionItem.Id);
-                    dbDict.Add("bs", CollectionItem.CollectionBuildStatus.Building);
-                    db.ExecuteCMD(sql, dbDict);
-
-                    List<CollectionContents.CollectionPlatformItem> collectionPlatformItems = GetCollectionContent(collectionItem).Collection;
-                    string ZipFilePath = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, collectionItem.Id + ".zip");
-                    string ZipFileTempPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, collectionItem.Id.ToString());
-
-                    try
+                    
+                    // clean up if needed
+                    if (File.Exists(ZipFilePath))
                     {
-                        
-                        // clean up if needed
-                        if (File.Exists(ZipFilePath))
-                        {
-                            Logging.Log(Logging.LogType.Warning, "Collections", "Deleting existing build of collection: " + collectionItem.Name);
-                            File.Delete(ZipFilePath);
-                        }
+                        Logging.Log(Logging.LogType.Warning, "Collections", "Deleting existing build of collection: " + collectionItem.Name);
+                        File.Delete(ZipFilePath);
+                    }
 
-                        if (Directory.Exists(ZipFileTempPath))
-                        {
-                            Directory.Delete(ZipFileTempPath, true);
-                        }
+                    if (Directory.Exists(ZipFileTempPath))
+                    {
+                        Directory.Delete(ZipFileTempPath, true);
+                    }
 
-                        // gather collection files
-                        Directory.CreateDirectory(ZipFileTempPath);
-                        string ZipBiosPath = Path.Combine(ZipFileTempPath, "BIOS");
+                    // gather collection files
+                    Directory.CreateDirectory(ZipFileTempPath);
+                    string ZipBiosPath = Path.Combine(ZipFileTempPath, "BIOS");
 
-                        // get the games
-                        foreach (CollectionContents.CollectionPlatformItem collectionPlatformItem in collectionPlatformItems)
+                    // get the games
+                    foreach (CollectionContents.CollectionPlatformItem collectionPlatformItem in collectionPlatformItems)
+                    {
+                        // get platform bios files if present
+                        if (collectionItem.IncludeBIOSFiles == true)
                         {
-                            // get platform bios files if present
-                            if (collectionItem.IncludeBIOSFiles == true)
+                            List<Bios.BiosItem> bios = Bios.GetBios(collectionPlatformItem.Id, true);
+                            if (!Directory.Exists(ZipBiosPath)) {
+                                Directory.CreateDirectory(ZipBiosPath);
+                            }
+
+                            foreach (Bios.BiosItem biosItem in bios) 
                             {
-                                List<Bios.BiosItem> bios = Bios.GetBios(collectionPlatformItem.Id, true);
-                                if (!Directory.Exists(ZipBiosPath)) {
-                                    Directory.CreateDirectory(ZipBiosPath);
-                                }
-
-                                foreach (Bios.BiosItem biosItem in bios) 
+                                if (File.Exists(biosItem.biosPath))
                                 {
-                                    if (File.Exists(biosItem.biosPath))
-                                    {
-                                        Logging.Log(Logging.LogType.Information, "Collections", "Copying BIOS file: " + biosItem.filename);
-                                        File.Copy(biosItem.biosPath, Path.Combine(ZipBiosPath, biosItem.filename));
-                                    }
+                                    Logging.Log(Logging.LogType.Information, "Collections", "Copying BIOS file: " + biosItem.filename);
+                                    File.Copy(biosItem.biosPath, Path.Combine(ZipBiosPath, biosItem.filename));
                                 }
                             }
+                        }
 
-                            // create platform directory
-                            string ZipPlatformPath = "";
-                            switch (collectionItem.FolderStructure)
-                            {
-                                case CollectionItem.FolderStructures.Gaseous:
+                        // create platform directory
+                        string ZipPlatformPath = "";
+                        switch (collectionItem.FolderStructure)
+                        {
+                            case CollectionItem.FolderStructures.Gaseous:
+                                ZipPlatformPath = Path.Combine(ZipFileTempPath, collectionPlatformItem.Slug);
+                                break;
+
+                            case CollectionItem.FolderStructures.RetroPie:
+                                try
+                                {
+                                    PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(collectionPlatformItem.Id);
+                                    ZipPlatformPath = Path.Combine(ZipFileTempPath, "roms", platformMapItem.RetroPieDirectoryName);
+                                }
+                                catch
+                                {
                                     ZipPlatformPath = Path.Combine(ZipFileTempPath, collectionPlatformItem.Slug);
-                                    break;
+                                }
 
-                                case CollectionItem.FolderStructures.RetroPie:
-                                    try
-                                    {
-                                        PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(collectionPlatformItem.Id);
-                                        ZipPlatformPath = Path.Combine(ZipFileTempPath, "roms", platformMapItem.RetroPieDirectoryName);
-                                    }
-                                    catch
-                                    {
-                                        ZipPlatformPath = Path.Combine(ZipFileTempPath, collectionPlatformItem.Slug);
-                                    }
+                                break;
 
-                                    break;
+                        }
+                        if (!Directory.Exists(ZipPlatformPath))
+                        {
+                            Directory.CreateDirectory(ZipPlatformPath);
+                        }
 
-                            }
-                            if (!Directory.Exists(ZipPlatformPath))
+                        foreach (CollectionContents.CollectionPlatformItem.CollectionGameItem collectionGameItem in collectionPlatformItem.Games)
+                        {
+                            bool includeGame = false;
+                            if (collectionGameItem.InclusionStatus == null)
                             {
-                                Directory.CreateDirectory(ZipPlatformPath);
+                                includeGame = true;
                             }
-
-                            foreach (CollectionContents.CollectionPlatformItem.CollectionGameItem collectionGameItem in collectionPlatformItem.Games)
+                            else
                             {
-                                bool includeGame = false;
-                                if (collectionGameItem.InclusionStatus == null)
+                                if (collectionGameItem.InclusionStatus.InclusionState == CollectionItem.AlwaysIncludeStatus.AlwaysInclude)
                                 {
                                     includeGame = true;
                                 }
-                                else
-                                {
-                                    if (collectionGameItem.InclusionStatus.InclusionState == CollectionItem.AlwaysIncludeStatus.AlwaysInclude)
-                                    {
-                                        includeGame = true;
-                                    }
-                                }
+                            }
 
-                                if (includeGame == true)
+                            if (includeGame == true)
+                            {
+                                string ZipGamePath = "";
+                                switch (collectionItem.FolderStructure)
                                 {
-                                    string ZipGamePath = "";
-                                    switch (collectionItem.FolderStructure)
-                                    {
-                                        case CollectionItem.FolderStructures.Gaseous:
-                                            // create game directory
-                                            ZipGamePath = Path.Combine(ZipPlatformPath, collectionGameItem.Slug);
-                                            if (!Directory.Exists(ZipGamePath))
-                                            {
-                                                Directory.CreateDirectory(ZipGamePath);
-                                            }
-                                            break;
-
-                                        case CollectionItem.FolderStructures.RetroPie:
-                                            ZipGamePath = ZipPlatformPath;
-                                            break;
-                                    }                                    
-                                    
-                                    // copy in roms
-                                    foreach (Roms.GameRomItem gameRomItem in collectionGameItem.Roms)
-                                    {
-                                        if (File.Exists(gameRomItem.Path))
+                                    case CollectionItem.FolderStructures.Gaseous:
+                                        // create game directory
+                                        ZipGamePath = Path.Combine(ZipPlatformPath, collectionGameItem.Slug);
+                                        if (!Directory.Exists(ZipGamePath))
                                         {
-                                            Logging.Log(Logging.LogType.Information, "Collections", "Copying ROM: " + gameRomItem.Name);
-                                            File.Copy(gameRomItem.Path, Path.Combine(ZipGamePath, gameRomItem.Name));
+                                            Directory.CreateDirectory(ZipGamePath);
                                         }
+                                        break;
+
+                                    case CollectionItem.FolderStructures.RetroPie:
+                                        ZipGamePath = ZipPlatformPath;
+                                        break;
+                                }                                    
+                                
+                                // copy in roms
+                                foreach (Roms.GameRomItem gameRomItem in collectionGameItem.Roms)
+                                {
+                                    if (File.Exists(gameRomItem.Path))
+                                    {
+                                        Logging.Log(Logging.LogType.Information, "Collections", "Copying ROM: " + gameRomItem.Name);
+                                        File.Copy(gameRomItem.Path, Path.Combine(ZipGamePath, gameRomItem.Name));
                                     }
                                 }
                             }
                         }
-
-                        // compress to zip
-                        Logging.Log(Logging.LogType.Information, "Collections", "Compressing collection");
-                        ZipFile.CreateFromDirectory(ZipFileTempPath, ZipFilePath, CompressionLevel.SmallestSize, false);
-
-                        // clean up
-                        if (Directory.Exists(ZipFileTempPath))
-                        {
-                            Logging.Log(Logging.LogType.Information, "Collections", "Cleaning up");
-                            Directory.Delete(ZipFileTempPath, true);
-                        }
-
-                        // set completed
-                        dbDict["bs"] = CollectionItem.CollectionBuildStatus.Completed;
-                        db.ExecuteCMD(sql, dbDict);
                     }
-                    catch (Exception ex)
+
+                    // compress to zip
+                    Logging.Log(Logging.LogType.Information, "Collections", "Compressing collection");
+                    ZipFile.CreateFromDirectory(ZipFileTempPath, ZipFilePath, CompressionLevel.SmallestSize, false);
+
+                    // clean up
+                    if (Directory.Exists(ZipFileTempPath))
                     {
-                        // clean up
-                        if (Directory.Exists(ZipFileTempPath))
-                        {
-                            Directory.Delete(ZipFileTempPath, true);
-                        }
-
-                        if (File.Exists(ZipFilePath))
-                        {
-                            File.Delete(ZipFilePath);
-                        }
-
-                        // set failed
-                        dbDict["bs"] = CollectionItem.CollectionBuildStatus.Failed;
-                        db.ExecuteCMD(sql, dbDict);
-
-                        Logging.Log(Logging.LogType.Critical, "Collection Builder", "Collection building has failed", ex);
+                        Logging.Log(Logging.LogType.Information, "Collections", "Cleaning up");
+                        Directory.Delete(ZipFileTempPath, true);
                     }
+
+                    // set completed
+                    dbDict["bs"] = CollectionItem.CollectionBuildStatus.Completed;
+                    db.ExecuteCMD(sql, dbDict);
+                }
+                catch (Exception ex)
+                {
+                    // clean up
+                    if (Directory.Exists(ZipFileTempPath))
+                    {
+                        Directory.Delete(ZipFileTempPath, true);
+                    }
+
+                    if (File.Exists(ZipFilePath))
+                    {
+                        File.Delete(ZipFilePath);
+                    }
+
+                    // set failed
+                    dbDict["bs"] = CollectionItem.CollectionBuildStatus.Failed;
+                    db.ExecuteCMD(sql, dbDict);
+
+                    Logging.Log(Logging.LogType.Critical, "Collection Builder", "Collection building has failed", ex);
                 }
             }
         }

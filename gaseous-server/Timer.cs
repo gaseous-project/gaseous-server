@@ -33,9 +33,15 @@ namespace gaseous_server
             //_logger.LogInformation(
             //    "Timed Hosted Service is working. Count: {Count}", count);
 
-            foreach (ProcessQueue.QueueItem qi in ProcessQueue.QueueItems) {
+            List<ProcessQueue.QueueItem> ActiveList = new List<ProcessQueue.QueueItem>();
+            ActiveList.AddRange(ProcessQueue.QueueItems);
+            foreach (ProcessQueue.QueueItem qi in ActiveList) {
                 if ((DateTime.UtcNow > qi.NextRunTime || qi.Force == true) && CheckProcessBlockList(qi) == true) {
                     qi.Execute();
+                    if (qi.RemoveWhenStopped == true)
+                    {
+                        ProcessQueue.QueueItems.Remove(qi);
+                    }
                 }
             }
         }

@@ -170,7 +170,6 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
         ProcessQueue.QueueItemType.OrganiseLibrary
     })
     );
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.CollectionCompiler, 5, false));
 
 // start the app
 app.Run();

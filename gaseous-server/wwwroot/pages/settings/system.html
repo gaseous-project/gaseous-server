@@ -52,7 +52,7 @@
                             itemTypeName = "Library scan";
                             break;
                         case 'CollectionCompiler':
-                            itemTypeName = "Compress collections";
+                            itemTypeName = "Compress collection id: " + result[i].options;
                             break;
                         default:
                             itemTypeName = result[i].itemType;
@@ -80,17 +80,24 @@
                             break;
                     }
 
+                    var itemInterval = result[i].interval;
+                    var nextRunTime = moment(result[i].nextRunTime).fromNow();
                     var startButton = '';
                     if (result[i].allowManualStart == true && result[i].itemState != "Running") {
                         startButton = "<span id='startProcess' class='romstart' onclick='StartProcess(\"" + result[i].itemType + "\");'>Start</span>";
                     }
 
+                    if (result[i].allowManualStart == false && result[i].removeWhenStopped == true) {
+                        itemInterval = '';
+                        nextRunTime = '';
+                    }
+
                     var newRow = [
                         itemTypeName,
                         itemStateName,
-                        result[i].interval,
+                        itemInterval,
                         itemLastStart,
-                        moment(result[i].nextRunTime).fromNow(),
+                        nextRunTime,
                         startButton
                     ];
                     newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));

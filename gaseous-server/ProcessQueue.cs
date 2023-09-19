@@ -9,22 +9,24 @@ namespace gaseous_server
 
         public class QueueItem
         {
-            public QueueItem(QueueItemType ItemType, int ExecutionInterval, bool AllowManualStart = true)
+            public QueueItem(QueueItemType ItemType, int ExecutionInterval, bool AllowManualStart = true, bool RemoveWhenStopped = false)
             {
                 _ItemType = ItemType;
                 _ItemState = QueueItemState.NeverStarted;
                 _LastRunTime = DateTime.UtcNow.AddMinutes(ExecutionInterval);
                 _Interval = ExecutionInterval;
                 _AllowManualStart = AllowManualStart;
+                _RemoveWhenStopped = RemoveWhenStopped;
             }
 
-            public QueueItem(QueueItemType ItemType, int ExecutionInterval, List<QueueItemType> Blocks, bool AllowManualStart = true)
+            public QueueItem(QueueItemType ItemType, int ExecutionInterval, List<QueueItemType> Blocks, bool AllowManualStart = true, bool RemoveWhenStopped = false)
             {
                 _ItemType = ItemType;
                 _ItemState = QueueItemState.NeverStarted;
                 _LastRunTime = DateTime.UtcNow.AddMinutes(ExecutionInterval);
                 _Interval = ExecutionInterval;
                 _AllowManualStart = AllowManualStart;
+                _RemoveWhenStopped = RemoveWhenStopped;
                 _Blocks = Blocks;
             }
 
@@ -37,6 +39,7 @@ namespace gaseous_server
             private string? _LastError = null;
             private bool _ForceExecute = false;
             private bool _AllowManualStart = true;
+            private bool _RemoveWhenStopped = false;
             private List<QueueItemType> _Blocks = new List<QueueItemType>();
 
             public QueueItemType ItemType => _ItemType;
@@ -54,6 +57,8 @@ namespace gaseous_server
             public string? LastError => _LastError;
             public bool Force => _ForceExecute;
             public bool AllowManualStart => _AllowManualStart;
+            public bool RemoveWhenStopped => _RemoveWhenStopped;
+            public object? Options { get; set; } = null;
             public List<QueueItemType> Blocks => _Blocks;
 
             public void Execute()
@@ -111,8 +116,14 @@ namespace gaseous_server
 
                                 case QueueItemType.CollectionCompiler:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Collection Compiler");
-                                    Classes.Collections.CompileCollections();
+                                    Classes.Collections.CompileCollections((long)Options);
                                     break;
+
+                                case QueueItemType.BackgroundDatabaseUpgrade:
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Background Upgrade");
+                                    
+                                    break;
+
                             }
                         }
                         catch (Exception ex)
@@ -143,7 +154,8 @@ namespace gaseous_server
             MetadataRefresh,
             OrganiseLibrary,
             LibraryScan,
-            CollectionCompiler
+            CollectionCompiler,
+            BackgroundDatabaseUpgrade
         }
 
         public enum QueueItemState

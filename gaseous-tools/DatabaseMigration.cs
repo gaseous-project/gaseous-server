@@ -24,7 +24,7 @@ namespace gaseous_tools
             }
         }
 
-        private static void MySql_1002_MigrateMetadataVersion() {
+        public static void MySql_1002_MigrateMetadataVersion() {
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
