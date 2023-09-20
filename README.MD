@@ -16,8 +16,10 @@ If you expose the server to the internet, **you do so at your own risk**.
 ![Emulator](./screenshots/Emulator.png)
 
 ## Requirements
-* MySQL Server 8+
+* MySQL Server 8+*
 * Internet Game Database API Key. See: https://api-docs.igdb.com/#account-creation
+
+***Note**: MariaDB is currently not supported as Gaseous uses features present only in MySQL. This is being tracked in https://github.com/gaseous-project/gaseous-server/issues/93
 
 ## Third Party Projects
 The following projects are used by Gaseous
@@ -89,7 +91,7 @@ Dockerfile and docker-compose-build.yml files have been provided to make deploym
 
 ## Source
 ### Build and deploy
-1. Install and configure a MySQL or MariaDB instance
+1. Install and configure a MySQL instance
 2. Install the dotnet 7.0 packages appropriate for your operating system
     * See: https://learn.microsoft.com/en-us/dotnet/core/install/linux
 3. Create a database user with permission to create a databse. Gaseous will create the new database and apply the database schema on it's first startup.
