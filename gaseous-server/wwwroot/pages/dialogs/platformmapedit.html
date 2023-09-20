@@ -27,7 +27,7 @@
                     <h4>Standard Directory Naming</h4>
                 </td>
                 <td style="text-align: right;">
-                    <input id="mapping_edit_igdbslug" readonly="readonly" type="text" style="width: 95%;"/>
+                    <input id="mapping_edit_igdbslug" readonly="readonly" type="text" style="width: 98%;"/>
                 </td>
             </tr>
             <tr>
@@ -38,7 +38,7 @@
                     <h4>RetroPie Directory Naming</h4>
                 </td>
                 <td style="text-align: right;">
-                    <input id="mapping_edit_retropie" type="text" style="width: 95%;"/>
+                    <input id="mapping_edit_retropie" type="text" style="width: 98%;"/>
                 </td>
             </tr>
         </table>
@@ -53,7 +53,7 @@
                     <input id="mapping_edit_enablewebemulator" type="checkbox"><label for="mapping_edit_enablewebemulator" style="margin-left: 5px;">Enabled</label>
                 </td>
             </tr>
-            <tr>
+            <tr name="mapping_edit_webemulator">
                 <td style="width: 25%;">
                     <h4>Engine</h4>
                 </td>
@@ -64,12 +64,20 @@
                     </select>
                 </td>
             </tr>
-            <tr>
+            <tr name="mapping_edit_webemulator">
                 <td style="width: 25%;">
                     <h4>Core</h4>
                 </td>
                 <td style="text-align: right;">
-                    <input id="mapping_edit_webemulatorcore" type="text" style="width: 95%;"/>
+                    <input id="mapping_edit_webemulatorcore" type="text" style="width: 98%;"/>
+                </td>
+            </tr>
+            <tr name="mapping_edit_webemulator">
+                <td style="width: 25%;">
+                
+                </td>
+                <td id="mapping_edit_webemulatorhelp">
+                    
                 </td>
             </tr>
         </table>
@@ -129,10 +137,15 @@
             if (result.webEmulator.type.length > 0) {
                 document.getElementById('mapping_edit_enablewebemulator').checked = true;
                 $('#mapping_edit_webemulatorengine').val(result.webEmulator.type);
+                DisplayWebEmulatorHelp(result.webEmulator.type);
                 $('#mapping_edit_webemulatorengine').trigger('change');
                 document.getElementById('mapping_edit_webemulatorcore').value = result.webEmulator.core;
+
+                DisplayWebEmulatorContent(true);
             } else {
                 document.getElementById('mapping_edit_enablewebemulator').checked = false;
+
+                DisplayWebEmulatorContent(false);
             }
 
             var biosTableHeaders = [
@@ -253,5 +266,39 @@
             },
             JSON.stringify(item)
         );
+    }
+
+    $('#mapping_edit_webemulatorengine').on('select2:select', function (e) {
+        DisplayWebEmulatorHelp(e.params.data.id);
+    });
+
+    function DisplayWebEmulatorHelp(Emulator) {
+        var helpCell = document.getElementById('mapping_edit_webemulatorhelp');
+        switch (Emulator) {
+            case 'EmulatorJS':
+                helpCell.innerHTML = '<img src="/images/help.svg" class="banner_button_image banner_button_image_smaller" alt="Help" title="Help" /> See <a href="https://emulatorjs.org/docs4devs/Cores.html" target="_blank" class="romlink">https://emulatorjs.org/docs4devs/Cores.html</a> for more information regarding EmulatorJS cores.';
+                break;
+
+            default:
+                helpCell.innerHTML = '';
+                break;
+
+        }
+    }
+
+    $('#mapping_edit_enablewebemulator').change(function() {
+        DisplayWebEmulatorContent(this.checked);
+    });
+
+    function DisplayWebEmulatorContent(showContent) {
+        var webEmulatorRows = document.getElementsByName('mapping_edit_webemulator');
+
+        for (var i = 0; i < webEmulatorRows.length; i++) {
+            if (showContent == true) {
+                webEmulatorRows[i].style.display = '';
+            } else {
+                webEmulatorRows[i].style.display = 'none';
+            }
+        }
     }
 </script>
