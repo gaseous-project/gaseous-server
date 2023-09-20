@@ -48,7 +48,7 @@
                     }
 
                     var newRow = [
-                        '<span onclick="ShowPlatformMappingDialog(' + result[i].igdbId + ');" class="romlink">' + result[i].igdbName + '</span>',
+                        '<a href="#/" onclick="ShowPlatformMappingDialog(' + result[i].igdbId + ');" class="romlink">' + result[i].igdbName + '</a>',
                         result[i].extensions.supportedFileExtensions.join(', '),
                         result[i].extensions.uniqueFileExtensions.join(', '),
                         hasWebEmulator
