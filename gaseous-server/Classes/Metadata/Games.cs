@@ -102,9 +102,16 @@ namespace gaseous_server.Classes.Metadata
                     UpdateSubClasses(returnValue, getAllMetadata, followSubGames);
                     return returnValue;
                 case Storage.CacheStatus.Expired:
-                    returnValue = await GetObjectFromServer(WhereClause);
-                    Storage.NewCacheValue(returnValue, true);
-                    UpdateSubClasses(returnValue, getAllMetadata, followSubGames);
+                    try
+                    {
+                        returnValue = await GetObjectFromServer(WhereClause);
+                        Storage.NewCacheValue(returnValue, true);
+                    }
+                    catch (Exception ex)
+                    {
+                        gaseous_tools.Logging.Log(gaseous_tools.Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
+                        returnValue = Storage.GetCacheValue<Game>(returnValue, "id", (long)searchValue);
+                    }
                     return returnValue;
                 case Storage.CacheStatus.Current:
                     return Storage.GetCacheValue<Game>(returnValue, "id", (long)searchValue);

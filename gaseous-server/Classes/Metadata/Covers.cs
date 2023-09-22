@@ -77,10 +77,18 @@ namespace gaseous_server.Classes.Metadata
                     forceImageDownload = true;
                     break;  
                 case Storage.CacheStatus.Expired:
-                    returnValue = await GetObjectFromServer(WhereClause, LogoPath);
-                    Storage.NewCacheValue(returnValue, true);
-                    forceImageDownload = true;
-                    break;  
+                    try
+                    {
+                        returnValue = await GetObjectFromServer(WhereClause, LogoPath);
+                        Storage.NewCacheValue(returnValue, true);
+                        forceImageDownload = true;
+                    }
+                    catch (Exception ex)
+                    {
+                        gaseous_tools.Logging.Log(gaseous_tools.Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
+                        returnValue = Storage.GetCacheValue<Cover>(returnValue, "id", (long)searchValue);
+                    }
+                    break;
                 case Storage.CacheStatus.Current:
                     returnValue = Storage.GetCacheValue<Cover>(returnValue, "id", (long)searchValue);
                     break;

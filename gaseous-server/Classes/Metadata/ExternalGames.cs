@@ -78,12 +78,17 @@ namespace gaseous_server.Classes.Metadata
                     }
                     break;  
                 case Storage.CacheStatus.Expired:
-                    returnValue = await GetObjectFromServer(WhereClause);
-                    if (returnValue != null)
+                    try
                     {
+                        returnValue = await GetObjectFromServer(WhereClause);
                         Storage.NewCacheValue(returnValue, true);
                     }
-                    break;  
+                    catch (Exception ex)
+                    {
+                        gaseous_tools.Logging.Log(gaseous_tools.Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
+                        returnValue = Storage.GetCacheValue<ExternalGame>(returnValue, "id", (long)searchValue);
+                    }
+                    break;
                 case Storage.CacheStatus.Current:
                     returnValue = Storage.GetCacheValue<ExternalGame>(returnValue, "id", (long)searchValue);
                     break;
