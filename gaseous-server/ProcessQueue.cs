@@ -54,6 +54,7 @@ namespace gaseous_server
             private bool _ForceExecute = false;
             private bool _AllowManualStart = true;
             private bool _RemoveWhenStopped = false;
+            private bool _IsBlocked = false;
             private List<QueueItemType> _Blocks = new List<QueueItemType>();
 
             public QueueItemType ItemType => _ItemType;
@@ -72,6 +73,7 @@ namespace gaseous_server
             public bool Force => _ForceExecute;
             public bool AllowManualStart => _AllowManualStart;
             public bool RemoveWhenStopped => _RemoveWhenStopped;
+            public bool IsBlocked => _IsBlocked;
             public object? Options { get; set; } = null;
             public List<QueueItemType> Blocks => _Blocks;
 
@@ -172,17 +174,58 @@ namespace gaseous_server
             {
                 _ForceExecute = true;
             }
+
+            public void BlockedState(bool BlockState)
+            {
+                _IsBlocked = BlockState;
+            }
         }
 
         public enum QueueItemType
         {
+            /// <summary>
+            /// Reserved for blocking all services - no actual background service is tied to this type
+            /// </summary>
+            All,
+
+            /// <summary>
+            /// Default type - no background service is tied to this type
+            /// </summary>
             NotConfigured,
+
+            /// <summary>
+            /// Ingests signature DAT files into the database
+            /// </summary>
             SignatureIngestor,
+
+            /// <summary>
+            /// Imports game files into the database and moves them to the required location on disk
+            /// </summary>
             TitleIngestor,
+
+            /// <summary>
+            /// Forces stored metadata to be refreshed
+            /// </summary>
             MetadataRefresh,
+
+            /// <summary>
+            /// Ensures all managed files are where they are supposed to be
+            /// </summary>
             OrganiseLibrary,
+
+            /// <summary>
+            /// Looks for orphaned files in the library and re-adds them to the database
+            /// </summary>
             LibraryScan,
+
+            /// <summary>
+            /// Builds collections - set the options attribute to the id of the collection to build
+            /// </summary>
             CollectionCompiler,
+
+            /// <summary>
+            /// Performs and post database upgrade scripts that can be processed as a background task
+            /// </summary>
             BackgroundDatabaseUpgrade
         }
 

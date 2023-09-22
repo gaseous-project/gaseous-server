@@ -36,12 +36,20 @@ namespace gaseous_server
             List<ProcessQueue.QueueItem> ActiveList = new List<ProcessQueue.QueueItem>();
             ActiveList.AddRange(ProcessQueue.QueueItems);
             foreach (ProcessQueue.QueueItem qi in ActiveList) {
-                if ((DateTime.UtcNow > qi.NextRunTime || qi.Force == true) && CheckProcessBlockList(qi) == true) {
-                    qi.Execute();
-                    if (qi.RemoveWhenStopped == true && qi.ItemState == ProcessQueue.QueueItemState.Stopped)
+                if (CheckProcessBlockList(qi) == true) {
+                    qi.BlockedState(false);
+                    if (DateTime.UtcNow > qi.NextRunTime || qi.Force == true)
                     {
-                        ProcessQueue.QueueItems.Remove(qi);
+                        qi.Execute();
+                        if (qi.RemoveWhenStopped == true && qi.ItemState == ProcessQueue.QueueItemState.Stopped)
+                        {
+                            ProcessQueue.QueueItems.Remove(qi);
+                        }
                     }
+                }
+                else
+                {
+                    qi.BlockedState(true);
                 }
             }
         }
@@ -67,7 +75,13 @@ namespace gaseous_server
             {
                 foreach (ProcessQueue.QueueItem qi in ProcessQueue.QueueItems)
                 {
-                    if (queueItem.Blocks.Contains(qi.ItemType) && qi.ItemState == ProcessQueue.QueueItemState.Running)
+                    if (
+                        (
+                            queueItem.Blocks.Contains(qi.ItemType) || 
+                            queueItem.Blocks.Contains(ProcessQueue.QueueItemType.All)
+                        ) &&
+                            qi.ItemState == ProcessQueue.QueueItemState.Running
+                        )
                     {
                         return false;
                     }
