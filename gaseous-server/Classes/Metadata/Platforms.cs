@@ -99,11 +99,19 @@ namespace gaseous_server.Classes.Metadata
                     AddPlatformMapping(returnValue);
                     return returnValue;
                 case Storage.CacheStatus.Expired:
-                    returnValue = await GetObjectFromServer(WhereClause);
-                    Storage.NewCacheValue(returnValue, true);
-                    UpdateSubClasses(returnValue);
-                    AddPlatformMapping(returnValue);
-                    return returnValue;
+                    try
+                    {
+                        returnValue = await GetObjectFromServer(WhereClause);
+                        Storage.NewCacheValue(returnValue, true);
+                        UpdateSubClasses(returnValue);
+                        AddPlatformMapping(returnValue);
+                        return returnValue;
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
+                        return Storage.GetCacheValue<Platform>(returnValue, "id", (long)searchValue);
+                    }
                 case Storage.CacheStatus.Current:
                     return Storage.GetCacheValue<Platform>(returnValue, "id", (long)searchValue);
                 default:
