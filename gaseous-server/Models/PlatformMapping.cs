@@ -25,7 +25,10 @@ namespace gaseous_server.Models
             {
                 string rawJson = reader.ReadToEnd();
                 List<PlatformMapItem> platforms = new List<PlatformMapItem>();
-                platforms = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PlatformMapItem>>(rawJson);
+                Newtonsoft.Json.JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings{
+                    MaxDepth = 64
+                };
+                platforms = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PlatformMapItem>>(rawJson, jsonSerializerSettings);
 
                 foreach (PlatformMapItem mapItem in platforms)
                 {
@@ -41,7 +44,7 @@ namespace gaseous_server.Models
                         }
                         else
                         {
-                            WritePlatformMap(mapItem, true);
+                            WritePlatformMap(mapItem, true, true);
                             Logging.Log(Logging.LogType.Information, "Platform Map", "Overwriting " + mapItem.IGDBName + " with default values.");
                         }
                     }
@@ -49,7 +52,7 @@ namespace gaseous_server.Models
                     {
                         Logging.Log(Logging.LogType.Information, "Platform Map", "Importing " + mapItem.IGDBName + " from predefined data.");
                         // doesn't exist - add it
-                        WritePlatformMap(mapItem, false);
+                        WritePlatformMap(mapItem, false, true);
                     }
                 }
             }
@@ -73,13 +76,13 @@ namespace gaseous_server.Models
 
                     // still here? we must have found the item we're looking for! overwrite it
                     Logging.Log(Logging.LogType.Information, "Platform Map", "Replacing " + mapItem.IGDBName + " from external JSON file.");
-                    WritePlatformMap(mapItem, true);
+                    WritePlatformMap(mapItem, true, true);
                 }
                 catch
                 {
                     // we caught a not found error, insert a new record
                     Logging.Log(Logging.LogType.Information, "Platform Map", "Importing " + mapItem.IGDBName + " from external JSON file.");
-                    WritePlatformMap(mapItem, false);
+                    WritePlatformMap(mapItem, false, true);
                 }
             }
         }
@@ -126,7 +129,7 @@ namespace gaseous_server.Models
             }
         }
 
-        public static void WritePlatformMap(PlatformMapItem item, bool Update)
+        public static void WritePlatformMap(PlatformMapItem item, bool Update, bool AllowAvailableEmulatorOverwrite)
         {
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
@@ -134,12 +137,19 @@ namespace gaseous_server.Models
             if (Update == false)
             {
                 // insert
-                sql = "INSERT INTO PlatformMap (Id, RetroPieDirectoryName, WebEmulator_Type, WebEmulator_Core) VALUES (@Id, @RetroPieDirectoryName, @WebEmulator_Type, @WebEmulator_Core)";
+                sql = "INSERT INTO PlatformMap (Id, RetroPieDirectoryName, WebEmulator_Type, WebEmulator_Core, AvailableWebEmulators) VALUES (@Id, @RetroPieDirectoryName, @WebEmulator_Type, @WebEmulator_Core, @AvailableWebEmulators)";
             }
             else
             {
                 // update
-                sql = "UPDATE PlatformMap SET RetroPieDirectoryName=@RetroPieDirectoryName, WebEmulator_Type=@WebEmulator_Type, WebEmulator_Core=@WebEmulator_Core WHERE Id = @Id";
+                if (AllowAvailableEmulatorOverwrite == true)
+                {
+                    sql = "UPDATE PlatformMap SET RetroPieDirectoryName=@RetroPieDirectoryName, WebEmulator_Type=@WebEmulator_Type, WebEmulator_Core=@WebEmulator_Core, AvailableWebEmulators=@AvailableWebEmulators WHERE Id = @Id";
+                }
+                else
+                {
+                    sql = "UPDATE PlatformMap SET RetroPieDirectoryName=@RetroPieDirectoryName, WebEmulator_Type=@WebEmulator_Type, WebEmulator_Core=@WebEmulator_Core WHERE Id = @Id";
+                }
             }
             dbDict.Add("Id", item.IGDBId);
             dbDict.Add("RetroPieDirectoryName", item.RetroPieDirectoryName);
@@ -147,11 +157,13 @@ namespace gaseous_server.Models
             {
                 dbDict.Add("WebEmulator_Type", item.WebEmulator.Type);
                 dbDict.Add("WebEmulator_Core", item.WebEmulator.Core);
+                dbDict.Add("AvailableWebEmulators", Newtonsoft.Json.JsonConvert.SerializeObject(item.WebEmulator.AvailableWebEmulators));
             }
             else
             {
                 dbDict.Add("WebEmulator_Type", "");
                 dbDict.Add("WebEmulator_Core", "");
+                dbDict.Add("AvailableWebEmulators", "");
             }
             db.ExecuteCMD(sql, dbDict);
 
@@ -304,7 +316,8 @@ namespace gaseous_server.Models
             mapItem.RetroPieDirectoryName = (string)Common.ReturnValueIfNull(row["RetroPieDirectoryName"], "");
             mapItem.WebEmulator = new PlatformMapItem.WebEmulatorItem{
                 Type = (string)Common.ReturnValueIfNull(row["WebEmulator_Type"], ""),
-                Core = (string)Common.ReturnValueIfNull(row["WebEmulator_Core"], "")
+                Core = (string)Common.ReturnValueIfNull(row["WebEmulator_Core"], ""),
+                AvailableWebEmulators = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PlatformMapItem.WebEmulatorItem.AvailableWebEmulatorItem>>((string)Common.ReturnValueIfNull(row["AvailableWebEmulators"], "[]"))
             };
             mapItem.Bios = bioss;
             
@@ -378,6 +391,21 @@ namespace gaseous_server.Models
             {
                 public string Type { get; set; }
                 public string Core { get; set; }
+
+                public List<AvailableWebEmulatorItem> AvailableWebEmulators { get; set; } = new List<AvailableWebEmulatorItem>();
+
+                public class AvailableWebEmulatorItem
+                {
+                    public string EmulatorType { get; set; }
+                    public List<AvailableWebEmulatorCoreItem> AvailableWebEmulatorCores { get; set; } = new List<AvailableWebEmulatorCoreItem>();
+
+                    public class AvailableWebEmulatorCoreItem
+                    {
+                        public string Core { get; set; }
+                        public string? AlternateCoreName { get; set; } = "";
+                        public bool Default { get; set; } = false;
+                    }
+                }
             }
 
             public List<EmulatorBiosItem> Bios { get; set; }

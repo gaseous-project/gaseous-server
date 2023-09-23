@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.OpenApi.Models;
 
+Logging.WriteToDiskOnly = true;
 Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server " + Assembly.GetExecutingAssembly().GetName().Version);
 
 // set up db
@@ -187,6 +188,8 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
         ProcessQueue.QueueItemType.OrganiseLibrary
     })
     );
+
+Logging.WriteToDiskOnly = false;
 
 // start the app
 app.Run();

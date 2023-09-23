@@ -375,7 +375,11 @@
 
                     var launchButton = '';
                     if (result[i].emulator) {
-                        launchButton = '<a href="/index.html?page=emulator&engine=' + result[i].emulator.type + '&core=' + result[i].emulator.core + '&platformid=' + result[i].platform.id + '&gameid=' + gameId + '&rompath=' + encodeURIComponent('/api/v1/Games/' + gameId + '/roms/' + result[i].id + '/' + encodeURIComponent(result[i].name)) + '" class="romstart">Launch</a>';
+                        if (result[i].emulator.type) {
+                            if (result[i].emulator.type.length > 0) {
+                                launchButton = '<a href="/index.html?page=emulator&engine=' + result[i].emulator.type + '&core=' + result[i].emulator.core + '&platformid=' + result[i].platform.id + '&gameid=' + gameId + '&rompath=' + encodeURIComponent('/api/v1/Games/' + gameId + '/roms/' + result[i].id + '/' + encodeURIComponent(result[i].name)) + '" class="romstart">Launch</a>';
+                            }
+                        }
                     }
 
                     var newRow = [

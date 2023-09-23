@@ -156,7 +156,7 @@ namespace gaseous_server.Classes.Metadata
                     IGDBSlug = platform.Slug,
                     AlternateNames = new List<string>{ platform.AlternativeName }
                 };
-                Models.PlatformMapping.WritePlatformMap(item, false);
+                Models.PlatformMapping.WritePlatformMap(item, false, true);
             }
         }
 

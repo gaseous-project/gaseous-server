@@ -18,6 +18,7 @@
     <None Remove="Database\MySQL\gaseous-1000.sql" />
     <None Remove="Database\MySQL\gaseous-1001.sql" />
     <None Remove="Database\MySQL\gaseous-1002.sql" />
+    <None Remove="Database\MySQL\gaseous-1003.sql" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Database\" />
@@ -27,5 +28,6 @@
     <EmbeddedResource Include="Database\MySQL\gaseous-1000.sql" />
     <EmbeddedResource Include="Database\MySQL\gaseous-1001.sql" />
     <EmbeddedResource Include="Database\MySQL\gaseous-1002.sql" />
+    <EmbeddedResource Include="Database\MySQL\gaseous-1003.sql" />
   </ItemGroup>
 </Project>

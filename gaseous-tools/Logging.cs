@@ -8,6 +8,8 @@ namespace gaseous_tools
 {
 	public class Logging
 	{
+        public static bool WriteToDiskOnly { get; set; } = false;
+
         static public void Log(LogType EventType, string ServerProcess, string Message, Exception? ExceptionValue = null, bool LogToDiskOnly = false)
         {
             LogItem logItem = new LogItem
@@ -60,6 +62,11 @@ namespace gaseous_tools
                 }
                 Console.WriteLine(TraceOutput);
                 Console.ResetColor();
+
+                if (WriteToDiskOnly == true)
+                {
+                    LogToDiskOnly = true;
+                }
 
                 if (LogToDiskOnly == false)
                 {
