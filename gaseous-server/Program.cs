@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.OpenApi.Models;
 
+Logging.WriteToDiskOnly = true;
 Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server " + Assembly.GetExecutingAssembly().GetName().Version);
 
 // set up db
@@ -178,6 +179,8 @@ DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1002);
 ProcessQueue.QueueItem queueItem = new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade, 1, false, true);
 queueItem.ForceExecute();
 ProcessQueue.QueueItems.Add(queueItem);
+
+Logging.WriteToDiskOnly = false;
 
 // start the app
 app.Run();

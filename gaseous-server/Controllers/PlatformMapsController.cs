@@ -110,32 +110,32 @@ namespace gaseous_server.Controllers
             return Ok(new { count = files.Count, size });
         }
 
-        [HttpPost]
-        [Route("{PlatformId}")]
-        [ProducesResponseType(typeof(PlatformMapping.PlatformMapItem), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public ActionResult NewPlatformMap(long PlatformId, PlatformMapping.PlatformMapItem Map)
-        {
-            try
-            {
-                PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(PlatformId);
+        // [HttpPost]
+        // [Route("{PlatformId}")]
+        // [ProducesResponseType(typeof(PlatformMapping.PlatformMapItem), StatusCodes.Status200OK)]
+        // [ProducesResponseType(StatusCodes.Status404NotFound)]
+        // [ProducesResponseType(StatusCodes.Status409Conflict)]
+        // public ActionResult NewPlatformMap(long PlatformId, PlatformMapping.PlatformMapItem Map)
+        // {
+        //     try
+        //     {
+        //         PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(PlatformId);
 
-                if (platformMapItem != null)
-                {
-                    return Conflict();
-                }
-                else
-                {
-                    PlatformMapping.WritePlatformMap(Map, false);
-                    return Ok(PlatformMapping.GetPlatformMap(PlatformId));
-                }
-            }
-            catch
-            {
-                return NotFound();
-            }
-        }
+        //         if (platformMapItem != null)
+        //         {
+        //             return Conflict();
+        //         }
+        //         else
+        //         {
+        //             PlatformMapping.WritePlatformMap(Map, false, false);
+        //             return Ok(PlatformMapping.GetPlatformMap(PlatformId));
+        //         }
+        //     }
+        //     catch
+        //     {
+        //         return NotFound();
+        //     }
+        // }
 
         [HttpPatch]
         [Route("{PlatformId}")]
@@ -149,7 +149,7 @@ namespace gaseous_server.Controllers
 
                 if (platformMapItem != null)
                 {
-                    PlatformMapping.WritePlatformMap(Map, true);
+                    PlatformMapping.WritePlatformMap(Map, true, false);
                     return Ok(PlatformMapping.GetPlatformMap(PlatformId));
                 }
                 else
