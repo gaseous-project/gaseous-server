@@ -86,7 +86,7 @@ Dockerfile and docker-compose-build.yml files have been provided to make deploym
 2. Change into the gaseous-server directory
 3. Clone the submodules with the command ```git submodule update --init```
 4. Open the docker-compose-build.yml file and edit the igdbclientid and igdbclientsecret to the values retrieved from your IGDB account
-5. Run the command "docker-compose up --file docker-compose-build.yml -d"
+5. Run the command ```docker-compose --file docker-compose-build.yml up -d```
 6. Connect to the host on port 5198
 
 ## Source
