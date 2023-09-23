@@ -30,6 +30,23 @@ if (Config.ReadSetting("API Key", "Test API Key") == "Test API Key")
     Config.SetSetting("API Key", APIKey.ToString());
 }
 
+// kick off any delayed upgrade tasks
+// run 1002 background updates in the background on every start
+DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1002);
+// start the task
+ProcessQueue.QueueItem queueItem = new ProcessQueue.QueueItem(
+        ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade,
+        1,
+        new List<ProcessQueue.QueueItemType>
+        {
+            ProcessQueue.QueueItemType.All
+        },
+        false,
+        true
+    );
+queueItem.ForceExecute();
+ProcessQueue.QueueItems.Add(queueItem);
+
 // set up server
 var builder = WebApplication.CreateBuilder(args);
 
@@ -171,14 +188,6 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
         ProcessQueue.QueueItemType.OrganiseLibrary
     })
     );
-
-// kick off any delayed upgrade tasks
-// run 1002 background updates in the background on every start
-DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1002);
-// start the task
-ProcessQueue.QueueItem queueItem = new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade, 1, false, true);
-queueItem.ForceExecute();
-ProcessQueue.QueueItems.Add(queueItem);
 
 Logging.WriteToDiskOnly = false;
 
