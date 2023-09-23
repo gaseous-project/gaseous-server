@@ -19,7 +19,19 @@
         "retroPieDirectoryName": "3do",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "3do"
+            "core": "3do",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "3do",
+                            "alternateCoreName": "opera",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
         },
         "bios": [
             {
@@ -228,7 +240,25 @@
         "retroPieDirectoryName": "",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "arcade"
+            "core": "arcade",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "arcade",
+                            "alternateCoreName": "fbneo",
+                            "default": true
+                        },
+                        {
+                            "core": "fbalpha2012_cps1"
+                        },
+                        {
+                            "core": "fbalpha2012_cps2"
+                        }
+                    ]
+                }
+            ]
         },
         "bios": []
     },
@@ -257,7 +287,19 @@
         "retroPieDirectoryName": "atari2600",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "atari2600"
+            "core": "atari2600",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "atari2600",
+                            "alternateCoreName": "stella2014",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
         },
         "bios": []
     },
@@ -298,7 +340,19 @@
         "retroPieDirectoryName": "atari5200",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "a5200"
+            "core": "atari5200",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "atari5200",
+                            "alternateCoreName": "a5200",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
         },
         "bios": [
             {
@@ -332,7 +386,19 @@
         "retroPieDirectoryName": "atari7800",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "atari7800"
+            "core": "atari7800",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "atari7800",
+                            "alternateCoreName": "prosystem",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
         },
         "bios": [
             {
@@ -363,7 +429,19 @@
         "retroPieDirectoryName": "atarijaguar",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "jaguar"
+            "core": "jaguar",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "jaguar",
+                            "alternateCoreName": "virtualjaguar",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
         },
         "bios": []
     },
@@ -388,7 +466,19 @@
         "retroPieDirectoryName": "atarilynx",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "lynx"
+            "core": "lynx",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "lynx",
+                            "alternateCoreName": "handy",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
         },
         "bios": [
             {
@@ -527,7 +617,22 @@
         "retroPieDirectoryName": "gb",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "gb"
+            "core": "gb",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "gb",
+                            "alternateCoreName": "gambatte",
+                            "default": true
+                        },
+                        {
+                            "core": "mgba"
+                        }
+                    ]
+                }
+            ]
         },
         "bios": [
             {
@@ -563,7 +668,19 @@
         "retroPieDirectoryName": "gba",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "gba"
+            "core": "gba",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "gb",
+                            "alternateCoreName": "mgba",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
         },
         "bios": [
             {
@@ -609,7 +726,22 @@
         "retroPieDirectoryName": "gbc",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "gb"
+            "core": "gb",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "gb",
+                            "alternateCoreName": "gambatte",
+                            "default": true
+                        },
+                        {
+                            "core": "mgba"
+                        }
+                    ]
+                }
+            ]
         },
         "bios": [
             {
@@ -648,7 +780,19 @@
         "retroPieDirectoryName": "n64",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "n64"
+            "core": "n64",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "n64",
+                            "alternateCoreName": "mupen64plus_next",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
         },
         "bios": []
     },
@@ -737,7 +881,22 @@
         "retroPieDirectoryName": "nes",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "nes"
+            "core": "nes",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "nes",
+                            "alternateCoreName": "fceumm",
+                            "default": true
+                        },
+                        {
+                            "core": "nestopia"
+                        }
+                    ]
+                }
+            ]
         },
         "bios": [
             {
@@ -821,7 +980,22 @@
         "retroPieDirectoryName": "psx",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "psx"
+            "core": "psx",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "psx",
+                            "alternateCoreName": "pcsx_rearmed",
+                            "default": true
+                        },
+                        {
+                            "core": "mednafen_psx"
+                        }
+                    ]
+                }
+            ]
         },
         "bios": [
             {
@@ -865,7 +1039,19 @@
         "retroPieDirectoryName": "sega32x",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "sega32x"
+            "core": "sega32x",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "sega32x",
+                            "alternateCoreName": "picodrive",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
         },
         "bios": []
     },
@@ -892,7 +1078,22 @@
         "retroPieDirectoryName": "segacd",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "segaCD"
+            "core": "segaCD",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "segaCD",
+                            "alternateCoreName": "genesis_plus_gx",
+                            "default": true
+                        },
+                        {
+                            "core": "picodrive"
+                        }
+                    ]
+                }
+            ]
         },
         "bios": [
             {
@@ -936,7 +1137,19 @@
         "retroPieDirectoryName": "gamegear",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "segaGG"
+            "core": "segaGG",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "segaGG",
+                            "alternateCoreName": "genesis_plus_gx",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
         },
         "bios": [
             {
@@ -971,7 +1184,19 @@
         "retroPieDirectoryName": "mastersystem",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "segaMS"
+            "core": "segaMS",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "segaMS",
+                            "alternateCoreName": "genesis_plus_gx",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
         },
         "bios": [
             {
@@ -1020,7 +1245,22 @@
         "retroPieDirectoryName": "megadrive",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "segaMD"
+            "core": "segaMD",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "segaMD",
+                            "alternateCoreName": "genesis_plus_gx",
+                            "default": true
+                        },
+                        {
+                            "core": "picodrive"
+                        }
+                    ]
+                }
+            ]
         },
         "bios": [
             {
@@ -1057,7 +1297,22 @@
         "retroPieDirectoryName": "saturn",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "segaSaturn"
+            "core": "segaSaturn",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "segaSaturn",
+                            "alternateCoreName": "yabause",
+                            "default": true
+                        },
+                        {
+                            "core": "mgba"
+                        }
+                    ]
+                }
+            ]
         },
         "bios": [
             {
@@ -1102,7 +1357,19 @@
         "retroPieDirectoryName": "snes",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "snes"
+            "core": "snes",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "snes",
+                            "alternateCoreName": "snes9x",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
         },
         "bios": []
     },
@@ -1126,7 +1393,19 @@
         "retroPieDirectoryName": "vb",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "vb"
+            "core": "vb",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "vb",
+                            "alternateCoreName": "beetle_vb",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
         },
         "bios": []
     },
