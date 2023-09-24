@@ -36,7 +36,7 @@ namespace gaseous_server
             List<ProcessQueue.QueueItem> ActiveList = new List<ProcessQueue.QueueItem>();
             ActiveList.AddRange(ProcessQueue.QueueItems);
             foreach (ProcessQueue.QueueItem qi in ActiveList) {
-                if (CheckProcessBlockList(qi) == true) {
+                if (CheckIfProcessIsBlockedByOthers(qi) == false) {
                     qi.BlockedState(false);
                     if (DateTime.UtcNow > qi.NextRunTime || qi.Force == true)
                     {
@@ -69,30 +69,24 @@ namespace gaseous_server
             _timer?.Dispose();
         }
 
-        private bool CheckProcessBlockList(ProcessQueue.QueueItem queueItem)
+        private bool CheckIfProcessIsBlockedByOthers(ProcessQueue.QueueItem queueItem)
         {
-            if (queueItem.Blocks.Count > 0)
+            foreach (ProcessQueue.QueueItem qi in ProcessQueue.QueueItems)
             {
-                foreach (ProcessQueue.QueueItem qi in ProcessQueue.QueueItems)
-                {
+                if (qi.ItemState == ProcessQueue.QueueItemState.Running) {
+                    // other service is running, check if queueItem is blocked by it
                     if (
-                        (
-                            queueItem.Blocks.Contains(qi.ItemType) || 
-                            queueItem.Blocks.Contains(ProcessQueue.QueueItemType.All)
-                        ) &&
-                            qi.ItemState == ProcessQueue.QueueItemState.Running
-                        )
+                        qi.Blocks.Contains(queueItem.ItemType) ||
+                        qi.Blocks.Contains(ProcessQueue.QueueItemType.All)
+                    )
                     {
-                        return false;
+                        Console.WriteLine(queueItem.ItemType.ToString() + " is blocked by " + qi.ItemType.ToString());
+                        return true;
                     }
                 }
+            }
 
-                return true;
-            }
-            else
-            {
-                return true;
-            }
+            return false;
         }
     }
 }
