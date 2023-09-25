@@ -7,30 +7,53 @@
     
 </table>
 
+<div style="width: 960px; text-align: center;">
+    <button value="Load More" onclick="loadLogs(lastStartIndex, currentPage);">Load More</button>
+</div>
+
 <script type="text/javascript">
-    function loadLogs() {
+    var lastStartIndex = 0;
+    var currentPage = 1;
+
+    function loadLogs(StartIndex, PageNumber) {
+        var apiQuery = '';
+
+        if (StartIndex && PageNumber) {
+            currentPage += 1;
+            apiQuery = '?StartIndex=' + StartIndex + '&PageNumber=' + PageNumber;
+        } else {
+            currentPage = 1;
+        }
+
         ajaxCall(
-            '/api/v1/Logs',
+            '/api/v1/Logs' + apiQuery,
             'GET',
             function (result) {
                 var newTable = document.getElementById('settings_events_table');
-                newTable.innerHTML = '';
-                newTable.appendChild(
-                    createTableRow(
-                        true, 
-                        [ 
-                            ['Event Time', 'logs_table_cell_150px'],
-                            ['Severity', 'logs_table_cell_150px'],
-                            'Process',
-                            'Message'
-                        ],
-                        '',
-                        ''
-                        )
-                    );
+                if (currentPage == 1) {
+                    newTable.innerHTML = '';
+                
+                    newTable.appendChild(
+                        createTableRow(
+                            true, 
+                            [
+                                //'Id',
+                                ['Event Time', 'logs_table_cell_150px'],
+                                ['Severity', 'logs_table_cell_150px'],
+                                'Process',
+                                'Message'
+                            ],
+                            '',
+                            ''
+                            )
+                        );
+                }
 
                 for (var i = 0; i < result.length; i++) {
+                    lastStartIndex = result[i].id;
+
                     var newRow = [
+                        //result[i].id,
                         moment(result[i].eventTime).fromNow(),
                         result[i].eventType,
                         result[i].process,
