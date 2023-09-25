@@ -13,9 +13,9 @@ namespace gaseous_server.Controllers
     {
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public List<Logging.LogItem> Logs()
+        public List<Logging.LogItem> Logs(long? StartIndex, int PageNumber = 1, int PageSize = 100)
         {
-            return Logging.GetLogs();
+            return Logging.GetLogs(StartIndex, PageNumber, PageSize);
         }
     }
 }

@@ -111,17 +111,30 @@ namespace gaseous_tools
             File.AppendAllText(Config.LogFilePath, TraceOutput);
         }
 
-        static public List<LogItem> GetLogs() 
+        static public List<LogItem> GetLogs(long? StartIndex, int PageNumber = 1, int PageSize = 100) 
         {
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM ServerLogs ORDER BY Id DESC";
-            DataTable dataTable = db.ExecuteCMD(sql);
+            string sql = "";
+            if (StartIndex == null)
+            {
+                sql = "SELECT * FROM ServerLogs ORDER BY Id DESC LIMIT @PageSize OFFSET @PageNumber;";
+            }
+            else
+            {
+                sql = "SELECT * FROM ServerLogs WHERE Id < @StartIndex ORDER BY Id DESC LIMIT @PageSize OFFSET @PageNumber;";
+            }
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            dbDict.Add("StartIndex", StartIndex);
+            dbDict.Add("PageNumber", (PageNumber - 1) * PageSize);
+            dbDict.Add("PageSize", PageSize);
+            DataTable dataTable = db.ExecuteCMD(sql, dbDict);
 
             List<LogItem> logs = new List<LogItem>();
             foreach (DataRow row in dataTable.Rows)
             {
                 LogItem log = new LogItem
                 {
+                    Id = (long)row["Id"],
                     EventTime = DateTime.Parse(((DateTime)row["EventTime"]).ToString("yyyy-MM-ddThh:mm:ss") + 'Z'),
                     EventType = (LogType)row["EventType"],
                     Process = (string)row["Process"],
@@ -145,6 +158,7 @@ namespace gaseous_tools
 
         public class LogItem
         {
+            public long Id { get; set; }
             public DateTime EventTime { get; set; }
             public LogType? EventType { get; set; }
             public string Process { get; set; } = "";
