@@ -80,7 +80,7 @@ namespace gaseous_server
                         qi.Blocks.Contains(ProcessQueue.QueueItemType.All)
                     )
                     {
-                        Console.WriteLine(queueItem.ItemType.ToString() + " is blocked by " + qi.ItemType.ToString());
+                        //Console.WriteLine(queueItem.ItemType.ToString() + " is blocked by " + qi.ItemType.ToString());
                         return true;
                     }
                 }
