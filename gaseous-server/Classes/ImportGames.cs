@@ -401,7 +401,7 @@ namespace gaseous_server.Classes
 
             if (UpdateId == 0)
             {
-                sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, Path, MetadataSource, MetadataGameName, MetadataVersion) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @Attributes, @romtype, @romtypemedia, @medialabel, @path, @metadatasource, @metadatagamename, @metadataversion); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+                sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, Path, MetadataSource, MetadataGameName, MetadataVersion, LibraryId) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @Attributes, @romtype, @romtypemedia, @medialabel, @path, @metadatasource, @metadatagamename, @metadataversion, @libraryid); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
             } else
             {
                 sql = "UPDATE Games_Roms SET PlatformId=platformid, GameId=@gameid, Name=@name, Size=@size, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion WHERE Id=@id;";
@@ -418,6 +418,7 @@ namespace gaseous_server.Classes
             dbDict.Add("metadatasource", discoveredSignature.Rom.SignatureSource);
             dbDict.Add("metadatagamename", discoveredSignature.Game.Name);
             dbDict.Add("metadataversion", 2);
+            dbDict.Add("libraryid", GameLibrary.GetDefaultLibrary.Id);
 
             if (discoveredSignature.Rom.Attributes != null)
             {
@@ -474,7 +475,7 @@ namespace gaseous_server.Classes
 			{
 				gameSlug = game.Slug;
 			}
-			string DestinationPath = Path.Combine(Config.LibraryConfiguration.LibraryDataDirectory, gameSlug, platformSlug);
+			string DestinationPath = Path.Combine(GameLibrary.GetDefaultLibrary.Path, gameSlug, platformSlug);
 			if (!Directory.Exists(DestinationPath))
 			{
 				Directory.CreateDirectory(DestinationPath);
@@ -550,7 +551,7 @@ namespace gaseous_server.Classes
 			}
 
 			// clean up empty directories
-			DeleteOrphanedDirectories(Config.LibraryConfiguration.LibraryDataDirectory);
+			DeleteOrphanedDirectories(GameLibrary.GetDefaultLibrary.Path);
 
             Logging.Log(Logging.LogType.Information, "Organise Library", "Finsihed library organisation");
         }
@@ -589,7 +590,7 @@ namespace gaseous_server.Classes
                     long romId = (long)dtRoms.Rows[i]["Id"];
                     string romPath = (string)dtRoms.Rows[i]["Path"];
 
-                    if (!romPath.StartsWith(Config.LibraryConfiguration.LibraryDataDirectory))
+                    if (!romPath.StartsWith(GameLibrary.GetDefaultLibrary.Path))
                     {
                         Logging.Log(Logging.LogType.Information, "Library Scan", " Deleting database entry for files with incorrect directory " + romPath);
                         string deleteSql = "DELETE FROM Games_Roms WHERE Id=@id";
@@ -605,7 +606,7 @@ namespace gaseous_server.Classes
 
             // search for files in the library that aren't in the database
             Logging.Log(Logging.LogType.Information, "Library Scan", "Looking for orphaned library files to add");
-            string[] LibraryFiles = Directory.GetFiles(Config.LibraryConfiguration.LibraryDataDirectory, "*.*", SearchOption.AllDirectories);
+            string[] LibraryFiles = Directory.GetFiles(GameLibrary.GetDefaultLibrary.Path, "*.*", SearchOption.AllDirectories);
             foreach (string LibraryFile in LibraryFiles)
             {
                 if (!Common.SkippableFiles.Contains<string>(Path.GetFileName(LibraryFile), StringComparer.OrdinalIgnoreCase))

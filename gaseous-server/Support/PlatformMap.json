@@ -120,8 +120,20 @@
         },
         "retroPieDirectoryName": "amiga",
         "webEmulator": {
-            "type": "",
-            "core": ""
+            "type": "EmulatorJS",
+            "core": "amiga",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "amiga",
+                            "alternateCoreName": "puae",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
         },
         "bios": [
             {
@@ -570,8 +582,20 @@
         },
         "retroPieDirectoryName": "c64",
         "webEmulator": {
-            "type": "",
-            "core": ""
+            "type": "EmulatorJS",
+            "core": "vice_x64",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "c64",
+                            "alternateCoreName": "vice_x64",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
         },
         "bios": [
             {
