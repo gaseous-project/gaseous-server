@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using gaseous_server.Classes.Metadata;
 using gaseous_tools;
 using IGDB.Models;
 using MySqlX.XDevAPI;
@@ -654,12 +655,25 @@ namespace gaseous_server.Classes
 
                             // get discovered platform
                             IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(sig.Flags.IGDBPlatformId);
+
+                            IGDB.Models.Game determinedGame = new Game();
                             if (determinedPlatform == null)
                             {
-                                determinedPlatform = new IGDB.Models.Platform();
+                                if (library.DefaultPlatformId == 0)
+                                {
+                                    determinedPlatform = new IGDB.Models.Platform();
+                                    determinedGame = SearchForGame(sig.Game.Name, sig.Flags.IGDBPlatformId);
+                                }
+                                else
+                                {
+                                    determinedPlatform = Platforms.GetPlatform(library.DefaultPlatformId);
+                                    determinedGame = SearchForGame(sig.Game.Name, library.DefaultPlatformId);
+                                }
                             }
-
-                            IGDB.Models.Game determinedGame = SearchForGame(sig.Game.Name, sig.Flags.IGDBPlatformId);
+                            else
+                            {
+                                determinedGame = SearchForGame(sig.Game.Name, (long)determinedPlatform.Id);
+                            }
 
                             StoreROM(library, hash, determinedGame, determinedPlatform, sig, LibraryFile);
                         }
