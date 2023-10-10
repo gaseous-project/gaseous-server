@@ -15,6 +15,8 @@ namespace gaseous_server.Models
 {
 	public class PlatformMapping
 	{
+        private static Dictionary<string, PlatformMapItem> PlatformMapCache = new Dictionary<string, PlatformMapItem>();
+
         /// <summary>
         /// Updates the platform map from the embedded platform map resource
         /// </summary>
@@ -98,7 +100,15 @@ namespace gaseous_server.Models
                 List<PlatformMapItem> platformMaps = new List<PlatformMapItem>();
                 foreach (DataRow row in data.Rows)
                 {
-                    platformMaps.Add(BuildPlatformMapItem(row));
+                    long mapId = (long)row["Id"];
+                    if (PlatformMapCache.ContainsKey(mapId.ToString()))
+                    {
+                        platformMaps.Add(PlatformMapCache[mapId.ToString()]);
+                    }
+                    else
+                    {
+                        platformMaps.Add(BuildPlatformMapItem(row));
+                    }
                 }
 
                 platformMaps.Sort((x, y) => x.IGDBName.CompareTo(y.IGDBName));
@@ -109,23 +119,30 @@ namespace gaseous_server.Models
 
         public static PlatformMapItem GetPlatformMap(long Id)
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM PlatformMap WHERE Id = @Id";
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
-            dbDict.Add("Id", Id);
-            DataTable data = db.ExecuteCMD(sql, dbDict);
-
-            if (data.Rows.Count > 0)
+            if (PlatformMapCache.ContainsKey(Id.ToString()))
             {
-                PlatformMapItem platformMap = BuildPlatformMapItem(data.Rows[0]);
-
-                return platformMap;
+                return PlatformMapCache[Id.ToString()];
             }
             else
             {
-                Exception exception = new Exception("Platform Map Id " + Id + " does not exist.");
-                Logging.Log(Logging.LogType.Critical, "Platform Map", "Platform Map Id " + Id + " does not exist.", exception);
-                throw exception;
+                Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                string sql = "SELECT * FROM PlatformMap WHERE Id = @Id";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>();
+                dbDict.Add("Id", Id);
+                DataTable data = db.ExecuteCMD(sql, dbDict);
+
+                if (data.Rows.Count > 0)
+                {
+                    PlatformMapItem platformMap = BuildPlatformMapItem(data.Rows[0]);
+
+                    return platformMap;
+                }
+                else
+                {
+                    Exception exception = new Exception("Platform Map Id " + Id + " does not exist.");
+                    Logging.Log(Logging.LogType.Critical, "Platform Map", "Platform Map Id " + Id + " does not exist.", exception);
+                    throw exception;
+                }
             }
         }
 
@@ -217,6 +234,11 @@ namespace gaseous_server.Models
                     dbDict.Add("Hash", biosItem.hash);
                     db.ExecuteCMD(sql, dbDict);
                 }
+            }
+
+            if (PlatformMapCache.ContainsKey(item.IGDBId.ToString()))
+            {
+                PlatformMapCache.Remove(item.IGDBId.ToString());
             }
         }
 
@@ -321,6 +343,15 @@ namespace gaseous_server.Models
             };
             mapItem.Bios = bioss;
             
+            if (PlatformMapCache.ContainsKey(IGDBId.ToString()))
+            {
+                PlatformMapCache[IGDBId.ToString()] = mapItem;
+            }
+            else
+            {
+                PlatformMapCache.Add(IGDBId.ToString(), mapItem);
+            }
+
             return mapItem;
         }
 
