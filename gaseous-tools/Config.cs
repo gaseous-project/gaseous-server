@@ -183,7 +183,7 @@ namespace gaseous_tools
             else
             {
                 Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                string sql = "SELECT Value FROM Settings WHERE Setting = @SettingName";
+                string sql = "SELECT * FROM Settings WHERE Setting = @SettingName";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
                 dbDict.Add("SettingName", SettingName);
                 dbDict.Add("Value", DefaultValue);
@@ -337,13 +337,13 @@ namespace gaseous_tools
                     }
                 }
 
-                // public string LibraryDataDirectory
-                // {
-                //     get
-                //     {
-                //         return Path.Combine(LibraryRootDirectory, "Library");
-                //     }
-                // }
+                public string LibraryDataDirectory
+                {
+                    get
+                    {
+                        return Path.Combine(LibraryRootDirectory, "Library");
+                    }
+                }
 
                 public string LibraryBIOSDirectory
                 {
@@ -418,6 +418,7 @@ namespace gaseous_tools
                 {
                     if (!Directory.Exists(LibraryRootDirectory)) { Directory.CreateDirectory(LibraryRootDirectory); }
                     if (!Directory.Exists(LibraryImportDirectory)) { Directory.CreateDirectory(LibraryImportDirectory); }
+                    if (!Directory.Exists(LibraryDataDirectory)) { Directory.CreateDirectory(LibraryDataDirectory); }
                     if (!Directory.Exists(LibraryBIOSDirectory)) { Directory.CreateDirectory(LibraryBIOSDirectory); }
                     if (!Directory.Exists(LibraryUploadDirectory)) { Directory.CreateDirectory(LibraryUploadDirectory); }
                     if (!Directory.Exists(LibraryMetadataDirectory)) { Directory.CreateDirectory(LibraryMetadataDirectory); }

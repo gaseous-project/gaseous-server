@@ -14,9 +14,6 @@ namespace gaseous_tools
 
         public static void PostUpgradeScript(int TargetSchemaVersion, gaseous_tools.Database.databaseType? DatabaseType) 
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
-
             switch(DatabaseType)
             {
                 case Database.databaseType.MySql:
@@ -26,26 +23,6 @@ namespace gaseous_tools
                             // this is a safe background task
                             BackgroundUpgradeTargetSchemaVersions.Add(1002);
                             break;
-                        
-                        case 1004:
-                            // needs to run on start up
-
-                            // copy root path to new libraries format
-                            string oldRoot = Path.Combine(Config.LibraryConfiguration.LibraryRootDirectory, "Library");
-                            string sql = "INSERT INTO GameLibraries (Name, Path, DefaultLibrary, DefaultPlatform) VALUES (@name, @path, @defaultlibrary, @defaultplatform); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
-                            dbDict.Add("name", "Default");
-                            dbDict.Add("path", oldRoot);
-                            dbDict.Add("defaultlibrary", 1);
-                            dbDict.Add("defaultplatform", 0);
-                            DataTable data = db.ExecuteCMD(sql, dbDict);
-
-                            // apply the new library id to the existing roms
-                            sql = "UPDATE Games_Roms SET LibraryId=@libraryid;";
-                            dbDict.Clear();
-                            dbDict.Add("libraryid", data.Rows[0][0]);
-                            db.ExecuteCMD(sql, dbDict);
-                            break;
-
                     }
                     break;
             }

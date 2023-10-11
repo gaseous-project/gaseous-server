@@ -81,19 +81,16 @@ namespace gaseous_server.Classes
 		public static void DeleteRom(long RomId)
 		{
 			GameRomItem rom = GetRom(RomId);
-			if (rom.Library.IsDefaultLibrary == true)
+			if (File.Exists(rom.Path))
 			{
-				if (File.Exists(rom.Path))
-				{
-					File.Delete(rom.Path);
-				}
-
-				Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-				string sql = "DELETE FROM Games_Roms WHERE Id = @id";
-				Dictionary<string, object> dbDict = new Dictionary<string, object>();
-				dbDict.Add("id", RomId);
-				db.ExecuteCMD(sql, dbDict);
+				File.Delete(rom.Path);
 			}
+
+            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "DELETE FROM Games_Roms WHERE Id = @id";
+			Dictionary<string, object> dbDict = new Dictionary<string, object>();
+			dbDict.Add("id", RomId);
+			db.ExecuteCMD(sql, dbDict);
         }
 
 		private static GameRomItem BuildRom(DataRow romDR)
@@ -116,8 +113,7 @@ namespace gaseous_server.Classes
                 MediaLabel = (string)romDR["medialabel"],
                 Path = (string)romDR["path"],
 				Source = (gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType)(Int32)romDR["metadatasource"],
-				SignatureSourceGameTitle = (string)Common.ReturnValueIfNull(romDR["MetadataGameName"], ""),
-				Library = GameLibrary.GetLibrary((int)romDR["LibraryId"])
+				SignatureSourceGameTitle = (string)Common.ReturnValueIfNull(romDR["MetadataGameName"], "")
             };
 
 			// check for a web emulator and update the romItem
@@ -157,7 +153,6 @@ namespace gaseous_server.Classes
 			public string? Path { get; set; }
             public gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType Source { get; set; }
 			public string? SignatureSourceGameTitle { get; set;}
-			public GameLibrary.LibraryItem Library { get; set; }
         }
     }
 }

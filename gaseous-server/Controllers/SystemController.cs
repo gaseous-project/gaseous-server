@@ -24,10 +24,8 @@ namespace gaseous_server.Controllers
 
             // disk size
             List<SystemInfo.PathItem> Disks = new List<SystemInfo.PathItem>();
-            foreach (GameLibrary.LibraryItem libraryItem in GameLibrary.GetLibraries)
-            {
-                Disks.Add(GetDisk(libraryItem.Path));
-            }
+            //Disks.Add(GetDisk(gaseous_tools.Config.ConfigurationPath));
+            Disks.Add(GetDisk(gaseous_tools.Config.LibraryConfiguration.LibraryRootDirectory));
             ReturnValue.Paths = Disks;
 
             // database size

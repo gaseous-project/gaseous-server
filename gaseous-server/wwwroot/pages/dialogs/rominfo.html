@@ -8,10 +8,6 @@
     <div id="properties_bodypanel_general" name="properties_tab" style="display: none;">
         <table cellspacing="0" style="width: 100%;">
             <tr>
-                <th>Library</th>
-                <td id="rominfo_library"></td>
-            </tr>
-            <tr>
                 <th>Platform</th>
                 <td id="rominfo_platform"></td>
             </tr>
@@ -121,7 +117,6 @@
     ajaxCall('/api/v1/Games/' + gameId + '/roms/' + modalVariables, 'GET', function (result) {
         romData = result;
         document.getElementById('modal-heading').innerHTML = result.name;
-        document.getElementById('rominfo_library').innerHTML = result.library.name;
         document.getElementById('rominfo_platform').innerHTML = result.platform.name;
         document.getElementById('rominfo_size').innerHTML = formatBytes(result.size, 2);
         document.getElementById('rominfo_type').innerHTML = getRomType(result.romType);
@@ -134,10 +129,6 @@
 
         document.getElementById('properties_fixplatform').innerHTML = "<option value='" + result.platform.id + "' selected='selected'>" + result.platform.name + "</option>";
         document.getElementById('properties_fixgame').innerHTML = "<option value='" + gameData.id + "' selected='selected'>" + gameData.name + "</option>";
-
-        if (result.library.isDefaultLibrary == false) {
-            document.getElementById('romDelete').style.display = 'none';
-        }
 
         if (result.attributes.length > 0) {
             document.getElementById('properties_bodypanel_attributes').appendChild(BuildAttributesTable(result.attributes, result.source));
