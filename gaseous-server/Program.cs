@@ -198,9 +198,8 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     })
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.LibraryScan, 30, new List<ProcessQueue.QueueItemType>
+    ProcessQueue.QueueItemType.LibraryScan, 1440, new List<ProcessQueue.QueueItemType>
     {
-        ProcessQueue.QueueItemType.TitleIngestor,
         ProcessQueue.QueueItemType.OrganiseLibrary
     })
     );
