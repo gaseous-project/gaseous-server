@@ -27,7 +27,7 @@ do
     {
         Thread.Sleep(30000);
     }
-} while (dbOnline == true);
+} while (dbOnline == false);
 
 // set up db
 db.InitDB();
