@@ -421,6 +421,10 @@ namespace gaseous_server.Classes.Metadata
 
         private static void CacheClean()
         {
+            if (ObjectCache == null)
+            {
+                ObjectCache = new Dictionary<string, MemoryCacheObject>();
+            }
             Dictionary<string, MemoryCacheObject> workCache = ObjectCache;
             foreach (KeyValuePair<string, MemoryCacheObject> objectCache in workCache)
             {
