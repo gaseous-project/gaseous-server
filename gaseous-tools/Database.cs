@@ -206,18 +206,6 @@ namespace gaseous_tools
 			}
 		}
 
-		public bool TestConnection()
-		{
-			switch (_ConnectorType)
-            {
-                case databaseType.MySql:
-                    MySQLServerConnector conn = new MySQLServerConnector(_ConnectionString);
-                    return conn.TestConnection();
-                default:
-                    return false;
-            }
-		}
-
         public class SQLTransactionItem
         {
 			public SQLTransactionItem()
@@ -326,20 +314,6 @@ namespace gaseous_tools
                 return cmd;
             }
 
-			public bool TestConnection()
-			{
-				MySqlConnection conn = new MySqlConnection(DBConn);
-				try
-				{
-					conn.Open();
-					conn.Close();
-					return true;
-				}
-				catch
-				{
-					return false;
-				}
-			}
         }
     }
 }
