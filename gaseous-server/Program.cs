@@ -12,8 +12,24 @@ using Microsoft.OpenApi.Models;
 Logging.WriteToDiskOnly = true;
 Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server " + Assembly.GetExecutingAssembly().GetName().Version);
 
-// set up db
 Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
+// check db availability
+bool dbOnline = false;
+do
+{
+    Logging.Log(Logging.LogType.Information, "Startup", "Waiting for database...");
+    if (db.TestConnection() == true)
+    {
+        dbOnline = true;
+    }
+    else
+    {
+        Thread.Sleep(30000);
+    }
+} while (dbOnline == true);
+
+// set up db
 db.InitDB();
 
 // load app settings

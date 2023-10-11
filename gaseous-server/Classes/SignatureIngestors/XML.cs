@@ -212,12 +212,13 @@ namespace gaseous_server.SignatureIngestors.XML
                                             dbDict.Add("romtypemedia", Common.ReturnValueIfNull(romObject.RomTypeMedia, ""));
                                             dbDict.Add("medialabel", Common.ReturnValueIfNull(romObject.MediaLabel, ""));
                                             dbDict.Add("metadatasource", romObject.SignatureSource);
+                                            dbDict.Add("ingestorversion", 2);
 
                                             sigDB = db.ExecuteCMD(sql, dbDict);
                                             if (sigDB.Rows.Count == 0)
                                             {
                                                 // entry not present, insert it
-                                                sql = "INSERT INTO Signatures_Roms (GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, MetadataSource) VALUES (@gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @attributes, @romtype, @romtypemedia, @medialabel, @metadatasource); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+                                                sql = "INSERT INTO Signatures_Roms (GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, MetadataSource, IngestorVersion) VALUES (@gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @attributes, @romtype, @romtypemedia, @medialabel, @metadatasource, @ingestorversion); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
                                                 sigDB = db.ExecuteCMD(sql, dbDict);
 
 
