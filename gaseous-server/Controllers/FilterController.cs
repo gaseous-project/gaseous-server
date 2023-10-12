@@ -36,7 +36,7 @@ namespace gaseous_server.Controllers
 
             // genres
             List<Genre> genres = new List<Genre>();
-            sql = "SELECT DISTINCT t1.Id, t1.`Name` FROM Genre AS t1 JOIN (SELECT * FROM Game WHERE (SELECT COUNT(Id) FROM Games_Roms WHERE GameId = Game.Id) > 0) AS t2 ON JSON_CONTAINS(t2.Genres, CAST(t1.Id AS char), '$') ORDER BY t1.`Name`";
+            sql = "SELECT DISTINCT Relation_Game_Genres.GenresId AS id, Genre.`Name` FROM Relation_Game_Genres JOIN Genre ON Relation_Game_Genres.GenresId = Genre.Id WHERE Relation_Game_Genres.GameId IN (SELECT DISTINCT GameId FROM Games_Roms) ORDER BY `Name`;";
             dbResponse = db.ExecuteCMD(sql);
 
             foreach (DataRow dr in dbResponse.Rows)
@@ -47,7 +47,7 @@ namespace gaseous_server.Controllers
 
             // game modes
             List<GameMode> gameModes = new List<GameMode>();
-            sql = "SELECT DISTINCT t1.Id, t1.`Name` FROM GameMode AS t1 JOIN (SELECT * FROM Game WHERE (SELECT COUNT(Id) FROM Games_Roms WHERE GameId = Game.Id) > 0) AS t2 ON JSON_CONTAINS(t2.GameModes, CAST(t1.Id AS char), '$') ORDER BY t1.Id";
+            sql = "SELECT DISTINCT Relation_Game_GameModes.GameModesId AS id, GameMode.`Name` FROM Relation_Game_GameModes JOIN GameMode ON Relation_Game_GameModes.GameModesId = GameMode.Id WHERE Relation_Game_GameModes.GameId IN (SELECT DISTINCT GameId FROM Games_Roms) ORDER BY `Name`;";
             dbResponse = db.ExecuteCMD(sql);
 
             foreach (DataRow dr in dbResponse.Rows)
@@ -58,7 +58,7 @@ namespace gaseous_server.Controllers
 
             // player perspectives
             List<PlayerPerspective> playerPerspectives = new List<PlayerPerspective>();
-            sql = "SELECT DISTINCT t1.Id, t1.`Name` FROM PlayerPerspective AS t1 JOIN (SELECT * FROM Game WHERE (SELECT COUNT(Id) FROM Games_Roms WHERE GameId = Game.Id) > 0) AS t2 ON JSON_CONTAINS(t2.PlayerPerspectives, CAST(t1.Id AS char), '$') ORDER BY t1.`Name`";
+            sql = "SELECT DISTINCT Relation_Game_PlayerPerspectives.PlayerPerspectivesId AS id, PlayerPerspective.`Name` FROM Relation_Game_PlayerPerspectives JOIN PlayerPerspective ON Relation_Game_PlayerPerspectives.PlayerPerspectivesId = PlayerPerspective.Id WHERE Relation_Game_PlayerPerspectives.GameId IN (SELECT DISTINCT GameId FROM Games_Roms) ORDER BY `Name`;";
             dbResponse = db.ExecuteCMD(sql);
 
             foreach (DataRow dr in dbResponse.Rows)
@@ -69,7 +69,7 @@ namespace gaseous_server.Controllers
 
             // themes
             List<Theme> themes = new List<Theme>();
-            sql = "SELECT DISTINCT t1.Id, t1.`Name` FROM Theme AS t1 JOIN (SELECT * FROM Game WHERE (SELECT COUNT(Id) FROM Games_Roms WHERE GameId = Game.Id) > 0) AS t2 ON JSON_CONTAINS(t2.Themes, CAST(t1.Id AS char), '$') ORDER BY t1.`Name`";
+            sql = "SELECT DISTINCT Relation_Game_Themes.ThemesId AS id, Theme.`Name` FROM Relation_Game_Themes JOIN Theme ON Relation_Game_Themes.ThemesId = Theme.Id WHERE Relation_Game_Themes.GameId IN (SELECT DISTINCT GameId FROM Games_Roms) ORDER BY `Name`;";
             dbResponse = db.ExecuteCMD(sql);
 
             foreach (DataRow dr in dbResponse.Rows)

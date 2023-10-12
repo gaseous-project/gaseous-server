@@ -106,6 +106,7 @@ namespace gaseous_server.Classes.Metadata
                     {
                         returnValue = await GetObjectFromServer(WhereClause);
                         Storage.NewCacheValue(returnValue, true);
+                        UpdateSubClasses(returnValue, getAllMetadata, followSubGames);
                     }
                     catch (Exception ex)
                     {
