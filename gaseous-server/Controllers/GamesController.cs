@@ -99,7 +99,7 @@ namespace gaseous_server.Controllers
 
             if (genre.Length > 0)
             {
-                tempVal = "(";
+                tempVal = "Relation_Game_Genres.GenresId IN (";
                 string[] genreClauseItems = genre.Split(",");
                 for (int i = 0; i < genreClauseItems.Length; i++)
                 {
@@ -108,7 +108,7 @@ namespace gaseous_server.Controllers
                         tempVal += " AND ";
                     }
                     string genreLabel = "@Genre" + i;
-                    tempVal += "JSON_CONTAINS(Game.Genres, " + genreLabel + ", '$')";
+                    tempVal += genreLabel;
                     whereParams.Add(genreLabel, genreClauseItems[i]);
                 }
                 tempVal += ")";
@@ -117,7 +117,7 @@ namespace gaseous_server.Controllers
 
             if (gamemode.Length > 0)
             {
-                tempVal = "(";
+                tempVal = "Relation_Game_GameModes.GameModesId IN (";
                 string[] gameModeClauseItems = gamemode.Split(",");
                 for (int i = 0; i < gameModeClauseItems.Length; i++)
                 {
@@ -126,7 +126,7 @@ namespace gaseous_server.Controllers
                         tempVal += " AND ";
                     }
                     string gameModeLabel = "@GameMode" + i;
-                    tempVal += "JSON_CONTAINS(Game.GameModes, " + gameModeLabel + ", '$')";
+                    tempVal += gameModeLabel;
                     whereParams.Add(gameModeLabel, gameModeClauseItems[i]);
                 }
                 tempVal += ")";
@@ -135,7 +135,7 @@ namespace gaseous_server.Controllers
 
             if (playerperspective.Length > 0)
             {
-                tempVal = "(";
+                tempVal = "Relation_Game_PlayerPerspectives.PlayerPerspectivesId IN (";
                 string[] playerPerspectiveClauseItems = playerperspective.Split(",");
                 for (int i = 0; i < playerPerspectiveClauseItems.Length; i++)
                 {
@@ -144,7 +144,7 @@ namespace gaseous_server.Controllers
                         tempVal += " AND ";
                     }
                     string playerPerspectiveLabel = "@PlayerPerspective" + i;
-                    tempVal += "JSON_CONTAINS(Game.PlayerPerspectives, " + playerPerspectiveLabel + ", '$')";
+                    tempVal += playerPerspectiveLabel;
                     whereParams.Add(playerPerspectiveLabel, playerPerspectiveClauseItems[i]);
                 }
                 tempVal += ")";
@@ -153,7 +153,7 @@ namespace gaseous_server.Controllers
 
             if (theme.Length > 0)
             {
-                tempVal = "(";
+                tempVal = "Relation_Game_Themes.ThemesId IN (";
                 string[] themeClauseItems = theme.Split(",");
                 for (int i = 0; i < themeClauseItems.Length; i++)
                 {
@@ -162,7 +162,7 @@ namespace gaseous_server.Controllers
                         tempVal += " AND ";
                     }
                     string themeLabel = "@Theme" + i;
-                    tempVal += "JSON_CONTAINS(Game.Themes, " + themeLabel + ", '$')";
+                    tempVal += themeLabel;
                     whereParams.Add(themeLabel, themeClauseItems[i]);
                 }
                 tempVal += ")";
@@ -205,7 +205,7 @@ namespace gaseous_server.Controllers
             }
 
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT DISTINCT Games_Roms.GameId AS ROMGameId, Game.Id, Game.AgeRatings, Game.AggregatedRating, Game.AggregatedRatingCount, Game.AlternativeNames, Game.Artworks, Game.Bundles, Game.Category, Game.Collection, Game.Cover, Game.Dlcs, Game.Expansions, Game.ExternalGames, Game.FirstReleaseDate, Game.`Follows`, Game.Franchise, Game.Franchises, Game.GameEngines, Game.GameModes, Game.Genres, Game.Hypes, Game.InvolvedCompanies, Game.Keywords, Game.MultiplayerModes, Game.`Name`, Game.ParentGame, Game.Platforms, Game.PlayerPerspectives, Game.Rating, Game.RatingCount, Game.ReleaseDates, Game.Screenshots, Game.SimilarGames, Game.Slug, Game.StandaloneExpansions, Game.`Status`, Game.StoryLine, Game.Summary, Game.Tags, Game.Themes, Game.TotalRating, Game.TotalRatingCount, Game.VersionParent, Game.VersionTitle, Game.Videos, Game.Websites FROM gaseous.Games_Roms LEFT JOIN Game ON Game.Id = Games_Roms.GameId " + whereClause + " " + havingClause + " " + orderByClause;
+            string sql = "SELECT DISTINCT Games_Roms.GameId AS ROMGameId, Game.* FROM gaseous.Games_Roms LEFT JOIN Game ON Game.Id = Games_Roms.GameId LEFT JOIN Relation_Game_Genres ON Game.Id = Relation_Game_Genres.GameId LEFT JOIN Relation_Game_GameModes ON Game.Id = Relation_Game_GameModes.GameId LEFT JOIN Relation_Game_PlayerPerspectives ON Game.Id = Relation_Game_PlayerPerspectives.GameId LEFT JOIN Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId " + whereClause + " " + havingClause + " " + orderByClause;
 
             List<IGDB.Models.Game> RetVal = new List<IGDB.Models.Game>();
 
