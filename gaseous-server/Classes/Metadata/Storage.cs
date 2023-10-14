@@ -426,9 +426,9 @@ namespace gaseous_server.Classes.Metadata
         {
             string TableName = "Relation_" + PrimaryTable + "_" + SecondaryTable;
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT EXISTS(SELECT * FROM information_schema.tables WHERE table_schema = '" + Config.DatabaseConfiguration.DatabaseName + "' AND table_name = '" + TableName + "');";
+            string sql = "SELECT * FROM information_schema.tables WHERE table_schema = '" + Config.DatabaseConfiguration.DatabaseName + "' AND table_name = '" + TableName + "';";
             DataTable data = db.ExecuteCMD(sql);
-            if ((int)data.Rows[0][0] == 0)
+            if (data.Rows.Count == 0)
             {
                 // table doesn't exist, create it
                 sql = "CREATE TABLE `" + Config.DatabaseConfiguration.DatabaseName + "`.`" + TableName + "` (`" + PrimaryTable + "Id` BIGINT NOT NULL, `" + SecondaryTable + "Id` BIGINT NOT NULL, PRIMARY KEY (`" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`), INDEX `idx_PrimaryColumn` (`" + PrimaryTable + "Id` ASC) VISIBLE);";

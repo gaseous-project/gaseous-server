@@ -1,0 +1,38 @@
+version: '2'
+services:
+  gaseous-server:
+    container_name: gaseous-server
+    image: gaseousgames/gaseousserver:latest
+    restart: unless-stopped
+    networks:
+      - gaseous
+    depends_on:
+      - gsdb
+    ports:
+      - 5198:80
+    volumes:
+      - gs:/root/.gaseous-server
+    environment:
+      - dbhost=gsdb
+      - dbuser=root
+      - dbpass=gaseous
+      - igdbclientid=<clientid>
+      - igdbclientsecret=<clientsecret>
+  gsdb:
+    container_name: gsdb
+    image: mariadb
+    restart: unless-stopped
+    networks:
+      - gaseous
+    volumes:
+      - gsdb:/var/lib/mysql
+    environment:
+      - MARIADB_ROOT_PASSWORD=gaseous
+      - MARIADB_USER=gaseous
+      - MARIADB_PASSWORD=gaseous
+networks:
+  gaseous:
+    driver: bridge
+volumes:
+  gs:
+  gsdb:

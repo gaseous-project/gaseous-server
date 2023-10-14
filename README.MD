@@ -16,10 +16,11 @@ If you expose the server to the internet, **you do so at your own risk**.
 ![Emulator](./screenshots/Emulator.png)
 
 ## Requirements
-* MySQL Server 8+*
+* MariaDB 11.1.2 or MySQL Server 8+
+  * These are the database versions Gaseous has been tested and developed against. Your mileage may vary with earlier versions.
+  * Currently MariaDB is the preferred database server, while MySQL will continue to be supported for existing users (they should be interchangable).
+  * Note that due to the earlier database schema using MySQL specific features, moving to MariaDB from MySQL will require rebuilding your database from scratch. The "Library Scan" background task can be used to re-import all titles.
 * Internet Game Database API Key. See: https://api-docs.igdb.com/#account-creation
-
-***Note**: MariaDB is currently not supported as Gaseous uses features present only in MySQL. This is being tracked in https://github.com/gaseous-project/gaseous-server/issues/93
 
 ## Third Party Projects
 The following projects are used by Gaseous
@@ -66,7 +67,7 @@ When Gaseous-Server is started for the first time, it creates a configuration fi
   },
   "LoggingConfiguration": {
     "DebugLogging": false,
-    "LogFormat": "text"
+    "LogRetention": 7
   }
 }
 
@@ -75,7 +76,7 @@ When Gaseous-Server is started for the first time, it creates a configuration fi
 ## Docker
 ### Deploy with the prebuilt Docker image
 Dockerfile and docker-compose.yml files have been provided to make deployment of the server as easy as possible.
-1. Download the docker-compose.yml file
+1. Download the docker-compose-{database}.yml file for the database type you would like to use.
 2. Open the docker-compose.yml file and edit the igdbclientid and igdbclientsecret to the values retrieved from your IGDB account
 3. Run the command ```docker-compose up -d```
 4. Connect to the host on port 5198
@@ -85,13 +86,13 @@ Dockerfile and docker-compose-build.yml files have been provided to make deploym
 1. Clone the repo with ```git clone https://github.com/gaseous-project/gaseous-server.git```
 2. Change into the gaseous-server directory
 3. Clone the submodules with the command ```git submodule update --init```
-4. Open the docker-compose-build.yml file and edit the igdbclientid and igdbclientsecret to the values retrieved from your IGDB account
-5. Run the command ```docker-compose --file docker-compose-build.yml up -d```
+4. Open the docker-compose-{database}-build.yml file and edit the igdbclientid and igdbclientsecret to the values retrieved from your IGDB account
+5. Run the command ```docker-compose --file docker-compose-{database}-build.yml up -d```
 6. Connect to the host on port 5198
 
 ## Source
 ### Build and deploy
-1. Install and configure a MySQL instance
+1. Install and configure a MariaDB or MySQL instance - this is beyond the scope of this document
 2. Install the dotnet 7.0 packages appropriate for your operating system
     * See: https://learn.microsoft.com/en-us/dotnet/core/install/linux
 3. Create a database user with permission to create a databse. Gaseous will create the new database and apply the database schema on it's first startup.
