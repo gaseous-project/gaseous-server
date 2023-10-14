@@ -12,7 +12,6 @@ using IGDB.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Scripting;
-using Org.BouncyCastle.Asn1.X509;
 using static gaseous_server.Classes.Metadata.AgeRatings;
 
 namespace gaseous_server.Controllers

@@ -2,7 +2,6 @@
 using gaseous_tools;
 using IGDB;
 using IGDB.Models;
-using MySqlX.XDevAPI.Common;
 using static gaseous_tools.Config.ConfigFile;
 
 namespace gaseous_server.Classes.Metadata

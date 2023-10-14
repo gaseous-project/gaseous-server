@@ -3,7 +3,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Reflection;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using static gaseous_tools.Database;
 
 namespace gaseous_tools
