@@ -66,9 +66,14 @@ namespace gaseous_server.Classes
                         DataTable importDB = db.ExecuteCMD(sql, dbDict);
                         if ((Int64)importDB.Rows[0]["count"] > 0)
                         {
-                            if (!GameFileImportPath.StartsWith(Config.LibraryConfiguration.LibraryImportDirectory))
+                            if (GameFileImportPath.StartsWith(Config.LibraryConfiguration.LibraryImportDirectory))
                             {
-                                Logging.Log(Logging.LogType.Warning, "Import Game", "  " + GameFileImportPath + " already in database - skipping");
+                                Logging.Log(Logging.LogType.Warning, "Import Game", "  " + GameFileImportPath + " already in database - moving to " + Config.LibraryConfiguration.LibraryImportDuplicatesDirectory);
+                                if (!Directory.Exists(Config.LibraryConfiguration.LibraryImportDuplicatesDirectory))
+                                {
+                                    Directory.CreateDirectory(Config.LibraryConfiguration.LibraryImportDuplicatesDirectory);
+                                }
+                                File.Move(GameFileImportPath, Path.Combine(Config.LibraryConfiguration.LibraryImportDuplicatesDirectory, Path.GetFileName(GameFileImportPath)), true);
                             }
                         }
                         else

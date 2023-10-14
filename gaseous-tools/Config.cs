@@ -346,13 +346,29 @@ namespace gaseous_tools
                     }
                 }
 
-                // public string LibraryDataDirectory
-                // {
-                //     get
-                //     {
-                //         return Path.Combine(LibraryRootDirectory, "Library");
-                //     }
-                // }
+                public string LibraryImportErrorDirectory
+                {
+                    get
+                    {
+                        return Path.Combine(LibraryRootDirectory, "Import Errors");
+                    }
+                }
+
+                public string LibraryImportDuplicatesDirectory
+                {
+                    get
+                    {
+                        return Path.Combine(LibraryImportErrorDirectory, "Duplicates");
+                    }
+                }
+
+                public string LibraryImportGeneralErrorDirectory
+                {
+                    get
+                    {
+                        return Path.Combine(LibraryImportErrorDirectory, "Error");
+                    }
+                }
 
                 public string LibraryBIOSDirectory
                 {
