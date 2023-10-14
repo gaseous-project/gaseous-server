@@ -1,2 +1,2 @@
 ALTER TABLE `PlatformMap` 
-ADD COLUMN `AvailableWebEmulators` JSON NULL;
+ADD COLUMN `AvailableWebEmulators` longtext NULL;

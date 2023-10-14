@@ -153,6 +153,9 @@ namespace gaseous_server.Classes.Metadata
                                     newDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(newObjectValue);
 									newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(newDict["Ids"]);
                                     objectDict[key.Key] = newObjectValue;
+
+                                    StoreRelations(ObjectTypeName, key.Key, (long)objectDict["Id"], newObjectValue);
+
                                     break;
 								case "int32[]":
                                     newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(objectValue);
@@ -417,6 +420,39 @@ namespace gaseous_server.Classes.Metadata
             }
 
             return EndpointType;
+        }
+
+        private static void StoreRelations(string PrimaryTable, string SecondaryTable, long ObjectId, string Relations)
+        {
+            string TableName = "Relation_" + PrimaryTable + "_" + SecondaryTable;
+            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT * FROM information_schema.tables WHERE table_schema = '" + Config.DatabaseConfiguration.DatabaseName + "' AND table_name = '" + TableName + "';";
+            DataTable data = db.ExecuteCMD(sql);
+            if (data.Rows.Count == 0)
+            {
+                // table doesn't exist, create it
+                sql = "CREATE TABLE `" + Config.DatabaseConfiguration.DatabaseName + "`.`" + TableName + "` (`" + PrimaryTable + "Id` BIGINT NOT NULL, `" + SecondaryTable + "Id` BIGINT NOT NULL, PRIMARY KEY (`" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`), INDEX `idx_PrimaryColumn` (`" + PrimaryTable + "Id` ASC) VISIBLE);";
+                db.ExecuteCMD(sql);
+            }
+            else
+            {
+                // clean existing records for this object
+                sql = "DELETE FROM " + TableName + " WHERE `" + PrimaryTable + "Id` = @objectid";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>();
+                dbDict.Add("objectid", ObjectId);
+                db.ExecuteCMD(sql, dbDict);
+            }
+
+            // insert data
+            long[] RelationValues = Newtonsoft.Json.JsonConvert.DeserializeObject<long[]>(Relations);
+            foreach (long RelationValue in RelationValues)
+            {
+                sql = "INSERT INTO " + TableName + " (`" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`) VALUES (@objectid, @relationvalue);";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>();
+                dbDict.Add("objectid", ObjectId);
+                dbDict.Add("relationvalue", RelationValue);
+                db.ExecuteCMD(sql, dbDict);
+            }
         }
 
         private static void CacheClean()

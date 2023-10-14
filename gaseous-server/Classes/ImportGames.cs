@@ -7,8 +7,6 @@ using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
 using gaseous_tools;
 using IGDB.Models;
-using MySqlX.XDevAPI;
-using Org.BouncyCastle.Utilities.IO.Pem;
 using static gaseous_server.Classes.Metadata.Games;
 
 namespace gaseous_server.Classes

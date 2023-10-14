@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data;
-using Google.Protobuf.WellKnownTypes;
 using Newtonsoft.Json;
 using IGDB.Models;
 
@@ -310,6 +309,16 @@ namespace gaseous_tools
                     get
                     {
                         string dbConnString = "server=" + HostName + ";port=" + Port + ";userid=" + UserName + ";password=" + Password + ";database=" + DatabaseName + "";
+                        return dbConnString;
+                    }
+                }
+
+                [JsonIgnore]
+                public string ConnectionStringNoDatabase
+                {
+                    get
+                    {
+                        string dbConnString = "server=" + HostName + ";port=" + Port + ";userid=" + UserName + ";password=" + Password + ";";
                         return dbConnString;
                     }
                 }

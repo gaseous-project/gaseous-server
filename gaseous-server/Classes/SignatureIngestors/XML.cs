@@ -1,9 +1,7 @@
 ﻿using System;
 using System.IO;
-using MySql.Data.MySqlClient;
 using gaseous_signature_parser.models.RomSignatureObject;
 using gaseous_tools;
-using MySqlX.XDevAPI;
 using System.Data;
 
 namespace gaseous_server.SignatureIngestors.XML
@@ -62,6 +60,11 @@ namespace gaseous_server.SignatureIngestors.XML
                         {
                             sql = "SELECT * FROM Signatures_Sources WHERE SourceMD5=@sourcemd5";
                             dbDict = new Dictionary<string, object>();
+                            string sourceUriStr = "";
+                            if (Object.Url != null)
+                            {
+                                sourceUriStr = Object.Url.ToString();
+                            }
                             dbDict.Add("name", Common.ReturnValueIfNull(Object.Name, ""));
                             dbDict.Add("description", Common.ReturnValueIfNull(Object.Description, ""));
                             dbDict.Add("category", Common.ReturnValueIfNull(Object.Category, ""));
@@ -69,7 +72,7 @@ namespace gaseous_server.SignatureIngestors.XML
                             dbDict.Add("author", Common.ReturnValueIfNull(Object.Author, ""));
                             dbDict.Add("email", Common.ReturnValueIfNull(Object.Email, ""));
                             dbDict.Add("homepage", Common.ReturnValueIfNull(Object.Homepage, ""));
-                            dbDict.Add("uri", Common.ReturnValueIfNull(Object.Url, ""));
+                            dbDict.Add("uri", sourceUriStr);
                             dbDict.Add("sourcetype", Common.ReturnValueIfNull(Object.SourceType, ""));
                             dbDict.Add("sourcemd5", Object.SourceMd5);
                             dbDict.Add("sourcesha1", Object.SourceSHA1);

@@ -72,6 +72,9 @@ namespace gaseous_server.Models
 
             foreach (PlatformMapItem mapItem in platforms)
             {
+                // get the IGDB platform data
+                Platform platform = Platforms.GetPlatform(mapItem.IGDBId);
+
                 try
                 {
                     PlatformMapItem item = GetPlatformMap(mapItem.IGDBId);

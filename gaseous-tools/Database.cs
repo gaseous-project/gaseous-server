@@ -3,7 +3,7 @@ using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Reflection;
-using MySql.Data.MySqlClient;
+using MySqlConnector;
 using static gaseous_tools.Database;
 
 namespace gaseous_tools
@@ -69,7 +69,7 @@ namespace gaseous_tools
 					ExecuteCMD(sql, dbDict, 30, "server=" + Config.DatabaseConfiguration.HostName + ";port=" + Config.DatabaseConfiguration.Port + ";userid=" + Config.DatabaseConfiguration.UserName + ";password=" + Config.DatabaseConfiguration.Password);
 
 					// check if schema version table is in place - if not, create the schema version table
-					sql = "SELECT TABLE_SCHEMA, TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'gaseous' AND TABLE_NAME = 'schema_version';";
+					sql = "SELECT TABLE_SCHEMA, TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = '" + Config.DatabaseConfiguration.DatabaseName + "' AND TABLE_NAME = 'schema_version';";
 					DataTable SchemaVersionPresent = ExecuteCMD(sql, dbDict);
 					if (SchemaVersionPresent.Rows.Count == 0)
 					{

@@ -30,7 +30,7 @@ namespace gaseous_server.Controllers
         {
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
-            string sql = "SELECT * FROM gaseous.Platform WHERE Id IN (SELECT DISTINCT PlatformId FROM Games_Roms) ORDER BY `Name` ASC;";
+            string sql = "SELECT * FROM Platform WHERE Id IN (SELECT DISTINCT PlatformId FROM Games_Roms) ORDER BY `Name` ASC;";
 
             List<Platform> RetVal = new List<Platform>();
 
