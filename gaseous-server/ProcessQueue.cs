@@ -116,6 +116,8 @@ namespace gaseous_server
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Title Ingestor");
                                     Classes.ImportGames importGames = new Classes.ImportGames(Config.LibraryConfiguration.LibraryImportDirectory);
 
+                                    Classes.ImportGame.DeleteOrphanedDirectories(Config.LibraryConfiguration.LibraryImportDirectory);
+
                                     _SaveLastRunTime = true;
 
                                     break;

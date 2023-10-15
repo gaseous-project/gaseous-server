@@ -70,7 +70,7 @@ namespace gaseous_server.Controllers
             // Process uploaded files
             foreach (Dictionary<string, object> UploadedFile in UploadedFiles)
             {
-                Classes.ImportGame.ImportGameFile((string)UploadedFile["fullpath"], OverridePlatform, false);
+                Classes.ImportGame.ImportGameFile((string)UploadedFile["fullpath"], OverridePlatform);
             }
 
             if (Directory.Exists(workPath))
