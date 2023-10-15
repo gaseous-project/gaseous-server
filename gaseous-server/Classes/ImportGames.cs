@@ -22,8 +22,13 @@ namespace gaseous_server.Classes
 
 				// import files first
 				foreach (string importContent in importContents_Files) {
-					ImportGame.ImportGameFile(importContent, null, false);
+					ImportGame.ImportGameFile(importContent, null);
 				}
+
+                // import sub directories
+                foreach (string importDir in importContents_Directories) {
+                    Classes.ImportGames importGames = new Classes.ImportGames(importDir);
+                }
             }
 			else
 			{
@@ -37,7 +42,7 @@ namespace gaseous_server.Classes
 
 	public class ImportGame
 	{
-        public static void ImportGameFile(string GameFileImportPath, IGDB.Models.Platform? OverridePlatform, bool IsDirectory = false)
+        public static void ImportGameFile(string GameFileImportPath, IGDB.Models.Platform? OverridePlatform)
 		{
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
@@ -49,88 +54,89 @@ namespace gaseous_server.Classes
             }
 			else
 			{
-				if (IsDirectory == false)
-				{
-					FileInfo fi = new FileInfo(GameFileImportPath);
-                    Common.hashObject hash = new Common.hashObject(GameFileImportPath);
+                FileInfo fi = new FileInfo(GameFileImportPath);
+                Common.hashObject hash = new Common.hashObject(GameFileImportPath);
 
-                    Models.PlatformMapping.PlatformMapItem? IsBios = Classes.Bios.BiosHashSignatureLookup(hash.md5hash);
+                Models.PlatformMapping.PlatformMapItem? IsBios = Classes.Bios.BiosHashSignatureLookup(hash.md5hash);
 
-                    if (IsBios == null)
+                if (IsBios == null)
+                {
+                    // file is a rom
+                    // check to make sure we don't already have this file imported
+                    sql = "SELECT COUNT(Id) AS count FROM Games_Roms WHERE MD5=@md5 AND SHA1=@sha1";
+                    dbDict.Add("md5", hash.md5hash);
+                    dbDict.Add("sha1", hash.sha1hash);
+                    DataTable importDB = db.ExecuteCMD(sql, dbDict);
+                    if ((Int64)importDB.Rows[0]["count"] > 0)
                     {
-                        // file is a rom
-                        // check to make sure we don't already have this file imported
-                        sql = "SELECT COUNT(Id) AS count FROM Games_Roms WHERE MD5=@md5 AND SHA1=@sha1";
-                        dbDict.Add("md5", hash.md5hash);
-                        dbDict.Add("sha1", hash.sha1hash);
-                        DataTable importDB = db.ExecuteCMD(sql, dbDict);
-                        if ((Int64)importDB.Rows[0]["count"] > 0)
+                        // import source was the import directory
+                        if (GameFileImportPath.StartsWith(Config.LibraryConfiguration.LibraryImportDirectory))
                         {
-                            // import source was the import directory
-                            if (GameFileImportPath.StartsWith(Config.LibraryConfiguration.LibraryImportDirectory))
+                            Logging.Log(Logging.LogType.Warning, "Import Game", "  " + GameFileImportPath + " already in database - moving to " + Config.LibraryConfiguration.LibraryImportDuplicatesDirectory);
+
+                            string targetPathWithFileName = GameFileImportPath.Replace(Config.LibraryConfiguration.LibraryImportDirectory, Config.LibraryConfiguration.LibraryImportDuplicatesDirectory);
+                            string targetPath = Path.GetDirectoryName(targetPathWithFileName);
+
+                            if (!Directory.Exists(targetPath))
                             {
-                                Logging.Log(Logging.LogType.Warning, "Import Game", "  " + GameFileImportPath + " already in database - moving to " + Config.LibraryConfiguration.LibraryImportDuplicatesDirectory);
-                                if (!Directory.Exists(Config.LibraryConfiguration.LibraryImportDuplicatesDirectory))
-                                {
-                                    Directory.CreateDirectory(Config.LibraryConfiguration.LibraryImportDuplicatesDirectory);
-                                }
-                                File.Move(GameFileImportPath, Path.Combine(Config.LibraryConfiguration.LibraryImportDuplicatesDirectory, Path.GetFileName(GameFileImportPath)), true);
+                                Directory.CreateDirectory(targetPath);
                             }
-                            
-                            // import source was the upload directory
-                            if (GameFileImportPath.StartsWith(Config.LibraryConfiguration.LibraryUploadDirectory))
-                            {
-                                Logging.Log(Logging.LogType.Warning, "Import Game", "  " + GameFileImportPath + " already in database - skipping import");
-                            }
+                            File.Move(GameFileImportPath, targetPathWithFileName, true);
                         }
-                        else
+                        
+                        // import source was the upload directory
+                        if (GameFileImportPath.StartsWith(Config.LibraryConfiguration.LibraryUploadDirectory))
                         {
-                            Logging.Log(Logging.LogType.Information, "Import Game", "  " + GameFileImportPath + " not in database - processing");
-
-                            Models.Signatures_Games discoveredSignature = GetFileSignature(hash, fi, GameFileImportPath);
-
-                            // get discovered platform
-                            IGDB.Models.Platform? determinedPlatform = null;
-                            if (OverridePlatform == null)
-                            {
-                                determinedPlatform = Metadata.Platforms.GetPlatform(discoveredSignature.Flags.IGDBPlatformId);
-                                if (determinedPlatform == null)
-                                {
-                                    determinedPlatform = new IGDB.Models.Platform();
-                                }
-                            }
-                            else
-                            {
-                                determinedPlatform = OverridePlatform;
-                                discoveredSignature.Flags.IGDBPlatformId = (long)determinedPlatform.Id;
-                                discoveredSignature.Flags.IGDBPlatformName = determinedPlatform.Name;
-                            }
-
-                            IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature.Game.Name, discoveredSignature.Flags.IGDBPlatformId);
-
-                            // add to database
-                            StoreROM(GameLibrary.GetDefaultLibrary, hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath);
+                            Logging.Log(Logging.LogType.Warning, "Import Game", "  " + GameFileImportPath + " already in database - skipping import");
                         }
                     }
                     else
                     {
-                        // file is a bios
-                        if (IsBios.WebEmulator != null)
+                        Logging.Log(Logging.LogType.Information, "Import Game", "  " + GameFileImportPath + " not in database - processing");
+
+                        Models.Signatures_Games discoveredSignature = GetFileSignature(hash, fi, GameFileImportPath);
+
+                        // get discovered platform
+                        IGDB.Models.Platform? determinedPlatform = null;
+                        if (OverridePlatform == null)
                         {
-                            foreach (Classes.Bios.BiosItem biosItem in Classes.Bios.GetBios())
+                            determinedPlatform = Metadata.Platforms.GetPlatform(discoveredSignature.Flags.IGDBPlatformId);
+                            if (determinedPlatform == null)
                             {
-                                if (biosItem.Available == false && biosItem.hash == hash.md5hash)
+                                determinedPlatform = new IGDB.Models.Platform();
+                            }
+                        }
+                        else
+                        {
+                            determinedPlatform = OverridePlatform;
+                            discoveredSignature.Flags.IGDBPlatformId = (long)determinedPlatform.Id;
+                            discoveredSignature.Flags.IGDBPlatformName = determinedPlatform.Name;
+                        }
+
+                        IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature.Game.Name, discoveredSignature.Flags.IGDBPlatformId);
+
+                        // add to database
+                        StoreROM(GameLibrary.GetDefaultLibrary, hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath);
+                    }
+                }
+                else
+                {
+                    // file is a bios
+                    if (IsBios.WebEmulator != null)
+                    {
+                        foreach (Classes.Bios.BiosItem biosItem in Classes.Bios.GetBios())
+                        {
+                            if (biosItem.Available == false && biosItem.hash == hash.md5hash)
+                            {
+                                string biosPath = biosItem.biosPath.Replace(biosItem.filename, "");
+                                if (!Directory.Exists(biosPath))
                                 {
-                                    string biosPath = biosItem.biosPath.Replace(biosItem.filename, "");
-                                    if (!Directory.Exists(biosPath))
-                                    {
-                                        Directory.CreateDirectory(biosPath);
-                                    }
-
-                                    File.Move(GameFileImportPath, biosItem.biosPath, true);
-
-                                    break;
+                                    Directory.CreateDirectory(biosPath);
                                 }
+
+                                File.Move(GameFileImportPath, biosItem.biosPath, true);
+
+                                break;
                             }
                         }
                     }
@@ -574,7 +580,7 @@ namespace gaseous_server.Classes
             Logging.Log(Logging.LogType.Information, "Organise Library", "Finsihed default library organisation");
         }
 
-        private static void DeleteOrphanedDirectories(string startLocation)
+        public static void DeleteOrphanedDirectories(string startLocation)
         {
             foreach (var directory in Directory.GetDirectories(startLocation))
             {
