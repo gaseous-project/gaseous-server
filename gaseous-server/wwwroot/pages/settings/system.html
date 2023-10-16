@@ -222,7 +222,7 @@
 
             var legendLabel = document.createElement('div');
             legendLabel.className = 'legend_label';
-            legendLabel.innerHTML = LibraryStatistics[i].platform + '<br />' + formatBytes(LibraryStatistics[i].totalSize);
+            legendLabel.innerHTML = LibraryStatistics[i].platform + '<br />' + formatBytes(LibraryStatistics[i].totalSize) + '<br />Images: ' + LibraryStatistics[i].romCount;
 
             legend.appendChild(legendColour);
             legend.appendChild(legendLabel);

@@ -266,11 +266,16 @@ input[id='filter_panel_userrating_max'] {
 
 .filter_panel_item {
     display: flex;
+    position: relative;
     padding: 3px;
 }
 
 .filter_panel_item_checkbox {
     margin-right: 10px;
+}
+
+.filter_panel_item_label {
+    margin-right: 15px;
 }
 
 #games_library {
@@ -772,7 +777,7 @@ button:disabled {
 .legend_box {
     display: inline-block;
     width: 145px;
-    height: 50px;
+    height: 70px;
     vertical-align: top;
     margin-right: 5px;
     padding-right: 5px;
@@ -925,3 +930,26 @@ button:disabled {
 .key { color: greenyellow; }
 .brace { color: #888; }
 .square { color: #fff000; }
+
+.tagBox {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    text-align: center;
+    font-size: 8px;
+}
+
+.tagBoxItem {
+    padding-left: 0px;
+    padding-right: 0px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    width: 10px;
+    height: 10px;
+    background-color: darkslategray;
+    color: white;
+    text-align: center;
+    border-radius: 5px;
+    border-color: darkslategray;
+    border-style: solid;
+}

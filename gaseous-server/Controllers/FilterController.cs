@@ -24,13 +24,18 @@ namespace gaseous_server.Controllers
             Dictionary<string, object> FilterSet = new Dictionary<string, object>();
 
             // platforms
-            List<Platform> platforms = new List<Platform>();
-            string sql = "SELECT Platform.Id, Platform.Abbreviation, Platform.AlternativeName, Platform.`Name`, Platform.PlatformLogo, (SELECT COUNT(Games_Roms.Id) AS RomCount FROM Games_Roms WHERE Games_Roms.PlatformId = Platform.Id) AS RomCount FROM Platform HAVING RomCount > 0 ORDER BY `Name`";
+            List<FilterPlatform> platforms = new List<FilterPlatform>();
+            //string sql = "SELECT Platform.Id, Platform.Abbreviation, Platform.AlternativeName, Platform.`Name`, Platform.PlatformLogo, (SELECT COUNT(Games_Roms.Id) AS RomCount FROM Games_Roms WHERE Games_Roms.PlatformId = Platform.Id) AS RomCount FROM Platform HAVING RomCount > 0 ORDER BY `Name`";
+            string sql = "SELECT Platform.Id, Platform.Abbreviation, Platform.AlternativeName, Platform.`Name`, Platform.PlatformLogo, (SELECT COUNT(Games_Roms.Id) AS RomCount FROM Games_Roms WHERE Games_Roms.PlatformId = Platform.Id) AS RomCount, (SELECT COUNT(*) AS GameCount FROM (SELECT DISTINCT Games_Roms.GameId AS ROMGameId, Games_Roms.PlatformId FROM Games_Roms LEFT JOIN Game ON Game.Id = Games_Roms.GameId) Game WHERE Game.PlatformId = Platform.Id) AS GameCount FROM Platform HAVING RomCount > 0 ORDER BY `Name`";
             DataTable dbResponse = db.ExecuteCMD(sql);
 
             foreach (DataRow dr in dbResponse.Rows)
             {
-                platforms.Add(Classes.Metadata.Platforms.GetPlatform((long)dr["id"]));
+                FilterPlatform platformItem = new FilterPlatform(Classes.Metadata.Platforms.GetPlatform((long)dr["id"]));
+                platformItem.RomCount = (int)(long)dr["RomCount"];
+                platformItem.GameCount = (int)(long)dr["GameCount"];
+                platforms.Add(platformItem);
+
             }
             FilterSet.Add("platforms", platforms);
 
@@ -79,6 +84,24 @@ namespace gaseous_server.Controllers
             FilterSet.Add("themes", themes);
 
             return FilterSet;
+        }
+
+        public class FilterPlatform : IGDB.Models.Platform
+        {
+            public FilterPlatform(Platform platform)
+            {
+                var properties = platform.GetType().GetProperties();
+                foreach (var prop in properties)
+                {
+                    if (prop.GetGetMethod() != null)
+                    {
+                        this.GetType().GetProperty(prop.Name).SetValue(this, prop.GetValue(platform));
+                    }
+                }
+            }
+
+            public int RomCount { get; set; }
+            public int GameCount { get; set; }
         }
     }
 }
