@@ -882,7 +882,7 @@
         "alternateNames": [
             "NES",
             "Nintendo Entertainment System",
-            "Nintendo Famicom &amp;amp; Entertainment System"
+            "Nintendo Famicom & Entertainment System"
         ],
         "extensions": {
             "supportedFileExtensions": [
@@ -1086,7 +1086,7 @@
         "alternateNames": [
             "Mega CD",
             "Sega CD",
-            "Sega Mega-CD &amp;amp; Sega CD",
+            "Sega Mega-CD & Sega CD",
             "segacd"
         ],
         "extensions": {
@@ -1188,7 +1188,7 @@
         "igdbName": "Sega Master System/Mark III",
         "igdbSlug": "sms",
         "alternateNames": [
-            "Sega Mark III &amp;amp; Master System",
+            "Sega Mark III & Master System",
             "Sega Master System",
             "Sega Master System/Mark III",
             "sms",
@@ -1248,7 +1248,7 @@
             "genesis-slash-megadrive",
             "Sega Genesis",
             "Sega Mega Drive",
-            "Sega Mega Drive &amp; Genesis",
+            "Sega Mega Drive & Genesis",
             "Sega Mega Drive/Genesis"
         ],
         "extensions": {
@@ -1351,7 +1351,7 @@
         "igdbName": "Super Nintendo Entertainment System",
         "igdbSlug": "snes",
         "alternateNames": [
-            "Nintendo Super Famicom &amp;amp; Super Entertainment System",
+            "Nintendo Super Famicom & Super Entertainment System",
             "SNES",
             "SNES, Super Nintendo",
             "Super Nintendo",

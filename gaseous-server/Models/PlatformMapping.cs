@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using System.Web;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
@@ -201,7 +202,7 @@ namespace gaseous_server.Models
                         sql = "INSERT INTO PlatformMap_AlternateNames (Id, Name) VALUES (@Id, @Name);";
                         dbDict.Clear();
                         dbDict.Add("Id", item.IGDBId);
-                        dbDict.Add("Name", alternateName);
+                        dbDict.Add("Name", HttpUtility.HtmlDecode(alternateName));
                         db.ExecuteCMD(sql, dbDict);
                     }
                 }

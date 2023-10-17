@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
 using gaseous_tools;
 using IGDB.Models;
+using NuGet.Common;
 using static gaseous_server.Classes.Metadata.Games;
 
 namespace gaseous_server.Classes
@@ -428,7 +429,7 @@ namespace gaseous_server.Classes
                 sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, Path, MetadataSource, MetadataGameName, MetadataVersion, LibraryId) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @Attributes, @romtype, @romtypemedia, @medialabel, @path, @metadatasource, @metadatagamename, @metadataversion, @libraryid); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
             } else
             {
-                sql = "UPDATE Games_Roms SET PlatformId=platformid, GameId=@gameid, Name=@name, Size=@size, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion WHERE Id=@id;";
+                sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid, Name=@name, Size=@size, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion WHERE Id=@id;";
                 dbDict.Add("id", UpdateId);
             }
             dbDict.Add("platformid", Common.ReturnValueIfNull(determinedPlatform.Id, 0));
@@ -720,37 +721,6 @@ namespace gaseous_server.Classes
 
                         if (File.Exists(romPath))
                         {
-                            // file exists, so lets check to make sure the signature was matched, and update if a signature can be found
-                            if (
-                                romMetadataSource == gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType.None ||
-                                (int)dtRoms.Rows[i]["MetadataVersion"] == 1
-                            )
-                            {
-                                Common.hashObject hash = new Common.hashObject
-                                {
-                                    md5hash = (string)dtRoms.Rows[i]["MD5"],
-                                    sha1hash = (string)dtRoms.Rows[i]["SHA1"]
-                                };
-                                FileInfo fi = new FileInfo(romPath);
-
-                                Models.Signatures_Games sig = GetFileSignature(hash, fi, romPath);
-                                if (sig.Rom.SignatureSource != gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType.None)
-                                {
-                                    Logging.Log(Logging.LogType.Information, "Library Scan", " Update signature found for " + romPath);
-
-                                    // get discovered platform
-                                    IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(sig.Flags.IGDBPlatformId);
-                                    if (determinedPlatform == null)
-                                    {
-                                        determinedPlatform = new IGDB.Models.Platform();
-                                    }
-
-                                    IGDB.Models.Game determinedGame = SearchForGame(sig.Game.Name, sig.Flags.IGDBPlatformId);
-
-                                    StoreROM(library, hash, determinedGame, determinedPlatform, sig, romPath, romId);
-                                }
-                            }
-
                             if (library.IsDefaultLibrary == true)
                             {
                                 if (romPath != ComputeROMPath(romId))
@@ -775,6 +745,57 @@ namespace gaseous_server.Classes
 
                 Logging.Log(Logging.LogType.Information, "Library Scan", "Library scan completed");
             }
+        }
+
+        public static void Rematcher()
+        {
+            // rescan all titles with an unknown platform or title and see if we can get a match
+            Logging.Log(Logging.LogType.Information, "Rematch Scan", "Rematch scan starting");
+
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT * FROM Games_Roms WHERE (PlatformId = 0 OR GameId = 0) AND (LastMatchAttemptDate IS NULL OR LastMatchAttemptDate < @lastmatchattemptdate) LIMIT 100;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            dbDict.Add("lastmatchattemptdate", DateTime.UtcNow.AddMonths(-1));
+            DataTable data = db.ExecuteCMD(sql, dbDict);
+            foreach (DataRow row in data.Rows)
+            {
+                // get library
+                GameLibrary.LibraryItem library = GameLibrary.GetLibrary((int)row["LibraryId"]);
+
+                // get rom info
+                long romId = (long)row["Id"];
+                string romPath = (string)row["Path"];
+                Common.hashObject hash = new Common.hashObject
+                {
+                    md5hash = (string)row["MD5"],
+                    sha1hash = (string)row["SHA1"]
+                };
+                FileInfo fi = new FileInfo(romPath);
+
+                Logging.Log(Logging.LogType.Information, "Rematch Scan", "Running rematch against " + romPath);
+
+                // determine rom signature
+                Models.Signatures_Games sig = GetFileSignature(hash, fi, romPath);
+
+                // determine rom platform
+                IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(sig.Flags.IGDBPlatformId);
+                if (determinedPlatform == null)
+                {
+                    determinedPlatform = new IGDB.Models.Platform();
+                }
+
+                IGDB.Models.Game determinedGame = SearchForGame(sig.Game.Name, sig.Flags.IGDBPlatformId);
+
+                StoreROM(library, hash, determinedGame, determinedPlatform, sig, romPath, romId);
+
+                string attemptSql = "UPDATE Games_Roms SET LastMatchAttemptDate=@lastmatchattemptdate WHERE Id=@id;";
+                Dictionary<string, object> dbLastAttemptDict = new Dictionary<string, object>();
+                dbLastAttemptDict.Add("id", romId);
+                dbLastAttemptDict.Add("lastmatchattemptdate", DateTime.UtcNow);
+                db.ExecuteCMD(attemptSql, dbLastAttemptDict);
+            }
+
+            Logging.Log(Logging.LogType.Information, "Rematch Scan", "Rematch scan completed");
         }
     }
 }

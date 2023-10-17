@@ -146,6 +146,14 @@ namespace gaseous_server
 
                                     break;
 
+                                case QueueItemType.Rematcher:
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Rematch");
+                                    Classes.ImportGame.Rematcher();
+
+                                    _SaveLastRunTime = true;
+
+                                    break;
+
                                 case QueueItemType.CollectionCompiler:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Collection Compiler");
                                     Classes.Collections.CompileCollections((long)Options);
@@ -168,6 +176,8 @@ namespace gaseous_server
                         _ForceExecute = false;
                         _ItemState = QueueItemState.Stopped;
                         _LastFinishTime = DateTime.UtcNow;
+
+                        Logging.Log(Logging.LogType.Information, "Timered Event", "Total " + _ItemType + " run time = " + (DateTime.UtcNow - _LastRunTime).TotalSeconds);
                     }
                 }
             }
@@ -219,6 +229,11 @@ namespace gaseous_server
             /// Looks for orphaned files in the library and re-adds them to the database
             /// </summary>
             LibraryScan,
+
+            /// <summary>
+            /// Looks for roms in the library that have an unknown platform or game match
+            /// </summary>
+            Rematcher,
 
             /// <summary>
             /// Builds collections - set the options attribute to the id of the collection to build

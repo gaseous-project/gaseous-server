@@ -182,29 +182,53 @@ gaseous_server.Classes.Metadata.Platforms.GetPlatform(0);
 PlatformMapping.ExtractPlatformMap();
 
 // add background tasks
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.SignatureIngestor, 60));
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.TitleIngestor, 1,
+    ProcessQueue.QueueItemType.SignatureIngestor,
+    60
+    )
+    );
+ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.TitleIngestor,
+    1,
     new List<ProcessQueue.QueueItemType>
     {
         ProcessQueue.QueueItemType.OrganiseLibrary,
         ProcessQueue.QueueItemType.LibraryScan
     })
     );
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.MetadataRefresh, 360));
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.OrganiseLibrary, 1440, new List<ProcessQueue.QueueItemType>
+    ProcessQueue.QueueItemType.MetadataRefresh,
+    360
+    )
+    );
+ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.OrganiseLibrary,
+    1440,
+    new List<ProcessQueue.QueueItemType>
     {
         ProcessQueue.QueueItemType.LibraryScan,
         ProcessQueue.QueueItemType.TitleIngestor
     })
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.LibraryScan, 1440, new List<ProcessQueue.QueueItemType>
+    ProcessQueue.QueueItemType.LibraryScan,
+    60,
+    new List<ProcessQueue.QueueItemType>
     {
-        ProcessQueue.QueueItemType.OrganiseLibrary
+        ProcessQueue.QueueItemType.OrganiseLibrary,
+        ProcessQueue.QueueItemType.Rematcher
     })
     );
+ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.Rematcher,
+    1440,
+    new List<ProcessQueue.QueueItemType>
+    {
+        ProcessQueue.QueueItemType.OrganiseLibrary,
+        ProcessQueue.QueueItemType.LibraryScan
+    })
+    );
+
 
 Logging.WriteToDiskOnly = false;
 
