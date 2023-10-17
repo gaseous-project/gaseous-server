@@ -37,3 +37,6 @@ CREATE TABLE `Relation_Game_Themes` (
   PRIMARY KEY (`GameId`, `ThemesId`),
   INDEX `idx_PrimaryColumn` (`GameId` ASC) VISIBLE
 );
+
+ALTER TABLE `Games_Roms` 
+ADD COLUMN `LastMatchAttemptDate` DATETIME NULL AFTER `LibraryId`;
