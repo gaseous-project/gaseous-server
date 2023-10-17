@@ -154,34 +154,41 @@ namespace gaseous_server.Classes
                 // extract the zip file and search the contents
                 string ExtractPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, Path.GetRandomFileName());
                 if (!Directory.Exists(ExtractPath)) { Directory.CreateDirectory(ExtractPath); }
-                ZipFile.ExtractToDirectory(GameFileImportPath, ExtractPath);
-
-                // loop through contents until we find the first signature match
-                foreach (string file in Directory.GetFiles(ExtractPath))
+                try
                 {
-                    FileInfo zfi = new FileInfo(file);
-                    Common.hashObject zhash = new Common.hashObject(file);
+                    ZipFile.ExtractToDirectory(GameFileImportPath, ExtractPath);
 
-                    Models.Signatures_Games zDiscoveredSignature = _GetFileSignature(zhash, zfi, file);
-                    zDiscoveredSignature.Rom.Name = Path.ChangeExtension(zDiscoveredSignature.Rom.Name, ".zip");
-
-                    if (zDiscoveredSignature.Score > discoveredSignature.Score)
+                    // loop through contents until we find the first signature match
+                    foreach (string file in Directory.GetFiles(ExtractPath))
                     {
-                        if (
-                            zDiscoveredSignature.Rom.SignatureSource == gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType.MAMEArcade || 
-                            zDiscoveredSignature.Rom.SignatureSource == gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType.MAMEMess
-                        )
-                        {
-                            zDiscoveredSignature.Rom.Name = zDiscoveredSignature.Game.Description + ".zip";
-                        }
-                        zDiscoveredSignature.Rom.Crc = discoveredSignature.Rom.Crc;
-                        zDiscoveredSignature.Rom.Md5 = discoveredSignature.Rom.Md5;
-                        zDiscoveredSignature.Rom.Sha1 = discoveredSignature.Rom.Sha1;
-                        zDiscoveredSignature.Rom.Size = discoveredSignature.Rom.Size;
-                        discoveredSignature = zDiscoveredSignature;
+                        FileInfo zfi = new FileInfo(file);
+                        Common.hashObject zhash = new Common.hashObject(file);
 
-                        break;
+                        Models.Signatures_Games zDiscoveredSignature = _GetFileSignature(zhash, zfi, file);
+                        zDiscoveredSignature.Rom.Name = Path.ChangeExtension(zDiscoveredSignature.Rom.Name, ".zip");
+
+                        if (zDiscoveredSignature.Score > discoveredSignature.Score)
+                        {
+                            if (
+                                zDiscoveredSignature.Rom.SignatureSource == gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType.MAMEArcade || 
+                                zDiscoveredSignature.Rom.SignatureSource == gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType.MAMEMess
+                            )
+                            {
+                                zDiscoveredSignature.Rom.Name = zDiscoveredSignature.Game.Description + ".zip";
+                            }
+                            zDiscoveredSignature.Rom.Crc = discoveredSignature.Rom.Crc;
+                            zDiscoveredSignature.Rom.Md5 = discoveredSignature.Rom.Md5;
+                            zDiscoveredSignature.Rom.Sha1 = discoveredSignature.Rom.Sha1;
+                            zDiscoveredSignature.Rom.Size = discoveredSignature.Rom.Size;
+                            discoveredSignature = zDiscoveredSignature;
+
+                            break;
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Log(Logging.LogType.Critical, "Get Signature", "Error processing zip file: " + GameFileImportPath, ex);
                 }
 
                 if (Directory.Exists(ExtractPath)) { Directory.Delete(ExtractPath, true); }
