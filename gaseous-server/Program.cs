@@ -207,7 +207,8 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     new List<ProcessQueue.QueueItemType>
     {
         ProcessQueue.QueueItemType.LibraryScan,
-        ProcessQueue.QueueItemType.TitleIngestor
+        ProcessQueue.QueueItemType.TitleIngestor,
+        ProcessQueue.QueueItemType.Rematcher
     })
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
