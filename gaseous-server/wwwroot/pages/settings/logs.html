@@ -54,7 +54,7 @@
 
                     var newRow = [
                         //result[i].id,
-                        moment(result[i].eventTime).fromNow(),
+                        moment(result[i].eventTime).format("YYYY-MM-DD H:mm:ss"),
                         result[i].eventType,
                         result[i].process,
                         result[i].message
