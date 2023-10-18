@@ -48,6 +48,16 @@ if (Config.ReadSetting("API Key", "Test API Key") == "Test API Key")
     Config.SetSetting("API Key", APIKey.ToString());
 }
 
+// clean up storage
+if (Directory.Exists(Config.LibraryConfiguration.LibraryTempDirectory))
+{
+    Directory.Delete(Config.LibraryConfiguration.LibraryTempDirectory, true);
+}
+if (Directory.Exists(Config.LibraryConfiguration.LibraryUploadDirectory))
+{
+    Directory.Delete(Config.LibraryConfiguration.LibraryUploadDirectory, true);
+}
+
 // kick off any delayed upgrade tasks
 // run 1002 background updates in the background on every start
 DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1002);
@@ -229,7 +239,14 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
         ProcessQueue.QueueItemType.LibraryScan
     })
     );
-
+ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.Maintainer,
+    10080,
+    new List<ProcessQueue.QueueItemType>
+    {
+        ProcessQueue.QueueItemType.All
+    })
+    );
 
 Logging.WriteToDiskOnly = false;
 

@@ -164,6 +164,11 @@ namespace gaseous_server
                                     gaseous_tools.DatabaseMigration.UpgradeScriptBackgroundTasks();
                                     break;
 
+                                case QueueItemType.Maintainer:
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Maintenance");
+                                    Classes.Maintenance.RunMaintenance();
+                                    break;
+
                             }
                         }
                         catch (Exception ex)
@@ -243,7 +248,12 @@ namespace gaseous_server
             /// <summary>
             /// Performs and post database upgrade scripts that can be processed as a background task
             /// </summary>
-            BackgroundDatabaseUpgrade
+            BackgroundDatabaseUpgrade,
+
+            /// <summary>
+            /// Performs a clean up of old files, and optimises the database
+            /// </summary>
+            Maintainer
         }
 
         public enum QueueItemState
