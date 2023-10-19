@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using gaseous_tools;
+using gaseous_signature_parser.models.RomSignatureObject;
 
 namespace gaseous_server.Classes
 {
@@ -153,12 +154,112 @@ namespace gaseous_server.Classes
 			public List<KeyValuePair<string, object>>? Attributes { get; set;}
 			public int RomType { get; set; }
 			public string? RomTypeMedia { get; set; }
+			public MediaType? MediaDetail {
+				get
+				{
+					if (RomTypeMedia != null)
+					{
+						return new MediaType(Source, RomTypeMedia);
+					}
+					else
+					{
+						return null;
+					}
+				}
+			}
 			public string? MediaLabel { get; set; }
 			public string? Path { get; set; }
-            public gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType Source { get; set; }
+            public RomSignatureObject.Game.Rom.SignatureSourceType Source { get; set; }
 			public string? SignatureSourceGameTitle { get; set;}
 			public GameLibrary.LibraryItem Library { get; set; }
         }
+
+		public class MediaType
+		{
+			public MediaType(RomSignatureObject.Game.Rom.SignatureSourceType Source, string MediaTypeString)
+			{
+				switch (Source)
+				{
+					case RomSignatureObject.Game.Rom.SignatureSourceType.TOSEC:
+						string[] typeString = MediaTypeString.Split(" ");
+
+						string inType = "";
+						foreach (string typeStringVal in typeString)
+						{
+							if (inType == "")
+							{
+								switch (typeStringVal.ToLower())
+								{
+									case "disk":
+										Media = RomSignatureObject.Game.Rom.RomTypes.Disk;
+
+										inType = typeStringVal;
+										break;
+									case "disc":
+										Media = RomSignatureObject.Game.Rom.RomTypes.Disc;
+
+										inType = typeStringVal;
+										break;
+									case "file":
+										Media = RomSignatureObject.Game.Rom.RomTypes.File;
+
+										inType = typeStringVal;
+										break;
+									case "part":
+										Media = RomSignatureObject.Game.Rom.RomTypes.Part;
+
+										inType = typeStringVal;
+										break;
+									case "tape":
+										Media = RomSignatureObject.Game.Rom.RomTypes.Tape;
+
+										inType = typeStringVal;
+										break;
+									case "of":
+										inType = typeStringVal;
+										break;
+									case "side":
+										inType = typeStringVal;
+										break;
+								}
+							}
+							else {
+								switch (inType.ToLower())
+								{
+									case "disk":
+									case "disc":
+									case "file":
+									case "part":
+									case "tape":
+										Number = int.Parse(typeStringVal);
+										break;
+									case "of":
+										Count = int.Parse(typeStringVal);
+										break;
+									case "side":
+										Side = typeStringVal;
+										break;
+								}
+								inType = "";
+							}
+						}
+
+						break;
+
+					default:
+						break;
+
+				}
+			}
+
+			public RomSignatureObject.Game.Rom.RomTypes? Media { get; set; }
+
+			public int? Number { get; set; }
+
+			public int? Count { get; set; }
+
+			public string? Side { get; set; }
+		}
     }
 }
 
