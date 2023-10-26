@@ -266,7 +266,7 @@ namespace gaseous_server.Classes
                             gameItem.InclusionStatus.PlatformId = alwaysIncludeItem.PlatformId;
                             gameItem.InclusionStatus.GameId = alwaysIncludeItem.GameId;
                             gameItem.InclusionStatus.InclusionState = alwaysIncludeItem.InclusionState;
-                            gameItem.Roms = Roms.GetRoms((long)gameItem.Id, (long)platform.Id);
+                            gameItem.Roms = Roms.GetRoms((long)gameItem.Id, (long)platform.Id).GameRomItems;
 
                             collectionPlatformItem.Games.Add(gameItem);
                     }
@@ -286,7 +286,7 @@ namespace gaseous_server.Classes
                     {
                         CollectionContents.CollectionPlatformItem.CollectionGameItem collectionGameItem = new CollectionContents.CollectionPlatformItem.CollectionGameItem(game);
 
-                        List<Roms.GameRomItem> gameRoms = Roms.GetRoms((long)game.Id, (long)platform.Id);
+                        List<Roms.GameRomItem> gameRoms = Roms.GetRoms((long)game.Id, (long)platform.Id).GameRomItems;
                         
                         bool AddGame = false;
 

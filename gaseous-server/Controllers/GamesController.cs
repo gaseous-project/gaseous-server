@@ -739,7 +739,7 @@ namespace gaseous_server.Controllers
 
         [HttpGet]
         [Route("{GameId}/roms")]
-        [ProducesResponseType(typeof(List<Classes.Roms.GameRomItem>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Classes.Roms.GameRomObject), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         //[ResponseCache(CacheProfileName = "5Minute")]
         public ActionResult GameRom(long GameId)
@@ -748,9 +748,7 @@ namespace gaseous_server.Controllers
             {
                 Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
 
-                List<Classes.Roms.GameRomItem> roms = Classes.Roms.GetRoms(GameId);
-
-                return Ok(roms);
+                return Ok(Classes.Roms.GetRoms(GameId));
             }
             catch
             {
@@ -896,6 +894,158 @@ namespace gaseous_server.Controllers
                 {
                     FileStream content = new FileStream(romFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
                     FileStreamResult response = File(content, "application/octet-stream", rom.Name);
+                    return response;
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
+        [Route("{GameId}/romgroup/{RomGroupId}")]
+        [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        //[ResponseCache(CacheProfileName = "5Minute")]
+        public ActionResult GameRomGroup(long GameId, long RomGroupId)
+        {
+            try
+            {
+                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+
+                Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomGroupId);
+                if (rom.GameId == GameId)
+                {
+                    return Ok(rom);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpPost]
+        [Route("{GameId}/romgroup")]
+        [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult NewGameRomGroup(long GameId, long PlatformId, [FromBody] List<long> RomIds)
+        {
+            try
+            {
+                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+
+                try
+                {
+                    Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.CreateMediaGroup(GameId, PlatformId, RomIds);
+                    return Ok(rom);
+                }
+                catch
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpPatch]
+        [Route("{GameId}/romgroup/{RomId}")]
+        [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GameRomGroupMembers(long GameId, long RomGroupId, [FromBody] List<long> RomIds)
+        {
+            try
+            {
+                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+
+                Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomGroupId);
+                if (rom.GameId == GameId)
+                {
+                    rom = Classes.RomMediaGroup.EditMediaGroup(RomGroupId, RomIds);
+                    return Ok(rom);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpDelete]
+        [Route("{GameId}/romgroup/{RomGroupId}")]
+        [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GameRomGroupDelete(long GameId, long RomGroupId)
+        {
+            try
+            {
+                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+
+                Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomGroupId);
+                if (rom.GameId == GameId)
+                {
+                    Classes.RomMediaGroup.DeleteMediaGroup(RomGroupId);
+                    return Ok(rom);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpGet]
+        [HttpHead]
+        [Route("{GameId}/romgroup/{RomGroupId}/file")]
+        [Route("{GameId}/romgroup/{RomGroupId}/{filename}")]
+        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GameRomGroupFile(long GameId, long RomGroupId, string filename = "")
+        {
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+
+                Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomGroupId);
+                if (rom.GameId != GameId)
+                {
+                    return NotFound();
+                }
+
+                string romFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMediaGroupDirectory, RomGroupId + ".zip");
+                if (System.IO.File.Exists(romFilePath))
+                {
+                    FileStream content = new FileStream(romFilePath, FileMode.Open, FileAccess.Read, FileShare.Read);
+                    string returnFileName = "";
+                    if (filename == "")
+                    {
+                        returnFileName = gameObject.Name + ".zip";
+                    }
+                    else
+                    {
+                        returnFileName = filename;
+                    }
+                    FileStreamResult response = File(content, "application/octet-stream", returnFileName);
                     return response;
                 }
                 else

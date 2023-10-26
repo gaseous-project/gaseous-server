@@ -146,14 +146,32 @@ namespace gaseous_server
 
                                     break;
 
+                                case QueueItemType.Rematcher:
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Rematch");
+                                    Classes.ImportGame.Rematcher();
+
+                                    _SaveLastRunTime = true;
+
+                                    break;
+
                                 case QueueItemType.CollectionCompiler:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Collection Compiler");
                                     Classes.Collections.CompileCollections((long)Options);
                                     break;
 
+                                case QueueItemType.MediaGroupCompiler:
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Media Group Compiler");
+                                    Classes.RomMediaGroup.CompileMediaGroup((long)Options);
+                                    break;
+
                                 case QueueItemType.BackgroundDatabaseUpgrade:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Background Upgrade");
                                     gaseous_tools.DatabaseMigration.UpgradeScriptBackgroundTasks();
+                                    break;
+
+                                case QueueItemType.Maintainer:
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Maintenance");
+                                    Classes.Maintenance.RunMaintenance();
                                     break;
 
                             }
@@ -168,6 +186,8 @@ namespace gaseous_server
                         _ForceExecute = false;
                         _ItemState = QueueItemState.Stopped;
                         _LastFinishTime = DateTime.UtcNow;
+
+                        Logging.Log(Logging.LogType.Information, "Timered Event", "Total " + _ItemType + " run time = " + (DateTime.UtcNow - _LastRunTime).TotalSeconds);
                     }
                 }
             }
@@ -221,14 +241,29 @@ namespace gaseous_server
             LibraryScan,
 
             /// <summary>
+            /// Looks for roms in the library that have an unknown platform or game match
+            /// </summary>
+            Rematcher,
+
+            /// <summary>
             /// Builds collections - set the options attribute to the id of the collection to build
             /// </summary>
             CollectionCompiler,
 
             /// <summary>
+            /// Builds media groups - set the options attribute to the id of the media group to build
+            /// </summary>
+            MediaGroupCompiler,
+
+            /// <summary>
             /// Performs and post database upgrade scripts that can be processed as a background task
             /// </summary>
-            BackgroundDatabaseUpgrade
+            BackgroundDatabaseUpgrade,
+
+            /// <summary>
+            /// Performs a clean up of old files, and optimises the database
+            /// </summary>
+            Maintainer
         }
 
         public enum QueueItemState

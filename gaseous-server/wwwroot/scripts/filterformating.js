@@ -91,7 +91,17 @@ function buildFilterPanel(targetElement, headerString, friendlyHeaderString, val
         containerPanel.setAttribute('style', 'display: none;');
     }
     for (var i = 0; i < valueList.length; i++) {
-        containerPanel.appendChild(buildFilterPanelItem(headerString, valueList[i].id, valueList[i].name));
+        var tags;
+        switch(headerString) {
+            case 'platform':
+                tags = [
+                    {
+                        'label': valueList[i].gameCount
+                    }
+                ];
+                break;
+        }
+        containerPanel.appendChild(buildFilterPanelItem(headerString, valueList[i].id, valueList[i].name, tags));
     }
     targetElement.appendChild(containerPanel);
 }
@@ -142,7 +152,7 @@ function toggleFilterPanel(panelName) {
     setCookie("filter_panel_box_" + panelName, cookieVal);
 }
 
-function buildFilterPanelItem(filterType, itemString, friendlyItemString) {
+function buildFilterPanelItem(filterType, itemString, friendlyItemString, tags) {
     var checkCookie = getCookie('filter_panel_item_' + filterType + '_checkbox_' + itemString);
     var checkState = false;
     if (checkCookie) {
@@ -173,9 +183,12 @@ function buildFilterPanelItem(filterType, itemString, friendlyItemString) {
     filterPanelItemLabel.setAttribute('for', filterPanelItemCheckBoxItem.id);
     filterPanelItemLabel.innerHTML = friendlyItemString;
 
+    if (tags) {
+        filterPanelItem.appendChild(buildFilterTag(tags));
+    }
     filterPanelItem.appendChild(filterPanelItemCheckBox);
     filterPanelItem.appendChild(filterPanelItemLabel);
-
+    
     return filterPanelItem;
 }
 
@@ -265,4 +278,25 @@ function GetFilterQuery(filterName) {
     }
 
     return queryString;
+}
+
+function buildFilterTag(tags) {
+    // accepts an array of numbers + classes for styling (optional)
+    // example [ { label: "G: 13", class: "tag_Green" }, { label: "R: 17", class: "tag_Orange" } ]
+    
+    var boundingDiv = document.createElement('div');
+    boundingDiv.className = 'tagBox';
+
+    for (var i = 0; i < tags.length; i++) {
+        var tagBox = document.createElement('div');
+        tagBox.classList.add('tagBoxItem');
+        if (tags[i].class) {
+            tagBox.classList.add(tags[i].class);
+        }
+        tagBox.innerHTML = tags[i].label;
+
+        boundingDiv.appendChild(tagBox);
+    }
+
+    return boundingDiv;
 }

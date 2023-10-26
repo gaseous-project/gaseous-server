@@ -48,6 +48,16 @@ if (Config.ReadSetting("API Key", "Test API Key") == "Test API Key")
     Config.SetSetting("API Key", APIKey.ToString());
 }
 
+// clean up storage
+if (Directory.Exists(Config.LibraryConfiguration.LibraryTempDirectory))
+{
+    Directory.Delete(Config.LibraryConfiguration.LibraryTempDirectory, true);
+}
+if (Directory.Exists(Config.LibraryConfiguration.LibraryUploadDirectory))
+{
+    Directory.Delete(Config.LibraryConfiguration.LibraryUploadDirectory, true);
+}
+
 // kick off any delayed upgrade tasks
 // run 1002 background updates in the background on every start
 DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1002);
@@ -182,27 +192,59 @@ gaseous_server.Classes.Metadata.Platforms.GetPlatform(0);
 PlatformMapping.ExtractPlatformMap();
 
 // add background tasks
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.SignatureIngestor, 60));
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.TitleIngestor, 1,
+    ProcessQueue.QueueItemType.SignatureIngestor,
+    60
+    )
+    );
+ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.TitleIngestor,
+    1,
     new List<ProcessQueue.QueueItemType>
     {
         ProcessQueue.QueueItemType.OrganiseLibrary,
         ProcessQueue.QueueItemType.LibraryScan
     })
     );
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.MetadataRefresh, 360));
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.OrganiseLibrary, 1440, new List<ProcessQueue.QueueItemType>
+    ProcessQueue.QueueItemType.MetadataRefresh,
+    360
+    )
+    );
+ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.OrganiseLibrary,
+    1440,
+    new List<ProcessQueue.QueueItemType>
     {
         ProcessQueue.QueueItemType.LibraryScan,
-        ProcessQueue.QueueItemType.TitleIngestor
+        ProcessQueue.QueueItemType.TitleIngestor,
+        ProcessQueue.QueueItemType.Rematcher
     })
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.LibraryScan, 1440, new List<ProcessQueue.QueueItemType>
+    ProcessQueue.QueueItemType.LibraryScan,
+    60,
+    new List<ProcessQueue.QueueItemType>
     {
-        ProcessQueue.QueueItemType.OrganiseLibrary
+        ProcessQueue.QueueItemType.OrganiseLibrary,
+        ProcessQueue.QueueItemType.Rematcher
+    })
+    );
+ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.Rematcher,
+    1440,
+    new List<ProcessQueue.QueueItemType>
+    {
+        ProcessQueue.QueueItemType.OrganiseLibrary,
+        ProcessQueue.QueueItemType.LibraryScan
+    })
+    );
+ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.Maintainer,
+    10080,
+    new List<ProcessQueue.QueueItemType>
+    {
+        ProcessQueue.QueueItemType.All
     })
     );
 
