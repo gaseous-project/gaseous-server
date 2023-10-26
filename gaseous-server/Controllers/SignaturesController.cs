@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
+using gaseous_signature_parser.models.RomSignatureObject;
 using gaseous_tools;
 using Microsoft.AspNetCore.Mvc;
 
@@ -92,7 +93,7 @@ namespace gaseous_server.Controllers
                         Sha1 = ((string)sigDbRow["SHA1"]).ToLower(),
                         DevelopmentStatus = (string)sigDbRow["DevelopmentStatus"],
                         Attributes = Newtonsoft.Json.JsonConvert.DeserializeObject<List<KeyValuePair<string, object>>>((string)Common.ReturnValueIfNull(sigDbRow["Attributes"], "[]")),
-                        RomType = (Models.Signatures_Games.RomItem.RomTypes)(int)sigDbRow["RomType"],
+                        RomType = (RomSignatureObject.Game.Rom.RomTypes)(int)sigDbRow["RomType"],
                         RomTypeMedia = (string)sigDbRow["RomTypeMedia"],
                         MediaLabel = (string)sigDbRow["MediaLabel"],
                         SignatureSource = (gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType)(Int32)sigDbRow["MetadataSource"]

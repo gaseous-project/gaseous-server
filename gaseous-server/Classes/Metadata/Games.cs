@@ -15,6 +15,12 @@ namespace gaseous_server.Classes.Metadata
 
         }
 
+        public class InvalidGameId : Exception
+        { 
+            public InvalidGameId(long Id) : base("Unable to find Game by id " + Id)
+            {}
+        }
+
         private static IGDBClient igdb = new IGDBClient(
                     // Found in Twitch Developer portal for your app
                     Config.IGDB.ClientId,

@@ -160,6 +160,7 @@ h3 {
     height: 40px;
     right: 0px;
     align-items: center;
+    z-index: 50;
 }
 
 #banner_header_label {
@@ -201,7 +202,7 @@ h3 {
 .filter_panel_box {
     position: relative;
     padding: 10px;
-    z-index: -1;
+    z-index: 1;
 }
 
 input[type='text'], input[type='number'] {
@@ -721,6 +722,7 @@ button:hover {
 
 button:disabled {
     background-color: #555;
+    color: #888;
     cursor: not-allowed;
 }
 
@@ -956,4 +958,8 @@ button:disabled {
     border-radius: 5px;
     border-color: darkslategray;
     border-style: solid;
+}
+
+.romGroupTitles {
+    padding-left: 20px;
 }

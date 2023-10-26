@@ -1,13 +1,24 @@
 ﻿using System;
 using System.Data;
 using gaseous_tools;
+using gaseous_signature_parser.models.RomSignatureObject;
+using static gaseous_server.Classes.RomMediaGroup;
+using gaseous_server.Classes.Metadata;
 
 namespace gaseous_server.Classes
 {
 	public class Roms
 	{
-		public static List<GameRomItem> GetRoms(long GameId, long PlatformId = -1)
+		public class InvalidRomId : Exception
+        { 
+            public InvalidRomId(long Id) : base("Unable to find ROM by id " + Id)
+            {}
+        }
+
+		public static GameRomObject GetRoms(long GameId, long PlatformId = -1)
 		{
+			GameRomObject GameRoms = new GameRomObject();
+
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
@@ -23,17 +34,19 @@ namespace gaseous_server.Classes
 
             if (romDT.Rows.Count > 0)
             {
-				List<GameRomItem> romItems = new List<GameRomItem>();
 				foreach (DataRow romDR in romDT.Rows)
 				{
-					romItems.Add(BuildRom(romDR));
+					GameRoms.GameRomItems.Add(BuildRom(romDR));
 				}
 
-				return romItems;
+				// get rom media groups
+				GameRoms.MediaGroups = Classes.RomMediaGroup.GetMediaGroupsFromGameId(GameId);
+
+				return GameRoms;
             }
             else
             {
-                throw new Exception("Unknown Game Id");
+                throw new Games.InvalidGameId(GameId);
             }
         }
 
@@ -53,7 +66,7 @@ namespace gaseous_server.Classes
 			}
 			else
 			{
-				throw new Exception("Unknown ROM Id");
+				throw new InvalidRomId(RomId);
 			}
 		}
 
@@ -135,6 +148,12 @@ namespace gaseous_server.Classes
             return romItem;
         }
 
+		public class GameRomObject
+		{
+			public List<GameRomMediaGroupItem> MediaGroups { get; set; } = new List<GameRomMediaGroupItem>();
+			public List<GameRomItem> GameRomItems { get; set; } = new List<GameRomItem>();
+		}
+
 		public class GameRomItem
 		{
 			public long Id { get; set; }
@@ -153,12 +172,112 @@ namespace gaseous_server.Classes
 			public List<KeyValuePair<string, object>>? Attributes { get; set;}
 			public int RomType { get; set; }
 			public string? RomTypeMedia { get; set; }
+			public MediaType? MediaDetail {
+				get
+				{
+					if (RomTypeMedia != null)
+					{
+						return new MediaType(Source, RomTypeMedia);
+					}
+					else
+					{
+						return null;
+					}
+				}
+			}
 			public string? MediaLabel { get; set; }
 			public string? Path { get; set; }
-            public gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType Source { get; set; }
+            public RomSignatureObject.Game.Rom.SignatureSourceType Source { get; set; }
 			public string? SignatureSourceGameTitle { get; set;}
 			public GameLibrary.LibraryItem Library { get; set; }
         }
+
+		public class MediaType
+		{
+			public MediaType(RomSignatureObject.Game.Rom.SignatureSourceType Source, string MediaTypeString)
+			{
+				switch (Source)
+				{
+					case RomSignatureObject.Game.Rom.SignatureSourceType.TOSEC:
+						string[] typeString = MediaTypeString.Split(" ");
+
+						string inType = "";
+						foreach (string typeStringVal in typeString)
+						{
+							if (inType == "")
+							{
+								switch (typeStringVal.ToLower())
+								{
+									case "disk":
+										Media = RomSignatureObject.Game.Rom.RomTypes.Disk;
+
+										inType = typeStringVal;
+										break;
+									case "disc":
+										Media = RomSignatureObject.Game.Rom.RomTypes.Disc;
+
+										inType = typeStringVal;
+										break;
+									case "file":
+										Media = RomSignatureObject.Game.Rom.RomTypes.File;
+
+										inType = typeStringVal;
+										break;
+									case "part":
+										Media = RomSignatureObject.Game.Rom.RomTypes.Part;
+
+										inType = typeStringVal;
+										break;
+									case "tape":
+										Media = RomSignatureObject.Game.Rom.RomTypes.Tape;
+
+										inType = typeStringVal;
+										break;
+									case "of":
+										inType = typeStringVal;
+										break;
+									case "side":
+										inType = typeStringVal;
+										break;
+								}
+							}
+							else {
+								switch (inType.ToLower())
+								{
+									case "disk":
+									case "disc":
+									case "file":
+									case "part":
+									case "tape":
+										Number = int.Parse(typeStringVal);
+										break;
+									case "of":
+										Count = int.Parse(typeStringVal);
+										break;
+									case "side":
+										Side = typeStringVal;
+										break;
+								}
+								inType = "";
+							}
+						}
+
+						break;
+
+					default:
+						break;
+
+				}
+			}
+
+			public RomSignatureObject.Game.Rom.RomTypes? Media { get; set; }
+
+			public int? Number { get; set; }
+
+			public int? Count { get; set; }
+
+			public string? Side { get; set; }
+		}
     }
 }
 

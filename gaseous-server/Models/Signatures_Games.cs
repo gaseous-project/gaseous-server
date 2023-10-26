@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text.Json.Serialization;
+using gaseous_signature_parser.models.RomSignatureObject;
 
 namespace gaseous_server.Models
 {
@@ -128,49 +129,11 @@ namespace gaseous_server.Models
 
             public List<KeyValuePair<string, object>> Attributes { get; set; } = new List<KeyValuePair<string, object>>();
 
-            public RomTypes RomType { get; set; }
+            public RomSignatureObject.Game.Rom.RomTypes RomType { get; set; }
             public string? RomTypeMedia { get; set; }
             public string? MediaLabel { get; set; }
 
-            public gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType SignatureSource { get; set; }
-
-            public enum RomTypes
-            {
-                /// <summary>
-                /// Media type is unknown
-                /// </summary>
-                Unknown = 0,
-
-                /// <summary>
-                /// Optical media
-                /// </summary>
-                Disc = 1,
-
-                /// <summary>
-                /// Magnetic media
-                /// </summary>
-                Disk = 2,
-
-                /// <summary>
-                /// Individual files
-                /// </summary>
-                File = 3,
-
-                /// <summary>
-                /// Individual pars
-                /// </summary>
-                Part = 4,
-
-                /// <summary>
-                /// Tape base media
-                /// </summary>
-                Tape = 5,
-
-                /// <summary>
-                /// Side of the media
-                /// </summary>
-                Side = 6
-            }
+            public RomSignatureObject.Game.Rom.SignatureSourceType SignatureSource { get; set; }
 
             [JsonIgnore]
             public int Score

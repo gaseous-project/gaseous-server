@@ -1,0 +1,27 @@
+﻿<p>Are you sure you want to delete this media group?</p>
+<p><strong>Warning:</strong> This cannot be undone!</p>
+<div style="width: 100%; text-align: center;">
+    <div style="display: inline-block; margin-right: 20px;">
+        <button class="redbutton" value="Delete" onclick="deleteCollection();">Delete</button>
+    </div>
+    <div style="display: inline-block; margin-left: 20px;">
+        <button value="Cancel" onclick="closeSubDialog();">Cancel</button>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function deleteCollection() {
+        ajaxCall(
+            '/api/v1/Games/' + gameData.id + '/romgroup/' + subModalVariables,
+            'DELETE', 
+            function (result) {
+                loadRoms();
+                closeSubDialog();
+            },
+            function (error) {
+                loadRoms();
+                closeSubDialog();
+            }
+        );
+    }
+</script>
