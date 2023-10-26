@@ -40,3 +40,15 @@ CREATE TABLE `Relation_Game_Themes` (
 
 ALTER TABLE `Games_Roms` 
 ADD COLUMN `LastMatchAttemptDate` DATETIME NULL AFTER `LibraryId`;
+
+CREATE TABLE `RomMediaGroup` (
+  `Id` BIGINT NOT NULL AUTO_INCREMENT,
+  `Status` INT NULL,
+  `PlatformId` BIGINT NULL,
+  `GameId` BIGINT NULL,
+  PRIMARY KEY (`Id`));
+
+CREATE TABLE `RomMediaGroup_Members` (
+  `GroupId` BIGINT NOT NULL,
+  `RomId` BIGINT NOT NULL,
+  PRIMARY KEY (`GroupId`, `RomId`));

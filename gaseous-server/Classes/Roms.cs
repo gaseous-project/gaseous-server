@@ -2,13 +2,23 @@
 using System.Data;
 using gaseous_tools;
 using gaseous_signature_parser.models.RomSignatureObject;
+using static gaseous_server.Classes.RomMediaGroup;
+using gaseous_server.Classes.Metadata;
 
 namespace gaseous_server.Classes
 {
 	public class Roms
 	{
-		public static List<GameRomItem> GetRoms(long GameId, long PlatformId = -1)
+		public class InvalidRomId : Exception
+        { 
+            public InvalidRomId(long Id) : base("Unable to find ROM by id " + Id)
+            {}
+        }
+
+		public static GameRomObject GetRoms(long GameId, long PlatformId = -1)
 		{
+			GameRomObject GameRoms = new GameRomObject();
+
             Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
@@ -24,17 +34,19 @@ namespace gaseous_server.Classes
 
             if (romDT.Rows.Count > 0)
             {
-				List<GameRomItem> romItems = new List<GameRomItem>();
 				foreach (DataRow romDR in romDT.Rows)
 				{
-					romItems.Add(BuildRom(romDR));
+					GameRoms.GameRomItems.Add(BuildRom(romDR));
 				}
 
-				return romItems;
+				// get rom media groups
+				GameRoms.MediaGroups = Classes.RomMediaGroup.GetMediaGroupsFromGameId(GameId);
+
+				return GameRoms;
             }
             else
             {
-                throw new Exception("Unknown Game Id");
+                throw new Games.InvalidGameId(GameId);
             }
         }
 
@@ -54,7 +66,7 @@ namespace gaseous_server.Classes
 			}
 			else
 			{
-				throw new Exception("Unknown ROM Id");
+				throw new InvalidRomId(RomId);
 			}
 		}
 
@@ -135,6 +147,12 @@ namespace gaseous_server.Classes
 
             return romItem;
         }
+
+		public class GameRomObject
+		{
+			public List<GameRomMediaGroupItem> MediaGroups { get; set; } = new List<GameRomMediaGroupItem>();
+			public List<GameRomItem> GameRomItems { get; set; } = new List<GameRomItem>();
+		}
 
 		public class GameRomItem
 		{

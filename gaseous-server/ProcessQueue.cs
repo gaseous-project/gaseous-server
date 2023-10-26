@@ -159,6 +159,11 @@ namespace gaseous_server
                                     Classes.Collections.CompileCollections((long)Options);
                                     break;
 
+                                case QueueItemType.MediaGroupCompiler:
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Media Group Compiler");
+                                    Classes.RomMediaGroup.CompileMediaGroup((long)Options);
+                                    break;
+
                                 case QueueItemType.BackgroundDatabaseUpgrade:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Background Upgrade");
                                     gaseous_tools.DatabaseMigration.UpgradeScriptBackgroundTasks();
@@ -244,6 +249,11 @@ namespace gaseous_server
             /// Builds collections - set the options attribute to the id of the collection to build
             /// </summary>
             CollectionCompiler,
+
+            /// <summary>
+            /// Builds media groups - set the options attribute to the id of the media group to build
+            /// </summary>
+            MediaGroupCompiler,
 
             /// <summary>
             /// Performs and post database upgrade scripts that can be processed as a background task

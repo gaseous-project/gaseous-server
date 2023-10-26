@@ -722,6 +722,7 @@ button:hover {
 
 button:disabled {
     background-color: #555;
+    color: #888;
     cursor: not-allowed;
 }
 
@@ -957,4 +958,8 @@ button:disabled {
     border-radius: 5px;
     border-color: darkslategray;
     border-style: solid;
+}
+
+.romGroupTitles {
+    padding-left: 20px;
 }

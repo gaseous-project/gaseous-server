@@ -410,6 +410,14 @@ namespace gaseous_tools
                     }
                 }
 
+                public string LibraryMediaGroupDirectory
+                {
+                    get
+                    {
+                        return Path.Combine(LibraryRootDirectory, "Media Groups");
+                    }
+                }
+
                 public string LibraryMetadataDirectory_Platform(Platform platform)
                 {
                     string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Platforms", platform.Slug);
