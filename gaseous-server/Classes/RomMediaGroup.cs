@@ -269,20 +269,46 @@ namespace gaseous_server.Classes
                     // build m3u
                     romItems.Sort((a, b) =>
                         {
-                            var firstCompare = a.MediaDetail.Number.ToString().CompareTo(b.MediaDetail.Number.ToString());
-                            return firstCompare != 0 ? firstCompare : a.MediaDetail.Side.CompareTo(b.MediaDetail.Side);
+                            if (a.MediaDetail != null)
+                            {
+                                if (a.MediaDetail.Number != null && a.MediaDetail.Side != null)
+                                {
+                                    var firstCompare = a.MediaDetail.Number.ToString().CompareTo(b.MediaDetail.Number.ToString());
+                                    return firstCompare != 0 ? firstCompare : a.MediaDetail.Side.CompareTo(b.MediaDetail.Side);
+                                }
+                                else if (a.MediaDetail.Number != null && a.MediaDetail.Side == null)
+                                {
+                                    return a.MediaDetail.Number.ToString().CompareTo(b.MediaDetail.Number.ToString());
+                                }
+                                else if (a.MediaDetail.Number == null && a.MediaDetail.Side != null)
+                                {
+                                    return a.MediaDetail.Side.ToString().CompareTo(b.MediaDetail.Side.ToString());
+                                }
+                                else
+                                {
+                                    return a.Name.CompareTo(b.Name);
+                                }
+                            }
+                            else
+                            {
+                                return a.Name.CompareTo(b.Name);
+                            }
                         }
                     );
                     foreach (Roms.GameRomItem romItem in romItems)
                     {
                         string M3UFileContent = "";
                         M3UFileContent += romItem.Name;
-                        if (romItem.MediaLabel != null)
+                        if (romItem.MediaLabel.Length == 0)
                         {
-                            if (romItem.MediaLabel.Length > 0)
+                            if (romItem.RomTypeMedia.Length > 0)
                             {
-                                M3UFileContent += "|" + romItem.MediaLabel;
+                                M3UFileContent += "|" + romItem.RomTypeMedia;
                             }
+                        }
+                        else
+                        {
+                            M3UFileContent += "|" + romItem.MediaLabel;
                         }
                         M3UFileContents.Add(M3UFileContent);
                     }

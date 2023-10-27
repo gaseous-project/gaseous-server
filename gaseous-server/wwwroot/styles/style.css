@@ -522,8 +522,11 @@ iframe {
     width: 100%;
 }
 
-.romrow:hover {
-    background-color: #383838;
+table .romrow:nth-child(even) {
+    background: rgba(94, 94, 94, 0.3);
+}
+
+table .romrow:nth-child(odd) {
     background: rgba(56, 56, 56, 0.3);
 }
 

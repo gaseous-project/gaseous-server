@@ -66,7 +66,7 @@
 
             <p id="gamesummarytext_label_button_contract" class="text_link" style="display: none;" onclick="document.querySelector('#gamesummarytext_label').classList.add('line-clamp-4'); document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', ''); document.querySelector('#gamesummarytext_label_button_contract').setAttribute('style', 'display: none;');">Read less...</p>
         </div>
-        <div id="gamesummarymediagroups">
+        <div id="gamesummarymediagroups" style="display: none;">
             <h3>Media Groups</h3>
         </div>
         <div id="gamesummaryroms">
@@ -446,6 +446,7 @@
                         var statusText = mediaGroup.status;
                         var downloadLink = '';
                         var packageSize = '-';
+                        var launchButtonContent = '';
                         switch (mediaGroup.status) {
                             case 'NoStatus':
                                 statusText = '-';
@@ -460,6 +461,7 @@
                                 statusText = 'Available';
                                 downloadLink = '<a href="/api/v1/Games/' + gameId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '.zip" class="romlink"><img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" /></a>';
                                 packageSize = formatBytes(mediaGroup.size);
+                                launchButtonContent = launchButton;
                                 break;
                             case "Failed":
                                 statusText = 'Build error';
@@ -476,7 +478,7 @@
                             mediaGroup.romIds.length,
                             packageSize,
                             statusText,
-                            launchButton,
+                            launchButtonContent,
                             '<div style="text-align: right;">' + downloadLink + deleteButton + '</div>'
                         ]
 
@@ -486,14 +488,21 @@
                         var mgRomCell = document.createElement('td');
                         mgRomCell.setAttribute('colspan', 6);
                         mgRomCell.className = 'romGroupTitles';
+                        
                         // iterate the group members
-                        var groupMemberNames = [];
+                        var groupMembers = [];
                         for (var r = 0; r < mediaGroup.romIds.length; r++) {
                             for (var x = 0; x < gameRomItems.length; x++) {
                                 if (mediaGroup.romIds[r] == gameRomItems[x].id) {
-                                    groupMemberNames.push(gameRomItems[x].name);
+                                    groupMembers.push(gameRomItems[x]);
                                 }
                             }
+                        }
+
+                        groupMembers.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
+                        var groupMemberNames = [];
+                        for (var r = 0; r < groupMembers.length; r++) {
+                            groupMemberNames.push(groupMembers[r].name);
                         }
                         mgRomCell.innerHTML = groupMemberNames.join("<br />");
                         
@@ -840,10 +849,12 @@
             '/api/v1/Games/' + gameId + '/romgroup?PlatformId=' + platformId,
             'POST',
             function (result) {
-                loadRoms(false);
+                DisplayROMCheckboxes(false);
+                loadRoms();
             },
             function (error) {
-                loadRoms(false);
+                DisplayROMCheckboxes(false);
+                loadRoms();
             },
             JSON.stringify(romIds)
         );
