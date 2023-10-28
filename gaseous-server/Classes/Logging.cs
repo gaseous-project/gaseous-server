@@ -3,7 +3,7 @@ using System.Data;
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
-namespace gaseous_tools
+namespace gaseous_server.Classes
 {
 	public class Logging
 	{
@@ -69,7 +69,7 @@ namespace gaseous_tools
 
                 if (LogToDiskOnly == false)
                 {
-                    Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                    Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
                     string sql = "DELETE FROM ServerLogs WHERE EventTime < @EventRententionDate; INSERT INTO ServerLogs (EventTime, EventType, Process, Message, Exception) VALUES (@EventTime, @EventType, @Process, @Message, @Exception);";
                     Dictionary<string, object> dbDict = new Dictionary<string, object>();
                     dbDict.Add("EventRententionDate", DateTime.UtcNow.AddDays(Config.LoggingConfiguration.LogRetention * -1));
@@ -112,7 +112,7 @@ namespace gaseous_tools
 
         static public List<LogItem> GetLogs(long? StartIndex, int PageNumber = 1, int PageSize = 100) 
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
             if (StartIndex == null)
             {

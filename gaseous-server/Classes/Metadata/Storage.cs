@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
 using System.Reflection;
-using gaseous_tools;
 using IGDB;
 using IGDB.Models;
 using Microsoft.Extensions.Caching.Memory;
@@ -67,7 +66,7 @@ namespace gaseous_server.Classes.Metadata
 
         private static CacheStatus _GetCacheStatus(string Endpoint, string SearchField, object SearchValue)
 		{
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
 			string sql = "SELECT lastUpdated FROM " + Endpoint + " WHERE " + SearchField + " = @" + SearchField;
 
@@ -178,7 +177,7 @@ namespace gaseous_server.Classes.Metadata
 			}
 
             // execute sql
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			db.ExecuteCMD(sql, objectDict);
         }
 
@@ -201,7 +200,7 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
 
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
             string sql = "SELECT * FROM " + Endpoint + " WHERE " + SearchField + " = @" + SearchField;
 
@@ -425,7 +424,7 @@ namespace gaseous_server.Classes.Metadata
         private static void StoreRelations(string PrimaryTable, string SecondaryTable, long ObjectId, string Relations)
         {
             string TableName = "Relation_" + PrimaryTable + "_" + SecondaryTable;
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM information_schema.tables WHERE table_schema = '" + Config.DatabaseConfiguration.DatabaseName + "' AND table_name = '" + TableName + "';";
             DataTable data = db.ExecuteCMD(sql);
             if (data.Rows.Count == 0)

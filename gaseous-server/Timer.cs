@@ -1,5 +1,5 @@
 ﻿using System;
-using gaseous_tools;
+using gaseous_server.Classes;
 
 namespace gaseous_server
 {

@@ -108,7 +108,7 @@ namespace gaseous_server.Controllers
             {
                 Classes.Collections.CollectionItem collectionItem = Classes.Collections.GetCollection(CollectionId);
 
-                string ZipFilePath = Path.Combine(gaseous_tools.Config.LibraryConfiguration.LibraryCollectionsDirectory, CollectionId + ".zip");
+                string ZipFilePath = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, CollectionId + ".zip");
 
                 if (System.IO.File.Exists(ZipFilePath))
                 {

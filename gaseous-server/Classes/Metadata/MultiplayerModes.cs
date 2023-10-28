@@ -1,8 +1,7 @@
 ﻿using System;
-using gaseous_tools;
 using IGDB;
 using IGDB.Models;
-using static gaseous_tools.Config.ConfigFile;
+
 
 namespace gaseous_server.Classes.Metadata
 {
@@ -81,7 +80,7 @@ namespace gaseous_server.Classes.Metadata
                     }
                     catch (Exception ex)
                     {
-                        gaseous_tools.Logging.Log(gaseous_tools.Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
+                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
                         returnValue = Storage.GetCacheValue<MultiplayerMode>(returnValue, "id", (long)searchValue);
                     }
                     break;

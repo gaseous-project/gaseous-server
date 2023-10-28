@@ -3,7 +3,7 @@ using System.Data;
 using Newtonsoft.Json;
 using IGDB.Models;
 
-namespace gaseous_tools
+namespace gaseous_server.Classes
 {
     public static class Config
     {

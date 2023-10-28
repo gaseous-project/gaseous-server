@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using gaseous_tools;
+using gaseous_server.Classes;
 using IGDB;
 using IGDB.Models;
 using Microsoft.AspNetCore.Mvc;
 using static gaseous_server.Classes.Metadata.Games;
-using static gaseous_tools.Config.ConfigFile;
+
 
 namespace gaseous_server.Controllers
 {

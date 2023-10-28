@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Data;
-using gaseous_tools;
+using gaseous_server.Classes;
 
 namespace gaseous_server.Models
 {
@@ -14,7 +14,7 @@ namespace gaseous_server.Models
 
 		public Signatures_Status()
 		{
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "select (select count(*) from Signatures_Sources) as SourceCount, (select count(*) from Signatures_Platforms) as PlatformCount, (select count(*) from Signatures_Games) as GameCount, (select count(*) from Signatures_Roms) as RomCount;";
             
             DataTable sigDb = db.ExecuteCMD(sql);

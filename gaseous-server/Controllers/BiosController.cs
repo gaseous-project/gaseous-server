@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using gaseous_server.Classes;
 using Microsoft.AspNetCore.Mvc;
 
 namespace gaseous_server.Controllers
@@ -37,7 +38,7 @@ namespace gaseous_server.Controllers
             {
                 IGDB.Models.Platform platform = Classes.Metadata.Platforms.GetPlatform(PlatformId);
 
-                string biosPath = Path.Combine(gaseous_tools.Config.LibraryConfiguration.LibraryBIOSDirectory, platform.Slug);
+                string biosPath = Path.Combine(Config.LibraryConfiguration.LibraryBIOSDirectory, platform.Slug);
 
                 string tempFile = Path.GetTempFileName();
 
