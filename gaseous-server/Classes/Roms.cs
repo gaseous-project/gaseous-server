@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Data;
-using gaseous_tools;
 using gaseous_signature_parser.models.RomSignatureObject;
 using static gaseous_server.Classes.RomMediaGroup;
 using gaseous_server.Classes.Metadata;
@@ -19,7 +18,7 @@ namespace gaseous_server.Classes
 		{
 			GameRomObject GameRoms = new GameRomObject();
 
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", GameId);
@@ -52,7 +51,7 @@ namespace gaseous_server.Classes
 
 		public static GameRomItem GetRom(long RomId)
 		{
-			Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "SELECT * FROM Games_Roms WHERE Id = @id";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 			dbDict.Add("id", RomId);
@@ -78,7 +77,7 @@ namespace gaseous_server.Classes
 			// ensure metadata for gameid is present
 			IGDB.Models.Game game = Classes.Metadata.Games.GetGame(GameId, false, false, false);
 
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid WHERE Id = @id";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", RomId);
@@ -101,7 +100,7 @@ namespace gaseous_server.Classes
 					File.Delete(rom.Path);
 				}
 
-				Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+				Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 				string sql = "DELETE FROM Games_Roms WHERE Id = @id";
 				Dictionary<string, object> dbDict = new Dictionary<string, object>();
 				dbDict.Add("id", RomId);

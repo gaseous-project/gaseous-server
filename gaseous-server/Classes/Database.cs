@@ -4,9 +4,8 @@ using System.Data.SqlClient;
 using System.Diagnostics;
 using System.Reflection;
 using MySqlConnector;
-using static gaseous_tools.Database;
 
-namespace gaseous_tools
+namespace gaseous_server.Classes
 {
 	public class Database
 	{
@@ -81,7 +80,7 @@ namespace gaseous_tools
 
                     for (int i = 1000; i < 10000; i++)
 					{
-						string resourceName = "gaseous_tools.Database.MySQL.gaseous-" + i + ".sql";
+						string resourceName = "gaseous_server.Support.Database.MySQL.gaseous-" + i + ".sql";
 						string dbScript = "";
 
 						string[] resources = Assembly.GetExecutingAssembly().GetManifestResourceNames();
@@ -109,7 +108,7 @@ namespace gaseous_tools
                                     if (SchemaVer < i)
 									{
 										// run pre-upgrade code
-										gaseous_tools.DatabaseMigration.PreUpgradeScript(i, _ConnectorType);
+										DatabaseMigration.PreUpgradeScript(i, _ConnectorType);
 										
                                         // apply schema!
                                         Logging.Log(Logging.LogType.Information, "Database", "Updating schema to version " + i);
@@ -121,7 +120,7 @@ namespace gaseous_tools
 										ExecuteCMD(sql, dbDict);
 
 										// run post-upgrade code
-										gaseous_tools.DatabaseMigration.PostUpgradeScript(i, _ConnectorType);
+										DatabaseMigration.PostUpgradeScript(i, _ConnectorType);
 									}
 								}
 							}

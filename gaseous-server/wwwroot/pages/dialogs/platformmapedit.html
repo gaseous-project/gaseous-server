@@ -105,7 +105,7 @@
     DisplayWebEmulatorContent(false);
 
     ajaxCall(
-        '/api/v1/PlatformMaps/' + modalVariables,
+        '/api/v1.0/PlatformMaps/' + modalVariables,
         'GET',
         function (result) {
             // set heading
@@ -338,7 +338,7 @@
         console.log(JSON.stringify(item));
 
         ajaxCall(
-            '/api/v1/PlatformMaps/' + modalVariables,
+            '/api/v1.0/PlatformMaps/' + modalVariables,
             'PATCH',
             function (result) {
                 loadPlatformMapping();

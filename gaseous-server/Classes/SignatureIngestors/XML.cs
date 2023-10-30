@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
+using gaseous_server.Classes;
 using gaseous_signature_parser.models.RomSignatureObject;
-using gaseous_tools;
 using System.Data;
 
 namespace gaseous_server.SignatureIngestors.XML
@@ -11,7 +11,7 @@ namespace gaseous_server.SignatureIngestors.XML
         public void Import(string SearchPath, gaseous_signature_parser.parser.SignatureParser XMLType)
         {
             // connect to database
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
             // process provided files
             Logging.Log(Logging.LogType.Information, "Signature Ingestor - XML", "Importing from " + SearchPath);

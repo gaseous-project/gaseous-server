@@ -1,6 +1,5 @@
 using System;
 using System.Data;
-using gaseous_tools;
 using gaseous_signature_parser.models.RomSignatureObject;
 using Microsoft.VisualBasic;
 using IGDB.Models;
@@ -19,7 +18,7 @@ namespace gaseous_server.Classes
 
         public static GameRomMediaGroupItem CreateMediaGroup(long GameId, long PlatformId, List<long> RomIds)
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "INSERT INTO RomMediaGroup (Status, PlatformId, GameId) VALUES (@status, @platformid, @gameid); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("status", GameRomMediaGroupItem.GroupBuildStatus.WaitingForBuild);
@@ -58,7 +57,7 @@ namespace gaseous_server.Classes
 
         public static GameRomMediaGroupItem GetMediaGroup(long Id)
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM RomMediaGroup WHERE Id=@id;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", Id);
@@ -78,7 +77,7 @@ namespace gaseous_server.Classes
 
         public static List<GameRomMediaGroupItem> GetMediaGroupsFromGameId(long GameId)
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM RomMediaGroup WHERE GameId=@gameid;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("gameid", GameId);
@@ -101,7 +100,7 @@ namespace gaseous_server.Classes
         {
             GameRomMediaGroupItem mg = GetMediaGroup(Id);
 
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
 
@@ -156,7 +155,7 @@ namespace gaseous_server.Classes
 
         public static void DeleteMediaGroup(long Id)
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "DELETE FROM RomMediaGroup WHERE Id=@id;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", Id);
@@ -179,7 +178,7 @@ namespace gaseous_server.Classes
             mediaGroupItem.RomIds = new List<long>();
 
             // get members
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM RomMediaGroup_Members WHERE GroupId=@id;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", mediaGroupItem.Id);
@@ -199,7 +198,7 @@ namespace gaseous_server.Classes
             if (mediaGroupItem.Status != GameRomMediaGroupItem.GroupBuildStatus.Building)
             {
                 // set collection item to waitingforbuild
-                Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
                 string sql = "UPDATE RomMediaGroup SET Status=@bs WHERE Id=@id";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
                 dbDict.Add("id", Id);
@@ -216,7 +215,7 @@ namespace gaseous_server.Classes
 
         public static void CompileMediaGroup(long Id)
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
             GameRomMediaGroupItem mediaGroupItem = GetMediaGroup(Id);
             if (mediaGroupItem.Status == GameRomMediaGroupItem.GroupBuildStatus.WaitingForBuild)

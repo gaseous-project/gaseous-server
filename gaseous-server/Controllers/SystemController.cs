@@ -5,20 +5,22 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using gaseous_tools;
+using gaseous_server.Classes;
 using Microsoft.AspNetCore.Mvc;
 
 namespace gaseous_server.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     public class SystemController : Controller
     {
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public SystemInfo GetSystemStatus()
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
             SystemInfo ReturnValue = new SystemInfo();
 
@@ -53,6 +55,7 @@ namespace gaseous_server.Controllers
             return ReturnValue;
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("Version")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -60,11 +63,12 @@ namespace gaseous_server.Controllers
             return Assembly.GetExecutingAssembly().GetName().Version;
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("VersionFile")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public FileContentResult GetSystemVersionAsFile() {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string ver = "var AppVersion = \"" + Assembly.GetExecutingAssembly().GetName().Version.ToString() + "\";" + Environment.NewLine +
                 "var DBSchemaVersion = \"" + db.GetDatabaseSchemaVersion() + "\";";
             byte[] bytes = Encoding.UTF8.GetBytes(ver);
@@ -75,7 +79,7 @@ namespace gaseous_server.Controllers
         {
             SystemInfo.PathItem pathItem = new SystemInfo.PathItem {
                 LibraryPath = Path,
-                SpaceUsed = gaseous_tools.Common.DirSize(new DirectoryInfo(Path)),
+                SpaceUsed = Common.DirSize(new DirectoryInfo(Path)),
                 SpaceAvailable = new DriveInfo(Path).AvailableFreeSpace,
                 TotalSpace = new DriveInfo(Path).TotalSize
             };

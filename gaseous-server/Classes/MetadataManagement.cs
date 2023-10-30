@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
 using gaseous_server.Models;
-using gaseous_tools;
 
 namespace gaseous_server.Classes
 {
@@ -9,7 +8,7 @@ namespace gaseous_server.Classes
 	{
 		public static void RefreshMetadata(bool forceRefresh = false)
 		{
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
 			DataTable dt = new DataTable();
 			

@@ -28,7 +28,7 @@
     document.getElementById('upload_platformoverride').innerHTML = "<option value='0' selected='selected'>Automatic Platform</option>";
 
     var myDropzone = new Dropzone("div#upload_target", {
-        url: "/api/v1/Roms",
+        url: "/api/v1.0/Roms",
         autoProcessQueue: true,
         uploadMultiple: true,
         paramName: myParamName,
@@ -84,7 +84,7 @@
     $('#upload_platformoverride').select2({
         minimumInputLength: 3,
         ajax: {
-            url: '/api/v1/Search/Platform',
+            url: '/api/v1.0/Search/Platform',
             data: function (params) {
                 var query = {
                     SearchString: params.term
@@ -125,6 +125,6 @@
         }
         console.log(queryString);
 
-        myDropzone.options.url = "/api/v1/Roms" + queryString;
+        myDropzone.options.url = "/api/v1.0/Roms" + queryString;
     });
 </script>

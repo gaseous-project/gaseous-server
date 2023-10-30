@@ -7,7 +7,6 @@ using System.Security.Cryptography;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
 using gaseous_server.Models;
-using gaseous_tools;
 using IGDB.Models;
 using Newtonsoft.Json;
 
@@ -21,7 +20,7 @@ namespace gaseous_server.Classes
 		}
 
         public static List<CollectionItem> GetCollections() {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM RomCollections ORDER BY `Name`";
 
             DataTable data = db.ExecuteCMD(sql);
@@ -36,7 +35,7 @@ namespace gaseous_server.Classes
         }
 
         public static CollectionItem GetCollection(long Id) {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "SELECT * FROM RomCollections WHERE Id = @id ORDER BY `Name`";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 			dbDict.Add("id", Id);
@@ -57,7 +56,7 @@ namespace gaseous_server.Classes
 
         public static CollectionItem NewCollection(CollectionItem item)
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "INSERT INTO RomCollections (`Name`, Description, Platforms, Genres, Players, PlayerPerspectives, Themes, MinimumRating, MaximumRating, MaximumRomsPerPlatform, MaximumBytesPerPlatform, MaximumCollectionSizeInBytes, FolderStructure, IncludeBIOSFiles, AlwaysInclude, BuiltStatus) VALUES (@name, @description, @platforms, @genres, @players, @playerperspectives, @themes, @minimumrating, @maximumrating, @maximumromsperplatform, @maximumbytesperplatform, @maximumcollectionsizeinbytes, @folderstructure, @includebiosfiles, @alwaysinclude, @builtstatus); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("name", item.Name);
@@ -88,7 +87,7 @@ namespace gaseous_server.Classes
 
         public static CollectionItem EditCollection(long Id, CollectionItem item, bool ForceRebuild = true)
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "UPDATE RomCollections SET `Name`=@name, Description=@description, Platforms=@platforms, Genres=@genres, Players=@players, PlayerPerspectives=@playerperspectives, Themes=@themes, MinimumRating=@minimumrating, MaximumRating=@maximumrating, MaximumRomsPerPlatform=@maximumromsperplatform, MaximumBytesPerPlatform=@maximumbytesperplatform, MaximumCollectionSizeInBytes=@maximumcollectionsizeinbytes, FolderStructure=@folderstructure, IncludeBIOSFiles=@includebiosfiles, AlwaysInclude=@alwaysinclude, BuiltStatus=@builtstatus WHERE Id=@id";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", Id);
@@ -143,7 +142,7 @@ namespace gaseous_server.Classes
 
         public static void DeleteCollection(long Id)
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "DELETE FROM RomCollections WHERE Id=@id";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", Id);
@@ -163,7 +162,7 @@ namespace gaseous_server.Classes
             if (collectionItem.BuildStatus != CollectionItem.CollectionBuildStatus.Building)
             {
                 // set collection item to waitingforbuild
-                Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
                 string sql = "UPDATE RomCollections SET BuiltStatus=@bs WHERE Id=@id";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
                 dbDict.Add("id", Id);
@@ -363,7 +362,7 @@ namespace gaseous_server.Classes
 
         public static void CompileCollections(long CollectionId)
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
             CollectionItem collectionItem = GetCollection(CollectionId);
             if (collectionItem.BuildStatus == CollectionItem.CollectionBuildStatus.WaitingForBuild)

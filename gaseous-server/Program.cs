@@ -1,18 +1,19 @@
 ﻿using System.Reflection;
 using System.Text.Json.Serialization;
 using gaseous_server;
+using gaseous_server.Classes;
 using gaseous_server.Models;
 using gaseous_server.SignatureIngestors.XML;
-using gaseous_tools;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.OpenApi.Models;
 
 Logging.WriteToDiskOnly = true;
 Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server " + Assembly.GetExecutingAssembly().GetName().Version);
 
-Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionStringNoDatabase);
+Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionStringNoDatabase);
 
 // check db availability
 bool dbOnline = false;
@@ -29,7 +30,7 @@ do
     }
 } while (dbOnline == false);
 
-db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
 // set up db
 db.InitDB();
@@ -111,6 +112,21 @@ builder.Services.AddControllers(options =>
             Location = ResponseCacheLocation.Any
         });
 });
+builder.Services.AddApiVersioning(config =>
+{
+    config.DefaultApiVersion = new ApiVersion(1, 0);
+    config.AssumeDefaultVersionWhenUnspecified = true;
+    config.ReportApiVersions = true;
+});
+builder.Services.AddApiVersioning(setup =>
+{
+    setup.ApiVersionReader = new UrlSegmentApiVersionReader();
+});
+builder.Services.AddVersionedApiExplorer(setup =>
+{
+    setup.GroupNameFormat = "'v'VVV";
+    setup.SubstituteApiVersionInUrl = true;
+});
 
 // set max upload size
 builder.Services.Configure<IISServerOptions>(options =>
@@ -134,7 +150,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         options.SwaggerDoc("v1", new OpenApiInfo
         {
-            Version = "v1",
+            Version = "v1.0",
             Title = "Gaseous Server API",
             Description = "An API for managing the Gaseous Server",
             TermsOfService = new Uri("https://github.com/gaseous-project/gaseous-server"),

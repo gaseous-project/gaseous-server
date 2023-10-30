@@ -2,17 +2,18 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using gaseous_tools;
+using gaseous_server.Classes;
 using IGDB;
 using IGDB.Models;
 using Microsoft.AspNetCore.Mvc;
 using static gaseous_server.Classes.Metadata.Games;
-using static gaseous_tools.Config.ConfigFile;
+
 
 namespace gaseous_server.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     public class SearchController : Controller
     {
         private static IGDBClient igdb = new IGDBClient(
@@ -21,6 +22,7 @@ namespace gaseous_server.Controllers
                             Config.IGDB.Secret
                         );
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("Platform")]
         [ProducesResponseType(typeof(List<Platform>), StatusCodes.Status200OK)]
@@ -42,6 +44,7 @@ namespace gaseous_server.Controllers
             return results.ToList();
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("Game")]
         [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]

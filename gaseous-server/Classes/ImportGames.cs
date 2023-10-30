@@ -5,7 +5,6 @@ using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
-using gaseous_tools;
 using IGDB.Models;
 using NuGet.Common;
 using static gaseous_server.Classes.Metadata.Games;
@@ -45,7 +44,7 @@ namespace gaseous_server.Classes
 	{
         public static void ImportGameFile(string GameFileImportPath, IGDB.Models.Platform? OverridePlatform)
 		{
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 
@@ -418,7 +417,7 @@ namespace gaseous_server.Classes
 
         public static long StoreROM(GameLibrary.LibraryItem library, Common.hashObject hash, IGDB.Models.Game determinedGame, IGDB.Models.Platform determinedPlatform, Models.Signatures_Games discoveredSignature, string GameFileImportPath, long UpdateId = 0)
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
             string sql = "";
 
@@ -541,7 +540,7 @@ namespace gaseous_server.Classes
 						File.Move(romPath, DestinationPath);
 
 						// update the db
-						Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+						Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 						string sql = "UPDATE Games_Roms SET Path=@path WHERE Id=@id";
 						Dictionary<string, object> dbDict = new Dictionary<string, object>();
 						dbDict.Add("id", RomId);
@@ -566,7 +565,7 @@ namespace gaseous_server.Classes
             GameLibrary.LibraryItem library = GameLibrary.GetDefaultLibrary;
 
             // move rom files to their new location
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM Games_Roms WHERE LibraryId = @libraryid";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("libraryid", library.Id);

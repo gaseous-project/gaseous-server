@@ -20,9 +20,13 @@
   <ItemGroup>
     <PackageReference Include="gaseous-signature-parser" Version="2.0.0" />
     <PackageReference Include="gaseous.IGDB" Version="1.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.1.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer" Version="5.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.12" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.10" />
+    <PackageReference Include="MySqlConnector" Version="2.2.7" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
   <ItemGroup>
@@ -32,6 +36,13 @@
     <None Remove="Classes\" />
     <None Remove="Classes\SignatureIngestors\" />
     <None Remove="Support\" />
+    <None Remove="Support\Database\" />
+    <None Remove="Support\Database\MySQL\" />
+    <None Remove="Support\Database\MySQL\gaseous-1000.sql" />
+    <None Remove="Support\Database\MySQL\gaseous-1001.sql" />
+    <None Remove="Support\Database\MySQL\gaseous-1002.sql" />
+    <None Remove="Support\Database\MySQL\gaseous-1003.sql" />
+    <None Remove="Support\Database\MySQL\gaseous-1004.sql" />
     <None Remove="Classes\Metadata\" />
     <None Remove="Assets\" />
     <None Remove="Assets\Ratings\" />
@@ -110,11 +121,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\gaseous-tools\gaseous-tools.csproj">
-      <GlobalPropertiesToRemove></GlobalPropertiesToRemove>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <EmbeddedResource Include="Support\PlatformMap.json" Condition="'$(ExcludeConfigFilesFromBuildOutput)'!='true'">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
@@ -158,5 +164,10 @@
     <EmbeddedResource Include="Assets\Ratings\CLASS_IND\CLASS_IND_Sixteen.svg" />
     <EmbeddedResource Include="Assets\Ratings\CLASS_IND\CLASS_IND_Ten.svg" />
     <EmbeddedResource Include="Assets\Ratings\CLASS_IND\CLASS_IND_Twelve.svg" />
+    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1000.sql" />
+    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1001.sql" />
+    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1002.sql" />
+    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1003.sql" />
+    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1004.sql" />
   </ItemGroup>
 </Project>

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
 
-namespace gaseous_tools
+namespace gaseous_server.Classes
 {
 	public class Common
 	{

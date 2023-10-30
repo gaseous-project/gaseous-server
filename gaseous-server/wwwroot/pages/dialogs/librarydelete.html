@@ -12,7 +12,7 @@
 <script type="text/javascript">
     function deleteLibrary() {
         ajaxCall(
-            '/api/v1/Library/' + subModalVariables,
+            '/api/v1.0/Library/' + subModalVariables,
             'DELETE',
             function (result) {
                 drawLibrary();

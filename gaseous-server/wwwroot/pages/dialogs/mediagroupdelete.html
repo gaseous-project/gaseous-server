@@ -12,7 +12,7 @@
 <script type="text/javascript">
     function deleteCollection() {
         ajaxCall(
-            '/api/v1/Games/' + gameData.id + '/romgroup/' + subModalVariables,
+            '/api/v1.0/Games/' + gameData.id + '/romgroup/' + subModalVariables,
             'DELETE', 
             function (result) {
                 loadRoms();

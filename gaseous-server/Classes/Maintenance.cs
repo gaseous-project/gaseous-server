@@ -1,7 +1,6 @@
 using System;
 using System.Data;
 using gaseous_server.Models;
-using gaseous_tools;
 using Microsoft.VisualStudio.Web.CodeGeneration;
 
 namespace gaseous_server.Classes
@@ -46,7 +45,7 @@ namespace gaseous_server.Classes
             }
 
             Logging.Log(Logging.LogType.Information, "Maintenance", "Optimising database tables");
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SHOW TABLES;";
             DataTable tables = db.ExecuteCMD(sql);
 

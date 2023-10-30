@@ -6,8 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
-using gaseous_tools;
 using IGDB.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -16,10 +16,12 @@ using static gaseous_server.Classes.Metadata.AgeRatings;
 
 namespace gaseous_server.Controllers
 {
-    [Route("api/v1/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     [ApiController]
     public class GamesController : ControllerBase
     {
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]
         public ActionResult Game(
@@ -203,7 +205,7 @@ namespace gaseous_server.Controllers
                 orderByClause = "ORDER BY `Name` DESC";
             }
 
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT DISTINCT Games_Roms.GameId AS ROMGameId, Game.* FROM Games_Roms LEFT JOIN Game ON Game.Id = Games_Roms.GameId LEFT JOIN Relation_Game_Genres ON Game.Id = Relation_Game_Genres.GameId LEFT JOIN Relation_Game_GameModes ON Game.Id = Relation_Game_GameModes.GameId LEFT JOIN Relation_Game_PlayerPerspectives ON Game.Id = Relation_Game_PlayerPerspectives.GameId LEFT JOIN Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId " + whereClause + " " + havingClause + " " + orderByClause;
 
             List<IGDB.Models.Game> RetVal = new List<IGDB.Models.Game>();
@@ -218,6 +220,7 @@ namespace gaseous_server.Controllers
             return RetVal;
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}")]
         [ProducesResponseType(typeof(Game), StatusCodes.Status200OK)]
@@ -244,6 +247,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/alternativename")]
         [ProducesResponseType(typeof(List<AlternativeName>), StatusCodes.Status200OK)]
@@ -275,6 +279,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/agerating")]
         [ProducesResponseType(typeof(List<AgeRatings.GameAgeRating>), StatusCodes.Status200OK)]
@@ -306,6 +311,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/agerating/{RatingId}/image")]
         [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
@@ -385,6 +391,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/artwork")]
         [ProducesResponseType(typeof(List<Artwork>), StatusCodes.Status200OK)]
@@ -414,6 +421,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/artwork/{ArtworkId}")]
         [ProducesResponseType(typeof(Artwork), StatusCodes.Status200OK)]
@@ -448,6 +456,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/artwork/{ArtworkId}/image")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
@@ -502,6 +511,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/cover")]
         [ProducesResponseType(typeof(Cover), StatusCodes.Status200OK)]
@@ -535,6 +545,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/cover/image")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
@@ -574,6 +585,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/genre")]
         [ProducesResponseType(typeof(List<Genre>), StatusCodes.Status200OK)]
@@ -610,6 +622,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/companies")]
         [ProducesResponseType(typeof(List<Dictionary<string, object>>), StatusCodes.Status200OK)]
@@ -653,6 +666,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/companies/{CompanyId}")]
         [ProducesResponseType(typeof(Dictionary<string, object>), StatusCodes.Status200OK)]
@@ -694,6 +708,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/companies/{CompanyId}/image")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
@@ -737,6 +752,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/roms")]
         [ProducesResponseType(typeof(Classes.Roms.GameRomObject), StatusCodes.Status200OK)]
@@ -756,6 +772,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/roms/{RomId}")]
         [ProducesResponseType(typeof(Classes.Roms.GameRomItem), StatusCodes.Status200OK)]
@@ -783,6 +800,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpPatch]
         [Route("{GameId}/roms/{RomId}")]
         [ProducesResponseType(typeof(Classes.Roms.GameRomItem), StatusCodes.Status200OK)]
@@ -810,6 +828,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpDelete]
         [Route("{GameId}/roms/{RomId}")]
         [ProducesResponseType(typeof(Classes.Roms.GameRomItem), StatusCodes.Status200OK)]
@@ -837,7 +856,9 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
+        [MapToApiVersion("1.0")]
         [HttpHead]
         [Route("{GameId}/roms/{RomId}/file")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
@@ -872,7 +893,9 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
+        [MapToApiVersion("1.0")]
         [HttpHead]
         [Route("{GameId}/roms/{RomId}/{FileName}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
@@ -907,6 +930,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/romgroup/{RomGroupId}")]
         [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
@@ -934,6 +958,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpPost]
         [Route("{GameId}/romgroup")]
         [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
@@ -960,6 +985,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpPatch]
         [Route("{GameId}/romgroup/{RomId}")]
         [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
@@ -987,6 +1013,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpDelete]
         [Route("{GameId}/romgroup/{RomGroupId}")]
         [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
@@ -1014,7 +1041,9 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
+        [MapToApiVersion("1.0")]
         [HttpHead]
         [Route("{GameId}/romgroup/{RomGroupId}/file")]
         [Route("{GameId}/romgroup/{RomGroupId}/{filename}")]
@@ -1059,6 +1088,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("search")]
         [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]
@@ -1096,6 +1126,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/screenshots")]
         [ProducesResponseType(typeof(List<Screenshot>), StatusCodes.Status200OK)]
@@ -1125,6 +1156,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/screenshots/{ScreenshotId}")]
         [ProducesResponseType(typeof(Screenshot), StatusCodes.Status200OK)]
@@ -1157,6 +1189,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/screenshots/{ScreenshotId}/image")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
@@ -1199,6 +1232,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{GameId}/videos")]
         [ProducesResponseType(typeof(List<GameVideo>), StatusCodes.Status200OK)]

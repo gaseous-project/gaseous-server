@@ -3,14 +3,17 @@ using System.Collections.Generic;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using gaseous_server.Classes;
 using Microsoft.AspNetCore.Mvc;
 
 namespace gaseous_server.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     public class BiosController : Controller
     {
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public List<Classes.Bios.BiosItem> GetBios()
@@ -18,6 +21,7 @@ namespace gaseous_server.Controllers
             return Classes.Bios.GetBios();
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{PlatformId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -26,7 +30,9 @@ namespace gaseous_server.Controllers
             return Classes.Bios.GetBios(PlatformId, AvailableOnly);
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
+        [MapToApiVersion("1.0")]
         [HttpHead]
         [Route("zip/{PlatformId}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
@@ -37,7 +43,7 @@ namespace gaseous_server.Controllers
             {
                 IGDB.Models.Platform platform = Classes.Metadata.Platforms.GetPlatform(PlatformId);
 
-                string biosPath = Path.Combine(gaseous_tools.Config.LibraryConfiguration.LibraryBIOSDirectory, platform.Slug);
+                string biosPath = Path.Combine(Config.LibraryConfiguration.LibraryBIOSDirectory, platform.Slug);
 
                 string tempFile = Path.GetTempFileName();
 
@@ -59,7 +65,9 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
+        [MapToApiVersion("1.0")]
         [HttpHead]
         [Route("{PlatformId}/{BiosName}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]

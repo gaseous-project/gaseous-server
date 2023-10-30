@@ -1,7 +1,7 @@
 using System;
 using System.Data;
+using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
-using gaseous_tools;
 using IGDB.Models;
 using Microsoft.CodeAnalysis.FlowAnalysis.DataFlow;
 
@@ -39,7 +39,7 @@ namespace gaseous_server
         {
             get
             {
-                Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
                 string sql = "SELECT * FROM GameLibraries WHERE DefaultLibrary=1 LIMIT 1";
                 DataTable data = db.ExecuteCMD(sql);
                 DataRow row = data.Rows[0];
@@ -54,7 +54,7 @@ namespace gaseous_server
             get
             {
                 List<LibraryItem> libraryItems = new List<LibraryItem>();
-                Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
                 string sql = "SELECT * FROM GameLibraries";
                 DataTable data = db.ExecuteCMD(sql);
                 foreach (DataRow row in data.Rows)
@@ -86,7 +86,7 @@ namespace gaseous_server
                 throw new PathNotFound(PathName);
             }
 
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "INSERT INTO GameLibraries (Name, Path, DefaultPlatform, DefaultLibrary) VALUES (@name, @path, @defaultplatform, 0); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("name", Name);
@@ -103,7 +103,7 @@ namespace gaseous_server
         {
             if (GetLibrary(LibraryId).IsDefaultLibrary == false)
             {
-                Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
                 string sql = "DELETE FROM Games_Roms WHERE LibraryId=@id; DELETE FROM GameLibraries WHERE Id=@id;";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
                 dbDict.Add("id", LibraryId);
@@ -117,7 +117,7 @@ namespace gaseous_server
 
         public static LibraryItem GetLibrary(int LibraryId)
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM GameLibraries WHERE Id=@id";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", LibraryId);

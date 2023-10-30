@@ -136,7 +136,7 @@
     // setup dropdowns
     $('#collection_platform').select2({
         ajax: {
-            url: '/api/v1/Filter',
+            url: '/api/v1.0/Filter',
             processResults: function (data) {
                 var filter = data['platforms'];
                 
@@ -159,7 +159,7 @@
 
     $('#collection_genres').select2({
         ajax: {
-            url: '/api/v1/Filter',
+            url: '/api/v1.0/Filter',
             processResults: function (data) {
                 var filter = data['genres'];
 
@@ -182,7 +182,7 @@
 
     $('#collection_players').select2({
         ajax: {
-            url: '/api/v1/Filter',
+            url: '/api/v1.0/Filter',
             processResults: function (data) {
                 var filter = data['gamemodes'];
 
@@ -205,7 +205,7 @@
 
     $('#collection_playerperspectives').select2({
         ajax: {
-            url: '/api/v1/Filter',
+            url: '/api/v1.0/Filter',
             processResults: function (data) {
                 var filter = data['playerperspectives'];
 
@@ -228,7 +228,7 @@
 
     $('#collection_themes').select2({
         ajax: {
-            url: '/api/v1/Filter',
+            url: '/api/v1.0/Filter',
             processResults: function (data) {
                 var filter = data['themes'];
 
@@ -258,7 +258,7 @@
 
         // edit mode
         ajaxCall(
-            '/api/v1/Collections/' + modalVariables,
+            '/api/v1.0/Collections/' + modalVariables,
             'GET',
             function(result) {
                 if (result.name) { document.getElementById('collection_name').value = result.name; }
@@ -278,7 +278,7 @@
                 // fill select2 controls
                 $.ajax(
                     {
-                        url: '/api/v1/Filter',
+                        url: '/api/v1.0/Filter',
                         type: 'GET',
                         indexValue: result,
                         dataType: 'json',
@@ -344,7 +344,7 @@
             // existing object - save over the top
             item.id = modalVariables;
             ajaxCall(
-                '/api/v1/Collections/' + modalVariables,
+                '/api/v1.0/Collections/' + modalVariables,
                 'PATCH',
                 function(result) {
                     location.reload();
@@ -357,7 +357,7 @@
         } else {
             // new object
             ajaxCall(
-                '/api/v1/Collections',
+                '/api/v1.0/Collections',
                 'POST',
                 function(result) {
                     location.reload();
@@ -426,7 +426,7 @@
         var item = GenerateCollectionItem();
 
         ajaxCall(
-            '/api/v1/Collections/Preview',
+            '/api/v1.0/Collections/Preview',
             'POST',
             function(result) {
                 DisplayPreview(result, 'collectionedit_previewbox_content');
@@ -579,7 +579,7 @@
                     var gameImage = document.createElement('img');
                     gameImage.className = 'game_tile_image game_tile_image_small';
                     if (gameItem.cover) {
-                        gameImage.src = '/api/v1/Games/' + gameItem.id + '/cover/image';
+                        gameImage.src = '/api/v1.0/Games/' + gameItem.id + '/cover/image';
                     } else {
                         gameImage.src = '/images/unknowngame.png';
                         gameImage.className = 'game_tile_image game_tile_image_small unknown';

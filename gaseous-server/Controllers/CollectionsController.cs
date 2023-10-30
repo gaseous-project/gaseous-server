@@ -9,13 +9,15 @@ using Microsoft.AspNetCore.Mvc;
 namespace gaseous_server.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     public class CollectionsController : Controller
     {
         /// <summary>
         /// Gets all ROM collections
         /// </summary>
         /// <returns></returns>
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public List<Classes.Collections.CollectionItem> GetCollections()
@@ -29,6 +31,7 @@ namespace gaseous_server.Controllers
         /// <param name="CollectionId"></param>
         /// <param name="Build">Set to true to begin the collection build process</param>
         /// <returns></returns>
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{CollectionId}")]
         [ProducesResponseType(typeof(Classes.Collections.CollectionItem), StatusCodes.Status200OK)]
@@ -55,6 +58,7 @@ namespace gaseous_server.Controllers
         /// </summary>
         /// <param name="CollectionId"></param>
         /// <returns></returns>
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{CollectionId}/Roms")]
         [ProducesResponseType(typeof(List<Classes.Collections.CollectionContents.CollectionPlatformItem>), StatusCodes.Status200OK)]
@@ -77,6 +81,7 @@ namespace gaseous_server.Controllers
         /// </summary>
         /// <param name="Item"></param>
         /// <returns></returns>
+        [MapToApiVersion("1.0")]
         [HttpPost]
         [Route("Preview")]
         [ProducesResponseType(typeof(List<Classes.Collections.CollectionContents.CollectionPlatformItem>), StatusCodes.Status200OK)]
@@ -98,6 +103,7 @@ namespace gaseous_server.Controllers
         /// </summary>
         /// <param name="CollectionId"></param>
         /// <returns></returns>
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{CollectionId}/Roms/Zip")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
@@ -108,7 +114,7 @@ namespace gaseous_server.Controllers
             {
                 Classes.Collections.CollectionItem collectionItem = Classes.Collections.GetCollection(CollectionId);
 
-                string ZipFilePath = Path.Combine(gaseous_tools.Config.LibraryConfiguration.LibraryCollectionsDirectory, CollectionId + ".zip");
+                string ZipFilePath = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, CollectionId + ".zip");
 
                 if (System.IO.File.Exists(ZipFilePath))
                 {
@@ -131,6 +137,7 @@ namespace gaseous_server.Controllers
         /// </summary>
         /// <param name="Item"></param>
         /// <returns></returns>
+        [MapToApiVersion("1.0")]
         [HttpPost]
         [ProducesResponseType(typeof(Classes.Collections.CollectionItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -152,6 +159,7 @@ namespace gaseous_server.Controllers
         /// <param name="CollectionId"></param>
         /// <param name="Item"></param>
         /// <returns></returns>
+        [MapToApiVersion("1.0")]
         [HttpPatch]
         [Route("{CollectionId}")]
         [ProducesResponseType(typeof(Classes.Collections.CollectionItem), StatusCodes.Status200OK)]
@@ -174,6 +182,7 @@ namespace gaseous_server.Controllers
         /// <param name="CollectionId"></param>
         /// <param name="Item"></param>
         /// <returns></returns>
+        [MapToApiVersion("1.0")]
         [HttpPatch]
         [Route("{CollectionId}/AlwaysInclude")]
         [ProducesResponseType(typeof(Classes.Collections.CollectionItem), StatusCodes.Status200OK)]
@@ -208,6 +217,7 @@ namespace gaseous_server.Controllers
         /// Deletes the specified ROM collection
         /// </summary>
         /// <param name="CollectionId"></param>
+        [MapToApiVersion("1.0")]
         [HttpDelete]
         [Route("{CollectionId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]

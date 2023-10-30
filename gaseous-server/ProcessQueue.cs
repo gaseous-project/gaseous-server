@@ -1,5 +1,5 @@
 ﻿using System;
-using gaseous_tools;
+using gaseous_server.Classes;
 
 namespace gaseous_server
 {
@@ -166,7 +166,7 @@ namespace gaseous_server
 
                                 case QueueItemType.BackgroundDatabaseUpgrade:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Background Upgrade");
-                                    gaseous_tools.DatabaseMigration.UpgradeScriptBackgroundTasks();
+                                    DatabaseMigration.UpgradeScriptBackgroundTasks();
                                     break;
 
                                 case QueueItemType.Maintainer:

@@ -5,9 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
-using gaseous_tools;
 using IGDB.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -15,10 +15,12 @@ using Microsoft.CodeAnalysis.Scripting;
 
 namespace gaseous_server.Controllers
 {
-    [Route("api/v1/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     [ApiController]
     public class PlatformsController : Controller
     {
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [ProducesResponseType(typeof(List<Platform>), StatusCodes.Status200OK)]
         public ActionResult Platform()
@@ -28,7 +30,7 @@ namespace gaseous_server.Controllers
 
         public static List<Platform> GetPlatforms()
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
             string sql = "SELECT * FROM Platform WHERE Id IN (SELECT DISTINCT PlatformId FROM Games_Roms) ORDER BY `Name` ASC;";
 
@@ -43,6 +45,7 @@ namespace gaseous_server.Controllers
             return RetVal;
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{PlatformId}")]
         [ProducesResponseType(typeof(Platform), StatusCodes.Status200OK)]
@@ -68,6 +71,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{PlatformId}/platformlogo")]
         [ProducesResponseType(typeof(PlatformLogo), StatusCodes.Status200OK)]
@@ -100,6 +104,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{PlatformId}/platformlogo/image")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]

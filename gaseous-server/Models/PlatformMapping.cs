@@ -8,7 +8,6 @@ using System.Web;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
-using gaseous_tools;
 using IGDB.Models;
 using Newtonsoft.Json;
 
@@ -97,7 +96,7 @@ namespace gaseous_server.Models
         {
             get
             {
-                Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
                 string sql = "SELECT * FROM PlatformMap";
                 DataTable data = db.ExecuteCMD(sql);
 
@@ -129,7 +128,7 @@ namespace gaseous_server.Models
             }
             else
             {
-                Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
                 string sql = "SELECT * FROM PlatformMap WHERE Id = @Id";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
                 dbDict.Add("Id", Id);
@@ -152,7 +151,7 @@ namespace gaseous_server.Models
 
         public static void WritePlatformMap(PlatformMapItem item, bool Update, bool AllowAvailableEmulatorOverwrite)
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             if (Update == false)
@@ -249,7 +248,7 @@ namespace gaseous_server.Models
         static PlatformMapItem BuildPlatformMapItem(DataRow row)
         {
             long IGDBId = (long)row["Id"];
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             string sql = "";
 

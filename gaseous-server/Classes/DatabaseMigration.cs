@@ -1,20 +1,20 @@
 using System;
 using System.Data;
 
-namespace gaseous_tools
+namespace gaseous_server.Classes
 {
 	public static class DatabaseMigration
 	{
         public static List<int> BackgroundUpgradeTargetSchemaVersions = new List<int>();
 
-        public static void PreUpgradeScript(int TargetSchemaVersion, gaseous_tools.Database.databaseType? DatabaseType) 
+        public static void PreUpgradeScript(int TargetSchemaVersion, Database.databaseType? DatabaseType) 
         {
 
         }
 
-        public static void PostUpgradeScript(int TargetSchemaVersion, gaseous_tools.Database.databaseType? DatabaseType) 
+        public static void PostUpgradeScript(int TargetSchemaVersion, Database.databaseType? DatabaseType) 
         {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
 
             switch(DatabaseType)
@@ -65,7 +65,7 @@ namespace gaseous_tools
         }
 
         public static void MySql_1002_MigrateMetadataVersion() {
-            Database db = new gaseous_tools.Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
 
