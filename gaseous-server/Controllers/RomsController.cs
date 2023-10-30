@@ -16,10 +16,12 @@ using static gaseous_server.Classes.Metadata.AgeRatings;
 
 namespace gaseous_server.Controllers
 {
-    [Route("api/v1/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     [ApiController]
     public class RomsController : ControllerBase
     {
+        [MapToApiVersion("1.0")]
         [HttpPost]
         [ProducesResponseType(typeof(List<IFormFile>), StatusCodes.Status200OK)]
         [RequestSizeLimit(long.MaxValue)]

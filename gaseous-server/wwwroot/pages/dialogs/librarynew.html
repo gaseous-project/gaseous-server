@@ -32,7 +32,7 @@
     $('#newlibrary_defaultplatform').select2({
         minimumInputLength: 3,
         ajax: {
-            url: '/api/v1/Search/Platform',
+            url: '/api/v1.0/Search/Platform',
             data: function (params) {
                 var query = {
                     SearchString: params.term
@@ -76,7 +76,7 @@
             alert("A path must be provided.");
         } else {
             ajaxCall(
-                '/api/v1/Library?Name=' + encodeURIComponent(libName) + '&DefaultPlatformId=' + libPlatform[0].id + '&Path=' + encodeURIComponent(libPath),
+                '/api/v1.0/Library?Name=' + encodeURIComponent(libName) + '&DefaultPlatformId=' + libPlatform[0].id + '&Path=' + encodeURIComponent(libPath),
                 'POST',
                 function(result) {
                     drawLibrary();

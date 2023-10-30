@@ -8,9 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace gaseous_server.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     public class LibraryController : Controller
     {
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [ProducesResponseType(typeof(List<GameLibrary.LibraryItem>), StatusCodes.Status200OK)]
         public ActionResult GetLibraries()
@@ -18,6 +20,7 @@ namespace gaseous_server.Controllers
             return Ok(GameLibrary.GetLibraries);
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet("{LibraryId}")]
         [ProducesResponseType(typeof(GameLibrary.LibraryItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -33,6 +36,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpPost]
         [ProducesResponseType(typeof(GameLibrary.LibraryItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -53,6 +57,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpDelete("{LibraryId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

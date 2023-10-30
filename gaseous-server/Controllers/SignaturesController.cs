@@ -13,13 +13,15 @@ using Microsoft.AspNetCore.Mvc;
 namespace gaseous_server.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]/[action]")]
+    [Route("api/v{version:apiVersion}/[controller]/[action]")]
+    [ApiVersion("1.0")]
     public class SignaturesController : ControllerBase
     {
         /// <summary>
         /// Get the current signature counts from the database
         /// </summary>
         /// <returns>Number of sources, publishers, games, and rom signatures in the database</returns>
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public Models.Signatures_Status Status()
@@ -27,6 +29,7 @@ namespace gaseous_server.Controllers
             return new Models.Signatures_Status();
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public List<Models.Signatures_Games> GetSignature(string md5 = "", string sha1 = "")
@@ -40,6 +43,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public List<Models.Signatures_Games> GetByTosecName(string TosecName = "")

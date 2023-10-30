@@ -15,10 +15,12 @@ using Microsoft.CodeAnalysis.Scripting;
 
 namespace gaseous_server.Controllers
 {
-    [Route("api/v1/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     [ApiController]
     public class PlatformsController : Controller
     {
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [ProducesResponseType(typeof(List<Platform>), StatusCodes.Status200OK)]
         public ActionResult Platform()
@@ -43,6 +45,7 @@ namespace gaseous_server.Controllers
             return RetVal;
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{PlatformId}")]
         [ProducesResponseType(typeof(Platform), StatusCodes.Status200OK)]
@@ -68,6 +71,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{PlatformId}/platformlogo")]
         [ProducesResponseType(typeof(PlatformLogo), StatusCodes.Status200OK)]
@@ -100,6 +104,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{PlatformId}/platformlogo/image")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]

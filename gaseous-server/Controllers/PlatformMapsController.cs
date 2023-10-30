@@ -15,10 +15,12 @@ using Microsoft.CodeAnalysis.Scripting;
 
 namespace gaseous_server.Controllers
 {
-    [Route("api/v1/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     [ApiController]
     public class PlatformMapsController : Controller
     {
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [ProducesResponseType(typeof(List<PlatformMapping.PlatformMapItem>), StatusCodes.Status200OK)]
         public ActionResult GetPlatformMap(bool ResetToDefault = false)
@@ -31,6 +33,7 @@ namespace gaseous_server.Controllers
             return Ok(PlatformMapping.PlatformMap);
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{PlatformId}")]
         [ProducesResponseType(typeof(PlatformMapping.PlatformMapItem), StatusCodes.Status200OK)]
@@ -56,6 +59,7 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpPost]
         [ProducesResponseType(typeof(List<IFormFile>), StatusCodes.Status200OK)]
         [RequestSizeLimit(long.MaxValue)]
@@ -110,7 +114,8 @@ namespace gaseous_server.Controllers
             return Ok(new { count = files.Count, size });
         }
 
-        // [HttpPost]
+        // [MapToApiVersion("1.0")]
+        [HttpPost]
         // [Route("{PlatformId}")]
         // [ProducesResponseType(typeof(PlatformMapping.PlatformMapItem), StatusCodes.Status200OK)]
         // [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -137,6 +142,7 @@ namespace gaseous_server.Controllers
         //     }
         // }
 
+        [MapToApiVersion("1.0")]
         [HttpPatch]
         [Route("{PlatformId}")]
         [ProducesResponseType(typeof(PlatformMapping.PlatformMapItem), StatusCodes.Status200OK)]

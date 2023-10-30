@@ -11,9 +11,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace gaseous_server.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     public class SystemController : Controller
     {
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public SystemInfo GetSystemStatus()
@@ -53,6 +55,7 @@ namespace gaseous_server.Controllers
             return ReturnValue;
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("Version")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -60,6 +63,7 @@ namespace gaseous_server.Controllers
             return Assembly.GetExecutingAssembly().GetName().Version;
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("VersionFile")]
         [ProducesResponseType(StatusCodes.Status200OK)]

@@ -8,9 +8,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace gaseous_server.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     public class LogsController : Controller
     {
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public List<Logging.LogItem> Logs(long? StartIndex, int PageNumber = 1, int PageSize = 100)

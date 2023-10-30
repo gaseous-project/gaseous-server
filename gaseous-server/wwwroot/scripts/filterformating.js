@@ -251,7 +251,7 @@ function executeFilter() {
 
     console.log('Query string = ' + queryString);
 
-    ajaxCall('/api/v1/Games' + queryString, 'GET', function (result) {
+    ajaxCall('/api/v1.0/Games' + queryString, 'GET', function (result) {
         var gameElement = document.getElementById('games_library');
         formatGamesPanel(gameElement, result);
     });

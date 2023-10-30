@@ -20,7 +20,7 @@
     GetCollections();
     
     function GetCollections() {
-        ajaxCall('/api/v1/Collections', 'GET', function (result) {
+        ajaxCall('/api/v1.0/Collections', 'GET', function (result) {
             if (result) {
                 var targetDiv = document.getElementById('collection_table_location');
                 targetDiv.innerHTML = '';
@@ -47,7 +47,7 @@
                             break;
                         case "Completed":
                             statusText = 'Available';
-                            downloadLink = '<a href="/api/v1/Collections/' + result[i].id + '/Roms/Zip" class="romlink"><img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" /></a>';
+                            downloadLink = '<a href="/api/v1.0/Collections/' + result[i].id + '/Roms/Zip" class="romlink"><img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" /></a>';
                             packageSize = formatBytes(result[i].collectionBuiltSizeBytes);
                             break;
                         case "Failed":

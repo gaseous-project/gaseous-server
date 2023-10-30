@@ -7,9 +7,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace gaseous_server.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     public class BackgroundTasksController : Controller
     {
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public List<ProcessQueue.QueueItem> GetQueue()
@@ -17,6 +19,7 @@ namespace gaseous_server.Controllers
             return ProcessQueue.QueueItems;
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{TaskType}")]
         [ProducesResponseType(StatusCodes.Status200OK)]

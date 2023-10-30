@@ -9,9 +9,11 @@ using Microsoft.AspNetCore.Mvc;
 namespace gaseous_server.Controllers
 {
     [ApiController]
-    [Route("api/v1/[controller]")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [ApiVersion("1.0")]
     public class BiosController : Controller
     {
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public List<Classes.Bios.BiosItem> GetBios()
@@ -19,6 +21,7 @@ namespace gaseous_server.Controllers
             return Classes.Bios.GetBios();
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
         [Route("{PlatformId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -27,7 +30,9 @@ namespace gaseous_server.Controllers
             return Classes.Bios.GetBios(PlatformId, AvailableOnly);
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
+        [MapToApiVersion("1.0")]
         [HttpHead]
         [Route("zip/{PlatformId}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
@@ -60,7 +65,9 @@ namespace gaseous_server.Controllers
             }
         }
 
+        [MapToApiVersion("1.0")]
         [HttpGet]
+        [MapToApiVersion("1.0")]
         [HttpHead]
         [Route("{PlatformId}/{BiosName}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]

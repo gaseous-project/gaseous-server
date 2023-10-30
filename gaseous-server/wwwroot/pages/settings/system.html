@@ -26,7 +26,7 @@
 <div id="system_signatures"></div>
 
 <script type="text/javascript">function SystemLoadStatus() {
-        ajaxCall('/api/v1/BackgroundTasks', 'GET', function (result) {
+        ajaxCall('/api/v1.0/BackgroundTasks', 'GET', function (result) {
             var newTable = document.createElement('table');
             newTable.className = 'romtable';
             newTable.setAttribute('cellspacing', 0);
@@ -119,7 +119,7 @@
     }
 
     function SystemLoadSystemStatus() {
-        ajaxCall('/api/v1/System', 'GET', function (result) {
+        ajaxCall('/api/v1.0/System', 'GET', function (result) {
             if (result) {
                 var totalLibrarySpace = 0;
 
@@ -234,7 +234,7 @@
     }
 
     function SystemSignaturesStatus() {
-        ajaxCall('/api/v1/Signatures/Status', 'GET', function (result) {
+        ajaxCall('/api/v1.0/Signatures/Status', 'GET', function (result) {
             var newTable = document.createElement('table');
             newTable.className = 'romtable';
             newTable.setAttribute('cellspacing', 0);
@@ -257,7 +257,7 @@
     }
 
     function StartProcess(itemType) {
-        ajaxCall('/api/v1/BackgroundTasks/' + itemType + '?ForceRun=true', 'GET', function (result) {
+        ajaxCall('/api/v1.0/BackgroundTasks/' + itemType + '?ForceRun=true', 'GET', function (result) {
             SystemLoadStatus();
         });
     }

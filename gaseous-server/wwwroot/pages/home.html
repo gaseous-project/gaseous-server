@@ -8,7 +8,7 @@
 </div>
 
 <script type="text/javascript">
-    ajaxCall('/api/v1/Filter', 'GET', function (result) {
+    ajaxCall('/api/v1.0/Filter', 'GET', function (result) {
         var filterElement = document.getElementById('games_filter');
         formatFilterPanel(filterElement, result);
 
