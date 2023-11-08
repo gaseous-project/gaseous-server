@@ -23,6 +23,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer" Version="5.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.12" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="7.0.10" />
     <PackageReference Include="MySqlConnector" Version="2.2.7" />
@@ -43,6 +44,7 @@
     <None Remove="Support\Database\MySQL\gaseous-1002.sql" />
     <None Remove="Support\Database\MySQL\gaseous-1003.sql" />
     <None Remove="Support\Database\MySQL\gaseous-1004.sql" />
+    <None Remove="Support\Database\MySQL\gaseous-1005.sql" />
     <None Remove="Classes\Metadata\" />
     <None Remove="Assets\" />
     <None Remove="Assets\Ratings\" />
@@ -169,5 +171,6 @@
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1002.sql" />
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1003.sql" />
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1004.sql" />
+    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1005.sql" />
   </ItemGroup>
 </Project>

@@ -7,8 +7,11 @@ using gaseous_server.SignatureIngestors.XML;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.OpenApi.Models;
+using Classes.Auth;
+using Microsoft.AspNetCore.Identity;
 
 Logging.WriteToDiskOnly = true;
 Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server " + Assembly.GetExecutingAssembly().GetName().Version);
@@ -173,6 +176,31 @@ builder.Services.AddSwaggerGen(options =>
 );
 builder.Services.AddHostedService<TimedHostedService>();
 
+// identity
+builder.Services.AddIdentity<Classes.Auth.IdentityUser, Classes.Auth.IdentityRole>()
+    .AddUserStore<UserStore<Classes.Auth.IdentityUser>>()
+    .AddRoleStore<RoleStore<Classes.Auth.IdentityRole>>()
+    .AddDefaultTokenProviders()
+    ;
+// builder.Services.AddIdentityCore<Classes.Auth.IdentityUser>(options => {
+//         options.SignIn.RequireConfirmedAccount = false;
+//         options.User.RequireUniqueEmail = true;
+//         options.Password.RequireDigit = false;
+//         options.Password.RequiredLength = 10;
+//         options.Password.RequireNonAlphanumeric = false;
+//         options.Password.RequireUppercase = false;
+//         options.Password.RequireLowercase = false;
+//     });
+builder.Services.AddScoped<UserStore<Classes.Auth.IdentityUser>>();
+builder.Services.AddScoped<RoleStore<Classes.Auth.IdentityRole>>();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("Manager", policy => policy.RequireRole("Manager"));
+    options.AddPolicy("Member", policy => policy.RequireRole("Member"));
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -185,6 +213,42 @@ app.UseSwaggerUI();
 //app.UseHttpsRedirection();
 
 app.UseResponseCaching();
+
+// set up system roles
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleStore<Classes.Auth.IdentityRole>>();
+    var roles = new[] { "Admin", "Manager", "Member" };
+ 
+    foreach (var role in roles)
+    {
+        if (await roleManager.FindByNameAsync(role, CancellationToken.None) == null)
+        {
+            await roleManager.CreateAsync(new Classes.Auth.IdentityRole(role), CancellationToken.None);
+        }
+    }
+
+    // set up administrator account
+    var userManager = scope.ServiceProvider.GetRequiredService<UserStore<Classes.Auth.IdentityUser>>();
+    if (await userManager.FindByNameAsync("administrator", CancellationToken.None) == null)
+    {
+        Classes.Auth.IdentityUser adminUser = new Classes.Auth.IdentityUser{
+            Id = Guid.NewGuid().ToString(),
+            Email = "admin@localhost",
+            NormalizedEmail = "ADMIN@LOCALHOST",
+            EmailConfirmed = true,
+            UserName = "administrator",
+            NormalizedUserName = "ADMINISTRATOR"
+        };
+
+        //set user password
+        PasswordHasher<Classes.Auth.IdentityUser> ph = new PasswordHasher<Classes.Auth.IdentityUser>();
+        adminUser.PasswordHash = ph.HashPassword(adminUser, "letmein");
+
+        await userManager.CreateAsync(adminUser, CancellationToken.None);
+        await userManager.AddToRoleAsync(adminUser, "Admin", CancellationToken.None);
+    }
+}
 
 app.UseAuthorization();
 
