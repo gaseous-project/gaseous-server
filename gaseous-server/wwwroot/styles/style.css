@@ -50,6 +50,7 @@ h3 {
     margin: 15% auto; /* 15% from the top and centered */
     padding: 10px;
     border: 1px solid #888;
+    border-radius: 10px;
     width: 700px; /* Could be more or less, depending on screen size */
     min-height: 358px;
 }
@@ -58,6 +59,7 @@ h3 {
     margin: 20% auto; /* 20% from the top and centered */
     padding: 10px;
     border: 1px solid #888;
+    border-radius: 10px;
     width: 300px; /* Could be more or less, depending on screen size */
     min-height: 110px;
 }
@@ -205,7 +207,7 @@ h3 {
     z-index: 1;
 }
 
-input[type='text'], input[type='number'] {
+input[type='text'], input[type='number'], input[type="email"], input[type="password"] {
     background-color: #2b2b2b;
     color: white;
     padding: 5px;
@@ -965,4 +967,41 @@ button:disabled {
 
 .romGroupTitles {
     padding-left: 20px;
+}
+
+.loginwindow {
+    position: fixed; /* Stay in place */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    /*background-color: rgb(0,0,0); /* Fallback color */
+    /*background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    /*backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);*/
+    filter: drop-shadow(5px 5px 10px #000);
+    -webkit-filter: drop-shadow(5px 5px 10px #000);
+}
+
+/* Modal Content/Box */
+.loginwindow-content {
+    position: relative;
+    background-color: #383838;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 10px;
+    border: 1px solid #888;
+    border-radius: 10px;
+    width: 350px; /* Could be more or less, depending on screen size */
+    min-height: 250px;
+}
+
+#loginwindow_header_label {
+    font-family: Commodore64;
+    display: inline-block;
+    padding: 10px;
+    font-size: 24pt;
+    vertical-align: top;
+    /*color: #edeffa;*/
+    color: #7c70da;
 }

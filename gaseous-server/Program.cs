@@ -10,8 +10,9 @@ using Microsoft.AspNetCore.Mvc.Versioning;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.OpenApi.Models;
-using Classes.Auth;
+using Authentication;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 Logging.WriteToDiskOnly = true;
 Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server " + Assembly.GetExecutingAssembly().GetName().Version);
@@ -177,12 +178,31 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddHostedService<TimedHostedService>();
 
 // identity
-builder.Services.AddIdentity<Classes.Auth.IdentityUser, Classes.Auth.IdentityRole>()
-    .AddUserStore<UserStore<Classes.Auth.IdentityUser>>()
-    .AddRoleStore<RoleStore<Classes.Auth.IdentityRole>>()
+builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+        {
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequireUppercase = true;
+            options.Password.RequiredLength = 10;
+            options.User.AllowedUserNameCharacters = null;
+            options.User.RequireUniqueEmail = true;
+            options.SignIn.RequireConfirmedPhoneNumber = false;
+            options.SignIn.RequireConfirmedEmail = false;
+            options.SignIn.RequireConfirmedAccount = false;
+        })
+    .AddUserStore<UserStore>()
+    .AddRoleStore<RoleStore>()
     .AddDefaultTokenProviders()
+    .AddDefaultUI()
     ;
-// builder.Services.AddIdentityCore<Classes.Auth.IdentityUser>(options => {
+builder.Services.ConfigureApplicationCookie(options =>
+        {
+            options.Cookie.Name = "Gaseous.Identity";
+            options.ExpireTimeSpan = TimeSpan.FromDays(90);
+            options.SlidingExpiration = true;
+        });
+// builder.Services.AddIdentityCore<ApplicationUser>(options => {
 //         options.SignIn.RequireConfirmedAccount = false;
 //         options.User.RequireUniqueEmail = true;
 //         options.Password.RequireDigit = false;
@@ -191,8 +211,11 @@ builder.Services.AddIdentity<Classes.Auth.IdentityUser, Classes.Auth.IdentityRol
 //         options.Password.RequireUppercase = false;
 //         options.Password.RequireLowercase = false;
 //     });
-builder.Services.AddScoped<UserStore<Classes.Auth.IdentityUser>>();
-builder.Services.AddScoped<RoleStore<Classes.Auth.IdentityRole>>();
+builder.Services.AddScoped<UserStore>();
+builder.Services.AddScoped<RoleStore>();
+
+builder.Services.AddTransient<IUserStore<ApplicationUser>, UserStore>();
+builder.Services.AddTransient<IRoleStore<ApplicationRole>, RoleStore>();
 
 builder.Services.AddAuthorization(options =>
 {
@@ -200,6 +223,11 @@ builder.Services.AddAuthorization(options =>
     options.AddPolicy("Manager", policy => policy.RequireRole("Manager"));
     options.AddPolicy("Member", policy => policy.RequireRole("Member"));
 });
+
+// builder.Services.AddControllersWithViews(options =>
+// {
+//     options.Filters.Add(new Microsoft.AspNetCore.Mvc.ValidateAntiForgeryTokenAttribute());
+// });
 
 var app = builder.Build();
 
@@ -217,22 +245,25 @@ app.UseResponseCaching();
 // set up system roles
 using (var scope = app.Services.CreateScope())
 {
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleStore<Classes.Auth.IdentityRole>>();
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleStore>();
     var roles = new[] { "Admin", "Manager", "Member" };
  
     foreach (var role in roles)
     {
         if (await roleManager.FindByNameAsync(role, CancellationToken.None) == null)
         {
-            await roleManager.CreateAsync(new Classes.Auth.IdentityRole(role), CancellationToken.None);
+            ApplicationRole applicationRole = new ApplicationRole();
+            applicationRole.Name = role;
+            applicationRole.NormalizedName = role.ToUpper();
+            await roleManager.CreateAsync(applicationRole, CancellationToken.None);
         }
     }
 
     // set up administrator account
-    var userManager = scope.ServiceProvider.GetRequiredService<UserStore<Classes.Auth.IdentityUser>>();
-    if (await userManager.FindByNameAsync("administrator", CancellationToken.None) == null)
+    var userManager = scope.ServiceProvider.GetRequiredService<UserStore>();
+    if (await userManager.FindByNameAsync("admin@localhost", CancellationToken.None) == null)
     {
-        Classes.Auth.IdentityUser adminUser = new Classes.Auth.IdentityUser{
+        ApplicationUser adminUser = new ApplicationUser{
             Id = Guid.NewGuid().ToString(),
             Email = "admin@localhost",
             NormalizedEmail = "ADMIN@LOCALHOST",
@@ -242,7 +273,7 @@ using (var scope = app.Services.CreateScope())
         };
 
         //set user password
-        PasswordHasher<Classes.Auth.IdentityUser> ph = new PasswordHasher<Classes.Auth.IdentityUser>();
+        PasswordHasher<ApplicationUser> ph = new PasswordHasher<ApplicationUser>();
         adminUser.PasswordHash = ph.HashPassword(adminUser, "letmein");
 
         await userManager.CreateAsync(adminUser, CancellationToken.None);

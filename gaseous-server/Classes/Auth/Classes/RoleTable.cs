@@ -4,7 +4,7 @@ using System.Data;
 using gaseous_server.Classes;
 using Microsoft.AspNetCore.Identity;
 
-namespace Classes.Auth
+namespace Authentication
 {
     /// <summary>
     /// Class that represents the Role table in the MySQL Database
@@ -41,7 +41,7 @@ namespace Classes.Auth
         /// </summary>
         /// <param name="roleName">The role's name</param>
         /// <returns></returns>
-        public int Insert(IdentityRole role)
+        public int Insert(ApplicationRole role)
         {
             string commandText = "Insert into Roles (Id, Name) values (@id, @name)";
             Dictionary<string, object> parameters = new Dictionary<string, object>();
@@ -95,19 +95,21 @@ namespace Classes.Auth
         }
 
         /// <summary>
-        /// Gets the IdentityRole given the role Id
+        /// Gets the ApplicationRole given the role Id
         /// </summary>
         /// <param name="roleId"></param>
         /// <returns></returns>
-        public IdentityRole? GetRoleById(string roleId)
+        public ApplicationRole? GetRoleById(string roleId)
         {
             var roleName = GetRoleName(roleId);
-            IdentityRole? role = null;
+            ApplicationRole? role = null;
 
             if(roleName != null)
             {
-                role = new IdentityRole(roleName);
+                role = new ApplicationRole();
                 role.Id = roleId;
+                role.Name = roleName;
+                role.NormalizedName = roleName.ToUpper();
             }
 
             return role;
@@ -115,31 +117,52 @@ namespace Classes.Auth
         }
 
         /// <summary>
-        /// Gets the IdentityRole given the role name
+        /// Gets the ApplicationRole given the role name
         /// </summary>
         /// <param name="roleName"></param>
         /// <returns></returns>
-        public IdentityRole? GetRoleByName(string roleName)
+        public ApplicationRole? GetRoleByName(string roleName)
         {
             var roleId = GetRoleId(roleName);
-            IdentityRole role = null;
+            ApplicationRole role = null;
 
             if (roleId != null)
             {
-                role = new IdentityRole(roleName);
+                role = new ApplicationRole();
                 role.Id = roleId;
+                role.Name = roleName;
+                role.NormalizedName = roleName.ToUpper();
             }
 
             return role;
         }
 
-        public int Update(IdentityRole role)
+        public int Update(ApplicationRole role)
         {
             string commandText = "Update Roles set Name = @name where Id = @id";
             Dictionary<string, object> parameters = new Dictionary<string, object>();
             parameters.Add("@id", role.Id);
 
             return (int)_database.ExecuteNonQuery(commandText, parameters);
+        }
+
+        public List<ApplicationRole> GetRoles()
+        {
+            List<ApplicationRole> roles = new List<ApplicationRole>();
+
+            string commandText = "Select Name from Roles";
+
+            var rows = _database.ExecuteCMDDict(commandText);
+            foreach(Dictionary<string, object> row in rows)
+            {
+                ApplicationRole role = (ApplicationRole)Activator.CreateInstance(typeof(ApplicationRole));
+                role.Id = (string)row["Id"];
+                role.Name = (string)row["Name"];
+                role.NormalizedName = ((string)row["Name"]).ToUpper();
+                roles.Add(role);
+            }
+
+            return roles;
         }
     }
 }

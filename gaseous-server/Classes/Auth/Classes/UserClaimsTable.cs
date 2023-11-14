@@ -5,7 +5,7 @@ using System.Security.Claims;
 using gaseous_server.Classes;
 using Microsoft.AspNetCore.Identity;
 
-namespace Classes.Auth
+namespace Authentication
 {
     /// <summary>
     /// Class that represents the UserClaims table in the MySQL Database

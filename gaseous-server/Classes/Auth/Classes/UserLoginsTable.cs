@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using System.Collections.Generic;
 using System.Data;
 
-namespace Classes.Auth
+namespace Authentication
 {
     /// <summary>
     /// Class that represents the UserLogins table in the MySQL Database

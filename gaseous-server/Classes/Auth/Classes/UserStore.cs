@@ -5,25 +5,24 @@ using gaseous_server.Classes;
 using Microsoft.AspNetCore.Identity;
 using MySqlConnector;
 
-namespace Classes.Auth
+namespace Authentication
 {
-    public class UserStore<TUser> : 
-        IUserStore<TUser>,
-        IUserRoleStore<TUser>,
-        IUserLoginStore<TUser>,
-        IUserClaimStore<TUser>,
-        IUserPasswordStore<TUser>,
-        IUserSecurityStampStore<TUser>,
-        IQueryableUserStore<TUser>,
-        IUserEmailStore<TUser>,
-        IUserPhoneNumberStore<TUser>,
-        IUserTwoFactorStore<TUser>,
-        IUserLockoutStore<TUser>
-        where TUser : IdentityUser
+    public class UserStore : 
+        IUserStore<ApplicationUser>,
+        IUserRoleStore<ApplicationUser>,
+        IUserLoginStore<ApplicationUser>,
+        IUserClaimStore<ApplicationUser>,
+        IUserPasswordStore<ApplicationUser>,
+        IUserSecurityStampStore<ApplicationUser>,
+        IQueryableUserStore<ApplicationUser>,
+        IUserEmailStore<ApplicationUser>,
+        IUserPhoneNumberStore<ApplicationUser>,
+        IUserTwoFactorStore<ApplicationUser>,
+        IUserLockoutStore<ApplicationUser>
     {
         private Database database;
 
-        private UserTable<TUser> userTable;
+        private UserTable<ApplicationUser> userTable;
         private RoleTable roleTable;
         private UserRolesTable userRolesTable;
         private UserLoginsTable userLoginsTable;
@@ -32,7 +31,7 @@ namespace Classes.Auth
         public UserStore()
         {
             database = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            userTable = new UserTable<TUser>(database);
+            userTable = new UserTable<ApplicationUser>(database);
             roleTable = new RoleTable(database);
             userRolesTable = new UserRolesTable(database);
             userLoginsTable = new UserLoginsTable(database);
@@ -42,22 +41,23 @@ namespace Classes.Auth
         public UserStore(Database database)
         {
             this.database = database;
-            userTable = new UserTable<TUser>(database);
+            userTable = new UserTable<ApplicationUser>(database);
             roleTable = new RoleTable(database);
             userRolesTable = new UserRolesTable(database);
             userLoginsTable = new UserLoginsTable(database);
             userClaimsTable = new UserClaimsTable(database);
         }
 
-        public IQueryable<TUser> Users
+        public IQueryable<ApplicationUser> Users
         {
             get
             {
-                return (IQueryable<TUser>)userTable.GetUsers();
+                List<ApplicationUser> users = userTable.GetUsers();
+                return users.AsQueryable();
             }
         }
 
-        public Task AddClaimsAsync(TUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
+        public Task AddClaimsAsync(ApplicationUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
         {
             if (user == null)
             {
@@ -77,7 +77,7 @@ namespace Classes.Auth
             return Task.FromResult<object>(null);
         }
 
-        public Task AddLoginAsync(TUser user, UserLoginInfo login, CancellationToken cancellationToken)
+        public Task AddLoginAsync(ApplicationUser user, UserLoginInfo login, CancellationToken cancellationToken)
         {
             if (user == null)
             {
@@ -94,7 +94,7 @@ namespace Classes.Auth
             return Task.FromResult<object>(null);
         }
 
-        public Task AddToRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
+        public Task AddToRoleAsync(ApplicationUser user, string roleName, CancellationToken cancellationToken)
         {
             if (user == null)
             {
@@ -115,7 +115,7 @@ namespace Classes.Auth
             return Task.FromResult<object>(null);
         }
 
-        public Task<IdentityResult> CreateAsync(TUser user, CancellationToken cancellationToken)
+        public Task<IdentityResult> CreateAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             if (user == null)
             {
@@ -127,7 +127,7 @@ namespace Classes.Auth
             return Task.FromResult<IdentityResult>(IdentityResult.Success);
         }
 
-        public Task<IdentityResult> DeleteAsync(TUser user, CancellationToken cancellationToken)
+        public Task<IdentityResult> DeleteAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             if (user != null)
             {
@@ -145,39 +145,39 @@ namespace Classes.Auth
             }
         }
 
-        public Task<TUser?> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
+        public Task<ApplicationUser?> FindByEmailAsync(string normalizedEmail, CancellationToken cancellationToken)
         {
             if (String.IsNullOrEmpty(normalizedEmail))
             {
                 throw new ArgumentNullException("email");
             }
 
-            TUser result = userTable.GetUserByEmail(normalizedEmail) as TUser;
+            ApplicationUser result = userTable.GetUserByEmail(normalizedEmail) as ApplicationUser;
             if (result != null)
             {
-                return Task.FromResult<TUser>(result);
+                return Task.FromResult<ApplicationUser>(result);
             }
 
-            return Task.FromResult<TUser>(null);
+            return Task.FromResult<ApplicationUser>(null);
         }
 
-        public Task<TUser?> FindByIdAsync(string userId, CancellationToken cancellationToken)
+        public Task<ApplicationUser?> FindByIdAsync(string userId, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(userId))
             {
                 throw new ArgumentException("Null or empty argument: userId");
             }
 
-            TUser result = userTable.GetUserById(userId) as TUser;
+            ApplicationUser result = userTable.GetUserById(userId) as ApplicationUser;
             if (result != null)
             {
-                return Task.FromResult<TUser>(result);
+                return Task.FromResult<ApplicationUser>(result);
             }
 
-            return Task.FromResult<TUser>(null);
+            return Task.FromResult<ApplicationUser>(null);
         }
 
-        public Task<TUser?> FindByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
+        public Task<ApplicationUser?> FindByLoginAsync(string loginProvider, string providerKey, CancellationToken cancellationToken)
         {
             if (loginProvider == null || providerKey == null)
             {
@@ -189,62 +189,62 @@ namespace Classes.Auth
             var userId = userLoginsTable.FindUserIdByLogin(login);
             if (userId != null)
             {
-                TUser user = userTable.GetUserById(userId) as TUser;
+                ApplicationUser user = userTable.GetUserById(userId) as ApplicationUser;
                 if (user != null)
                 {
-                    return Task.FromResult<TUser>(user);
+                    return Task.FromResult<ApplicationUser>(user);
                 }
             }
 
-            return Task.FromResult<TUser>(null);
+            return Task.FromResult<ApplicationUser>(null);
         }
 
-        public Task<TUser?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
+        public Task<ApplicationUser?> FindByNameAsync(string normalizedUserName, CancellationToken cancellationToken)
         {
             if (string.IsNullOrEmpty(normalizedUserName))
             {
                 throw new ArgumentException("Null or empty argument: normalizedUserName");
             }
 
-            List<TUser> result = userTable.GetUserByName(normalizedUserName) as List<TUser>;
+            List<ApplicationUser> result = userTable.GetUserByName(normalizedUserName) as List<ApplicationUser>;
 
             // Should I throw if > 1 user?
             if (result != null && result.Count == 1)
             {
-                return Task.FromResult<TUser>(result[0]);
+                return Task.FromResult<ApplicationUser>(result[0]);
             }
 
-            return Task.FromResult<TUser>(null);
+            return Task.FromResult<ApplicationUser>(null);
         }
 
-        public Task<int> GetAccessFailedCountAsync(TUser user, CancellationToken cancellationToken)
+        public Task<int> GetAccessFailedCountAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.AccessFailedCount);
         }
 
-        public Task<IList<Claim>> GetClaimsAsync(TUser user, CancellationToken cancellationToken)
+        public Task<IList<Claim>> GetClaimsAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             ClaimsIdentity identity = userClaimsTable.FindByUserId(user.Id);
 
             return Task.FromResult<IList<Claim>>(identity.Claims.ToList());
         }
 
-        public Task<string?> GetEmailAsync(TUser user, CancellationToken cancellationToken)
+        public Task<string?> GetEmailAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.Email);
         }
 
-        public Task<bool> GetEmailConfirmedAsync(TUser user, CancellationToken cancellationToken)
+        public Task<bool> GetEmailConfirmedAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.EmailConfirmed);
         }
 
-        public Task<bool> GetLockoutEnabledAsync(TUser user, CancellationToken cancellationToken)
+        public Task<bool> GetLockoutEnabledAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.LockoutEnabled);
         }
 
-        public Task<DateTimeOffset?> GetLockoutEndDateAsync(TUser user, CancellationToken cancellationToken)
+        public Task<DateTimeOffset?> GetLockoutEndDateAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             if (user.LockoutEnd.HasValue)
             {
@@ -256,7 +256,7 @@ namespace Classes.Auth
             }
         }
 
-        public Task<IList<UserLoginInfo>> GetLoginsAsync(TUser user, CancellationToken cancellationToken)
+        public Task<IList<UserLoginInfo>> GetLoginsAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             if (user == null)
             {
@@ -272,12 +272,12 @@ namespace Classes.Auth
             return Task.FromResult<IList<UserLoginInfo>>(null);
         }
 
-        public Task<string?> GetNormalizedEmailAsync(TUser user, CancellationToken cancellationToken)
+        public Task<string?> GetNormalizedEmailAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.NormalizedEmail);
         }
 
-        public Task<string?> GetNormalizedUserNameAsync(TUser user, CancellationToken cancellationToken)
+        public Task<string?> GetNormalizedUserNameAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             if (user != null)
             {
@@ -287,7 +287,7 @@ namespace Classes.Auth
             return Task.FromResult<string?>(null);
         }
 
-        public Task<string?> GetPasswordHashAsync(TUser user, CancellationToken cancellationToken)
+        public Task<string?> GetPasswordHashAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             if (user != null)
             {
@@ -297,17 +297,17 @@ namespace Classes.Auth
             return Task.FromResult<string?>(null);
         }
 
-        public Task<string?> GetPhoneNumberAsync(TUser user, CancellationToken cancellationToken)
+        public Task<string?> GetPhoneNumberAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.PhoneNumber);
         }
 
-        public Task<bool> GetPhoneNumberConfirmedAsync(TUser user, CancellationToken cancellationToken)
+        public Task<bool> GetPhoneNumberConfirmedAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.PhoneNumberConfirmed);
         }
 
-        public Task<IList<string>> GetRolesAsync(TUser user, CancellationToken cancellationToken)
+        public Task<IList<string>> GetRolesAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             if (user == null)
             {
@@ -325,17 +325,17 @@ namespace Classes.Auth
             return Task.FromResult<IList<string>>(null);
         }
 
-        public Task<string?> GetSecurityStampAsync(TUser user, CancellationToken cancellationToken)
+        public Task<string?> GetSecurityStampAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.SecurityStamp);
         }
 
-        public Task<bool> GetTwoFactorEnabledAsync(TUser user, CancellationToken cancellationToken)
+        public Task<bool> GetTwoFactorEnabledAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             return Task.FromResult(user.TwoFactorEnabled);
         }
 
-        public Task<string> GetUserIdAsync(TUser user, CancellationToken cancellationToken)
+        public Task<string> GetUserIdAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             if (user != null)
             {
@@ -345,34 +345,35 @@ namespace Classes.Auth
             return Task.FromResult<string>(null);
         }
 
-        public Task<string?> GetUserNameAsync(TUser user, CancellationToken cancellationToken)
+        public Task<string?> GetUserNameAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             if (user != null)
             {
-                return Task.FromResult<string?>(userTable.GetUserName(user.Id));
+                //return Task.FromResult<string?>(userTable.GetUserName(user.Id));
+                return Task.FromResult(user.UserName);
             }
 
             return Task.FromResult<string?>(null);
         }
 
-        public Task<IList<TUser>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken)
+        public Task<IList<ApplicationUser>> GetUsersForClaimAsync(Claim claim, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public Task<IList<TUser>> GetUsersInRoleAsync(string roleName, CancellationToken cancellationToken)
+        public Task<IList<ApplicationUser>> GetUsersInRoleAsync(string roleName, CancellationToken cancellationToken)
         {
             throw new NotImplementedException();
         }
 
-        public Task<bool> HasPasswordAsync(TUser user, CancellationToken cancellationToken)
+        public Task<bool> HasPasswordAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             var hasPassword = !string.IsNullOrEmpty(userTable.GetPasswordHash(user.Id));
 
             return Task.FromResult<bool>(Boolean.Parse(hasPassword.ToString()));
         }
 
-        public Task<int> IncrementAccessFailedCountAsync(TUser user, CancellationToken cancellationToken)
+        public Task<int> IncrementAccessFailedCountAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             user.AccessFailedCount++;
             userTable.Update(user);
@@ -380,7 +381,7 @@ namespace Classes.Auth
             return Task.FromResult(user.AccessFailedCount);
         }
 
-        public Task<bool> IsInRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
+        public Task<bool> IsInRoleAsync(ApplicationUser user, string roleName, CancellationToken cancellationToken)
         {
             if (user == null)
             {
@@ -403,7 +404,7 @@ namespace Classes.Auth
             return Task.FromResult<bool>(false);
         }
 
-        public Task RemoveClaimsAsync(TUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
+        public Task RemoveClaimsAsync(ApplicationUser user, IEnumerable<Claim> claims, CancellationToken cancellationToken)
         {
             if (user == null)
             {
@@ -423,7 +424,7 @@ namespace Classes.Auth
             return Task.FromResult<object>(null);
         }
 
-        public Task RemoveFromRoleAsync(TUser user, string roleName, CancellationToken cancellationToken)
+        public Task RemoveFromRoleAsync(ApplicationUser user, string roleName, CancellationToken cancellationToken)
         {
             if (user == null)
             {
@@ -445,7 +446,7 @@ namespace Classes.Auth
             return Task.FromResult<Object>(null);
         }
 
-        public Task RemoveLoginAsync(TUser user, string loginProvider, string providerKey, CancellationToken cancellationToken)
+        public Task RemoveLoginAsync(ApplicationUser user, string loginProvider, string providerKey, CancellationToken cancellationToken)
         {
             if (user == null)
             {
@@ -464,7 +465,7 @@ namespace Classes.Auth
             return Task.FromResult<Object>(null);
         }
 
-        public Task ReplaceClaimAsync(TUser user, Claim claim, Claim newClaim, CancellationToken cancellationToken)
+        public Task ReplaceClaimAsync(ApplicationUser user, Claim claim, Claim newClaim, CancellationToken cancellationToken)
         {
             if (user == null)
             {
@@ -482,7 +483,7 @@ namespace Classes.Auth
             return Task.FromResult<Object>(null);
         }
 
-        public Task ResetAccessFailedCountAsync(TUser user, CancellationToken cancellationToken)
+        public Task ResetAccessFailedCountAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             user.AccessFailedCount = 0;
             userTable.Update(user);
@@ -490,7 +491,7 @@ namespace Classes.Auth
             return Task.FromResult(0);
         }
 
-        public Task SetEmailAsync(TUser user, string? email, CancellationToken cancellationToken)
+        public Task SetEmailAsync(ApplicationUser user, string? email, CancellationToken cancellationToken)
         {
             user.Email = email;
             userTable.Update(user);
@@ -498,7 +499,7 @@ namespace Classes.Auth
             return Task.FromResult(0);
         }
 
-        public Task SetEmailConfirmedAsync(TUser user, bool confirmed, CancellationToken cancellationToken)
+        public Task SetEmailConfirmedAsync(ApplicationUser user, bool confirmed, CancellationToken cancellationToken)
         {
             user.EmailConfirmed = confirmed;
             userTable.Update(user);
@@ -506,7 +507,7 @@ namespace Classes.Auth
             return Task.FromResult(0);
         }
 
-        public Task SetLockoutEnabledAsync(TUser user, bool enabled, CancellationToken cancellationToken)
+        public Task SetLockoutEnabledAsync(ApplicationUser user, bool enabled, CancellationToken cancellationToken)
         {
             user.LockoutEnabled = enabled;
             userTable.Update(user);
@@ -514,7 +515,7 @@ namespace Classes.Auth
             return Task.FromResult(0);
         }
 
-        public Task SetLockoutEndDateAsync(TUser user, DateTimeOffset? lockoutEnd, CancellationToken cancellationToken)
+        public Task SetLockoutEndDateAsync(ApplicationUser user, DateTimeOffset? lockoutEnd, CancellationToken cancellationToken)
         {
             user.LockoutEnd = lockoutEnd;
             userTable.Update(user);
@@ -522,7 +523,7 @@ namespace Classes.Auth
             return Task.FromResult(0);
         }
 
-        public Task SetNormalizedEmailAsync(TUser user, string? normalizedEmail, CancellationToken cancellationToken)
+        public Task SetNormalizedEmailAsync(ApplicationUser user, string? normalizedEmail, CancellationToken cancellationToken)
         {
             user.NormalizedEmail = normalizedEmail;
             userTable.Update(user);
@@ -530,7 +531,7 @@ namespace Classes.Auth
             return Task.FromResult(0);
         }
 
-        public Task SetNormalizedUserNameAsync(TUser user, string? normalizedName, CancellationToken cancellationToken)
+        public Task SetNormalizedUserNameAsync(ApplicationUser user, string? normalizedName, CancellationToken cancellationToken)
         {
             if (user == null)
             {
@@ -543,14 +544,14 @@ namespace Classes.Auth
             return Task.FromResult<IdentityResult>(IdentityResult.Success);
         }
 
-        public Task SetPasswordHashAsync(TUser user, string? passwordHash, CancellationToken cancellationToken)
+        public Task SetPasswordHashAsync(ApplicationUser user, string? passwordHash, CancellationToken cancellationToken)
         {
             user.PasswordHash = passwordHash;
 
             return Task.FromResult<Object>(null);
         }
 
-        public Task SetPhoneNumberAsync(TUser user, string? phoneNumber, CancellationToken cancellationToken)
+        public Task SetPhoneNumberAsync(ApplicationUser user, string? phoneNumber, CancellationToken cancellationToken)
         {
             user.PhoneNumber = phoneNumber;
             userTable.Update(user);
@@ -558,7 +559,7 @@ namespace Classes.Auth
             return Task.FromResult(0);
         }
 
-        public Task SetPhoneNumberConfirmedAsync(TUser user, bool confirmed, CancellationToken cancellationToken)
+        public Task SetPhoneNumberConfirmedAsync(ApplicationUser user, bool confirmed, CancellationToken cancellationToken)
         {
             user.PhoneNumberConfirmed = confirmed;
             userTable.Update(user);
@@ -566,14 +567,14 @@ namespace Classes.Auth
             return Task.FromResult(0);
         }
 
-        public Task SetSecurityStampAsync(TUser user, string stamp, CancellationToken cancellationToken)
+        public Task SetSecurityStampAsync(ApplicationUser user, string stamp, CancellationToken cancellationToken)
         {
             user.SecurityStamp = stamp;
 
             return Task.FromResult(0);
         }
 
-        public Task SetTwoFactorEnabledAsync(TUser user, bool enabled, CancellationToken cancellationToken)
+        public Task SetTwoFactorEnabledAsync(ApplicationUser user, bool enabled, CancellationToken cancellationToken)
         {
             user.TwoFactorEnabled = enabled;
             userTable.Update(user);
@@ -581,7 +582,7 @@ namespace Classes.Auth
             return Task.FromResult(0);
         }
 
-        public Task SetUserNameAsync(TUser user, string? userName, CancellationToken cancellationToken)
+        public Task SetUserNameAsync(ApplicationUser user, string? userName, CancellationToken cancellationToken)
         {
             if (user == null)
             {
@@ -594,7 +595,7 @@ namespace Classes.Auth
             return Task.FromResult<IdentityResult>(IdentityResult.Success);
         }
 
-        public Task<IdentityResult> UpdateAsync(TUser user, CancellationToken cancellationToken)
+        public Task<IdentityResult> UpdateAsync(ApplicationUser user, CancellationToken cancellationToken)
         {
             if (user == null)
             {

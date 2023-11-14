@@ -4,7 +4,7 @@ using System.Data;
 using gaseous_server.Classes;
 using Microsoft.AspNetCore.Identity;
 
-namespace Classes.Auth
+namespace Authentication
 {
     /// <summary>
     /// Class that represents the Users table in the MySQL Database
@@ -78,10 +78,10 @@ namespace Classes.Auth
             string commandText = "Select * from Users where Id = @id";
             Dictionary<string, object> parameters = new Dictionary<string, object>() { { "@id", userId } };
 
-            var rows = _database.ExecuteCMD(commandText, parameters).Rows;
+            var rows = _database.ExecuteCMDDict(commandText, parameters);
             if (rows != null && rows.Count == 1)
             {
-                DataRow row = rows[0];
+                Dictionary<string, object> row = rows[0];
                 user = (TUser)Activator.CreateInstance(typeof(TUser));
                 user.Id = (string)row["Id"];
                 user.UserName = (string?)row["UserName"];
@@ -95,7 +95,7 @@ namespace Classes.Auth
                 user.NormalizedEmail = (string?)(string.IsNullOrEmpty((string?)row["NormalizedEmail"]) ? null : row["NormalizedEmail"]);
                 user.NormalizedUserName = (string?)(string.IsNullOrEmpty((string?)row["NormalizedUserName"]) ? null : row["NormalizedUserName"]);
                 user.LockoutEnabled = row["LockoutEnabled"] == "1" ? true : false;
-                user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEndDateUtc"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEndDateUtc"]);
+                user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEnd"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEndDateUtc"]);
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
                 user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true:false;
             }
@@ -111,11 +111,11 @@ namespace Classes.Auth
         public List<TUser> GetUserByName(string normalizedUserName)
         {
             List<TUser> users = new List<TUser>();
-            string commandText = "Select * from Users where NormalizedUserName = @name";
+            string commandText = "Select * from Users where NormalizedEmail = @name";
             Dictionary<string, object> parameters = new Dictionary<string, object>() { { "@name", normalizedUserName } };
 
-            var rows = _database.ExecuteCMD(commandText, parameters).Rows;
-            foreach(DataRow row in rows)
+            var rows = _database.ExecuteCMDDict(commandText, parameters);
+            foreach(Dictionary<string, object> row in rows)
             {
                 TUser user = (TUser)Activator.CreateInstance(typeof(TUser));
                 user.Id = (string)row["Id"];
@@ -130,7 +130,7 @@ namespace Classes.Auth
                 user.NormalizedEmail = (string?)(string.IsNullOrEmpty((string?)row["NormalizedEmail"]) ? null : row["NormalizedEmail"]);
                 user.NormalizedUserName = (string?)(string.IsNullOrEmpty((string?)row["NormalizedUserName"]) ? null : row["NormalizedUserName"]);
                 user.LockoutEnabled = row["LockoutEnabled"] == "1" ? true : false;
-                user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEndDateUtc"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEndDateUtc"]);
+                user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEnd"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEnd"]);
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
                 user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true:false;
                 users.Add(user);
@@ -144,8 +144,8 @@ namespace Classes.Auth
             List<TUser> users = new List<TUser>();
             string commandText = "Select * from Users order by NormalizedUserName";
             
-            var rows = _database.ExecuteCMD(commandText).Rows;
-            foreach(DataRow row in rows)
+            var rows = _database.ExecuteCMDDict(commandText);
+            foreach(Dictionary<string, object> row in rows)
             {
                 TUser user = (TUser)Activator.CreateInstance(typeof(TUser));
                 user.Id = (string)row["Id"];
@@ -160,7 +160,7 @@ namespace Classes.Auth
                 user.NormalizedEmail = (string?)(string.IsNullOrEmpty((string?)row["NormalizedEmail"]) ? null : row["NormalizedEmail"]);
                 user.NormalizedUserName = (string?)(string.IsNullOrEmpty((string?)row["NormalizedUserName"]) ? null : row["NormalizedUserName"]);
                 user.LockoutEnabled = row["LockoutEnabled"] == "1" ? true : false;
-                user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEndDateUtc"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEndDateUtc"]);
+                user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEnd"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEnd"]);
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
                 user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true:false;
                 users.Add(user);
@@ -169,7 +169,7 @@ namespace Classes.Auth
             return users;
         }
 
-        public List<TUser> GetUserByEmail(string email)
+        public TUser GetUserByEmail(string email)
         {
             return null;
         }

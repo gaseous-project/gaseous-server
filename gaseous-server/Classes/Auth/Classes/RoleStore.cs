@@ -5,22 +5,22 @@ using gaseous_server.Classes;
 using Microsoft.AspNetCore.Identity;
 using MySqlConnector;
 
-namespace Classes.Auth
+namespace Authentication
 {
     /// <summary>
     /// Class that implements the key ASP.NET Identity role store iterfaces
     /// </summary>
-    public class RoleStore<TRole> : IQueryableRoleStore<TRole>
-        where TRole : IdentityRole
+    public class RoleStore : IQueryableRoleStore<ApplicationRole>
     {
         private RoleTable roleTable;
         public Database Database { get; private set; }
 
-        public IQueryable<TRole> Roles
+        public IQueryable<ApplicationRole> Roles
         {
             get
             {
-                throw new NotImplementedException();
+                List<ApplicationRole> roles = roleTable.GetRoles();
+                return roles.AsQueryable();
             }
         }
 
@@ -40,7 +40,7 @@ namespace Classes.Auth
             roleTable = new RoleTable(database);
         }
 
-        public Task<IdentityResult> CreateAsync(TRole role, CancellationToken cancellationToken)
+        public Task<IdentityResult> CreateAsync(ApplicationRole role, CancellationToken cancellationToken)
         {
             if (role == null)
             {
@@ -52,7 +52,7 @@ namespace Classes.Auth
             return Task.FromResult<IdentityResult>(IdentityResult.Success);
         }
 
-        public Task<IdentityResult> DeleteAsync(TRole role, CancellationToken cancellationToken)
+        public Task<IdentityResult> DeleteAsync(ApplicationRole role, CancellationToken cancellationToken)
         {
             if (role == null)
             {
@@ -64,16 +64,16 @@ namespace Classes.Auth
             return Task.FromResult<IdentityResult>(IdentityResult.Success);
         }
 
-        public Task<TRole> FindByIdAsync(string roleId, CancellationToken cancellationToken)
+        public Task<ApplicationRole> FindByIdAsync(string roleId, CancellationToken cancellationToken)
         {
-            TRole result = roleTable.GetRoleById(roleId) as TRole;
+            ApplicationRole result = roleTable.GetRoleById(roleId) as ApplicationRole;
 
-            return Task.FromResult<TRole>(result);
+            return Task.FromResult<ApplicationRole>(result);
         }
 
         public Task<bool> RoleExistsAsync(string roleId, CancellationToken cancellationToken)
         {
-            TRole? result = roleTable.GetRoleById(roleId) as TRole;
+            ApplicationRole? result = roleTable.GetRoleById(roleId) as ApplicationRole;
 
             if (result == null)
             {
@@ -85,14 +85,14 @@ namespace Classes.Auth
             }
         }
 
-        public Task<TRole?> FindByNameAsync(string roleName, CancellationToken cancellationToken)
+        public Task<ApplicationRole?> FindByNameAsync(string roleName, CancellationToken cancellationToken)
         {
-            TRole? result = roleTable.GetRoleByName(roleName) as TRole;
+            ApplicationRole? result = roleTable.GetRoleByName(roleName) as ApplicationRole;
 
-            return Task.FromResult<TRole?>(result);
+            return Task.FromResult<ApplicationRole?>(result);
         }
 
-        public Task<IdentityResult> UpdateAsync(TRole role, CancellationToken cancellationToken)
+        public Task<IdentityResult> UpdateAsync(ApplicationRole role, CancellationToken cancellationToken)
         {
             if (role == null)
             {
@@ -112,7 +112,7 @@ namespace Classes.Auth
             }
         }
 
-        public Task<string> GetRoleIdAsync(TRole role, CancellationToken cancellationToken)
+        public Task<string> GetRoleIdAsync(ApplicationRole role, CancellationToken cancellationToken)
         {
             if (role != null)
             {
@@ -122,7 +122,7 @@ namespace Classes.Auth
             return Task.FromResult<string>(null);
         }
 
-        public Task<string?> GetRoleNameAsync(TRole role, CancellationToken cancellationToken)
+        public Task<string?> GetRoleNameAsync(ApplicationRole role, CancellationToken cancellationToken)
         {
             if (role != null)
             {
@@ -132,7 +132,7 @@ namespace Classes.Auth
             return Task.FromResult<string?>(null);
         }
 
-        public Task SetRoleNameAsync(TRole role, string? roleName, CancellationToken cancellationToken)
+        public Task SetRoleNameAsync(ApplicationRole role, string? roleName, CancellationToken cancellationToken)
         {
             if (role == null)
             {
@@ -145,7 +145,7 @@ namespace Classes.Auth
             return Task.FromResult<IdentityResult>(IdentityResult.Success);
         }
 
-        public Task<string?> GetNormalizedRoleNameAsync(TRole role, CancellationToken cancellationToken)
+        public Task<string?> GetNormalizedRoleNameAsync(ApplicationRole role, CancellationToken cancellationToken)
         {
             if (role != null)
             {
@@ -155,7 +155,7 @@ namespace Classes.Auth
             return Task.FromResult<string?>(null);
         }
 
-        public Task SetNormalizedRoleNameAsync(TRole role, string? normalizedName, CancellationToken cancellationToken)
+        public Task SetNormalizedRoleNameAsync(ApplicationRole role, string? normalizedName, CancellationToken cancellationToken)
         {
             if (role == null)
             {

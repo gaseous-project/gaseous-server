@@ -25,6 +25,10 @@
 <h3>Signatures</h3>
 <div id="system_signatures"></div>
 
+<h3>Testing</h3>
+<button id="UserLogin" value="UserLogin" onclick="UserLogin();">UserLogin</button>
+<button id="UserLogoff" value="UserLogoff" onclick="UserLogoff();">UserLogoff</button>
+
 <script type="text/javascript">function SystemLoadStatus() {
         ajaxCall('/api/v1.0/BackgroundTasks', 'GET', function (result) {
             var newTable = document.createElement('table');
@@ -260,6 +264,39 @@
         ajaxCall('/api/v1.0/BackgroundTasks/' + itemType + '?ForceRun=true', 'GET', function (result) {
             SystemLoadStatus();
         });
+    }
+
+    function UserLogin() {
+        var loginObj = {
+            "email": "user@example.com",
+            "password": "ThisIsMyPassword1",
+            "rememberMe": true
+        }
+
+        ajaxCall(
+            '/api/v1/Account/Login',
+            'POST',
+            function(result) {
+                alert(JSON.stringify(result));
+            },
+            function(error) {
+                alert(JSON.stringify(error));
+            },
+            JSON.stringify(loginObj)
+        );
+    }
+
+    function UserLogoff() {
+        ajaxCall(
+            '/api/v1/Account/LogOff',
+            'POST',
+            function(result) {
+                alert(JSON.stringify(result));
+            },
+            function(error) {
+                alert(JSON.stringify(error));
+            }
+        );
     }
 
     SystemLoadStatus();

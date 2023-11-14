@@ -147,6 +147,50 @@ namespace gaseous_server.Classes
 			return _ExecuteCMD(Command, Parameters, Timeout, ConnectionString);
         }
 
+		public List<Dictionary<string, object>> ExecuteCMDDict(string Command)
+		{
+			Dictionary<string, object> dbDict = new Dictionary<string, object>();
+			return _ExecuteCMDDict(Command, dbDict, 30, "");
+		}
+
+        public List<Dictionary<string, object>> ExecuteCMDDict(string Command, Dictionary<string, object> Parameters)
+        {
+            return _ExecuteCMDDict(Command, Parameters, 30, "");
+        }
+
+        public List<Dictionary<string, object>> ExecuteCMDDict(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
+        {
+			return _ExecuteCMDDict(Command, Parameters, Timeout, ConnectionString);
+        }
+
+		private List<Dictionary<string, object>> _ExecuteCMDDict(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
+		{
+			DataTable dataTable = _ExecuteCMD(Command, Parameters, Timeout, ConnectionString);
+
+			// convert datatable to dictionary
+			List<Dictionary<string, object?>> rows = new List<Dictionary<string, object?>>();
+
+			foreach (DataRow dataRow in dataTable.Rows)
+			{
+				Dictionary<string, object?> row = new Dictionary<string, object?>();
+				for (int i = 0; i < dataRow.Table.Columns.Count; i++)
+				{
+					string columnName = dataRow.Table.Columns[i].ColumnName;
+					if (dataRow[i] == System.DBNull.Value)
+					{
+						row.Add(columnName, null);
+					}
+					else
+					{
+						row.Add(columnName, dataRow[i].ToString());
+					}
+				}
+				rows.Add(row);
+			}
+
+			return rows;
+		}
+
         private DataTable _ExecuteCMD(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
         {
             if (ConnectionString == "") { ConnectionString = _ConnectionString; }
