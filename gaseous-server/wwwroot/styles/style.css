@@ -1005,3 +1005,72 @@ button:disabled {
     /*color: #edeffa;*/
     color: #7c70da;
 }
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+    position: relative;
+    display: inline-block;
+    float: right;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    min-width: 160px;
+    /* box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); */
+    z-index: 1;
+    right: 0;
+    top: 40px;
+    filter: drop-shadow(5px 5px 10px #000);
+    -webkit-filter: drop-shadow(5px 5px 10px #000);
+}
+
+/* Links inside the dropdown */
+.dropdown-content a, .dropdown-content span {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content span {
+    cursor: auto;
+}
+  
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover {background-color: #ddd;}
+  
+/* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
+.show {display:block;}
+
+.dropdown-content .dropdownemailitem {
+    display: inline-block;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-left: 16px;
+    margin-right: 0px;
+    padding: 3px 6px;
+}
+
+.dropdown-content .dropdownroleitem {
+    display: inline-block;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-left: 16px;
+    margin-right: 0px;
+    padding: 3px 6px;
+}
+
+.dropdownroleitem {
+    text-transform: capitalize;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+    background-color: red;
+    border-color: red;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 5px;
+}

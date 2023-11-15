@@ -10,7 +10,7 @@ namespace gaseous_server.Controllers
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
-    [Authorize]
+    [Authorize(Roles = "Admin,Member")]
     public class BackgroundTasksController : Controller
     {
         [MapToApiVersion("1.0")]
