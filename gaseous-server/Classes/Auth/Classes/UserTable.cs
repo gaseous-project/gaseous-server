@@ -95,7 +95,7 @@ namespace Authentication
                 user.NormalizedEmail = (string?)(string.IsNullOrEmpty((string?)row["NormalizedEmail"]) ? null : row["NormalizedEmail"]);
                 user.NormalizedUserName = (string?)(string.IsNullOrEmpty((string?)row["NormalizedUserName"]) ? null : row["NormalizedUserName"]);
                 user.LockoutEnabled = row["LockoutEnabled"] == "1" ? true : false;
-                user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEnd"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEndDateUtc"]);
+                user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEnd"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEnd"]);
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
                 user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true:false;
             }
@@ -171,7 +171,15 @@ namespace Authentication
 
         public TUser GetUserByEmail(string email)
         {
-            return null;
+            List<TUser> users = GetUserByName(email);
+            if (users.Count == 0)
+            {
+                return null;
+            }
+            else
+            {
+                return users[0];
+            }
         }
 
         /// <summary>
@@ -295,6 +303,7 @@ namespace Authentication
         {
             string commandText = @"Update Users set UserName = @userName, PasswordHash = @pwdHash, SecurityStamp = @secStamp, ConcurrencyStamp = @concurrencystamp, Email = @email, EmailConfirmed = @emailconfirmed, PhoneNumber = @phonenumber, PhoneNumberConfirmed = @phonenumberconfirmed, NormalizedEmail = @normalizedemail, NormalizedUserName = @normalizedusername, AccessFailedCount = @accesscount, LockoutEnabled = @lockoutenabled, LockoutEnd = @lockoutenddate, TwoFactorEnabled=@twofactorenabled WHERE Id = @userId;";
             Dictionary<string, object> parameters = new Dictionary<string, object>();
+            parameters.Add("@userId", user.Id);
             parameters.Add("@userName", user.UserName);
             parameters.Add("@pwdHash", user.PasswordHash);
             parameters.Add("@SecStamp", user.SecurityStamp);

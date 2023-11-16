@@ -52,6 +52,7 @@
                 <img src="/images/user.svg" alt="Account" title="Account" id="banner_user_image" class="banner_button_image" style="position: relative; top: 10px; right: 0px; pointer-events: none;" onclick="showMenu();" />
                 <div id="myDropdown" class="dropdown-content">
                     <div id="banner_user_roles"></div>
+                    <a href="#" onclick="showDialog('userprofile');">Profile</a>
                     <a href="#" onclick="userLogoff();">Sign Out</a>
                 </div>
             </div>
@@ -117,23 +118,23 @@
                 console.log("User is logged in");
                 userProfile = result;
 
-                var userRolesDiv = document.getElementById('banner_user_roles');
+                // var userRolesDiv = document.getElementById('banner_user_roles');
                 
-                var userEmail = document.createElement('span');
-                userEmail.className = 'dropdownemailitem';
-                userEmail.innerHTML = result.emailAddress;
-                userRolesDiv.appendChild(userEmail);
+                // var userEmail = document.createElement('span');
+                // userEmail.className = 'dropdownemailitem';
+                // userEmail.innerHTML = result.emailAddress;
+                // userRolesDiv.appendChild(userEmail);
 
-                for (var i = 0; i < result.roles.length; i++) {
-                    var roleItem = document.createElement('div');
-                    roleItem.className = 'dropdownroleitem';
-                    roleItem.innerHTML = result.roles[i];
-                    var colorVal = intToRGB(hashCode(result.roles[i]));
-                    console.log(colorVal);
-                    roleItem.style.backgroundColor = '#' + colorVal;
-                    roleItem.style.borderColor = '#' + colorVal;
-                    userRolesDiv.appendChild(roleItem);
-                }
+                // for (var i = 0; i < result.roles.length; i++) {
+                //     var roleItem = document.createElement('div');
+                //     roleItem.className = 'dropdownroleitem';
+                //     roleItem.innerHTML = result.roles[i];
+                //     var colorVal = intToRGB(hashCode(result.roles[i]));
+                //     console.log(colorVal);
+                //     roleItem.style.backgroundColor = '#' + colorVal;
+                //     roleItem.style.borderColor = '#' + colorVal;
+                //     userRolesDiv.appendChild(roleItem);
+                // }
             },
             function(error) {
                 window.location.replace("/pages/login.html");
