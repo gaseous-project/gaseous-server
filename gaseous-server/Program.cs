@@ -220,8 +220,8 @@ builder.Services.AddTransient<IRoleStore<ApplicationRole>, RoleStore>();
 builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
-    options.AddPolicy("Manager", policy => policy.RequireRole("Manager"));
-    options.AddPolicy("Member", policy => policy.RequireRole("Member"));
+    options.AddPolicy("Gamer", policy => policy.RequireRole("Gamer"));
+    options.AddPolicy("Player", policy => policy.RequireRole("Player"));
 });
 
 // builder.Services.AddControllersWithViews(options =>
@@ -246,7 +246,7 @@ app.UseResponseCaching();
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleStore>();
-    var roles = new[] { "Admin", "Manager", "Member" };
+    var roles = new[] { "Admin", "Gamer", "Player" };
  
     foreach (var role in roles)
     {

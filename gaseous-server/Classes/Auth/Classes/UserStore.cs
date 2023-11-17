@@ -395,9 +395,15 @@ namespace Authentication
 
             List<string> roles = userRolesTable.FindByUserId(user.Id);
             {
-                if (roles != null && roles.Contains(roleName))
+                if (roles != null)
                 {
-                    return Task.FromResult<bool>(true);
+                    foreach (string role in roles)
+                    {
+                        if (role.ToUpper() == roleName.ToUpper())
+                        {
+                            return Task.FromResult<bool>(true);
+                        }
+                    }
                 }
             }
 

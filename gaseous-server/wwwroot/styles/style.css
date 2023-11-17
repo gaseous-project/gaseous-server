@@ -1045,24 +1045,6 @@ button:disabled {
 /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
 .show {display:block;}
 
-.dropdown-content .dropdownemailitem {
-    display: inline-block;
-    margin-top: 5px;
-    margin-bottom: 5px;
-    margin-left: 16px;
-    margin-right: 0px;
-    padding: 3px 6px;
-}
-
-.dropdown-content .dropdownroleitem {
-    display: inline-block;
-    margin-top: 5px;
-    margin-bottom: 5px;
-    margin-left: 16px;
-    margin-right: 0px;
-    padding: 3px 6px;
-}
-
 .dropdownroleitem {
     text-transform: capitalize;
     font-size: 12px;
@@ -1073,4 +1055,10 @@ button:disabled {
     border-style: solid;
     border-width: 1px;
     border-radius: 5px;
+    padding: 3px 6px;
+    display: inline-block;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
 }

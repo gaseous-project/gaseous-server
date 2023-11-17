@@ -1,11 +1,12 @@
 namespace Authentication
 {
-    public class ProfileBasicViewModel
+    public class UserViewModel
     {
-        public string UserId { get; set; }
-        public string UserName { get; set; }
+        public string Id { get; set; }
         public string EmailAddress { get; set; }
-        public List<String> Roles { get; set; }
+        public bool LockoutEnabled { get; set; }
+        public DateTimeOffset? LockoutEnd { get; set; }
+        public List<string> Roles { get; set; }
         public string HighestRole {
             get
             {
