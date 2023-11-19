@@ -247,7 +247,7 @@ namespace gaseous_server.Controllers
         }
 
         [HttpPost]
-        [Route("Users/{UserId}")]
+        [Route("Users/{UserId}/Roles")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> SetUserRoles(string UserId, string RoleName)
         {
@@ -288,6 +288,39 @@ namespace gaseous_server.Controllers
                 }
                 
                 return Ok();
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpPost]
+        [Route("Users/{UserId}/Password")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ResetPassword(string UserId, SetPasswordViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                // we can reset the users password
+                ApplicationUser? user = await _userManager.FindByIdAsync(UserId);
+                if (user != null)
+                {
+                    string resetToken = await _userManager.GeneratePasswordResetTokenAsync(user);
+                    IdentityResult passwordChangeResult = await _userManager.ResetPasswordAsync(user, resetToken, model.NewPassword);
+                    if (passwordChangeResult.Succeeded == true)
+                    {
+                        return Ok();
+                    }
+                    else
+                    {
+                        return Ok(passwordChangeResult);
+                    }
+                }
+                else
+                {
+                    return NotFound();
+                }
             }
             else
             {
