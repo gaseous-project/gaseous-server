@@ -6,6 +6,7 @@ namespace Authentication
         public string UserName { get; set; }
         public string EmailAddress { get; set; }
         public List<String> Roles { get; set; }
+        public SecurityProfileViewModel SecurityProfile { get; set; }
         public string HighestRole {
             get
             {

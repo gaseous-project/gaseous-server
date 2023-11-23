@@ -20,7 +20,7 @@ function renderGameIcon(gameObject, showTitle, showRatings) {
     var gameImage = document.createElement('img');
     gameImage.className = 'game_tile_image lazy';
     if (gameObject.cover) {
-        gameImage.setAttribute('data-src', '/api/v1.0/Games/' + gameObject.id + '/cover/image');
+        gameImage.setAttribute('data-src', '/api/v1.1/Games/' + gameObject.id + '/cover/image');
     } else {
         gameImage.src = '/images/unknowngame.png';
         gameImage.className = 'game_tile_image unknown';
@@ -40,7 +40,7 @@ function renderGameIcon(gameObject, showTitle, showRatings) {
             ratingsSection.id = 'ratings_section';
             for (var i = 0; i < gameObject.ageRatings.ids.length; i++) {
                 var ratingImage = document.createElement('img');
-                ratingImage.src = '/api/v1.0/Games/' + gameObject.id + '/agerating/' + gameObject.ageRatings.ids[i] + '/image';
+                ratingImage.src = '/api/v1.1/Games/' + gameObject.id + '/agerating/' + gameObject.ageRatings.ids[i] + '/image';
                 ratingImage.className = 'rating_image_mini';
                 ratingsSection.appendChild(ratingImage);
             }

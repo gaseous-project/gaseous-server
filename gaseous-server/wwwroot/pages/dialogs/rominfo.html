@@ -118,7 +118,7 @@
         }
     }
 
-    ajaxCall('/api/v1.0/Games/' + gameId + '/roms/' + modalVariables, 'GET', function (result) {
+    ajaxCall('/api/v1.1/Games/' + gameId + '/roms/' + modalVariables, 'GET', function (result) {
         romData = result;
         document.getElementById('modal-heading').innerHTML = result.name;
         document.getElementById('rominfo_library').innerHTML = result.library.name;
@@ -169,7 +169,7 @@
     $('#properties_fixplatform').select2({
         minimumInputLength: 3,
         ajax: {
-            url: '/api/v1.0/Search/Platform',
+            url: '/api/v1.1/Search/Platform',
             data: function (params) {
                 var query = {
                     SearchString: params.term
@@ -200,7 +200,7 @@
         minimumInputLength: 3,
         templateResult: DropDownRenderGameOption,
         ajax: {
-            url: '/api/v1.0/Search/Game',
+            url: '/api/v1.1/Search/Game',
             data: function (params) {
                 fixplatform = $('#properties_fixplatform').select2('data');
 
@@ -236,7 +236,7 @@
 
         document.getElementById('properties_fixsave').setAttribute("disabled", "disabled");
 
-        ajaxCall('/api/v1.0/Games/' + gameId + '/roms/' + modalVariables + '?NewPlatformId=' + fixplatform[0].id + '&NewGameId=' + fixgame[0].id, 'PATCH', function (result) {
+        ajaxCall('/api/v1.1/Games/' + gameId + '/roms/' + modalVariables + '?NewPlatformId=' + fixplatform[0].id + '&NewGameId=' + fixgame[0].id, 'PATCH', function (result) {
             window.location.reload();
         });
     }

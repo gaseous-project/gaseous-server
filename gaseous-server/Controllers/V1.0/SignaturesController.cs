@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 using gaseous_server.Classes;
 using gaseous_signature_parser.models.RomSignatureObject;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 // For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -15,6 +16,8 @@ namespace gaseous_server.Controllers
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]/[action]")]
     [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize]
     public class SignaturesController : ControllerBase
     {
         /// <summary>
@@ -22,6 +25,7 @@ namespace gaseous_server.Controllers
         /// </summary>
         /// <returns>Number of sources, publishers, games, and rom signatures in the database</returns>
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public Models.Signatures_Status Status()
@@ -30,6 +34,7 @@ namespace gaseous_server.Controllers
         }
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public List<Models.Signatures_Games> GetSignature(string md5 = "", string sha1 = "")
@@ -44,6 +49,7 @@ namespace gaseous_server.Controllers
         }
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public List<Models.Signatures_Games> GetByTosecName(string TosecName = "")

@@ -411,7 +411,7 @@ input[id='filter_panel_userrating_max'] {
     display: inline-block;
     max-width: 32px;
     max-height: 32px;
-    margin-right: 2px;
+    margin-right: 10px;
 }
 
 #gamescreenshots {
@@ -623,14 +623,14 @@ th {
     height: 100%;
 }
 
-div[name="properties_toc_item"] {
+div[name="properties_toc_item"],div[name="properties_user_toc_item"] {
     padding: 10px;
     border-bottom-width: 1px;
     border-bottom-style: solid;
     border-bottom-color: #2b2b2b;
 }
 
-div[name="properties_toc_item"]:hover {
+div[name="properties_toc_item"]:hover,div[name="properties_user_toc_item"]:hover {
     background-color: #2b2b2b;
     cursor: pointer;
 }

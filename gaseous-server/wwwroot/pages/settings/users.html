@@ -14,7 +14,7 @@
         targetDiv.innerHTML = '';
 
         ajaxCall(
-            '/api/v1/Account/Users',
+            '/api/v1.1/Account/Users',
             'GET',
             function(result) {
                 var newTable = document.createElement('table');
@@ -48,19 +48,28 @@
                     //     roleDiv.appendChild(roleItem);
                     // }
 
-                    var roleItem = document.createElement('div');
-                    roleItem.className = 'dropdownroleitem';
-                    roleItem.innerHTML = result[i].highestRole.toUpperCase();
-                    var colorVal = intToRGB(hashCode(result[i].highestRole));
-                    roleItem.style.backgroundColor = '#' + colorVal;
-                    roleItem.style.borderColor = '#' + colorVal;
+                    var roleItem = CreateBadge(result[i].highestRole);
                     roleDiv.appendChild(roleItem);
+
+                    var ageRestrictionPolicyDescription = document.createElement('div');
+                    if (result[i].securityProfile != null) {
+                        if (result[i].securityProfile.ageRestrictionPolicy != null) {
+                            var IncludeUnratedText = '';
+                            if (result[i].securityProfile.ageRestrictionPolicy.includeUnrated == true) {
+                                IncludeUnratedText = " &#43; Unclassified titles";
+                            }
+
+                            var restrictionText = result[i].securityProfile.ageRestrictionPolicy.maximumAgeRestriction + IncludeUnratedText;
+
+                            ageRestrictionPolicyDescription = CreateBadge(restrictionText);
+                        }
+                    }
 
                     var editButton = '';
 
                     var deleteButton = '';
 
-                    if (userProfile.userId != result[i].id) {
+                    if (userProfile.UserId != result[i].id) {
                         editButton = '<a href="#" onclick="showDialog(\'settingsuseredit\', \'' + result[i].id + '\');" class="romlink"><img src="/images/edit.svg" class="banner_button_image" alt="Edit" title="Edit" /></a>';
 
                         deleteButton = '<a href="#" onclick="showSubDialog(\'settingsuserdelete\', \'' + result[i].id + '\');" class="romlink"><img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" /></a>';
@@ -72,7 +81,7 @@
                             [
                                 result[i].emailAddress,
                                 roleDiv,
-                                '',
+                                ageRestrictionPolicyDescription,
                                 '<div style="text-align: right;">' + editButton + deleteButton + '</div>'
                             ],
                             'romrow',

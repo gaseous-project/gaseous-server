@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Identity;
+﻿using gaseous_server.Classes;
+using Microsoft.AspNetCore.Identity;
 using System;
 
 namespace Authentication
@@ -9,5 +10,6 @@ namespace Authentication
     /// </summary>
     public class ApplicationUser : IdentityUser
     {
+        public SecurityProfileViewModel SecurityProfile { get; set; }
     }
 }

@@ -121,11 +121,14 @@ builder.Services.AddApiVersioning(config =>
     config.DefaultApiVersion = new ApiVersion(1, 0);
     config.AssumeDefaultVersionWhenUnspecified = true;
     config.ReportApiVersions = true;
+    config.ApiVersionReader = ApiVersionReader.Combine(new UrlSegmentApiVersionReader(),
+                                                    new HeaderApiVersionReader("x-api-version"),
+                                                    new MediaTypeApiVersionReader("x-api-version"));
 });
-builder.Services.AddApiVersioning(setup =>
-{
-    setup.ApiVersionReader = new UrlSegmentApiVersionReader();
-});
+// builder.Services.AddApiVersioning(setup =>
+// {
+//     setup.ApiVersionReader = new UrlSegmentApiVersionReader();
+// });
 builder.Services.AddVersionedApiExplorer(setup =>
 {
     setup.GroupNameFormat = "'v'VVV";
@@ -155,6 +158,24 @@ builder.Services.AddSwaggerGen(options =>
         options.SwaggerDoc("v1", new OpenApiInfo
         {
             Version = "v1.0",
+            Title = "Gaseous Server API",
+            Description = "An API for managing the Gaseous Server",
+            TermsOfService = new Uri("https://github.com/gaseous-project/gaseous-server"),
+            Contact = new OpenApiContact
+            {
+                Name = "GitHub Repository",
+                Url = new Uri("https://github.com/gaseous-project/gaseous-server")
+            },
+            License = new OpenApiLicense
+            {
+                Name = "Gaseous Server License",
+                Url = new Uri("https://github.com/gaseous-project/gaseous-server/blob/main/LICENSE")
+            }
+        });
+
+        options.SwaggerDoc("v1.1", new OpenApiInfo
+        {
+            Version = "v1.1",
             Title = "Gaseous Server API",
             Description = "An API for managing the Gaseous Server",
             TermsOfService = new Uri("https://github.com/gaseous-project/gaseous-server"),
@@ -235,7 +256,12 @@ var app = builder.Build();
 //if (app.Environment.IsDevelopment())
 //{
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint($"/swagger/v1/swagger.json", "v1.0");
+        options.SwaggerEndpoint($"/swagger/v1.1/swagger.json", "v1.1");
+    }
+);
 //}
 
 //app.UseHttpsRedirection();

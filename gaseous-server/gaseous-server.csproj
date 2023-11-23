@@ -117,6 +117,7 @@
     <Folder Include="Assets\Ratings\USK\" />
     <Folder Include="Assets\Ratings\GRAC\" />
     <Folder Include="Assets\Ratings\CLASS_IND\" />
+    <Folder Remove="Reference" />
   </ItemGroup>
   <ItemGroup>
     <None Include="wwwroot\**">

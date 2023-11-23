@@ -30,7 +30,7 @@
 </div>
 
 <script type="text/javascript">
-    document.getElementById('modal-heading').innerHTML = userProfile.emailAddress;
+    document.getElementById('modal-heading').innerHTML = userProfile.EmailAddress;
 
     function SelectTab(TabName) {
         var tabs = document.getElementsByName('properties_tab');
@@ -92,7 +92,7 @@
         }
 
         ajaxCall(
-            '/api/v1/Account/ChangePassword',
+            '/api/v1.1/Account/ChangePassword',
             'POST',
             function(result) {
                 ResetPasswordCallback(result);

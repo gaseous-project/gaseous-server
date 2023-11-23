@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace gaseous_server.Controllers
@@ -10,9 +11,12 @@ namespace gaseous_server.Controllers
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize(Roles = "Admin")]
     public class LibraryController : Controller
     {
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(typeof(List<GameLibrary.LibraryItem>), StatusCodes.Status200OK)]
         public ActionResult GetLibraries()
@@ -21,6 +25,7 @@ namespace gaseous_server.Controllers
         }
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet("{LibraryId}")]
         [ProducesResponseType(typeof(GameLibrary.LibraryItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -37,6 +42,7 @@ namespace gaseous_server.Controllers
         }
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpPost]
         [ProducesResponseType(typeof(GameLibrary.LibraryItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -58,6 +64,7 @@ namespace gaseous_server.Controllers
         }
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpDelete("{LibraryId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

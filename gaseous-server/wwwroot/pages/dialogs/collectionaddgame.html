@@ -24,7 +24,7 @@
 
     $('#collection_addgame').select2({
         ajax: {
-            url: '/api/v1.0/Collections',
+            url: '/api/v1.1/Collections',
             placeholder: 'Select collection',
             processResults: function (data) {
                 var arr = [];
@@ -59,7 +59,7 @@
 
         if (CollectionId != 0) {
             ajaxCall(
-                '/api/v1.0/Collections/' + CollectionId + '/AlwaysInclude' + RebuildCollection,
+                '/api/v1.1/Collections/' + CollectionId + '/AlwaysInclude' + RebuildCollection,
                 'PATCH',
                 function (result) {
                     closeSubDialog();

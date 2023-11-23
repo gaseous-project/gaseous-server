@@ -10,7 +10,7 @@ namespace Authentication
     /// Class that represents the Users table in the MySQL Database
     /// </summary>
     public class UserTable<TUser>
-        where TUser :IdentityUser
+        where TUser :ApplicationUser
     {
         private Database _database;
 
@@ -98,6 +98,7 @@ namespace Authentication
                 user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEnd"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEnd"]);
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
                 user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true:false;
+                user.SecurityProfile = GetSecurityProfile(user);
             }
 
             return user;
@@ -133,6 +134,7 @@ namespace Authentication
                 user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEnd"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEnd"]);
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
                 user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true:false;
+                user.SecurityProfile = GetSecurityProfile(user);
                 users.Add(user);
             }
 
@@ -163,6 +165,7 @@ namespace Authentication
                 user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEnd"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEnd"]);
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
                 user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true:false;
+                user.SecurityProfile = GetSecurityProfile(user);
                 users.Add(user);
             }
 
@@ -267,6 +270,9 @@ namespace Authentication
             parameters.Add("@lockoutenddate", user.LockoutEnd);
             parameters.Add("@twofactorenabled", user.TwoFactorEnabled);
 
+            // set default security profile
+            SetSecurityProfile(user, new SecurityProfileViewModel());
+
             return _database.ExecuteCMD(commandText, parameters).Rows.Count;
         }
 
@@ -319,6 +325,46 @@ namespace Authentication
             parameters.Add("@lockoutenddate", user.LockoutEnd);
             parameters.Add("@twofactorenabled", user.TwoFactorEnabled);
 
+            // set the security profile
+            SetSecurityProfile(user, user.SecurityProfile);
+
+            return _database.ExecuteCMD(commandText, parameters).Rows.Count;
+        }
+
+        private SecurityProfileViewModel GetSecurityProfile(TUser user)
+        {
+            string sql = "SELECT SecurityProfile FROM users WHERE Id=@Id;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            dbDict.Add("Id", user.Id);
+
+            List<Dictionary<string, object>> data = _database.ExecuteCMDDict(sql, dbDict);
+            if (data.Count == 0)
+            {
+                // no saved profile - return the default one
+                return new SecurityProfileViewModel();
+            }
+            else
+            {
+                string? securityProfileString = (string?)data[0]["SecurityProfile"];
+                if (securityProfileString != null)
+                {
+                    SecurityProfileViewModel securityProfile = Newtonsoft.Json.JsonConvert.DeserializeObject<SecurityProfileViewModel>(securityProfileString);
+                    return securityProfile;
+                }
+                else
+                {
+                    return new SecurityProfileViewModel();
+                }
+            }
+        }
+
+        private int SetSecurityProfile(TUser user, SecurityProfileViewModel securityProfile)
+        {
+            string commandText = "UPDATE users SET SecurityProfile=@SecurityProfile WHERE Id=@Id;";
+            Dictionary<string, object> parameters = new Dictionary<string, object>();
+            parameters.Add("Id", user.Id);
+            parameters.Add("SecurityProfile", Newtonsoft.Json.JsonConvert.SerializeObject(securityProfile));
+            
             return _database.ExecuteCMD(commandText, parameters).Rows.Count;
         }
     }

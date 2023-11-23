@@ -11,7 +11,7 @@
 
 <script type="text/javascript">
     function deleteRom() {
-        ajaxCall('/api/v1.0/Games/' + gameId + '/roms/' + modalVariables, 'DELETE', function (result) {
+        ajaxCall('/api/v1.1/Games/' + gameId + '/roms/' + modalVariables, 'DELETE', function (result) {
             window.location.reload();
         });
     }

@@ -15,7 +15,7 @@
     var emuBios = '';
     var emuBackground = '';
 
-    ajaxCall('/api/v1.0/Games/' + gameId, 'GET', function (result) {
+    ajaxCall('/api/v1.1/Games/' + gameId, 'GET', function (result) {
         gameData = result;
 
         // load artwork
@@ -27,22 +27,22 @@
         } else {
             if (result.cover) {
                 var bg = document.getElementById('bgImage');
-                bg.setAttribute('style', 'background-image: url("/api/v1.0/Games/' + gameId + '/cover/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+                bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/cover/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
             }
         }
 
         if (result.cover) {
-            emuBackground = '/api/v1.0/Games/' + gameId + '/cover/image';
+            emuBackground = '/api/v1.1/Games/' + gameId + '/cover/image';
         }
 
         emuGameTitle = gameData.name;
     });
 
-    ajaxCall('/api/v1.0/Bios/' + platformId, 'GET', function (result) {
+    ajaxCall('/api/v1.1/Bios/' + platformId, 'GET', function (result) {
         if (result.length == 0) {
             emuBios = '';
         } else {
-            emuBios = '/api/v1.0/Bios/zip/' + platformId;
+            emuBios = '/api/v1.1/Bios/zip/' + platformId;
         }
 
         switch (getQueryString('engine', 'string')) {
@@ -59,7 +59,7 @@
                 artworksPosition = 0;
             }
             var bg = document.getElementById('bgImage');
-            bg.setAttribute('style', 'background-image: url("/api/v1.0/Games/' + gameId + '/artwork/' + artworks[artworksPosition] + '/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+            bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/artwork/' + artworks[artworksPosition] + '/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
         }
     }
 </script>

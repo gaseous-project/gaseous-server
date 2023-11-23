@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using IGDB.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Scripting;
@@ -18,11 +19,15 @@ namespace gaseous_server.Controllers
 {
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize]
     [ApiController]
     public class RomsController : ControllerBase
     {
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpPost]
+        [Authorize(Roles = "Admin,Gamer")]
         [ProducesResponseType(typeof(List<IFormFile>), StatusCodes.Status200OK)]
         [RequestSizeLimit(long.MaxValue)]
         [DisableRequestSizeLimit, RequestFormLimits(MultipartBodyLengthLimit = long.MaxValue, ValueLengthLimit = int.MaxValue)]

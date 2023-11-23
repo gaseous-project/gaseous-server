@@ -12,7 +12,7 @@
 <script type="text/javascript">
     function deleteUserCallback() {
         ajaxCall(
-            '/api/v1/Account/Users/' + subModalVariables,
+            '/api/v1.1/Account/Users/' + subModalVariables,
             'DELETE',
             function(result) {
                 console.log('Deleted user');

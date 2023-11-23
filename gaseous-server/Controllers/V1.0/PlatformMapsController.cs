@@ -12,15 +12,19 @@ using IGDB.Models;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Scripting;
+using Microsoft.AspNetCore.Authorization;
 
 namespace gaseous_server.Controllers
 {
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
     [ApiController]
+    [Authorize]
     public class PlatformMapsController : Controller
     {
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(typeof(List<PlatformMapping.PlatformMapItem>), StatusCodes.Status200OK)]
         public ActionResult GetPlatformMap(bool ResetToDefault = false)
@@ -34,6 +38,7 @@ namespace gaseous_server.Controllers
         }
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("{PlatformId}")]
         [ProducesResponseType(typeof(PlatformMapping.PlatformMapItem), StatusCodes.Status200OK)]
@@ -60,10 +65,12 @@ namespace gaseous_server.Controllers
         }
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpPost]
         [ProducesResponseType(typeof(List<IFormFile>), StatusCodes.Status200OK)]
         [RequestSizeLimit(long.MaxValue)]
         [DisableRequestSizeLimit, RequestFormLimits(MultipartBodyLengthLimit = long.MaxValue, ValueLengthLimit = int.MaxValue)]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> UploadPlatformMap(List<IFormFile> files)
         {
             Guid sessionid = Guid.NewGuid();
@@ -115,6 +122,7 @@ namespace gaseous_server.Controllers
         }
 
         // [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpPost]
         // [Route("{PlatformId}")]
         // [ProducesResponseType(typeof(PlatformMapping.PlatformMapItem), StatusCodes.Status200OK)]
@@ -143,10 +151,12 @@ namespace gaseous_server.Controllers
         // }
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpPatch]
         [Route("{PlatformId}")]
         [ProducesResponseType(typeof(PlatformMapping.PlatformMapItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Authorize(Roles = "Admin")]
         public ActionResult EditPlatformMap(long PlatformId, PlatformMapping.PlatformMapItem Map)
         {
             try

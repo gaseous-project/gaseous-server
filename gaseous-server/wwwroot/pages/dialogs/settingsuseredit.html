@@ -1,12 +1,12 @@
 <div id="properties_toc">
-    <div id="properties_toc_password" name="properties_toc_item" onclick="SelectTab('password');">Password</div>
-    <div id="properties_toc_role" name="properties_toc_item" onclick="SelectTab('role');">Role</div>
-    <div id="properties_toc_age" name="properties_toc_item" onclick="SelectTab('age');">Content Restrictions</div>
+    <div id="properties_user_toc_password" name="properties_user_toc_item" onclick="UserSelectTab('password');">Password</div>
+    <div id="properties_user_toc_role" name="properties_user_toc_item" onclick="UserSelectTab('role');">Role</div>
+    <div id="properties_user_toc_age" name="properties_user_toc_item" onclick="UserSelectTab('age');">Content Restrictions</div>
     <!--<div id="properties_toc_manage" name="properties_toc_item" onclick="SelectTab('manage');">Manage</div>-->
 </div>
 
 <div id="properties_bodypanel" style="height: 450px; overflow-y: scroll;">
-    <div id="properties_bodypanel_password" name="properties_tab" style="display: none;">
+    <div id="properties_bodypanel_password" name="properties_user_tab" style="display: none;">
         <table style="width: 100%;">
             <tr>
                 <th>
@@ -30,7 +30,7 @@
         </table>
     </div>
 
-    <div id="properties_bodypanel_role" name="properties_tab" style="display: none;">
+    <div id="properties_bodypanel_role" name="properties_user_tab" style="display: none;">
         <table style="width: 100%;" class="romtable">
             <tr>
                 <th>
@@ -136,7 +136,7 @@
             <tr class="romrow">
                 <td class="romcell">Modify platform mapping</td>
                 <td class="romcell"></td>
-                <td class="romcell"><img src="/images/tick.svg" class="banner_button_image" /></td>
+                <td class="romcell"></td>
                 <td class="romcell"><img src="/images/tick.svg" class="banner_button_image" /></td>
             </tr>
             <tr class="romrow">
@@ -161,8 +161,11 @@
     
     </div>
 
-    <div id="properties_bodypanel_age" name="properties_tab" style="display: none;">
-        
+    <div id="properties_bodypanel_age" name="properties_user_tab" style="display: none;">
+        <h3>Classification Restrictions</h3>
+        <div id="properties_bodypanel_age_classification">
+        </div>
+        <input type="checkbox" id="properties_bodypanel_age_includeunclassified"> <label for="properties_bodypanel_age_includeunclassified">Include unclassified titles</label>
     </div>
 </div>
 <div style="width: 100%; padding-top: 10px; text-align: right;">
@@ -170,23 +173,71 @@
 </div>
 
 <script type="text/javascript">
-    
-
     ajaxCall(
-        '/api/v1/Account/users/' + modalVariables,
+        '/api/v1.1/Account/users/' + modalVariables,
         'GET',
         function(result) {
             document.getElementById('modal-heading').innerHTML = result.emailAddress;
 
+            // role page
             document.getElementById('settings_user_role_' + result.highestRole.toLowerCase()).checked = true;
+
+            // age restriction page
+            var ageRatingsContainer = document.getElementById('properties_bodypanel_age_classification');
+            var ageRatingsTable = document.createElement('table');
+            ageRatingsTable.style.width = '100%';
+            ageRatingsTable.cellSpacing = 0;
+            ageRatingsTable.appendChild(
+                    createTableRow(
+                        true, 
+                        [ 
+                            'Highest Allowed Rating',
+                            'Included Ratings'
+                        ],
+                        '',
+                        ''
+                        )
+                    );
+            for (var ageGroup in AgeRatingGroups) {
+                if (AgeRatingGroups.hasOwnProperty(ageGroup)) {
+                    var ratingsValues = '';
+                    var classBoards = AgeRatingGroups[ageGroup];
+
+                    for (var classBoard in classBoards) {
+                        for (var rating in classBoards[classBoard]) {
+                            ratingsValues += "<img src='/api/v1.1/Ratings/Images/" + classBoard + "/" + classBoards[classBoard][rating] + "/image.svg' class='rating_image_mini' />";
+                        }
+                    }
+
+                    var radioCheckedState = '';
+                    if (result.securityProfile.ageRestrictionPolicy.maximumAgeRestriction.toLowerCase() == ageGroup.toLocaleLowerCase()) {
+                        radioCheckedState = "checked='checked'";
+                    }
+
+                    ageRatingsTable.appendChild(
+                        createTableRow(
+                            false, 
+                            [ 
+                                "<input type='radio' id='properties_bodypanel_age_classification_" + ageGroup + "' name='classification_group' " + radioCheckedState + " value='" + ageGroup + "' /> <label for='properties_bodypanel_age_classification_" + ageGroup + "'>" + ageGroup + "</label>",
+                                ratingsValues
+                            ],
+                            'romrow',
+                            'romcell'
+                            )
+                        );
+                }
+            }
+            ageRatingsContainer.appendChild(ageRatingsTable);
+
+            document.getElementById('properties_bodypanel_age_includeunclassified').checked = result.securityProfile.ageRestrictionPolicy.includeUnrated;
         },
         function(error) {
             closeDialog();
         } 
     );
 
-    function SelectTab(TabName) {
-        var tabs = document.getElementsByName('properties_tab');
+    function UserSelectTab(TabName) {
+        var tabs = document.getElementsByName('properties_user_tab');
         for (var i = 0; i < tabs.length; i++) {
             if ((tabs[i].id) == ("properties_bodypanel_" + TabName)) {
                 tabs[i].style.display = '';
@@ -195,9 +246,9 @@
             }
         }
 
-        var tocs = document.getElementsByName('properties_toc_item');
+        var tocs = document.getElementsByName('properties_user_toc_item');
         for (var i = 0; i < tocs.length; i++) {
-            if ((tocs[i].id) == ("properties_toc_" + TabName)) {
+            if ((tocs[i].id) == ("properties_user_toc_" + TabName)) {
                 tocs[i].className = "properties_toc_item_selected";
             } else {
                 tocs[i].className = '';
@@ -245,14 +296,38 @@
             var selectedRole = $("input[type='radio'][name='settings_user_role']:checked").val();
 
             ajaxCall(
-                '/api/v1/Account/users/' + modalVariables + '/Roles?RoleName=' + selectedRole,
+                '/api/v1.1/Account/users/' + modalVariables + '/Roles?RoleName=' + selectedRole,
+                'POST',
+                function(result) {
+                    saveSecurityProfile();
+                },
+                function(error) {
+                    saveSecurityProfile();
+                }
+            );
+        }
+    }
+
+    function saveSecurityProfile() {
+        if (checkPasswordsMatch() == true) {
+            // process security profile
+            var securityProfile = {
+                "ageRestrictionPolicy": {
+                    "maximumAgeRestriction": $("input[type='radio'][name='classification_group']:checked").val(),
+                    "includeUnrated": document.getElementById('properties_bodypanel_age_includeunclassified').checked
+                }
+            };
+
+            ajaxCall(
+                '/api/v1.1/Account/users/' + modalVariables + '/SecurityProfile',
                 'POST',
                 function(result) {
                     savePassword();
                 },
                 function(error) {
                     savePassword();
-                }
+                },
+                JSON.stringify(securityProfile)
             );
         }
     }
@@ -270,7 +345,7 @@
                 }
 
                 ajaxCall(
-                    '/api/v1/Account/Users/' + modalVariables + '/Password',
+                    '/api/v1.1/Account/Users/' + modalVariables + '/Password',
                     'POST',
                     function(result) {
                         console.log(JSON.stringify(result));
@@ -296,5 +371,5 @@
         closeDialog();
     }
 
-    SelectTab('password');
+    UserSelectTab('password');
 </script>

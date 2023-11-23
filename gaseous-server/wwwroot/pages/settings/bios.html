@@ -8,7 +8,7 @@
 </table>
 
 <script type="text/javascript">
-    ajaxCall('/api/v1.0/Bios', 'GET', function (result) {
+    ajaxCall('/api/v1.1/Bios', 'GET', function (result) {
         result.sort((a, b) => a.platformname.charCodeAt(0) - b.platformname.charCodeAt(0));
 
         var lastPlatform = '';
@@ -28,7 +28,7 @@
             }
 
             var biosFilename = document.createElement('a');
-            biosFilename.href = '/api/v1.0/Bios/' + result[i].platformid + '/' + result[i].filename;
+            biosFilename.href = '/api/v1.1/Bios/' + result[i].platformid + '/' + result[i].filename;
             biosFilename.innerHTML = result[i].filename;
             biosFilename.className = 'romlink';
 
@@ -38,7 +38,7 @@
                 availableText.className = 'greentext';
 
                 biosFilename = document.createElement('a');
-                biosFilename.href = '/api/v1.0/Bios/' + result[i].platformid + '/' + result[i].filename;
+                biosFilename.href = '/api/v1.1/Bios/' + result[i].platformid + '/' + result[i].filename;
                 biosFilename.innerHTML = result[i].filename;
                 biosFilename.className = 'romlink';
             } else {

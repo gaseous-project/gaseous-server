@@ -4,8 +4,11 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using gaseous_server.Classes;
+using gaseous_server.Classes.Metadata;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace gaseous_server.Controllers
@@ -13,9 +16,12 @@ namespace gaseous_server.Controllers
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize]
     public class SystemController : Controller
     {
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public SystemInfo GetSystemStatus()
@@ -56,6 +62,7 @@ namespace gaseous_server.Controllers
         }
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("Version")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -64,13 +71,29 @@ namespace gaseous_server.Controllers
         }
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("VersionFile")]
+        [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public FileContentResult GetSystemVersionAsFile() {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
+            // get age ratings dictionary
+            Dictionary<int, string> AgeRatingsStrings = new Dictionary<int, string>();
+            foreach(IGDB.Models.AgeRatingTitle ageRatingTitle in Enum.GetValues(typeof(IGDB.Models.AgeRatingTitle)) )
+            {
+                AgeRatingsStrings.Add((int)ageRatingTitle, ageRatingTitle.ToString());
+            }
+
             string ver = "var AppVersion = \"" + Assembly.GetExecutingAssembly().GetName().Version.ToString() + "\";" + Environment.NewLine +
-                "var DBSchemaVersion = \"" + db.GetDatabaseSchemaVersion() + "\";";
+                "var DBSchemaVersion = \"" + db.GetDatabaseSchemaVersion() + "\";" + Environment.NewLine +
+                "var AgeRatingStrings = " + JsonSerializer.Serialize(AgeRatingsStrings, new JsonSerializerOptions{
+                    WriteIndented = true
+                }) + ";" + Environment.NewLine +
+                "var AgeRatingGroups = " + JsonSerializer.Serialize(AgeRatings.AgeGroups.AgeGroupingsFlat, new JsonSerializerOptions{
+                    WriteIndented = true
+                }) + ";";
             byte[] bytes = Encoding.UTF8.GetBytes(ver);
             return File(bytes, "text/javascript");
         }

@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using gaseous_server.Classes;
 using IGDB;
 using IGDB.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using static gaseous_server.Classes.Metadata.Games;
 
@@ -14,6 +15,8 @@ namespace gaseous_server.Controllers
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize]
     public class SearchController : Controller
     {
         private static IGDBClient igdb = new IGDBClient(
@@ -23,6 +26,7 @@ namespace gaseous_server.Controllers
                         );
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("Platform")]
         [ProducesResponseType(typeof(List<Platform>), StatusCodes.Status200OK)]
@@ -45,6 +49,7 @@ namespace gaseous_server.Controllers
         }
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("Game")]
         [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]

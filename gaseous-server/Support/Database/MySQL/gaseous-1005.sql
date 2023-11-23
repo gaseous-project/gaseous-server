@@ -20,6 +20,7 @@ CREATE TABLE `users` (
   `AccessFailedCount` int(11) NOT NULL,
   `UserName` varchar(256) NOT NULL,
   `NormalizedUserName` varchar(256) NOT NULL,
+  `SecurityProfile` longtext,
   PRIMARY KEY (`Id`)
 );
 

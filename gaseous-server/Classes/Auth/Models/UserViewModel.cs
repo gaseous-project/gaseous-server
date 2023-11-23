@@ -7,6 +7,7 @@ namespace Authentication
         public bool LockoutEnabled { get; set; }
         public DateTimeOffset? LockoutEnd { get; set; }
         public List<string> Roles { get; set; }
+        public SecurityProfileViewModel SecurityProfile { get; set; }
         public string HighestRole {
             get
             {

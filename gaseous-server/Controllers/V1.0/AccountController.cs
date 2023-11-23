@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using System.Text;
 using Authentication;
 using gaseous_server.Classes;
 using Microsoft.AspNetCore.Authorization;
@@ -12,6 +13,7 @@ namespace gaseous_server.Controllers
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
     [Authorize]
     public class AccountController : Controller
     {
@@ -92,9 +94,41 @@ namespace gaseous_server.Controllers
             profile.UserName = _userManager.GetUserName(HttpContext.User);
             profile.EmailAddress = await _userManager.GetEmailAsync(user);
             profile.Roles = new List<string>(await _userManager.GetRolesAsync(user));
+            profile.SecurityProfile = user.SecurityProfile;
             profile.Roles.Sort();
 
             return Ok(profile);
+        }
+
+        [HttpGet]
+        [Route("Profile/Basic/profile.js")]
+        [ApiExplorerSettings(IgnoreApi = true)]
+        [AllowAnonymous]
+        public async Task<IActionResult> ProfileBasicFile()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user != null)
+            {
+                ProfileBasicViewModel profile = new ProfileBasicViewModel();
+                profile.UserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                profile.UserName = _userManager.GetUserName(HttpContext.User);
+                profile.EmailAddress = await _userManager.GetEmailAsync(user);
+                profile.Roles = new List<string>(await _userManager.GetRolesAsync(user));
+                profile.SecurityProfile = user.SecurityProfile;
+                profile.Roles.Sort();
+                
+                string profileString = "var userProfile = " + Newtonsoft.Json.JsonConvert.SerializeObject(profile, Newtonsoft.Json.Formatting.Indented) + ";";
+
+                byte[] bytes = Encoding.UTF8.GetBytes(profileString);
+                return File(bytes, "text/javascript");
+            }
+            else
+            {
+                string profileString = "var userProfile = null;";
+
+                byte[] bytes = Encoding.UTF8.GetBytes(profileString);
+                return File(bytes, "text/javascript");
+            }
         }
 
         [HttpPost]
@@ -147,6 +181,7 @@ namespace gaseous_server.Controllers
                 user.EmailAddress = rawUser.NormalizedEmail.ToLower();
                 user.LockoutEnabled = rawUser.LockoutEnabled;
                 user.LockoutEnd = rawUser.LockoutEnd;
+                user.SecurityProfile = rawUser.SecurityProfile;
                 
                 // get roles
                 ApplicationUser? aUser = await _userManager.FindByIdAsync(rawUser.Id);
@@ -183,7 +218,9 @@ namespace gaseous_server.Controllers
                 {
                     // add new users to the player role
                     await _userManager.AddToRoleAsync(user, "Player");
+
                     Logging.Log(Logging.LogType.Information, "User Management", User.FindFirstValue(ClaimTypes.Name) + " created user " + model.Email + " with password.");
+
                     return Ok(result);
                 }
                 else
@@ -211,6 +248,7 @@ namespace gaseous_server.Controllers
                 user.EmailAddress = rawUser.NormalizedEmail.ToLower();
                 user.LockoutEnabled = rawUser.LockoutEnabled;
                 user.LockoutEnd = rawUser.LockoutEnd;
+                user.SecurityProfile = rawUser.SecurityProfile;
                 
                 // get roles
                 IList<string> aUserRoles = await _userManager.GetRolesAsync(rawUser);
@@ -288,6 +326,33 @@ namespace gaseous_server.Controllers
                 }
                 
                 return Ok();
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
+        [HttpPost]
+        [Route("Users/{UserId}/SecurityProfile")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> SetUserSecurityProfile(string UserId, SecurityProfileViewModel securityProfile)
+        {
+            if (ModelState.IsValid)
+            {
+                ApplicationUser? user = await _userManager.FindByIdAsync(UserId);
+                
+                if (user != null)
+                {
+                    user.SecurityProfile = securityProfile;
+                    await _userManager.UpdateAsync(user);
+                    
+                    return Ok();
+                }
+                else
+                {
+                    return NotFound();
+                }
             }
             else
             {

@@ -6,7 +6,7 @@
 
 <p>This list is pre-populated with some of the more common platforms. New platforms will appear in this list as titles are added.</p>
 
-<p><button value="Export to JSON" onclick="DownloadJSON();">Export to JSON</button><button id="importjson" value="Import JSON">Import JSON</button><button value="Reset to Default" onclick="loadPlatformMapping(true);">Reset to Default</button></p>
+<p id="settings_mapping_import" style="display: none;"><button value="Export to JSON" onclick="DownloadJSON();">Export to JSON</button><button id="importjson" value="Import JSON">Import JSON</button><button value="Reset to Default" onclick="loadPlatformMapping(true);">Reset to Default</button></p>
 
 <input id='uploadjson' type='file' name='files' hidden/>
 
@@ -15,6 +15,10 @@
 </table>
 
 <script type="text/javascript">
+    if (userProfile.roles.includes("Admin")) {
+        document.getElementById('settings_mapping_import').style.display = '';
+    }
+
     function loadPlatformMapping(Overwrite) {
         var queryString = '';
         if (Overwrite == true) {
@@ -22,7 +26,7 @@
         }
 
         ajaxCall(
-            '/api/v1.0/PlatformMaps' + queryString,
+            '/api/v1.1/PlatformMaps' + queryString,
             'GET',
             function (result) {
                 var newTable = document.getElementById('settings_mapping_table');
@@ -47,8 +51,15 @@
                         hasWebEmulator = 'Yes';
                     }
 
+                    var platformLink = '';
+                    if (userProfile.roles.includes("Admin")) {
+                        platformLink = '<a href="#/" onclick="ShowPlatformMappingDialog(' + result[i].igdbId + ');" class="romlink">' + result[i].igdbName + '</a>';
+                    } else {
+                        platformLink = result[i].igdbName;
+                    }
+
                     var newRow = [
-                        '<a href="#/" onclick="ShowPlatformMappingDialog(' + result[i].igdbId + ');" class="romlink">' + result[i].igdbName + '</a>',
+                        platformLink,
                         result[i].extensions.supportedFileExtensions.join(', '),
                         result[i].extensions.uniqueFileExtensions.join(', '),
                         hasWebEmulator
@@ -61,7 +72,7 @@
     }
 
     function DownloadJSON() {
-        window.open('/api/v1.0/PlatformMaps', '_blank');
+        window.open('/api/v1.1/PlatformMaps', '_blank');
     }
 
     document.getElementById('importjson').addEventListener('click', openDialog);
@@ -71,7 +82,7 @@
     }
 
     $('#uploadjson').change(function () {
-        $(this).simpleUpload("/api/v1.0/PlatformMaps", {
+        $(this).simpleUpload("/api/v1.1/PlatformMaps", {
             start: function (file) {
                 //upload started
                 console.log("JSON upload started");

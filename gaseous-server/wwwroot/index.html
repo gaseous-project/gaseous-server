@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <script src="/api/v1.0/System/VersionFile"></script>
+    <script src="/api/v1.1/System/VersionFile"></script>
     <link type="text/css" rel="stylesheet" dat-href="/styles/style.css" />
     <script src="/scripts/jquery-3.6.0.min.js"></script>
     <script src="/scripts/moment.js"></script>
@@ -109,32 +109,31 @@
 
     </div>
 
-    <script type="text/javascript">var modalVariables = null;
+    <script type="text/javascript">
+        var modalVariables = null;
+
         // redirect if not logged in
         ajaxCall(
-            '/api/v1/Account/Profile/Basic',
+            '/api/v1.1/Account/Profile/Basic',
             'GET',
             function(result) {
                 console.log("User is logged in");
                 userProfile = result;
 
-                // var userRolesDiv = document.getElementById('banner_user_roles');
+                // hide the upload button if it's not permitted
+                var uploadButton = document.getElementById('banner_upload');
+                if (!userProfile.roles.includes("Admin") && !userProfile.roles.includes("Gamer")) {
+                    uploadButton.style.display = 'none';
+                }
                 
-                // var userEmail = document.createElement('span');
-                // userEmail.className = 'dropdownemailitem';
-                // userEmail.innerHTML = result.emailAddress;
-                // userRolesDiv.appendChild(userEmail);
+                // populate page
+                var myParam = getQueryString('page', 'string');
 
-                // for (var i = 0; i < result.roles.length; i++) {
-                //     var roleItem = document.createElement('div');
-                //     roleItem.className = 'dropdownroleitem';
-                //     roleItem.innerHTML = result.roles[i];
-                //     var colorVal = intToRGB(hashCode(result.roles[i]));
-                //     console.log(colorVal);
-                //     roleItem.style.backgroundColor = '#' + colorVal;
-                //     roleItem.style.borderColor = '#' + colorVal;
-                //     userRolesDiv.appendChild(roleItem);
-                // }
+                if (!myParam) {
+                    myParam = 'home';
+                }
+
+                $('#content').load('/pages/' + myParam + '.html?v=' + AppVersion);
             },
             function(error) {
                 window.location.replace("/pages/login.html");
@@ -163,7 +162,7 @@
 
         function userLogoff() {
             ajaxCall(
-                '/api/v1/Account/LogOff',
+                '/api/v1.1/Account/LogOff',
                 'POST',
                 function (result) {
                     location.replace("/index.html");
@@ -173,16 +172,6 @@
                 }
             );
         }
-
-        $(document).ready(function () {
-            var myParam = getQueryString('page', 'string');
-
-            if (!myParam) {
-                myParam = 'home';
-            }
-
-            $('#content').load('/pages/' + myParam + '.html?v=' + AppVersion);
-        });
     </script>
 </body>
 </html>

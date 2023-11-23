@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <script src="/api/v1.0/System/VersionFile"></script>
+    <script src="/api/v1.1/System/VersionFile"></script>
     <link type="text/css" rel="stylesheet" dat-href="/styles/style.css" />
     <script src="/scripts/jquery-3.6.0.min.js"></script>
     <script src="/scripts/moment.js"></script>
@@ -89,7 +89,7 @@
         }
 
         ajaxCall(
-            '/api/v1/Account/Login',
+            '/api/v1.1/Account/Login',
             'POST',
             function(result) {
                 loginCallback(result);
