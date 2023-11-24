@@ -69,7 +69,7 @@
 
                     var deleteButton = '';
 
-                    if (userProfile.UserId != result[i].id) {
+                    if (userProfile.userId != result[i].id) {
                         editButton = '<a href="#" onclick="showDialog(\'settingsuseredit\', \'' + result[i].id + '\');" class="romlink"><img src="/images/edit.svg" class="banner_button_image" alt="Edit" title="Edit" /></a>';
 
                         deleteButton = '<a href="#" onclick="showSubDialog(\'settingsuserdelete\', \'' + result[i].id + '\');" class="romlink"><img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" /></a>';
