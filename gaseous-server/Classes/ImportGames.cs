@@ -755,11 +755,11 @@ namespace gaseous_server.Classes
             string sql = "";
             if (ForceExecute == false)
             {
-                sql = "SELECT * FROM Games_Roms WHERE (PlatformId = 0 OR GameId = 0 OR MetaddataSource = 0) AND (LastMatchAttemptDate IS NULL OR LastMatchAttemptDate < @lastmatchattemptdate) LIMIT 100;";
+                sql = "SELECT * FROM Games_Roms WHERE (PlatformId = 0 OR GameId = 0 OR MetadataSource = 0) AND (LastMatchAttemptDate IS NULL OR LastMatchAttemptDate < @lastmatchattemptdate) LIMIT 100;";
             }
             else
             {
-                sql = "SELECT * FROM Games_Roms WHERE (PlatformId = 0 OR GameId = 0 OR MetaddataSource = 0);";
+                sql = "SELECT * FROM Games_Roms WHERE (PlatformId = 0 OR GameId = 0 OR MetadataSource = 0);";
             }
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("lastmatchattemptdate", DateTime.UtcNow.AddDays(-7));
