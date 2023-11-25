@@ -212,7 +212,7 @@ namespace gaseous_server.Classes
             } else {
                 // get all platforms to pull from
                 FilterController filterController = new FilterController();
-                platforms.AddRange((List<Platform>)filterController.Filter()["platforms"]);
+                platforms.AddRange((List<FilterController.FilterPlatform>)filterController.Filter()["platforms"]);
             }
 
             // build collection
