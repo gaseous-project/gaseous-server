@@ -333,7 +333,7 @@ namespace Authentication
 
         private SecurityProfileViewModel GetSecurityProfile(TUser user)
         {
-            string sql = "SELECT SecurityProfile FROM users WHERE Id=@Id;";
+            string sql = "SELECT SecurityProfile FROM Users WHERE Id=@Id;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("Id", user.Id);
 
@@ -360,7 +360,7 @@ namespace Authentication
 
         private int SetSecurityProfile(TUser user, SecurityProfileViewModel securityProfile)
         {
-            string commandText = "UPDATE users SET SecurityProfile=@SecurityProfile WHERE Id=@Id;";
+            string commandText = "UPDATE Users SET SecurityProfile=@SecurityProfile WHERE Id=@Id;";
             Dictionary<string, object> parameters = new Dictionary<string, object>();
             parameters.Add("Id", user.Id);
             parameters.Add("SecurityProfile", Newtonsoft.Json.JsonConvert.SerializeObject(securityProfile));

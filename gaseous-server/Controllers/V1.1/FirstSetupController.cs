@@ -67,7 +67,7 @@ namespace gaseous_server.Controllers
                     }
                 }
 
-                return NotFound();
+                return Problem(ModelState.ToString());
             }
             else
             {

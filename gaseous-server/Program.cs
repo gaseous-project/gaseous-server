@@ -222,6 +222,9 @@ builder.Services.ConfigureApplicationCookie(options =>
             options.Cookie.Name = "Gaseous.Identity";
             options.ExpireTimeSpan = TimeSpan.FromDays(90);
             options.SlidingExpiration = true;
+            options.Cookie.HttpOnly = true;
+            options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
+            options.Cookie.SameSite = SameSiteMode.Strict;
         });
 // builder.Services.AddIdentityCore<ApplicationUser>(options => {
 //         options.SignIn.RequireConfirmedAccount = false;
@@ -285,26 +288,26 @@ using (var scope = app.Services.CreateScope())
         }
     }
 
-    // set up administrator account
-    var userManager = scope.ServiceProvider.GetRequiredService<UserStore>();
-    if (await userManager.FindByNameAsync("admin@localhost", CancellationToken.None) == null)
-    {
-        ApplicationUser adminUser = new ApplicationUser{
-            Id = Guid.NewGuid().ToString(),
-            Email = "admin@localhost",
-            NormalizedEmail = "ADMIN@LOCALHOST",
-            EmailConfirmed = true,
-            UserName = "administrator",
-            NormalizedUserName = "ADMINISTRATOR"
-        };
+    // // set up administrator account
+    // var userManager = scope.ServiceProvider.GetRequiredService<UserStore>();
+    // if (await userManager.FindByNameAsync("admin@localhost", CancellationToken.None) == null)
+    // {
+    //     ApplicationUser adminUser = new ApplicationUser{
+    //         Id = Guid.NewGuid().ToString(),
+    //         Email = "admin@localhost",
+    //         NormalizedEmail = "ADMIN@LOCALHOST",
+    //         EmailConfirmed = true,
+    //         UserName = "administrator",
+    //         NormalizedUserName = "ADMINISTRATOR"
+    //     };
 
-        //set user password
-        PasswordHasher<ApplicationUser> ph = new PasswordHasher<ApplicationUser>();
-        adminUser.PasswordHash = ph.HashPassword(adminUser, "letmein");
+    //     //set user password
+    //     PasswordHasher<ApplicationUser> ph = new PasswordHasher<ApplicationUser>();
+    //     adminUser.PasswordHash = ph.HashPassword(adminUser, "letmein");
 
-        await userManager.CreateAsync(adminUser, CancellationToken.None);
-        await userManager.AddToRoleAsync(adminUser, "Admin", CancellationToken.None);
-    }
+    //     await userManager.CreateAsync(adminUser, CancellationToken.None);
+    //     await userManager.AddToRoleAsync(adminUser, "Admin", CancellationToken.None);
+    // }
 }
 
 app.UseAuthorization();
