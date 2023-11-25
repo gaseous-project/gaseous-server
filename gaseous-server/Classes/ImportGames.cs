@@ -746,15 +746,23 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static void Rematcher()
+        public static void Rematcher(bool ForceExecute = false)
         {
             // rescan all titles with an unknown platform or title and see if we can get a match
             Logging.Log(Logging.LogType.Information, "Rematch Scan", "Rematch scan starting");
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM Games_Roms WHERE (PlatformId = 0 OR GameId = 0) AND (LastMatchAttemptDate IS NULL OR LastMatchAttemptDate < @lastmatchattemptdate) LIMIT 100;";
+            string sql = "";
+            if (ForceExecute == false)
+            {
+                sql = "SELECT * FROM Games_Roms WHERE (PlatformId = 0 OR GameId = 0 OR MetaddataSource = 0) AND (LastMatchAttemptDate IS NULL OR LastMatchAttemptDate < @lastmatchattemptdate) LIMIT 100;";
+            }
+            else
+            {
+                sql = "SELECT * FROM Games_Roms WHERE (PlatformId = 0 OR GameId = 0 OR MetaddataSource = 0);";
+            }
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
-            dbDict.Add("lastmatchattemptdate", DateTime.UtcNow.AddMonths(-1));
+            dbDict.Add("lastmatchattemptdate", DateTime.UtcNow.AddDays(-7));
             DataTable data = db.ExecuteCMD(sql, dbDict);
             foreach (DataRow row in data.Rows)
             {

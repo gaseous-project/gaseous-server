@@ -148,7 +148,7 @@ namespace gaseous_server
 
                                 case QueueItemType.Rematcher:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Rematch");
-                                    Classes.ImportGame.Rematcher();
+                                    Classes.ImportGame.Rematcher(_ForceExecute);
 
                                     _SaveLastRunTime = true;
 
