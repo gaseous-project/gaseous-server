@@ -88,6 +88,7 @@ namespace gaseous_server.Controllers
 
             string ver = "var AppVersion = \"" + Assembly.GetExecutingAssembly().GetName().Version.ToString() + "\";" + Environment.NewLine +
                 "var DBSchemaVersion = \"" + db.GetDatabaseSchemaVersion() + "\";" + Environment.NewLine +
+                "var FirstRunStatus = " + Config.ReadSetting("FirstRunStatus", "0") + ";" + Environment.NewLine +
                 "var AgeRatingStrings = " + JsonSerializer.Serialize(AgeRatingsStrings, new JsonSerializerOptions{
                     WriteIndented = true
                 }) + ";" + Environment.NewLine +

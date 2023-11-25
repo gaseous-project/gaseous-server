@@ -112,6 +112,11 @@
     <script type="text/javascript">
         var modalVariables = null;
 
+        // redirect if first run status = 0
+        if (FirstRunStatus == 0) {
+            window.location.replace("/pages/first.html");
+        }
+
         // redirect if not logged in
         ajaxCall(
             '/api/v1.1/Account/Profile/Basic',

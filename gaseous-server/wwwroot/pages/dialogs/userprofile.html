@@ -1,8 +1,8 @@
 <div id="properties_toc">
-    <div id="properties_toc_general" name="properties_toc_item" onclick="SelectTab('general');">Account</div>
+    <div id="properties_profile_toc_general" name="properties_profile_toc_item" onclick="ProfileSelectTab('general');">Account</div>
 </div>
 <div id="properties_bodypanel">
-    <div id="properties_bodypanel_general" name="properties_tab" style="display: none;">
+    <div id="properties_bodypanel_general" name="properties_profile_tab" style="display: none;">
         <h3>Reset Password</h3>
         <table style="width: 100%;">
             <tr>
@@ -32,8 +32,8 @@
 <script type="text/javascript">
     document.getElementById('modal-heading').innerHTML = userProfile.emailAddress;
 
-    function SelectTab(TabName) {
-        var tabs = document.getElementsByName('properties_tab');
+    function ProfileSelectTab(TabName) {
+        var tabs = document.getElementsByName('properties_profile_tab');
         for (var i = 0; i < tabs.length; i++) {
             if ((tabs[i].id) == ("properties_bodypanel_" + TabName)) {
                 tabs[i].style.display = '';
@@ -42,9 +42,9 @@
             }
         }
 
-        var tocs = document.getElementsByName('properties_toc_item');
+        var tocs = document.getElementsByName('properties_profile_toc_item');
         for (var i = 0; i < tocs.length; i++) {
-            if ((tocs[i].id) == ("properties_toc_" + TabName)) {
+            if ((tocs[i].id) == ("properties_profile_toc_" + TabName)) {
                 tocs[i].className = "properties_toc_item_selected";
             } else {
                 tocs[i].className = '';
@@ -118,5 +118,5 @@
         }
     }
 
-    SelectTab('general');
+    ProfileSelectTab('general');
 </script>

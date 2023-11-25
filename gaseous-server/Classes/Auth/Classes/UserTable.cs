@@ -346,7 +346,7 @@ namespace Authentication
             else
             {
                 string? securityProfileString = (string?)data[0]["SecurityProfile"];
-                if (securityProfileString != null)
+                if (securityProfileString != null && securityProfileString != "null")
                 {
                     SecurityProfileViewModel securityProfile = Newtonsoft.Json.JsonConvert.DeserializeObject<SecurityProfileViewModel>(securityProfileString);
                     return securityProfile;

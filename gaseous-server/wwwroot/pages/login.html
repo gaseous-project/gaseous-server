@@ -68,7 +68,7 @@
                     </tr>
                     <tr>
                         <td colspan="2" style="padding-top: 20px;">
-                            <button type="button" value="Sign In" onclick="UserLogin();" style="width: 100%; font-size: 16px; border-radius: 10px;">Sign In</button>
+                            <button type="button" value="Sign In" onclick="UserLogin();" style="margin-top: 10px; width: 100%; font-size: 16px; border-radius: 10px; padding-top: 10px; padding-bottom: 10px;">Sign In</button>
                         </td>
                     </tr>
                 </table>
@@ -81,35 +81,48 @@
     </div>
 
     <script type="text/javascript">
-        function UserLogin() {
-        var loginObj = {
-            "email": document.getElementById('login_email').value,
-            "password": document.getElementById('login_password').value,
-            "rememberMe": document.getElementById('login_rememberme').checked
-        }
-
+        // redirect if logged in
         ajaxCall(
-            '/api/v1.1/Account/Login',
-            'POST',
+            '/api/v1.1/Account/Profile/Basic',
+            'GET',
             function(result) {
-                loginCallback(result);
+                // user is signed in - redirect to main page
+                window.location.replace("/");
             },
             function(error) {
-                loginCallback(error);
-            },
-            JSON.stringify(loginObj)
+                // user is not signed in - do nothing
+            }
         );
 
-        function loginCallback(result) {
-            switch(result.status) {
-                case 200:
-                    window.location.replace('/index.html');
-                    break;
-                default:
-                    // login failed
-                    break;
+        function UserLogin() {
+            var loginObj = {
+                "email": document.getElementById('login_email').value,
+                "password": document.getElementById('login_password').value,
+                "rememberMe": document.getElementById('login_rememberme').checked
+            }
+
+            ajaxCall(
+                '/api/v1.1/Account/Login',
+                'POST',
+                function(result) {
+                    loginCallback(result);
+                },
+                function(error) {
+                    loginCallback(error);
+                },
+                JSON.stringify(loginObj)
+            );
+
+            function loginCallback(result) {
+                switch(result.status) {
+                    case 200:
+                        window.location.replace('/index.html');
+                        break;
+                    default:
+                        // login failed
+                        break;
+                }
             }
         }
-    }
     </script>
 </body>
