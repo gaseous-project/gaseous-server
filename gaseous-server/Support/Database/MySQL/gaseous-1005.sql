@@ -1,10 +1,10 @@
-CREATE TABLE `roles` (
+CREATE TABLE `Roles` (
   `Id` varchar(128) NOT NULL,
   `Name` varchar(256) NOT NULL,
   PRIMARY KEY (`Id`)
 );
 
-CREATE TABLE `users` (
+CREATE TABLE `Users` (
   `Id` varchar(128) NOT NULL,
   `Email` varchar(256) DEFAULT NULL,
   `EmailConfirmed` tinyint(1) NOT NULL,
@@ -24,7 +24,7 @@ CREATE TABLE `users` (
   PRIMARY KEY (`Id`)
 );
 
-CREATE TABLE `userclaims` (
+CREATE TABLE `UserClaims` (
   `Id` int(11) NOT NULL AUTO_INCREMENT,
   `UserId` varchar(128) NOT NULL,
   `ClaimType` longtext,
@@ -32,23 +32,23 @@ CREATE TABLE `userclaims` (
   PRIMARY KEY (`Id`),
   UNIQUE KEY `Id` (`Id`),
   KEY `UserId` (`UserId`),
-  CONSTRAINT `ApplicationUser_Claims` FOREIGN KEY (`UserId`) REFERENCES `users` (`Id`) ON DELETE CASCADE ON UPDATE NO ACTION
+  CONSTRAINT `ApplicationUser_Claims` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE ON UPDATE NO ACTION
 );
 
-CREATE TABLE `userlogins` (
+CREATE TABLE `UserLogins` (
   `LoginProvider` varchar(128) NOT NULL,
   `ProviderKey` varchar(128) NOT NULL,
   `UserId` varchar(128) NOT NULL,
   PRIMARY KEY (`LoginProvider`,`ProviderKey`,`UserId`),
   KEY `ApplicationUser_Logins` (`UserId`),
-  CONSTRAINT `ApplicationUser_Logins` FOREIGN KEY (`UserId`) REFERENCES `users` (`Id`) ON DELETE CASCADE ON UPDATE NO ACTION
+  CONSTRAINT `ApplicationUser_Logins` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE ON UPDATE NO ACTION
 );
 
-CREATE TABLE `userroles` (
+CREATE TABLE `UserRoles` (
   `UserId` varchar(128) NOT NULL,
   `RoleId` varchar(128) NOT NULL,
   PRIMARY KEY (`UserId`,`RoleId`),
   KEY `IdentityRole_Users` (`RoleId`),
-  CONSTRAINT `ApplicationUser_Roles` FOREIGN KEY (`UserId`) REFERENCES `users` (`Id`) ON DELETE CASCADE ON UPDATE NO ACTION,
-  CONSTRAINT `IdentityRole_Users` FOREIGN KEY (`RoleId`) REFERENCES `roles` (`Id`) ON DELETE CASCADE ON UPDATE NO ACTION
+  CONSTRAINT `ApplicationUser_Roles` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE ON UPDATE NO ACTION,
+  CONSTRAINT `IdentityRole_Users` FOREIGN KEY (`RoleId`) REFERENCES `Roles` (`Id`) ON DELETE CASCADE ON UPDATE NO ACTION
 ) ;

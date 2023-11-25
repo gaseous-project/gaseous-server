@@ -10,6 +10,13 @@ CREATE TABLE `GameLibraries` (
 ALTER TABLE `Games_Roms` 
 ADD COLUMN `LibraryId` INT NULL DEFAULT 0 AFTER `MetadataVersion`;
 
+CREATE TABLE `Relation_Game_AgeRatings` (
+  `GameId` BIGINT NOT NULL,
+  `AgeRatingsId` BIGINT NOT NULL,
+  PRIMARY KEY (`GameId`, `AgeRatingsId`),
+  INDEX `idx_PrimaryColumn` (`GameId` ASC) VISIBLE
+);
+
 CREATE TABLE `Relation_Game_Genres` (
   `GameId` BIGINT NOT NULL,
   `GenresId` BIGINT NOT NULL,
