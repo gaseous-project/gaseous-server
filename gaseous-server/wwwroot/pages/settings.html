@@ -6,10 +6,11 @@
     <div id="properties_toc" class="settings_toc">
         <div class="filter_header">Settings</div>
         <div id="properties_toc_system" name="properties_toc_item" onclick="SelectTab('system');">System</div>
-        <div id="properties_toc_settings" name="properties_toc_item" onclick="SelectTab('settings');">Settings</div>
-        <div id="properties_toc_mapping" name="properties_toc_item" onclick="SelectTab('mapping');">Platform Mapping</div>
+        <div id="properties_toc_settings" name="properties_toc_item" onclick="SelectTab('settings');" style="display: none;">Settings</div>
+        <div id="properties_toc_users" name="properties_toc_item" onclick="SelectTab('users');" style="display: none;">Users</div>
+        <div id="properties_toc_mapping" name="properties_toc_item" onclick="SelectTab('mapping');" style="display: none;">Platform Mapping</div>
         <div id="properties_toc_bios" name="properties_toc_item" onclick="SelectTab('bios');">Firmware</div>
-        <div id="properties_toc_logs" name="properties_toc_item" onclick="SelectTab('logs');">Logs</div>
+        <div id="properties_toc_logs" name="properties_toc_item" onclick="SelectTab('logs');" style="display: none;">Logs</div>
         <div id="properties_toc_about" name="properties_toc_item" onclick="SelectTab('about');">About</div>
     </div>
     <div id="properties_bodypanel">
@@ -23,6 +24,16 @@
 </div>
 
 <script type="text/javascript">
+    if (userProfile.roles.includes("Admin")) {
+        document.getElementById('properties_toc_settings').style.display = '';
+        document.getElementById('properties_toc_users').style.display = '';
+        document.getElementById('properties_toc_mapping').style.display = '';
+        document.getElementById('properties_toc_logs').style.display = '';
+    }
+    if (userProfile.roles.includes("Gamer")) {
+        document.getElementById('properties_toc_mapping').style.display = '';
+    }
+
     var myParam = getQueryString('sub', 'string');
 
     var selectedTab = '';

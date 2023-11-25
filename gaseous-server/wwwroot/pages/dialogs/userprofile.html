@@ -1,0 +1,122 @@
+<div id="properties_toc">
+    <div id="properties_profile_toc_general" name="properties_profile_toc_item" onclick="ProfileSelectTab('general');">Account</div>
+</div>
+<div id="properties_bodypanel">
+    <div id="properties_bodypanel_general" name="properties_profile_tab" style="display: none;">
+        <h3>Reset Password</h3>
+        <table style="width: 100%;">
+            <tr>
+                <th>Old Password</th>
+                <td><input type="password" id="profile_oldpassword" style="width: 95%;" /></td>
+            </tr>
+            <tr>
+                <th>New Password</th>
+                <td><input type="password" id="profile_newpassword" style="width: 95%;" onkeyup="checkPasswordsMatch();" /></td>
+            </tr>
+            <tr>
+                <th>Confirm Password</th>
+                <td><input type="password" id="profile_confirmpassword" style="width: 95%;" onkeyup="checkPasswordsMatch();" /></td>
+            </tr>
+            <tr>
+                <td colspan="2" id="profile_passwordnotice"></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="text-align: right;">
+                    <button id="profile_resetpassword" value="Reset Password" disabled="disabled" onclick="ResetPassword();">Reset Password</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<script type="text/javascript">
+    document.getElementById('modal-heading').innerHTML = userProfile.emailAddress;
+
+    function ProfileSelectTab(TabName) {
+        var tabs = document.getElementsByName('properties_profile_tab');
+        for (var i = 0; i < tabs.length; i++) {
+            if ((tabs[i].id) == ("properties_bodypanel_" + TabName)) {
+                tabs[i].style.display = '';
+            } else {
+                tabs[i].style.display = 'none';
+            }
+        }
+
+        var tocs = document.getElementsByName('properties_profile_toc_item');
+        for (var i = 0; i < tocs.length; i++) {
+            if ((tocs[i].id) == ("properties_profile_toc_" + TabName)) {
+                tocs[i].className = "properties_toc_item_selected";
+            } else {
+                tocs[i].className = '';
+            }
+        }
+    }
+
+    function checkPasswordsMatch() {
+        var oldPassword = document.getElementById('profile_oldpassword').value;
+        var newPassword = document.getElementById('profile_newpassword').value;
+        var conPassword = document.getElementById('profile_confirmpassword').value;
+        var errorLabel = document.getElementById('profile_passwordnotice');
+        var submitButton = document.getElementById('profile_resetpassword');
+
+        // make sure the new password is not the same as the old one
+        if (newPassword == oldPassword) {
+            errorLabel.innerHTML = "New password should not match the old password";
+            submitButton.setAttribute('disabled', 'disabled');
+        } else {
+            if (newPassword == conPassword) {
+                // check if password meets requirements
+                if (newPassword.length > 10) {
+                    errorLabel.innerHTML = "";
+                    submitButton.removeAttribute('disabled');
+                } else {
+                    errorLabel.innerHTML = "Password should be at least 10 characters long";
+                    submitButton.setAttribute('disabled', 'disabled');
+                }
+            } else {
+                errorLabel.innerHTML = "New and confirmed passwords do not match";
+                submitButton.setAttribute('disabled', 'disabled');
+            }
+        }
+    }
+
+    function ResetPassword() {
+        var oldPassword = document.getElementById('profile_oldpassword').value;
+        var newPassword = document.getElementById('profile_newpassword').value;
+        var conPassword = document.getElementById('profile_confirmpassword').value;
+
+        var model = {
+            "OldPassword": oldPassword,
+            "NewPassword": newPassword,
+            "ConfirmPassword": conPassword
+        }
+
+        ajaxCall(
+            '/api/v1.1/Account/ChangePassword',
+            'POST',
+            function(result) {
+                ResetPasswordCallback(result);
+            },
+            function(error) {
+                ResetPasswordCallback(error);
+            },
+            JSON.stringify(model)
+        );
+    }
+
+    function ResetPasswordCallback(result) {
+        var errorLabel = document.getElementById('profile_passwordnotice');
+
+        if (result.succeeded == false) {
+            errorLabel.innerHTML = result.errors.description;
+        } else {
+            document.getElementById('profile_oldpassword').value = '';
+            document.getElementById('profile_newpassword').value = '';
+            document.getElementById('profile_confirmpassword').value = '';
+            document.getElementById('profile_resetpassword').setAttribute('disabled', 'disabled');
+            errorLabel.innerHTML = "Password changed.";
+        }
+    }
+
+    ProfileSelectTab('general');
+</script>

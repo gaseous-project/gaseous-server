@@ -1,0 +1,88 @@
+<h3>New User</h3>
+
+<table style="width: 100%;">
+    <tr>
+        <th>
+            Email
+        </th>
+        <td>
+            <input type="text" id="settings_users_new_username" style="width: 95%;" onkeyup="checkPasswordsMatch();" />
+        </td>
+    </tr>
+    <tr>
+        <th>
+            Password
+        </th>
+        <td>
+            <input type="password" id="settings_users_new_password" style="width: 95%;" onkeyup="checkPasswordsMatch();" />
+        </td>
+    </tr>
+    <tr>
+        <th>
+            Confirm password
+        </th>
+        <td>
+            <input type="password" id="settings_users_new_confirmpassword" style="width: 95%;" onkeyup="checkPasswordsMatch();" />
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2" id="settings_users_new_label"></td>
+    </tr>
+    <tr>
+        <td colspan="2" style="text-align: right; padding-top: 10px;">
+            <button value="OK" id="settings_users_new_okbutton" disabled="disabled" onclick="createUser();">OK</button><button value="Cancel" onclick="closeSubDialog();">Cancel</button>
+        </td>
+    </tr>
+</table>
+
+<script type="text/javascript">
+    function checkPasswordsMatch() {
+        var userNameVal = document.getElementById('settings_users_new_username').value;
+        var newPassword = document.getElementById('settings_users_new_password').value;
+        var conPassword = document.getElementById('settings_users_new_confirmpassword').value;
+        var errorLabel = document.getElementById('settings_users_new_label');
+        var submitButton = document.getElementById('settings_users_new_okbutton');
+
+        if (userNameVal.includes("@")) {
+            if (newPassword == conPassword) {
+                // check if password meets requirements
+                if (newPassword.length > 10) {
+                    errorLabel.innerHTML = "";
+                    submitButton.removeAttribute('disabled');
+                } else {
+                    errorLabel.innerHTML = "Password should be at least 10 characters long";
+                    submitButton.setAttribute('disabled', 'disabled');
+                }
+            } else {
+                errorLabel.innerHTML = "New and confirmed passwords do not match";
+                submitButton.setAttribute('disabled', 'disabled');
+            }
+        } else {
+            errorLabel.innerHTML = "Email address is invalid";
+            submitButton.setAttribute('disabled', 'disabled');
+        }
+    }
+
+    function createUser() {
+        var model = {
+            "userName": document.getElementById('settings_users_new_username').value,
+            "email": document.getElementById('settings_users_new_username').value,
+            "password": document.getElementById('settings_users_new_password').value,
+            "confirmPassword": document.getElementById('settings_users_new_confirmpassword').value
+        }
+
+        ajaxCall(
+            '/api/v1.1/Account/Users',
+            'POST',
+            function(result) {
+                GetUsers();
+                closeSubDialog();
+            },
+            function(error) {
+                GetUsers();
+                closeSubDialog();
+            },
+            JSON.stringify(model)
+        );
+    }
+</script>

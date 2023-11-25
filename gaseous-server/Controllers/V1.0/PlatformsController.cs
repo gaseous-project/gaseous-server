@@ -9,6 +9,7 @@ using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
 using IGDB.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Scripting;
@@ -17,10 +18,13 @@ namespace gaseous_server.Controllers
 {
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize]
     [ApiController]
     public class PlatformsController : Controller
     {
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(typeof(List<Platform>), StatusCodes.Status200OK)]
         public ActionResult Platform()
@@ -46,6 +50,7 @@ namespace gaseous_server.Controllers
         }
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("{PlatformId}")]
         [ProducesResponseType(typeof(Platform), StatusCodes.Status200OK)]
@@ -72,6 +77,7 @@ namespace gaseous_server.Controllers
         }
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("{PlatformId}/platformlogo")]
         [ProducesResponseType(typeof(PlatformLogo), StatusCodes.Status200OK)]
@@ -105,6 +111,7 @@ namespace gaseous_server.Controllers
         }
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("{PlatformId}/platformlogo/image")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]

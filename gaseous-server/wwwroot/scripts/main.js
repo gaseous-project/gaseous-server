@@ -374,3 +374,18 @@ function LoadEditableTableData(TableName, Headers, Values) {
         eTable.appendChild(row);
     }
 }
+
+function CreateBadge(BadgeText, ColourOverride) {
+    var badgeItem = document.createElement('div');
+    badgeItem.className = 'dropdownroleitem';
+    badgeItem.innerHTML = BadgeText.toUpperCase();
+    var colorVal = intToRGB(hashCode(BadgeText));
+    if (!ColourOverride) {
+        badgeItem.style.backgroundColor = '#' + colorVal;
+        badgeItem.style.borderColor = '#' + colorVal;
+    } else {
+        badgeItem.style.backgroundColor = ColourOverride;
+        badgeItem.style.borderColor = ColourOverride;
+    }
+    return badgeItem;
+}

@@ -94,7 +94,7 @@
     var artworksTimer = null;
     var selectedScreenshot = 0;
 
-    ajaxCall('/api/v1.0/Games/' + gameId, 'GET', function (result) {
+    ajaxCall('/api/v1.1/Games/' + gameId, 'GET', function (result) {
         // populate games page
         gameData = result;
 
@@ -116,7 +116,7 @@
         // get alt name
         var gameTitleAltLabel = document.getElementById('gametitle_alts');
         if (result.alternativeNames) {
-            ajaxCall('/api/v1.0/Games/' + gameId + '/alternativename', 'GET', function (result) {
+            ajaxCall('/api/v1.1/Games/' + gameId + '/alternativename', 'GET', function (result) {
                 var altNames = '';
                 for (var i = 0; i < result.length; i++) {
                     if (altNames.length > 0) {
@@ -161,7 +161,7 @@
         } else {
             var bg = document.getElementById('bgImage');
             if (result.cover) {
-                bg.setAttribute('style', 'background-image: url("/api/v1.0/Games/' + gameId + '/cover/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+                bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/cover/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
             } else {
                 var randomInt = randomIntFromInterval(1, 3);
                 bg.setAttribute('style', 'background-image: url("/images/gamebg' + randomInt + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
@@ -175,7 +175,7 @@
         var gameDeveloperLoaded = false;
         var gamePublisherLoaded = false;
         if (result.involvedCompanies) {
-            ajaxCall('/api/v1.0/games/' + gameId + '/companies', 'GET', function (result) {
+            ajaxCall('/api/v1.1/games/' + gameId + '/companies', 'GET', function (result) {
                 var lstDevelopers = [];
                 var lstPublishers = [];
 
@@ -227,7 +227,7 @@
         var gameImage = document.createElement('img');
         gameImage.className = 'game_cover_image';
         if (result.cover) {
-            gameImage.src = '/api/v1.0/Games/' + result.id + '/cover/image';
+            gameImage.src = '/api/v1.1/Games/' + result.id + '/cover/image';
         } else {
             gameImage.src = '/images/unknowngame.png';
             gameImage.className = 'game_cover_image unknown';
@@ -240,7 +240,7 @@
             var gameRatings = document.createElement('div');
             for (var i = 0; i < result.ageRatings.ids.length; i++) {
                 var ratingImage = document.createElement('img');
-                ratingImage.src = '/api/v1.0/Games/' + result.id + '/agerating/' + result.ageRatings.ids[i] + '/image';
+                ratingImage.src = '/api/v1.1/Games/' + result.id + '/agerating/' + result.ageRatings.ids[i] + '/image';
                 ratingImage.className = 'rating_image';
                 gameRatings.appendChild(ratingImage);
             }
@@ -252,7 +252,7 @@
         // load genres
         var gameSummaryGenres = document.getElementById('gamesumarry_genres');
         if (result.genres) {
-            ajaxCall('/api/v1.0/Games/' + gameId + '/genre', 'GET', function (result) {
+            ajaxCall('/api/v1.1/Games/' + gameId + '/genre', 'GET', function (result) {
                 for (var i = 0; i < result.length; i++) {
                     var genreLabel = document.createElement('span');
                     genreLabel.className = 'gamegenrelabel';
@@ -281,7 +281,7 @@
                     var screenshotItem = document.createElement('div');
                     screenshotItem.id = 'gamescreenshots_gallery_' + imageIndex;
                     screenshotItem.setAttribute('name', 'gamescreenshots_gallery_item');
-                    screenshotItem.setAttribute('style', 'background-image: url("/api/v1.0/Games/' + gameId + '/screenshots/' + result.screenshots.ids[i] + '/image"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
+                    screenshotItem.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/screenshots/' + result.screenshots.ids[i] + '/image"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
                     screenshotItem.setAttribute('imageid', imageIndex);
                     screenshotItem.setAttribute('imagetype', 0);
                     screenshotItem.className = 'gamescreenshots_gallery_item';
@@ -293,7 +293,7 @@
 
             // load videos
             if (result.videos) {
-                ajaxCall('/api/v1.0/Games/' + gameId + '/videos', 'GET', function (result) {
+                ajaxCall('/api/v1.1/Games/' + gameId + '/videos', 'GET', function (result) {
                     var gameScreenshots_vGallery = document.getElementById('gamescreenshots_gallery_panel');
                     for (var i = 0; i < result.length; i++) {
                         var vScreenshotItem = document.createElement('div');
@@ -360,7 +360,7 @@
         }
 
         var gameRoms = document.getElementById('gamesummaryroms');
-        ajaxCall('/api/v1.0/Games/' + gameId + '/roms', 'GET', function (result) {
+        ajaxCall('/api/v1.1/Games/' + gameId + '/roms', 'GET', function (result) {
             if (result.gameRomItems) {
                 var gameRomItems = result.gameRomItems;
                 var mediaGroups = result.mediaGroups;
@@ -391,14 +391,14 @@
                     if (result.gameRomItems[i].emulator) {
                         if (gameRomItems[i].emulator.type) {
                             if (gameRomItems[i].emulator.type.length > 0) {
-                                launchButton = '<a href="/index.html?page=emulator&engine=' + gameRomItems[i].emulator.type + '&core=' + gameRomItems[i].emulator.core + '&platformid=' + gameRomItems[i].platform.id + '&gameid=' + gameId + '&rompath=' + encodeURIComponent('/api/v1.0/Games/' + gameId + '/roms/' + gameRomItems[i].id + '/' + encodeURIComponent(gameRomItems[i].name)) + '" class="romstart">Launch</a>';
+                                launchButton = '<a href="/index.html?page=emulator&engine=' + gameRomItems[i].emulator.type + '&core=' + gameRomItems[i].emulator.core + '&platformid=' + gameRomItems[i].platform.id + '&gameid=' + gameId + '&rompath=' + encodeURIComponent('/api/v1.1/Games/' + gameId + '/roms/' + gameRomItems[i].id + '/' + encodeURIComponent(gameRomItems[i].name)) + '" class="romstart">Launch</a>';
                             }
                         }
                     }
 
                     var newRow = [
                         ['<input type="checkbox" name="rom_checkbox" data-gameid="' + gameData.id + '" data-platformid="' + gameRomItems[i].platformId + '" data-romid="' + gameRomItems[i].id + '" onclick="handleChecks();" />', 'rom_checkbox_box_hidden', 'rom_edit_checkbox'],
-                        '<a href="/api/v1.0/Games/' + gameId + '/roms/' + gameRomItems[i].id + '/' + encodeURIComponent(gameRomItems[i].name) + '" class="romlink">' + gameRomItems[i].name + '</a>',
+                        '<a href="/api/v1.1/Games/' + gameId + '/roms/' + gameRomItems[i].id + '/' + encodeURIComponent(gameRomItems[i].name) + '" class="romlink">' + gameRomItems[i].name + '</a>',
                         formatBytes(gameRomItems[i].size, 2),
                         gameRomItems[i].romTypeMedia,
                         gameRomItems[i].mediaLabel,
@@ -436,7 +436,7 @@
                             if (gameRomItem.platformId == mediaGroup.platformId) {
                                 if (gameRomItem.emulator) {
                                     if (gameRomItem.emulator.type.length > 0) {
-                                        launchButton = '<a href="/index.html?page=emulator&engine=' + gameRomItem.emulator.type + '&core=' + gameRomItem.emulator.core + '&platformid=' + gameRomItem.platform.id + '&gameid=' + gameId + '&rompath=' + encodeURIComponent('/api/v1.0/Games/' + gameId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '(' + mediaGroup.id + ')' + '.zip') + '" class="romstart">Launch</a>';
+                                        launchButton = '<a href="/index.html?page=emulator&engine=' + gameRomItem.emulator.type + '&core=' + gameRomItem.emulator.core + '&platformid=' + gameRomItem.platform.id + '&gameid=' + gameId + '&rompath=' + encodeURIComponent('/api/v1.1/Games/' + gameId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '(' + mediaGroup.id + ')' + '.zip') + '" class="romstart">Launch</a>';
                                         break;
                                     }
                                 }    
@@ -459,7 +459,7 @@
                                 break;
                             case "Completed":
                                 statusText = 'Available';
-                                downloadLink = '<a href="/api/v1.0/Games/' + gameId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '.zip" class="romlink"><img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" /></a>';
+                                downloadLink = '<a href="/api/v1.1/Games/' + gameId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '.zip" class="romlink"><img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" /></a>';
                                 packageSize = formatBytes(mediaGroup.size);
                                 launchButtonContent = launchButton;
                                 break;
@@ -525,7 +525,7 @@
                 artworksPosition = 0;
             }
             var bg = document.getElementById('bgImage');
-            bg.setAttribute('style', 'background-image: url("/api/v1.0/Games/' + gameId + '/artwork/' + artworks[artworksPosition] + '/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+            bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/artwork/' + artworks[artworksPosition] + '/image"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
             artworksTimer = setTimeout(rotateBackground, 60000);
         }
     }
@@ -677,7 +677,7 @@
         minimumInputLength: 3,
         placeholder: "Platform",
         ajax: {
-            url: '/api/v1.0/Search/Platform',
+            url: '/api/v1.1/Search/Platform',
             data: function (params) {
                 var query = {
                     SearchString: params.term
@@ -709,7 +709,7 @@
         templateResult: DropDownRenderGameOption,
         placeholder: "Game",
         ajax: {
-            url: '/api/v1.0/Search/Game',
+            url: '/api/v1.1/Search/Game',
             data: function (params) {
                 fixplatform = $('#rom_edit_fixplatform').select2('data');
 
@@ -762,7 +762,7 @@
                     if (rom_checks[i].checked == true) {
                         var romId = rom_checks[i].getAttribute('data-romid');
                         remapCallCounter += 1;
-                        ajaxCall('/api/v1.0/Games/' + gameId + '/roms/' + romId + '?NewPlatformId=' + fixplatform[0].id + '&NewGameId=' + fixgame[0].id, 'PATCH', function (result) {
+                        ajaxCall('/api/v1.1/Games/' + gameId + '/roms/' + romId + '?NewPlatformId=' + fixplatform[0].id + '&NewGameId=' + fixgame[0].id, 'PATCH', function (result) {
                             remapTitlesCallback();
                         }, function (result) {
                             remapTitlesCallback();
@@ -804,7 +804,7 @@
             if (rom_checks[i].checked == true) {
                 var romId = rom_checks[i].getAttribute('data-romid');
                 remapCallCounter += 1;
-                ajaxCall('/api/v1.0/Games/' + gameId + '/roms/' + romId, 'DELETE', function (result) {
+                ajaxCall('/api/v1.1/Games/' + gameId + '/roms/' + romId, 'DELETE', function (result) {
                     remapTitlesCallback();
                 });
             }
@@ -846,7 +846,7 @@
         }
 
         ajaxCall(
-            '/api/v1.0/Games/' + gameId + '/romgroup?PlatformId=' + platformId,
+            '/api/v1.1/Games/' + gameId + '/romgroup?PlatformId=' + platformId,
             'POST',
             function (result) {
                 DisplayROMCheckboxes(false);

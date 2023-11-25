@@ -17,10 +17,17 @@
 </div>
 
 <script type="text/javascript">
+    var newCollectionButton = document.getElementById('collection_new');
+    if (userProfile.roles.includes("Admin") || userProfile.roles.includes("Gamer")) {
+        newCollectionButton.style.display = '';
+    } else {
+        newCollectionButton.style.display = 'none';
+    }
+
     GetCollections();
     
     function GetCollections() {
-        ajaxCall('/api/v1.0/Collections', 'GET', function (result) {
+        ajaxCall('/api/v1.1/Collections', 'GET', function (result) {
             if (result) {
                 var targetDiv = document.getElementById('collection_table_location');
                 targetDiv.innerHTML = '';
@@ -47,7 +54,7 @@
                             break;
                         case "Completed":
                             statusText = 'Available';
-                            downloadLink = '<a href="/api/v1.0/Collections/' + result[i].id + '/Roms/Zip" class="romlink"><img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" /></a>';
+                            downloadLink = '<a href="/api/v1.1/Collections/' + result[i].id + '/Roms/Zip" class="romlink"><img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" /></a>';
                             packageSize = formatBytes(result[i].collectionBuiltSizeBytes);
                             break;
                         case "Failed":
@@ -58,9 +65,14 @@
                             break;
                     }
 
-                    var editButton = '<a href="#" onclick="showDialog(\'collectionedit\', ' + result[i].id + ');" class="romlink"><img src="/images/edit.svg" class="banner_button_image" alt="Edit" title="Edit" /></a>';
+                    var editButton = '';
+                    var deleteButton = '';
+                    
+                    if (userProfile.roles.includes("Admin") || userProfile.roles.includes("Gamer")) {
+                        editButton = '<a href="#" onclick="showDialog(\'collectionedit\', ' + result[i].id + ');" class="romlink"><img src="/images/edit.svg" class="banner_button_image" alt="Edit" title="Edit" /></a>';
 
-                    var deleteButton = '<a href="#" onclick="showSubDialog(\'collectiondelete\', ' + result[i].id + ');" class="romlink"><img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" /></a>';
+                        deleteButton = '<a href="#" onclick="showSubDialog(\'collectiondelete\', ' + result[i].id + ');" class="romlink"><img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" /></a>';
+                    }
 
                     var newRow = [
                         result[i].name,

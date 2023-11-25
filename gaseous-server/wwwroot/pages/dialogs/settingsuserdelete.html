@@ -1,0 +1,29 @@
+<p>Are you sure you want to delete the selected user?</p>
+<p><strong>Warning:</strong> This cannot be undone!</p>
+<div style="width: 100%; text-align: center;">
+    <div style="display: inline-block; margin-right: 20px;">
+        <button class="redbutton" value="Delete" onclick="deleteUserCallback();">Delete</button>
+    </div>
+    <div style="display: inline-block; margin-left: 20px;">
+        <button value="Cancel" onclick="closeSubDialog();">Cancel</button>
+    </div>
+</div>
+
+<script type="text/javascript">
+    function deleteUserCallback() {
+        ajaxCall(
+            '/api/v1.1/Account/Users/' + subModalVariables,
+            'DELETE',
+            function(result) {
+                console.log('Deleted user');
+                GetUsers();
+                closeSubDialog();
+            },
+            function(error) {
+                console.log(JSON.stringify(error));
+                GetUsers();
+                closeSubDialog();
+            }
+        );
+    }
+</script>

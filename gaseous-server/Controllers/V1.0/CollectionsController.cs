@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using gaseous_server.Classes;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace gaseous_server.Controllers
@@ -11,6 +12,8 @@ namespace gaseous_server.Controllers
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize]
     public class CollectionsController : Controller
     {
         /// <summary>
@@ -18,6 +21,7 @@ namespace gaseous_server.Controllers
         /// </summary>
         /// <returns></returns>
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public List<Classes.Collections.CollectionItem> GetCollections()
@@ -32,6 +36,7 @@ namespace gaseous_server.Controllers
         /// <param name="Build">Set to true to begin the collection build process</param>
         /// <returns></returns>
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("{CollectionId}")]
         [ProducesResponseType(typeof(Classes.Collections.CollectionItem), StatusCodes.Status200OK)]
@@ -59,6 +64,7 @@ namespace gaseous_server.Controllers
         /// <param name="CollectionId"></param>
         /// <returns></returns>
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("{CollectionId}/Roms")]
         [ProducesResponseType(typeof(List<Classes.Collections.CollectionContents.CollectionPlatformItem>), StatusCodes.Status200OK)]
@@ -82,8 +88,10 @@ namespace gaseous_server.Controllers
         /// <param name="Item"></param>
         /// <returns></returns>
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpPost]
         [Route("Preview")]
+        [Authorize(Roles = "Admin,Gamer")]
         [ProducesResponseType(typeof(List<Classes.Collections.CollectionContents.CollectionPlatformItem>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult GetCollectionRomsPreview(Classes.Collections.CollectionItem Item)
@@ -104,6 +112,7 @@ namespace gaseous_server.Controllers
         /// <param name="CollectionId"></param>
         /// <returns></returns>
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("{CollectionId}/Roms/Zip")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
@@ -138,7 +147,9 @@ namespace gaseous_server.Controllers
         /// <param name="Item"></param>
         /// <returns></returns>
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpPost]
+        [Authorize(Roles = "Admin,Gamer")]
         [ProducesResponseType(typeof(Classes.Collections.CollectionItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public ActionResult NewCollection(Classes.Collections.CollectionItem Item)
@@ -160,8 +171,10 @@ namespace gaseous_server.Controllers
         /// <param name="Item"></param>
         /// <returns></returns>
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpPatch]
         [Route("{CollectionId}")]
+        [Authorize(Roles = "Admin,Gamer")]
         [ProducesResponseType(typeof(Classes.Collections.CollectionItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult EditCollection(long CollectionId, Classes.Collections.CollectionItem Item)
@@ -183,7 +196,9 @@ namespace gaseous_server.Controllers
         /// <param name="Item"></param>
         /// <returns></returns>
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpPatch]
+        [Authorize(Roles = "Admin,Gamer")]
         [Route("{CollectionId}/AlwaysInclude")]
         [ProducesResponseType(typeof(Classes.Collections.CollectionItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -218,7 +233,9 @@ namespace gaseous_server.Controllers
         /// </summary>
         /// <param name="CollectionId"></param>
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpDelete]
+        [Authorize(Roles = "Admin,Gamer")]
         [Route("{CollectionId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8" />
-    <script src="/api/v1.0/System/VersionFile"></script>
+    <script src="/api/v1.1/System/VersionFile"></script>
     <link type="text/css" rel="stylesheet" dat-href="/styles/style.css" />
     <script src="/scripts/jquery-3.6.0.min.js"></script>
     <script src="/scripts/moment.js"></script>
@@ -38,6 +38,8 @@
                 head.appendChild(newLink);
             }
         }
+
+        var userProfile;
     </script>
 </head>
 <body>
@@ -45,24 +47,35 @@
         <img src="/images/logo.png" alt="Gaseous" id="banner_icon_image" />
     </div>
     <div id="banner_header">
-        <div id="banner_cog" onclick="window.location.href = '/index.html?page=settings';" class="banner_button">
-            <img src="/images/settings.svg" alt="Settings" title="Settings" id="banner_system_image" class="banner_button_image" />
-            <span id="banner_system_label">Settings</span>
-        </div>
+        <div id="bannerButtons">
+            <div id="banner_user" onclick="showMenu();" class="banner_button dropdown dropbtn">
+                <img src="/images/user.svg" alt="Account" title="Account" id="banner_user_image" class="banner_button_image" style="position: relative; top: 10px; right: 0px; pointer-events: none;" onclick="showMenu();" />
+                <div id="myDropdown" class="dropdown-content">
+                    <div id="banner_user_roles"></div>
+                    <a href="#" onclick="showDialog('userprofile');">Profile</a>
+                    <a href="#" onclick="userLogoff();">Sign Out</a>
+                </div>
+            </div>
+            
+            <div id="banner_cog" onclick="window.location.href = '/index.html?page=settings';" class="banner_button">
+                <img src="/images/settings.svg" alt="Settings" title="Settings" id="banner_system_image" class="banner_button_image" />
+                <span id="banner_system_label">Settings</span>
+            </div>
 
-        <div id="banner_upload" onclick="showDialog('upload');" class="banner_button">
-            <img src="/images/upload.svg" alt="Upload" title="Upload" id="banner_upload_image" class="banner_button_image" />
-            <span id="banner_upload_label">Upload</span>
-        </div>
+            <div id="banner_upload" onclick="showDialog('upload');" class="banner_button">
+                <img src="/images/upload.svg" alt="Upload" title="Upload" id="banner_upload_image" class="banner_button_image" />
+                <span id="banner_upload_label">Upload</span>
+            </div>
 
-        <div id="banner_collections" onclick="window.location.href = '/index.html?page=collections';" class="banner_button">
-            <img src="/images/collections.svg" alt="Collections" title="Collections" id="banner_collections_image" class="banner_button_image" />
-            <span id="banner_collections_label">Collections</span>
-        </div>
+            <div id="banner_collections" onclick="window.location.href = '/index.html?page=collections';" class="banner_button">
+                <img src="/images/collections.svg" alt="Collections" title="Collections" id="banner_collections_image" class="banner_button_image" />
+                <span id="banner_collections_label">Collections</span>
+            </div>
 
-        <div id="banner_library" onclick="window.location.href = '/index.html';" class="banner_button">
-            <img src="/images/library.svg" alt="Library" title="Library" id="banner_library_image" class="banner_button_image" />
-            <span id="banner_library_label">Library</span>
+            <div id="banner_library" onclick="window.location.href = '/index.html';" class="banner_button">
+                <img src="/images/library.svg" alt="Library" title="Library" id="banner_library_image" class="banner_button_image" />
+                <span id="banner_library_label">Library</span>
+            </div>
         </div>
 
         <div id="banner_header_label" onclick="window.location.href = '/index.html';">Gaseous Games</div>
@@ -96,18 +109,74 @@
 
     </div>
 
-    <script type="text/javascript">var modalVariables = null;
-        
+    <script type="text/javascript">
+        var modalVariables = null;
 
-        $(document).ready(function () {
-            var myParam = getQueryString('page', 'string');
+        // redirect if first run status = 0
+        if (FirstRunStatus == 0) {
+            window.location.replace("/pages/first.html");
+        }
 
-            if (!myParam) {
-                myParam = 'home';
+        // redirect if not logged in
+        ajaxCall(
+            '/api/v1.1/Account/Profile/Basic',
+            'GET',
+            function(result) {
+                console.log("User is logged in");
+                userProfile = result;
+
+                // hide the upload button if it's not permitted
+                var uploadButton = document.getElementById('banner_upload');
+                if (!userProfile.roles.includes("Admin") && !userProfile.roles.includes("Gamer")) {
+                    uploadButton.style.display = 'none';
+                }
+                
+                // populate page
+                var myParam = getQueryString('page', 'string');
+
+                if (!myParam) {
+                    myParam = 'home';
+                }
+
+                $('#content').load('/pages/' + myParam + '.html?v=' + AppVersion);
+            },
+            function(error) {
+                window.location.replace("/pages/login.html");
             }
+        );
 
-            $('#content').load('/pages/' + myParam + '.html?v=' + AppVersion);
-        });
+        /* When the user clicks on the button,
+        toggle between hiding and showing the dropdown content */
+        function showMenu() {
+            document.getElementById("myDropdown").classList.toggle("show");
+        }
+
+        // Close the dropdown menu if the user clicks outside of it
+        window.onclick = function(event) {
+            if (!event.target.matches('.dropbtn')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                var i;
+                for (i = 0; i < dropdowns.length; i++) {
+                var openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+                }
+            }
+        }
+
+        function userLogoff() {
+            ajaxCall(
+                '/api/v1.1/Account/LogOff',
+                'POST',
+                function (result) {
+                    location.replace("/index.html");
+                },
+                function (error) {
+                    location.replace("/index.html");
+                }
+            );
+        }
     </script>
 </body>
 </html>

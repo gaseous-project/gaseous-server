@@ -26,7 +26,7 @@
 <div id="system_signatures"></div>
 
 <script type="text/javascript">function SystemLoadStatus() {
-        ajaxCall('/api/v1.0/BackgroundTasks', 'GET', function (result) {
+        ajaxCall('/api/v1.1/BackgroundTasks', 'GET', function (result) {
             var newTable = document.createElement('table');
             newTable.className = 'romtable';
             newTable.setAttribute('cellspacing', 0);
@@ -91,8 +91,10 @@
                     var itemInterval = result[i].interval;
                     var nextRunTime = moment(result[i].nextRunTime).fromNow();
                     var startButton = '';
-                    if (result[i].allowManualStart == true && result[i].itemState != "Running") {
-                        startButton = "<span id='startProcess' class='romstart' onclick='StartProcess(\"" + result[i].itemType + "\");'>Start</span>";
+                    if (userProfile.roles.includes("Admin")) {
+                        if (result[i].allowManualStart == true && result[i].itemState != "Running") {
+                            startButton = "<span id='startProcess' class='romstart' onclick='StartProcess(\"" + result[i].itemType + "\");'>Start</span>";
+                        }
                     }
 
                     if (result[i].allowManualStart == false && result[i].removeWhenStopped == true) {
@@ -119,7 +121,7 @@
     }
 
     function SystemLoadSystemStatus() {
-        ajaxCall('/api/v1.0/System', 'GET', function (result) {
+        ajaxCall('/api/v1.1/System', 'GET', function (result) {
             if (result) {
                 var totalLibrarySpace = 0;
 
@@ -234,7 +236,7 @@
     }
 
     function SystemSignaturesStatus() {
-        ajaxCall('/api/v1.0/Signatures/Status', 'GET', function (result) {
+        ajaxCall('/api/v1.1/Signatures/Status', 'GET', function (result) {
             var newTable = document.createElement('table');
             newTable.className = 'romtable';
             newTable.setAttribute('cellspacing', 0);
@@ -257,7 +259,7 @@
     }
 
     function StartProcess(itemType) {
-        ajaxCall('/api/v1.0/BackgroundTasks/' + itemType + '?ForceRun=true', 'GET', function (result) {
+        ajaxCall('/api/v1.1/BackgroundTasks/' + itemType + '?ForceRun=true', 'GET', function (result) {
             SystemLoadStatus();
         });
     }

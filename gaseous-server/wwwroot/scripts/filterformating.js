@@ -171,7 +171,7 @@ function buildFilterPanelItem(filterType, itemString, friendlyItemString, tags) 
     filterPanelItemCheckBoxItem.className = 'filter_panel_item_checkbox';
     filterPanelItemCheckBoxItem.name = 'filter_' + filterType;
     filterPanelItemCheckBoxItem.setAttribute('filter_id', itemString);
-    filterPanelItemCheckBoxItem.setAttribute('oninput' , 'executeFilter();');
+    filterPanelItemCheckBoxItem.setAttribute('oninput' , 'executeFilter1_1();');
     if (checkState == true) {
         filterPanelItemCheckBoxItem.checked = true;
     }
@@ -198,7 +198,7 @@ function executeFilterDelayed() {
         filterExecutor = null;
     }
 
-    filterExecutor = setTimeout(executeFilter, 1000);
+    filterExecutor = setTimeout(executeFilter1_1, 1000);
 }
 
 function executeFilter() {
@@ -299,4 +299,82 @@ function buildFilterTag(tags) {
     }
 
     return boundingDiv;
+}
+
+function executeFilter1_1() {
+    console.log("Execute filter 1.1");
+    var minUserRating = -1;
+    var minUserRatingInput = document.getElementById('filter_panel_userrating_min');
+    if (minUserRatingInput.value) {
+        minUserRating = minUserRatingInput.value;
+    }
+    setCookie(minUserRatingInput.id, minUserRatingInput.value);
+
+    var maxUserRating = -1;
+    var maxUserRatingInput = document.getElementById('filter_panel_userrating_max');
+    if (maxUserRatingInput.value) {
+        maxUserRating = maxUserRatingInput.value;
+    }
+    setCookie(maxUserRatingInput.id, maxUserRatingInput.value);
+
+    // build filter model
+    var model = {
+        "Name": document.getElementById('filter_panel_search').value,
+        "Platform": GetFilterQuery1_1('platform'),
+        "Genre": GetFilterQuery1_1('genre'),
+        "GameMode": GetFilterQuery1_1('gamemmode'),
+        "PlayerPerspective": GetFilterQuery1_1('playerperspective'),
+        "Theme": GetFilterQuery1_1('theme'),
+        "GameRating": {
+            "MinimumRating": minUserRating,
+            "MinimumRatingCount": -1,
+            "MaximumRating": maxUserRating,
+            "MaximumRatingCount": -1,
+            "IncludeUnrated": true
+        },
+        "GameAgeRating": {
+            "AgeGroupings": [
+                "Child",
+                "Teen",
+                "Mature",
+                "Adult"
+            ],
+            "IncludeUnrated": true
+        },
+        "Sorting": {
+            "SortBy": "NameThe",
+            "SortAscenting": true
+        }
+    };
+
+    console.log('Search model = ' + JSON.stringify(model));
+
+    ajaxCall(
+        '/api/v1.1/Games',
+        'POST',
+        function (result) {
+            var gameElement = document.getElementById('games_library');
+            formatGamesPanel(gameElement, result);
+        },
+        function (error) {
+            console.log('An error occurred: ' + JSON.stringify(error));
+        },
+        JSON.stringify(model)
+    );
+}
+
+function GetFilterQuery1_1(filterName) {
+    var Filters = document.getElementsByName('filter_' + filterName);
+    var selections = [];
+
+    for (var i = 0; i < Filters.length; i++) {
+        if (Filters[i].checked) {
+            setCookie(Filters[i].id, true);
+            selections.push(Filters[i].getAttribute('filter_id'));
+        } else {
+            setCookie(Filters[i].id, false);
+        }
+    }
+
+    return selections;
 }

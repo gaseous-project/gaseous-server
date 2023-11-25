@@ -7,8 +7,12 @@ using gaseous_server.SignatureIngestors.XML;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Versioning;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.OpenApi.Models;
+using Authentication;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 
 Logging.WriteToDiskOnly = true;
 Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server " + Assembly.GetExecutingAssembly().GetName().Version);
@@ -117,11 +121,14 @@ builder.Services.AddApiVersioning(config =>
     config.DefaultApiVersion = new ApiVersion(1, 0);
     config.AssumeDefaultVersionWhenUnspecified = true;
     config.ReportApiVersions = true;
+    config.ApiVersionReader = ApiVersionReader.Combine(new UrlSegmentApiVersionReader(),
+                                                    new HeaderApiVersionReader("x-api-version"),
+                                                    new MediaTypeApiVersionReader("x-api-version"));
 });
-builder.Services.AddApiVersioning(setup =>
-{
-    setup.ApiVersionReader = new UrlSegmentApiVersionReader();
-});
+// builder.Services.AddApiVersioning(setup =>
+// {
+//     setup.ApiVersionReader = new UrlSegmentApiVersionReader();
+// });
 builder.Services.AddVersionedApiExplorer(setup =>
 {
     setup.GroupNameFormat = "'v'VVV";
@@ -166,6 +173,24 @@ builder.Services.AddSwaggerGen(options =>
             }
         });
 
+        options.SwaggerDoc("v1.1", new OpenApiInfo
+        {
+            Version = "v1.1",
+            Title = "Gaseous Server API",
+            Description = "An API for managing the Gaseous Server",
+            TermsOfService = new Uri("https://github.com/gaseous-project/gaseous-server"),
+            Contact = new OpenApiContact
+            {
+                Name = "GitHub Repository",
+                Url = new Uri("https://github.com/gaseous-project/gaseous-server")
+            },
+            License = new OpenApiLicense
+            {
+                Name = "Gaseous Server License",
+                Url = new Uri("https://github.com/gaseous-project/gaseous-server/blob/main/LICENSE")
+            }
+        });
+
         // using System.Reflection;
         var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
         options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
@@ -173,18 +198,114 @@ builder.Services.AddSwaggerGen(options =>
 );
 builder.Services.AddHostedService<TimedHostedService>();
 
+// identity
+builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+        {
+            options.Password.RequireDigit = true;
+            options.Password.RequireLowercase = true;
+            options.Password.RequireNonAlphanumeric = false;
+            options.Password.RequireUppercase = true;
+            options.Password.RequiredLength = 10;
+            options.User.AllowedUserNameCharacters = null;
+            options.User.RequireUniqueEmail = true;
+            options.SignIn.RequireConfirmedPhoneNumber = false;
+            options.SignIn.RequireConfirmedEmail = false;
+            options.SignIn.RequireConfirmedAccount = false;
+        })
+    .AddUserStore<UserStore>()
+    .AddRoleStore<RoleStore>()
+    .AddDefaultTokenProviders()
+    .AddDefaultUI()
+    ;
+builder.Services.ConfigureApplicationCookie(options =>
+        {
+            options.Cookie.Name = "Gaseous.Identity";
+            options.ExpireTimeSpan = TimeSpan.FromDays(90);
+            options.SlidingExpiration = true;
+        });
+// builder.Services.AddIdentityCore<ApplicationUser>(options => {
+//         options.SignIn.RequireConfirmedAccount = false;
+//         options.User.RequireUniqueEmail = true;
+//         options.Password.RequireDigit = false;
+//         options.Password.RequiredLength = 10;
+//         options.Password.RequireNonAlphanumeric = false;
+//         options.Password.RequireUppercase = false;
+//         options.Password.RequireLowercase = false;
+//     });
+builder.Services.AddScoped<UserStore>();
+builder.Services.AddScoped<RoleStore>();
+
+builder.Services.AddTransient<IUserStore<ApplicationUser>, UserStore>();
+builder.Services.AddTransient<IRoleStore<ApplicationRole>, RoleStore>();
+
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("Admin", policy => policy.RequireRole("Admin"));
+    options.AddPolicy("Gamer", policy => policy.RequireRole("Gamer"));
+    options.AddPolicy("Player", policy => policy.RequireRole("Player"));
+});
+
+// builder.Services.AddControllersWithViews(options =>
+// {
+//     options.Filters.Add(new Microsoft.AspNetCore.Mvc.ValidateAntiForgeryTokenAttribute());
+// });
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
 //if (app.Environment.IsDevelopment())
 //{
 app.UseSwagger();
-app.UseSwaggerUI();
+app.UseSwaggerUI(options =>
+    {
+        options.SwaggerEndpoint($"/swagger/v1/swagger.json", "v1.0");
+        options.SwaggerEndpoint($"/swagger/v1.1/swagger.json", "v1.1");
+    }
+);
 //}
 
 //app.UseHttpsRedirection();
 
 app.UseResponseCaching();
+
+// set up system roles
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleStore>();
+    var roles = new[] { "Admin", "Gamer", "Player" };
+ 
+    foreach (var role in roles)
+    {
+        if (await roleManager.FindByNameAsync(role, CancellationToken.None) == null)
+        {
+            ApplicationRole applicationRole = new ApplicationRole();
+            applicationRole.Name = role;
+            applicationRole.NormalizedName = role.ToUpper();
+            await roleManager.CreateAsync(applicationRole, CancellationToken.None);
+        }
+    }
+
+    // set up administrator account
+    var userManager = scope.ServiceProvider.GetRequiredService<UserStore>();
+    if (await userManager.FindByNameAsync("admin@localhost", CancellationToken.None) == null)
+    {
+        ApplicationUser adminUser = new ApplicationUser{
+            Id = Guid.NewGuid().ToString(),
+            Email = "admin@localhost",
+            NormalizedEmail = "ADMIN@LOCALHOST",
+            EmailConfirmed = true,
+            UserName = "administrator",
+            NormalizedUserName = "ADMINISTRATOR"
+        };
+
+        //set user password
+        PasswordHasher<ApplicationUser> ph = new PasswordHasher<ApplicationUser>();
+        adminUser.PasswordHash = ph.HashPassword(adminUser, "letmein");
+
+        await userManager.CreateAsync(adminUser, CancellationToken.None);
+        await userManager.AddToRoleAsync(adminUser, "Admin", CancellationToken.None);
+    }
+}
 
 app.UseAuthorization();
 
@@ -196,6 +317,72 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.MapControllers();
+
+// emergency password recovery if environment variable is set
+// process:
+// - set the environment variable "recoveraccount" to the email address of the account to be recovered
+// - when the server starts the password will be reset to a random string and saved in the library
+//   directory with the name RecoverAccount.txt
+// - user should copy this password and remove the "recoveraccount" environment variable and the
+//   RecoverAccount.txt file
+// - the server will not start while the RecoverAccount.txt file exists
+string PasswordRecoveryFile = Path.Combine(Config.LibraryConfiguration.LibraryRootDirectory, "RecoverAccount.txt");
+if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("recoveraccount")))
+{   
+    if (File.Exists(PasswordRecoveryFile))
+    {
+        // password has already been set - do nothing and just exit
+        Logging.Log(Logging.LogType.Critical, "Server Startup", "Unable to start while recoveraccount environment varibale is set and RecoverAccount.txt file exists.", null, true);
+        Environment.Exit(0);
+    }
+    else
+    {
+        // generate and save the password to disk
+        int length = 10;
+        string chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()_+";
+        var random = new Random();
+        string password = new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
+
+        File.WriteAllText(PasswordRecoveryFile, password);
+        
+        // reset the password
+        using (var scope = app.Services.CreateScope())
+        {
+            var userManager = scope.ServiceProvider.GetRequiredService<UserStore>();
+            if (await userManager.FindByNameAsync(Environment.GetEnvironmentVariable("recoveraccount"), CancellationToken.None) != null)
+            {
+                ApplicationUser User = await userManager.FindByEmailAsync(Environment.GetEnvironmentVariable("recoveraccount"), CancellationToken.None);
+
+                //set user password
+                PasswordHasher<ApplicationUser> ph = new PasswordHasher<ApplicationUser>();
+                User.PasswordHash = ph.HashPassword(User, password);
+
+                await userManager.SetPasswordHashAsync(User, User.PasswordHash, CancellationToken.None);
+
+                Logging.Log(Logging.LogType.Information, "Server Startup", "Password reset complete, remove the recoveraccount environment variable and RecoverAccount.text file to allow server start.", null, true);
+
+                Environment.Exit(0);
+            }
+            else
+            {
+                Logging.Log(Logging.LogType.Critical, "Server Startup", "Account to recover not found.", null, true);
+
+                Environment.Exit(0);
+            }
+        }
+
+    }
+}
+else
+{
+    // check if RecoverAccount.text file is present
+    if (File.Exists(PasswordRecoveryFile))
+    {
+        // cannot start while password recovery file exists
+        Logging.Log(Logging.LogType.Critical, "Server Startup", "Unable to start while RecoverAccount.txt file exists. Remove the file and try again.", null, true);
+        Environment.Exit(0);
+    }
+}
 
 // setup library directories
 Config.LibraryConfiguration.InitLibrary();

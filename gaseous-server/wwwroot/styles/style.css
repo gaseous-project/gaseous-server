@@ -30,12 +30,12 @@ h3 {
 .modal {
     display: none; /* Hidden by default */
     position: fixed; /* Stay in place */
-    z-index: 1; /* Sit on top */
+    z-index: 100; /* Sit on top */
     left: 0;
     top: 0;
     width: 100%; /* Full width */
     height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
+    overflow: none; /* Enable scroll if needed */
     background-color: rgb(0,0,0); /* Fallback color */
     background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
     backdrop-filter: blur(8px);
@@ -47,9 +47,10 @@ h3 {
 /* Modal Content/Box */
 .modal-content {
     background-color: #383838;
-    margin: 15% auto; /* 15% from the top and centered */
+    margin: 10% auto; /* 15% from the top and centered */
     padding: 10px;
     border: 1px solid #888;
+    border-radius: 10px;
     width: 700px; /* Could be more or less, depending on screen size */
     min-height: 358px;
 }
@@ -58,6 +59,7 @@ h3 {
     margin: 20% auto; /* 20% from the top and centered */
     padding: 10px;
     border: 1px solid #888;
+    border-radius: 10px;
     width: 300px; /* Could be more or less, depending on screen size */
     min-height: 110px;
 }
@@ -205,7 +207,7 @@ h3 {
     z-index: 1;
 }
 
-input[type='text'], input[type='number'] {
+input[type='text'], input[type='number'], input[type="email"], input[type="password"] {
     background-color: #2b2b2b;
     color: white;
     padding: 5px;
@@ -409,7 +411,7 @@ input[id='filter_panel_userrating_max'] {
     display: inline-block;
     max-width: 32px;
     max-height: 32px;
-    margin-right: 2px;
+    margin-right: 10px;
 }
 
 #gamescreenshots {
@@ -621,14 +623,14 @@ th {
     height: 100%;
 }
 
-div[name="properties_toc_item"] {
+div[name="properties_toc_item"],div[name="properties_user_toc_item"],div[name="properties_profile_toc_item"] {
     padding: 10px;
     border-bottom-width: 1px;
     border-bottom-style: solid;
     border-bottom-color: #2b2b2b;
 }
 
-div[name="properties_toc_item"]:hover {
+div[name="properties_toc_item"]:hover,div[name="properties_user_toc_item"]:hover,div[name="properties_profile_toc_item"]:hover {
     background-color: #2b2b2b;
     cursor: pointer;
 }
@@ -965,4 +967,98 @@ button:disabled {
 
 .romGroupTitles {
     padding-left: 20px;
+}
+
+.loginwindow {
+    position: fixed; /* Stay in place */
+    left: 0;
+    top: 0;
+    width: 100%; /* Full width */
+    height: 100%; /* Full height */
+    overflow: auto; /* Enable scroll if needed */
+    /*background-color: rgb(0,0,0); /* Fallback color */
+    /*background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+    /*backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);*/
+    filter: drop-shadow(5px 5px 10px #000);
+    -webkit-filter: drop-shadow(5px 5px 10px #000);
+}
+
+/* Modal Content/Box */
+.loginwindow-content {
+    position: relative;
+    background-color: #383838;
+    margin: 15% auto; /* 15% from the top and centered */
+    padding: 10px;
+    border: 1px solid #888;
+    border-radius: 10px;
+    width: 350px; /* Could be more or less, depending on screen size */
+    min-height: 250px;
+}
+
+#loginwindow_header_label {
+    font-family: Commodore64;
+    display: inline-block;
+    padding: 10px;
+    font-size: 24pt;
+    vertical-align: top;
+    /*color: #edeffa;*/
+    color: #7c70da;
+}
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+    position: relative;
+    display: inline-block;
+    float: right;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+    display: none;
+    position: absolute;
+    background-color: #f1f1f1;
+    min-width: 160px;
+    /* box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); */
+    z-index: 1;
+    right: 0;
+    top: 40px;
+    filter: drop-shadow(5px 5px 10px #000);
+    -webkit-filter: drop-shadow(5px 5px 10px #000);
+}
+
+/* Links inside the dropdown */
+.dropdown-content a, .dropdown-content span {
+    color: black;
+    padding: 12px 16px;
+    text-decoration: none;
+    display: block;
+}
+
+.dropdown-content span {
+    cursor: auto;
+}
+  
+/* Change color of dropdown links on hover */
+.dropdown-content a:hover {background-color: #ddd;}
+  
+/* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
+.show {display:block;}
+
+.dropdownroleitem {
+    text-transform: capitalize;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+    background-color: red;
+    border-color: red;
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 5px;
+    padding: 3px 6px;
+    display: inline-block;
+    margin-top: 5px;
+    margin-bottom: 5px;
+    margin-left: 5px;
+    margin-right: 5px;
 }

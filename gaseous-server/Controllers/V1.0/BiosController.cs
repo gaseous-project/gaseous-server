@@ -4,6 +4,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
 using gaseous_server.Classes;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace gaseous_server.Controllers
@@ -11,9 +12,12 @@ namespace gaseous_server.Controllers
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize]
     public class BiosController : Controller
     {
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public List<Classes.Bios.BiosItem> GetBios()
@@ -22,6 +26,7 @@ namespace gaseous_server.Controllers
         }
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("{PlatformId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
@@ -31,8 +36,10 @@ namespace gaseous_server.Controllers
         }
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpHead]
         [Route("zip/{PlatformId}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
@@ -66,8 +73,10 @@ namespace gaseous_server.Controllers
         }
 
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpHead]
         [Route("{PlatformId}/{BiosName}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using gaseous_server.Classes;
 using IGDB.Models;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -12,10 +13,13 @@ namespace gaseous_server.Controllers
 {
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.0")]
+    [ApiVersion("1.1")]
+    [Authorize]
     [ApiController]
     public class FilterController : ControllerBase
     {
         [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
         //[ResponseCache(CacheProfileName = "5Minute")]

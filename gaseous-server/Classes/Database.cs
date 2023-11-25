@@ -147,6 +147,50 @@ namespace gaseous_server.Classes
 			return _ExecuteCMD(Command, Parameters, Timeout, ConnectionString);
         }
 
+		public List<Dictionary<string, object>> ExecuteCMDDict(string Command)
+		{
+			Dictionary<string, object> dbDict = new Dictionary<string, object>();
+			return _ExecuteCMDDict(Command, dbDict, 30, "");
+		}
+
+        public List<Dictionary<string, object>> ExecuteCMDDict(string Command, Dictionary<string, object> Parameters)
+        {
+            return _ExecuteCMDDict(Command, Parameters, 30, "");
+        }
+
+        public List<Dictionary<string, object>> ExecuteCMDDict(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
+        {
+			return _ExecuteCMDDict(Command, Parameters, Timeout, ConnectionString);
+        }
+
+		private List<Dictionary<string, object>> _ExecuteCMDDict(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
+		{
+			DataTable dataTable = _ExecuteCMD(Command, Parameters, Timeout, ConnectionString);
+
+			// convert datatable to dictionary
+			List<Dictionary<string, object?>> rows = new List<Dictionary<string, object?>>();
+
+			foreach (DataRow dataRow in dataTable.Rows)
+			{
+				Dictionary<string, object?> row = new Dictionary<string, object?>();
+				for (int i = 0; i < dataRow.Table.Columns.Count; i++)
+				{
+					string columnName = dataRow.Table.Columns[i].ColumnName;
+					if (dataRow[i] == System.DBNull.Value)
+					{
+						row.Add(columnName, null);
+					}
+					else
+					{
+						row.Add(columnName, dataRow[i].ToString());
+					}
+				}
+				rows.Add(row);
+			}
+
+			return rows;
+		}
+
         private DataTable _ExecuteCMD(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
         {
             if (ConnectionString == "") { ConnectionString = _ConnectionString; }
@@ -157,6 +201,35 @@ namespace gaseous_server.Classes
                     return (DataTable)conn.ExecCMD(Command, Parameters, Timeout);
                 default:
                     return new DataTable();
+            }
+        }
+
+		public int ExecuteNonQuery(string Command)
+		{
+			Dictionary<string, object> dbDict = new Dictionary<string, object>();
+			return _ExecuteNonQuery(Command, dbDict, 30, "");
+		}
+
+        public int ExecuteNonQuery(string Command, Dictionary<string, object> Parameters)
+        {
+            return _ExecuteNonQuery(Command, Parameters, 30, "");
+        }
+
+        public int ExecuteNonQuery(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
+        {
+			return _ExecuteNonQuery(Command, Parameters, Timeout, ConnectionString);
+        }
+
+        private int _ExecuteNonQuery(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
+        {
+            if (ConnectionString == "") { ConnectionString = _ConnectionString; }
+            switch (_ConnectorType)
+            {
+                case databaseType.MySql:
+                    MySQLServerConnector conn = new MySQLServerConnector(ConnectionString);
+                    return (int)conn.ExecNonQuery(Command, Parameters, Timeout);
+                default:
+                    return 0;
             }
         }
 
@@ -282,6 +355,47 @@ namespace gaseous_server.Classes
 				conn.Close();
 
 				return RetTable;
+			}
+
+			public int ExecNonQuery(string SQL, Dictionary< string, object> Parameters, int Timeout)
+			{
+				int result = 0;
+
+                Logging.Log(Logging.LogType.Debug, "Database", "Connecting to database", null, true);
+                MySqlConnection conn = new MySqlConnection(DBConn);
+				conn.Open();
+
+				MySqlCommand cmd = new MySqlCommand
+				{
+					Connection = conn,
+					CommandText = SQL,
+					CommandTimeout = Timeout
+				};
+
+				foreach (string Parameter in Parameters.Keys)
+				{
+					cmd.Parameters.AddWithValue(Parameter, Parameters[Parameter]);
+				}
+
+				try
+				{
+                    Logging.Log(Logging.LogType.Debug, "Database", "Executing sql: '" + SQL + "'", null, true);
+					if (Parameters.Count > 0)
+					{
+						string dictValues = string.Join(";", Parameters.Select(x => string.Join("=", x.Key, x.Value)));
+						Logging.Log(Logging.LogType.Debug, "Database", "Parameters: " + dictValues, null, true);
+					}
+                    result = cmd.ExecuteNonQuery();
+				} catch (Exception ex) {
+					Logging.Log(Logging.LogType.Critical, "Database", "Error while executing '" + SQL + "'", ex);
+					Trace.WriteLine("Error executing " + SQL);
+					Trace.WriteLine("Full exception: " + ex.ToString());
+				}
+
+				Logging.Log(Logging.LogType.Debug, "Database", "Closing database connection", null, true);
+				conn.Close();
+
+				return result;
 			}
 
             public void TransactionExecCMD(List<Dictionary<string, object>> Parameters, int Timeout)
