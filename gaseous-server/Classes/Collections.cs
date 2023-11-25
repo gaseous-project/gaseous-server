@@ -415,7 +415,7 @@ namespace gaseous_server.Classes
                                 if (File.Exists(biosItem.biosPath))
                                 {
                                     Logging.Log(Logging.LogType.Information, "Collections", "Copying BIOS file: " + biosItem.filename);
-                                    File.Copy(biosItem.biosPath, Path.Combine(ZipBiosPath, biosItem.filename));
+                                    File.Copy(biosItem.biosPath, Path.Combine(ZipBiosPath, biosItem.filename), true);
                                 }
                             }
                         }
