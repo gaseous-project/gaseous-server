@@ -144,33 +144,38 @@
 
             // start populating drop downs
             if (result.webEmulator) {
-                if (result.webEmulator.availableWebEmulators.length > 0) {
-                    availableWebEmulators = result.webEmulator.availableWebEmulators;
+                if (result.webEmulator.availableWebEmulators) {
+                    if (result.webEmulator.availableWebEmulators.length > 0) {
+                        availableWebEmulators = result.webEmulator.availableWebEmulators;
 
-                    var offOption = new Option("-", "", false, false);
-                    $('#mapping_edit_webemulatorengine').append(offOption).trigger('change');
-                    for (var e = 0; e < result.webEmulator.availableWebEmulators.length; e++) {
-                        var newOption = new Option(result.webEmulator.availableWebEmulators[e].emulatorType, result.webEmulator.availableWebEmulators[e].emulatorType, false, false);
-                        $('#mapping_edit_webemulatorengine').append(newOption).trigger('change');
-                    }
-                    $('#mapping_edit_webemulatorengine').val(result.webEmulator.type);
-                    $('#mapping_edit_webemulatorengine').trigger('change');
+                        var offOption = new Option("-", "", false, false);
+                        $('#mapping_edit_webemulatorengine').append(offOption).trigger('change');
+                        for (var e = 0; e < result.webEmulator.availableWebEmulators.length; e++) {
+                            var newOption = new Option(result.webEmulator.availableWebEmulators[e].emulatorType, result.webEmulator.availableWebEmulators[e].emulatorType, false, false);
+                            $('#mapping_edit_webemulatorengine').append(newOption).trigger('change');
+                        }
+                        $('#mapping_edit_webemulatorengine').val(result.webEmulator.type);
+                        $('#mapping_edit_webemulatorengine').trigger('change');
 
-                    // select cores
-                    RenderWebEmulatorCores(result.webEmulator.core);
+                        // select cores
+                        RenderWebEmulatorCores(result.webEmulator.core);
 
-                    if (result.webEmulator.type.length > 0) {
-                        document.getElementById('mapping_edit_enablewebemulator').checked = true;
-                    }
-                    
-                    DisplayWebEmulatorHelp(result.webEmulator.type);
+                        if (result.webEmulator.type.length > 0) {
+                            document.getElementById('mapping_edit_enablewebemulator').checked = true;
+                        }
+                        
+                        DisplayWebEmulatorHelp(result.webEmulator.type);
 
-                    $('#mapping_edit_webemulatorengine').on('change', function(e) {
-                        RenderWebEmulatorCores();
-                    });
-                    if (result.webEmulator.type.length > 0) {
-                        DisplayWebEmulatorContent(true);
+                        $('#mapping_edit_webemulatorengine').on('change', function(e) {
+                            RenderWebEmulatorCores();
+                        });
+                        if (result.webEmulator.type.length > 0) {
+                            DisplayWebEmulatorContent(true);
+                        } else {
+                            DisplayWebEmulatorContent(false);
+                        }
                     } else {
+                        // no emulators available
                         DisplayWebEmulatorContent(false);
                     }
                 } else {
@@ -269,11 +274,7 @@
     }
 
     function SubmitMappingItem() {
-        var alternateNames = [];
-        for (var i = 0; i < document.getElementById('mapping_edit_alternativenames').childNodes.length; i++) {
-            var optionObj = document.getElementById('mapping_edit_alternativenames').childNodes[i];
-            alternateNames.push(optionObj.innerHTML);
-        }
+        var alternateNames = $('#mapping_edit_alternativenames').val();
 
         var knownExtensions = $('#mapping_edit_supportedfileextensions').val();
         
@@ -293,34 +294,36 @@
 
         var bios = [];
         var biosTable = document.getElementById('EditableTable_bios');
-        // get rows
-        for (var i = 0; i < biosTable.childNodes.length; i++) {
-            var rowObj = biosTable.childNodes[i];
-            var biosObj = {};
-            var addBiosObj = false;
+        if (biosTable) {
+            // get rows
+            for (var i = 0; i < biosTable.childNodes.length; i++) {
+                var rowObj = biosTable.childNodes[i];
+                var biosObj = {};
+                var addBiosObj = false;
 
-            // get cells
-            for (var v = 0; v < rowObj.childNodes.length; v++) {
-                var cell = rowObj.childNodes[v];
-                if (cell.tagName.toLowerCase() != 'th') {
-                    // get input boxes
-                    for (var c = 0; c < cell.childNodes.length; c++) {
-                        var element = cell.childNodes[c];
-                        if (element) {
-                            if (element.getAttribute('data-cell')) {
-                                var nodeName = element.getAttribute('data-cell');
-                                biosObj[nodeName] = element.value;
-                                addBiosObj = true;
-                                
-                                break;
+                // get cells
+                for (var v = 0; v < rowObj.childNodes.length; v++) {
+                    var cell = rowObj.childNodes[v];
+                    if (cell.tagName.toLowerCase() != 'th') {
+                        // get input boxes
+                        for (var c = 0; c < cell.childNodes.length; c++) {
+                            var element = cell.childNodes[c];
+                            if (element) {
+                                if (element.getAttribute('data-cell')) {
+                                    var nodeName = element.getAttribute('data-cell');
+                                    biosObj[nodeName] = element.value;
+                                    addBiosObj = true;
+                                    
+                                    break;
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            if (addBiosObj == true) {
-                bios.push(biosObj);
+                if (addBiosObj == true) {
+                    bios.push(biosObj);
+                }
             }
         }
 
