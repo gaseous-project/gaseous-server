@@ -400,12 +400,12 @@ PlatformMapping.ExtractPlatformMap();
 // add background tasks
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.SignatureIngestor,
-    60
+    int.Parse(Config.ReadSetting("Interval_SignatureIngestor", "60"))
     )
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.TitleIngestor,
-    1,
+    int.Parse(Config.ReadSetting("Interval_TitleIngestor", "1")),
     new List<ProcessQueue.QueueItemType>
     {
         ProcessQueue.QueueItemType.OrganiseLibrary,
@@ -414,12 +414,12 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.MetadataRefresh,
-    360
+    int.Parse(Config.ReadSetting("Interval_MetadataRefresh", "360"))
     )
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.OrganiseLibrary,
-    1440,
+    int.Parse(Config.ReadSetting("Interval_OrganiseLibrary", "1440")),
     new List<ProcessQueue.QueueItemType>
     {
         ProcessQueue.QueueItemType.LibraryScan,
@@ -429,7 +429,7 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.LibraryScan,
-    1440,
+    int.Parse(Config.ReadSetting("Interval_LibraryScan", "1440")),
     new List<ProcessQueue.QueueItemType>
     {
         ProcessQueue.QueueItemType.OrganiseLibrary,
@@ -438,7 +438,7 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.Rematcher,
-    1440,
+    int.Parse(Config.ReadSetting("Interval_Rematcher", "1440")),
     new List<ProcessQueue.QueueItemType>
     {
         ProcessQueue.QueueItemType.OrganiseLibrary,
@@ -447,7 +447,7 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.Maintainer,
-    10080,
+    int.Parse(Config.ReadSetting("Interval_Maintainer", "10080")),
     new List<ProcessQueue.QueueItemType>
     {
         ProcessQueue.QueueItemType.All
