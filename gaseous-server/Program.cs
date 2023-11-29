@@ -429,7 +429,7 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.LibraryScan,
-    60,
+    1440,
     new List<ProcessQueue.QueueItemType>
     {
         ProcessQueue.QueueItemType.OrganiseLibrary,
