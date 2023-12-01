@@ -67,7 +67,17 @@ namespace gaseous_server
                     return LastRunTime.AddMinutes(Interval);
                 }
             }
-            public int Interval => _Interval;
+            public int Interval
+            {
+                get
+                {
+                    return _Interval;
+                }
+                set
+                {
+                    _Interval = value;
+                }
+            }
             public string LastResult => _LastResult;
             public string? LastError => _LastError;
             public bool Force => _ForceExecute;
