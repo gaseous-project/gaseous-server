@@ -27,6 +27,9 @@
             <tr>
                 <td colspan="2" id="settings_users_edit_label"></td>
             </tr>
+            <tr>
+                <td colspan="2" id="settings_users_edit_errorlabel" style="color: red;"></td>
+            </tr>
         </table>
     </div>
 
@@ -339,6 +342,7 @@
             var newPassword = document.getElementById('settings_users_edit_password').value;
 
             if (newPassword.length > 0) {
+                console.log("New password value is long enough to commit to database");
                 var model = {
                     "newPassword": newPassword,
                     "confirmPassword": newPassword
@@ -348,12 +352,10 @@
                     '/api/v1.1/Account/Users/' + modalVariables + '/Password',
                     'POST',
                     function(result) {
-                        console.log(JSON.stringify(result));
-                        savePropertiesCallback();
+                        savePasswordsCallback(result);
                     },
                     function(error) {
-                        console.log(JSON.stringify(error));
-                        savePropertiesCallback();
+                        savePasswordsCallback(error);
                     },
                     JSON.stringify(model)
                 );
@@ -363,6 +365,21 @@
             }
         } else {
             console.log("Passwords don't match");
+        }
+    }
+
+    function savePasswordsCallback(result) {
+        console.log(result);
+        if (result.succeeded == true) {
+            savePropertiesCallback();
+        } else {
+            var errorBox = document.getElementById('settings_users_edit_errorlabel');
+            errorBox.innerHTML = '';
+            for (var i = 0; i < result.errors.length; i++) {
+                var errorMessage = document.createElement('p');
+                errorMessage.innerHTML = result.errors[i].description;
+                errorBox.appendChild(errorMessage);
+            }
         }
     }
 

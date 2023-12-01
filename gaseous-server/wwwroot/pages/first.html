@@ -63,7 +63,7 @@
 
                 <table style="width: 100%; margin-top: 20px;" cellpadding="5px">
                     <tr>
-                        <td colspan="2" style="font-size: 18px;">Create your account.</td>
+                        <td colspan="2" style="font-size: 18px;">Create your administrator account.</td>
                     </tr>
                     <tr>
                         <th>Email</th>
@@ -79,6 +79,9 @@
                     </tr>
                     <tr>
                         <td colspan="2" id="login_passwordnotice">&nbsp;</td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" id="login_passworderrors" style="color: red;"></td>
                     </tr>
                     <tr>
                         <td colspan="2" style="padding-top: 20px;">
@@ -154,13 +157,19 @@
         }
 
         function loginCallback(result) {
-            switch(result.status) {
-                case 200:
-                    window.location.replace('/index.html');
-                    break;
-                default:
-                    // login failed
-                    break;
+            var errorLabel = document.getElementById('login_passwordnotice');
+            var errorBox = document.getElementById('login_passworderrors');
+            errorBox.innerHTML = '';
+
+            console.log(result);
+            if (result.succeeded == false) {
+                for (var i = 0; i < result.errors.length; i++) {
+                    var errorMessage = document.createElement('p');
+                    errorMessage.innerHTML = result.errors[i].description;
+                    errorBox.appendChild(errorMessage);
+                }
+            } else {
+                window.location.replace('/index.html');
             }
         }
     </script>

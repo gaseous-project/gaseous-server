@@ -63,7 +63,11 @@ namespace gaseous_server.Controllers
                         
                         Config.SetSetting("FirstRunStatus", "1");
 
-                        return Ok();
+                        return Ok(result);
+                    }
+                    else
+                    {
+                        return Ok(result);
                     }
                 }
 

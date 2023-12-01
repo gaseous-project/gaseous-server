@@ -67,6 +67,9 @@
                         </td>
                     </tr>
                     <tr>
+                        <td colspan="2" id="login_errorlabel" style="color: red;"></td>
+                    </tr>
+                    <tr>
                         <td colspan="2" style="padding-top: 20px;">
                             <button type="button" value="Sign In" onclick="UserLogin();" style="margin-top: 10px; width: 100%; font-size: 16px; border-radius: 10px; padding-top: 10px; padding-bottom: 10px;">Sign In</button>
                         </td>
@@ -120,6 +123,7 @@
                         break;
                     default:
                         // login failed
+                        document.getElementById('login_errorlabel').innerHTML = 'Incorrect password';
                         break;
                 }
             }

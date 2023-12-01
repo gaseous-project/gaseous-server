@@ -21,6 +21,9 @@
                 <td colspan="2" id="profile_passwordnotice"></td>
             </tr>
             <tr>
+                <td colspan="2" id="profile_passworderrors" style="color: red;"></td>
+            </tr>
+            <tr>
                 <td colspan="2" style="text-align: right;">
                     <button id="profile_resetpassword" value="Reset Password" disabled="disabled" onclick="ResetPassword();">Reset Password</button>
                 </td>
@@ -106,9 +109,16 @@
 
     function ResetPasswordCallback(result) {
         var errorLabel = document.getElementById('profile_passwordnotice');
+        var errorBox = document.getElementById('profile_passworderrors');
+        errorBox.innerHTML = '';
 
-        if (result.succeeded == false) {
-            errorLabel.innerHTML = result.errors.description;
+        console.log(result);
+        if (result.responseJSON.succeeded == false) {
+            for (var i = 0; i < result.responseJSON.errors.length; i++) {
+                var errorMessage = document.createElement('p');
+                errorMessage.innerHTML = result.responseJSON.errors[i].description;
+                errorBox.appendChild(errorMessage);
+            }
         } else {
             document.getElementById('profile_oldpassword').value = '';
             document.getElementById('profile_newpassword').value = '';
