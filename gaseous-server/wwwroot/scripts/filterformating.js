@@ -201,85 +201,6 @@ function executeFilterDelayed() {
     filterExecutor = setTimeout(executeFilter1_1, 1000);
 }
 
-function executeFilter() {
-    // build filter lists
-    var queries = [];
-
-    var platforms = '';
-    var genres = '';
-
-    var searchString = document.getElementById('filter_panel_search');
-    if (searchString.value.length > 0) {
-        queries.push('name=' + searchString.value);
-    }
-    setCookie(searchString.id, searchString.value);
-
-    var minUserRating = 0;
-    var minUserRatingInput = document.getElementById('filter_panel_userrating_min');
-    if (minUserRatingInput.value) {
-        minUserRating = minUserRatingInput.value;
-        queries.push('minrating=' + minUserRating);
-    }
-    setCookie(minUserRatingInput.id, minUserRatingInput.value);
-
-    var maxUserRating = 100;
-    var maxUserRatingInput = document.getElementById('filter_panel_userrating_max');
-    if (maxUserRatingInput.value) {
-        maxUserRating = maxUserRatingInput.value;
-        queries.push('maxrating=' + maxUserRating);
-    }
-    setCookie(maxUserRatingInput.id, maxUserRatingInput.value);
-
-    queries.push(GetFilterQuery('platform'));
-    queries.push(GetFilterQuery('genre'));
-    queries.push(GetFilterQuery('gamemode'));
-    queries.push(GetFilterQuery('playerperspective'));
-    queries.push(GetFilterQuery('theme'));
-
-    var queryString = '';
-    for (var i = 0; i < queries.length; i++) {
-        if (queries[i].length > 0) {
-            if (queryString.length == 0) {
-                queryString = '?';
-            } else {
-                queryString += '&';
-            }
-
-            queryString += queries[i];
-        }
-    }
-
-    console.log('Query string = ' + queryString);
-
-    ajaxCall('/api/v1.0/Games' + queryString, 'GET', function (result) {
-        var gameElement = document.getElementById('games_library');
-        formatGamesPanel(gameElement, result);
-    });
-}
-
-function GetFilterQuery(filterName) {
-    var Filters = document.getElementsByName('filter_' + filterName);
-    var queryString = '';
-
-    for (var i = 0; i < Filters.length; i++) {
-        if (Filters[i].checked) {
-            setCookie(Filters[i].id, true);
-            if (queryString.length > 0) {
-                queryString += ',';
-            }
-            queryString += Filters[i].getAttribute('filter_id');
-        } else {
-            setCookie(Filters[i].id, false);
-        }
-    }
-
-    if (queryString.length > 0) {
-        queryString = filterName + '=' + queryString;
-    }
-
-    return queryString;
-}
-
 function buildFilterTag(tags) {
     // accepts an array of numbers + classes for styling (optional)
     // example [ { label: "G: 13", class: "tag_Green" }, { label: "R: 17", class: "tag_Orange" } ]
@@ -301,7 +222,15 @@ function buildFilterTag(tags) {
     return boundingDiv;
 }
 
-function executeFilter1_1() {
+function executeFilter1_1(pageNumber, pageSize) {
+    if (!pageNumber) {
+        pageNumber = 1;
+    }
+
+    if (!pageSize) {
+        pageSize = 30;
+    }
+
     console.log("Execute filter 1.1");
     var minUserRating = -1;
     var minUserRatingInput = document.getElementById('filter_panel_userrating_min');
@@ -350,11 +279,11 @@ function executeFilter1_1() {
     console.log('Search model = ' + JSON.stringify(model));
 
     ajaxCall(
-        '/api/v1.1/Games',
+        '/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize,
         'POST',
         function (result) {
             var gameElement = document.getElementById('games_library');
-            formatGamesPanel(gameElement, result);
+            formatGamesPanel(gameElement, result, pageNumber, pageSize);
         },
         function (error) {
             console.log('An error occurred: ' + JSON.stringify(error));

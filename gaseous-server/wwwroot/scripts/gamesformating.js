@@ -1,19 +1,66 @@
-﻿function formatGamesPanel(targetElement, result) {
-    targetElement.innerHTML = '';
-    for (var i = 0; i < result.length; i++) {
-        var game = renderGameIcon(result[i], true, false);
+﻿function formatGamesPanel(targetElement, result, pageNumber, pageSize) {
+    console.log("Displaying page: " + pageNumber);
+    console.log("Page size: " + pageSize);
+
+    if (pageNumber == 1) {
+        targetElement.innerHTML = ''; 
+    }
+
+    var existingLoadPageButton = document.getElementById('games_library_loadmore');
+    if (existingLoadPageButton) {
+        existingLoadPageButton.parentNode.removeChild(existingLoadPageButton);
+    }
+
+    for (var i = 0; i < result.games.length; i++) {
+        var game = renderGameIcon(result.games[i], true, false);
         targetElement.appendChild(game);
     }
 
     $('.lazy').Lazy({
         scrollDirection: 'vertical',
         effect: 'fadeIn',
-        visibleOnly: true
+        visibleOnly: false
     });
+
+    if (result.games.length == pageSize) {
+        var loadPageButton = document.createElement("div");
+        loadPageButton.id = 'games_library_loadmore';
+        loadPageButton.innerHTML = 'Load More';
+        loadPageButton.setAttribute('onclick', 'executeFilter1_1(' + (pageNumber + 1) + ', ' + pageSize + ');');
+        loadPageButton.setAttribute('data-pagenumber', Number(pageNumber + 1));
+        loadPageButton.setAttribute('data-pagesize', pageSize);
+        targetElement.appendChild(loadPageButton);
+    }
 }
+
+function isScrolledIntoView(elem) {
+    if (elem) {
+        var docViewTop = $(window).scrollTop();
+        var docViewBottom = docViewTop + $(window).height();
+
+        var elemTop = $(elem).offset().top;
+        var elemBottom = elemTop + $(elem).height();
+
+        return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop));
+    }
+}
+
+function IsInView() {
+    var loadElement = document.getElementById('games_library_loadmore');
+    if (loadElement) {
+        if (isScrolledIntoView(loadElement)) {
+            var pageNumber = Number(document.getElementById('games_library_loadmore').getAttribute('data-pagenumber'));
+            var pageSize = document.getElementById('games_library_loadmore').getAttribute('data-pagesize');
+            executeFilter1_1(pageNumber, pageSize);
+        }
+    }
+}
+
+$(window).scroll(IsInView);
 
 function renderGameIcon(gameObject, showTitle, showRatings) {
     var gameBox = document.createElement('div');
+    gameBox.id = "game_tile_" + gameObject.id;
     gameBox.className = 'game_tile';
     gameBox.setAttribute('onclick', 'window.location.href = "/index.html?page=game&id=' + gameObject.id + '";');
 

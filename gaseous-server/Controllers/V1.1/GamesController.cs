@@ -40,7 +40,7 @@ namespace gaseous_server.Controllers.v1_1
         [MapToApiVersion("1.1")]
         [HttpPost]
         [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> Game_v1_1(GameSearchModel model)
+        public async Task<IActionResult> Game_v1_1(GameSearchModel model, int pageNumber = 0, int pageSize = 0)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -77,7 +77,7 @@ namespace gaseous_server.Controllers.v1_1
                     model.GameAgeRating.IncludeUnrated = false;
                 }
 
-                return Ok(GetGames(model));
+                return Ok(GetGames(model, pageNumber, pageSize));
             }
             else
             {
@@ -128,7 +128,7 @@ namespace gaseous_server.Controllers.v1_1
             }
         }
     
-        public static List<Game> GetGames(GameSearchModel model)
+        public static GameReturnPackage GetGames(GameSearchModel model, int pageNumber = 0, int pageSize = 0)
         {
             string whereClause = "";
             string havingClause = "";
@@ -401,13 +401,54 @@ namespace gaseous_server.Controllers.v1_1
             List<IGDB.Models.Game> RetVal = new List<IGDB.Models.Game>();
 
             DataTable dbResponse = db.ExecuteCMD(sql, whereParams);
-            foreach (DataRow dr in dbResponse.Rows)
+
+            // get count
+            int RecordCount = dbResponse.Rows.Count;
+            
+            // compile data for return
+            int pageOffset = pageSize * (pageNumber - 1);
+            for (int i = 0; i < dbResponse.Rows.Count; i++)
             {
-                //RetVal.Add(Classes.Metadata.Games.GetGame((long)dr["ROMGameId"], false, false));
-                RetVal.Add(Classes.Metadata.Games.GetGame(dr));
+                DataRow dr = dbResponse.Rows[i];
+
+                bool includeGame = false;
+
+                if (pageSize == 0)
+                {
+                    // page size is full size include all
+                    includeGame = true;
+                }
+                else if (i >= pageOffset && i < (pageOffset + pageSize))
+                {
+                    includeGame = true;
+                }
+
+                if (includeGame == true)
+                {
+                    RetVal.Add(Classes.Metadata.Games.GetGame(dr));
+                }
             }
 
-            return RetVal;
+            GameReturnPackage gameReturn = new GameReturnPackage(RecordCount, RetVal);
+
+            return gameReturn;
+        }
+
+        public class GameReturnPackage
+        {
+            public GameReturnPackage()
+            {
+
+            }
+
+            public GameReturnPackage(int Count, List<Game> Games)
+            {
+                this.Count = Count;
+                this.Games = Games;
+            }
+
+            public int Count { get; set; }
+            public List<Game> Games { get; set; } = new List<Game>();
         }
     }
 }
