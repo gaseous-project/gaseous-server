@@ -389,3 +389,24 @@ function CreateBadge(BadgeText, ColourOverride) {
     }
     return badgeItem;
 }
+
+function GetTaskFriendlyName(TaskName, options) {
+    switch (TaskName) {
+        case 'SignatureIngestor':
+            return "Signature import";
+        case 'TitleIngestor':
+            return "Title import";
+        case 'MetadataRefresh':
+            return "Metadata refresh";
+        case 'OrganiseLibrary':
+            return "Organise library";
+        case 'LibraryScan':
+            return "Library scan";
+        case 'CollectionCompiler':
+            return "Compress collection id: " + options;
+        case 'BackgroundDatabaseUpgrade':
+            return "Background database upgrade";
+        default:
+            return TaskName;
+    }
+}

@@ -34,34 +34,8 @@
 
             if (result) {
                 for (var i = 0; i < result.length; i++) {
-                    var itemTypeName;
-                    switch (result[i].itemType) {
-                        case 'SignatureIngestor':
-                            itemTypeName = "Signature import";
-                            break;
-                        case 'TitleIngestor':
-                            itemTypeName = "Title import";
-                            break;
-                        case 'MetadataRefresh':
-                            itemTypeName = "Metadata refresh"
-                            break;
-                        case 'OrganiseLibrary':
-                            itemTypeName = "Organise library";
-                            break;
-                        case 'LibraryScan':
-                            itemTypeName = "Library scan";
-                            break;
-                        case 'CollectionCompiler':
-                            itemTypeName = "Compress collection id: " + result[i].options;
-                            break;
-                        case 'BackgroundDatabaseUpgrade':
-                            itemTypeName = "Background database upgrade";
-                            break;
-                        default:
-                            itemTypeName = result[i].itemType;
-                            break;
-                    }
-
+                    var itemTypeName = GetTaskFriendlyName(result[i].itemType, result[i].options);
+                    
                     var itemStateName;
                     var itemLastStart;
                     if (result[i].isBlocked == false) {
