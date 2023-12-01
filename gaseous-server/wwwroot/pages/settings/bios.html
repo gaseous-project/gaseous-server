@@ -2,60 +2,121 @@
     <h1 id="gametitle_label">Firmware</h1>
 </div>
 
-<h3>Firmware Availablility</h3>
+<h3>Firmware Availablility <span id="firmware_totalcount" style="float: right;"></span></h3>
+<p>
+    Display:
+    <ul style="list-style-type:none;">
+        <li><input type="checkbox" id="firmware_showavailable" checked="checked" onclick="displayFirmwareList();"/><label for="firmware_showavailable"> Available</label></li>
+        <li><input type="checkbox" id="firmware_showunavailable" checked="checked" onclick="displayFirmwareList();"/><label for="firmware_showunavailable"> Unavailable</label></li>
+    </ul>
+</p>
 <table id="table_firmware" class="romtable" cellspacing="0">
 
 </table>
 
 <script type="text/javascript">
+    var biosDict = {};
+
     ajaxCall('/api/v1.1/Bios', 'GET', function (result) {
         result.sort((a, b) => a.platformname.charCodeAt(0) - b.platformname.charCodeAt(0));
 
+        // sort into a dictionary
+        for (var i = 0; i < result.length; i++) {
+            var tempArray = [];
+            if (biosDict.hasOwnProperty(result[i].platformname)) {
+                tempArray = biosDict[result[i].platformname];
+                tempArray.push(result[i]);
+            } else {
+                tempArray.push(result[i]);
+                biosDict[result[i].platformname] = tempArray;
+            }
+
+            biosDict[result[i].platformname] = tempArray;
+        }
+        console.log(biosDict);
+
+        displayFirmwareList();
+    });
+
+    function displayFirmwareList() {
         var lastPlatform = '';
 
         var newTable = document.getElementById('table_firmware');
+        newTable.innerHTML = '';
         newTable.appendChild(createTableRow(true, ['Description', 'File name', 'MD5 Hash', 'Available']));
 
-        for (var i = 0; i < result.length; i++) {
-            if (result[i].platformname != lastPlatform) {
-                lastPlatform = result[i].platformname;
-                var platformRow = document.createElement('tr');
-                var platformHeader = document.createElement('th');
-                platformHeader.setAttribute('colspan', 4);
-                platformHeader.innerHTML = result[i].platformname;
-                platformRow.appendChild(platformHeader);
-                newTable.appendChild(platformRow);
+        var totalAvailable = 0;
+        var totalCount = 0;
+
+        for (const [key, value] of Object.entries(biosDict)) {
+            // new platform - show a header
+            var platformRow = document.createElement('tr');
+            var platformHeader = document.createElement('th');
+            platformHeader.setAttribute('colspan', 4);
+
+            var platformHeaderValue = document.createElement('span');
+            platformHeaderValue.innerHTML = key;
+            platformHeader.appendChild(platformHeaderValue);
+
+            var platformHeaderCounter = document.createElement('span');
+            platformHeaderCounter.style.float = 'right';
+            platformHeader.appendChild(platformHeaderCounter);
+
+            platformRow.appendChild(platformHeader);
+            newTable.appendChild(platformRow);
+            
+            var totalPlatformAvailable = 0;
+
+            var showAvailable = document.getElementById('firmware_showavailable').checked;
+            var showUnavailable = document.getElementById('firmware_showunavailable').checked;
+
+            for (var i = 0; i < value.length; i++) {
+                // update counters
+                if (value[i].available == true) {
+                    totalAvailable += 1;
+                    totalPlatformAvailable += 1;
+                }
+
+                if (
+                    (value[i].available == true && showAvailable == true) ||
+                    (value[i].available == false && showUnavailable == true)
+                ) {
+                    var biosFilename = document.createElement('a');
+                    biosFilename.href = '/api/v1.1/Bios/' + value[i].platformid + '/' + value[i].filename;
+                    biosFilename.innerHTML = value[i].filename;
+                    biosFilename.className = 'romlink';
+
+                    var availableText = document.createElement('span');
+                    if (value[i].available == true) {
+                        availableText.innerHTML = 'Available';
+                        availableText.className = 'greentext';
+
+                        biosFilename = document.createElement('a');
+                        biosFilename.href = '/api/v1.1/Bios/' + value[i].platformid + '/' + value[i].filename;
+                        biosFilename.innerHTML = value[i].filename;
+                        biosFilename.className = 'romlink';
+                    } else {
+                        availableText.innerHTML = 'Unavailable';
+                        availableText.className = 'redtext';
+
+                        biosFilename = document.createElement('span');
+                        biosFilename.innerHTML = value[i].filename;
+                    }
+
+                    var newRow = [
+                        value[i].description,
+                        biosFilename,
+                        value[i].hash,
+                        availableText
+                    ];
+                    newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
+                }
+                totalCount += 1;
             }
 
-            var biosFilename = document.createElement('a');
-            biosFilename.href = '/api/v1.1/Bios/' + result[i].platformid + '/' + result[i].filename;
-            biosFilename.innerHTML = result[i].filename;
-            biosFilename.className = 'romlink';
-
-            var availableText = document.createElement('span');
-            if (result[i].available == true) {
-                availableText.innerHTML = 'Available';
-                availableText.className = 'greentext';
-
-                biosFilename = document.createElement('a');
-                biosFilename.href = '/api/v1.1/Bios/' + result[i].platformid + '/' + result[i].filename;
-                biosFilename.innerHTML = result[i].filename;
-                biosFilename.className = 'romlink';
-            } else {
-                availableText.innerHTML = 'Unavailable';
-                availableText.className = 'redtext';
-
-                biosFilename = document.createElement('span');
-                biosFilename.innerHTML = result[i].filename;
-            }
-
-            var newRow = [
-                result[i].description,
-                biosFilename,
-                result[i].hash,
-                availableText
-            ];
-            newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
+            platformHeaderCounter.innerHTML = totalPlatformAvailable + ' / ' + value.length + ' available';
         }
-    });
+
+        document.getElementById('firmware_totalcount').innerHTML = totalAvailable + ' / ' + totalCount + ' available';
+    }
 </script>
