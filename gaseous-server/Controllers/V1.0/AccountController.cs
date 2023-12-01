@@ -375,7 +375,7 @@ namespace gaseous_server.Controllers
                     IdentityResult passwordChangeResult = await _userManager.ResetPasswordAsync(user, resetToken, model.NewPassword);
                     if (passwordChangeResult.Succeeded == true)
                     {
-                        return Ok();
+                        return Ok(passwordChangeResult);
                     }
                     else
                     {

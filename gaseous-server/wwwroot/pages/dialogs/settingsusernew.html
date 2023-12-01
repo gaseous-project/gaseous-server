@@ -29,6 +29,9 @@
         <td colspan="2" id="settings_users_new_label"></td>
     </tr>
     <tr>
+        <td colspan="2" id="settings_users_new_errors" style="color: red;"></td>
+    </tr>
+    <tr>
         <td colspan="2" style="text-align: right; padding-top: 10px;">
             <button value="OK" id="settings_users_new_okbutton" disabled="disabled" onclick="createUser();">OK</button><button value="Cancel" onclick="closeSubDialog();">Cancel</button>
         </td>
@@ -75,14 +78,27 @@
             '/api/v1.1/Account/Users',
             'POST',
             function(result) {
-                GetUsers();
-                closeSubDialog();
+                createUserCallback(result);
             },
             function(error) {
-                GetUsers();
-                closeSubDialog();
+                createUserCallback(result);
             },
             JSON.stringify(model)
         );
+    }
+
+    function createUserCallback(result) {
+        if (result.succeeded == true) {
+            GetUsers();
+            closeSubDialog();
+        } else {
+            var errorBox = document.getElementById('settings_users_new_errors');
+            errorBox.innerHTML = '';
+            for (var i = 0; i < result.errors.length; i++) {
+                var errorMessage = document.createElement('p');
+                errorMessage.innerHTML = result.errors[i].description;
+                errorBox.appendChild(errorMessage);
+            }
+        }
     }
 </script>
