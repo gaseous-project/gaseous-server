@@ -8,6 +8,15 @@
 </table>
 <div style="text-align: right;"><button id="settings_newlibrary" onclick="showSubDialog('librarynew');">New Library</button></div>
 
+<h2>Advanced Settings</h2>
+<p><strong>Warning</strong> Do not modify the below settings unless you know what you're doing.</p>
+<h3>Background Task Timers</h3>
+<p>All intervals are in minutes.</p>
+<table id="settings_tasktimers" class="romtable" style="width: 100%;" cellspacing="0">
+    
+</table>
+<div style="text-align: right;"><button id="settings_tasktimers_default" onclick="defaultTaskTimers();">Reset to Default</button><button id="settings_tasktimers_new" onclick="saveTaskTimers();">Save</button></div>
+
 <script type="text/javascript">
     function drawLibrary() {
         ajaxCall(
@@ -59,5 +68,67 @@
         );
     }
 
+    function getBackgroundTaskTimers() {
+        ajaxCall(
+            '/api/v1/System/Settings/BackgroundTasks/Intervals',
+            'GET',
+            function(result) {
+                var targetTable = document.getElementById('settings_tasktimers');
+                targetTable.innerHTML = '';
+
+                targetTable.appendChild(
+                    createTableRow(true, ['Background Task', 'Timer Interval', 'Default Interval', 'Minimum Allowed Interval'])
+                );
+
+                for (const [key, value] of Object.entries(result)) {
+                    var newTableRow = createTableRow(
+                        false,
+                        [
+                            GetTaskFriendlyName(value.task),
+                            '<input id="settings_tasktimers_' + value.task + '" name="settings_tasktimers_values" data-name="' + value.task + '" data-default="' + value.defaultInterval + '" type="number" placeholder="0" min="' + value.minimumAllowedValue + '" value="' + value.interval + '" />',
+                            value.defaultInterval,
+                            value.minimumAllowedValue
+                        ],
+                        'romrow',
+                        'romcell'
+                    );
+                    targetTable.appendChild(newTableRow);
+                }
+            }
+        );
+    }
+
+    function saveTaskTimers() {
+        var timerValues = document.getElementsByName('settings_tasktimers_values');
+
+        var model = {};
+        for (var i = 0; i < timerValues.length; i++) {
+            model[timerValues[i].getAttribute('data-name')] = timerValues[i].value;
+        }
+
+        ajaxCall(
+            '/api/v1/System/Settings/BackgroundTasks/Intervals',
+            'POST',
+            function(result) {
+                getBackgroundTaskTimers();
+            },
+            function(error) {
+                getBackgroundTaskTimers();
+            },
+            JSON.stringify(model)
+        );
+    }
+
+    function defaultTaskTimers() {
+        var timerValues = document.getElementsByName('settings_tasktimers_values');
+
+        for (var i = 0; i < timerValues.length; i++) {
+            timerValues[i].value = timerValues[i].getAttribute('data-default');
+        }
+
+        saveTaskTimers();
+    }
+
     drawLibrary();
+    getBackgroundTaskTimers();
 </script>
