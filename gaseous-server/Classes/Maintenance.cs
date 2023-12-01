@@ -60,7 +60,7 @@ namespace gaseous_server.Classes
                     {
                         retVal += responseRow.ItemArray[i] + "; ";
                     }
-                    Logging.Log(Logging.LogType.Information, "Maintenance", "Optimizse table " + row[0].ToString() + ": " + retVal);
+                    Logging.Log(Logging.LogType.Information, "Maintenance", "Optimise table " + row[0].ToString() + ": " + retVal);
                 }
             }
         }
