@@ -1,0 +1,15 @@
+changelog:
+  categories:
+    - title: What's New
+      labels:
+        - '*'
+      exclude:
+        labels:
+          - bug
+          - dependencies
+    - title: Bug Fixes
+      labels:
+        - bug
+    - title: Dependencies
+      labels:
+        - dependencies
