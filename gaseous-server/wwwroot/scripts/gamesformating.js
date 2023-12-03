@@ -6,30 +6,41 @@
         targetElement.innerHTML = ''; 
     }
 
-    var existingLoadPageButton = document.getElementById('games_library_loadmore');
-    if (existingLoadPageButton) {
-        existingLoadPageButton.parentNode.removeChild(existingLoadPageButton);
+    var pagerCheck = document.getElementById('games_library_pagerstore');
+    if (pageNumber == 1) {
+        pagerCheck.innerHTML = "0";
     }
 
-    for (var i = 0; i < result.games.length; i++) {
-        var game = renderGameIcon(result.games[i], true, false);
-        targetElement.appendChild(game);
-    }
+    if (pageNumber > Number(pagerCheck.innerHTML)) {
+        pagerCheck.innerHTML = pageNumber;
 
-    $('.lazy').Lazy({
-        scrollDirection: 'vertical',
-        effect: 'fadeIn',
-        visibleOnly: false
-    });
+        document.getElementById('games_library_recordcount').innerHTML = result.count + ' games';
 
-    if (result.games.length == pageSize) {
-        var loadPageButton = document.createElement("div");
-        loadPageButton.id = 'games_library_loadmore';
-        loadPageButton.innerHTML = 'Load More';
-        loadPageButton.setAttribute('onclick', 'executeFilter1_1(' + (pageNumber + 1) + ', ' + pageSize + ');');
-        loadPageButton.setAttribute('data-pagenumber', Number(pageNumber + 1));
-        loadPageButton.setAttribute('data-pagesize', pageSize);
-        targetElement.appendChild(loadPageButton);
+        var existingLoadPageButton = document.getElementById('games_library_loadmore');
+        if (existingLoadPageButton) {
+            existingLoadPageButton.parentNode.removeChild(existingLoadPageButton);
+        }
+
+        for (var i = 0; i < result.games.length; i++) {
+            var game = renderGameIcon(result.games[i], true, false);
+            targetElement.appendChild(game);
+        }
+
+        $('.lazy').Lazy({
+            scrollDirection: 'vertical',
+            effect: 'fadeIn',
+            visibleOnly: false
+        });
+
+        if (result.games.length == pageSize) {
+            var loadPageButton = document.createElement("div");
+            loadPageButton.id = 'games_library_loadmore';
+            loadPageButton.innerHTML = 'Load More';
+            loadPageButton.setAttribute('onclick', 'executeFilter1_1(' + (pageNumber + 1) + ', ' + pageSize + ');');
+            loadPageButton.setAttribute('data-pagenumber', Number(pageNumber + 1));
+            loadPageButton.setAttribute('data-pagesize', pageSize);
+            targetElement.appendChild(loadPageButton);
+        }
     }
 }
 

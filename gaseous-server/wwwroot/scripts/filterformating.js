@@ -72,6 +72,12 @@
         buildFilterPanel(panel, 'theme', 'Themes', result.themes, true, false);
     }
 
+    if (result.agegroupings) {
+        if (result.agegroupings.length > 1) {
+            buildFilterPanel(panel, 'agegroupings', 'Age Groups', result.agegroupings, true, false);
+        }
+    }
+
     targetElement.appendChild(panel);
 }
 
@@ -80,7 +86,6 @@ function buildFilterPanel(targetElement, headerString, friendlyHeaderString, val
     var displayCookie = getCookie('filter_panel_box_' + headerString);
     if (displayCookie) {
         initialDisplay = (displayCookie === 'true');
-        console.log(displayCookie);
     }
     targetElement.appendChild(buildFilterPanelHeader(headerString, friendlyHeaderString, showToggle, initialDisplay));
 
@@ -92,14 +97,13 @@ function buildFilterPanel(targetElement, headerString, friendlyHeaderString, val
     }
     for (var i = 0; i < valueList.length; i++) {
         var tags;
-        switch(headerString) {
-            case 'platform':
-                tags = [
-                    {
-                        'label': valueList[i].gameCount
-                    }
-                ];
-                break;
+        
+        if (valueList[i].gameCount) {
+            tags = [
+                {
+                    'label': valueList[i].gameCount
+                }
+            ];
         }
         containerPanel.appendChild(buildFilterPanelItem(headerString, valueList[i].id, valueList[i].name, tags));
     }
@@ -231,7 +235,6 @@ function executeFilter1_1(pageNumber, pageSize) {
         pageSize = 30;
     }
 
-    console.log("Execute filter 1.1");
     var minUserRating = -1;
     var minUserRatingInput = document.getElementById('filter_panel_userrating_min');
     if (minUserRatingInput.value) {
@@ -247,11 +250,17 @@ function executeFilter1_1(pageNumber, pageSize) {
     setCookie(maxUserRatingInput.id, maxUserRatingInput.value);
 
     // build filter model
+    var ratingAgeGroups = GetFilterQuery1_1('agegroupings');
+    var ratingIncludeUnrated = false;
+    if (ratingAgeGroups.includes("0")) {
+        ratingIncludeUnrated = true;
+    }
+
     var model = {
         "Name": document.getElementById('filter_panel_search').value,
         "Platform": GetFilterQuery1_1('platform'),
         "Genre": GetFilterQuery1_1('genre'),
-        "GameMode": GetFilterQuery1_1('gamemmode'),
+        "GameMode": GetFilterQuery1_1('gamemode'),
         "PlayerPerspective": GetFilterQuery1_1('playerperspective'),
         "Theme": GetFilterQuery1_1('theme'),
         "GameRating": {
@@ -262,13 +271,8 @@ function executeFilter1_1(pageNumber, pageSize) {
             "IncludeUnrated": true
         },
         "GameAgeRating": {
-            "AgeGroupings": [
-                "Child",
-                "Teen",
-                "Mature",
-                "Adult"
-            ],
-            "IncludeUnrated": true
+            "AgeGroupings": ratingAgeGroups,
+            "IncludeUnrated": ratingIncludeUnrated
         },
         "Sorting": {
             "SortBy": "NameThe",

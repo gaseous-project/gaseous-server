@@ -282,9 +282,10 @@ input[id='filter_panel_userrating_max'] {
 }
 
 #games_home {
-    display: flex;
+    display: absolute;
     margin-left: 210px;
     margin-top: 20px;
+    right: 20px;
 }
 
 .filter_panel_item {
@@ -302,7 +303,23 @@ input[id='filter_panel_userrating_max'] {
     margin-right: 15px;
 }
 
+#games_library_controls {
+    display: absolute;
+    border-style: solid;
+    border-width: 1px;
+    border-color: #2b2b2b;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    padding: 10px;
+    text-align: right;
+}
+
+.games_library_controlblock {
+    display: inline-block;
+}
+
 #games_library {
+    display: block;
     /* width: 90%; */
     /* border-style: solid;
     border-width: 1px;
@@ -973,7 +990,7 @@ button:disabled {
     top: 0px;
     right: 0px;
     text-align: center;
-    font-size: 8px;
+    font-size: 10px;
 }
 
 .tagBoxItem {

@@ -4,20 +4,28 @@ using System.IO.Compression;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using Authentication;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
 using gaseous_server.Models;
 using IGDB.Models;
+using Microsoft.AspNetCore.Identity;
 using Newtonsoft.Json;
 
 namespace gaseous_server.Classes
 {
 	public class Collections
 	{
-		public Collections()
-		{
-            
-		}
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+
+		public Collections(
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager)
+        {
+            _userManager = userManager;
+            _signInManager = signInManager;
+        }
 
         public static List<CollectionItem> GetCollections() {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -211,8 +219,8 @@ namespace gaseous_server.Classes
                 }
             } else {
                 // get all platforms to pull from
-                FilterController filterController = new FilterController();
-                platforms.AddRange((List<FilterController.FilterPlatform>)filterController.Filter()["platforms"]);
+                Dictionary<string, object> FilterDict = Filters.Filter(AgeRatings.AgeGroups.AgeRestrictionGroupings.Adult, true);
+                platforms.AddRange((List<Filters.FilterPlatform>)FilterDict["platforms"]);
             }
 
             // build collection

@@ -174,17 +174,17 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
 
+            if (Game.AgeRatings != null)
+            {
+                foreach (long AgeRatingId in Game.AgeRatings.Ids)
+                {
+                    AgeRating GameAgeRating = AgeRatings.GetAgeRatings(AgeRatingId);
+                }
+            }
+
             // optional metadata - usually downloaded as needed
             if (getAllMetadata == true)
             {
-                if (Game.AgeRatings != null)
-                {
-                    foreach (long AgeRatingId in Game.AgeRatings.Ids)
-                    {
-                        AgeRating GameAgeRating = AgeRatings.GetAgeRatings(AgeRatingId);
-                    }
-                }
-
                 if (Game.AlternativeNames != null)
                 {
                     foreach (long AlternativeNameId in Game.AlternativeNames.Ids)

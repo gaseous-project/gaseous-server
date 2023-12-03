@@ -181,9 +181,10 @@ namespace gaseous_server.Controllers
                 List<long> AgeClassificationsList = new List<long>();
                 foreach (string ratingGroup in ratinggroup.Split(','))
                 {
-                    if (AgeGroups.AgeGroupings.ContainsKey(ratingGroup))
+                    AgeGroups.AgeRestrictionGroupings ageRestriction = (AgeGroups.AgeRestrictionGroupings)Enum.Parse(typeof(AgeGroups.AgeRestrictionGroupings), ratingGroup);
+                    if (AgeGroups.AgeGroupings.ContainsKey(ageRestriction))
                     {
-                        List<AgeGroups.AgeGroupItem> ageGroups = AgeGroups.AgeGroupings[ratingGroup];
+                        List<AgeGroups.AgeGroupItem> ageGroups = AgeGroups.AgeGroupings[ageRestriction];
                         foreach (AgeGroups.AgeGroupItem ageGroup in ageGroups)
                         {
                             AgeClassificationsList.AddRange(ageGroup.AgeGroupItemValues);

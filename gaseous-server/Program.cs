@@ -13,6 +13,8 @@ using Microsoft.OpenApi.Models;
 using Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
+using IGDB.Models;
+using gaseous_server.Classes.Metadata;
 
 Logging.WriteToDiskOnly = true;
 Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server " + Assembly.GetExecutingAssembly().GetName().Version);
@@ -38,6 +40,9 @@ db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.Conn
 
 // set up db
 db.InitDB();
+
+// populate db with static data for lookups
+AgeRatings.PopulateAgeMap();
 
 // load app settings
 Config.InitSettings();
