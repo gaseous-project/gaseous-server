@@ -828,6 +828,44 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
+        [Route("{GameId}/releasedates")]
+        [ProducesResponseType(typeof(List<ReleaseDate>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
+        public ActionResult GameReleaseDates(long GameId)
+        {
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                if (gameObject != null)
+                {
+                    List<ReleaseDate> rdObjects = new List<ReleaseDate>();
+                    if (gameObject.ReleaseDates != null)
+                    {
+                        foreach (long icId in gameObject.ReleaseDates.Ids)
+                        {
+                            ReleaseDate releaseDate = Classes.Metadata.ReleaseDates.GetReleaseDates(icId);
+                            
+                            rdObjects.Add(releaseDate);
+                        }
+                    }
+
+                    return Ok(rdObjects);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpGet]
         [Route("{GameId}/roms")]
         [ProducesResponseType(typeof(Classes.Roms.GameRomObject), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

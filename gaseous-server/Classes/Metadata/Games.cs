@@ -182,6 +182,14 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
 
+            if (Game.ReleaseDates != null)
+            {
+                foreach (long ReleaseDateId in Game.ReleaseDates.Ids)
+                {
+                    ReleaseDate GameReleaseDate = ReleaseDates.GetReleaseDates(ReleaseDateId);
+                }
+            }
+
             // optional metadata - usually downloaded as needed
             if (getAllMetadata == true)
             {
@@ -333,6 +341,41 @@ namespace gaseous_server.Classes.Metadata
             wherefuzzy = 1,
             search = 2,
             searchNoPlatform = 3
+        }
+
+        public class MinimalGameItem
+        {
+            public MinimalGameItem(Game gameObject)
+            {
+                this.Id = gameObject.Id;
+                this.Name = gameObject.Name;
+                this.TotalRating = gameObject.TotalRating;
+                this.TotalRatingCount = gameObject.TotalRatingCount;
+                this.Cover = gameObject.Cover;
+                this.Artworks = gameObject.Artworks;
+
+                // compile age ratings
+                this.AgeRatings = new List<AgeRating>();
+                if (gameObject.AgeRatings != null)
+                {
+                    foreach (long ageRatingId in gameObject.AgeRatings.Ids)
+                    {
+                        AgeRating? rating = Classes.Metadata.AgeRatings.GetAgeRatings(ageRatingId);
+                        if (rating != null)
+                        {
+                            this.AgeRatings.Add(rating);
+                        }
+                    }
+                }
+            }
+
+            public long? Id { get; set; }
+            public string Name { get; set; }
+            public double? TotalRating { get; set; }
+            public int? TotalRatingCount { get; set; }
+            public IGDB.IdentityOrValue<IGDB.Models.Cover> Cover { get; set; }
+            public IGDB.IdentitiesOrValues<IGDB.Models.Artwork> Artworks { get; set; }
+            public List<IGDB.Models.AgeRating> AgeRatings { get; set; }
         }
     }
 }

@@ -39,7 +39,7 @@ namespace gaseous_server.Controllers.v1_1
 
         [MapToApiVersion("1.1")]
         [HttpPost]
-        [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(GameReturnPackage), StatusCodes.Status200OK)]
         public async Task<IActionResult> Game_v1_1(GameSearchModel model, int pageNumber = 0, int pageSize = 0)
         {
             var user = await _userManager.GetUserAsync(User);
@@ -86,6 +86,46 @@ namespace gaseous_server.Controllers.v1_1
                 }
 
                 return Ok(GetGames(model, pageNumber, pageSize));
+            }
+            else
+            {
+                return Unauthorized();
+            }
+        }
+
+        [MapToApiVersion("1.1")]
+        [HttpGet]
+        [Route("{GameId}/Related")]
+        [ProducesResponseType(typeof(GameReturnPackage), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GameRelated(long GameId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user != null)
+            {
+                string IncludeUnrated = "";
+                if (user.SecurityProfile.AgeRestrictionPolicy.IncludeUnrated == true) {
+                    IncludeUnrated = " OR view_Games.AgeGroupId IS NULL";
+                }
+
+                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                string sql = "SELECT view_Games.Id, view_Games.AgeGroupId, Relation_Game_SimilarGames.SimilarGamesId FROM view_Games JOIN Relation_Game_SimilarGames ON view_Games.Id = Relation_Game_SimilarGames.GameId AND Relation_Game_SimilarGames.SimilarGamesId IN (SELECT Id FROM view_Games) WHERE view_Games.Id = @id AND (view_Games.AgeGroupId <= @agegroupid" + IncludeUnrated + ")";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>();
+                dbDict.Add("id", GameId);
+                dbDict.Add("agegroupid", (int)user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction);
+
+                List<IGDB.Models.Game> RetVal = new List<IGDB.Models.Game>();
+
+                DataTable dbResponse = db.ExecuteCMD(sql, dbDict);
+
+                foreach (DataRow dr in dbResponse.Rows)
+                {
+                    RetVal.Add(Classes.Metadata.Games.GetGame((long)dr["SimilarGamesId"], false, false, false));
+                }
+
+                GameReturnPackage gameReturn = new GameReturnPackage(RetVal.Count, RetVal);
+
+                return Ok(gameReturn);
             }
             else
             {
@@ -204,7 +244,7 @@ namespace gaseous_server.Controllers.v1_1
                     }
                 }
 
-                string unratedClause = "totalRating IS NOT NULL";
+                string unratedClause = "";
                 if (model.GameRating.IncludeUnrated == true)
                 {
                     unratedClause = "totalRating IS NULL";
@@ -212,7 +252,14 @@ namespace gaseous_server.Controllers.v1_1
 
                 if (ratingClauseValue.Length > 0)
                 {
-                    havingClauses.Add("((" + ratingClauseValue + ") OR " + unratedClause + ")");
+                    if (unratedClause.Length > 0)
+                    {
+                        havingClauses.Add("((" + ratingClauseValue + ") OR " + unratedClause + ")");
+                    }
+                    else
+                    {
+                        havingClauses.Add("(" + ratingClauseValue + ")");
+                    }
                 }
             }
 
@@ -440,11 +487,18 @@ namespace gaseous_server.Controllers.v1_1
             public GameReturnPackage(int Count, List<Game> Games)
             {
                 this.Count = Count;
-                this.Games = Games;
+
+                List<Games.MinimalGameItem> minimalGames = new List<Games.MinimalGameItem>();
+                foreach (Game game in Games)
+                {
+                    minimalGames.Add(new Classes.Metadata.Games.MinimalGameItem(game));
+                }
+
+                this.Games = minimalGames;
             }
 
             public int Count { get; set; }
-            public List<Game> Games { get; set; } = new List<Game>();
+            public List<Games.MinimalGameItem> Games { get; set; } = new List<Games.MinimalGameItem>();
         }
     }
 }

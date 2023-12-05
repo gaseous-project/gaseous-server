@@ -1,4 +1,8 @@
-﻿function ajaxCall(endpoint, method, successFunction, errorFunction, body) {
+﻿var locale = window.navigator.userLanguage || window.navigator.language;
+console.log(locale);
+moment.locale(locale);
+
+function ajaxCall(endpoint, method, successFunction, errorFunction, body) {
     $.ajax({
 
         // Our sample url to make request
@@ -409,4 +413,8 @@ function GetTaskFriendlyName(TaskName, options) {
         default:
             return TaskName;
     }
+}
+
+function getKeyByValue(object, value) {
+    return Object.keys(object).find(key => object[key] === value);
 }

@@ -22,14 +22,14 @@
         }
 
         for (var i = 0; i < result.games.length; i++) {
-            var game = renderGameIcon(result.games[i], true, false);
+            var game = renderGameIcon(result.games[i], true, true, true);
             targetElement.appendChild(game);
         }
 
         $('.lazy').Lazy({
             scrollDirection: 'vertical',
             effect: 'fadeIn',
-            visibleOnly: false
+            visibleOnly: true
         });
 
         if (result.games.length == pageSize) {
@@ -69,41 +69,88 @@ function IsInView() {
 
 $(window).scroll(IsInView);
 
-function renderGameIcon(gameObject, showTitle, showRatings) {
+function renderGameIcon(gameObject, showTitle, showRatings, showClassification, useSmallCover) {
     var gameBox = document.createElement('div');
     gameBox.id = "game_tile_" + gameObject.id;
-    gameBox.className = 'game_tile';
+    if (useSmallCover == true) {
+        gameBox.className = 'game_tile game_tile_small';
+    } else {
+        gameBox.className = 'game_tile';
+    }
     gameBox.setAttribute('onclick', 'window.location.href = "/index.html?page=game&id=' + gameObject.id + '";');
 
+    var gameImageBox = document.createElement('div');
+    gameImageBox.className = 'game_tile_box';
+
     var gameImage = document.createElement('img');
-    gameImage.className = 'game_tile_image lazy';
+    if (useSmallCover == true) {
+        gameImage.className = 'game_tile_image game_tile_image_small lazy';
+    } else {
+        gameImage.className = 'game_tile_image lazy';
+    }
+    gameImage.src = '/images/unknowngame.png';
     if (gameObject.cover) {
         gameImage.setAttribute('data-src', '/api/v1.1/Games/' + gameObject.id + '/cover/image');
     } else {
-        gameImage.src = '/images/unknowngame.png';
         gameImage.className = 'game_tile_image unknown';
     }
-    gameBox.appendChild(gameImage);
+    gameImageBox.appendChild(gameImage);
+
+    var displayClassificationBoards = [ 'ACB', 'ESRB', 'USK' ];
+    var classificationPath = '';
+    var displayClassification = false;
+    var shownClassificationBoard = '';
+    if (showClassification == true) {
+        for (var b = 0; b < displayClassificationBoards.length; b++) {
+            if (shownClassificationBoard == '') {
+                for (var c = 0; c < gameObject.ageRatings.length; c++) {
+                    if (gameObject.ageRatings[c].category == displayClassificationBoards[b]) {
+                        shownClassificationBoard = displayClassificationBoards[b];
+                        displayClassification = true;
+                        classificationPath = '/api/v1.1/Ratings/Images/' + displayClassificationBoards[b] + '/' + getKeyByValue(AgeRatingStrings, gameObject.ageRatings[c].rating) + '/image.svg';
+                    }
+                }
+            } else {
+                break;
+            }
+        }
+    }
+
+    if (gameObject.totalRating || displayClassification == true) {
+        var gameImageRatingBanner = document.createElement('div');
+        gameImageRatingBanner.className = 'game_tile_box_ratingbanner';
+
+        if (showRatings == true || displayClassification == true) {
+            if (showRatings == true) {
+                if (gameObject.totalRating) {
+                    var gameImageRatingBannerLogo = document.createElement('img');
+                    gameImageRatingBannerLogo.src = '/images/IGDB_logo.svg';
+                    gameImageRatingBannerLogo.setAttribute('style', 'filter: invert(100%); height: 10px; margin-right: 5px; padding-top: 4px;');
+                    gameImageRatingBanner.appendChild(gameImageRatingBannerLogo);
+    
+                    var gameImageRatingBannerValue = document.createElement('span');
+                    gameImageRatingBannerValue.innerHTML = Math.floor(gameObject.totalRating) + '% / ' + gameObject.totalRatingCount;
+                    gameImageRatingBanner.appendChild(gameImageRatingBannerValue);
+                }
+            }
+
+            gameImageBox.appendChild(gameImageRatingBanner);
+            
+            if (displayClassification == true) {
+                var gameImageClassificationLogo = document.createElement('img');
+                gameImageClassificationLogo.src = classificationPath;
+                gameImageClassificationLogo.className = 'rating_image_mini';
+                gameImageBox.appendChild(gameImageClassificationLogo);
+            }
+        }
+    }
+    gameBox.appendChild(gameImageBox);
 
     if (showTitle == true) {
         var gameBoxTitle = document.createElement('div');
         gameBoxTitle.class = 'game_tile_label';
         gameBoxTitle.innerHTML = gameObject.name;
         gameBox.appendChild(gameBoxTitle);
-    }
-
-    if (showRatings == true) {
-        if (gameObject.ageRatings) {
-            var ratingsSection = document.createElement('div');
-            ratingsSection.id = 'ratings_section';
-            for (var i = 0; i < gameObject.ageRatings.ids.length; i++) {
-                var ratingImage = document.createElement('img');
-                ratingImage.src = '/api/v1.1/Games/' + gameObject.id + '/agerating/' + gameObject.ageRatings.ids[i] + '/image';
-                ratingImage.className = 'rating_image_mini';
-                ratingsSection.appendChild(ratingImage);
-            }
-            gameBox.appendChild(ratingsSection);
-        }
     }
 
     return gameBox;

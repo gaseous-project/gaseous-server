@@ -40,3 +40,27 @@ FROM
     LEFT JOIN AgeRating ON Relation_Game_AgeRatings.AgeRatingsId = AgeRating.Id
     ) g
 WHERE g.seqnum = 1;
+
+CREATE TABLE `ReleaseDate` (
+  `Id` BIGINT NOT NULL,
+  `Category` INT(11) NULL DEFAULT NULL,
+  `Checksum` VARCHAR(45) NULL DEFAULT NULL,
+  `CreatedAt` DATETIME NULL DEFAULT NULL,
+  `Date` DATETIME NULL,
+  `Game` BIGINT NULL,
+  `Human` VARCHAR(100) NULL,
+  `m` INT NULL,
+  `Platform` BIGINT NULL,
+  `Region` INT NULL,
+  `Status` BIGINT NULL,
+  `UpdatedAt` DATETIME NULL DEFAULT NULL,
+  `y` INT NULL,
+  `dateAdded` DATETIME NULL DEFAULT NULL,
+  `lastUpdated` DATETIME NULL DEFAULT NULL,
+  PRIMARY KEY (`Id`));
+
+CREATE TABLE `User_Settings` (
+  `Id` VARCHAR(128) NOT NULL,
+  `Setting` VARCHAR(45) NOT NULL,
+  `Value` LONGTEXT NULL DEFAULT NULL,
+  PRIMARY KEY (`Id`, `Setting`));

@@ -8,6 +8,19 @@
 <div id="games_home">
     <div id="games_home_box">
         <div id="games_library_controls">
+            <div id="games_library_orderby" class="games_library_controlblock">
+                <span>Order by: </span>
+                <select id="games_library_orderby_select" onchange="executeFilter1_1();">
+                    <option selected="selected" value="NameThe">Name, The</option>
+                    <option value="Name">Name</option>
+                    <option value="Rating">User Rating</option>
+                    <option value="RatingCount">User Rating Count</option>
+                </select>
+                <select id="games_library_orderby_direction_select" onchange="executeFilter1_1();">
+                    <option selected="selected" value="Ascending">Ascending</option>
+                    <option value="Descending">Descending</option>
+                </select>
+            </div>
             <div id="games_library_recordcount" class="games_library_controlblock"></div>
         </div>
         <div id="games_library"></div>

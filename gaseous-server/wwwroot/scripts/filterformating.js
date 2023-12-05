@@ -19,9 +19,25 @@
 
     panel.appendChild(containerPanelSearch);
 
-    panel.appendChild(buildFilterPanelHeader('userrating', 'User Rating'));
+    panel.appendChild(buildFilterPanelHeader('userrating', 'User Rating', true, false));
     var containerPanelUserRating = document.createElement('div');
+    containerPanelUserRating.id = 'filter_panel_box_userrating';
     containerPanelUserRating.className = 'filter_panel_box';
+
+    var containerPanelUserRatingCheckBox = document.createElement('input');
+    containerPanelUserRatingCheckBox.id = 'filter_panel_userrating_enabled';
+    containerPanelUserRatingCheckBox.type = 'checkbox';
+    containerPanelUserRatingCheckBox.setAttribute('oninput', 'executeFilterDelayed();');
+    var ratingEnabledCookie = getCookie('filter_panel_userrating_enabled');
+    if (ratingEnabledCookie) {
+        if (ratingEnabledCookie == "true") {
+            containerPanelUserRatingCheckBox.checked = true;
+        } else {
+            containerPanelUserRatingCheckBox.checked = false;
+        }
+    }
+    containerPanelUserRating.appendChild(containerPanelUserRatingCheckBox);
+
     var containerPanelUserRatingMinField = document.createElement('input');
     var minRatingCookie = getCookie('filter_panel_userrating_min');
     if (minRatingCookie) {
@@ -79,6 +95,16 @@
     }
 
     targetElement.appendChild(panel);
+
+    // set order by values
+    var orderByCookie = getCookie('games_library_orderby_select');
+    if (orderByCookie) {
+        document.getElementById('games_library_orderby_select').value = orderByCookie;
+    }
+    var orderByDirectionCookie = getCookie('games_library_orderby_direction_select');
+    if (orderByDirectionCookie) {
+        document.getElementById('games_library_orderby_direction_select').value = orderByDirectionCookie;
+    }
 }
 
 function buildFilterPanel(targetElement, headerString, friendlyHeaderString, valueList, showToggle, initialDisplay) {
@@ -235,10 +261,14 @@ function executeFilter1_1(pageNumber, pageSize) {
         pageSize = 30;
     }
 
+    // user ratings
+    var userRatingEnabled = document.getElementById('filter_panel_userrating_enabled');
+
     var minUserRating = -1;
     var minUserRatingInput = document.getElementById('filter_panel_userrating_min');
     if (minUserRatingInput.value) {
         minUserRating = minUserRatingInput.value;
+        userRatingEnabled.checked = true;
     }
     setCookie(minUserRatingInput.id, minUserRatingInput.value);
 
@@ -246,8 +276,38 @@ function executeFilter1_1(pageNumber, pageSize) {
     var maxUserRatingInput = document.getElementById('filter_panel_userrating_max');
     if (maxUserRatingInput.value) {
         maxUserRating = maxUserRatingInput.value;
+        userRatingEnabled.checked = true;
     }
     setCookie(maxUserRatingInput.id, maxUserRatingInput.value);
+
+    if (minUserRating == -1 && maxUserRating == -1) {
+        userRatingEnabled.checked = false;
+    }
+
+    if (userRatingEnabled.checked == false) {
+        setCookie("filter_panel_userrating_enabled", false);
+
+        minUserRating = -1;
+        minUserRatingInput.value = "";
+        setCookie(minUserRatingInput.id, minUserRatingInput.value);
+        maxUserRating = -1;
+        maxUserRatingInput.value = "";
+        setCookie(maxUserRatingInput.id, maxUserRatingInput.value);
+    } else {
+        setCookie("filter_panel_userrating_enabled", true);
+    }
+
+    // get order by
+    var orderBy = document.getElementById('games_library_orderby_select').value;
+    setCookie('games_library_orderby_select', orderBy);
+    var orderByDirection = true;
+    var orderByDirectionSelect = document.getElementById('games_library_orderby_direction_select').value;
+    if (orderByDirectionSelect == "Ascending") {
+        orderByDirection = true;
+    } else {
+        orderByDirection = false;
+    }
+    setCookie('games_library_orderby_direction_select', orderByDirectionSelect);
 
     // build filter model
     var ratingAgeGroups = GetFilterQuery1_1('agegroupings');
@@ -268,19 +328,19 @@ function executeFilter1_1(pageNumber, pageSize) {
             "MinimumRatingCount": -1,
             "MaximumRating": maxUserRating,
             "MaximumRatingCount": -1,
-            "IncludeUnrated": true
+            "IncludeUnrated": !userRatingEnabled
         },
         "GameAgeRating": {
             "AgeGroupings": ratingAgeGroups,
             "IncludeUnrated": ratingIncludeUnrated
         },
         "Sorting": {
-            "SortBy": "NameThe",
-            "SortAscenting": true
+            "SortBy": orderBy,
+            "SortAscending": orderByDirection
         }
     };
 
-    console.log('Search model = ' + JSON.stringify(model));
+    console.log(model);
 
     ajaxCall(
         '/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize,
