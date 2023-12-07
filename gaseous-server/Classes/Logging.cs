@@ -7,6 +7,7 @@ namespace gaseous_server.Classes
 {
 	public class Logging
 	{
+        private static DateTime lastDiskRetentionSweep = DateTime.UtcNow;
         public static bool WriteToDiskOnly { get; set; } = false;
 
         static public void Log(LogType EventType, string ServerProcess, string Message, Exception? ExceptionValue = null, bool LogToDiskOnly = false)
@@ -69,6 +70,11 @@ namespace gaseous_server.Classes
 
                 if (LogToDiskOnly == false)
                 {
+                    if (Config.LoggingConfiguration.AlwaysLogToDisk == true)
+                    {
+                        LogToDisk(logItem, TraceOutput, null);
+                    }
+
                     Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
                     string sql = "DELETE FROM ServerLogs WHERE EventTime < @EventRententionDate; INSERT INTO ServerLogs (EventTime, EventType, Process, Message, Exception) VALUES (@EventTime, @EventType, @Process, @Message, @Exception);";
                     Dictionary<string, object> dbDict = new Dictionary<string, object>();
@@ -91,6 +97,22 @@ namespace gaseous_server.Classes
                 else
                 {
                     LogToDisk(logItem, TraceOutput, null);
+                }
+            }
+
+            if (lastDiskRetentionSweep.AddMinutes(60) < DateTime.UtcNow)
+            {
+                // time to delete any old logs
+                lastDiskRetentionSweep = DateTime.UtcNow;
+                string[] files = Directory.GetFiles(Config.LogPath);
+
+                foreach (string file in files)
+                {
+                    FileInfo fi = new FileInfo(file);
+                    if (fi.LastAccessTime < DateTime.Now.AddDays(Config.LoggingConfiguration.LogRetention * -1)) 
+                    { 
+                        fi.Delete(); 
+                    }
                 }
             }
         }

@@ -17,6 +17,40 @@
 </table>
 <div style="text-align: right;"><button id="settings_tasktimers_default" onclick="defaultTaskTimers();">Reset to Default</button><button id="settings_tasktimers_new" onclick="saveTaskTimers();">Save</button></div>
 
+<h3>Logging</h3>
+<table cellspacing="0" style="width: 100%;">
+    <tr>
+        <th>
+            Write logs
+        </th>
+        <td>
+            <input type="radio" name="settings_logs_write" id="settings_logs_write_db" value="false" checked="checked"><label for="settings_logs_write_db"> To database only (default)</label>
+        </td>
+    </tr>
+    <tr>
+        <td></td>
+        <td>
+            <input type="radio" name="settings_logs_write" id="settings_logs_write_fs" value="true"><label for="settings_logs_write_fs"> To database and disk</label>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2">&nbsp;</td>
+    </tr>
+    <tr>
+        <th>
+            Minimum log retention (days):
+        </th>
+        <td>
+            <input type="number" min="1" id="settings_logs_retention" />
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2" style="text-align: right;">
+            <button id="settings_tasktimers_new" onclick="setLoggingSettings();">Save</button>
+        </td>
+    </tr>
+</table>
+
 <script type="text/javascript">
     function drawLibrary() {
         ajaxCall(
@@ -129,6 +163,55 @@
         saveTaskTimers();
     }
 
+    function getLoggingSettings() {
+        ajaxCall(
+            '/api/v1/System/Settings/System',
+            'GET',
+            function(result) {
+                var optionToSelect = 'settings_logs_write_db';
+                if (result.alwaysLogToDisk == true) {
+                    optionToSelect = 'settings_logs_write_fs';
+                }
+                document.getElementById(optionToSelect).checked = true;
+
+                document.getElementById('settings_logs_retention').value = result.minimumLogRetentionPeriod;
+            }
+        );
+    }
+
+    function setLoggingSettings() {
+        var alwaysLogToDisk = false;
+        if ($("input[type='radio'][name='settings_logs_write']:checked").val() == "true") {
+            alwaysLogToDisk = true;
+        }
+
+        var retention = document.getElementById('settings_logs_retention');
+        var retentionValue = 0;
+        if (retention.value) {
+            retentionValue = retention.value;
+        } else {
+            retentionValue = 7;
+        }
+
+        var model = {
+            "alwaysLogToDisk": alwaysLogToDisk,
+            "minimumLogRetentionPeriod": retentionValue
+        };
+
+        ajaxCall(
+            '/api/v1/System/Settings/System',
+            'POST',
+            function(result) {
+                getLoggingSettings();
+            },
+            function(error) {
+                getLoggingSettings();
+            },
+            JSON.stringify(model)
+        );
+    }
+
     drawLibrary();
     getBackgroundTaskTimers();
+    getLoggingSettings();
 </script>
