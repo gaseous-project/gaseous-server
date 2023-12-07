@@ -1,4 +1,14 @@
-﻿function formatGamesPanel(targetElement, result, pageNumber, pageSize) {
+﻿var ClassificationBoards = {
+    "ESRB":      "Entertainment Software Rating Board (ESRB)",
+    "PEGI":      "Pan European Game Information (PEGI)",
+    "CERO":      "Computer Entertainment Rating Organisation (CERO)",
+    "USK":       "Unterhaltungssoftware Selbstkontrolle (USK)",
+    "GRAC":      "Game Rating and Administration Committee (GRAC)",
+    "CLASS_IND": "Brazilian advisory rating system",
+    "ACB":       "Australian Classification Board (ACB)"
+};
+
+function formatGamesPanel(targetElement, result, pageNumber, pageSize) {
     console.log("Displaying page: " + pageNumber);
     console.log("Page size: " + pageSize);
 
@@ -21,8 +31,18 @@
             existingLoadPageButton.parentNode.removeChild(existingLoadPageButton);
         }
 
+        // setup preferences
+        var showTitle = GetPreference("LibraryShowGameTitle", true);
+        var showRatings = GetPreference("LibraryShowGameRating", true);
+        var showClassification = GetPreference("LibraryShowGameClassification", true);
+        var classificationDisplayOrderString = GetPreference("LibraryGameClassificationDisplayOrder", JSON.stringify([ "ESRB" ]));
+        var classificationDisplayOrder = JSON.parse(classificationDisplayOrderString);
+        if (showTitle == "true") { showTitle = true; } else { showTitle = false; }
+        if (showRatings == "true") { showRatings = true; } else { showRatings = false; }
+        if (showClassification == "true") { showClassification = true; } else { showClassification = false; }
+
         for (var i = 0; i < result.games.length; i++) {
-            var game = renderGameIcon(result.games[i], true, true, true);
+            var game = renderGameIcon(result.games[i], showTitle, showRatings, showClassification, classificationDisplayOrder, false);
             targetElement.appendChild(game);
         }
 
@@ -69,7 +89,7 @@ function IsInView() {
 
 $(window).scroll(IsInView);
 
-function renderGameIcon(gameObject, showTitle, showRatings, showClassification, useSmallCover) {
+function renderGameIcon(gameObject, showTitle, showRatings, showClassification, classificationDisplayOrder, useSmallCover) {
     var gameBox = document.createElement('div');
     gameBox.id = "game_tile_" + gameObject.id;
     if (useSmallCover == true) {
@@ -96,18 +116,17 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
     }
     gameImageBox.appendChild(gameImage);
 
-    var displayClassificationBoards = [ 'ACB', 'ESRB', 'USK' ];
     var classificationPath = '';
     var displayClassification = false;
     var shownClassificationBoard = '';
     if (showClassification == true) {
-        for (var b = 0; b < displayClassificationBoards.length; b++) {
+        for (var b = 0; b < classificationDisplayOrder.length; b++) {
             if (shownClassificationBoard == '') {
                 for (var c = 0; c < gameObject.ageRatings.length; c++) {
-                    if (gameObject.ageRatings[c].category == displayClassificationBoards[b]) {
-                        shownClassificationBoard = displayClassificationBoards[b];
+                    if (gameObject.ageRatings[c].category == classificationDisplayOrder[b]) {
+                        shownClassificationBoard = classificationDisplayOrder[b];
                         displayClassification = true;
-                        classificationPath = '/api/v1.1/Ratings/Images/' + displayClassificationBoards[b] + '/' + getKeyByValue(AgeRatingStrings, gameObject.ageRatings[c].rating) + '/image.svg';
+                        classificationPath = '/api/v1.1/Ratings/Images/' + classificationDisplayOrder[b] + '/' + getKeyByValue(AgeRatingStrings, gameObject.ageRatings[c].rating) + '/image.svg';
                     }
                 }
             } else {
@@ -139,7 +158,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
             if (displayClassification == true) {
                 var gameImageClassificationLogo = document.createElement('img');
                 gameImageClassificationLogo.src = classificationPath;
-                gameImageClassificationLogo.className = 'rating_image_mini';
+                gameImageClassificationLogo.className = 'rating_image_overlay';
                 gameImageBox.appendChild(gameImageClassificationLogo);
             }
         }

@@ -99,6 +99,7 @@ namespace Authentication
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
                 user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true:false;
                 user.SecurityProfile = GetSecurityProfile(user);
+                user.UserPreferences = GetPreferences(user);
             }
 
             return user;
@@ -135,6 +136,7 @@ namespace Authentication
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
                 user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true:false;
                 user.SecurityProfile = GetSecurityProfile(user);
+                user.UserPreferences = GetPreferences(user);
                 users.Add(user);
             }
 
@@ -166,6 +168,7 @@ namespace Authentication
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
                 user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true:false;
                 user.SecurityProfile = GetSecurityProfile(user);
+                user.UserPreferences = GetPreferences(user);
                 users.Add(user);
             }
 
@@ -273,6 +276,9 @@ namespace Authentication
             // set default security profile
             SetSecurityProfile(user, new SecurityProfileViewModel());
 
+            // set default preferences
+            SetPreferences(user, new List<UserPreferenceViewModel>());
+
             return _database.ExecuteCMD(commandText, parameters).Rows.Count;
         }
 
@@ -283,7 +289,7 @@ namespace Authentication
         /// <returns></returns>
         private int Delete(string userId)
         {
-            string commandText = "Delete from Users where Id = @userId";
+            string commandText = "Delete from Users where Id = @userId; Delete from User_Settings where Id = @userId;";
             Dictionary<string, object> parameters = new Dictionary<string, object>();
             parameters.Add("@userId", userId);
 
@@ -328,6 +334,9 @@ namespace Authentication
             // set the security profile
             SetSecurityProfile(user, user.SecurityProfile);
 
+            // set preferences
+            SetPreferences(user, user.UserPreferences);
+
             return _database.ExecuteCMD(commandText, parameters).Rows.Count;
         }
 
@@ -366,6 +375,60 @@ namespace Authentication
             parameters.Add("SecurityProfile", Newtonsoft.Json.JsonConvert.SerializeObject(securityProfile));
             
             return _database.ExecuteCMD(commandText, parameters).Rows.Count;
+        }
+
+        public List<UserPreferenceViewModel> GetPreferences(TUser user)
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT `Setting`, `Value` FROM User_Settings WHERE Id=@id;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            dbDict.Add("id", user.Id);
+
+            DataTable data = db.ExecuteCMD(sql, dbDict);
+
+            List<UserPreferenceViewModel> userPrefs = new List<UserPreferenceViewModel>();
+            foreach (DataRow row in data.Rows)
+            {
+                UserPreferenceViewModel userPref = new UserPreferenceViewModel();
+                userPref.Setting = (string)row["Setting"];
+                userPref.Value = (string)row["Value"];
+                userPrefs.Add(userPref);
+            }
+
+            return userPrefs;
+        }
+
+        public int SetPreferences(TUser user, List<UserPreferenceViewModel> model)
+        {
+            List<UserPreferenceViewModel> userPreferences = GetPreferences(user);
+
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            
+            foreach (UserPreferenceViewModel modelItem in model)
+            {
+                bool prefItemFound = false;
+                foreach (UserPreferenceViewModel existing in userPreferences)
+                {
+                    if (existing.Setting.ToLower() == modelItem.Setting.ToLower())
+                    {
+                        prefItemFound = true;
+                        break;
+                    }
+                }
+
+                string sql = "INSERT INTO User_Settings (`Id`, `Setting`, `Value`) VALUES (@id, @setting, @value);";
+                if (prefItemFound == true)
+                {
+                    sql = "UPDATE User_Settings SET `Value`=@value WHERE `Id`=@id AND `Setting`=@setting";
+                }
+                Dictionary<string, object> dbDict = new Dictionary<string, object>();
+                dbDict.Add("id", user.Id);
+                dbDict.Add("setting", modelItem.Setting);
+                dbDict.Add("value", modelItem.Value);
+                db.ExecuteNonQuery(sql, dbDict);
+            }
+
+            return model.Count;
         }
     }
 }

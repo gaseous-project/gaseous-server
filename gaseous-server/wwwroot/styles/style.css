@@ -496,6 +496,13 @@ input[id='filter_panel_userrating_max'] {
 }
 
 .rating_image_mini {
+    max-width: 32px;
+    max-height: 32px;
+    margin-right: 5px;
+    margin-bottom: 5px;
+}
+
+.rating_image_overlay {
     position: absolute;
     max-width: 32px;
     max-height: 32px;

@@ -218,11 +218,18 @@ namespace gaseous_server.Classes.Metadata
             {
 				DataRow dataRow = dt.Rows[0];
                 object returnObject = BuildCacheObject<T>(EndpointType, dataRow);
-                if (!ObjectCache.ContainsKey(Endpoint + SearchValue))
+                try {
+                    if (!ObjectCache.ContainsKey(Endpoint + SearchValue))
+                    {
+                        ObjectCache.Add(Endpoint + SearchValue, new MemoryCacheObject{
+                            Object = returnObject
+                        });
+                    }
+                }
+                catch
                 {
-                    ObjectCache.Add(Endpoint + SearchValue, new MemoryCacheObject{
-                        Object = returnObject
-                    });
+                    // unable add item to cache
+                    ObjectCache.Clear();
                 }
                 return (T)returnObject;
             }

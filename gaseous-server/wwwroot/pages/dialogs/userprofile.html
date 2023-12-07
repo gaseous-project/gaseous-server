@@ -1,8 +1,53 @@
 <div id="properties_toc">
-    <div id="properties_profile_toc_general" name="properties_profile_toc_item" onclick="ProfileSelectTab('general');">Account</div>
+    <div id="properties_profile_toc_general" name="properties_profile_toc_item" onclick="ProfileSelectTab('general');">Preferences</div>
+    <div id="properties_profile_toc_account" name="properties_profile_toc_item" onclick="ProfileSelectTab('account');">Account</div>
 </div>
 <div id="properties_bodypanel">
     <div id="properties_bodypanel_general" name="properties_profile_tab" style="display: none;">
+        <h3>Game Library Display</h3>
+        <table style="width: 100%;">
+            <tr>
+                <td>
+                    <input type="checkbox" id="profile_pref_LibraryShowGameTitle" data-pref="LibraryShowGameTitle" onchange="SavePrefValue_Checkbox(this);"><label for="profile_pref_LibraryShowGameTitle"> Show title</label>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="checkbox" id="profile_pref_LibraryShowGameRating" data-pref="LibraryShowGameRating" onchange="SavePrefValue_Checkbox(this);"><label for="profile_pref_LibraryShowGameRating"> Show rating</label>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="checkbox" id="profile_pref_LibraryShowGameClassification" data-pref="LibraryShowGameClassification" onchange="SavePrefValue_Checkbox(this);"><label for="profile_pref_LibraryShowGameClassification"> Show age classification badges</label>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <table id="profile_pref_LibraryClassificationBadgeSelect">
+                        <tr>
+                            <td>Use classification badges from:</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <select id="profile_pref_LibraryPrimaryClassificationBadge" data-primary="primary" onchange="SavePrefValue_ClassBadge(this);">
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Fallback to classification badges from:</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <select id="profile_pref_LibraryFallbackClassificationBadge" onchange="SavePrefValue_ClassBadge(this);">
+                                </select>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div id="properties_bodypanel_account" name="properties_profile_tab" style="display: none;">
         <h3>Reset Password</h3>
         <table style="width: 100%;">
             <tr>
@@ -53,6 +98,115 @@
                 tocs[i].className = '';
             }
         }
+    }
+
+    function GetPrefInitialValues() {
+        ConfigurePrefInitialValue_Checkbox("LibraryShowGameTitle", GetPreference("LibraryShowGameTitle", true));
+        ConfigurePrefInitialValue_Checkbox("LibraryShowGameRating", GetPreference("LibraryShowGameRating", true));
+        ConfigurePrefInitialValue_Checkbox("LibraryShowGameClassification", GetPreference("LibraryShowGameClassification", true));
+
+        var primary = document.getElementById('profile_pref_LibraryPrimaryClassificationBadge');
+        var secondary = document.getElementById('profile_pref_LibraryFallbackClassificationBadge');
+        PopulateClassificationMenus(primary);
+        PopulateClassificationMenus(secondary, true);
+
+        var classificationOrder = JSON.parse(GetPreference("LibraryGameClassificationDisplayOrder", JSON.stringify([ "ESRB" ])));
+        primary.value = classificationOrder[0];
+        if (classificationOrder[1]) {
+            secondary.value = classificationOrder[1];
+        }
+
+        for (var i = 0; i < secondary.childNodes.length; i++) {
+            if (secondary.childNodes[i].value == primary.value) {
+                secondary.childNodes[i].setAttribute('disabled', 'disabled');
+            } else {
+                secondary.childNodes[i].removeAttribute('disabled');
+            }
+        }
+    }
+
+    function PopulateClassificationMenus(targetSelector, IsSecondary) {
+        targetSelector.innerHTML = '';
+
+        if (IsSecondary == true) {
+            var defaultOpt = document.createElement('option');
+            defaultOpt.value = '-';
+            defaultOpt.innerHTML = 'None';
+            targetSelector.appendChild(defaultOpt);
+        }
+
+        for (const [key, value] of Object.entries(ClassificationBoards)) {
+            var opt = document.createElement('option');
+            opt.value = key;
+            opt.innerHTML = value;
+            targetSelector.appendChild(opt);
+        }
+    }
+
+    function ConfigurePrefInitialValue_Checkbox(ValueName, ValueSetting) {
+        var valueCheckbox = document.getElementById("profile_pref_" + ValueName);
+        if (ValueSetting == "true" || ValueSetting == true) {
+            valueCheckbox.checked = true;
+            updateDisplay(ValueName, true);
+        } else {
+            valueCheckbox.checked = false;
+            updateDisplay(ValueName, false);
+        }
+    }
+
+    function SavePrefValue_Checkbox(e) {
+        var ValueName = e.getAttribute("data-pref");
+        SetPreference(ValueName, e.checked);
+
+        updateDisplay(ValueName, e.checked);
+
+        executeFilter1_1(1);
+    }
+
+    function updateDisplay(ValueName, ValueSetting) {
+        switch(ValueName) {
+            case "LibraryShowGameClassification":
+                var badgeSelector = document.getElementById("profile_pref_LibraryClassificationBadgeSelect");
+                if (ValueSetting == true || ValueSetting == "true") {
+                    badgeSelector.style.display = '';
+                } else {
+                    badgeSelector.style.display = 'none';
+                }
+                break;
+        }
+    }
+
+    function SavePrefValue_ClassBadge(e) {
+        var primary = document.getElementById('profile_pref_LibraryPrimaryClassificationBadge');
+        var secondary = document.getElementById('profile_pref_LibraryFallbackClassificationBadge');
+
+        if (e.getAttribute('data-primary') == 'primary') {
+            // reset secondary to "none" if the same board is selected in both
+            if (primary.value == secondary.value) {
+                secondary.value = '-';
+            }
+
+            // disable in secondary board selected in primary
+            for (var i = 0; i < secondary.childNodes.length; i++) {
+                if (secondary.childNodes[i].value == primary.value) {
+                    secondary.childNodes[i].setAttribute('disabled', 'disabled');
+                } else {
+                    secondary.childNodes[i].removeAttribute('disabled');
+                }
+            }
+        }
+
+        // save values
+        var model = [];
+        if (secondary.value == '-') {
+            model = [ primary.value ];
+        } else {
+            model = [ primary.value, secondary.value ];
+        }
+        
+        SetPreference('LibraryGameClassificationDisplayOrder', JSON.stringify(model));
+
+        executeFilter1_1(1);
     }
 
     function checkPasswordsMatch() {
@@ -129,4 +283,5 @@
     }
 
     ProfileSelectTab('general');
+    GetPrefInitialValues();
 </script>

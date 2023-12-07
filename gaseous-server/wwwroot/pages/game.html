@@ -367,7 +367,7 @@
             if (result.games.length > 0) {
                 var gameSummarySimilarContent = document.getElementById('gamesummarysimilar');
                 for (var i = 0; i < result.games.length; i++) {
-                    var similarObject = renderGameIcon(result.games[i], false, false, false, true);
+                    var similarObject = renderGameIcon(result.games[i], false, false, false, null, true);
                     gameSummarySimilarContent.appendChild(similarObject);
                 }
 
