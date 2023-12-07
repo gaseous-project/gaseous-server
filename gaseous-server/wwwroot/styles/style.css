@@ -288,6 +288,47 @@ input[id='filter_panel_userrating_max'] {
     right: 20px;
 }
 
+#games_home_box {
+    display: relative;
+}
+
+#games_pager {
+    position: fixed;
+    bottom: 50px;
+    left: 50%;
+    transform: translate(-50%, 0);
+    border-style: solid;
+    border-width: 1px;
+    border-radius: 7px;
+    border-color: rgba(0, 22, 56, 0.8);
+    padding-left: 20px;
+    padding-right: 20px;
+    padding-top: 15px;
+    padding-bottom: 15px;
+    font-size: 18px;
+    font-family: Commodore64;
+    background-color: rgba(0, 22, 56, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -webkit-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    -moz-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+}
+
+.games_pager_number {
+    padding: 5px;
+}
+
+.games_pager_number:hover {
+    background-color: blue;
+    cursor: pointer;
+}
+
+.games_pager_number_disabled {
+    padding: 5px;
+    color: grey;
+}
+
 .filter_panel_item {
     display: flex;
     position: relative;
@@ -334,6 +375,14 @@ input[id='filter_panel_userrating_max'] {
     text-align: center;
     padding-top: 10px;
     height: 50px;
+}
+
+#games_library_padding {
+    display: block;
+    width: 100%;
+    text-align: center;
+    padding-top: 10px;
+    height: 100px;
 }
 
 .game_tile {

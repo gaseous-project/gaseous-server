@@ -12,7 +12,9 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize) {
     console.log("Displaying page: " + pageNumber);
     console.log("Page size: " + pageSize);
 
-    if (pageNumber == 1) {
+    var pageMode = GetPreference('LibraryPagination', 'infinite');
+
+    if (pageNumber == 1 || pageMode == 'paged') {
         targetElement.innerHTML = ''; 
     }
 
@@ -21,7 +23,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize) {
         pagerCheck.innerHTML = "0";
     }
 
-    if (pageNumber > Number(pagerCheck.innerHTML)) {
+    if (pageNumber > Number(pagerCheck.innerHTML) || pageMode == 'paged') {
         pagerCheck.innerHTML = pageNumber;
 
         document.getElementById('games_library_recordcount').innerHTML = result.count + ' games';
@@ -52,14 +54,73 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize) {
             visibleOnly: true
         });
 
-        if (result.games.length == pageSize) {
-            var loadPageButton = document.createElement("div");
-            loadPageButton.id = 'games_library_loadmore';
-            loadPageButton.innerHTML = 'Load More';
-            loadPageButton.setAttribute('onclick', 'executeFilter1_1(' + (pageNumber + 1) + ', ' + pageSize + ');');
-            loadPageButton.setAttribute('data-pagenumber', Number(pageNumber + 1));
-            loadPageButton.setAttribute('data-pagesize', pageSize);
-            targetElement.appendChild(loadPageButton);
+        var pager = document.getElementById('games_pager');
+        pager.style.display = 'none';
+
+        switch(pageMode) {
+            case 'infinite':
+                if (result.games.length == pageSize) {
+                    var loadPageButton = document.createElement("div");
+                    loadPageButton.id = 'games_library_loadmore';
+                    loadPageButton.innerHTML = 'Load More';
+                    loadPageButton.setAttribute('onclick', 'executeFilter1_1(' + (pageNumber + 1) + ', ' + pageSize + ');');
+                    loadPageButton.setAttribute('data-pagenumber', Number(pageNumber + 1));
+                    loadPageButton.setAttribute('data-pagesize', pageSize);
+                    targetElement.appendChild(loadPageButton);
+                }
+                break;
+
+            case 'paged':
+                if (result.count > pageSize) {
+                    // add some padding to the bottom of the games list
+                    var loadPageButton = document.createElement("div");
+                    loadPageButton.id = 'games_library_padding';
+                    targetElement.appendChild(loadPageButton);
+
+                    var pageCount = Math.ceil(result.count / pageSize);
+
+                    // add previous page button
+                    var prevPage = document.createElement('span');
+                    prevPage.innerHTML = '&lt;';
+                    if (pageNumber == 1) {
+                        prevPage.className = 'games_pager_number_disabled';
+                    } else {
+                        prevPage.className = 'games_pager_number';
+                        prevPage.setAttribute('onclick', 'executeFilter1_1(' + (pageNumber - 1) + ');');
+                    }
+
+                    // add page numbers
+                    var pageNumbers = document.createElement('span');
+                    for (var i = 1; i <= pageCount; i++) {
+                        var pageNum = document.createElement('span');
+                        if (Number(pagerCheck.innerHTML) == i) {
+                            pageNum.className = 'games_pager_number_disabled';
+                        } else {
+                            pageNum.className = 'games_pager_number';
+                            pageNum.setAttribute('onclick', 'executeFilter1_1(' + i + ');');
+                        }
+                        pageNum.innerHTML = i;
+                        pageNumbers.appendChild(pageNum);
+                    }
+
+                    // add next page button
+                    var nextPage = document.createElement('span');
+                    nextPage.innerHTML = '&gt;';
+                    if (pageNumber == pageCount) {
+                        nextPage.className = 'games_pager_number_disabled';
+                    } else {
+                        nextPage.className = 'games_pager_number';
+                        nextPage.setAttribute('onclick', 'executeFilter1_1(' + (pageNumber + 1) + ');');
+                    }
+
+                    pager.innerHTML = '';
+                    pager.appendChild(prevPage);
+                    pager.appendChild(pageNumbers);
+                    pager.appendChild(nextPage);
+
+                    pager.style.display = '';
+                }
+                break;
         }
     }
 }

@@ -28,6 +28,10 @@
     </div>
 </div>
 
+<div id="games_pager" style="display: none;">
+    &lt; 1 2 3 4 5 &gt;
+</div>
+
 <script type="text/javascript">
     ajaxCall('/api/v1.1/Filter', 'GET', function (result) {
         var filterElement = document.getElementById('games_filter');

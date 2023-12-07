@@ -340,8 +340,6 @@ function executeFilter1_1(pageNumber, pageSize) {
         }
     };
 
-    console.log(model);
-
     ajaxCall(
         '/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize,
         'POST',
