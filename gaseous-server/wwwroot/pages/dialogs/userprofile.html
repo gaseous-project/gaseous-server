@@ -19,8 +19,8 @@
             <tr>
                 <td>
                     <select id="profile_pref-LibraryPagination" data-pref="LibraryPagination" onchange="SavePrefValue_Value(this);">
-                        <option value="infinite">Infinite scrolling</option>
                         <option value="paged">Paged</option>
+                        <option value="infinite">Infinite scrolling</option>
                     </select>
                 </td>
             </tr>
@@ -128,7 +128,7 @@
 
     function GetPrefInitialValues() {
         var paginationMode = document.getElementById('profile_pref-LibraryPagination');
-        paginationMode.value = GetPreference('LibraryPagination', 'infinite');
+        paginationMode.value = GetPreference('LibraryPagination', 'paged');
 
         ConfigurePrefInitialValue_Checkbox("LibraryShowGameTitle", GetPreference("LibraryShowGameTitle", true));
         ConfigurePrefInitialValue_Checkbox("LibraryShowGameRating", GetPreference("LibraryShowGameRating", true));

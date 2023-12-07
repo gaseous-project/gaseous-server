@@ -12,7 +12,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize) {
     console.log("Displaying page: " + pageNumber);
     console.log("Page size: " + pageSize);
 
-    var pageMode = GetPreference('LibraryPagination', 'infinite');
+    var pageMode = GetPreference('LibraryPagination', 'paged');
 
     if (pageNumber == 1 || pageMode == 'paged') {
         targetElement.innerHTML = ''; 
