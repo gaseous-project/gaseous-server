@@ -39,33 +39,41 @@ namespace gaseous_server.Controllers.v1_1
 
         [MapToApiVersion("1.1")]
         [HttpPost]
-        [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]
-        public async Task<IActionResult> Game_v1_1(GameSearchModel model)
+        [ProducesResponseType(typeof(GameReturnPackage), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Game_v1_1(GameSearchModel model, int pageNumber = 0, int pageSize = 0)
         {
             var user = await _userManager.GetUserAsync(User);
 
             if (user != null)
             {
                 // apply security profile filtering
-                List<string> RemoveAgeGroups = new List<string>();
-                switch (user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction.ToLower())
+                if (model.GameAgeRating.AgeGroupings.Count == 0)
                 {
-                    case "adult":
+                    model.GameAgeRating.AgeGroupings.Add(AgeGroups.AgeRestrictionGroupings.Adult);
+                    model.GameAgeRating.AgeGroupings.Add(AgeGroups.AgeRestrictionGroupings.Mature);
+                    model.GameAgeRating.AgeGroupings.Add(AgeGroups.AgeRestrictionGroupings.Teen);
+                    model.GameAgeRating.AgeGroupings.Add(AgeGroups.AgeRestrictionGroupings.Child);
+                    model.GameAgeRating.IncludeUnrated = true;
+                }
+                List<AgeGroups.AgeRestrictionGroupings> RemoveAgeGroups = new List<AgeGroups.AgeRestrictionGroupings>();
+                switch (user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction)
+                {
+                    case AgeGroups.AgeRestrictionGroupings.Adult:
                         break;
-                    case "mature":
-                        RemoveAgeGroups.Add("Adult");
+                    case AgeGroups.AgeRestrictionGroupings.Mature:
+                        RemoveAgeGroups.Add(AgeGroups.AgeRestrictionGroupings.Adult);
                         break;
-                    case "teen":
-                        RemoveAgeGroups.Add("Adult");
-                        RemoveAgeGroups.Add("Mature");
+                    case AgeGroups.AgeRestrictionGroupings.Teen:
+                        RemoveAgeGroups.Add(AgeGroups.AgeRestrictionGroupings.Adult);
+                        RemoveAgeGroups.Add(AgeGroups.AgeRestrictionGroupings.Mature);
                         break;
-                    case "child":
-                        RemoveAgeGroups.Add("Adult");
-                        RemoveAgeGroups.Add("Mature");
-                        RemoveAgeGroups.Add("Teen");
+                    case AgeGroups.AgeRestrictionGroupings.Child:
+                        RemoveAgeGroups.Add(AgeGroups.AgeRestrictionGroupings.Adult);
+                        RemoveAgeGroups.Add(AgeGroups.AgeRestrictionGroupings.Mature);
+                        RemoveAgeGroups.Add(AgeGroups.AgeRestrictionGroupings.Teen);
                         break;
                 }
-                foreach (string RemoveAgeGroup in RemoveAgeGroups)
+                foreach (AgeGroups.AgeRestrictionGroupings RemoveAgeGroup in RemoveAgeGroups)
                 {
                     if (model.GameAgeRating.AgeGroupings.Contains(RemoveAgeGroup))
                     {
@@ -77,7 +85,47 @@ namespace gaseous_server.Controllers.v1_1
                     model.GameAgeRating.IncludeUnrated = false;
                 }
 
-                return Ok(GetGames(model));
+                return Ok(GetGames(model, pageNumber, pageSize));
+            }
+            else
+            {
+                return Unauthorized();
+            }
+        }
+
+        [MapToApiVersion("1.1")]
+        [HttpGet]
+        [Route("{GameId}/Related")]
+        [ProducesResponseType(typeof(GameReturnPackage), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GameRelated(long GameId)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user != null)
+            {
+                string IncludeUnrated = "";
+                if (user.SecurityProfile.AgeRestrictionPolicy.IncludeUnrated == true) {
+                    IncludeUnrated = " OR view_Games.AgeGroupId IS NULL";
+                }
+
+                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                string sql = "SELECT view_Games.Id, view_Games.AgeGroupId, Relation_Game_SimilarGames.SimilarGamesId FROM view_Games JOIN Relation_Game_SimilarGames ON view_Games.Id = Relation_Game_SimilarGames.GameId AND Relation_Game_SimilarGames.SimilarGamesId IN (SELECT Id FROM view_Games) WHERE view_Games.Id = @id AND (view_Games.AgeGroupId <= @agegroupid" + IncludeUnrated + ")";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>();
+                dbDict.Add("id", GameId);
+                dbDict.Add("agegroupid", (int)user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction);
+
+                List<IGDB.Models.Game> RetVal = new List<IGDB.Models.Game>();
+
+                DataTable dbResponse = db.ExecuteCMD(sql, dbDict);
+
+                foreach (DataRow dr in dbResponse.Rows)
+                {
+                    RetVal.Add(Classes.Metadata.Games.GetGame((long)dr["SimilarGamesId"], false, false, false));
+                }
+
+                GameReturnPackage gameReturn = new GameReturnPackage(RetVal.Count, RetVal);
+
+                return Ok(gameReturn);
             }
             else
             {
@@ -109,7 +157,12 @@ namespace gaseous_server.Controllers.v1_1
 
             public class GameAgeRatingItem
             {
-                public List<string> AgeGroupings { get; set; } = new List<string>{ "Child", "Teen", "Mature", "Adult" };
+                public List<AgeGroups.AgeRestrictionGroupings> AgeGroupings { get; set; } = new List<AgeGroups.AgeRestrictionGroupings>{ 
+                    AgeGroups.AgeRestrictionGroupings.Child,
+                    AgeGroups.AgeRestrictionGroupings.Teen,
+                    AgeGroups.AgeRestrictionGroupings.Mature,
+                    AgeGroups.AgeRestrictionGroupings.Adult
+                };
                 public bool IncludeUnrated { get; set; } = true;
             }
 
@@ -128,7 +181,7 @@ namespace gaseous_server.Controllers.v1_1
             }
         }
     
-        public static List<Game> GetGames(GameSearchModel model)
+        public static GameReturnPackage GetGames(GameSearchModel model, int pageNumber = 0, int pageSize = 0)
         {
             string whereClause = "";
             string havingClause = "";
@@ -191,7 +244,7 @@ namespace gaseous_server.Controllers.v1_1
                     }
                 }
 
-                string unratedClause = "totalRating IS NOT NULL";
+                string unratedClause = "";
                 if (model.GameRating.IncludeUnrated == true)
                 {
                     unratedClause = "totalRating IS NULL";
@@ -199,7 +252,14 @@ namespace gaseous_server.Controllers.v1_1
 
                 if (ratingClauseValue.Length > 0)
                 {
-                    havingClauses.Add("((" + ratingClauseValue + ") OR " + unratedClause + ")");
+                    if (unratedClause.Length > 0)
+                    {
+                        havingClauses.Add("((" + ratingClauseValue + ") OR " + unratedClause + ")");
+                    }
+                    else
+                    {
+                        havingClauses.Add("(" + ratingClauseValue + ")");
+                    }
                 }
             }
 
@@ -292,43 +352,26 @@ namespace gaseous_server.Controllers.v1_1
             {
                 if (model.GameAgeRating.AgeGroupings.Count > 0)
                 {
-                    List<long> AgeClassificationsList = new List<long>();
-                    foreach (string ratingGroup in model.GameAgeRating.AgeGroupings)
+                    tempVal = "(AgeGroupId IN (";
+                    for (int i = 0; i < model.GameAgeRating.AgeGroupings.Count; i++)
                     {
-                        if (AgeGroups.AgeGroupings.ContainsKey(ratingGroup))
+                        if (i > 0)
                         {
-                            List<AgeGroups.AgeGroupItem> ageGroups = AgeGroups.AgeGroupings[ratingGroup];
-                            foreach (AgeGroups.AgeGroupItem ageGroup in ageGroups)
-                            {
-                                AgeClassificationsList.AddRange(ageGroup.AgeGroupItemValues);
-                            }
+                            tempVal += ", ";
                         }
+                        string themeLabel = "@Rating" + i;
+                        tempVal += themeLabel;
+                        whereParams.Add(themeLabel, model.GameAgeRating.AgeGroupings[i]);
                     }
+                    tempVal += ")";
 
-                    if (AgeClassificationsList.Count > 0)
+                    if (model.GameAgeRating.IncludeUnrated == true)
                     {
-                        AgeClassificationsList = new HashSet<long>(AgeClassificationsList).ToList();
-                        tempVal = "(view_AgeRatings.Rating IN (";
-                        for (int i = 0; i < AgeClassificationsList.Count; i++)
-                        {
-                            if (i > 0)
-                            {
-                                tempVal += ", ";
-                            }
-                            string themeLabel = "@Rating" + i;
-                            tempVal += themeLabel;
-                            whereParams.Add(themeLabel, AgeClassificationsList[i]);
-                        }
-                        tempVal += ")";
-
-                        if (model.GameAgeRating.IncludeUnrated == true)
-                        {
-                            tempVal += " OR view_AgeRatings.Rating IS NULL";
-                        }
-                        tempVal += ")";
-
-                        whereClauses.Add(tempVal);
+                        tempVal += " OR AgeGroupId IS NULL";
                     }
+                    tempVal += ")";
+
+                    whereClauses.Add(tempVal);
                 }
             }
 
@@ -396,18 +439,66 @@ namespace gaseous_server.Controllers.v1_1
             string orderByClause = "ORDER BY `" + orderByField + "` " + orderByOrder;
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT DISTINCT Games_Roms.GameId AS ROMGameId, Game.*, case when Game.`Name` like 'The %' then CONCAT(trim(substr(Game.`Name` from 4)), ', The') else Game.`Name` end as NameThe FROM Games_Roms LEFT JOIN Game ON Game.Id = Games_Roms.GameId LEFT JOIN Relation_Game_Genres ON Game.Id = Relation_Game_Genres.GameId LEFT JOIN Relation_Game_GameModes ON Game.Id = Relation_Game_GameModes.GameId LEFT JOIN Relation_Game_PlayerPerspectives ON Game.Id = Relation_Game_PlayerPerspectives.GameId LEFT JOIN Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId LEFT JOIN (SELECT Relation_Game_AgeRatings.GameId, AgeRating.* FROM Relation_Game_AgeRatings JOIN AgeRating ON Relation_Game_AgeRatings.AgeRatingsId = AgeRating.Id) view_AgeRatings ON Game.Id = view_AgeRatings.GameId " + whereClause + " " + havingClause + " " + orderByClause;
+            string sql = "SELECT DISTINCT view_Games.* FROM view_Games LEFT JOIN Games_Roms ON view_Games.Id = Games_Roms.GameId LEFT JOIN Relation_Game_Genres ON view_Games.Id = Relation_Game_Genres.GameId LEFT JOIN Relation_Game_GameModes ON view_Games.Id = Relation_Game_GameModes.GameId LEFT JOIN Relation_Game_PlayerPerspectives ON view_Games.Id = Relation_Game_PlayerPerspectives.GameId LEFT JOIN Relation_Game_Themes ON view_Games.Id = Relation_Game_Themes.GameId " + whereClause + " " + havingClause + " " + orderByClause;
 
             List<IGDB.Models.Game> RetVal = new List<IGDB.Models.Game>();
 
             DataTable dbResponse = db.ExecuteCMD(sql, whereParams);
-            foreach (DataRow dr in dbResponse.Rows)
+
+            // get count
+            int RecordCount = dbResponse.Rows.Count;
+            
+            // compile data for return
+            int pageOffset = pageSize * (pageNumber - 1);
+            for (int i = 0; i < dbResponse.Rows.Count; i++)
             {
-                //RetVal.Add(Classes.Metadata.Games.GetGame((long)dr["ROMGameId"], false, false));
-                RetVal.Add(Classes.Metadata.Games.GetGame(dr));
+                DataRow dr = dbResponse.Rows[i];
+
+                bool includeGame = false;
+
+                if (pageSize == 0)
+                {
+                    // page size is full size include all
+                    includeGame = true;
+                }
+                else if (i >= pageOffset && i < (pageOffset + pageSize))
+                {
+                    includeGame = true;
+                }
+
+                if (includeGame == true)
+                {
+                    RetVal.Add(Classes.Metadata.Games.GetGame(dr));
+                }
             }
 
-            return RetVal;
+            GameReturnPackage gameReturn = new GameReturnPackage(RecordCount, RetVal);
+
+            return gameReturn;
+        }
+
+        public class GameReturnPackage
+        {
+            public GameReturnPackage()
+            {
+
+            }
+
+            public GameReturnPackage(int Count, List<Game> Games)
+            {
+                this.Count = Count;
+
+                List<Games.MinimalGameItem> minimalGames = new List<Games.MinimalGameItem>();
+                foreach (Game game in Games)
+                {
+                    minimalGames.Add(new Classes.Metadata.Games.MinimalGameItem(game));
+                }
+
+                this.Games = minimalGames;
+            }
+
+            public int Count { get; set; }
+            public List<Games.MinimalGameItem> Games { get; set; } = new List<Games.MinimalGameItem>();
         }
     }
 }

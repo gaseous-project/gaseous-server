@@ -3,6 +3,7 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using IGDB;
 using IGDB.Models;
+using Microsoft.CodeAnalysis.Classification;
 
 namespace gaseous_server.Classes.Metadata
 {
@@ -153,6 +154,44 @@ namespace gaseous_server.Classes.Metadata
             public string[] Descriptions { get; set; }
         }
 
+        public static void PopulateAgeMap()
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "DELETE FROM ClassificationMap;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            db.ExecuteNonQuery(sql);
+
+            // loop all age groups
+            foreach(KeyValuePair<AgeGroups.AgeRestrictionGroupings, AgeGroups.AgeGroupItem> ageGrouping in AgeGroups.AgeGroupingsFlat)
+            {
+                AgeGroups.AgeGroupItem ageGroupItem = ageGrouping.Value;
+                var properties = ageGroupItem.GetType().GetProperties();
+                foreach (var prop in properties)
+                {
+                    if (prop.GetGetMethod() != null)
+                    {
+                        List<string> AgeRatingCategories = new List<string>(Enum.GetNames(typeof(AgeRatingCategory)));
+                        if (AgeRatingCategories.Contains(prop.Name))
+                        {
+                            AgeRatingCategory ageRatingCategory = (AgeRatingCategory)Enum.Parse(typeof(AgeRatingCategory), prop.Name);
+                            List<AgeRatingTitle> ageRatingTitles = (List<AgeRatingTitle>)prop.GetValue(ageGroupItem);
+                            
+                            foreach (AgeRatingTitle ageRatingTitle in ageRatingTitles)
+                            {
+                                dbDict.Clear();
+                                dbDict.Add("AgeGroupId", ageGrouping.Key);
+                                dbDict.Add("ClassificationBoardId", ageRatingCategory);
+                                dbDict.Add("RatingId", ageRatingTitle);
+
+                                sql = "INSERT INTO ClassificationMap (AgeGroupId, ClassificationBoardId, RatingId) VALUES (@AgeGroupId, @ClassificationBoardId, @RatingId);";
+                                db.ExecuteCMD(sql, dbDict);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         public class AgeGroups
         {
             public AgeGroups()
@@ -160,93 +199,55 @@ namespace gaseous_server.Classes.Metadata
 
             }
 
-            public static Dictionary<string, List<AgeGroupItem>> AgeGroupings
+            public static Dictionary<AgeRestrictionGroupings, List<AgeGroupItem>> AgeGroupings
             {
                 get
                 {
-                    return new Dictionary<string, List<AgeGroupItem>>{
+                    return new Dictionary<AgeRestrictionGroupings, List<AgeGroupItem>>{
                         { 
-                            "Adult", new List<AgeGroupItem>{ Adult_Item, Mature_Item, Teen_Item, Child_Item } 
+                            AgeRestrictionGroupings.Adult, new List<AgeGroupItem>{ Adult_Item, Mature_Item, Teen_Item, Child_Item } 
                         },
                         {
-                            "Mature", new List<AgeGroupItem>{ Mature_Item, Teen_Item, Child_Item }
+                            AgeRestrictionGroupings.Mature, new List<AgeGroupItem>{ Mature_Item, Teen_Item, Child_Item }
                         },
                         {
-                            "Teen", new List<AgeGroupItem>{ Teen_Item, Child_Item }
+                            AgeRestrictionGroupings.Teen, new List<AgeGroupItem>{ Teen_Item, Child_Item }
                         },
                         { 
-                            "Child", new List<AgeGroupItem>{ Child_Item }
+                            AgeRestrictionGroupings.Child, new List<AgeGroupItem>{ Child_Item }
                         }
                     };
                 }
             }
 
-            public static Dictionary<string, AgeGroupItem> AgeGroupingsFlat
+            public static Dictionary<AgeRestrictionGroupings, AgeGroupItem> AgeGroupingsFlat
             {
                 get
                 {
-                    return new Dictionary<string, AgeGroupItem>{
+                    return new Dictionary<AgeRestrictionGroupings, AgeGroupItem>{
                         {
-                            "Adult", Adult_Item
+                            AgeRestrictionGroupings.Adult, Adult_Item
                         },
                         {
-                            "Mature", Mature_Item
+                            AgeRestrictionGroupings.Mature, Mature_Item
                         },
                         {
-                            "Teen", Teen_Item
+                            AgeRestrictionGroupings.Teen, Teen_Item
                         },
                         {
-                            "Child", Child_Item
+                            AgeRestrictionGroupings.Child, Child_Item
                         }
                     };
                 }
             }
 
-            public static List<ClassificationBoardItem> ClassificationBoards
+            public enum AgeRestrictionGroupings
             {
-                get
-                {
-                    ClassificationBoardItem boardItem = new ClassificationBoardItem{ 
-                        Board = AgeRatingCategory.ACB, 
-                        Classifications = new List<AgeRatingTitle>{
-                            AgeRatingTitle.ACB_G, AgeRatingTitle.ACB_M, AgeRatingTitle.ACB_MA15, AgeRatingTitle.ACB_R18, AgeRatingTitle.ACB_RC
-                        }
-                    };
-
-                    return new List<ClassificationBoardItem>{
-                        new ClassificationBoardItem{ 
-                            Board = AgeRatingCategory.ACB, 
-                            Classifications = new List<AgeRatingTitle>{
-                                AgeRatingTitle.ACB_G,
-                                AgeRatingTitle.ACB_M,
-                                AgeRatingTitle.ACB_MA15,
-                                AgeRatingTitle.ACB_R18,
-                                AgeRatingTitle.ACB_RC
-                            }
-                        },
-                        new ClassificationBoardItem{ 
-                            Board = AgeRatingCategory.CERO, 
-                            Classifications = new List<AgeRatingTitle>{
-                                AgeRatingTitle.CERO_A,
-                                AgeRatingTitle.CERO_B,
-                                AgeRatingTitle.CERO_C,
-                                AgeRatingTitle.CERO_D,
-                                AgeRatingTitle.CERO_Z
-                            }
-                        },
-                        new ClassificationBoardItem{ 
-                            Board = AgeRatingCategory.CLASS_IND, 
-                            Classifications = new List<AgeRatingTitle>{
-                                AgeRatingTitle.CLASS_IND_L,
-                                AgeRatingTitle.CLASS_IND_Ten,
-                                AgeRatingTitle.CLASS_IND_Twelve,
-                                AgeRatingTitle.CLASS_IND_Fourteen,
-                                AgeRatingTitle.CLASS_IND_Sixteen,
-                                AgeRatingTitle.CLASS_IND_Eighteen
-                            }
-                        }
-                    };
-                }
+                Adult = 4,
+                Mature = 3,
+                Teen = 2,
+                Child = 1,
+                Unclassified = 0
             }
 
             readonly static AgeGroupItem Adult_Item = new AgeGroupItem{
@@ -340,12 +341,6 @@ namespace gaseous_server.Classes.Metadata
                         return values;
                     }
                 }
-            }
-
-            public class ClassificationBoardItem
-            {
-                public IGDB.Models.AgeRatingCategory Board { get; set; }
-                public List<IGDB.Models.AgeRatingTitle> Classifications { get; set; }
             }
         }
 	}

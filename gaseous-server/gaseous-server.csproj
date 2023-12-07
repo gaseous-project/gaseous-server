@@ -46,6 +46,8 @@
     <None Remove="Support\Database\MySQL\gaseous-1003.sql" />
     <None Remove="Support\Database\MySQL\gaseous-1004.sql" />
     <None Remove="Support\Database\MySQL\gaseous-1005.sql" />
+    <None Remove="Support\Database\MySQL\gaseous-1006.sql" />
+    <None Remove="Support\Database\MySQL\gaseous-1007.sql" />
     <None Remove="Classes\Metadata\" />
     <None Remove="Assets\" />
     <None Remove="Assets\Ratings\" />
@@ -174,5 +176,7 @@
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1003.sql" />
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1004.sql" />
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1005.sql" />
+    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1006.sql" />
+    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1007.sql" />
   </ItemGroup>
 </Project>

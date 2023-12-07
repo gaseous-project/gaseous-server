@@ -19,9 +19,25 @@
 
     panel.appendChild(containerPanelSearch);
 
-    panel.appendChild(buildFilterPanelHeader('userrating', 'User Rating'));
+    panel.appendChild(buildFilterPanelHeader('userrating', 'User Rating', true, false));
     var containerPanelUserRating = document.createElement('div');
+    containerPanelUserRating.id = 'filter_panel_box_userrating';
     containerPanelUserRating.className = 'filter_panel_box';
+
+    var containerPanelUserRatingCheckBox = document.createElement('input');
+    containerPanelUserRatingCheckBox.id = 'filter_panel_userrating_enabled';
+    containerPanelUserRatingCheckBox.type = 'checkbox';
+    containerPanelUserRatingCheckBox.setAttribute('oninput', 'executeFilterDelayed();');
+    var ratingEnabledCookie = getCookie('filter_panel_userrating_enabled');
+    if (ratingEnabledCookie) {
+        if (ratingEnabledCookie == "true") {
+            containerPanelUserRatingCheckBox.checked = true;
+        } else {
+            containerPanelUserRatingCheckBox.checked = false;
+        }
+    }
+    containerPanelUserRating.appendChild(containerPanelUserRatingCheckBox);
+
     var containerPanelUserRatingMinField = document.createElement('input');
     var minRatingCookie = getCookie('filter_panel_userrating_min');
     if (minRatingCookie) {
@@ -72,7 +88,23 @@
         buildFilterPanel(panel, 'theme', 'Themes', result.themes, true, false);
     }
 
+    if (result.agegroupings) {
+        if (result.agegroupings.length > 1) {
+            buildFilterPanel(panel, 'agegroupings', 'Age Groups', result.agegroupings, true, false);
+        }
+    }
+
     targetElement.appendChild(panel);
+
+    // set order by values
+    var orderByCookie = getCookie('games_library_orderby_select');
+    if (orderByCookie) {
+        document.getElementById('games_library_orderby_select').value = orderByCookie;
+    }
+    var orderByDirectionCookie = getCookie('games_library_orderby_direction_select');
+    if (orderByDirectionCookie) {
+        document.getElementById('games_library_orderby_direction_select').value = orderByDirectionCookie;
+    }
 }
 
 function buildFilterPanel(targetElement, headerString, friendlyHeaderString, valueList, showToggle, initialDisplay) {
@@ -80,7 +112,6 @@ function buildFilterPanel(targetElement, headerString, friendlyHeaderString, val
     var displayCookie = getCookie('filter_panel_box_' + headerString);
     if (displayCookie) {
         initialDisplay = (displayCookie === 'true');
-        console.log(displayCookie);
     }
     targetElement.appendChild(buildFilterPanelHeader(headerString, friendlyHeaderString, showToggle, initialDisplay));
 
@@ -92,14 +123,13 @@ function buildFilterPanel(targetElement, headerString, friendlyHeaderString, val
     }
     for (var i = 0; i < valueList.length; i++) {
         var tags;
-        switch(headerString) {
-            case 'platform':
-                tags = [
-                    {
-                        'label': valueList[i].gameCount
-                    }
-                ];
-                break;
+        
+        if (valueList[i].gameCount) {
+            tags = [
+                {
+                    'label': valueList[i].gameCount
+                }
+            ];
         }
         containerPanel.appendChild(buildFilterPanelItem(headerString, valueList[i].id, valueList[i].name, tags));
     }
@@ -201,85 +231,6 @@ function executeFilterDelayed() {
     filterExecutor = setTimeout(executeFilter1_1, 1000);
 }
 
-function executeFilter() {
-    // build filter lists
-    var queries = [];
-
-    var platforms = '';
-    var genres = '';
-
-    var searchString = document.getElementById('filter_panel_search');
-    if (searchString.value.length > 0) {
-        queries.push('name=' + searchString.value);
-    }
-    setCookie(searchString.id, searchString.value);
-
-    var minUserRating = 0;
-    var minUserRatingInput = document.getElementById('filter_panel_userrating_min');
-    if (minUserRatingInput.value) {
-        minUserRating = minUserRatingInput.value;
-        queries.push('minrating=' + minUserRating);
-    }
-    setCookie(minUserRatingInput.id, minUserRatingInput.value);
-
-    var maxUserRating = 100;
-    var maxUserRatingInput = document.getElementById('filter_panel_userrating_max');
-    if (maxUserRatingInput.value) {
-        maxUserRating = maxUserRatingInput.value;
-        queries.push('maxrating=' + maxUserRating);
-    }
-    setCookie(maxUserRatingInput.id, maxUserRatingInput.value);
-
-    queries.push(GetFilterQuery('platform'));
-    queries.push(GetFilterQuery('genre'));
-    queries.push(GetFilterQuery('gamemode'));
-    queries.push(GetFilterQuery('playerperspective'));
-    queries.push(GetFilterQuery('theme'));
-
-    var queryString = '';
-    for (var i = 0; i < queries.length; i++) {
-        if (queries[i].length > 0) {
-            if (queryString.length == 0) {
-                queryString = '?';
-            } else {
-                queryString += '&';
-            }
-
-            queryString += queries[i];
-        }
-    }
-
-    console.log('Query string = ' + queryString);
-
-    ajaxCall('/api/v1.0/Games' + queryString, 'GET', function (result) {
-        var gameElement = document.getElementById('games_library');
-        formatGamesPanel(gameElement, result);
-    });
-}
-
-function GetFilterQuery(filterName) {
-    var Filters = document.getElementsByName('filter_' + filterName);
-    var queryString = '';
-
-    for (var i = 0; i < Filters.length; i++) {
-        if (Filters[i].checked) {
-            setCookie(Filters[i].id, true);
-            if (queryString.length > 0) {
-                queryString += ',';
-            }
-            queryString += Filters[i].getAttribute('filter_id');
-        } else {
-            setCookie(Filters[i].id, false);
-        }
-    }
-
-    if (queryString.length > 0) {
-        queryString = filterName + '=' + queryString;
-    }
-
-    return queryString;
-}
-
 function buildFilterTag(tags) {
     // accepts an array of numbers + classes for styling (optional)
     // example [ { label: "G: 13", class: "tag_Green" }, { label: "R: 17", class: "tag_Orange" } ]
@@ -301,12 +252,23 @@ function buildFilterTag(tags) {
     return boundingDiv;
 }
 
-function executeFilter1_1() {
-    console.log("Execute filter 1.1");
+function executeFilter1_1(pageNumber, pageSize) {
+    if (!pageNumber) {
+        pageNumber = 1;
+    }
+
+    if (!pageSize) {
+        pageSize = 30;
+    }
+
+    // user ratings
+    var userRatingEnabled = document.getElementById('filter_panel_userrating_enabled');
+
     var minUserRating = -1;
     var minUserRatingInput = document.getElementById('filter_panel_userrating_min');
     if (minUserRatingInput.value) {
         minUserRating = minUserRatingInput.value;
+        userRatingEnabled.checked = true;
     }
     setCookie(minUserRatingInput.id, minUserRatingInput.value);
 
@@ -314,15 +276,51 @@ function executeFilter1_1() {
     var maxUserRatingInput = document.getElementById('filter_panel_userrating_max');
     if (maxUserRatingInput.value) {
         maxUserRating = maxUserRatingInput.value;
+        userRatingEnabled.checked = true;
     }
     setCookie(maxUserRatingInput.id, maxUserRatingInput.value);
 
+    if (minUserRating == -1 && maxUserRating == -1) {
+        userRatingEnabled.checked = false;
+    }
+
+    if (userRatingEnabled.checked == false) {
+        setCookie("filter_panel_userrating_enabled", false);
+
+        minUserRating = -1;
+        minUserRatingInput.value = "";
+        setCookie(minUserRatingInput.id, minUserRatingInput.value);
+        maxUserRating = -1;
+        maxUserRatingInput.value = "";
+        setCookie(maxUserRatingInput.id, maxUserRatingInput.value);
+    } else {
+        setCookie("filter_panel_userrating_enabled", true);
+    }
+
+    // get order by
+    var orderBy = document.getElementById('games_library_orderby_select').value;
+    setCookie('games_library_orderby_select', orderBy);
+    var orderByDirection = true;
+    var orderByDirectionSelect = document.getElementById('games_library_orderby_direction_select').value;
+    if (orderByDirectionSelect == "Ascending") {
+        orderByDirection = true;
+    } else {
+        orderByDirection = false;
+    }
+    setCookie('games_library_orderby_direction_select', orderByDirectionSelect);
+
     // build filter model
+    var ratingAgeGroups = GetFilterQuery1_1('agegroupings');
+    var ratingIncludeUnrated = false;
+    if (ratingAgeGroups.includes("0")) {
+        ratingIncludeUnrated = true;
+    }
+
     var model = {
         "Name": document.getElementById('filter_panel_search').value,
         "Platform": GetFilterQuery1_1('platform'),
         "Genre": GetFilterQuery1_1('genre'),
-        "GameMode": GetFilterQuery1_1('gamemmode'),
+        "GameMode": GetFilterQuery1_1('gamemode'),
         "PlayerPerspective": GetFilterQuery1_1('playerperspective'),
         "Theme": GetFilterQuery1_1('theme'),
         "GameRating": {
@@ -330,31 +328,24 @@ function executeFilter1_1() {
             "MinimumRatingCount": -1,
             "MaximumRating": maxUserRating,
             "MaximumRatingCount": -1,
-            "IncludeUnrated": true
+            "IncludeUnrated": !userRatingEnabled
         },
         "GameAgeRating": {
-            "AgeGroupings": [
-                "Child",
-                "Teen",
-                "Mature",
-                "Adult"
-            ],
-            "IncludeUnrated": true
+            "AgeGroupings": ratingAgeGroups,
+            "IncludeUnrated": ratingIncludeUnrated
         },
         "Sorting": {
-            "SortBy": "NameThe",
-            "SortAscenting": true
+            "SortBy": orderBy,
+            "SortAscending": orderByDirection
         }
     };
 
-    console.log('Search model = ' + JSON.stringify(model));
-
     ajaxCall(
-        '/api/v1.1/Games',
+        '/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize,
         'POST',
         function (result) {
             var gameElement = document.getElementById('games_library');
-            formatGamesPanel(gameElement, result);
+            formatGamesPanel(gameElement, result, pageNumber, pageSize);
         },
         function (error) {
             console.log('An error occurred: ' + JSON.stringify(error));

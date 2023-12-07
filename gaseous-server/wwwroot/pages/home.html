@@ -2,9 +2,34 @@
     <div id="bgImage_Opacity"></div>
 </div>
 
-<div id="games_home">
+<div id="games_filter_scroller">
     <div id="games_filter"></div>
-    <div id="games_library"></div>
+</div>
+<div id="games_home">
+    <div id="games_home_box">
+        <div id="games_library_controls">
+            <div id="games_library_orderby" class="games_library_controlblock">
+                <span>Order by: </span>
+                <select id="games_library_orderby_select" onchange="executeFilter1_1();">
+                    <option selected="selected" value="NameThe">Name, The</option>
+                    <option value="Name">Name</option>
+                    <option value="Rating">User Rating</option>
+                    <option value="RatingCount">User Rating Count</option>
+                </select>
+                <select id="games_library_orderby_direction_select" onchange="executeFilter1_1();">
+                    <option selected="selected" value="Ascending">Ascending</option>
+                    <option value="Descending">Descending</option>
+                </select>
+            </div>
+            <div id="games_library_recordcount" class="games_library_controlblock"></div>
+        </div>
+        <div id="games_library"></div>
+        <div id="games_library_pagerstore" style="display: none;">0</div>
+    </div>
+</div>
+
+<div id="games_pager" style="display: none;">
+    &lt; 1 2 3 4 5 &gt;
 </div>
 
 <script type="text/javascript">

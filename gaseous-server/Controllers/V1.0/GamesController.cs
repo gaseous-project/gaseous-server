@@ -181,9 +181,10 @@ namespace gaseous_server.Controllers
                 List<long> AgeClassificationsList = new List<long>();
                 foreach (string ratingGroup in ratinggroup.Split(','))
                 {
-                    if (AgeGroups.AgeGroupings.ContainsKey(ratingGroup))
+                    AgeGroups.AgeRestrictionGroupings ageRestriction = (AgeGroups.AgeRestrictionGroupings)Enum.Parse(typeof(AgeGroups.AgeRestrictionGroupings), ratingGroup);
+                    if (AgeGroups.AgeGroupings.ContainsKey(ageRestriction))
                     {
-                        List<AgeGroups.AgeGroupItem> ageGroups = AgeGroups.AgeGroupings[ratingGroup];
+                        List<AgeGroups.AgeGroupItem> ageGroups = AgeGroups.AgeGroupings[ageRestriction];
                         foreach (AgeGroups.AgeGroupItem ageGroup in ageGroups)
                         {
                             AgeClassificationsList.AddRange(ageGroup.AgeGroupItemValues);
@@ -812,6 +813,44 @@ namespace gaseous_server.Controllers
                     Response.Headers.Add("Cache-Control", "public, max-age=604800");
 
                     return File(filedata, contentType);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpGet]
+        [Route("{GameId}/releasedates")]
+        [ProducesResponseType(typeof(List<ReleaseDate>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
+        public ActionResult GameReleaseDates(long GameId)
+        {
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                if (gameObject != null)
+                {
+                    List<ReleaseDate> rdObjects = new List<ReleaseDate>();
+                    if (gameObject.ReleaseDates != null)
+                    {
+                        foreach (long icId in gameObject.ReleaseDates.Ids)
+                        {
+                            ReleaseDate releaseDate = Classes.Metadata.ReleaseDates.GetReleaseDates(icId);
+                            
+                            rdObjects.Add(releaseDate);
+                        }
+                    }
+
+                    return Ok(rdObjects);
                 }
                 else
                 {

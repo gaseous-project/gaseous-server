@@ -82,6 +82,12 @@ namespace gaseous_server.Controllers
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
             // get age ratings dictionary
+            Dictionary<int, string> ClassificationBoardsStrings = new Dictionary<int, string>();
+            foreach(IGDB.Models.AgeRatingCategory ageRatingCategory in Enum.GetValues(typeof(IGDB.Models.AgeRatingCategory)) )
+            {
+                ClassificationBoardsStrings.Add((int)ageRatingCategory, ageRatingCategory.ToString());
+            }
+
             Dictionary<int, string> AgeRatingsStrings = new Dictionary<int, string>();
             foreach(IGDB.Models.AgeRatingTitle ageRatingTitle in Enum.GetValues(typeof(IGDB.Models.AgeRatingTitle)) )
             {
@@ -91,6 +97,9 @@ namespace gaseous_server.Controllers
             string ver = "var AppVersion = \"" + Assembly.GetExecutingAssembly().GetName().Version.ToString() + "\";" + Environment.NewLine +
                 "var DBSchemaVersion = \"" + db.GetDatabaseSchemaVersion() + "\";" + Environment.NewLine +
                 "var FirstRunStatus = " + Config.ReadSetting("FirstRunStatus", "0") + ";" + Environment.NewLine +
+                "var AgeRatingBoardsStrings = " + JsonSerializer.Serialize(ClassificationBoardsStrings, new JsonSerializerOptions{
+                    WriteIndented = true
+                }) + ";" + Environment.NewLine +
                 "var AgeRatingStrings = " + JsonSerializer.Serialize(AgeRatingsStrings, new JsonSerializerOptions{
                     WriteIndented = true
                 }) + ";" + Environment.NewLine +

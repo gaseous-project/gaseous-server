@@ -11,5 +11,6 @@ namespace Authentication
     public class ApplicationUser : IdentityUser
     {
         public SecurityProfileViewModel SecurityProfile { get; set; }
+        public List<UserPreferenceViewModel> UserPreferences { get; set; }
     }
 }

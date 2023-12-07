@@ -30,7 +30,16 @@ namespace gaseous_server.Classes
 			}
 
 			// update games
-			sql = "SELECT Id, `Name` FROM Game;";
+			if (forceRefresh == true)
+			{
+				// when forced, only update games with ROMs for
+				sql = "SELECT Id, `Name` FROM view_GamesWithRoms;";
+			}
+			else
+			{
+				// when run normally, update all games (since this will honour cache timeouts)
+				sql = "SELECT Id, `Name` FROM Game;";
+			}
 			dt = db.ExecuteCMD(sql);
 
 			foreach (DataRow dr in dt.Rows)
@@ -38,7 +47,7 @@ namespace gaseous_server.Classes
 				try
 				{
 					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ")");
-					Metadata.Games.GetGame((long)dr["id"], true, true, forceRefresh);
+					Metadata.Games.GetGame((long)dr["id"], true, false, forceRefresh);
 				}
 				catch (Exception ex)
 				{

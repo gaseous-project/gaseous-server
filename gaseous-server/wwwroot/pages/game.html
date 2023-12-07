@@ -35,6 +35,9 @@
 
     <div id="gamesummary">
         <div id="gamesummary_cover"></div>
+        <div id="gamesummary_firstrelease">
+            <h3>First Released</h3>
+        </div>
         <div id="gamesumarry_genres">
             <h3>Genres</h3>
         </div>
@@ -82,6 +85,10 @@
                     <button id="rom_edit_creategroup" onclick="createMgGroup();" disabled="disabled">Create Media Group</button>
                 </div>
             </div>
+        </div>
+        <div id="gamesummarysimilar">
+            <h3>Similar Games</h3>
+            <div id="gamesummarysimilarcontent"></div>
         </div>
     </div>
 </div>
@@ -234,6 +241,16 @@
         }
         gameSummaryCover.appendChild(gameImage);
 
+        // load release date
+        var gameSummaryRelease = document.getElementById('gamesummary_firstrelease');
+        if (result.firstReleaseDate) {
+            var firstRelease = document.createElement('p');
+            firstRelease.innerHTML = '<p>' + moment(result.firstReleaseDate).format('LL') + ' (' + moment(result.firstReleaseDate).fromNow() + ')</p>';
+            gameSummaryRelease.appendChild(firstRelease);
+        } else {
+            gameSummaryRelease.setAttribute('style', 'display: none;');
+        }
+
         // load ratings
         var gameSummaryRatings = document.getElementById('gamesummary_ratings');
         if (result.ageRatings) {
@@ -344,6 +361,26 @@
             gamescreenshots.setAttribute('style', 'display: none;');
         }
 
+        // load similar
+        var gameSummarySimilar = document.getElementById('gamesummarysimilar');
+        ajaxCall('/api/v1.1/Games/' + gameId + '/Related', 'GET', function (result) {
+            if (result.games.length > 0) {
+                var gameSummarySimilarContent = document.getElementById('gamesummarysimilar');
+                for (var i = 0; i < result.games.length; i++) {
+                    var similarObject = renderGameIcon(result.games[i], false, false, false, null, true);
+                    gameSummarySimilarContent.appendChild(similarObject);
+                }
+
+                $('.lazy').Lazy({
+                    scrollDirection: 'vertical',
+                    effect: 'fadeIn',
+                    visibleOnly: true
+                });
+            } else {
+                gameSummarySimilar.setAttribute('style', 'display: none;');
+            }
+        });
+        
         // load roms
         loadRoms();
     });

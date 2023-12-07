@@ -134,7 +134,7 @@ namespace gaseous_server
 
                                 case QueueItemType.MetadataRefresh:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Metadata Refresher");
-                                    Classes.MetadataManagement.RefreshMetadata();
+                                    Classes.MetadataManagement.RefreshMetadata(_ForceExecute);
 
                                     _SaveLastRunTime = true;
 

@@ -1,3 +1,4 @@
+using System.Data;
 using System.Security.Claims;
 using System.Text;
 using Authentication;
@@ -95,6 +96,7 @@ namespace gaseous_server.Controllers
             profile.EmailAddress = await _userManager.GetEmailAsync(user);
             profile.Roles = new List<string>(await _userManager.GetRolesAsync(user));
             profile.SecurityProfile = user.SecurityProfile;
+            profile.UserPreferences = user.UserPreferences;
             profile.Roles.Sort();
 
             return Ok(profile);
@@ -115,6 +117,7 @@ namespace gaseous_server.Controllers
                 profile.EmailAddress = await _userManager.GetEmailAsync(user);
                 profile.Roles = new List<string>(await _userManager.GetRolesAsync(user));
                 profile.SecurityProfile = user.SecurityProfile;
+                profile.UserPreferences = user.UserPreferences;
                 profile.Roles.Sort();
                 
                 string profileString = "var userProfile = " + Newtonsoft.Json.JsonConvert.SerializeObject(profile, Newtonsoft.Json.Formatting.Indented) + ";";
@@ -390,6 +393,24 @@ namespace gaseous_server.Controllers
             else
             {
                 return NotFound();
+            }
+        }
+
+        [HttpPost]
+        [Route("Preferences")]
+        public async Task<IActionResult> SetPreferences(List<UserPreferenceViewModel> model)
+        {
+            ApplicationUser? user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            else
+            {
+                user.UserPreferences = model;
+                await _userManager.UpdateAsync(user);
+                
+                return Ok();
             }
         }
     }

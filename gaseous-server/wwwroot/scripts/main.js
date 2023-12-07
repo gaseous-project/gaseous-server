@@ -1,4 +1,8 @@
-﻿function ajaxCall(endpoint, method, successFunction, errorFunction, body) {
+﻿var locale = window.navigator.userLanguage || window.navigator.language;
+console.log(locale);
+moment.locale(locale);
+
+function ajaxCall(endpoint, method, successFunction, errorFunction, body) {
     $.ajax({
 
         // Our sample url to make request
@@ -408,5 +412,61 @@ function GetTaskFriendlyName(TaskName, options) {
             return "Background database upgrade";
         default:
             return TaskName;
+    }
+}
+
+function getKeyByValue(object, value) {
+    return Object.keys(object).find(key => object[key] === value);
+}
+
+function GetPreference(Setting, DefaultValue) {
+    if (userProfile.userPreferences) {
+        for (var i = 0; i < userProfile.userPreferences.length; i++) {
+            if (userProfile.userPreferences[i].setting == Setting) {
+                return userProfile.userPreferences[i].value.toString();
+            }
+        }
+    }
+
+    SetPreference(Setting, DefaultValue);
+
+    return DefaultValue;
+}
+
+function SetPreference(Setting, Value) {
+    var model = [
+        {
+            "setting": Setting,
+            "value": Value.toString()
+        }
+    ];
+
+    ajaxCall(
+        '/api/v1.1/Account/Preferences',
+        'POST',
+        function(result) {
+            SetPreference_Local(Setting, Value);
+        },
+        function(error) {
+            SetPreference_Local(Setting, Value);
+        },
+        JSON.stringify(model)
+    );
+}
+
+function SetPreference_Local(Setting, Value) {
+    if (userProfile.userPreferences) {
+        var prefFound = false;
+        for (var i = 0; i < userProfile.userPreferences.length; i++) {
+            if (userProfile.userPreferences[i].setting == Setting) {
+                userProfile.userPreferences[i].value = Value;
+                prefFound = true;
+                break;
+            }
+        }
+
+        if (prefFound == false) {
+            userProfile.userPreferences.push(model);
+        }
     }
 }
