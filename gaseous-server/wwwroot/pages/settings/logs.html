@@ -2,7 +2,34 @@
     <h1 id="gametitle_label">Logs</h1>
 </div>
 
-<a href="#" class="romlink" onclick="loadLogs();" style="float: right;"><img src="/images/refresh.svg" alt="Refresh" title="Refresh" class="banner_button_image" /></a>
+<table style="width: 960px; max-width: 960px;" cellspacing="0">
+    <tr>
+        <td>
+            <input type="datetime-local" id="logs_startdate" />
+        </td>
+        <td>
+            <input type="datetime-local" id="logs_enddate" />
+        </td>
+        <td>
+            <input type="checkbox" id="logs_type_info"><label for="logs_type_info">Information</label>
+        </td>
+        <td>
+            <input type="checkbox" id="logs_type_warning"><label for="logs_type_warning">Warning</label>
+        </td>
+        <td>
+            <input type="checkbox" id="logs_type_critical"><label for="logs_type_critical">Critical</label>
+        </td>
+        <td>
+            <input type="text" id="logs_textsearch" placeholder="Search" />
+        </td>
+        <td>
+            <button onclick="loadLogs();">Search</button>
+            <button onclick="resetFilters();">Reset</button>
+        </td>
+    </tr>
+</table>
+
+<!-- <a href="#" class="romlink" onclick="loadLogs();" style="float: right;"><img src="/images/refresh.svg" alt="Refresh" title="Refresh" class="banner_button_image" /></a> -->
 <table id="settings_events_table" style="width: 960px; max-width: 960px;" cellspacing="0">
     
 </table>
@@ -14,20 +41,64 @@
 <script type="text/javascript">
     var lastStartIndex = 0;
     var currentPage = 1;
+    var searchModel = {};
+
+    function resetFilters() {
+        document.getElementById('logs_startdate').value = '';
+        document.getElementById('logs_enddate').value = '';
+        document.getElementById('logs_type_info').checked = false;
+        document.getElementById('logs_type_warning').checked = false;
+        document.getElementById('logs_type_critical').checked = false;
+        document.getElementById('logs_textsearch').value = '';
+
+        loadLogs();
+    }
 
     function loadLogs(StartIndex, PageNumber) {
-        var apiQuery = '';
+        var model = {}
 
         if (StartIndex && PageNumber) {
             currentPage += 1;
-            apiQuery = '?StartIndex=' + StartIndex + '&PageNumber=' + PageNumber;
+
+            // get saved search model
+            model = searchModel;
+            model.StartIndex = StartIndex;
+            model.PageNumber = PageNumber;
         } else {
             currentPage = 1;
+
+            // create search model
+            var statusList = [];
+            if (document.getElementById('logs_type_info').checked == true) { statusList.push(0); }
+            if (document.getElementById('logs_type_warning').checked == true) { statusList.push(2); }
+            if (document.getElementById('logs_type_critical').checked == true) { statusList.push(3); }
+            var startDate = null;
+            var startDateObj = document.getElementById('logs_startdate');
+            if (startDateObj.value != null) { startDate = new Date(startDateObj.value); }
+            var endDate = null;
+            var endDateObj = document.getElementById('logs_enddate');
+            if (endDateObj.value != null) { endDate = new Date(endDateObj.value); }
+            var searchText = null;
+            var searchTextObj = document.getElementById('logs_textsearch');
+            if (searchTextObj.value != null) { searchText = searchTextObj.value; }
+
+            model = {
+                "StartIndex": StartIndex,
+                "PageNumber": PageNumber,
+                "PageSize": 100,
+                "Status": statusList,
+                "StartDateTime": startDate,
+                "EndDateTime": endDate,
+                "SearchText": searchText
+            }
+            searchModel = model;
         }
 
+        console.log(model);
+
         ajaxCall(
-            '/api/v1.1/Logs' + apiQuery,
-            'GET',
+            '/api/v1.1/Logs',
+            'POST',
             function (result) {
                 var newTable = document.getElementById('settings_events_table');
                 if (currentPage == 1) {
@@ -54,7 +125,7 @@
 
                     var newRow = [
                         //result[i].id,
-                        moment(result[i].eventTime).format("YYYY-MM-DD H:mm:ss"),
+                        moment(result[i].eventTime).format("YYYY-MM-DD h:mm:ss a"),
                         result[i].eventType,
                         result[i].process,
                         result[i].message
@@ -74,7 +145,11 @@
                         newTable.appendChild(exRow);
                     }
                 }
-            }
+            },
+            function (error) {
+
+            },
+            JSON.stringify(model)
         );
     }
 

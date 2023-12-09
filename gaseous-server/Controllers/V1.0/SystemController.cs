@@ -179,6 +179,40 @@ namespace gaseous_server.Controllers
             return Ok();
         }
 
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpGet]
+        [Route("Settings/System")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public ActionResult GetSystemSettings()
+        {
+            SystemSettingsModel systemSettingsModel = new SystemSettingsModel{
+                AlwaysLogToDisk = Config.LoggingConfiguration.AlwaysLogToDisk,
+                MinimumLogRetentionPeriod = Config.LoggingConfiguration.LogRetention
+            };
+
+            return Ok(systemSettingsModel);
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpPost]
+        [Route("Settings/System")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public ActionResult SetSystemSettings(SystemSettingsModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                Config.LoggingConfiguration.AlwaysLogToDisk = model.AlwaysLogToDisk;
+                Config.LoggingConfiguration.LogRetention = model.MinimumLogRetentionPeriod;
+                Config.UpdateConfig();
+            }
+
+            return Ok(model);
+        }
+
         private SystemInfo.PathItem GetDisk(string Path)
         {
             SystemInfo.PathItem pathItem = new SystemInfo.PathItem {
@@ -277,5 +311,11 @@ namespace gaseous_server.Controllers
         }
         public int DefaultInterval { get; set; }
         public int MinimumAllowedValue { get; set; }
+    }
+
+    public class SystemSettingsModel
+    {
+        public bool AlwaysLogToDisk { get; set; }
+        public int MinimumLogRetentionPeriod { get; set; }
     }
 }
