@@ -132,22 +132,82 @@ namespace gaseous_server.Classes
             File.AppendAllText(Config.LogFilePath, TraceOutput);
         }
 
-        static public List<LogItem> GetLogs(long? StartIndex, int PageNumber = 1, int PageSize = 100) 
+        static public List<LogItem> GetLogs(LogsViewModel model) 
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            dbDict.Add("StartIndex", model.StartIndex);
+            dbDict.Add("PageNumber", (model.PageNumber - 1) * model.PageSize);
+            dbDict.Add("PageSize", model.PageSize);
             string sql = "";
-            if (StartIndex == null)
+
+            List<string> whereClauses = new List<string>();
+
+            // handle status criteria
+            if (model.Status != null)
             {
-                sql = "SELECT * FROM ServerLogs ORDER BY Id DESC LIMIT @PageSize OFFSET @PageNumber;";
+                if (model.Status.Count > 0)
+                {
+                    List<string> statusWhere = new List<string>();
+                    for (int i = 0; i < model.Status.Count; i++)
+                    {
+                        string valueName = "@eventtype" + i;
+                        statusWhere.Add(valueName);
+                        dbDict.Add(valueName, (int)model.Status[i]);
+                    }
+
+                    whereClauses.Add("EventType IN (" + string.Join(",", statusWhere) + ")");
+                }
+            }
+
+            // handle start date criteria
+            if (model.StartDateTime != null)
+            {
+                dbDict.Add("startdate", model.StartDateTime);
+                whereClauses.Add("EventTime >= @startdate");
+            }
+
+            // handle end date criteria
+            if (model.EndDateTime != null)
+            {
+                dbDict.Add("enddate", model.EndDateTime);
+                whereClauses.Add("EventTime <= @enddate");
+            }
+
+            // handle search text criteria
+            if (model.SearchText != null)
+            {
+                if (model.SearchText.Length > 0)
+                {
+                    dbDict.Add("messageSearch", model.SearchText);
+                    whereClauses.Add("MATCH(Message) AGAINST (@messageSearch)");
+                }
+            }
+
+            // compile WHERE clause
+            string whereClause = "";
+            if (whereClauses.Count > 0)
+            {
+                whereClause = "(" + String.Join(" AND ", whereClauses) + ")";
+            }
+
+            // execute query
+            if (model.StartIndex == null)
+            {
+                if (whereClause.Length > 0)
+                {
+                    whereClause = "WHERE " + whereClause;
+                }
+                sql = "SELECT * FROM ServerLogs " + whereClause + " ORDER BY Id DESC LIMIT @PageSize OFFSET @PageNumber;";
             }
             else
             {
-                sql = "SELECT * FROM ServerLogs WHERE Id < @StartIndex ORDER BY Id DESC LIMIT @PageSize OFFSET @PageNumber;";
+                if (whereClause.Length > 0)
+                {
+                    whereClause = "AND " + whereClause;
+                }
+                sql = "SELECT * FROM ServerLogs WHERE Id < @StartIndex " + whereClause + " ORDER BY Id DESC LIMIT @PageSize OFFSET @PageNumber;";
             }
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
-            dbDict.Add("StartIndex", StartIndex);
-            dbDict.Add("PageNumber", (PageNumber - 1) * PageSize);
-            dbDict.Add("PageSize", PageSize);
             DataTable dataTable = db.ExecuteCMD(sql, dbDict);
 
             List<LogItem> logs = new List<LogItem>();
@@ -196,6 +256,17 @@ namespace gaseous_server.Classes
                 }
             }
             public string? ExceptionValue { get; set; }
+        }
+
+        public class LogsViewModel
+        {
+            public long? StartIndex { get; set; }
+            public int PageNumber { get; set; } = 1;
+            public int PageSize { get; set; } = 100;
+            public List<LogType> Status { get; set; } = new List<LogType>();
+            public DateTime? StartDateTime { get; set; }
+            public DateTime? EndDateTime { get; set; }
+            public string? SearchText { get; set; }
         }
     }
 }

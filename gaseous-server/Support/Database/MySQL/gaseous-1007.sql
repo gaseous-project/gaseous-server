@@ -64,3 +64,6 @@ CREATE TABLE `User_Settings` (
   `Setting` VARCHAR(45) NOT NULL,
   `Value` LONGTEXT NULL DEFAULT NULL,
   PRIMARY KEY (`Id`, `Setting`));
+
+ALTER TABLE `ServerLogs` 
+ADD FULLTEXT INDEX `ft_message` USING BTREE (`Message`) VISIBLE;

@@ -17,11 +17,11 @@ namespace gaseous_server.Controllers
     {
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
-        [HttpGet]
+        [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public List<Logging.LogItem> Logs(long? StartIndex, int PageNumber = 1, int PageSize = 100)
+        public List<Logging.LogItem> Logs(Logging.LogsViewModel model)
         {
-            return Logging.GetLogs(StartIndex, PageNumber, PageSize);
+            return Logging.GetLogs(model);
         }
     }
 }
