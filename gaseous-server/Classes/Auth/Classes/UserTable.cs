@@ -400,35 +400,42 @@ namespace Authentication
 
         public int SetPreferences(TUser user, List<UserPreferenceViewModel> model)
         {
-            List<UserPreferenceViewModel> userPreferences = GetPreferences(user);
-
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            
-            foreach (UserPreferenceViewModel modelItem in model)
+            if (model != null)
             {
-                bool prefItemFound = false;
-                foreach (UserPreferenceViewModel existing in userPreferences)
+                List<UserPreferenceViewModel> userPreferences = GetPreferences(user);
+
+                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                
+                foreach (UserPreferenceViewModel modelItem in model)
                 {
-                    if (existing.Setting.ToLower() == modelItem.Setting.ToLower())
+                    bool prefItemFound = false;
+                    foreach (UserPreferenceViewModel existing in userPreferences)
                     {
-                        prefItemFound = true;
-                        break;
+                        if (existing.Setting.ToLower() == modelItem.Setting.ToLower())
+                        {
+                            prefItemFound = true;
+                            break;
+                        }
                     }
+
+                    string sql = "INSERT INTO User_Settings (`Id`, `Setting`, `Value`) VALUES (@id, @setting, @value);";
+                    if (prefItemFound == true)
+                    {
+                        sql = "UPDATE User_Settings SET `Value`=@value WHERE `Id`=@id AND `Setting`=@setting";
+                    }
+                    Dictionary<string, object> dbDict = new Dictionary<string, object>();
+                    dbDict.Add("id", user.Id);
+                    dbDict.Add("setting", modelItem.Setting);
+                    dbDict.Add("value", modelItem.Value);
+                    db.ExecuteNonQuery(sql, dbDict);
                 }
 
-                string sql = "INSERT INTO User_Settings (`Id`, `Setting`, `Value`) VALUES (@id, @setting, @value);";
-                if (prefItemFound == true)
-                {
-                    sql = "UPDATE User_Settings SET `Value`=@value WHERE `Id`=@id AND `Setting`=@setting";
-                }
-                Dictionary<string, object> dbDict = new Dictionary<string, object>();
-                dbDict.Add("id", user.Id);
-                dbDict.Add("setting", modelItem.Setting);
-                dbDict.Add("value", modelItem.Value);
-                db.ExecuteNonQuery(sql, dbDict);
+                return model.Count;
             }
-
-            return model.Count;
+            else
+            {
+                return 0;
+            }
         }
     }
 }

@@ -66,4 +66,11 @@ CREATE TABLE `User_Settings` (
   PRIMARY KEY (`Id`, `Setting`));
 
 ALTER TABLE `ServerLogs` 
-ADD FULLTEXT INDEX `ft_message` USING BTREE (`Message`) VISIBLE;
+ADD FULLTEXT INDEX `ft_message` (`Message`) VISIBLE;
+
+CREATE TABLE `Relation_Game_Platforms` (
+  `GameId` BIGINT NOT NULL,
+  `PlatformsId` BIGINT NOT NULL,
+  PRIMARY KEY (`GameId`, `PlatformsId`),
+  INDEX `idx_PrimaryColumn` (`GameId` ASC) VISIBLE
+);

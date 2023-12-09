@@ -45,6 +45,11 @@ namespace gaseous_server
                 DataRow row = data.Rows[0];
                 LibraryItem library = new LibraryItem((int)row["Id"], (string)row["Name"], (string)row["Path"], (long)row["DefaultPlatform"], Convert.ToBoolean((int)row["DefaultLibrary"]));
 
+                if (!Directory.Exists(library.Path))
+                {
+                    Directory.CreateDirectory(library.Path);
+                }
+
                 return library;
             }
         }
@@ -61,6 +66,15 @@ namespace gaseous_server
                 {
                     LibraryItem library = new LibraryItem((int)row["Id"], (string)row["Name"], (string)row["Path"], (long)row["DefaultPlatform"], Convert.ToBoolean((int)row["DefaultLibrary"]));
                     libraryItems.Add(library);
+
+                    if (library.IsDefaultLibrary == true)
+                    {
+                        // check directory exists
+                        if (!Directory.Exists(library.Path))
+                        {
+                            Directory.CreateDirectory(library.Path);
+                        }
+                    }
                 }
 
                 return libraryItems;
@@ -143,6 +157,11 @@ namespace gaseous_server
                 _Path = Path;
                 _DefaultPlatformId = DefaultPlatformId;
                 _IsDefaultLibrary = IsDefaultLibrary;
+
+                if (!Directory.Exists(Path))
+                {
+                    Directory.CreateDirectory(Path);
+                }
             }
 
             int _Id = 0;
