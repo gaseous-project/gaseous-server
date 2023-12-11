@@ -13,12 +13,6 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        private static IGDBClient igdb = new IGDBClient(
-                    // Found in Twitch Developer portal for your app
-                    Config.IGDB.ClientId,
-                    Config.IGDB.Secret
-                );
-
         public static Franchise? GetFranchises(long? Id)
         {
             if ((Id == 0) || (Id == null))
@@ -103,7 +97,7 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<Franchise> GetObjectFromServer(string WhereClause)
         {
             // get FranchiseContentDescriptions metadata
-            var results = await igdb.QueryAsync<Franchise>(IGDBClient.Endpoints.Franchies, query: fieldList + " " + WhereClause + ";");
+            var results = await Communications.APIComm<Franchise>(IGDBClient.Endpoints.Franchies, fieldList, WhereClause);
             var result = results.First();
 
             return result;

@@ -13,12 +13,6 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        private static IGDBClient igdb = new IGDBClient(
-                    // Found in Twitch Developer portal for your app
-                    Config.IGDB.ClientId,
-                    Config.IGDB.Secret
-                );
-
         public static Artwork? GetArtwork(long? Id, string LogoPath)
         {
             if ((Id == 0) || (Id == null))
@@ -113,7 +107,7 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<Artwork> GetObjectFromServer(string WhereClause, string LogoPath)
         {
             // get Artwork metadata
-            var results = await igdb.QueryAsync<Artwork>(IGDBClient.Endpoints.Artworks, query: fieldList + " " + WhereClause + ";");
+            var results = await Communications.APIComm<Artwork>(IGDBClient.Endpoints.Artworks, fieldList, WhereClause);
             var result = results.First();
 
             //GetImageFromServer(result.Url, LogoPath, LogoSize.t_thumb, result.ImageId);

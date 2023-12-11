@@ -13,12 +13,6 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        private static IGDBClient igdb = new IGDBClient(
-                    // Found in Twitch Developer portal for your app
-                    Config.IGDB.ClientId,
-                    Config.IGDB.Secret
-                );
-
         public static ReleaseDate? GetReleaseDates(long? Id)
         {
             if ((Id == 0) || (Id == null))
@@ -103,7 +97,7 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<ReleaseDate> GetObjectFromServer(string WhereClause)
         {
             // get ReleaseDates metadata
-            var results = await igdb.QueryAsync<ReleaseDate>(IGDBClient.Endpoints.ReleaseDates, query: fieldList + " " + WhereClause + ";");
+            var results = await Communications.APIComm<ReleaseDate>(IGDBClient.Endpoints.ReleaseDates, fieldList, WhereClause);
             var result = results.First();
 
             return result;

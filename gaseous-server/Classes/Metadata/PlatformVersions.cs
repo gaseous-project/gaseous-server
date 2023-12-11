@@ -13,12 +13,6 @@ namespace gaseous_server.Classes.Metadata
 		{
 		}
 
-        private static IGDBClient igdb = new IGDBClient(
-                    // Found in Twitch Developer portal for your app
-                    Config.IGDB.ClientId,
-                    Config.IGDB.Secret
-                );
-
         public static PlatformVersion? GetPlatformVersion(long Id, Platform ParentPlatform)
         {
             if (Id == 0)
@@ -113,7 +107,7 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<PlatformVersion?> GetObjectFromServer(string WhereClause)
         {
             // get PlatformVersion metadata
-            var results = await igdb.QueryAsync<PlatformVersion>(IGDBClient.Endpoints.PlatformVersions, query: fieldList + " " + WhereClause + ";");
+            var results = await Communications.APIComm<PlatformVersion>(IGDBClient.Endpoints.PlatformVersions, fieldList, WhereClause);
             if (results.Length > 0)
             {
                 var result = results.First();

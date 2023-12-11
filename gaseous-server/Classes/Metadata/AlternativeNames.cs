@@ -13,12 +13,6 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        private static IGDBClient igdb = new IGDBClient(
-                    // Found in Twitch Developer portal for your app
-                    Config.IGDB.ClientId,
-                    Config.IGDB.Secret
-                );
-
         public static AlternativeName? GetAlternativeNames(long? Id)
         {
             if ((Id == 0) || (Id == null))
@@ -103,7 +97,7 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<AlternativeName> GetObjectFromServer(string WhereClause)
         {
             // get AlternativeNames metadata
-            var results = await igdb.QueryAsync<AlternativeName>(IGDBClient.Endpoints.AlternativeNames, query: fieldList + " " + WhereClause + ";");
+            var results = await Communications.APIComm<AlternativeName>(IGDBClient.Endpoints.AlternativeNames, fieldList, WhereClause);
             var result = results.First();
 
             return result;

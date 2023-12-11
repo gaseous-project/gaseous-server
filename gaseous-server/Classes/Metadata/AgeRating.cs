@@ -15,12 +15,6 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        private static IGDBClient igdb = new IGDBClient(
-                    // Found in Twitch Developer portal for your app
-                    Config.IGDB.ClientId,
-                    Config.IGDB.Secret
-                );
-
         public static AgeRating? GetAgeRatings(long? Id)
         {
             if ((Id == 0) || (Id == null))
@@ -117,7 +111,7 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<AgeRating> GetObjectFromServer(string WhereClause)
         {
             // get AgeRatings metadata
-            var results = await igdb.QueryAsync<AgeRating>(IGDBClient.Endpoints.AgeRating, query: fieldList + " " + WhereClause + ";");
+            var results = await Communications.APIComm<AgeRating>(IGDBClient.Endpoints.AgeRating, fieldList, WhereClause);
             var result = results.First();
 
             return result;

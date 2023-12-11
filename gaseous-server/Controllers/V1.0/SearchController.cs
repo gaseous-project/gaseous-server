@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using gaseous_server.Classes;
+using gaseous_server.Classes.Metadata;
 using IGDB;
 using IGDB.Models;
 using Microsoft.AspNetCore.Authorization;
@@ -19,12 +20,6 @@ namespace gaseous_server.Controllers
     [Authorize]
     public class SearchController : Controller
     {
-        private static IGDBClient igdb = new IGDBClient(
-                            // Found in Twitch Developer portal for your app
-                            Config.IGDB.ClientId,
-                            Config.IGDB.Secret
-                        );
-
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
@@ -39,11 +34,11 @@ namespace gaseous_server.Controllers
         private static async Task<List<Platform>> _SearchForPlatform(string SearchString)
         {
             string searchBody = "";
-            searchBody += "fields abbreviation,alternative_name,category,checksum,created_at,generation,name,platform_family,platform_logo,slug,summary,updated_at,url,versions,websites; ";
+            string searchFields = "fields abbreviation,alternative_name,category,checksum,created_at,generation,name,platform_family,platform_logo,slug,summary,updated_at,url,versions,websites; ";
             searchBody += "where name ~ *\"" + SearchString + "\"*;";
 
             // get Platform metadata
-            var results = await igdb.QueryAsync<Platform>(IGDBClient.Endpoints.Platforms, query: searchBody);
+            var results = await Communications.APIComm<Platform>(IGDBClient.Endpoints.Platforms, searchFields, searchBody);
 
             return results.ToList();
         }
@@ -62,12 +57,12 @@ namespace gaseous_server.Controllers
         private static async Task<List<Game>> _SearchForGame(long PlatformId, string SearchString)
         {
             string searchBody = "";
-            searchBody += "fields cover.*,first_release_date,name,platforms,slug; ";
+            string searchFields = "fields cover.*,first_release_date,name,platforms,slug; ";
             searchBody += "search \"" + SearchString + "\";";
             searchBody += "where platforms = (" + PlatformId + ");";
 
             // get Platform metadata
-            var results = await igdb.QueryAsync<Game>(IGDBClient.Endpoints.Games, query: searchBody);
+            var results = await Communications.APIComm<Game>(IGDBClient.Endpoints.Games, searchFields, searchBody);
 
             return results.ToList();
         }
