@@ -414,6 +414,12 @@ namespace gaseous_server.Classes.Metadata
                                 case "[igdb.models.startdatecategory":
                                     property.SetValue(EndpointType, (StartDateCategory)dataRow[property.Name]);
                                     break;
+                                case "[igdb.models.releasedateregion":
+                                    property.SetValue(EndpointType, (ReleaseDateRegion)dataRow[property.Name]);
+                                    break;
+                                    case "[igdb.models.releasedatecategory":
+                                    property.SetValue(EndpointType, (ReleaseDateCategory)dataRow[property.Name]);
+                                    break;
                                 default:
                                     property.SetValue(EndpointType, dataRow[property.Name]);
                                     break;

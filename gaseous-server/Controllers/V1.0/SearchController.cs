@@ -38,7 +38,8 @@ namespace gaseous_server.Controllers
             searchBody += "where name ~ *\"" + SearchString + "\"*;";
 
             // get Platform metadata
-            var results = await Communications.APIComm<Platform>(IGDBClient.Endpoints.Platforms, searchFields, searchBody);
+            Communications comms = new Communications();
+            var results = await comms.APIComm<Platform>(IGDBClient.Endpoints.Platforms, searchFields, searchBody);
 
             return results.ToList();
         }
@@ -62,7 +63,8 @@ namespace gaseous_server.Controllers
             searchBody += "where platforms = (" + PlatformId + ");";
 
             // get Platform metadata
-            var results = await Communications.APIComm<Game>(IGDBClient.Endpoints.Games, searchFields, searchBody);
+            Communications comms = new Communications();
+            var results = await comms.APIComm<Game>(IGDBClient.Endpoints.Games, searchFields, searchBody);
 
             return results.ToList();
         }

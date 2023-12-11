@@ -107,7 +107,8 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<PlatformVersion?> GetObjectFromServer(string WhereClause)
         {
             // get PlatformVersion metadata
-            var results = await Communications.APIComm<PlatformVersion>(IGDBClient.Endpoints.PlatformVersions, fieldList, WhereClause);
+            Communications comms = new Communications();
+            var results = await comms.APIComm<PlatformVersion>(IGDBClient.Endpoints.PlatformVersions, fieldList, WhereClause);
             if (results.Length > 0)
             {
                 var result = results.First();

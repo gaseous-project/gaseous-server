@@ -112,7 +112,8 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<PlatformLogo?> GetObjectFromServer(string WhereClause, string LogoPath)
         {
             // get PlatformLogo metadata
-            var results = await Communications.APIComm<PlatformLogo>(IGDBClient.Endpoints.PlatformLogos, fieldList, WhereClause);
+            Communications comms = new Communications();
+            var results = await comms.APIComm<PlatformLogo>(IGDBClient.Endpoints.PlatformLogos, fieldList, WhereClause);
             if (results.Length > 0)
             {
                 var result = results.First();

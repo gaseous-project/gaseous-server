@@ -97,7 +97,8 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<AlternativeName> GetObjectFromServer(string WhereClause)
         {
             // get AlternativeNames metadata
-            var results = await Communications.APIComm<AlternativeName>(IGDBClient.Endpoints.AlternativeNames, fieldList, WhereClause);
+            Communications comms = new Communications();
+            var results = await comms.APIComm<AlternativeName>(IGDBClient.Endpoints.AlternativeNames, fieldList, WhereClause);
             var result = results.First();
 
             return result;

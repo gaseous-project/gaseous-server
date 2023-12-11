@@ -289,7 +289,8 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<Game> GetObjectFromServer(string WhereClause)
         {
             // get Game metadata
-            var results = await Communications.APIComm<Game>(IGDBClient.Endpoints.Games, fieldList, WhereClause);
+            Communications comms = new Communications();
+            var results = await comms.APIComm<Game>(IGDBClient.Endpoints.Games, fieldList, WhereClause);
             var result = results.First();
 
             return result;
@@ -324,7 +325,8 @@ namespace gaseous_server.Classes.Metadata
             
 
             // get Game metadata
-            var results = await Communications.APIComm<Game>(IGDBClient.Endpoints.Games, searchFields, searchBody);
+            Communications comms = new Communications();
+            var results = await comms.APIComm<Game>(IGDBClient.Endpoints.Games, searchFields, searchBody);
 
             return results;
         }

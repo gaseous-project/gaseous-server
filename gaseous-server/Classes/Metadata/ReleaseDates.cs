@@ -97,7 +97,8 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<ReleaseDate> GetObjectFromServer(string WhereClause)
         {
             // get ReleaseDates metadata
-            var results = await Communications.APIComm<ReleaseDate>(IGDBClient.Endpoints.ReleaseDates, fieldList, WhereClause);
+            Communications comms = new Communications();
+            var results = await comms.APIComm<ReleaseDate>(IGDBClient.Endpoints.ReleaseDates, fieldList, WhereClause);
             var result = results.First();
 
             return result;

@@ -107,7 +107,8 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<Cover> GetObjectFromServer(string WhereClause, string LogoPath)
         {
             // get Cover metadata
-            var results = await Communications.APIComm<Cover>(IGDBClient.Endpoints.Covers, fieldList, WhereClause);
+            Communications comms = new Communications();
+            var results = await comms.APIComm<Cover>(IGDBClient.Endpoints.Covers, fieldList, WhereClause);
             var result = results.First();
 
             //GetImageFromServer(result.Url, LogoPath, LogoSize.t_thumb, result.ImageId);

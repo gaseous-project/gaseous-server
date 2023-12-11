@@ -100,7 +100,8 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<ExternalGame?> GetObjectFromServer(string WhereClause)
         {
             // get ExternalGames metadata
-            var results = await Communications.APIComm<ExternalGame>(IGDBClient.Endpoints.ExternalGames, fieldList, WhereClause);
+            Communications comms = new Communications();
+            var results = await comms.APIComm<ExternalGame>(IGDBClient.Endpoints.ExternalGames, fieldList, WhereClause);
             if (results.Length > 0)
             {
                 var result = results.First();

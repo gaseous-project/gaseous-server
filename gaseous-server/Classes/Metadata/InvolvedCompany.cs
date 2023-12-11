@@ -107,7 +107,8 @@ namespace gaseous_server.Classes.Metadata
             // get InvolvedCompanies metadata
             try
             {
-                var results = await Communications.APIComm<InvolvedCompany>(IGDBClient.Endpoints.InvolvedCompanies, fieldList, WhereClause);
+                Communications comms = new Communications();
+            var results = await comms.APIComm<InvolvedCompany>(IGDBClient.Endpoints.InvolvedCompanies, fieldList, WhereClause);
                 var result = results.First();
 
                 return result;

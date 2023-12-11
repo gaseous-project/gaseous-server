@@ -97,7 +97,8 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<MultiplayerMode> GetObjectFromServer(string WhereClause)
         {
             // get Game_MultiplayerModes metadata
-            var results = await Communications.APIComm<MultiplayerMode>(IGDBClient.Endpoints.MultiplayerModes, fieldList, WhereClause);
+            Communications comms = new Communications();
+            var results = await comms.APIComm<MultiplayerMode>(IGDBClient.Endpoints.MultiplayerModes, fieldList, WhereClause);
             var result = results.First();
 
             return result;

@@ -97,7 +97,8 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<AgeRatingContentDescription> GetObjectFromServer(string WhereClause)
         {
             // get AgeRatingContentDescriptionContentDescriptions metadata
-            var results = await Communications.APIComm<AgeRatingContentDescription>(IGDBClient.Endpoints.AgeRatingContentDescriptions, fieldList, WhereClause);
+            Communications comms = new Communications();
+            var results = await comms.APIComm<AgeRatingContentDescription>(IGDBClient.Endpoints.AgeRatingContentDescriptions, fieldList, WhereClause);
             var result = results.First();
 
             return result;

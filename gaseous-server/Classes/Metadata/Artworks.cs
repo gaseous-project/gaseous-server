@@ -107,7 +107,8 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<Artwork> GetObjectFromServer(string WhereClause, string LogoPath)
         {
             // get Artwork metadata
-            var results = await Communications.APIComm<Artwork>(IGDBClient.Endpoints.Artworks, fieldList, WhereClause);
+            Communications comms = new Communications();
+            var results = await comms.APIComm<Artwork>(IGDBClient.Endpoints.Artworks, fieldList, WhereClause);
             var result = results.First();
 
             //GetImageFromServer(result.Url, LogoPath, LogoSize.t_thumb, result.ImageId);

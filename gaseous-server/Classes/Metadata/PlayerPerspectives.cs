@@ -99,7 +99,8 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<PlayerPerspective> GetObjectFromServer(string WhereClause)
         {
             // get Game_PlayerPerspectives metadata
-            var results = await Communications.APIComm<PlayerPerspective>(IGDBClient.Endpoints.PlayerPerspectives, fieldList, WhereClause);
+            Communications comms = new Communications();
+            var results = await comms.APIComm<PlayerPerspective>(IGDBClient.Endpoints.PlayerPerspectives, fieldList, WhereClause);
             var result = results.First();
 
             return result;
