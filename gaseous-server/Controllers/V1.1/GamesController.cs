@@ -450,24 +450,14 @@ namespace gaseous_server.Controllers.v1_1
             
             // compile data for return
             int pageOffset = pageSize * (pageNumber - 1);
-            for (int i = 0; i < dbResponse.Rows.Count; i++)
+            for (int i = pageOffset; i < dbResponse.Rows.Count; i++)
             {
-                bool includeGame = false;
-
-                if (pageSize == 0)
+                if (i >= (pageOffset + pageSize))
                 {
-                    // page size is full size include all
-                    includeGame = true;
-                }
-                else if (i >= pageOffset && i < (pageOffset + pageSize))
-                {
-                    includeGame = true;
+                    break;
                 }
 
-                if (includeGame == true)
-                {
-                    RetVal.Add(Classes.Metadata.Games.GetGame(dbResponse.Rows[i]));
-                }
+                RetVal.Add(Classes.Metadata.Games.GetGame(dbResponse.Rows[i]));
             }
 
             GameReturnPackage gameReturn = new GameReturnPackage(RecordCount, RetVal);

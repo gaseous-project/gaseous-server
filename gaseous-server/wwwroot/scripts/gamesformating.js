@@ -90,17 +90,36 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize) {
                     }
 
                     // add page numbers
+                    var pageEitherSide = 4;
+                    var currentPage = Number(pagerCheck.innerHTML);
                     var pageNumbers = document.createElement('span');
                     for (var i = 1; i <= pageCount; i++) {
-                        var pageNum = document.createElement('span');
-                        if (Number(pagerCheck.innerHTML) == i) {
-                            pageNum.className = 'games_pager_number_disabled';
-                        } else {
-                            pageNum.className = 'games_pager_number';
-                            pageNum.setAttribute('onclick', 'executeFilter1_1(' + i + ');');
+                        if (
+                            (
+                                (i >= currentPage - pageEitherSide) &&
+                                (i <= currentPage + pageEitherSide)
+                            ) ||
+                            (
+                                (
+                                    i <= (pageEitherSide * 2 + 1) &&
+                                    currentPage <= (pageEitherSide)
+                                ) ||
+                                (
+                                    i >= (pageCount - (pageEitherSide * 2)) &&
+                                    currentPage >= (pageCount - (pageEitherSide))
+                                )
+                            )
+                        ) {
+                            var pageNum = document.createElement('span');
+                            if (Number(pagerCheck.innerHTML) == i) {
+                                pageNum.className = 'games_pager_number_disabled';
+                            } else {
+                                pageNum.className = 'games_pager_number';
+                                pageNum.setAttribute('onclick', 'executeFilter1_1(' + i + ');');
+                            }
+                            pageNum.innerHTML = i;
+                            pageNumbers.appendChild(pageNum);
                         }
-                        pageNum.innerHTML = i;
-                        pageNumbers.appendChild(pageNum);
                     }
 
                     // add next page button
