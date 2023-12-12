@@ -88,6 +88,8 @@ namespace gaseous_server
             public bool RemoveWhenStopped => _RemoveWhenStopped;
             public bool IsBlocked => _IsBlocked;
             public object? Options { get; set; } = null;
+            public string CurrentState { get; set; } = "";
+            public string CurrentStateProgress { get; set; } = "";
             public List<QueueItemType> Blocks => _Blocks;
 
             public void Execute()
@@ -110,8 +112,11 @@ namespace gaseous_server
                             {
                                 case QueueItemType.SignatureIngestor:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Signature Ingestor");
-                                    SignatureIngestors.XML.XMLIngestor tIngest = new SignatureIngestors.XML.XMLIngestor();
-                                    
+                                    SignatureIngestors.XML.XMLIngestor tIngest = new SignatureIngestors.XML.XMLIngestor
+                                    {
+                                        CallingQueueItem = this
+                                    };
+
                                     Logging.Log(Logging.LogType.Debug, "Signature Import", "Processing TOSEC files");
                                     tIngest.Import(Path.Combine(Config.LibraryConfiguration.LibrarySignatureImportDirectory, "TOSEC"), gaseous_signature_parser.parser.SignatureParser.TOSEC);
                                     
@@ -127,7 +132,10 @@ namespace gaseous_server
 
                                 case QueueItemType.TitleIngestor:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Title Ingestor");
-                                    Classes.ImportGames importGames = new Classes.ImportGames(Config.LibraryConfiguration.LibraryImportDirectory);
+                                    Classes.ImportGames importGames = new Classes.ImportGames(Config.LibraryConfiguration.LibraryImportDirectory)
+                                    {
+                                        CallingQueueItem = this
+                                    };
 
                                     Classes.ImportGame.DeleteOrphanedDirectories(Config.LibraryConfiguration.LibraryImportDirectory);
 
@@ -137,7 +145,11 @@ namespace gaseous_server
 
                                 case QueueItemType.MetadataRefresh:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Metadata Refresher");
-                                    Classes.MetadataManagement.RefreshMetadata(_ForceExecute);
+                                    Classes.MetadataManagement metadataManagement = new MetadataManagement
+                                    {
+                                        CallingQueueItem = this
+                                    };
+                                    metadataManagement.RefreshMetadata(_ForceExecute);
 
                                     _SaveLastRunTime = true;
 
@@ -153,7 +165,11 @@ namespace gaseous_server
 
                                 case QueueItemType.LibraryScan:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Library Scanner");
-                                    Classes.ImportGame.LibraryScan();
+                                    Classes.ImportGame import = new ImportGame
+                                    {
+                                        CallingQueueItem = this
+                                    };
+                                    import.LibraryScan();
 
                                     _SaveLastRunTime = true;
 
@@ -161,7 +177,11 @@ namespace gaseous_server
 
                                 case QueueItemType.Rematcher:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Rematch");
-                                    Classes.ImportGame.Rematcher(_ForceExecute);
+                                    Classes.ImportGame importRematch = new ImportGame
+                                    {
+                                        CallingQueueItem = this
+                                    };
+                                    importRematch.Rematcher(_ForceExecute);
 
                                     _SaveLastRunTime = true;
 
@@ -184,7 +204,10 @@ namespace gaseous_server
 
                                 case QueueItemType.Maintainer:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Maintenance");
-                                    Classes.Maintenance.RunMaintenance();
+                                    Classes.Maintenance maintenance = new Maintenance{
+                                        CallingQueueItem = this
+                                    };
+                                    maintenance.RunMaintenance();
                                     break;
 
                             }

@@ -1,17 +1,19 @@
 ﻿using System;
 using System.Data;
 using System.IO.Compression;
+using System.Security.Authentication;
 using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
 using IGDB.Models;
 using NuGet.Common;
+using NuGet.LibraryModel;
 using static gaseous_server.Classes.Metadata.Games;
 
 namespace gaseous_server.Classes
 {
-	public class ImportGames
+	public class ImportGames : QueueItemStatus
 	{
 		public ImportGames(string ImportPath)
 		{
@@ -21,9 +23,15 @@ namespace gaseous_server.Classes
                 string[] importContents_Directories = Directory.GetDirectories(ImportPath);
 
 				// import files first
+                int importCount = 1;
 				foreach (string importContent in importContents_Files) {
+                    SetStatus(importCount, importContents_Files.Length, "Importing file: " + importContent);
+
 					ImportGame.ImportGameFile(importContent, null);
+
+                    importCount += 1;
 				}
+                ClearStatus();
 
                 // import sub directories
                 foreach (string importDir in importContents_Directories) {
@@ -40,7 +48,7 @@ namespace gaseous_server.Classes
 
 	}
 
-	public class ImportGame
+	public class ImportGame : QueueItemStatus
 	{
         public static void ImportGameFile(string GameFileImportPath, IGDB.Models.Platform? OverridePlatform)
 		{
@@ -600,7 +608,7 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static void LibraryScan()
+        public void LibraryScan()
         {
             foreach (GameLibrary.LibraryItem library in GameLibrary.GetLibraries)
             {
@@ -645,8 +653,10 @@ namespace gaseous_server.Classes
                 // search for files in the library that aren't in the database
                 Logging.Log(Logging.LogType.Information, "Library Scan", "Looking for orphaned library files to add");
                 string[] LibraryFiles = Directory.GetFiles(library.Path, "*.*", SearchOption.AllDirectories);
+                int StatusCount = 0;
                 foreach (string LibraryFile in LibraryFiles)
                 {
+                    SetStatus(StatusCount, LibraryFiles.Length, "Processing file " + LibraryFile);
                     if (!Common.SkippableFiles.Contains<string>(Path.GetFileName(LibraryFile), StringComparer.OrdinalIgnoreCase))
                     {
                         Common.hashObject LibraryFileHash = new Common.hashObject(LibraryFile);
@@ -702,6 +712,7 @@ namespace gaseous_server.Classes
                         }
                     }
                 }
+                ClearStatus();
 
                 sql = "SELECT * FROM Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
                 dtRoms = db.ExecuteCMD(sql, dbDict);
@@ -746,7 +757,7 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static void Rematcher(bool ForceExecute = false)
+        public void Rematcher(bool ForceExecute = false)
         {
             // rescan all titles with an unknown platform or title and see if we can get a match
             Logging.Log(Logging.LogType.Information, "Rematch Scan", "Rematch scan starting");
@@ -764,8 +775,11 @@ namespace gaseous_server.Classes
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("lastmatchattemptdate", DateTime.UtcNow.AddDays(-7));
             DataTable data = db.ExecuteCMD(sql, dbDict);
+            int StatusCount = -0;
             foreach (DataRow row in data.Rows)
             {
+                SetStatus(StatusCount, data.Rows.Count, "Running rematcher");
+
                 // get library
                 GameLibrary.LibraryItem library = GameLibrary.GetLibrary((int)row["LibraryId"]);
 
@@ -800,9 +814,13 @@ namespace gaseous_server.Classes
                 dbLastAttemptDict.Add("id", romId);
                 dbLastAttemptDict.Add("lastmatchattemptdate", DateTime.UtcNow);
                 db.ExecuteCMD(attemptSql, dbLastAttemptDict);
+
+                StatusCount += 1;
             }
+            ClearStatus();
 
             Logging.Log(Logging.LogType.Information, "Rematch Scan", "Rematch scan completed");
+            ClearStatus();
         }
     }
 }

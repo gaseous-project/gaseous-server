@@ -6,7 +6,7 @@ using System.Data;
 
 namespace gaseous_server.SignatureIngestors.XML
 {
-    public class XMLIngestor
+    public class XMLIngestor : QueueItemStatus
     {
         public void Import(string SearchPath, gaseous_signature_parser.parser.SignatureParser XMLType)
         {
@@ -30,6 +30,8 @@ namespace gaseous_server.SignatureIngestors.XML
             for (UInt16 i = 0; i < PathContents.Length; ++i)
             {
                 string XMLFile = PathContents[i];
+
+                SetStatus(i + 1, PathContents.Length, "Processing signature file: " + XMLFile);
 
                 // check xml file md5
                 Common.hashObject hashObject = new Common.hashObject(XMLFile);
@@ -247,6 +249,7 @@ namespace gaseous_server.SignatureIngestors.XML
                     Logging.Log(Logging.LogType.Debug, "Signature Ingestor - XML", "Rejecting already imported file: " + XMLFile);
                 }
             }
+            ClearStatus();
         }
     }
 }
