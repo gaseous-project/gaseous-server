@@ -5,11 +5,11 @@ using Microsoft.VisualStudio.Web.CodeGeneration;
 
 namespace gaseous_server.Classes
 {
-	public class Maintenance
+	public class Maintenance : QueueItemStatus
     {
         const int MaxFileAge = 30;
 
-        public static void RunMaintenance()
+        public void RunMaintenance()
         {
             // delete files and directories older than 7 days in PathsToClean
             List<string> PathsToClean = new List<string>();
@@ -49,8 +49,11 @@ namespace gaseous_server.Classes
             string sql = "SHOW TABLES;";
             DataTable tables = db.ExecuteCMD(sql);
 
+            int StatusCounter = 1;
             foreach (DataRow row in tables.Rows)
             {
+                SetStatus(StatusCounter, tables.Rows.Count, "Optimising table " + row[0].ToString());
+
                 sql = "OPTIMIZE TABLE " + row[0].ToString();
                 DataTable response = db.ExecuteCMD(sql);
                 foreach (DataRow responseRow in response.Rows)
@@ -60,9 +63,12 @@ namespace gaseous_server.Classes
                     {
                         retVal += responseRow.ItemArray[i] + "; ";
                     }
-                    Logging.Log(Logging.LogType.Information, "Maintenance", "Optimise table " + row[0].ToString() + ": " + retVal);
+                    Logging.Log(Logging.LogType.Information, "Maintenance", "(" + StatusCounter + "/" + tables.Rows.Count + "): Optimise table " + row[0].ToString() + ": " + retVal);
                 }
+
+                StatusCounter += 1;
             }
+            ClearStatus();
         }
     }
 }

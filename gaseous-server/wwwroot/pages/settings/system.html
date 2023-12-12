@@ -25,12 +25,13 @@
 <h3>Signatures</h3>
 <div id="system_signatures"></div>
 
-<script type="text/javascript">function SystemLoadStatus() {
+<script type="text/javascript">
+    function SystemLoadStatus() {
         ajaxCall('/api/v1.1/BackgroundTasks', 'GET', function (result) {
             var newTable = document.createElement('table');
             newTable.className = 'romtable';
             newTable.setAttribute('cellspacing', 0);
-            newTable.appendChild(createTableRow(true, ['Task', 'Status', 'Interval', 'Last Run Time', 'Next Run Time', '']));
+            newTable.appendChild(createTableRow(true, ['Task', 'Status', 'Interval', 'Last Run Start', 'Last Run Duration (seconds)', 'Next Run Start', '']));
 
             if (result) {
                 for (var i = 0; i < result.length; i++) {
@@ -46,15 +47,19 @@
                                 break;
                             case 'Stopped':
                                 itemStateName = "Stopped";
-                                itemLastStart = moment(result[i].lastRunTime).fromNow();
+                                itemLastStart = moment(result[i].lastRunTime).format("YYYY-MM-DD h:mm:ss a");
                                 break;
                             case 'Running':
-                                itemStateName = "Running";
-                                itemLastStart = moment(result[i].lastRunTime).fromNow();
+                                var progressPercent = "";
+                                if (result[i].currentStateProgress) {
+                                    progressPercent = " (" + result[i].currentStateProgress + ")";
+                                }
+                                itemStateName = "Running" + progressPercent;
+                                itemLastStart = moment(result[i].lastRunTime).format("YYYY-MM-DD h:mm:ss a");
                                 break;
                             default:
                                 itemStateName = "Unknown status";
-                                itemLastStart = moment(result[i].lastRunTime).fromNow();
+                                itemLastStart = moment(result[i].lastRunTime).format("YYYY-MM-DD h:mm:ss a");
                                 break;
                         }
                     } else {
@@ -63,7 +68,7 @@
                     }
 
                     var itemInterval = result[i].interval;
-                    var nextRunTime = moment(result[i].nextRunTime).fromNow();
+                    var nextRunTime = moment(result[i].nextRunTime).format("YYYY-MM-DD h:mm:ss a");
                     var startButton = '';
                     if (userProfile.roles.includes("Admin")) {
                         if (result[i].allowManualStart == true && result[i].itemState != "Running") {
@@ -81,6 +86,7 @@
                         itemStateName,
                         itemInterval,
                         itemLastStart,
+                        result[i].lastRunDuration,
                         nextRunTime,
                         startButton
                     ];
@@ -176,6 +182,9 @@
     }
 
     function BuildLibraryStatisticsBar(TargetObject, TargetObjectLegend, LibraryStatistics, LibrarySize) {
+        TargetObject.innerHTML = '';
+        TargetObjectLegend.innerHTML = '';
+
         var newTable = document.createElement('table');
         newTable.setAttribute('cellspacing', 0);
         newTable.setAttribute('style', 'width: 100%; height: 10px;');
@@ -239,8 +248,9 @@
     }
 
     SystemLoadStatus();
-    setInterval(SystemLoadStatus, 30000);
+    setInterval(SystemLoadStatus, 3000);
     SystemLoadSystemStatus();
-    setInterval(SystemLoadStatus, 60000);
+    setInterval(SystemLoadSystemStatus, 60000);
     SystemSignaturesStatus();
-    setInterval(SystemSignaturesStatus, 300000);</script>
+    setInterval(SystemSignaturesStatus, 300000);
+</script>

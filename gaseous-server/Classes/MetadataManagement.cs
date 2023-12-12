@@ -4,30 +4,39 @@ using gaseous_server.Models;
 
 namespace gaseous_server.Classes
 {
-	public class MetadataManagement
+	public class MetadataManagement : QueueItemStatus
 	{
-		public static void RefreshMetadata(bool forceRefresh = false)
+		public void RefreshMetadata(bool forceRefresh = false)
 		{
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
 			DataTable dt = new DataTable();
 			
+			// disabling forceRefresh
+			forceRefresh = false;
+
 			// update platforms
 			sql = "SELECT Id, `Name` FROM Platform;";
 			dt = db.ExecuteCMD(sql);
 
+			int StatusCounter = 1;
 			foreach (DataRow dr in dt.Rows)
 			{
+				SetStatus(StatusCounter, dt.Rows.Count, "Refreshing metadata for platform " + dr["name"]);
+
 				try
 				{
-					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing metadata for platform " + dr["name"] + " (" + dr["id"] + ")");
+					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Refreshing metadata for platform " + dr["name"] + " (" + dr["id"] + ")");
 					Metadata.Platforms.GetPlatform((long)dr["id"], true);
 				}
 				catch (Exception ex)
 				{
 					Logging.Log(Logging.LogType.Critical, "Metadata Refresh", "An error occurred while refreshing metadata for " + dr["name"], ex);
 				}
+
+				StatusCounter += 1;
 			}
+			ClearStatus();
 
 			// update games
 			if (forceRefresh == true)
@@ -42,18 +51,24 @@ namespace gaseous_server.Classes
 			}
 			dt = db.ExecuteCMD(sql);
 
+			StatusCounter = 1;
 			foreach (DataRow dr in dt.Rows)
 			{
+				SetStatus(StatusCounter, dt.Rows.Count, "Refreshing metadata for game " + dr["name"]);
+
 				try
 				{
-					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ")");
+					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ")");
 					Metadata.Games.GetGame((long)dr["id"], true, false, forceRefresh);
 				}
 				catch (Exception ex)
 				{
 					Logging.Log(Logging.LogType.Critical, "Metadata Refresh", "An error occurred while refreshing metadata for " + dr["name"], ex);
 				}
+
+				StatusCounter += 1;
 			}
+			ClearStatus();
         }
 	}
 }
