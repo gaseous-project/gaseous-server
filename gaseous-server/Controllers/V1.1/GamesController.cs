@@ -452,8 +452,6 @@ namespace gaseous_server.Controllers.v1_1
             int pageOffset = pageSize * (pageNumber - 1);
             for (int i = 0; i < dbResponse.Rows.Count; i++)
             {
-                DataRow dr = dbResponse.Rows[i];
-
                 bool includeGame = false;
 
                 if (pageSize == 0)
@@ -468,7 +466,7 @@ namespace gaseous_server.Controllers.v1_1
 
                 if (includeGame == true)
                 {
-                    RetVal.Add(Classes.Metadata.Games.GetGame(dr));
+                    RetVal.Add(Classes.Metadata.Games.GetGame(dbResponse.Rows[i]));
                 }
             }
 
