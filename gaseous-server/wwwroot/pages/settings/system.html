@@ -30,7 +30,7 @@
             var newTable = document.createElement('table');
             newTable.className = 'romtable';
             newTable.setAttribute('cellspacing', 0);
-            newTable.appendChild(createTableRow(true, ['Task', 'Status', 'Interval', 'Last Run Time', 'Next Run Time', '']));
+            newTable.appendChild(createTableRow(true, ['Task', 'Status', 'Interval', 'Last Run Start', 'Last Run Duration (seconds)', 'Next Run Start', '']));
 
             if (result) {
                 for (var i = 0; i < result.length; i++) {
@@ -81,6 +81,7 @@
                         itemStateName,
                         itemInterval,
                         itemLastStart,
+                        result[i].lastRunDuration,
                         nextRunTime,
                         startButton
                     ];

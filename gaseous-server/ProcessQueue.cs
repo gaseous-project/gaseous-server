@@ -33,6 +33,7 @@ namespace gaseous_server
             private QueueItemType _ItemType = QueueItemType.NotConfigured;
             private QueueItemState _ItemState = QueueItemState.NeverStarted;
             private DateTime _LastRunTime = DateTime.UtcNow;
+            private double _LastRunDuration = 0;
             private DateTime _LastFinishTime
             {
                 get
@@ -61,7 +62,9 @@ namespace gaseous_server
             public QueueItemState ItemState => _ItemState;
             public DateTime LastRunTime => _LastRunTime;
             public DateTime LastFinishTime => _LastFinishTime;
-            public DateTime NextRunTime {
+            public double LastRunDuration => _LastRunDuration;
+            public DateTime NextRunTime 
+            {
                 get
                 {
                     return LastRunTime.AddMinutes(Interval);
@@ -196,8 +199,9 @@ namespace gaseous_server
                         _ForceExecute = false;
                         _ItemState = QueueItemState.Stopped;
                         _LastFinishTime = DateTime.UtcNow;
+                        _LastRunDuration = Math.Round((DateTime.UtcNow - _LastRunTime).TotalSeconds, 2);
 
-                        Logging.Log(Logging.LogType.Information, "Timered Event", "Total " + _ItemType + " run time = " + (DateTime.UtcNow - _LastRunTime).TotalSeconds);
+                        Logging.Log(Logging.LogType.Information, "Timered Event", "Total " + _ItemType + " run time = " + _LastRunDuration);
                     }
                 }
             }
