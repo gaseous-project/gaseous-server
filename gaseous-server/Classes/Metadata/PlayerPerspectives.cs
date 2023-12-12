@@ -13,12 +13,6 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        private static IGDBClient igdb = new IGDBClient(
-                    // Found in Twitch Developer portal for your app
-                    Config.IGDB.ClientId,
-                    Config.IGDB.Secret
-                );
-
         public static PlayerPerspective? GetGame_PlayerPerspectives(long? Id)
         {
             if ((Id == 0) || (Id == null))
@@ -105,7 +99,8 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<PlayerPerspective> GetObjectFromServer(string WhereClause)
         {
             // get Game_PlayerPerspectives metadata
-            var results = await igdb.QueryAsync<PlayerPerspective>(IGDBClient.Endpoints.PlayerPerspectives, query: fieldList + " " + WhereClause + ";");
+            Communications comms = new Communications();
+            var results = await comms.APIComm<PlayerPerspective>(IGDBClient.Endpoints.PlayerPerspectives, fieldList, WhereClause);
             var result = results.First();
 
             return result;

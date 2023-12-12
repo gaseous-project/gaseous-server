@@ -13,12 +13,6 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        private static IGDBClient igdb = new IGDBClient(
-                    // Found in Twitch Developer portal for your app
-                    Config.IGDB.ClientId,
-                    Config.IGDB.Secret
-                );
-
         public static Screenshot? GetScreenshot(long? Id, string LogoPath)
         {
             if ((Id == 0) || (Id == null))
@@ -114,7 +108,8 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<Screenshot> GetObjectFromServer(string WhereClause, string LogoPath)
         {
             // get Screenshot metadata
-            var results = await igdb.QueryAsync<Screenshot>(IGDBClient.Endpoints.Screenshots, query: fieldList + " " + WhereClause + ";");
+            Communications comms = new Communications();
+            var results = await comms.APIComm<Screenshot>(IGDBClient.Endpoints.Screenshots, fieldList, WhereClause);
             var result = results.First();
 
             //GetImageFromServer(result.Url, LogoPath, LogoSize.t_thumb, result.ImageId);

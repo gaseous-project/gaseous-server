@@ -13,12 +13,6 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        private static IGDBClient igdb = new IGDBClient(
-                    // Found in Twitch Developer portal for your app
-                    Config.IGDB.ClientId,
-                    Config.IGDB.Secret
-                );
-
         public static Genre? GetGenres(long? Id)
         {
             if ((Id == 0) || (Id == null))
@@ -103,7 +97,8 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<Genre> GetObjectFromServer(string WhereClause)
         {
             // get Genres metadata
-            var results = await igdb.QueryAsync<Genre>(IGDBClient.Endpoints.Genres, query: fieldList + " " + WhereClause + ";");
+            Communications comms = new Communications();
+            var results = await comms.APIComm<Genre>(IGDBClient.Endpoints.Genres, fieldList, WhereClause);
             var result = results.First();
 
             return result;

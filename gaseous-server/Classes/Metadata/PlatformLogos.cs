@@ -13,12 +13,6 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        private static IGDBClient igdb = new IGDBClient(
-                    // Found in Twitch Developer portal for your app
-                    Config.IGDB.ClientId,
-                    Config.IGDB.Secret
-                );
-
         public static PlatformLogo? GetPlatformLogo(long? Id, string LogoPath)
         {
             if ((Id == 0) || (Id == null))
@@ -118,7 +112,8 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<PlatformLogo?> GetObjectFromServer(string WhereClause, string LogoPath)
         {
             // get PlatformLogo metadata
-            var results = await igdb.QueryAsync<PlatformLogo>(IGDBClient.Endpoints.PlatformLogos, query: fieldList + " " + WhereClause + ";");
+            Communications comms = new Communications();
+            var results = await comms.APIComm<PlatformLogo>(IGDBClient.Endpoints.PlatformLogos, fieldList, WhereClause);
             if (results.Length > 0)
             {
                 var result = results.First();

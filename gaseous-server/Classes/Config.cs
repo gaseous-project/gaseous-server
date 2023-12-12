@@ -2,6 +2,7 @@
 using System.Data;
 using Newtonsoft.Json;
 using IGDB.Models;
+using gaseous_server.Classes.Metadata;
 
 namespace gaseous_server.Classes
 {
@@ -54,6 +55,14 @@ namespace gaseous_server.Classes
             get
             {
                 return _config.LibraryConfiguration;
+            }
+        }
+
+        public static ConfigFile.MetadataAPI MetadataConfiguration
+        {
+            get
+            {
+                return _config.MetadataConfiguration;
             }
         }
 
@@ -246,6 +255,8 @@ namespace gaseous_server.Classes
 
             [JsonIgnore]
             public Library LibraryConfiguration = new Library();
+
+            public MetadataAPI MetadataConfiguration = new MetadataAPI();
 
             public IGDB IGDBConfiguration = new IGDB();
 
@@ -458,6 +469,26 @@ namespace gaseous_server.Classes
                     if (!Directory.Exists(LibraryCollectionsDirectory)) { Directory.CreateDirectory(LibraryCollectionsDirectory); }
                     if (!Directory.Exists(LibrarySignatureImportDirectory)) { Directory.CreateDirectory(LibrarySignatureImportDirectory); }
                 }
+            }
+
+            public class MetadataAPI
+            {
+                private static Communications.MetadataSources _Source
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("metadatasource")))
+                        {
+                            return (Communications.MetadataSources)Enum.Parse(typeof(Communications.MetadataSources), Environment.GetEnvironmentVariable("metadatasource"));
+                        }
+                        else
+                        {
+                            return Communications.MetadataSources.IGDB;
+                        }
+                    }
+                }
+
+                public Communications.MetadataSources Source = _Source;
             }
 
             public class IGDB

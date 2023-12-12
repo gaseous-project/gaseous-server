@@ -13,12 +13,6 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        private static IGDBClient igdb = new IGDBClient(
-                    // Found in Twitch Developer portal for your app
-                    Config.IGDB.ClientId,
-                    Config.IGDB.Secret
-                );
-
         public static ExternalGame? GetExternalGames(long? Id)
         {
             if ((Id == 0) || (Id == null))
@@ -106,7 +100,8 @@ namespace gaseous_server.Classes.Metadata
         private static async Task<ExternalGame?> GetObjectFromServer(string WhereClause)
         {
             // get ExternalGames metadata
-            var results = await igdb.QueryAsync<ExternalGame>(IGDBClient.Endpoints.ExternalGames, query: fieldList + " " + WhereClause + ";");
+            Communications comms = new Communications();
+            var results = await comms.APIComm<ExternalGame>(IGDBClient.Endpoints.ExternalGames, fieldList, WhereClause);
             if (results.Length > 0)
             {
                 var result = results.First();
