@@ -49,6 +49,9 @@ Config.InitSettings();
 // write updated settings back to the config file
 Config.UpdateConfig();
 
+// set api metadata source from config
+Communications.MetadataSource = Config.MetadataConfiguration.Source;
+
 // set initial values
 Guid APIKey = Guid.NewGuid();
 if (Config.ReadSetting("API Key", "Test API Key") == "Test API Key")
