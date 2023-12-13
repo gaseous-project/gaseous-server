@@ -21,6 +21,6 @@ ADD INDEX `idx_SecondaryColumn` (`ThemesId` ASC) VISIBLE;
 
 ALTER TABLE `ServerLogs` 
 ADD COLUMN `CorrelationId` VARCHAR(45) NULL AFTER `Exception`,
-ADD COLUMN `CallingProcess` VARCHAR(45) NULL AFTER `CorrelationId`,
+ADD COLUMN `CallingProcess` VARCHAR(255) NULL AFTER `CorrelationId`,
 ADD INDEX `idx_CorrelationId` (`CorrelationId` ASC) VISIBLE,
 ADD INDEX `idx_CallingProcess` (`CallingProcess` ASC) VISIBLE;

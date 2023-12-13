@@ -76,23 +76,37 @@ namespace gaseous_server.Classes
                     }
 
                     string correlationId;
-                    if (CallContext.GetData("CorrelationId").ToString() == null)
+                    try
+                    {
+                        if (CallContext.GetData("CorrelationId").ToString() == null)
+                        {
+                            correlationId = "";
+                        }
+                        else
+                        {
+                            correlationId = CallContext.GetData("CorrelationId").ToString();
+                        }
+                    }
+                    catch
                     {
                         correlationId = "";
                     }
-                    else
-                    {
-                        correlationId = CallContext.GetData("CorrelationId").ToString();
-                    }
 
                     string callingProcess;
-                    if (CallContext.GetData("CallingProcess").ToString() == null)
+                    try
+                    {
+                        if (CallContext.GetData("CallingProcess").ToString() == null)
+                        {
+                            callingProcess = "";
+                        }
+                        else
+                        {
+                            callingProcess = CallContext.GetData("CallingProcess").ToString();
+                        }
+                    }
+                    catch
                     {
                         callingProcess = "";
-                    }
-                    else
-                    {
-                        callingProcess = CallContext.GetData("CallingProcess").ToString();
                     }
 
                     Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);

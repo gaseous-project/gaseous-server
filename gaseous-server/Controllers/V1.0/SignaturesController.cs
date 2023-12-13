@@ -18,7 +18,7 @@ namespace gaseous_server.Controllers
     [ApiVersion("1.0")]
     [ApiVersion("1.1")]
     [Authorize]
-    public class SignaturesController : ControllerBase
+    public class SignaturesController : Controller
     {
         /// <summary>
         /// Get the current signature counts from the database

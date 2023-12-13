@@ -22,7 +22,7 @@ namespace gaseous_server.Controllers
     [ApiVersion("1.1")]
     [Authorize]
     [ApiController]
-    public class RomsController : ControllerBase
+    public class RomsController : Controller
     {
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]

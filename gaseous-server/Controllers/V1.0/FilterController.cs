@@ -18,7 +18,7 @@ namespace gaseous_server.Controllers
     [ApiVersion("1.1")]
     [Authorize]
     [ApiController]
-    public class FilterController : ControllerBase
+    public class FilterController : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
