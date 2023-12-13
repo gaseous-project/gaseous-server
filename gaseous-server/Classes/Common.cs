@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Security.Cryptography;
 
 namespace gaseous_server.Classes
@@ -138,4 +137,3 @@ namespace gaseous_server.Classes
             state.TryGetValue(name, out AsyncLocal<object> data) ? data.Value : null;
     }
 }
-

@@ -22,7 +22,7 @@ namespace gaseous_server.Controllers
     [ApiVersion("1.1")]
     [Authorize]
     [ApiController]
-    public class GamesController : ControllerBase
+    public class GamesController : Controller
     {
         [MapToApiVersion("1.0")]
         [HttpGet]

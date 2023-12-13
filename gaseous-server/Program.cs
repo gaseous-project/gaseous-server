@@ -295,28 +295,21 @@ using (var scope = app.Services.CreateScope())
             await roleManager.CreateAsync(applicationRole, CancellationToken.None);
         }
     }
-
-    // // set up administrator account
-    // var userManager = scope.ServiceProvider.GetRequiredService<UserStore>();
-    // if (await userManager.FindByNameAsync("admin@localhost", CancellationToken.None) == null)
-    // {
-    //     ApplicationUser adminUser = new ApplicationUser{
-    //         Id = Guid.NewGuid().ToString(),
-    //         Email = "admin@localhost",
-    //         NormalizedEmail = "ADMIN@LOCALHOST",
-    //         EmailConfirmed = true,
-    //         UserName = "administrator",
-    //         NormalizedUserName = "ADMINISTRATOR"
-    //     };
-
-    //     //set user password
-    //     PasswordHasher<ApplicationUser> ph = new PasswordHasher<ApplicationUser>();
-    //     adminUser.PasswordHash = ph.HashPassword(adminUser, "letmein");
-
-    //     await userManager.CreateAsync(adminUser, CancellationToken.None);
-    //     await userManager.AddToRoleAsync(adminUser, "Admin", CancellationToken.None);
-    // }
 }
+
+
+		
+
+app.Use(async (context, next) =>
+{
+    // set the correlation id
+    string correlationId = Guid.NewGuid().ToString();
+    CallContext.SetData("CorrelationId", correlationId);
+    CallContext.SetData("CallingProcess", context.Request.Method + ": " + context.Request.Path);
+
+    context.Response.Headers.Add("x-correlation-id", correlationId.ToString());
+    await next();
+});
 
 app.UseAuthorization();
 
