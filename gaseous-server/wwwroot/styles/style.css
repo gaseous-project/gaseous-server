@@ -316,7 +316,10 @@ input[id='filter_panel_userrating_max'] {
 }
 
 .games_pager_number {
+    display: inline-block;
     padding: 5px;
+    width: 40px;
+    text-align: center;
 }
 
 .games_pager_number:hover {
@@ -325,7 +328,10 @@ input[id='filter_panel_userrating_max'] {
 }
 
 .games_pager_number_disabled {
+    display: inline-block;
     padding: 5px;
+    width: 40px;
+    text-align: center;
     color: grey;
 }
 

@@ -14,7 +14,7 @@ namespace gaseous_server.Classes
             Dictionary<string, object> FilterSet = new Dictionary<string, object>();
 
             // platforms
-            List<FilterPlatform> platforms = new List<FilterPlatform>();
+            List<FilterItem> platforms = new List<FilterItem>();
             
             string ageRestriction_Platform = "Game.AgeGroupId <= " + (int)MaximumAgeRestriction;
             string ageRestriction_Generic = "view_Games.AgeGroupId <= " + (int)MaximumAgeRestriction;
@@ -30,57 +30,52 @@ namespace gaseous_server.Classes
 
             foreach (DataRow dr in dbResponse.Rows)
             {
-                FilterPlatform platformItem = new FilterPlatform(Classes.Metadata.Platforms.GetPlatform((long)dr["id"]));
-                platformItem.GameCount = (int)(long)dr["GameCount"];
+                FilterItem platformItem = new FilterItem(dr);
                 platforms.Add(platformItem);
 
             }
             FilterSet.Add("platforms", platforms);
 
             // genres
-            List<FilterGenre> genres = new List<FilterGenre>();
+            List<FilterItem> genres = new List<FilterItem>();
             dbResponse = GetGenericFilterItem(db, "Genre", ageRestriction_Generic);
 
             foreach (DataRow dr in dbResponse.Rows)
             {
-                FilterGenre genreItem = new FilterGenre(Classes.Metadata.Genres.GetGenres((long)dr["id"]));
-                genreItem.GameCount = (int)(long)dr["GameCount"];
+                FilterItem genreItem = new FilterItem(dr);
                 genres.Add(genreItem);
             }
             FilterSet.Add("genres", genres);
 
             // game modes
-            List<FilterGameMode> gameModes = new List<FilterGameMode>();
+            List<FilterItem> gameModes = new List<FilterItem>();
             dbResponse = GetGenericFilterItem(db, "GameMode", ageRestriction_Generic);
 
             foreach (DataRow dr in dbResponse.Rows)
             {
-                FilterGameMode gameModeItem = new FilterGameMode(Classes.Metadata.GameModes.GetGame_Modes((long)dr["id"]));
-                gameModeItem.GameCount = (int)(long)dr["GameCount"];
+                FilterItem gameModeItem = new FilterItem(dr);
                 gameModes.Add(gameModeItem);
             }
             FilterSet.Add("gamemodes", gameModes);
 
             // player perspectives
-            List<FilterPlayerPerspective> playerPerspectives = new List<FilterPlayerPerspective>();
+            List<FilterItem> playerPerspectives = new List<FilterItem>();
             dbResponse = GetGenericFilterItem(db, "PlayerPerspective", ageRestriction_Generic);
 
             foreach (DataRow dr in dbResponse.Rows)
             {
-                FilterPlayerPerspective playerPerspectiveItem = new FilterPlayerPerspective(Classes.Metadata.PlayerPerspectives.GetGame_PlayerPerspectives((long)dr["id"]));
-                playerPerspectiveItem.GameCount = (int)(long)dr["GameCount"];
+                FilterItem playerPerspectiveItem = new FilterItem(dr);
                 playerPerspectives.Add(playerPerspectiveItem);
             }
             FilterSet.Add("playerperspectives", playerPerspectives);
 
             // themes
-            List<FilterTheme> themes = new List<FilterTheme>();
+            List<FilterItem> themes = new List<FilterItem>();
             dbResponse = GetGenericFilterItem(db, "Theme", ageRestriction_Generic);
 
             foreach (DataRow dr in dbResponse.Rows)
             {
-                FilterTheme themeItem = new FilterTheme(Classes.Metadata.Themes.GetGame_Themes((long)dr["id"]));
-                themeItem.GameCount = (int)(long)dr["GameCount"];
+                FilterItem themeItem = new FilterItem(dr);
                 themes.Add(themeItem);
             }
             FilterSet.Add("themes", themes);
@@ -120,87 +115,18 @@ namespace gaseous_server.Classes
             return dbResponse;
         }
 
-        public class FilterPlatform : IGDB.Models.Platform
+        public class FilterItem
         {
-            public FilterPlatform(Platform obj)
+            public FilterItem(DataRow dr)
             {
-                var properties = obj.GetType().GetProperties();
-                foreach (var prop in properties)
-                {
-                    if (prop.GetGetMethod() != null)
-                    {
-                        this.GetType().GetProperty(prop.Name).SetValue(this, prop.GetValue(obj));
-                    }
-                }
+                this.Id = (long)dr["Id"];
+                this.Name = (string)dr["Name"];
+                this.GameCount = (int)(long)dr["GameCount"];
             }
 
-            public int GameCount { get; set; }
-        }
+            public long Id { get; set; }
 
-        public class FilterGenre : IGDB.Models.Genre
-        {
-            public FilterGenre(Genre obj)
-            {
-                var properties = obj.GetType().GetProperties();
-                foreach (var prop in properties)
-                {
-                    if (prop.GetGetMethod() != null)
-                    {
-                        this.GetType().GetProperty(prop.Name).SetValue(this, prop.GetValue(obj));
-                    }
-                }
-            }
-
-            public int GameCount { get; set; }
-        }
-
-        public class FilterGameMode : IGDB.Models.GameMode
-        {
-            public FilterGameMode(GameMode obj)
-            {
-                var properties = obj.GetType().GetProperties();
-                foreach (var prop in properties)
-                {
-                    if (prop.GetGetMethod() != null)
-                    {
-                        this.GetType().GetProperty(prop.Name).SetValue(this, prop.GetValue(obj));
-                    }
-                }
-            }
-
-            public int GameCount { get; set; }
-        }
-
-        public class FilterPlayerPerspective : IGDB.Models.PlayerPerspective
-        {
-            public FilterPlayerPerspective(PlayerPerspective obj)
-            {
-                var properties = obj.GetType().GetProperties();
-                foreach (var prop in properties)
-                {
-                    if (prop.GetGetMethod() != null)
-                    {
-                        this.GetType().GetProperty(prop.Name).SetValue(this, prop.GetValue(obj));
-                    }
-                }
-            }
-
-            public int GameCount { get; set; }
-        }
-
-        public class FilterTheme : IGDB.Models.Theme
-        {
-            public FilterTheme(Theme obj)
-            {
-                var properties = obj.GetType().GetProperties();
-                foreach (var prop in properties)
-                {
-                    if (prop.GetGetMethod() != null)
-                    {
-                        this.GetType().GetProperty(prop.Name).SetValue(this, prop.GetValue(obj));
-                    }
-                }
-            }
+            public string Name { get; set; }
 
             public int GameCount { get; set; }
         }

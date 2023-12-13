@@ -13,7 +13,7 @@ namespace gaseous_server
             {
                 _ItemType = ItemType;
                 _ItemState = QueueItemState.NeverStarted;
-                _LastRunTime = DateTime.Parse(Config.ReadSetting("LastRun_" + _ItemType.ToString(), DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:ssZ")));
+                _LastRunTime = DateTime.Parse(Config.ReadSetting("LastRun_" + _ItemType.ToString(), DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:ssZ"))).AddMinutes(-5);
                 _Interval = ExecutionInterval;
                 _AllowManualStart = AllowManualStart;
                 _RemoveWhenStopped = RemoveWhenStopped;
@@ -23,7 +23,7 @@ namespace gaseous_server
             {
                 _ItemType = ItemType;
                 _ItemState = QueueItemState.NeverStarted;
-                _LastRunTime = DateTime.Parse(Config.ReadSetting("LastRun_" + _ItemType.ToString(), DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:ssZ")));
+                _LastRunTime = DateTime.Parse(Config.ReadSetting("LastRun_" + _ItemType.ToString(), DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:ssZ"))).AddMinutes(-5);
                 _Interval = ExecutionInterval;
                 _AllowManualStart = AllowManualStart;
                 _RemoveWhenStopped = RemoveWhenStopped;

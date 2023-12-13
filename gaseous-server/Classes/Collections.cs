@@ -10,6 +10,7 @@ using gaseous_server.Controllers;
 using gaseous_server.Models;
 using IGDB.Models;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;
 
 namespace gaseous_server.Classes
@@ -220,7 +221,10 @@ namespace gaseous_server.Classes
             } else {
                 // get all platforms to pull from
                 Dictionary<string, object> FilterDict = Filters.Filter(AgeRatings.AgeGroups.AgeRestrictionGroupings.Adult, true);
-                platforms.AddRange((List<Filters.FilterPlatform>)FilterDict["platforms"]);
+                List<Classes.Filters.FilterItem> filteredPlatforms = (List<Classes.Filters.FilterItem>)FilterDict["platforms"];
+                foreach (Filters.FilterItem filterItem in filteredPlatforms) {
+                    platforms.Add(Platforms.GetPlatform(filterItem.Id));
+                }
             }
 
             // build collection
