@@ -75,8 +75,28 @@ namespace gaseous_server.Classes
                         LogToDisk(logItem, TraceOutput, null);
                     }
 
+                    string correlationId;
+                    if (CallContext.GetData("CorrelationId").ToString() == null)
+                    {
+                        correlationId = "";
+                    }
+                    else
+                    {
+                        correlationId = CallContext.GetData("CorrelationId").ToString();
+                    }
+
+                    string callingProcess;
+                    if (CallContext.GetData("CallingProcess").ToString() == null)
+                    {
+                        callingProcess = "";
+                    }
+                    else
+                    {
+                        callingProcess = CallContext.GetData("CallingProcess").ToString();
+                    }
+
                     Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                    string sql = "DELETE FROM ServerLogs WHERE EventTime < @EventRententionDate; INSERT INTO ServerLogs (EventTime, EventType, Process, Message, Exception) VALUES (@EventTime, @EventType, @Process, @Message, @Exception);";
+                    string sql = "DELETE FROM ServerLogs WHERE EventTime < @EventRententionDate; INSERT INTO ServerLogs (EventTime, EventType, Process, Message, Exception, CorrelationId, CallingProcess) VALUES (@EventTime, @EventType, @Process, @Message, @Exception, @correlationid, @callingprocess);";
                     Dictionary<string, object> dbDict = new Dictionary<string, object>();
                     dbDict.Add("EventRententionDate", DateTime.UtcNow.AddDays(Config.LoggingConfiguration.LogRetention * -1));
                     dbDict.Add("EventTime", logItem.EventTime);
@@ -84,6 +104,8 @@ namespace gaseous_server.Classes
                     dbDict.Add("Process", logItem.Process);
                     dbDict.Add("Message", logItem.Message);
                     dbDict.Add("Exception", Common.ReturnValueIfNull(logItem.ExceptionValue, "").ToString());
+                    dbDict.Add("correlationid", correlationId);
+                    dbDict.Add("callingprocess", callingProcess);
 
                     try
                     {
@@ -184,6 +206,24 @@ namespace gaseous_server.Classes
                 }
             }
 
+            if (model.CorrelationId != null)
+            {
+                if (model.CorrelationId.Length > 0)
+                {
+                    dbDict.Add("correlationId", model.CorrelationId);
+                    whereClauses.Add("CorrelationId = @correlationId");
+                }
+            }
+
+            if (model.CallingProcess != null)
+            {
+                if (model.CallingProcess.Length > 0)
+                {
+                    dbDict.Add("callingProcess", model.CallingProcess);
+                    whereClauses.Add("CallingProcess = @callingProcess");
+                }
+            }
+
             // compile WHERE clause
             string whereClause = "";
             if (whereClauses.Count > 0)
@@ -220,7 +260,9 @@ namespace gaseous_server.Classes
                     EventType = (LogType)row["EventType"],
                     Process = (string)row["Process"],
                     Message = (string)row["Message"],
-                    ExceptionValue = (string)row["Exception"]
+                    ExceptionValue = (string)row["Exception"],
+                    CorrelationId = (string)row["CorrelationId"],
+                    CallingProcess = (string)row["CallingProcess"]
                 };
 
                 logs.Add(log);
@@ -243,6 +285,8 @@ namespace gaseous_server.Classes
             public DateTime EventTime { get; set; }
             public LogType? EventType { get; set; }
             public string Process { get; set; } = "";
+            public string CorrelationId { get; set; } = "";
+            public string? CallingProcess { get; set; } = "";
             private string _Message = "";
             public string Message
             {
@@ -267,6 +311,8 @@ namespace gaseous_server.Classes
             public DateTime? StartDateTime { get; set; }
             public DateTime? EndDateTime { get; set; }
             public string? SearchText { get; set; }
+            public string? CorrelationId { get; set; }
+            public string? CallingProcess { get; set; }
         }
     }
 }

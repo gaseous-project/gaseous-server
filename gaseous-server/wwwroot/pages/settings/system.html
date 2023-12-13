@@ -31,66 +31,84 @@
             var newTable = document.createElement('table');
             newTable.className = 'romtable';
             newTable.setAttribute('cellspacing', 0);
-            newTable.appendChild(createTableRow(true, ['Task', 'Status', 'Interval', 'Last Run Start', 'Last Run Duration (seconds)', 'Next Run Start', '']));
+            newTable.appendChild(createTableRow(true, ['Task', 'Status', 'Interval<br/>(minutes)', 'Last Run Duration<br />(hh:mm:ss)', '', 'Last Run Start', 'Next Run Start', '']));
 
             if (result) {
                 for (var i = 0; i < result.length; i++) {
-                    var itemTypeName = GetTaskFriendlyName(result[i].itemType, result[i].options);
-                    
-                    var itemStateName;
-                    var itemLastStart;
-                    if (result[i].isBlocked == false) {
-                        switch (result[i].itemState) {
-                            case 'NeverStarted':
-                                itemStateName = "Never started";
-                                itemLastStart = '-';
-                                break;
-                            case 'Stopped':
-                                itemStateName = "Stopped";
-                                itemLastStart = moment(result[i].lastRunTime).format("YYYY-MM-DD h:mm:ss a");
-                                break;
-                            case 'Running':
-                                var progressPercent = "";
-                                if (result[i].currentStateProgress) {
-                                    progressPercent = " (" + result[i].currentStateProgress + ")";
-                                }
-                                itemStateName = "Running" + progressPercent;
-                                itemLastStart = moment(result[i].lastRunTime).format("YYYY-MM-DD h:mm:ss a");
-                                break;
-                            default:
-                                itemStateName = "Unknown status";
-                                itemLastStart = moment(result[i].lastRunTime).format("YYYY-MM-DD h:mm:ss a");
-                                break;
+                    if (result[i].itemState != "Disabled") {
+                        var itemTypeName = GetTaskFriendlyName(result[i].itemType, result[i].options);
+                        
+                        var itemStateName;
+                        var itemLastStart;
+                        
+                        var hasError = "";
+                        if (result[i].hasErrors) {
+                            if (result[i].hasErrors.errorType != null) {
+                                hasError = " (" + result[i].hasErrors.errorType + ")";
+                            }
                         }
-                    } else {
-                        itemStateName = "Blocked";
-                        itemLastStart = moment(result[i].lastRunTime).fromNow();
-                    }
 
-                    var itemInterval = result[i].interval;
-                    var nextRunTime = moment(result[i].nextRunTime).format("YYYY-MM-DD h:mm:ss a");
-                    var startButton = '';
-                    if (userProfile.roles.includes("Admin")) {
-                        if (result[i].allowManualStart == true && result[i].itemState != "Running") {
-                            startButton = "<span id='startProcess' class='romstart' onclick='StartProcess(\"" + result[i].itemType + "\");'>Start</span>";
+                        if (result[i].isBlocked == false) {
+                            switch (result[i].itemState) {
+                                case 'NeverStarted':
+                                    itemStateName = "Never started";
+                                    itemLastStart = '-';
+                                    break;
+                                case 'Stopped':
+                                    itemStateName = "Stopped";
+                                    itemLastStart = moment(result[i].lastRunTime).format("YYYY-MM-DD h:mm:ss a");
+                                    break;
+                                case 'Running':
+                                    var progressPercent = "";
+                                    if (result[i].currentStateProgress) {
+                                        progressPercent = " (" + result[i].currentStateProgress + ")";
+                                    }
+                                    itemStateName = "Running" + progressPercent;
+                                    itemLastStart = moment(result[i].lastRunTime).format("YYYY-MM-DD h:mm:ss a");
+                                    break;
+                                default:
+                                    itemStateName = "Unknown status";
+                                    itemLastStart = moment(result[i].lastRunTime).format("YYYY-MM-DD h:mm:ss a");
+                                    break;
+                            }
+                        } else {
+                            itemStateName = "Blocked";
+                            itemLastStart = moment(result[i].lastRunTime).format("YYYY-MM-DD h:mm:ss a");
                         }
-                    }
 
-                    if (result[i].allowManualStart == false && result[i].removeWhenStopped == true) {
-                        itemInterval = '';
-                        nextRunTime = '';
-                    }
+                        itemStateName += hasError;
 
-                    var newRow = [
-                        itemTypeName,
-                        itemStateName,
-                        itemInterval,
-                        itemLastStart,
-                        result[i].lastRunDuration,
-                        nextRunTime,
-                        startButton
-                    ];
-                    newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
+                        var itemInterval = result[i].interval;
+                        var nextRunTime = moment(result[i].nextRunTime).format("YYYY-MM-DD h:mm:ss a");
+                        var startButton = '';
+                        if (userProfile.roles.includes("Admin")) {
+                            if (result[i].allowManualStart == true && result[i].itemState != "Running") {
+                                startButton = "<span id='startProcess' class='romstart' onclick='StartProcess(\"" + result[i].itemType + "\");'>Start</span>";
+                            }
+                        }
+
+                        if (result[i].allowManualStart == false && result[i].removeWhenStopped == true) {
+                            itemInterval = '';
+                            nextRunTime = '';
+                        }
+
+                        var logLink = '';
+                        if (result[i].correlationId) {
+                            logLink = '<a href="/index.html?page=settings&sub=logs&correlationid=' + result[i].correlationId + '" class="romlink">View Log</a>';
+                        }
+
+                        var newRow = [
+                            itemTypeName,
+                            itemStateName,
+                            itemInterval,
+                            new Date(result[i].lastRunDuration * 1000).toISOString().slice(11, 19),
+                            logLink,
+                            itemLastStart,
+                            nextRunTime,
+                            startButton
+                        ];
+                        newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
+                    }
                 }
             }
 

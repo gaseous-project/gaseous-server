@@ -1,4 +1,6 @@
 ﻿using System;
+using System.ComponentModel.Design.Serialization;
+using System.Data;
 using gaseous_server.Classes;
 
 namespace gaseous_server
@@ -56,6 +58,7 @@ namespace gaseous_server
             private bool _AllowManualStart = true;
             private bool _RemoveWhenStopped = false;
             private bool _IsBlocked = false;
+            private string _CorrelationId = "";
             private List<QueueItemType> _Blocks = new List<QueueItemType>();
 
             public QueueItemType ItemType => _ItemType;
@@ -90,6 +93,7 @@ namespace gaseous_server
             public object? Options { get; set; } = null;
             public string CurrentState { get; set; } = "";
             public string CurrentStateProgress { get; set; } = "";
+            public string CorrelationId => _CorrelationId;
             public List<QueueItemType> Blocks => _Blocks;
 
             public void Execute()
@@ -104,7 +108,14 @@ namespace gaseous_server
                         _LastResult = "";
                         _LastError = null;
 
-                        Logging.Log(Logging.LogType.Debug, "Timered Event", "Executing " + _ItemType);
+                        // set the correlation id
+                        Guid correlationId = Guid.NewGuid();
+                        _CorrelationId = correlationId.ToString();
+                        CallContext.SetData("CorrelationId", correlationId);
+                        CallContext.SetData("CallingProcess", _ItemType.ToString());
+
+                        // log the start
+                        Logging.Log(Logging.LogType.Debug, "Timered Event", "Executing " + _ItemType + " with correlation id " + _CorrelationId);
 
                         try
                         {
@@ -237,6 +248,66 @@ namespace gaseous_server
             public void BlockedState(bool BlockState)
             {
                 _IsBlocked = BlockState;
+            }
+
+            public HasErrorsItem HasErrors
+            {
+                get
+                {
+                    return new HasErrorsItem(_CorrelationId);
+                }
+            }
+
+            public class HasErrorsItem
+            {
+                public HasErrorsItem(string? CorrelationId)
+                {
+                    if (CorrelationId != null)
+                    {
+                        if (CorrelationId.Length > 0)
+                        {
+                            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                            string sql = "SELECT EventType, COUNT(EventType) AS EventTypes FROM gaseous.ServerLogs WHERE CorrelationId = @correlationid GROUP BY EventType ORDER BY EventType DESC LIMIT 1;";
+                            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+                            dbDict.Add("correlationid", CorrelationId);
+
+                            DataTable data = db.ExecuteCMD(sql, dbDict);
+
+                            if (data.Rows.Count == 0)
+                            {
+                                ErrorType = null;
+                                ErrorCount = 0;
+                            }
+                            else
+                            {
+                                Logging.LogType errorType = (Logging.LogType)data.Rows[0]["EventType"];
+                                if (errorType != Logging.LogType.Information)
+                                {
+                                    ErrorType = errorType;
+                                    ErrorCount = (int)(long)data.Rows[0]["EventTypes"];
+                                }
+                                else
+                                {
+                                    ErrorType = null;
+                                    ErrorCount = 0;
+                                }
+                            }
+                        }
+                        else
+                        {
+                            ErrorType = null;
+                            ErrorCount = 0;
+                        }
+                    }
+                    else
+                    {
+                        ErrorType = null;
+                        ErrorCount = 0;
+                    }
+                }
+
+                public Logging.LogType? ErrorType { get; set; }
+                public int ErrorCount { get; set; }
             }
         }
 

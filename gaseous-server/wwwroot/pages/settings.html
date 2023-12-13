@@ -47,6 +47,10 @@
     SelectTab(selectedTab);
 
     function SelectTab(TabName) {
+        if (selectedTab != TabName) {
+            window.location.href = '/index.html?page=settings&sub=' + TabName;
+        }
+
         var tocs = document.getElementsByName('properties_toc_item');
         for (var i = 0; i < tocs.length; i++) {
             if ((tocs[i].id) == ("properties_toc_" + TabName)) {

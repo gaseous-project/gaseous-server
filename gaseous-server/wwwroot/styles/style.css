@@ -1060,20 +1060,36 @@ button:disabled {
     vertical-align: top;
 }
 
-.logs_table_row_Information:hover {
+.logs_table_row_Information:nth-child(even) {
     background: rgba(42, 41, 150, 0.3);
 }
 
-.logs_table_row_Warning:hover {
+.logs_table_row_Information:nth-child(odd) {
+    background: rgba(10, 9, 83, 0.3);
+}
+
+.logs_table_row_Warning:nth-child(even) {
     background: rgba(139, 150, 41, 0.3);
 }
 
-.logs_table_row_Critical:hover {
+.logs_table_row_Warning:nth-child(odd) {
+    background: rgba(49, 53, 14, 0.3);
+}
+
+.logs_table_row_Critical:nth-child(even) {
     background: rgba(150, 41, 41, 0.3);
 }
 
-.logs_table_row_Debug:hover {
+.logs_table_row_Critical:nth-child(odd) {
+    background: rgba(58, 16, 16, 0.3);
+}
+
+.logs_table_row_Debug:nth-child(even) {
     background: rgba(150, 41, 135, 0.3);
+}
+
+.logs_table_row_Debug:nth-child(odd) {
+    background: rgba(68, 18, 61, 0.3);
 }
 
 .logs_table_exception {

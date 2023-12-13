@@ -5,10 +5,7 @@
 <table style="width: 960px; max-width: 960px;" cellspacing="0">
     <tr>
         <td>
-            <input type="datetime-local" id="logs_startdate" />
-        </td>
-        <td>
-            <input type="datetime-local" id="logs_enddate" />
+            <input type="datetime-local" id="logs_startdate" style="width: 30%;" /> <input type="datetime-local" id="logs_enddate" style="width: 30%;" />
         </td>
         <td>
             <input type="checkbox" id="logs_type_info"><label for="logs_type_info">Information</label>
@@ -19,10 +16,17 @@
         <td>
             <input type="checkbox" id="logs_type_critical"><label for="logs_type_critical">Critical</label>
         </td>
-        <td>
-            <input type="text" id="logs_textsearch" placeholder="Search" />
+    </tr>
+    <tr>
+        <td colspan="1">
+            <input type="text" id="logs_textsearch" placeholder="Search" style="width: 75%;" />
         </td>
-        <td>
+        <td colspan="3">
+            <input type="text" id="logs_correlationid" placeholder="Correlation Id" style="width: 75%;" />
+        </td>
+    </tr>
+    <tr>
+        <td colspan="4" style="text-align: right;">
             <button onclick="loadLogs();">Search</button>
             <button onclick="resetFilters();">Reset</button>
         </td>
@@ -43,6 +47,13 @@
     var currentPage = 1;
     var searchModel = {};
 
+    var correlationIdParam = getQueryString('correlationid', 'string');
+    if (correlationIdParam) {
+        if (correlationIdParam.length > 0) {
+            document.getElementById('logs_correlationid').value = correlationIdParam;
+        }
+    }
+
     function resetFilters() {
         document.getElementById('logs_startdate').value = '';
         document.getElementById('logs_enddate').value = '';
@@ -50,6 +61,7 @@
         document.getElementById('logs_type_warning').checked = false;
         document.getElementById('logs_type_critical').checked = false;
         document.getElementById('logs_textsearch').value = '';
+        document.getElementById('logs_correlationid').value = '';
 
         loadLogs();
     }
@@ -81,6 +93,9 @@
             var searchText = null;
             var searchTextObj = document.getElementById('logs_textsearch');
             if (searchTextObj.value != null) { searchText = searchTextObj.value; }
+            var correlationId = null;
+            var correlationIdTextObj = document.getElementById('logs_correlationid');
+            if (correlationIdTextObj.value != null) { correlationId = correlationIdTextObj.value; }
 
             model = {
                 "StartIndex": StartIndex,
@@ -89,7 +104,8 @@
                 "Status": statusList,
                 "StartDateTime": startDate,
                 "EndDateTime": endDate,
-                "SearchText": searchText
+                "SearchText": searchText,
+                "CorrelationId": correlationId
             }
             searchModel = model;
         }
@@ -131,7 +147,7 @@
                         result[i].message
                     ];
 
-                    newTable.appendChild(createTableRow(false, newRow, 'romrow logs_table_row_' + result[i].eventType, 'romcell logs_table_cell'));
+                    newTable.appendChild(createTableRow(false, newRow, 'logs_table_row_' + result[i].eventType, 'romcell logs_table_cell'));
 
                     if (result[i].exceptionValue) {
                         var exceptionString = "<h3>Exception</h3><pre class='logs_table_exception' style='width: 795px; word-wrap: break-word; overflow-wrap: break-word; overflow-y: scroll;'>" + syntaxHighlight(JSON.stringify(result[i].exceptionValue, null, 2)).replace(/\\n/g, "<br />    ") + "</pre>";
