@@ -16,32 +16,14 @@ namespace gaseous_server.Classes.Metadata
 			Expired
 		}
 
-        //private static Dictionary<string, MemoryCacheObject> ObjectCache = new Dictionary<string, MemoryCacheObject>();
-
 		public static CacheStatus GetCacheStatus(string Endpoint, string Slug)
 		{
-            // CacheClean();
-            // if (ObjectCache.ContainsKey(Endpoint + Slug))
-            // {
-            //     return CacheStatus.Current;
-            // }
-            // else
-            // {
-			    return _GetCacheStatus(Endpoint, "slug", Slug);
-            // }
+            return _GetCacheStatus(Endpoint, "slug", Slug);
 		}
 
         public static CacheStatus GetCacheStatus(string Endpoint, long Id)
         {
-            // CacheClean();
-            // if (ObjectCache.ContainsKey(Endpoint + Id))
-            // {
-            //     return CacheStatus.Current;
-            // }
-            // else
-			// {
-                return _GetCacheStatus(Endpoint, "id", Id);
-            // }
+            return _GetCacheStatus(Endpoint, "id", Id);
         }
 
         public static CacheStatus GetCacheStatus(DataRow Row)
@@ -185,21 +167,6 @@ namespace gaseous_server.Classes.Metadata
 		{
             string Endpoint = EndpointType.GetType().Name;
 
-            // if (ObjectCache.ContainsKey(Endpoint + SearchValue))
-            // {
-            //     MemoryCacheObject cacheObject = ObjectCache[Endpoint + SearchValue];
-            //     if (cacheObject.ExpiryTime < DateTime.UtcNow)
-            //     {
-            //         // object has expired, remove it
-            //         ObjectCache.Remove(Endpoint + SearchValue);
-            //     }
-            //     else
-            //     {
-            //         // object is valid, return it
-            //         return (T)cacheObject.Object;
-            //     }
-            // }
-
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
             string sql = "SELECT * FROM " + Endpoint + " WHERE " + SearchField + " = @" + SearchField;
@@ -218,19 +185,7 @@ namespace gaseous_server.Classes.Metadata
             {
 				DataRow dataRow = dt.Rows[0];
                 object returnObject = BuildCacheObject<T>(EndpointType, dataRow);
-                // try {
-                //     if (!ObjectCache.ContainsKey(Endpoint + SearchValue))
-                //     {
-                //         ObjectCache.Add(Endpoint + SearchValue, new MemoryCacheObject{
-                //             Object = returnObject
-                //         });
-                //     }
-                // }
-                // catch
-                // {
-                //     // unable add item to cache
-                //     ObjectCache.Clear();
-                // }
+                
                 return (T)returnObject;
             }
         }
@@ -469,29 +424,6 @@ namespace gaseous_server.Classes.Metadata
                 db.ExecuteCMD(sql, dbDict);
             }
         }
-
-        // private static void CacheClean()
-        // {
-        //     try
-        //     {
-        //         if (ObjectCache == null)
-        //         {
-        //             ObjectCache = new Dictionary<string, MemoryCacheObject>();
-        //         }
-        //         Dictionary<string, MemoryCacheObject> workCache = ObjectCache;
-        //         foreach (KeyValuePair<string, MemoryCacheObject> objectCache in workCache)
-        //         {
-        //             if (objectCache.Value.ExpiryTime < DateTime.UtcNow)
-        //             {
-        //                 ObjectCache.Remove(objectCache.Key);
-        //             }
-        //         }
-        //     }
-        //     catch
-        //     {
-        //         ObjectCache = new Dictionary<string, MemoryCacheObject>();
-        //     }
-        // }
 
         private class MemoryCacheObject
         {

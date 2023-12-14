@@ -711,6 +711,7 @@ namespace gaseous_server.Classes
                             StoreROM(library, hash, determinedGame, determinedPlatform, sig, LibraryFile);
                         }
                     }
+                    StatusCount += 1;
                 }
                 ClearStatus();
 

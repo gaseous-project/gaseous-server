@@ -265,7 +265,7 @@ namespace gaseous_server.Controllers.v1_1
 
             if (model.Platform.Count > 0)
             {
-                tempVal = "Games_Roms.PlatformId IN (";
+                tempVal = "Relation_Game_Platforms.PlatformsId IN (";
                 for (int i = 0; i < model.Platform.Count; i++)
                 {
                     if (i > 0)
@@ -439,7 +439,7 @@ namespace gaseous_server.Controllers.v1_1
             string orderByClause = "ORDER BY `" + orderByField + "` " + orderByOrder;
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT DISTINCT view_Games.* FROM view_Games LEFT JOIN Games_Roms ON view_Games.Id = Games_Roms.GameId LEFT JOIN Relation_Game_Genres ON view_Games.Id = Relation_Game_Genres.GameId LEFT JOIN Relation_Game_GameModes ON view_Games.Id = Relation_Game_GameModes.GameId LEFT JOIN Relation_Game_PlayerPerspectives ON view_Games.Id = Relation_Game_PlayerPerspectives.GameId LEFT JOIN Relation_Game_Themes ON view_Games.Id = Relation_Game_Themes.GameId " + whereClause + " " + havingClause + " " + orderByClause;
+            string sql = "SELECT DISTINCT view_Games.* FROM view_Games LEFT JOIN Relation_Game_Platforms ON view_Games.Id = Relation_Game_Platforms.GameId AND (Relation_Game_Platforms.PlatformsId IN (SELECT DISTINCT PlatformId FROM Games_Roms WHERE Games_Roms.GameId = view_Games.Id)) LEFT JOIN Relation_Game_Genres ON view_Games.Id = Relation_Game_Genres.GameId LEFT JOIN Relation_Game_GameModes ON view_Games.Id = Relation_Game_GameModes.GameId LEFT JOIN Relation_Game_PlayerPerspectives ON view_Games.Id = Relation_Game_PlayerPerspectives.GameId LEFT JOIN Relation_Game_Themes ON view_Games.Id = Relation_Game_Themes.GameId " + whereClause + " " + havingClause + " " + orderByClause;
 
             List<IGDB.Models.Game> RetVal = new List<IGDB.Models.Game>();
 

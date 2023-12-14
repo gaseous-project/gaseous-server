@@ -393,7 +393,9 @@ Config.LibraryConfiguration.InitLibrary();
 
 // insert unknown platform and game if not present
 gaseous_server.Classes.Metadata.Games.GetGame(0, false, false, false);
+gaseous_server.Classes.Metadata.Games.AssignAllGamesToPlatformIdZero();
 gaseous_server.Classes.Metadata.Platforms.GetPlatform(0);
+gaseous_server.Classes.Metadata.Platforms.AssignAllPlatformsToGameIdZero();
 
 // extract platform map if not present
 PlatformMapping.ExtractPlatformMap();
