@@ -293,7 +293,35 @@ namespace gaseous_server.Classes.Metadata
             var results = await comms.APIComm<Game>(IGDBClient.Endpoints.Games, fieldList, WhereClause);
             var result = results.First();
 
+            // add artificial unknown platform mapping
+            List<long> platformIds = new List<long>();
+            platformIds.Add(0);
+            if (result.Platforms != null)
+            {
+                if (result.Platforms.Ids != null)
+                {
+                    platformIds.AddRange(result.Platforms.Ids.ToList());
+                }
+            }
+            result.Platforms = new IdentitiesOrValues<Platform>(
+                ids: platformIds.ToArray<long>()
+            );
+
             return result;
+        }
+        
+        public static void AssignAllGamesToPlatformIdZero()
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT * FROM Game;";
+            DataTable gamesTable = db.ExecuteCMD(sql);
+            foreach (DataRow gameRow in gamesTable.Rows)
+            {
+                sql = "DELETE FROM Relation_Game_Platforms WHERE PlatformsId = 0 AND GameId = @Id; INSERT INTO Relation_Game_Platforms (GameId, PlatformsId) VALUES (@Id, 0);";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>();
+                dbDict.Add("Id", (long)gameRow["Id"]);
+                db.ExecuteCMD(sql, dbDict);
+            }
         }
 
         public static Game[] SearchForGame(string SearchString, long PlatformId, SearchType searchType)

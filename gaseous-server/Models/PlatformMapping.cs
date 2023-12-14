@@ -157,18 +157,18 @@ namespace gaseous_server.Models
             if (Update == false)
             {
                 // insert
-                sql = "INSERT INTO PlatformMap (Id, RetroPieDirectoryName, WebEmulator_Type, WebEmulator_Core, AvailableWebEmulators) VALUES (@Id, @RetroPieDirectoryName, @WebEmulator_Type, @WebEmulator_Core, @AvailableWebEmulators)";
+                sql = "INSERT INTO PlatformMap (Id, RetroPieDirectoryName, WebEmulator_Type, WebEmulator_Core, AvailableWebEmulators) VALUES (@Id, @RetroPieDirectoryName, @WebEmulator_Type, @WebEmulator_Core, @AvailableWebEmulators);";
             }
             else
             {
                 // update
                 if (AllowAvailableEmulatorOverwrite == true)
                 {
-                    sql = "UPDATE PlatformMap SET RetroPieDirectoryName=@RetroPieDirectoryName, WebEmulator_Type=@WebEmulator_Type, WebEmulator_Core=@WebEmulator_Core, AvailableWebEmulators=@AvailableWebEmulators WHERE Id = @Id";
+                    sql = "UPDATE PlatformMap SET RetroPieDirectoryName=@RetroPieDirectoryName, WebEmulator_Type=@WebEmulator_Type, WebEmulator_Core=@WebEmulator_Core, AvailableWebEmulators=@AvailableWebEmulators WHERE Id = @Id; ";
                 }
                 else
                 {
-                    sql = "UPDATE PlatformMap SET RetroPieDirectoryName=@RetroPieDirectoryName, WebEmulator_Type=@WebEmulator_Type, WebEmulator_Core=@WebEmulator_Core WHERE Id = @Id";
+                    sql = "UPDATE PlatformMap SET RetroPieDirectoryName=@RetroPieDirectoryName, WebEmulator_Type=@WebEmulator_Type, WebEmulator_Core=@WebEmulator_Core WHERE Id = @Id;";
                 }
             }
             dbDict.Add("Id", item.IGDBId);

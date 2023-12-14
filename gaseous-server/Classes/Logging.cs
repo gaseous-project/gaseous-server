@@ -275,8 +275,8 @@ namespace gaseous_server.Classes
                     Process = (string)row["Process"],
                     Message = (string)row["Message"],
                     ExceptionValue = (string)row["Exception"],
-                    CorrelationId = (string)row["CorrelationId"],
-                    CallingProcess = (string)row["CallingProcess"]
+                    CorrelationId = (string)Common.ReturnValueIfNull(row["CorrelationId"], ""),
+                    CallingProcess = (string)Common.ReturnValueIfNull(row["CallingProcess"], "")
                 };
 
                 logs.Add(log);

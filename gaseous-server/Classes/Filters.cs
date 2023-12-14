@@ -24,7 +24,7 @@ namespace gaseous_server.Classes
                 ageRestriction_Generic += " OR view_Games.AgeGroupId IS NULL";
             }
 
-            string sql = "SELECT DISTINCT Platform.Id, Platform.Abbreviation, Platform.AlternativeName, Platform.`Name`, Platform.PlatformLogo, (SELECT COUNT(*) AS GameCount FROM (SELECT DISTINCT Games_Roms.GameId AS ROMGameId, Games_Roms.PlatformId, view_Games.AgeGroupId FROM Games_Roms LEFT JOIN view_Games ON view_Games.Id = Games_Roms.GameId) Game WHERE Game.PlatformId = Platform.Id AND (" + ageRestriction_Platform + ")) AS GameCount FROM Platform LEFT JOIN Relation_Game_Platforms ON Relation_Game_Platforms.PlatformsId = Platform.Id LEFT JOIN view_Games ON view_Games.Id = Relation_Game_Platforms.GameId HAVING GameCount > 0 ORDER BY Platform.`Name`;";
+            string sql = "SELECT Platform.Id, Platform.`Name`, COUNT(view_Games.Id) AS GameCount FROM view_Games JOIN Relation_Game_Platforms ON Relation_Game_Platforms.GameId = view_Games.Id AND (Relation_Game_Platforms.PlatformsId IN (SELECT DISTINCT PlatformId FROM Games_Roms WHERE Games_Roms.GameId = view_Games.Id)) JOIN Platform ON Platform.Id = Relation_Game_Platforms.PlatformsId WHERE (" + ageRestriction_Generic + ") GROUP BY Platform.`Name` ORDER BY Platform.`Name`;";
             
             DataTable dbResponse = db.ExecuteCMD(sql);
 
@@ -108,7 +108,7 @@ namespace gaseous_server.Classes
 
         private static DataTable GetGenericFilterItem(Database db, string Name, string AgeRestriction_Generic)
         {
-            string sql = "SELECT DISTINCT <ITEMNAME>.Id, <ITEMNAME>.`Name`, COUNT(view_Games.Id) AS GameCount FROM <ITEMNAME> LEFT JOIN Relation_Game_<ITEMNAME>s ON Relation_Game_<ITEMNAME>s.<ITEMNAME>sId = <ITEMNAME>.Id LEFT JOIN view_Games ON view_Games.Id = Relation_Game_<ITEMNAME>s.GameId WHERE (" + AgeRestriction_Generic + ") GROUP BY <ITEMNAME>.Id ORDER BY <ITEMNAME>.`Name`;";
+            string sql = "SELECT DISTINCT <ITEMNAME>.Id, <ITEMNAME>.`Name`, COUNT(view_Games.Id) AS GameCount FROM <ITEMNAME> LEFT JOIN Relation_Game_<ITEMNAME>s ON Relation_Game_<ITEMNAME>s.<ITEMNAME>sId = <ITEMNAME>.Id LEFT JOIN view_Games ON view_Games.Id = Relation_Game_<ITEMNAME>s.GameId WHERE (" + AgeRestriction_Generic + ") GROUP BY <ITEMNAME>.Id HAVING GameCount > 0 ORDER BY <ITEMNAME>.`Name`;";
             sql = sql.Replace("<ITEMNAME>", Name);
             DataTable dbResponse = db.ExecuteCMD(sql);
 

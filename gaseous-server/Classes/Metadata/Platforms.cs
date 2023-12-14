@@ -168,6 +168,20 @@ namespace gaseous_server.Classes.Metadata
 
             return result;
         }
+
+        public static void AssignAllPlatformsToGameIdZero()
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT * FROM Platform;";
+            DataTable platformsTable = db.ExecuteCMD(sql);
+            foreach (DataRow platformRow in platformsTable.Rows)
+            {
+                sql = "DELETE FROM Relation_Game_Platforms WHERE GameId = 0 AND PlatformsId = @Id; INSERT INTO Relation_Game_Platforms (GameId, PlatformsId) VALUES (0, @Id);";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>();
+                dbDict.Add("Id", (long)platformRow["Id"]);
+                db.ExecuteCMD(sql, dbDict);
+            }
+        }
     }
 }
 

@@ -1,0 +1,4 @@
+ALTER TABLE `Games_Roms` 
+ADD INDEX `id_LibraryId` (`LibraryId` ASC) VISIBLE,
+ADD INDEX `id_MD5` USING BTREE (`MD5`) VISIBLE;
+
