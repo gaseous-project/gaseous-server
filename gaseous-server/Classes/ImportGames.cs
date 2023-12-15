@@ -690,25 +690,32 @@ namespace gaseous_server.Classes
                             IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(sig.Flags.IGDBPlatformId);
 
                             IGDB.Models.Game determinedGame = new Game();
-                            if (determinedPlatform == null)
+                            try
                             {
-                                if (library.DefaultPlatformId == 0)
+                                if (determinedPlatform == null)
                                 {
-                                    determinedPlatform = new IGDB.Models.Platform();
-                                    determinedGame = SearchForGame(sig.Game.Name, sig.Flags.IGDBPlatformId);
+                                    if (library.DefaultPlatformId == 0)
+                                    {
+                                        determinedPlatform = new IGDB.Models.Platform();
+                                        determinedGame = SearchForGame(sig.Game.Name, sig.Flags.IGDBPlatformId);
+                                    }
+                                    else
+                                    {
+                                        determinedPlatform = Platforms.GetPlatform(library.DefaultPlatformId);
+                                        determinedGame = SearchForGame(sig.Game.Name, library.DefaultPlatformId);
+                                    }
                                 }
                                 else
                                 {
-                                    determinedPlatform = Platforms.GetPlatform(library.DefaultPlatformId);
-                                    determinedGame = SearchForGame(sig.Game.Name, library.DefaultPlatformId);
+                                    determinedGame = SearchForGame(sig.Game.Name, (long)determinedPlatform.Id);
                                 }
-                            }
-                            else
-                            {
-                                determinedGame = SearchForGame(sig.Game.Name, (long)determinedPlatform.Id);
-                            }
 
-                            StoreROM(library, hash, determinedGame, determinedPlatform, sig, LibraryFile);
+                                StoreROM(library, hash, determinedGame, determinedPlatform, sig, LibraryFile);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logging.Log(Logging.LogType.Warning, "Library Scan", " An error occurred while matching orphaned file: " + LibraryFile + ". Skipping.", ex);
+                            }
                         }
                     }
                     StatusCount += 1;
@@ -720,6 +727,7 @@ namespace gaseous_server.Classes
 
                 // check all roms to see if their local file still exists
                 Logging.Log(Logging.LogType.Information, "Library Scan", "Checking library files exist on disk");
+                StatusCount = 0;
                 if (dtRoms.Rows.Count > 0)
                 {
                     for (var i = 0; i < dtRoms.Rows.Count; i++)
@@ -728,6 +736,7 @@ namespace gaseous_server.Classes
                         string romPath = (string)dtRoms.Rows[i]["Path"];
                         gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType romMetadataSource = (gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType)(int)dtRoms.Rows[i]["MetadataSource"];
 
+                        SetStatus(StatusCount, dtRoms.Rows.Count, "Processing file " + romPath);
                         Logging.Log(Logging.LogType.Information, "Library Scan", " Processing ROM at path " + romPath);
 
                         if (File.Exists(romPath))
@@ -751,6 +760,8 @@ namespace gaseous_server.Classes
                             deleteDict.Add("libraryid", library.Id);
                             db.ExecuteCMD(deleteSql, deleteDict);
                         }
+
+                        StatusCount += 1;
                     }
                 }
 
