@@ -499,7 +499,7 @@ namespace gaseous_server.Classes
                                     if (File.Exists(gameRomItem.Path))
                                     {
                                         Logging.Log(Logging.LogType.Information, "Collections", "Copying ROM: " + gameRomItem.Name);
-                                        File.Copy(gameRomItem.Path, Path.Combine(ZipGamePath, gameRomItem.Name));
+                                        File.Copy(gameRomItem.Path, Path.Combine(ZipGamePath, gameRomItem.Name), true);
                                     }
                                 }
                             }

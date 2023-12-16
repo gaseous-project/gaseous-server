@@ -18,3 +18,6 @@ FROM
     LEFT JOIN AgeRating ON Relation_Game_AgeRatings.AgeRatingsId = AgeRating.Id
     GROUP BY Id) b ON a.Id = b.Id
 ORDER BY NameThe;
+
+ALTER TABLE `ServerLogs` 
+ADD COLUMN `CallingUser` VARCHAR(255) NULL AFTER `CallingProcess`;

@@ -297,20 +297,6 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-
-		
-
-app.Use(async (context, next) =>
-{
-    // set the correlation id
-    string correlationId = Guid.NewGuid().ToString();
-    CallContext.SetData("CorrelationId", correlationId);
-    CallContext.SetData("CallingProcess", context.Request.Method + ": " + context.Request.Path);
-
-    context.Response.Headers.Add("x-correlation-id", correlationId.ToString());
-    await next();
-});
-
 app.UseAuthorization();
 
 app.UseDefaultFiles();
@@ -321,6 +307,28 @@ app.UseStaticFiles(new StaticFileOptions
 });
 
 app.MapControllers();
+
+app.Use(async (context, next) =>
+{
+    // set the correlation id
+    string correlationId = Guid.NewGuid().ToString();
+    CallContext.SetData("CorrelationId", correlationId);
+    CallContext.SetData("CallingProcess", context.Request.Method + ": " + context.Request.Path);
+    
+    string userIdentity;
+    try
+    {
+        userIdentity = context.User.Claims.Where(x=>x.Type==System.Security.Claims.ClaimTypes.NameIdentifier).FirstOrDefault().Value;
+    }
+    catch
+    {
+        userIdentity = "";
+    }
+    CallContext.SetData("CallingUser", userIdentity);
+
+    context.Response.Headers.Add("x-correlation-id", correlationId.ToString());
+    await next();
+});
 
 // emergency password recovery if environment variable is set
 // process:

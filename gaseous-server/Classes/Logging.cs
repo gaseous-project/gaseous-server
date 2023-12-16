@@ -109,8 +109,25 @@ namespace gaseous_server.Classes
                         callingProcess = "";
                     }
 
+                    string callingUser;
+                    try
+                    {
+                        if (CallContext.GetData("CallingUser").ToString() == null)
+                        {
+                            callingUser = "";
+                        }
+                        else
+                        {
+                            callingUser = CallContext.GetData("CallingUser").ToString();
+                        }
+                    }
+                    catch
+                    {
+                        callingUser = "";
+                    }
+
                     Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                    string sql = "DELETE FROM ServerLogs WHERE EventTime < @EventRententionDate; INSERT INTO ServerLogs (EventTime, EventType, Process, Message, Exception, CorrelationId, CallingProcess) VALUES (@EventTime, @EventType, @Process, @Message, @Exception, @correlationid, @callingprocess);";
+                    string sql = "DELETE FROM ServerLogs WHERE EventTime < @EventRententionDate; INSERT INTO ServerLogs (EventTime, EventType, Process, Message, Exception, CorrelationId, CallingProcess, CallingUser) VALUES (@EventTime, @EventType, @Process, @Message, @Exception, @correlationid, @callingprocess, @callinguser);";
                     Dictionary<string, object> dbDict = new Dictionary<string, object>();
                     dbDict.Add("EventRententionDate", DateTime.UtcNow.AddDays(Config.LoggingConfiguration.LogRetention * -1));
                     dbDict.Add("EventTime", logItem.EventTime);
@@ -120,6 +137,7 @@ namespace gaseous_server.Classes
                     dbDict.Add("Exception", Common.ReturnValueIfNull(logItem.ExceptionValue, "").ToString());
                     dbDict.Add("correlationid", correlationId);
                     dbDict.Add("callingprocess", callingProcess);
+                    dbDict.Add("callinguser", callingUser);
 
                     try
                     {
@@ -238,6 +256,15 @@ namespace gaseous_server.Classes
                 }
             }
 
+            if (model.CallingUser != null)
+            {
+                if (model.CallingUser.Length > 0)
+                {
+                    dbDict.Add("callingUser", model.CallingUser);
+                    whereClauses.Add("CallingUser = @callingUser");
+                }
+            }
+
             // compile WHERE clause
             string whereClause = "";
             if (whereClauses.Count > 0)
@@ -252,7 +279,8 @@ namespace gaseous_server.Classes
                 {
                     whereClause = "WHERE " + whereClause;
                 }
-                sql = "SELECT * FROM ServerLogs " + whereClause + " ORDER BY Id DESC LIMIT @PageSize OFFSET @PageNumber;";
+                
+                sql = "SELECT ServerLogs.Id, ServerLogs.EventTime, ServerLogs.EventType, ServerLogs.`Process`, ServerLogs.Message, ServerLogs.Exception, ServerLogs.CorrelationId, ServerLogs.CallingProcess, Users.Email FROM ServerLogs LEFT JOIN Users ON ServerLogs.CallingUser = Users.Id " + whereClause + " ORDER BY ServerLogs.Id DESC LIMIT @PageSize OFFSET @PageNumber;";
             }
             else
             {
@@ -260,7 +288,8 @@ namespace gaseous_server.Classes
                 {
                     whereClause = "AND " + whereClause;
                 }
-                sql = "SELECT * FROM ServerLogs WHERE Id < @StartIndex " + whereClause + " ORDER BY Id DESC LIMIT @PageSize OFFSET @PageNumber;";
+                
+                sql = "SELECT ServerLogs.Id, ServerLogs.EventTime, ServerLogs.EventType, ServerLogs.`Process`, ServerLogs.Message, ServerLogs.Exception, ServerLogs.CorrelationId, ServerLogs.CallingProcess, Users.Email FROM ServerLogs LEFT JOIN Users ON ServerLogs.CallingUser = Users.Id  WHERE ServerLogs.Id < @StartIndex " + whereClause + " ORDER BY ServerLogs.Id DESC LIMIT @PageSize OFFSET @PageNumber;";
             }
             DataTable dataTable = db.ExecuteCMD(sql, dbDict);
 
@@ -276,7 +305,8 @@ namespace gaseous_server.Classes
                     Message = (string)row["Message"],
                     ExceptionValue = (string)row["Exception"],
                     CorrelationId = (string)Common.ReturnValueIfNull(row["CorrelationId"], ""),
-                    CallingProcess = (string)Common.ReturnValueIfNull(row["CallingProcess"], "")
+                    CallingProcess = (string)Common.ReturnValueIfNull(row["CallingProcess"], ""),
+                    CallingUser = (string)Common.ReturnValueIfNull(row["Email"], "")
                 };
 
                 logs.Add(log);
@@ -301,6 +331,7 @@ namespace gaseous_server.Classes
             public string Process { get; set; } = "";
             public string CorrelationId { get; set; } = "";
             public string? CallingProcess { get; set; } = "";
+            public string? CallingUser { get; set; } = "";
             private string _Message = "";
             public string Message
             {
@@ -327,6 +358,7 @@ namespace gaseous_server.Classes
             public string? SearchText { get; set; }
             public string? CorrelationId { get; set; }
             public string? CallingProcess { get; set; }
+            public string? CallingUser { get; set; }
         }
     }
 }
