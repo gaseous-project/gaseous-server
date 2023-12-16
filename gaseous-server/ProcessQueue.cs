@@ -151,9 +151,6 @@ namespace gaseous_server
                                     // clean up
                                     Classes.ImportGame.DeleteOrphanedDirectories(Config.LibraryConfiguration.LibraryImportDirectory);
 
-                                    // update filters
-                                    Filters.BuildFilterSetInBackground();
-
                                     _SaveLastRunTime = true;
 
                                     break;
@@ -165,9 +162,6 @@ namespace gaseous_server
                                         CallingQueueItem = this
                                     };
                                     metadataManagement.RefreshMetadata(_ForceExecute);
-
-                                    // update filters
-                                    Filters.BuildFilterSetInBackground();
 
                                     _SaveLastRunTime = true;
 
@@ -189,9 +183,6 @@ namespace gaseous_server
                                     };
                                     import.LibraryScan();
 
-                                    // update filters
-                                    Filters.BuildFilterSetInBackground();
-
                                     _SaveLastRunTime = true;
 
                                     break;
@@ -203,9 +194,6 @@ namespace gaseous_server
                                         CallingQueueItem = this
                                     };
                                     importRematch.Rematcher(_ForceExecute);
-
-                                    // update filters
-                                    Filters.BuildFilterSetInBackground();
 
                                     _SaveLastRunTime = true;
 
@@ -232,11 +220,6 @@ namespace gaseous_server
                                         CallingQueueItem = this
                                     };
                                     maintenance.RunMaintenance();
-                                    break;
-
-                                case QueueItemType.FilterCompiler:
-                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Filter Compiler");
-                                    Filters.BuildFilterSet();
                                     break;
 
                             }
@@ -389,12 +372,7 @@ namespace gaseous_server
             /// <summary>
             /// Performs a clean up of old files, and optimises the database
             /// </summary>
-            Maintainer,
-
-            /// <summary>
-            /// Compiles the contents of the game filters as a background task
-            /// </summary>
-            FilterCompiler
+            Maintainer
         }
 
         public enum QueueItemState

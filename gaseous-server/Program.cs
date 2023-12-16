@@ -460,9 +460,6 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     })
     );
 
-// start filter build
-Filters.BuildFilterSetInBackground();
-
 Logging.WriteToDiskOnly = false;
 
 // start the app

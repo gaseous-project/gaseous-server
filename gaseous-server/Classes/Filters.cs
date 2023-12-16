@@ -9,58 +9,9 @@ namespace gaseous_server.Classes
     {
         public static Dictionary<string, List<FilterItem>> Filter(Metadata.AgeRatings.AgeGroups.AgeRestrictionGroupings MaximumAgeRestriction, bool IncludeUnrated)
         {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
             Dictionary<string, List<FilterItem>> FilterSet = new Dictionary<string, List<FilterItem>>();
-
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM Statistics_Filters WHERE MaximumAgeRestriction = @agegroup AND IncludeUnrated = @includeunrated ORDER BY `Name`;";
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
-            dbDict.Add("agegroup", MaximumAgeRestriction);
-            dbDict.Add("includeunrated", IncludeUnrated);
-            
-            DataTable data = db.ExecuteCMD(sql, dbDict);
-            
-            foreach (DataRow row in data.Rows)
-            {
-                FilterItem filterItem = new FilterItem();
-                filterItem.Id = (long)row["TypeId"];
-                filterItem.Name = (string)row["Name"];
-                filterItem.GameCount = (int)row["GameCount"];
-
-                if (!FilterSet.ContainsKey((string)row["filtertype"]))
-                {
-                    FilterSet[(string)row["filtertype"]] = new List<FilterItem>();
-                }
-                FilterSet[(string)row["filtertype"]].Add(filterItem);
-            }
-
-            return FilterSet;
-        }
-
-        public static void BuildFilterSet()
-        {
-            foreach (Metadata.AgeRatings.AgeGroups.AgeRestrictionGroupings ageRestriction in Enum.GetValues(typeof(Metadata.AgeRatings.AgeGroups.AgeRestrictionGroupings)))
-            {
-                _BuildFilterStatistics(ageRestriction, false);
-                _BuildFilterStatistics(ageRestriction, true);
-            }
-        }
-
-        public static void BuildFilterSetInBackground()
-        {
-            ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-                ProcessQueue.QueueItemType.FilterCompiler,
-                10,
-                false,
-                true
-                )
-            );
-        }
-
-        private static void _BuildFilterStatistics(Metadata.AgeRatings.AgeGroups.AgeRestrictionGroupings MaximumAgeRestriction, bool IncludeUnrated)
-        {
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-
-            Dictionary<string, object> FilterSet = new Dictionary<string, object>();
 
             // platforms
             List<FilterItem> platforms = new List<FilterItem>();
@@ -139,36 +90,22 @@ namespace gaseous_server.Classes
                 FilterItem filterAgeGrouping = new FilterItem();
                 if (dr["AgeGroupId"] == DBNull.Value)
                 {
-                    filterAgeGrouping.Id = (long)AgeRatings.AgeGroups.AgeRestrictionGroupings.Unclassified;
+                    filterAgeGrouping.Id = (int)(long)AgeRatings.AgeGroups.AgeRestrictionGroupings.Unclassified;
                     filterAgeGrouping.Name = AgeRatings.AgeGroups.AgeRestrictionGroupings.Unclassified.ToString();
                 }
                 else
                 {
-                    filterAgeGrouping.Id = (long)(AgeRatings.AgeGroups.AgeRestrictionGroupings)dr["AgeGroupId"];
-                    filterAgeGrouping.Name = ((AgeRatings.AgeGroups.AgeRestrictionGroupings)dr["AgeGroupId"]).ToString();
+                    long ageGroupLong = (long)dr["AgeGroupId"];
+                    AgeRatings.AgeGroups.AgeRestrictionGroupings ageGroup = (AgeRatings.AgeGroups.AgeRestrictionGroupings)ageGroupLong;
+                    filterAgeGrouping.Id = ageGroupLong;
+                    filterAgeGrouping.Name = ageGroup.ToString();
                 }
                 filterAgeGrouping.GameCount = (int)(long)dr["GameCount"];
                 agegroupings.Add(filterAgeGrouping);
             }
             FilterSet.Add("agegroupings", agegroupings);
 
-            // update status table
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
-            foreach (KeyValuePair<string, object> filterObject in FilterSet)
-            {
-                foreach (FilterItem item in (List<FilterItem>)filterObject.Value)
-                {
-                    sql = "DELETE FROM Statistics_Filters WHERE FilterType = @filtertype AND TypeId = @typeid AND `Name` = @name AND MaximumAgeRestricion = @maximumagerestriction AND IncludeUnrated = @includeunrated; INSERT INTO Statistics_Filters (FilterType, TypeId, Name, MaximumAgeRestriction, IncludeUnrated, GameCount) VALUES (@filtertype, @typeid, @name, @maximumagerestriction, @includeunrated, @gamecount);";
-                    dbDict.Clear();
-                    dbDict.Add("filtertype", filterObject.Key);
-                    dbDict.Add("typeid", item.Id);
-                    dbDict.Add("name", item.Name);
-                    dbDict.Add("maximumagerestriction", MaximumAgeRestriction);
-                    dbDict.Add("includeunrated", IncludeUnrated);
-                    dbDict.Add("gamecount", item.GameCount);
-                    db.ExecuteNonQuery(sql, dbDict);
-                }
-            }
+            return FilterSet;
         }
 
         private static DataTable GetGenericFilterItem(Database db, string Name, string AgeRestriction_Generic)
