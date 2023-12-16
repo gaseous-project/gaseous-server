@@ -148,6 +148,7 @@ namespace gaseous_server
                                         CallingQueueItem = this
                                     };
 
+                                    // clean up
                                     Classes.ImportGame.DeleteOrphanedDirectories(Config.LibraryConfiguration.LibraryImportDirectory);
 
                                     _SaveLastRunTime = true;

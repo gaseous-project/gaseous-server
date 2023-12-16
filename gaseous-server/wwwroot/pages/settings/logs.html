@@ -139,18 +139,25 @@
                 for (var i = 0; i < result.length; i++) {
                     lastStartIndex = result[i].id;
 
+                    console.log(result[i]);
+
+                    var surroundingRow = document.createElement('tbody');
+                    surroundingRow.setAttribute('colspan', 4);
+                    surroundingRow.className = 'logs_table_row_' + result[i].eventType;
+
                     var newRow = [
-                        //result[i].id,
                         moment(result[i].eventTime).format("YYYY-MM-DD h:mm:ss a"),
                         result[i].eventType,
                         result[i].process,
                         result[i].message
                     ];
 
-                    newTable.appendChild(createTableRow(false, newRow, 'logs_table_row_' + result[i].eventType, 'romcell logs_table_cell'));
+                    surroundingRow.appendChild(createTableRow(false, newRow, '', 'romcell logs_table_cell'));
 
+                    // exception
+                    var exceptionString = '';
                     if (result[i].exceptionValue) {
-                        var exceptionString = "<h3>Exception</h3><pre class='logs_table_exception' style='width: 795px; word-wrap: break-word; overflow-wrap: break-word; overflow-y: scroll;'>" + syntaxHighlight(JSON.stringify(result[i].exceptionValue, null, 2)).replace(/\\n/g, "<br />    ") + "</pre>";
+                        exceptionString = "<strong>Exception</strong><pre class='logs_table_exception' style='width: 795px; word-wrap: break-word; overflow-wrap: break-word; overflow-y: scroll;'>" + syntaxHighlight(JSON.stringify(result[i].exceptionValue, null, 2)).replace(/\\n/g, "<br />    ") + "</pre>";
                         var exRow = document.createElement('tr');
                         var leadCell = document.createElement('td');
                         exRow.appendChild(leadCell);
@@ -158,8 +165,59 @@
                         exCell.colSpan = '3';
                         exCell.innerHTML = exceptionString;
                         exRow.appendChild(exCell);
-                        newTable.appendChild(exRow);
+                        surroundingRow.appendChild(exRow);
                     }
+                    
+                    // calling process
+                    var infoRow = document.createElement('tr');
+                    
+                    var infoRowEmptyCell = document.createElement('td');
+                    infoRowEmptyCell.className = 'romcell';
+
+                    var infoRowDataCell = document.createElement('td');
+                    infoRowDataCell.className = 'romcell';
+                    infoRowDataCell.setAttribute('colspan', 3);
+                    infoRowDataCell.innerHTML = '<strong>Calling process:</strong> ' + result[i].callingProcess;
+
+                    infoRow.appendChild(infoRowEmptyCell);
+                    infoRow.appendChild(infoRowDataCell);
+                    surroundingRow.appendChild(infoRow);
+                    
+                    // initiated by user
+                    if (result[i].callingUser) {
+                        if (result[i].callingUser.length > 0) {
+                            var infoRow3 = document.createElement('tr');
+                            
+                            var infoRowEmptyCell3 = document.createElement('td');
+                            infoRowEmptyCell3.className = 'romcell';
+
+                            var infoRowDataCell3 = document.createElement('td');
+                            infoRowDataCell3.className = 'romcell';
+                            infoRowDataCell3.setAttribute('colspan', 3);
+                            infoRowDataCell3.innerHTML = '<strong>User:</strong> ' + result[i].callingUser + "</a>";
+
+                            infoRow3.appendChild(infoRowEmptyCell3);
+                            infoRow3.appendChild(infoRowDataCell3);
+                            surroundingRow.appendChild(infoRow3);
+                        }
+                    }
+
+                    // correlation id
+                    var infoRow2 = document.createElement('tr');
+                    
+                    var infoRowEmptyCell2 = document.createElement('td');
+                    infoRowEmptyCell2.className = 'romcell';
+
+                    var infoRowDataCell2 = document.createElement('td');
+                    infoRowDataCell2.className = 'romcell';
+                    infoRowDataCell2.setAttribute('colspan', 3);
+                    infoRowDataCell2.innerHTML = '<strong>Correlation Id:</strong> <a class="romlink" href="/index.html?page=settings&sub=logs&correlationid=' + result[i].correlationId + '">' + result[i].correlationId + "</a>";
+
+                    infoRow2.appendChild(infoRowEmptyCell2);
+                    infoRow2.appendChild(infoRowDataCell2);
+                    surroundingRow.appendChild(infoRow2);
+
+                    newTable.appendChild(surroundingRow);
                 }
             },
             function (error) {

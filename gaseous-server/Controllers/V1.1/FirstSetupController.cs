@@ -52,15 +52,22 @@ namespace gaseous_server.Controllers
                         NormalizedEmail = model.Email.ToUpper(),
                         SecurityProfile = new SecurityProfileViewModel()
                     };
+                    Logging.Log(Logging.LogType.Information, "First Run", "Creating new account " + model.Email);
                     var result = await _userManager.CreateAsync(user, model.Password);
                     if (result.Succeeded)
                     {
+                        Logging.Log(Logging.LogType.Information, "First Run", "Creation of " + model.Email + " successful.");
+                        Logging.Log(Logging.LogType.Information, "First Run", "Adding Player role to " + model.Email);
                         await _userManager.AddToRoleAsync(user, "Player");
+                        Logging.Log(Logging.LogType.Information, "First Run", "Adding Gamer role to " + model.Email);
                         await _userManager.AddToRoleAsync(user, "Gamer");
+                        Logging.Log(Logging.LogType.Information, "First Run", "Adding Admin role to " + model.Email);
                         await _userManager.AddToRoleAsync(user, "Admin");
 
+                        Logging.Log(Logging.LogType.Information, "First Run", "Signing in as " + model.Email);
                         await _signInManager.SignInAsync(user, isPersistent: true);
                         
+                        Logging.Log(Logging.LogType.Information, "First Run", "Setting first run state to 1");
                         Config.SetSetting("FirstRunStatus", "1");
 
                         return Ok(result);

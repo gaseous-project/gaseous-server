@@ -7,11 +7,11 @@ namespace gaseous_server.Classes
 {
     public class Filters
     {
-        public static Dictionary<string, object> Filter(Metadata.AgeRatings.AgeGroups.AgeRestrictionGroupings MaximumAgeRestriction, bool IncludeUnrated)
+        public static Dictionary<string, List<FilterItem>> Filter(Metadata.AgeRatings.AgeGroups.AgeRestrictionGroupings MaximumAgeRestriction, bool IncludeUnrated)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
-            Dictionary<string, object> FilterSet = new Dictionary<string, object>();
+            Dictionary<string, List<FilterItem>> FilterSet = new Dictionary<string, List<FilterItem>>();
 
             // platforms
             List<FilterItem> platforms = new List<FilterItem>();
@@ -81,22 +81,24 @@ namespace gaseous_server.Classes
             FilterSet.Add("themes", themes);
 
             // age groups
-            List<FilterAgeGrouping> agegroupings = new List<FilterAgeGrouping>();
+            List<FilterItem> agegroupings = new List<FilterItem>();
             sql = "SELECT view_Games.Id, view_Games.AgeGroupId, COUNT(view_Games.Id) AS GameCount FROM view_Games WHERE (" + ageRestriction_Generic + ") GROUP BY view_Games.AgeGroupId ORDER BY view_Games.AgeGroupId DESC;";
             dbResponse = db.ExecuteCMD(sql);
 
             foreach (DataRow dr in dbResponse.Rows)
             {
-                FilterAgeGrouping filterAgeGrouping = new FilterAgeGrouping();
+                FilterItem filterAgeGrouping = new FilterItem();
                 if (dr["AgeGroupId"] == DBNull.Value)
                 {
-                    filterAgeGrouping.Id = (long)AgeRatings.AgeGroups.AgeRestrictionGroupings.Unclassified;
-                    filterAgeGrouping.AgeGroup = AgeRatings.AgeGroups.AgeRestrictionGroupings.Unclassified;
+                    filterAgeGrouping.Id = (int)(long)AgeRatings.AgeGroups.AgeRestrictionGroupings.Unclassified;
+                    filterAgeGrouping.Name = AgeRatings.AgeGroups.AgeRestrictionGroupings.Unclassified.ToString();
                 }
                 else
                 {
-                    filterAgeGrouping.Id = (long)(AgeRatings.AgeGroups.AgeRestrictionGroupings)dr["AgeGroupId"];
-                    filterAgeGrouping.AgeGroup = (AgeRatings.AgeGroups.AgeRestrictionGroupings)dr["AgeGroupId"];
+                    long ageGroupLong = (long)dr["AgeGroupId"];
+                    AgeRatings.AgeGroups.AgeRestrictionGroupings ageGroup = (AgeRatings.AgeGroups.AgeRestrictionGroupings)ageGroupLong;
+                    filterAgeGrouping.Id = ageGroupLong;
+                    filterAgeGrouping.Name = ageGroup.ToString();
                 }
                 filterAgeGrouping.GameCount = (int)(long)dr["GameCount"];
                 agegroupings.Add(filterAgeGrouping);
@@ -117,6 +119,11 @@ namespace gaseous_server.Classes
 
         public class FilterItem
         {
+            public FilterItem()
+            {
+
+            }
+
             public FilterItem(DataRow dr)
             {
                 this.Id = (long)dr["Id"];
@@ -127,23 +134,6 @@ namespace gaseous_server.Classes
             public long Id { get; set; }
 
             public string Name { get; set; }
-
-            public int GameCount { get; set; }
-        }
-
-        public class FilterAgeGrouping
-        {
-            public long Id { get; set; }
-
-            public AgeRatings.AgeGroups.AgeRestrictionGroupings AgeGroup { get ; set; }
-
-            public string Name
-            {
-                get
-                {
-                    return this.AgeGroup.ToString();
-                }
-            }
 
             public int GameCount { get; set; }
         }

@@ -220,7 +220,7 @@ namespace gaseous_server.Classes
                 }
             } else {
                 // get all platforms to pull from
-                Dictionary<string, object> FilterDict = Filters.Filter(AgeRatings.AgeGroups.AgeRestrictionGroupings.Adult, true);
+                Dictionary<string, List<Filters.FilterItem>> FilterDict = Filters.Filter(AgeRatings.AgeGroups.AgeRestrictionGroupings.Adult, true);
                 List<Classes.Filters.FilterItem> filteredPlatforms = (List<Classes.Filters.FilterItem>)FilterDict["platforms"];
                 foreach (Filters.FilterItem filterItem in filteredPlatforms) {
                     platforms.Add(Platforms.GetPlatform(filterItem.Id));
@@ -499,7 +499,7 @@ namespace gaseous_server.Classes
                                     if (File.Exists(gameRomItem.Path))
                                     {
                                         Logging.Log(Logging.LogType.Information, "Collections", "Copying ROM: " + gameRomItem.Name);
-                                        File.Copy(gameRomItem.Path, Path.Combine(ZipGamePath, gameRomItem.Name));
+                                        File.Copy(gameRomItem.Path, Path.Combine(ZipGamePath, gameRomItem.Name), true);
                                     }
                                 }
                             }
