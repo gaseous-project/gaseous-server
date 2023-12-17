@@ -107,20 +107,28 @@ namespace gaseous_server.Classes
                                     Logging.Log(Logging.LogType.Information, "Database", "Schema version is " + SchemaVer);
                                     if (SchemaVer < i)
 									{
-										// run pre-upgrade code
-										DatabaseMigration.PreUpgradeScript(i, _ConnectorType);
-										
-                                        // apply schema!
-                                        Logging.Log(Logging.LogType.Information, "Database", "Updating schema to version " + i);
-                                        ExecuteCMD(dbScript, dbDict);
+										try
+										{
+											// run pre-upgrade code
+											DatabaseMigration.PreUpgradeScript(i, _ConnectorType);
+											
+											// apply schema!
+											Logging.Log(Logging.LogType.Information, "Database", "Updating schema to version " + i);
+											ExecuteCMD(dbScript, dbDict, 180);
 
-										sql = "UPDATE schema_version SET schema_version=@schemaver";
-										dbDict = new Dictionary<string, object>();
-										dbDict.Add("schemaver", i);
-										ExecuteCMD(sql, dbDict);
+											sql = "UPDATE schema_version SET schema_version=@schemaver";
+											dbDict = new Dictionary<string, object>();
+											dbDict.Add("schemaver", i);
+											ExecuteCMD(sql, dbDict);
 
-										// run post-upgrade code
-										DatabaseMigration.PostUpgradeScript(i, _ConnectorType);
+											// run post-upgrade code
+											DatabaseMigration.PostUpgradeScript(i, _ConnectorType);
+										}
+										catch (Exception ex)
+										{
+											Logging.Log(Logging.LogType.Critical, "Database", "Schema upgrade failed! Unable to continue.", ex);
+											System.Environment.Exit(1);
+										}
 									}
 								}
 							}
