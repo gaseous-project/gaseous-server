@@ -14,6 +14,137 @@ namespace gaseous_server.Classes.Metadata
 
         }
 
+        public static AgeGroup? GetAgeGroup(Game? game)
+        {
+            if (game == null)
+            {
+                return null;
+            }
+            else
+            {
+                Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
+                cacheStatus = Storage.GetCacheStatus("AgeGroup", (long)game.Id);
+
+                AgeGroup? RetVal = new AgeGroup();
+
+                switch (cacheStatus)
+                {
+                    case Storage.CacheStatus.NotPresent:
+                        RetVal = _GetAgeGroup(game);
+                        Storage.NewCacheValue(RetVal, false);
+                        break;
+
+                    case Storage.CacheStatus.Expired:
+                        RetVal = _GetAgeGroup(game);
+                        Storage.NewCacheValue(RetVal, true);
+                        break;
+
+                    case Storage.CacheStatus.Current:
+                        RetVal = Storage.GetCacheValue<AgeGroup>(RetVal, "Id", game.Id);
+                        break;
+
+                    default:
+                        throw new Exception("How did you get here?");
+                }
+                
+                return RetVal;
+            }
+        }
+
+        public static AgeGroup? _GetAgeGroup(Game game)
+        {
+            // compile the maximum age group for the given game
+            if (game != null)
+            {
+                if (game.AgeRatings != null)
+                {
+                    if (game.AgeRatings.Ids != null)
+                    {
+                        // collect ratings values from metadata
+                        List<AgeRating> ageRatings = new List<AgeRating>();
+                        foreach (long ratingId in game.AgeRatings.Ids)
+                        {
+                            AgeRating? rating = AgeRatings.GetAgeRatings(ratingId);
+                            if (rating != null)
+                            {
+                                ageRatings.Add(rating);
+                            }
+                        }
+
+                        // compile the ratings values into the ratings groups
+                        AgeRestrictionGroupings highestAgeGroup = AgeRestrictionGroupings.Unclassified;
+                        foreach (AgeRating ageRating in ageRatings)
+                        {
+                            foreach (KeyValuePair<AgeRestrictionGroupings, AgeGroupItem> ageGroupItem in AgeGroupingsFlat)
+                            {
+                                
+                                PropertyInfo[] groupProps = typeof(AgeGroupItem).GetProperties();
+                                foreach (PropertyInfo property in groupProps)
+                                {
+                                    if (RatingsBoards.Contains(property.Name))
+                                    {
+                                        List<AgeRatingTitle> ratingBoard = (List<AgeRatingTitle>)property.GetValue(ageGroupItem.Value);
+                                        foreach (AgeRatingTitle ratingTitle in ratingBoard)
+                                        {
+                                            if (ageRating.Rating == ratingTitle)
+                                            {
+                                                if (highestAgeGroup < ageGroupItem.Key)
+                                                {
+                                                    highestAgeGroup = ageGroupItem.Key;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // return the compiled ratings group
+                        AgeGroup ageGroup = new AgeGroup();
+                        ageGroup.Id = game.Id;
+                        ageGroup.GameId = game.Id;
+                        if (highestAgeGroup == 0)
+                        {
+                            ageGroup.AgeGroupId = null;
+                        }
+                        else
+                        {
+                            ageGroup.AgeGroupId = highestAgeGroup;
+                        }
+                        
+                        return ageGroup;
+                    }
+                    else
+                    {
+                        AgeGroup ageGroup = new AgeGroup();
+                        ageGroup.Id = game.Id;
+                        ageGroup.GameId = game.Id;
+                        ageGroup.AgeGroupId = null;
+                        
+                        return ageGroup;
+                    }
+                }
+                else
+                {
+                    AgeGroup ageGroup = new AgeGroup();
+                    ageGroup.Id = game.Id;
+                    ageGroup.GameId = game.Id;
+                    ageGroup.AgeGroupId = null;
+                    
+                    return ageGroup;
+                }
+            }
+            
+            return null;
+        }
+
+        public class AgeGroup
+        {
+            public long? Id { get; set; }
+            public long? GameId { get; set; }
+            public AgeRestrictionGroupings? AgeGroupId { get; set; }
+        }
+
         public static Dictionary<AgeRestrictionGroupings, List<AgeGroupItem>> AgeGroupings
         {
             get
@@ -63,6 +194,18 @@ namespace gaseous_server.Classes.Metadata
             Teen = 2,
             Child = 1,
             Unclassified = 0
+        }
+
+        public static List<string> RatingsBoards
+        {
+            get
+            {
+                List<string> boards = new List<string>{
+                    "ACB", "CERO", "CLASS_IND", "ESRB", "GRAC", "PEGI", "USK"
+                };
+
+                return boards;
+            }
         }
 
         readonly static AgeGroupItem Adult_Item = new AgeGroupItem{

@@ -95,7 +95,7 @@ namespace gaseous_server.Classes
                 }
                 else
                 {
-                    long ageGroupLong = (long)dr["AgeGroupId"];
+                    int ageGroupLong = (int)dr["AgeGroupId"];
                     AgeGroups.AgeRestrictionGroupings ageGroup = (AgeGroups.AgeRestrictionGroupings)ageGroupLong;
                     filterAgeGrouping.Id = ageGroupLong;
                     filterAgeGrouping.Name = ageGroup.ToString();
