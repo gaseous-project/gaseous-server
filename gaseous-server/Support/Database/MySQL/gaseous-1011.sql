@@ -1,0 +1,7 @@
+CREATE TABLE `AgeGroups` (
+  `Id` BIGINT NOT NULL,
+  `GameId` BIGINT NULL,
+  `AgeGroupId` INT NULL,
+  `dateAdded` DATETIME NULL DEFAULT NULL,
+  `lastUpdated` DATETIME NULL DEFAULT NULL,
+  PRIMARY KEY (`Id`));

@@ -7,7 +7,7 @@ namespace gaseous_server.Classes
 {
     public class Filters
     {
-        public static Dictionary<string, List<FilterItem>> Filter(Metadata.AgeRatings.AgeGroups.AgeRestrictionGroupings MaximumAgeRestriction, bool IncludeUnrated)
+        public static Dictionary<string, List<FilterItem>> Filter(Metadata.AgeGroups.AgeRestrictionGroupings MaximumAgeRestriction, bool IncludeUnrated)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
@@ -90,13 +90,13 @@ namespace gaseous_server.Classes
                 FilterItem filterAgeGrouping = new FilterItem();
                 if (dr["AgeGroupId"] == DBNull.Value)
                 {
-                    filterAgeGrouping.Id = (int)(long)AgeRatings.AgeGroups.AgeRestrictionGroupings.Unclassified;
-                    filterAgeGrouping.Name = AgeRatings.AgeGroups.AgeRestrictionGroupings.Unclassified.ToString();
+                    filterAgeGrouping.Id = (int)(long)AgeGroups.AgeRestrictionGroupings.Unclassified;
+                    filterAgeGrouping.Name = AgeGroups.AgeRestrictionGroupings.Unclassified.ToString();
                 }
                 else
                 {
                     long ageGroupLong = (long)dr["AgeGroupId"];
-                    AgeRatings.AgeGroups.AgeRestrictionGroupings ageGroup = (AgeRatings.AgeGroups.AgeRestrictionGroupings)ageGroupLong;
+                    AgeGroups.AgeRestrictionGroupings ageGroup = (AgeGroups.AgeRestrictionGroupings)ageGroupLong;
                     filterAgeGrouping.Id = ageGroupLong;
                     filterAgeGrouping.Name = ageGroup.ToString();
                 }
