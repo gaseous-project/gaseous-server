@@ -196,39 +196,55 @@
         }
     });
 
-    $('#properties_fixgame').select2({
-        minimumInputLength: 3,
-        templateResult: DropDownRenderGameOption,
-        ajax: {
-            url: '/api/v1.1/Search/Game',
-            data: function (params) {
-                fixplatform = $('#properties_fixplatform').select2('data');
+    $('#properties_fixplatform').on('select2:select', function (e) {
+        var platformData = e.params.data;
+        console.log(platformData);
 
-                var query = {
-                    PlatformId: fixplatform[0].id,
-                    SearchString: params.term
-                }
+        var gameValue = $('#properties_fixgame').select2('data');
+        if (gameValue) {
+            console.log(gameValue[0]);
 
-                // Query parameters will be ?SearchString=[term]
-                return query;
-            },
-            processResults: function (data) {
-                var arr = [];
-
-                for (var i = 0; i < data.length; i++) {
-                    arr.push({
-                        id: data[i].id,
-                        text: data[i].name,
-                        cover: data[i].cover
-                    });
-                }
-
-                return {
-                    results: arr
-                };
-            }
+            setFixGameDropDown();
         }
     });
+
+    function setFixGameDropDown() {
+        $('#properties_fixgame').empty().select2({
+            minimumInputLength: 3,
+            placeholder: 'Game',
+            templateResult: DropDownRenderGameOption,
+            ajax: {
+                url: '/api/v1.1/Search/Game',
+                data: function (params) {
+                    fixplatform = $('#properties_fixplatform').select2('data');
+
+                    var query = {
+                        PlatformId: fixplatform[0].id,
+                        SearchString: params.term
+                    }
+
+                    // Query parameters will be ?SearchString=[term]
+                    return query;
+                },
+                processResults: function (data) {
+                    var arr = [];
+
+                    for (var i = 0; i < data.length; i++) {
+                        arr.push({
+                            id: data[i].id,
+                            text: data[i].name,
+                            cover: data[i].cover
+                        });
+                    }
+
+                    return {
+                        results: arr
+                    };
+                }
+            }
+        });
+    }
+    setFixGameDropDown();
 
     function SaveFixedGame() {
         var fixplatform = $('#properties_fixplatform').select2('data');

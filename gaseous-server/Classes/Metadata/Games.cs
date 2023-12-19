@@ -114,7 +114,9 @@ namespace gaseous_server.Classes.Metadata
                     }
                     return returnValue;
                 case Storage.CacheStatus.Current:
-                    return Storage.GetCacheValue<Game>(returnValue, "id", (long)searchValue);
+                    returnValue = Storage.GetCacheValue<Game>(returnValue, "id", (long)searchValue);
+                    UpdateSubClasses(returnValue, false, false);
+                    return returnValue;
                 default:
                     throw new Exception("How did you get here?");
             }
@@ -125,7 +127,14 @@ namespace gaseous_server.Classes.Metadata
             // required metadata
             if (Game.Cover != null)
             {
-                Cover GameCover = Covers.GetCover(Game.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
+                try
+                {
+                    Cover GameCover = Covers.GetCover(Game.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
+                }
+                catch (Exception ex)
+                {
+                    Logging.Log(Logging.LogType.Critical, "Game Metadata", "Unable to fetch cover artwork.", ex);
+                }
             }
 
             if (Game.Genres != null)
@@ -175,6 +184,7 @@ namespace gaseous_server.Classes.Metadata
                     AgeRating GameAgeRating = AgeRatings.GetAgeRatings(AgeRatingId);
                 }
             }
+            AgeGroups.GetAgeGroup(Game);
 
             if (Game.ReleaseDates != null)
             {
@@ -199,7 +209,14 @@ namespace gaseous_server.Classes.Metadata
                 {
                     foreach (long ArtworkId in Game.Artworks.Ids)
                     {
-                        Artwork GameArtwork = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
+                        try
+                        {
+                            Artwork GameArtwork = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Log(Logging.LogType.Critical, "Game Metadata", "Unable to fetch artwork id: " + ArtworkId, ex);
+                        }
                     }
                 }
 
@@ -266,7 +283,14 @@ namespace gaseous_server.Classes.Metadata
                 {
                     foreach (long ScreenshotId in Game.Screenshots.Ids)
                     {
+                        try
+                        {
                         Screenshot GameScreenshot = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Log(Logging.LogType.Critical, "Game Metadata", "Unable to fetch screenshot id: " + ScreenshotId, ex);
+                        }
                     }
                 }
 

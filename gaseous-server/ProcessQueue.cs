@@ -113,6 +113,7 @@ namespace gaseous_server
                         _CorrelationId = correlationId.ToString();
                         CallContext.SetData("CorrelationId", correlationId);
                         CallContext.SetData("CallingProcess", _ItemType.ToString());
+                        CallContext.SetData("CallingUser", "System");
 
                         // log the start
                         Logging.Log(Logging.LogType.Debug, "Timered Event", "Executing " + _ItemType + " with correlation id " + _CorrelationId);

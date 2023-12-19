@@ -103,7 +103,7 @@ namespace gaseous_server.Controllers
                 "var AgeRatingStrings = " + JsonSerializer.Serialize(AgeRatingsStrings, new JsonSerializerOptions{
                     WriteIndented = true
                 }) + ";" + Environment.NewLine +
-                "var AgeRatingGroups = " + JsonSerializer.Serialize(AgeRatings.AgeGroups.AgeGroupingsFlat, new JsonSerializerOptions{
+                "var AgeRatingGroups = " + JsonSerializer.Serialize(AgeGroups.AgeGroupingsFlat, new JsonSerializerOptions{
                     WriteIndented = true
                 }) + ";";
             byte[] bytes = Encoding.UTF8.GetBytes(ver);
