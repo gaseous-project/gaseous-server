@@ -345,6 +345,8 @@ input[id='filter_panel_userrating_max'] {
     padding-bottom: 15px;
     font-size: 16px;
     font-family: Commodore64;
+    text-align: center;
+    width: 80%;
 }
 
 .rom_pager_number {

@@ -38,10 +38,10 @@ namespace gaseous_server.Classes
 				GameRoms.Count = romDT.Rows.Count;
 				
 				// setup platforms list
-				GameRoms.Platforms = new Dictionary<long, string>();
+				Dictionary<long, string> platformDict = new Dictionary<long, string>();
 
 				int pageOffset = pageSize * (pageNumber - 1);
-				for (int i = pageOffset; i < romDT.Rows.Count; i++)
+				for (int i = 0; i < romDT.Rows.Count; i++)
 				{
 					GameRomItem gameRomItem = BuildRom(romDT.Rows[i]);
 
@@ -50,14 +50,17 @@ namespace gaseous_server.Classes
 						GameRoms.GameRomItems.Add(gameRomItem);
 					}
 
-					if (!GameRoms.Platforms.ContainsKey(gameRomItem.PlatformId))
+					if (!platformDict.ContainsKey(gameRomItem.PlatformId))
 					{
-						GameRoms.Platforms.Add(gameRomItem.PlatformId, gameRomItem.Platform);
+						platformDict.Add(gameRomItem.PlatformId, gameRomItem.Platform);
 					}
 				}
 
 				// get rom media groups
 				GameRoms.MediaGroups = Classes.RomMediaGroup.GetMediaGroupsFromGameId(GameId);
+
+				// sort the platforms
+				GameRoms.Platforms = platformDict.OrderBy(x => x.Value).ToDictionary(x => x.Key, x => x.Value).ToList<KeyValuePair<long, string>>();
 
 				return GameRoms;
             }
@@ -170,7 +173,7 @@ namespace gaseous_server.Classes
 			public List<GameRomMediaGroupItem> MediaGroups { get; set; } = new List<GameRomMediaGroupItem>();
 			public List<GameRomItem> GameRomItems { get; set; } = new List<GameRomItem>();
 			public int Count { get; set; }
-			public Dictionary<long, string> Platforms { get; set; }
+			public List<KeyValuePair<long, string>> Platforms { get; set; }
 		}
 
 		public class GameRomItem
