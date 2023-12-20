@@ -870,13 +870,13 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(Classes.Roms.GameRomObject), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         //[ResponseCache(CacheProfileName = "5Minute")]
-        public ActionResult GameRom(long GameId)
+        public ActionResult GameRom(long GameId, int pageNumber = 0, int pageSize = 0, long PlatformId = -1)
         {
             try
             {
                 Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
 
-                return Ok(Classes.Roms.GetRoms(GameId));
+                return Ok(Classes.Roms.GetRoms(GameId, PlatformId, pageNumber, pageSize));
             }
             catch
             {

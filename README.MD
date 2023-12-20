@@ -1,6 +1,6 @@
 # Gaseous Server
 
-This is the server for the Gaseous system. It offers ROM and title management, as well as some basic in browser emulation of those ROM's.
+This is the server for the Gaseous system. It offers ROM and title management, as well as some basic in browser emulation of those ROMs.
 
 ## Warning
 

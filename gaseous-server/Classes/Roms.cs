@@ -3,6 +3,7 @@ using System.Data;
 using gaseous_signature_parser.models.RomSignatureObject;
 using static gaseous_server.Classes.RomMediaGroup;
 using gaseous_server.Classes.Metadata;
+using IGDB.Models;
 
 namespace gaseous_server.Classes
 {
@@ -14,7 +15,7 @@ namespace gaseous_server.Classes
             {}
         }
 
-		public static GameRomObject GetRoms(long GameId, long PlatformId = -1)
+		public static GameRomObject GetRoms(long GameId, long PlatformId = -1, int pageNumber = 0, int pageSize = 0)
 		{
 			GameRomObject GameRoms = new GameRomObject();
 
@@ -24,22 +25,42 @@ namespace gaseous_server.Classes
             dbDict.Add("id", GameId);
             
 			if (PlatformId == -1) {
-				sql = "SELECT * FROM Games_Roms WHERE GameId = @id ORDER BY `Name`";
+				sql = "SELECT Games_Roms.*, Platform.`Name` AS platformname FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE Games_Roms.GameId = @id ORDER BY Platform.`Name`, Games_Roms.`Name`";
 			} else {
-				sql = "SELECT * FROM Games_Roms WHERE GameId = @id AND PlatformId = @platformid ORDER BY `Name`";
+				sql = "SELECT Games_Roms.*, Platform.`Name` AS platformname FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE Games_Roms.GameId = @id AND Games_Roms.PlatformId = @platformid ORDER BY Platform.`Name`, Games_Roms.`Name`";
 				dbDict.Add("platformid", PlatformId);
 			}
             DataTable romDT = db.ExecuteCMD(sql, dbDict);
 
             if (romDT.Rows.Count > 0)
             {
-				foreach (DataRow romDR in romDT.Rows)
+				// set count of roms
+				GameRoms.Count = romDT.Rows.Count;
+				
+				// setup platforms list
+				Dictionary<long, string> platformDict = new Dictionary<long, string>();
+
+				int pageOffset = pageSize * (pageNumber - 1);
+				for (int i = 0; i < romDT.Rows.Count; i++)
 				{
-					GameRoms.GameRomItems.Add(BuildRom(romDR));
+					GameRomItem gameRomItem = BuildRom(romDT.Rows[i]);
+
+					if ((i >= pageOffset && i < pageOffset + pageSize) || pageSize == 0)
+					{
+						GameRoms.GameRomItems.Add(gameRomItem);
+					}
+
+					if (!platformDict.ContainsKey(gameRomItem.PlatformId))
+					{
+						platformDict.Add(gameRomItem.PlatformId, gameRomItem.Platform);
+					}
 				}
 
 				// get rom media groups
 				GameRoms.MediaGroups = Classes.RomMediaGroup.GetMediaGroupsFromGameId(GameId);
+
+				// sort the platforms
+				GameRoms.Platforms = platformDict.OrderBy(x => x.Value).ToDictionary(x => x.Key, x => x.Value).ToList<KeyValuePair<long, string>>();
 
 				return GameRoms;
             }
@@ -52,7 +73,7 @@ namespace gaseous_server.Classes
 		public static GameRomItem GetRom(long RomId)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "SELECT * FROM Games_Roms WHERE Id = @id";
+			string sql = "SELECT Games_Roms.*, Platform.`Name` AS platformname FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE Games_Roms.Id = @id";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 			dbDict.Add("id", RomId);
 			DataTable romDT = db.ExecuteCMD(sql, dbDict);
@@ -114,7 +135,7 @@ namespace gaseous_server.Classes
             {
                 Id = (long)romDR["id"],
                 PlatformId = (long)romDR["platformid"],
-				Platform = Classes.Metadata.Platforms.GetPlatform((long)romDR["platformid"]),
+				Platform = (string)romDR["platformname"],
                 GameId = (long)romDR["gameid"],
                 Name = (string)romDR["name"],
                 Size = (long)romDR["size"],
@@ -151,13 +172,15 @@ namespace gaseous_server.Classes
 		{
 			public List<GameRomMediaGroupItem> MediaGroups { get; set; } = new List<GameRomMediaGroupItem>();
 			public List<GameRomItem> GameRomItems { get; set; } = new List<GameRomItem>();
+			public int Count { get; set; }
+			public List<KeyValuePair<long, string>> Platforms { get; set; }
 		}
 
 		public class GameRomItem
 		{
 			public long Id { get; set; }
 			public long PlatformId { get; set; }
-			public IGDB.Models.Platform Platform { get; set; }
+			public string Platform { get; set; }
 			//public Dictionary<string, object>? Emulator { get; set; }
             public Models.PlatformMapping.PlatformMapItem.WebEmulatorItem? Emulator { get; set; }
             public long GameId { get; set; }
