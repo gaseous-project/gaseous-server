@@ -26,4 +26,4 @@ ADD FULLTEXT INDEX `ft_Name` (`Name`) VISIBLE;
 
 ALTER TABLE `AlternativeName` 
 ADD FULLTEXT INDEX `ft_Name` (`Name`) VISIBLE,
-ADD INDEX `id_GameId` (`GameId` ASC) VISIBLE;
+ADD INDEX `id_GameId` (`Game` ASC) VISIBLE;
