@@ -120,9 +120,10 @@
 
     ajaxCall('/api/v1.1/Games/' + gameId + '/roms/' + modalVariables, 'GET', function (result) {
         romData = result;
+        console.log(romData);
         document.getElementById('modal-heading').innerHTML = result.name;
         document.getElementById('rominfo_library').innerHTML = result.library.name;
-        document.getElementById('rominfo_platform').innerHTML = result.platform.name;
+        document.getElementById('rominfo_platform').innerHTML = result.platform;
         document.getElementById('rominfo_size').innerHTML = formatBytes(result.size, 2);
         document.getElementById('rominfo_type').innerHTML = getRomType(result.romType);
         document.getElementById('rominfo_mediatype').innerHTML = result.romTypeMedia;
@@ -132,7 +133,7 @@
         document.getElementById('rominfo_signaturematch').innerHTML = result.source;
         document.getElementById('rominfo_signaturetitle').innerHTML = result.signatureSourceGameTitle;
 
-        document.getElementById('properties_fixplatform').innerHTML = "<option value='" + result.platform.id + "' selected='selected'>" + result.platform.name + "</option>";
+        document.getElementById('properties_fixplatform').innerHTML = "<option value='" + result.platformId + "' selected='selected'>" + result.platform + "</option>";
         document.getElementById('properties_fixgame').innerHTML = "<option value='" + gameData.id + "' selected='selected'>" + gameData.name + "</option>";
 
         if (result.library.isDefaultLibrary == false) {
@@ -233,7 +234,8 @@
                         arr.push({
                             id: data[i].id,
                             text: data[i].name,
-                            cover: data[i].cover
+                            cover: data[i].cover,
+                            releaseDate: data[i].firstReleaseDate
                         });
                     }
 

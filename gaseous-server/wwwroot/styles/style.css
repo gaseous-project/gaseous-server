@@ -895,6 +895,18 @@ div[name="properties_toc_item"]:hover,div[name="properties_user_toc_item"]:hover
     text-align: left;
 }
 
+.dropdown-title {
+    display: block;
+    font-weight: bold;
+    margin-right: 5px;
+}
+
+.dropdown-releasedate {
+    display: block;
+    font-weight: normal;
+    color: lightgray;
+}
+
 button {
     background-color: #555;
     color: white;
