@@ -7,7 +7,8 @@ CREATE TABLE `AgeGroup` (
   PRIMARY KEY (`Id`));
 
 ALTER TABLE `AgeGroup` 
-ADD INDEX `id_GameId` (`GameId` ASC) VISIBLE;
+ADD INDEX `id_GameId` (`GameId` ASC) VISIBLE,
+ADD INDEX `id_AgeGroupId` (`AgeGroupId` ASC) VISIBLE;
 
 ALTER TABLE `Game` 
 CHANGE COLUMN `Slug` `Slug` VARCHAR(255) NULL DEFAULT NULL;
@@ -24,4 +25,5 @@ ALTER TABLE `Game`
 ADD FULLTEXT INDEX `ft_Name` (`Name`) VISIBLE;
 
 ALTER TABLE `AlternativeName` 
-ADD FULLTEXT INDEX `ft_Name` (`Name`) VISIBLE;
+ADD FULLTEXT INDEX `ft_Name` (`Name`) VISIBLE,
+ADD INDEX `id_GameId` (`Game` ASC) VISIBLE;
