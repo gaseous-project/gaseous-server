@@ -331,6 +331,37 @@ namespace gaseous_server.Classes.Metadata
                 ids: platformIds.ToArray<long>()
             );
 
+            // get cover art from parent if this has no cover
+            if (result.Cover == null)
+            {
+                if (result.ParentGame != null)
+                {
+                    if (result.ParentGame.Id != null)
+                    {
+                        Logging.Log(Logging.LogType.Information, "Game Metadata", "Game has no cover art, fetching cover art from parent game");
+                        Game parentGame = GetGame((long)result.ParentGame.Id, false, false, false);
+                        result.Cover = parentGame.Cover;
+                    }
+                }
+            }
+
+            // get missing metadata from parent if this is a port
+            if (result.Category == Category.Port)
+                {
+                if (result.Summary == null)
+                {
+                    if (result.ParentGame != null)
+                    {
+                        if (result.ParentGame.Id != null)
+                        {
+                            Logging.Log(Logging.LogType.Information, "Game Metadata", "Game has no summary, fetching summary from parent game");
+                            Game parentGame = GetGame((long)result.ParentGame.Id, false, false, false);
+                            result.Summary = parentGame.Summary;
+                        }
+                    }
+                }
+            }
+
             return result;
         }
         
@@ -348,37 +379,112 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
+        private static bool AllowNoPlatformSearch = false;
+
         public static Game[] SearchForGame(string SearchString, long PlatformId, SearchType searchType)
         {
-            Task<Game[]> games = _SearchForGame(SearchString, PlatformId, searchType);
+            // search local first
+            Logging.Log(Logging.LogType.Information, "Game Search", "Attempting local search of type '" + searchType.ToString() + "' for " + SearchString);
+            Task<Game[]> games = _SearchForGameDatabase(SearchString, PlatformId, searchType);
+            if (games.Result.Length == 0)
+            {
+                // fall back to online search
+                Logging.Log(Logging.LogType.Information, "Game Search", "Falling back to remote search of type '" + searchType.ToString() + "' for " + SearchString);
+                games = _SearchForGameRemote(SearchString, PlatformId, searchType);
+            }
             return games.Result;
         }
 
-        private static async Task<Game[]> _SearchForGame(string SearchString, long PlatformId, SearchType searchType)
+        private static async Task<Game[]> _SearchForGameDatabase(string SearchString, long PlatformId, SearchType searchType)
         {
-            string searchBody = "";
-            string searchFields = "fields id,name,slug,platforms,summary; ";
+            string whereClause = "";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+
+            bool allowSearch = true;
             switch (searchType)
             {
                 case SearchType.searchNoPlatform:
-                    searchBody += "search \"" + SearchString + "\"; ";
+                    whereClause = "MATCH(`Name`) AGAINST (@gamename)";
+                    dbDict.Add("platformid", PlatformId);
+                    dbDict.Add("gamename", SearchString);
+
+                    allowSearch = AllowNoPlatformSearch;
                     break;
                 case SearchType.search:
-                    searchBody += "search \"" + SearchString + "\"; ";
-                    searchBody += "where platforms = (" + PlatformId + ");";
+                    whereClause = "PlatformsId = @platformid AND MATCH(`Name`) AGAINST (@gamename)";
+                    dbDict.Add("platformid", PlatformId);
+                    dbDict.Add("gamename", SearchString);
                     break;
                 case SearchType.wherefuzzy:
-                    searchBody += "where platforms = (" + PlatformId + ") & name ~ *\"" + SearchString + "\"*;";
+                    whereClause = "PlatformsId = @platformid AND `Name` LIKE @gamename";
+                    dbDict.Add("platformid", PlatformId);
+                    dbDict.Add("gamename", "%" + SearchString + "%");
                     break;
                 case SearchType.where:
-                    searchBody += "where platforms = (" + PlatformId + ") & name ~ \"" + SearchString + "\";";
+                    whereClause = "PlatformsId = @platformid AND `Name` = @gamename";
+                    dbDict.Add("platformid", PlatformId);
+                    dbDict.Add("gamename", SearchString);
+                    break;
+            }
+
+            string sql = "SELECT Game.Id, Game.`Name`, Game.Slug, Relation_Game_Platforms.PlatformsId AS PlatformsId, Game.Summary FROM gaseous.Game JOIN Relation_Game_Platforms ON Game.Id = Relation_Game_Platforms.GameId WHERE " + whereClause + ";";
+            
+
+            // get Game metadata
+            Game[]? results = new Game[0];
+            if (allowSearch == true)
+            {
+                List<Game> searchResults = new List<Game>();
+                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                DataTable data = db.ExecuteCMD(sql, dbDict);
+                foreach (DataRow row in data.Rows)
+                {
+                    Game game = new Game{
+                        Id = (long)row["Id"],
+                        Name = (string)row["Name"],
+                        Slug = (string)row["Slug"],
+                        Summary = (string)row["Summary"]
+                    };
+                    searchResults.Add(game);
+                }
+
+                results = searchResults.ToArray();
+            }
+
+            return results;
+        }
+
+        private static async Task<Game[]> _SearchForGameRemote(string SearchString, long PlatformId, SearchType searchType)
+        {
+            string searchBody = "";
+            string searchFields = "fields id,name,slug,platforms,summary; ";
+            bool allowSearch = true;
+            switch (searchType)
+            {
+                case SearchType.searchNoPlatform:
+                    searchBody = "search \"" + SearchString + "\"; ";
+
+                    allowSearch = AllowNoPlatformSearch;
+                    break;
+                case SearchType.search:
+                    searchBody = "search \"" + SearchString + "\"; where platforms = (" + PlatformId + ");";
+                    break;
+                case SearchType.wherefuzzy:
+                    searchBody = "where platforms = (" + PlatformId + ") & name ~ *\"" + SearchString + "\"*;";
+                    break;
+                case SearchType.where:
+                    searchBody = "where platforms = (" + PlatformId + ") & name ~ \"" + SearchString + "\";";
                     break;
             }
             
 
             // get Game metadata
             Communications comms = new Communications();
-            var results = await comms.APIComm<Game>(IGDBClient.Endpoints.Games, searchFields, searchBody);
+            Game[]? results = new Game[0];
+            if (allowSearch == true)
+            {
+                results = await comms.APIComm<Game>(IGDBClient.Endpoints.Games, searchFields, searchBody);
+            }
 
             return results;
         }
@@ -401,6 +507,7 @@ namespace gaseous_server.Classes.Metadata
                 this.TotalRatingCount = gameObject.TotalRatingCount;
                 this.Cover = gameObject.Cover;
                 this.Artworks = gameObject.Artworks;
+                this.FirstReleaseDate = gameObject.FirstReleaseDate;
 
                 // compile age ratings
                 this.AgeRatings = new List<AgeRating>();
@@ -421,6 +528,7 @@ namespace gaseous_server.Classes.Metadata
             public string Name { get; set; }
             public double? TotalRating { get; set; }
             public int? TotalRatingCount { get; set; }
+            public DateTimeOffset? FirstReleaseDate { get; set; }
             public IGDB.IdentityOrValue<IGDB.Models.Cover> Cover { get; set; }
             public IGDB.IdentitiesOrValues<IGDB.Models.Artwork> Artworks { get; set; }
             public List<IGDB.Models.AgeRating> AgeRatings { get; set; }

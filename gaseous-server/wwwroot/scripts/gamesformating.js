@@ -12,6 +12,8 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize) {
     console.log("Displaying page: " + pageNumber);
     console.log("Page size: " + pageSize);
 
+    window.scrollTo(0, 0);
+
     var pageMode = GetPreference('LibraryPagination', 'paged');
 
     if (pageNumber == 1 || pageMode == 'paged') {
