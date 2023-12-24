@@ -584,7 +584,7 @@
                             if (gameRomItem.platformId == mediaGroup.platformId) {
                                 if (gameRomItem.emulator) {
                                     if (gameRomItem.emulator.type.length > 0) {
-                                        launchButton = '<a href="/index.html?page=emulator&engine=' + gameRomItem.emulator.type + '&core=' + gameRomItem.emulator.core + '&platformid=' + gameRomItem.platform.id + '&gameid=' + gameId + '&rompath=' + encodeURIComponent('/api/v1.1/Games/' + gameId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '(' + mediaGroup.id + ')' + '.zip') + '" class="romstart">Launch</a>';
+                                        launchButton = '<a href="/index.html?page=emulator&engine=' + gameRomItem.emulator.type + '&core=' + gameRomItem.emulator.core + '&platformid=' + gameRomItem.platformId + '&gameid=' + gameId + '&rompath=' + encodeURIComponent('/api/v1.1/Games/' + gameId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '(' + mediaGroup.id + ')' + '.zip') + '" class="romstart">Launch</a>';
                                         break;
                                     }
                                 }    
