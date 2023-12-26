@@ -18,7 +18,7 @@ namespace gaseous_server.Classes.Metadata
         /// <summary>
         /// Configure metadata API communications
         /// </summary>
-        public static MetadataSources MetadataSource
+        public static HasheousClient.Models.MetadataModel.MetadataSources MetadataSource
         {
             get
             {
@@ -30,7 +30,7 @@ namespace gaseous_server.Classes.Metadata
 
                 switch (value)
                 {
-                    case MetadataSources.IGDB:
+                    case HasheousClient.Models.MetadataModel.MetadataSources.IGDB:
                         // set rate limiter avoidance values
                         RateLimitAvoidanceWait = 1500;
                         RateLimitAvoidanceThreshold = 3;
@@ -46,7 +46,7 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
         }
-        private static MetadataSources _MetadataSource = MetadataSources.None;
+        private static HasheousClient.Models.MetadataModel.MetadataSources _MetadataSource = HasheousClient.Models.MetadataModel.MetadataSources.None;
 
         // rate limit avoidance - what can we do to ensure that rate limiting is avoided?
         // these values affect all communications
@@ -143,22 +143,6 @@ namespace gaseous_server.Classes.Metadata
         private int RetryAttemptsMax = 3;
 
         /// <summary>
-        /// Supported metadata sources
-        /// </summary>
-        public enum MetadataSources
-        {
-            /// <summary>
-            /// None - always returns null for metadata requests - should not really be using this source
-            /// </summary>
-            None,
-
-            /// <summary>
-            /// IGDB - queries the IGDB service for metadata
-            /// </summary>
-            IGDB
-        }
-
-        /// <summary>
         /// Request data from the metadata API
         /// </summary>
         /// <typeparam name="T">Type of object to return</typeparam>
@@ -170,9 +154,9 @@ namespace gaseous_server.Classes.Metadata
         {
             switch (_MetadataSource)
             {
-                case MetadataSources.None:
+                case HasheousClient.Models.MetadataModel.MetadataSources.None:
                     return null;
-                case MetadataSources.IGDB:
+                case HasheousClient.Models.MetadataModel.MetadataSources.IGDB:
                     return await IGDBAPI<T>(Endpoint, Fields, Query);
                 default:
                     return null;

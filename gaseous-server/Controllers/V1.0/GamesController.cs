@@ -1232,7 +1232,7 @@ namespace gaseous_server.Controllers
                 {
                     Classes.Roms.GameRomItem romItem = Classes.Roms.GetRom(RomId);
                     Common.hashObject hash = new Common.hashObject(romItem.Path);
-                    Models.Signatures_Games romSig = Classes.ImportGame.GetFileSignature(hash, new FileInfo(romItem.Path), romItem.Path);
+                    gaseous_server.Models.Signatures_Games romSig = FileSignature.GetFileSignature(hash, new FileInfo(romItem.Path), romItem.Path);
                     List<Game> searchResults = Classes.ImportGame.SearchForGame_GetAll(romSig.Game.Name, romSig.Flags.IGDBPlatformId);
 
                     return Ok(searchResults);

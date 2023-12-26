@@ -50,7 +50,10 @@ Config.InitSettings();
 Config.UpdateConfig();
 
 // set api metadata source from config
-Communications.MetadataSource = Config.MetadataConfiguration.Source;
+Communications.MetadataSource = Config.MetadataConfiguration.MetadataSource;
+
+// set up hasheous client
+HasheousClient.WebApp.HttpHelper.BaseUri = Config.MetadataConfiguration.HasheousHost;
 
 // set initial values
 Guid APIKey = Guid.NewGuid();

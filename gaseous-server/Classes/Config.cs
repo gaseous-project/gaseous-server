@@ -473,22 +473,56 @@ namespace gaseous_server.Classes
 
             public class MetadataAPI
             {
-                private static Communications.MetadataSources _Source
+                private static HasheousClient.Models.MetadataModel.MetadataSources _MetadataSource
                 {
                     get
                     {
                         if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("metadatasource")))
                         {
-                            return (Communications.MetadataSources)Enum.Parse(typeof(Communications.MetadataSources), Environment.GetEnvironmentVariable("metadatasource"));
+                            return (HasheousClient.Models.MetadataModel.MetadataSources)Enum.Parse(typeof(HasheousClient.Models.MetadataModel.MetadataSources), Environment.GetEnvironmentVariable("metadatasource"));
                         }
                         else
                         {
-                            return Communications.MetadataSources.IGDB;
+                            return HasheousClient.Models.MetadataModel.MetadataSources.IGDB;
                         }
                     }
                 }
 
-                public Communications.MetadataSources Source = _Source;
+                private static HasheousClient.Models.MetadataModel.SignatureSources _SignatureSource
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("signaturesource")))
+                        {
+                            return (HasheousClient.Models.MetadataModel.SignatureSources)Enum.Parse(typeof(HasheousClient.Models.MetadataModel.SignatureSources), Environment.GetEnvironmentVariable("signaturesource"));
+                        }
+                        else
+                        {
+                            return HasheousClient.Models.MetadataModel.SignatureSources.LocalOnly;
+                        }
+                    }
+                }
+
+                private static string _HasheousHost
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("hasheoushoust")))
+                        {
+                            return Environment.GetEnvironmentVariable("hasheoushoust");
+                        }
+                        else
+                        {
+                            return "https://hasheous.org/";
+                        }
+                    }
+                }
+
+                public HasheousClient.Models.MetadataModel.MetadataSources MetadataSource = _MetadataSource;
+
+                public HasheousClient.Models.MetadataModel.SignatureSources SignatureSource = _SignatureSource;
+
+                public string HasheousHost = _HasheousHost;
             }
 
             public class IGDB

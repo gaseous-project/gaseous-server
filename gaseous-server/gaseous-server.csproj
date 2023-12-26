@@ -187,4 +187,7 @@
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1010.sql" />
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1011.sql" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\hasheous-client\hasheous-client.csproj" />
+  </ItemGroup>
 </Project>
