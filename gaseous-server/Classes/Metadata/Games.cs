@@ -129,7 +129,7 @@ namespace gaseous_server.Classes.Metadata
             {
                 try
                 {
-                    Cover GameCover = Covers.GetCover(Game.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
+                    Cover GameCover = Covers.GetCover(Game.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), false);
                 }
                 catch (Exception ex)
                 {

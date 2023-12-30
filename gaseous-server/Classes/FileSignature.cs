@@ -1,5 +1,8 @@
 using System.IO.Compression;
 using HasheousClient.Models;
+using SharpCompress.Archives;
+using SharpCompress.Archives.Rar;
+using SharpCompress.Common;
 
 namespace gaseous_server.Classes
 {
@@ -10,16 +13,54 @@ namespace gaseous_server.Classes
             gaseous_server.Models.Signatures_Games discoveredSignature = new gaseous_server.Models.Signatures_Games();
             discoveredSignature = _GetFileSignature(hash, fi, GameFileImportPath, false);
 
-            if ((Path.GetExtension(GameFileImportPath) == ".zip") && (fi.Length < 1073741824))
+            string[] CompressionExts = { ".zip", ".rar", ".7z" };
+            string ImportedFileExtension = Path.GetExtension(GameFileImportPath);
+
+            if (CompressionExts.Contains(ImportedFileExtension) && (fi.Length < 1073741824))
             {
                 // file is a zip and less than 1 GiB
                 // extract the zip file and search the contents
+                Logging.Log(Logging.LogType.Information, "Get Signature", "Decompressing " + GameFileImportPath + " to examine contents");
+
                 string ExtractPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, Path.GetRandomFileName());
                 if (!Directory.Exists(ExtractPath)) { Directory.CreateDirectory(ExtractPath); }
                 try
                 {
-                    ZipFile.ExtractToDirectory(GameFileImportPath, ExtractPath);
+                    switch(ImportedFileExtension)
+                    {
+                        case ".zip":
+                            ZipFile.ExtractToDirectory(GameFileImportPath, ExtractPath);
+                            break;
 
+                        case ".rar":
+                            using (var archive = RarArchive.Open(GameFileImportPath))
+                            {
+                                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                                {
+                                    entry.WriteToDirectory(ExtractPath, new ExtractionOptions()
+                                    {
+                                        ExtractFullPath = true,
+                                        Overwrite = true
+                                    });
+                                }
+                            }
+                            break;
+
+                        case ".7z":
+                            using (var archive = SharpCompress.Archives.SevenZip.SevenZipArchive.Open(GameFileImportPath))
+                            {
+                                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                                {
+                                    entry.WriteToDirectory(ExtractPath, new ExtractionOptions()
+                                    {
+                                        ExtractFullPath = true,
+                                        Overwrite = true
+                                    });
+                                }
+                            }
+                            break;
+                    }
+                    
                     // loop through contents until we find the first signature match
                     foreach (string file in Directory.GetFiles(ExtractPath, "*.*", SearchOption.AllDirectories))
                     {
@@ -27,7 +68,7 @@ namespace gaseous_server.Classes
                         Common.hashObject zhash = new Common.hashObject(file);
 
                         gaseous_server.Models.Signatures_Games zDiscoveredSignature = _GetFileSignature(zhash, zfi, file, true);
-                        zDiscoveredSignature.Rom.Name = Path.ChangeExtension(zDiscoveredSignature.Rom.Name, ".zip");
+                        zDiscoveredSignature.Rom.Name = Path.ChangeExtension(zDiscoveredSignature.Rom.Name, ImportedFileExtension);
 
                         if (zDiscoveredSignature.Score > discoveredSignature.Score)
                         {
@@ -36,7 +77,7 @@ namespace gaseous_server.Classes
                                 zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEMess
                             )
                             {
-                                zDiscoveredSignature.Rom.Name = zDiscoveredSignature.Game.Description + ".zip";
+                                zDiscoveredSignature.Rom.Name = zDiscoveredSignature.Game.Description + ImportedFileExtension;
                             }
                             zDiscoveredSignature.Rom.Crc = discoveredSignature.Rom.Crc;
                             zDiscoveredSignature.Rom.Md5 = discoveredSignature.Rom.Md5;
@@ -137,7 +178,8 @@ namespace gaseous_server.Classes
             // check if hasheous is enabled, and if so use it's signature database
             if (Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous)
             {
-                SignatureLookupItem? HasheousResult = HasheousClient.Hasheous.RetrieveFromHasheousAsync(new HashLookupModel{
+                HasheousClient.Hasheous hasheous = new HasheousClient.Hasheous();
+                SignatureLookupItem? HasheousResult = hasheous.RetrieveFromHasheousAsync(new HashLookupModel{
                     MD5 = hash.md5hash,
                     SHA1 = hash.sha1hash
                 });

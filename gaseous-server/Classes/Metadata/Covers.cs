@@ -1,6 +1,8 @@
 ﻿using System;
+using System.Net;
 using IGDB;
 using IGDB.Models;
+using Microsoft.CodeAnalysis.Elfie.Model.Strings;
 
 
 namespace gaseous_server.Classes.Metadata
@@ -13,7 +15,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static Cover? GetCover(long? Id, string LogoPath)
+        public static Cover? GetCover(long? Id, string ImagePath, bool GetImages = true)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -21,18 +23,18 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<Cover> RetVal = _GetCover(SearchUsing.id, Id, LogoPath);
+                Task<Cover> RetVal = _GetCover(SearchUsing.id, Id, ImagePath, GetImages);
                 return RetVal.Result;
             }
         }
 
-        public static Cover GetCover(string Slug, string LogoPath)
+        public static Cover GetCover(string Slug, string ImagePath, bool GetImages = true)
         {
-            Task<Cover> RetVal = _GetCover(SearchUsing.slug, Slug, LogoPath);
+            Task<Cover> RetVal = _GetCover(SearchUsing.slug, Slug, ImagePath, GetImages);
             return RetVal.Result;
         }
 
-        private static async Task<Cover> _GetCover(SearchUsing searchUsing, object searchValue, string LogoPath)
+        private static async Task<Cover> _GetCover(SearchUsing searchUsing, object searchValue, string ImagePath, bool GetImages = true)
         {
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
@@ -61,19 +63,20 @@ namespace gaseous_server.Classes.Metadata
 
             Cover returnValue = new Cover();
             bool forceImageDownload = false;
+            ImagePath = Path.Combine(ImagePath, "Covers");
             switch (cacheStatus)
             {
                 case Storage.CacheStatus.NotPresent:
-                    returnValue = await GetObjectFromServer(WhereClause, LogoPath);
+                    returnValue = await GetObjectFromServer(WhereClause, ImagePath);
                     Storage.NewCacheValue(returnValue);
-                    forceImageDownload = true;
+                    if (GetImages == true) { forceImageDownload = true; }
                     break;  
                 case Storage.CacheStatus.Expired:
                     try
                     {
-                        returnValue = await GetObjectFromServer(WhereClause, LogoPath);
+                        returnValue = await GetObjectFromServer(WhereClause, ImagePath);
                         Storage.NewCacheValue(returnValue, true);
-                        forceImageDownload = true;
+                        if (GetImages == true) { forceImageDownload = true; }
                     }
                     catch (Exception ex)
                     {
@@ -88,11 +91,21 @@ namespace gaseous_server.Classes.Metadata
                     throw new Exception("How did you get here?");
             }
 
-            if ((!File.Exists(Path.Combine(LogoPath, "Cover.jpg"))) || forceImageDownload == true)
+            if (forceImageDownload == true)
             {
-                //GetImageFromServer(returnValue.Url, LogoPath, LogoSize.t_thumb, returnValue.ImageId);
-                //GetImageFromServer(returnValue.Url, LogoPath, LogoSize.t_logo_med, returnValue.ImageId);
-                GetImageFromServer(returnValue.Url, LogoPath, LogoSize.t_original, returnValue.ImageId);
+                Logging.Log(Logging.LogType.Information, "Metadata: " + returnValue.GetType().Name, "Cover download forced.");
+
+                // check for presence of image file - download if absent or force download is true
+                List<Communications.IGDBAPI_ImageSize> imageSizes = new List<Communications.IGDBAPI_ImageSize>();
+                imageSizes.AddRange(Enum.GetValues(typeof(Communications.IGDBAPI_ImageSize)).Cast<Communications.IGDBAPI_ImageSize>());
+                foreach (Communications.IGDBAPI_ImageSize size in imageSizes)
+                {
+                    string localFile = Path.Combine(ImagePath, size.ToString(), returnValue.ImageId + ".jpg");
+                    if ((!File.Exists(localFile)) || forceImageDownload == true)
+                    {
+                        Communications.GetSpecificImageFromServer(ImagePath, returnValue.ImageId, size, null);
+                    }
+                }
             }
 
             return returnValue;
@@ -104,63 +117,23 @@ namespace gaseous_server.Classes.Metadata
             slug
         }
 
-        private static async Task<Cover> GetObjectFromServer(string WhereClause, string LogoPath)
+        private static async Task<Cover> GetObjectFromServer(string WhereClause, string ImagePath)
         {
             // get Cover metadata
             Communications comms = new Communications();
             var results = await comms.APIComm<Cover>(IGDBClient.Endpoints.Covers, fieldList, WhereClause);
             var result = results.First();
 
-            //GetImageFromServer(result.Url, LogoPath, LogoSize.t_thumb, result.ImageId);
-            //GetImageFromServer(result.Url, LogoPath, LogoSize.t_logo_med, result.ImageId);
-            GetImageFromServer(result.Url, LogoPath, LogoSize.t_original, result.ImageId);
-
             return result;
         }
 
-        private static void GetImageFromServer(string Url, string LogoPath, LogoSize logoSize, string ImageId)
+        public static async void GetImageFromServer(string ImagePath, string ImageId)
         {
-            using (var client = new HttpClient())
-            {
-                string fileName = "Cover.jpg";
-                string extension = "jpg";
-                switch (logoSize)
-                {
-                    case LogoSize.t_thumb:
-                        fileName = "Cover_Thumb";
-                        extension = "jpg";
-                        break;
-                    case LogoSize.t_logo_med:
-                        fileName = "Cover_Medium";
-                        extension = "png";
-                        break;
-                    case LogoSize.t_original:
-                        fileName = "Cover";
-                        extension = "png";
-                        break;
-                    default:
-                        fileName = "Cover";
-                        extension = "jpg";
-                        break;
-                }
-                string imageUrl = Url.Replace(LogoSize.t_thumb.ToString(), logoSize.ToString()).Replace("jpg", extension);
+            Communications comms = new Communications();
+            List<Communications.IGDBAPI_ImageSize> imageSizes = new List<Communications.IGDBAPI_ImageSize>();
+            imageSizes.AddRange(Enum.GetValues(typeof(Communications.IGDBAPI_ImageSize)).Cast<Communications.IGDBAPI_ImageSize>());
 
-                using (var s = client.GetStreamAsync("https:" + imageUrl))
-                {
-                    if (!Directory.Exists(LogoPath)) { Directory.CreateDirectory(LogoPath); }
-                    using (var fs = new FileStream(Path.Combine(LogoPath, fileName + "." + extension), FileMode.OpenOrCreate))
-                    {
-                        s.Result.CopyTo(fs);
-                    }
-                }
-            }
-        }
-
-        private enum LogoSize
-        {
-            t_thumb,
-            t_logo_med,
-            t_original
+            await comms.IGDBAPI_GetImage(imageSizes, ImageId, ImagePath);
         }
 	}
 }

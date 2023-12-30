@@ -192,7 +192,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
     }
     gameImage.src = '/images/unknowngame.png';
     if (gameObject.cover) {
-        gameImage.setAttribute('data-src', '/api/v1.1/Games/' + gameObject.id + '/cover/image');
+        gameImage.setAttribute('data-src', '/api/v1.1/Games/' + gameObject.id + '/cover/image/cover_big');
     } else {
         gameImage.className = 'game_tile_image unknown';
     }

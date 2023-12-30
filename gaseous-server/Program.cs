@@ -109,6 +109,11 @@ builder.Services.AddControllers().AddJsonOptions(x =>
 builder.Services.AddResponseCaching();
 builder.Services.AddControllers(options =>
 {
+    options.CacheProfiles.Add("None",
+        new CacheProfile()
+        {
+            Duration = 1
+        });
     options.CacheProfiles.Add("Default30",
         new CacheProfile()
         {

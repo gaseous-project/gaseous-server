@@ -525,10 +525,10 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/artwork/{ArtworkId}/image")]
+        [Route("{GameId}/artwork/{ArtworkId}/image/{size}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameCoverImage(long GameId, long ArtworkId)
+        public ActionResult GameCoverImage(long GameId, long ArtworkId, Communications.IGDBAPI_ImageSize size)
         {
             try
             {
@@ -538,13 +538,13 @@ namespace gaseous_server.Controllers
                 {
                     IGDB.Models.Artwork artworkObject = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
                     if (artworkObject != null) {
-                        string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Artwork", artworkObject.ImageId + ".png");
+                        string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Artwork", size.ToString(), artworkObject.ImageId + ".jpg");
                         if (System.IO.File.Exists(coverFilePath))
                         {
-                            string filename = artworkObject.ImageId + ".png";
+                            string filename = artworkObject.ImageId + ".jpg";
                             string filepath = coverFilePath;
                             byte[] filedata = System.IO.File.ReadAllBytes(filepath);
-                            string contentType = "image/png";
+                            string contentType = "image/jpg";
 
                             var cd = new System.Net.Mime.ContentDisposition
                             {
@@ -592,7 +592,7 @@ namespace gaseous_server.Controllers
                 IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
                 if (gameObject != null)
                 {
-                    IGDB.Models.Cover coverObject = Covers.GetCover(gameObject.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
+                    IGDB.Models.Cover coverObject = Covers.GetCover(gameObject.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), false);
                     if (coverObject != null)
                     {
                         return Ok(coverObject);
@@ -616,37 +616,47 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/cover/image")]
+        [Route("{GameId}/cover/image/{size}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameCoverImage(long GameId)
+        [ResponseCache(CacheProfileName = "None")]
+        public ActionResult GameCoverImage(long GameId, Communications.IGDBAPI_ImageSize size)
         {
             try
             {
                 IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
 
-                string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Cover.png");
-                if (System.IO.File.Exists(coverFilePath)) {
-                    string filename = "Cover.png";
-                    string filepath = coverFilePath;
-                    byte[] filedata = System.IO.File.ReadAllBytes(filepath);
-                    string contentType = "image/png";
-
-                    var cd = new System.Net.Mime.ContentDisposition
-                    {
-                        FileName = filename,
-                        Inline = true,
-                    };
-
-                    Response.Headers.Add("Content-Disposition", cd.ToString());
-                    Response.Headers.Add("Cache-Control", "public, max-age=604800");
-
-                    return File(filedata, contentType);
-                }
-                else
+                if (gameObject.Cover != null)
                 {
-                    return NotFound();
+                    if (gameObject.Cover.Id != null)
+                    {
+                        IGDB.Models.Cover cover = Classes.Metadata.Covers.GetCover(gameObject.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), false);
+                        string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Covers");
+                        
+                        Task<string> ImgFetch = Communications.GetSpecificImageFromServer(basePath, cover.ImageId, size, new List<Communications.IGDBAPI_ImageSize>{ Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
+
+                        string coverFilePath = ImgFetch.Result;
+
+                        if (System.IO.File.Exists(coverFilePath)) {
+                            string filename = cover.ImageId + ".jpg";
+                            string filepath = coverFilePath;
+                            byte[] filedata = System.IO.File.ReadAllBytes(filepath);
+                            string contentType = "image/jpg";
+
+                            var cd = new System.Net.Mime.ContentDisposition
+                            {
+                                FileName = filename,
+                                Inline = true,
+                            };
+
+                            Response.Headers.Add("Content-Disposition", cd.ToString());
+                            //Response.Headers.Add("Cache-Control", "public, max-age=604800");
+
+                            return File(filedata, contentType);
+                        }
+                    }
                 }
+                return NotFound();
             }
             catch
             {
@@ -1325,10 +1335,10 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/screenshots/{ScreenshotId}/image")]
+        [Route("{GameId}/screenshots/{ScreenshotId}/image/{size}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameScreenshotImage(long GameId, long ScreenshotId)
+        public ActionResult GameScreenshotImage(long GameId, long ScreenshotId, Communications.IGDBAPI_ImageSize Size)
         {
             try
             {
@@ -1336,13 +1346,13 @@ namespace gaseous_server.Controllers
 
                 IGDB.Models.Screenshot screenshotObject = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
 
-                string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Screenshots", screenshotObject.ImageId + ".png");
+                string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Screenshots", Size.ToString(), screenshotObject.ImageId + ".jpg");
                 if (System.IO.File.Exists(coverFilePath))
                 {
-                    string filename = screenshotObject.ImageId + ".png";
+                    string filename = screenshotObject.ImageId + ".jpg";
                     string filepath = coverFilePath;
                     byte[] filedata = System.IO.File.ReadAllBytes(filepath);
-                    string contentType = "image/png";
+                    string contentType = "image/jpg";
 
                     var cd = new System.Net.Mime.ContentDisposition
                     {
