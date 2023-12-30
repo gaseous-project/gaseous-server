@@ -128,9 +128,9 @@
         document.getElementById('rominfo_type').innerHTML = getRomType(result.romType);
         document.getElementById('rominfo_mediatype').innerHTML = result.romTypeMedia;
         document.getElementById('rominfo_medialabel').innerHTML = result.mediaLabel;
-        document.getElementById('rominfo_md5').innerHTML = result.mD5;
-        document.getElementById('rominfo_sha1').innerHTML = result.shA1;
-        document.getElementById('rominfo_signaturematch').innerHTML = result.source;
+        document.getElementById('rominfo_md5').innerHTML = result.md5;
+        document.getElementById('rominfo_sha1').innerHTML = result.sha1;
+        document.getElementById('rominfo_signaturematch').innerHTML = result.signatureSource;
         document.getElementById('rominfo_signaturetitle').innerHTML = result.signatureSourceGameTitle;
 
         document.getElementById('properties_fixplatform').innerHTML = "<option value='" + result.platformId + "' selected='selected'>" + result.platform + "</option>";

@@ -304,7 +304,7 @@ namespace gaseous_server.Classes
                         // calculate total rom size for the game
                         long GameRomSize = 0;
                         foreach (Roms.GameRomItem gameRom in gameRoms) {
-                            GameRomSize += gameRom.Size;
+                            GameRomSize += (long)gameRom.Size;
                         }
                         if (collectionItem.MaximumBytesPerPlatform > 0) {
                             if ((TotalRomSize + GameRomSize) < collectionItem.MaximumBytesPerPlatform) {
@@ -749,7 +749,7 @@ namespace gaseous_server.Classes
                         long Size = 0;
                         foreach (CollectionGameItem Game in Games) {
                             foreach (Roms.GameRomItem Rom in Game.Roms) {
-                                Size += Rom.Size;
+                                Size += (long)Rom.Size;
                             }
                         }
 
@@ -801,7 +801,7 @@ namespace gaseous_server.Classes
                     get {
                         long Size = 0;
                         foreach (Roms.GameRomItem Rom in Roms) {
-                            Size += Rom.Size;
+                            Size += (long)Rom.Size;
                         }
                     
                         return Size;

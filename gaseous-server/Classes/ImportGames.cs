@@ -6,10 +6,13 @@ using System.Security.Policy;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
+using gaseous_server.Models;
 using IGDB.Models;
 using NuGet.Common;
 using NuGet.LibraryModel;
 using static gaseous_server.Classes.Metadata.Games;
+using static gaseous_server.Classes.FileSignature;
+using HasheousClient.Models;
 
 namespace gaseous_server.Classes
 {
@@ -102,7 +105,7 @@ namespace gaseous_server.Classes
                     {
                         Logging.Log(Logging.LogType.Information, "Import Game", "  " + GameFileImportPath + " not in database - processing");
 
-                        Models.Signatures_Games discoveredSignature = GetFileSignature(hash, fi, GameFileImportPath);
+                        gaseous_server.Models.Signatures_Games discoveredSignature = GetFileSignature(hash, fi, GameFileImportPath);
 
                         // get discovered platform
                         IGDB.Models.Platform? determinedPlatform = null;
@@ -121,7 +124,7 @@ namespace gaseous_server.Classes
                             discoveredSignature.Flags.IGDBPlatformName = determinedPlatform.Name;
                         }
 
-                        IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature.Game.Name, discoveredSignature.Flags.IGDBPlatformId);
+                        IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature, discoveredSignature.Flags.IGDBPlatformId);
 
                         // add to database
                         StoreROM(GameLibrary.GetDefaultLibrary, hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath);
@@ -152,154 +155,28 @@ namespace gaseous_server.Classes
 			}
 		}
 
-        public static Models.Signatures_Games GetFileSignature(Common.hashObject hash, FileInfo fi, string GameFileImportPath)
+        public static IGDB.Models.Game SearchForGame(gaseous_server.Models.Signatures_Games Signature, long PlatformId)
         {
-            Models.Signatures_Games discoveredSignature = _GetFileSignature(hash, fi, GameFileImportPath);
-
-            if ((Path.GetExtension(GameFileImportPath) == ".zip") && (fi.Length < 1073741824))
+            if (Signature.Flags != null)
             {
-                // file is a zip and less than 1 GiB
-                // extract the zip file and search the contents
-                string ExtractPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, Path.GetRandomFileName());
-                if (!Directory.Exists(ExtractPath)) { Directory.CreateDirectory(ExtractPath); }
-                try
+                if (Signature.Flags.IGDBGameId != null)
                 {
-                    ZipFile.ExtractToDirectory(GameFileImportPath, ExtractPath);
-
-                    // loop through contents until we find the first signature match
-                    foreach (string file in Directory.GetFiles(ExtractPath))
+                    // game was determined elsewhere - probably a Hasheous server
+                    try
                     {
-                        FileInfo zfi = new FileInfo(file);
-                        Common.hashObject zhash = new Common.hashObject(file);
-
-                        Models.Signatures_Games zDiscoveredSignature = _GetFileSignature(zhash, zfi, file);
-                        zDiscoveredSignature.Rom.Name = Path.ChangeExtension(zDiscoveredSignature.Rom.Name, ".zip");
-
-                        if (zDiscoveredSignature.Score > discoveredSignature.Score)
-                        {
-                            if (
-                                zDiscoveredSignature.Rom.SignatureSource == gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType.MAMEArcade || 
-                                zDiscoveredSignature.Rom.SignatureSource == gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType.MAMEMess
-                            )
-                            {
-                                zDiscoveredSignature.Rom.Name = zDiscoveredSignature.Game.Description + ".zip";
-                            }
-                            zDiscoveredSignature.Rom.Crc = discoveredSignature.Rom.Crc;
-                            zDiscoveredSignature.Rom.Md5 = discoveredSignature.Rom.Md5;
-                            zDiscoveredSignature.Rom.Sha1 = discoveredSignature.Rom.Sha1;
-                            zDiscoveredSignature.Rom.Size = discoveredSignature.Rom.Size;
-                            discoveredSignature = zDiscoveredSignature;
-
-                            break;
-                        }
+                        return Games.GetGame(Signature.Flags.IGDBGameId, false, false, false);
                     }
-                }
-                catch (Exception ex)
-                {
-                    Logging.Log(Logging.LogType.Critical, "Get Signature", "Error processing zip file: " + GameFileImportPath, ex);
-                }
-
-                if (Directory.Exists(ExtractPath)) { Directory.Delete(ExtractPath, true); }
-            }
-
-            return discoveredSignature;
-        }
-
-		private static Models.Signatures_Games _GetFileSignature(Common.hashObject hash, FileInfo fi, string GameFileImportPath)
-		{
-            // check 1: do we have a signature for it?
-            gaseous_server.Controllers.SignaturesController sc = new Controllers.SignaturesController();
-            List<Models.Signatures_Games> signatures = sc.GetSignature(hash.md5hash);
-            if (signatures.Count == 0)
-            {
-                // no md5 signature found - try sha1
-                signatures = sc.GetSignature("", hash.sha1hash);
-            }
-
-            Models.Signatures_Games discoveredSignature = new Models.Signatures_Games();
-            if (signatures.Count == 1)
-            {
-                // only 1 signature found!
-                discoveredSignature = signatures.ElementAt(0);
-                gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
-            }
-            else if (signatures.Count > 1)
-            {
-                // more than one signature found - find one with highest score
-                foreach (Models.Signatures_Games Sig in signatures)
-                {
-                    if (Sig.Score > discoveredSignature.Score)
+                    catch (Exception ex)
                     {
-                        discoveredSignature = Sig;
-                        gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
+                        Logging.Log(Logging.LogType.Warning, "Import Game", "Provided game id resulted in a failed game lookup", ex);
                     }
                 }
             }
-            else
-            {
-                // no signature match found - try name search
-                signatures = sc.GetByTosecName(fi.Name);
 
-                if (signatures.Count == 1)
-                {
-                    // only 1 signature found!
-                    discoveredSignature = signatures.ElementAt(0);
-                    gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
-                }
-                else if (signatures.Count > 1)
-                {
-                    // more than one signature found - find one with highest score
-                    foreach (Models.Signatures_Games Sig in signatures)
-                    {
-                        if (Sig.Score > discoveredSignature.Score)
-                        {
-                            discoveredSignature = Sig;
-                            gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
-                        }
-                    }
-                }
-                else
-                {
-                    // still no search - try alternate method
-                    Models.Signatures_Games.GameItem gi = new Models.Signatures_Games.GameItem();
-                    Models.Signatures_Games.RomItem ri = new Models.Signatures_Games.RomItem();
-
-                    discoveredSignature.Game = gi;
-                    discoveredSignature.Rom = ri;
-
-                    // game title is the file name without the extension or path
-                    gi.Name = Path.GetFileNameWithoutExtension(GameFileImportPath);
-
-                    // remove everything after brackets - leaving (hopefully) only the name
-                    if (gi.Name.Contains("("))
-                    {
-                        gi.Name = gi.Name.Substring(0, gi.Name.IndexOf("("));
-                    }
-
-                    // remove special characters like dashes
-                    gi.Name = gi.Name.Replace("-", "");
-
-                    // guess platform
-                    gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, true);
-
-                    // get rom data
-                    ri.Name = Path.GetFileName(GameFileImportPath);
-                    ri.Md5 = hash.md5hash;
-                    ri.Sha1 = hash.sha1hash;
-                    ri.Size = fi.Length;
-                    ri.SignatureSource = gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType.None;
-                }
-            }
-
-            Logging.Log(Logging.LogType.Information, "Import Game", "  Determined import file as: " + discoveredSignature.Game.Name + " (" + discoveredSignature.Game.Year + ") " + discoveredSignature.Game.System);
-
-            return discoveredSignature;
-        }
-
-        public static IGDB.Models.Game SearchForGame(string GameName, long PlatformId)
-        {
             // search discovered game - case insensitive exact match first
             IGDB.Models.Game determinedGame = new IGDB.Models.Game();
+
+            string GameName = Signature.Game.Name;
 
             List<string> SearchCandidates = GetSearchCandidates(GameName);
             
@@ -423,7 +300,7 @@ namespace gaseous_server.Classes
             return SearchCandidates;
         }
 
-        public static long StoreROM(GameLibrary.LibraryItem library, Common.hashObject hash, IGDB.Models.Game determinedGame, IGDB.Models.Platform determinedPlatform, Models.Signatures_Games discoveredSignature, string GameFileImportPath, long UpdateId = 0)
+        public static long StoreROM(GameLibrary.LibraryItem library, Common.hashObject hash, IGDB.Models.Game determinedGame, IGDB.Models.Platform determinedPlatform, gaseous_server.Models.Signatures_Games discoveredSignature, string GameFileImportPath, long UpdateId = 0)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
@@ -682,7 +559,7 @@ namespace gaseous_server.Classes
                             Common.hashObject hash = new Common.hashObject(LibraryFile);
                             FileInfo fi = new FileInfo(LibraryFile);
 
-                            Models.Signatures_Games sig = GetFileSignature(hash, fi, LibraryFile);
+                            gaseous_server.Models.Signatures_Games sig = GetFileSignature(hash, fi, LibraryFile);
 
                             Logging.Log(Logging.LogType.Information, "Library Scan", " Orphaned file found in library: " + LibraryFile);
 
@@ -697,17 +574,17 @@ namespace gaseous_server.Classes
                                     if (library.DefaultPlatformId == 0)
                                     {
                                         determinedPlatform = new IGDB.Models.Platform();
-                                        determinedGame = SearchForGame(sig.Game.Name, sig.Flags.IGDBPlatformId);
+                                        determinedGame = SearchForGame(sig, sig.Flags.IGDBPlatformId);
                                     }
                                     else
                                     {
                                         determinedPlatform = Platforms.GetPlatform(library.DefaultPlatformId);
-                                        determinedGame = SearchForGame(sig.Game.Name, library.DefaultPlatformId);
+                                        determinedGame = SearchForGame(sig, library.DefaultPlatformId);
                                     }
                                 }
                                 else
                                 {
-                                    determinedGame = SearchForGame(sig.Game.Name, (long)determinedPlatform.Id);
+                                    determinedGame = SearchForGame(sig, (long)determinedPlatform.Id);
                                 }
 
                                 StoreROM(library, hash, determinedGame, determinedPlatform, sig, LibraryFile);
@@ -734,7 +611,7 @@ namespace gaseous_server.Classes
                     {
                         long romId = (long)dtRoms.Rows[i]["Id"];
                         string romPath = (string)dtRoms.Rows[i]["Path"];
-                        gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType romMetadataSource = (gaseous_signature_parser.models.RomSignatureObject.RomSignatureObject.Game.Rom.SignatureSourceType)(int)dtRoms.Rows[i]["MetadataSource"];
+                        gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType romMetadataSource = (gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType)(int)dtRoms.Rows[i]["MetadataSource"];
 
                         SetStatus(StatusCount, dtRoms.Rows.Count, "Processing file " + romPath);
                         Logging.Log(Logging.LogType.Information, "Library Scan", " Processing ROM at path " + romPath);
@@ -778,11 +655,11 @@ namespace gaseous_server.Classes
             string sql = "";
             if (ForceExecute == false)
             {
-                sql = "SELECT * FROM Games_Roms WHERE ((PlatformId = 0 OR GameId = 0) AND MetadataSource = 0) AND (LastMatchAttemptDate IS NULL OR LastMatchAttemptDate < @lastmatchattemptdate) LIMIT 100;";
+                sql = "SELECT * FROM Games_Roms WHERE (((PlatformId = 0 OR GameId = 0) AND MetadataSource = 0) OR (PlatformId = 0 AND GameId = 0)) AND (LastMatchAttemptDate IS NULL OR LastMatchAttemptDate < @lastmatchattemptdate) LIMIT 100;";
             }
             else
             {
-                sql = "SELECT * FROM Games_Roms WHERE ((PlatformId = 0 OR GameId = 0) AND MetadataSource = 0);";
+                sql = "SELECT * FROM Games_Roms WHERE (((PlatformId = 0 OR GameId = 0) AND MetadataSource = 0) OR (PlatformId = 0 AND GameId = 0));";
             }
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("lastmatchattemptdate", DateTime.UtcNow.AddDays(-7));
@@ -808,7 +685,7 @@ namespace gaseous_server.Classes
                 Logging.Log(Logging.LogType.Information, "Rematch Scan", "Running rematch against " + romPath);
 
                 // determine rom signature
-                Models.Signatures_Games sig = GetFileSignature(hash, fi, romPath);
+                gaseous_server.Models.Signatures_Games sig = GetFileSignature(hash, fi, romPath);
 
                 // determine rom platform
                 IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(sig.Flags.IGDBPlatformId);
@@ -817,7 +694,7 @@ namespace gaseous_server.Classes
                     determinedPlatform = new IGDB.Models.Platform();
                 }
 
-                IGDB.Models.Game determinedGame = SearchForGame(sig.Game.Name, sig.Flags.IGDBPlatformId);
+                IGDB.Models.Game determinedGame = SearchForGame(sig, sig.Flags.IGDBPlatformId);
 
                 StoreROM(library, hash, determinedGame, determinedPlatform, sig, romPath, romId);
 

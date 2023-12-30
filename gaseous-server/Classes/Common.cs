@@ -1,9 +1,11 @@
 ﻿using System.Collections.Concurrent;
+using System.ComponentModel;
+using System.Reflection;
 using System.Security.Cryptography;
 
 namespace gaseous_server.Classes
 {
-	public class Common
+	public static class Common
 	{
 		/// <summary>
 		/// Returns IfNullValue if the ObjectToCheck is null
@@ -109,6 +111,14 @@ namespace gaseous_server.Classes
 		{
 			return Path.GetFullPath(new Uri(path).LocalPath)
 					.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+		}
+
+		public static string GetDescription(this Enum value)
+		{
+			return ((DescriptionAttribute)Attribute.GetCustomAttribute(
+				value.GetType().GetFields(BindingFlags.Public | BindingFlags.Static)
+					.Single(x => x.GetValue(null).Equals(value)),
+				typeof(DescriptionAttribute)))?.Description ?? value.ToString();
 		}
     }
 

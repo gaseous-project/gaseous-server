@@ -13,7 +13,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static CompanyLogo? GetCompanyLogo(long? Id, string LogoPath)
+        public static CompanyLogo? GetCompanyLogo(long? Id, string ImagePath)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -21,18 +21,18 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<CompanyLogo> RetVal = _GetCompanyLogo(SearchUsing.id, Id, LogoPath);
+                Task<CompanyLogo> RetVal = _GetCompanyLogo(SearchUsing.id, Id, ImagePath);
                 return RetVal.Result;
             }
         }
 
-        public static CompanyLogo GetCompanyLogo(string Slug, string LogoPath)
+        public static CompanyLogo GetCompanyLogo(string Slug, string ImagePath)
         {
-            Task<CompanyLogo> RetVal = _GetCompanyLogo(SearchUsing.slug, Slug, LogoPath);
+            Task<CompanyLogo> RetVal = _GetCompanyLogo(SearchUsing.slug, Slug, ImagePath);
             return RetVal.Result;
         }
 
-        private static async Task<CompanyLogo> _GetCompanyLogo(SearchUsing searchUsing, object searchValue, string LogoPath)
+        private static async Task<CompanyLogo> _GetCompanyLogo(SearchUsing searchUsing, object searchValue, string ImagePath)
         {
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
@@ -64,7 +64,7 @@ namespace gaseous_server.Classes.Metadata
             switch (cacheStatus)
             {
                 case Storage.CacheStatus.NotPresent:
-                    returnValue = await GetObjectFromServer(WhereClause, LogoPath);
+                    returnValue = await GetObjectFromServer(WhereClause, ImagePath);
                     if (returnValue != null)
                     {
                         Storage.NewCacheValue(returnValue);
@@ -74,7 +74,7 @@ namespace gaseous_server.Classes.Metadata
                 case Storage.CacheStatus.Expired:
                     try
                     {
-                        returnValue = await GetObjectFromServer(WhereClause, LogoPath);
+                        returnValue = await GetObjectFromServer(WhereClause, ImagePath);
                         Storage.NewCacheValue(returnValue, true);
                         forceImageDownload = true;
                     }
@@ -91,13 +91,13 @@ namespace gaseous_server.Classes.Metadata
                     throw new Exception("How did you get here?");
             }
 
-            if (returnValue != null)
+            // check for presence of "original" quality file - download if absent or force download is true
+            string localFile = Path.Combine(ImagePath, Communications.IGDBAPI_ImageSize.original.ToString(), returnValue.ImageId + ".jpg");
+            if ((!File.Exists(localFile)) || forceImageDownload == true)
             {
-                if ((!File.Exists(Path.Combine(LogoPath, "Logo.jpg"))) || forceImageDownload == true)
-                {
-                    GetImageFromServer(returnValue.Url, LogoPath, LogoSize.t_thumb);
-                    GetImageFromServer(returnValue.Url, LogoPath, LogoSize.t_logo_med);
-                }
+                Logging.Log(Logging.LogType.Information, "Metadata: " + returnValue.GetType().Name, "Company logo download forced.");
+
+                GetImageFromServer(ImagePath, returnValue.ImageId);
             }
 
             return returnValue;
@@ -109,64 +109,23 @@ namespace gaseous_server.Classes.Metadata
             slug
         }
 
-        private static async Task<CompanyLogo?> GetObjectFromServer(string WhereClause, string LogoPath)
+        private static async Task<CompanyLogo> GetObjectFromServer(string WhereClause, string ImagePath)
         {
-            // get CompanyLogo metadata
+            // get Artwork metadata
             Communications comms = new Communications();
             var results = await comms.APIComm<CompanyLogo>(IGDBClient.Endpoints.CompanyLogos, fieldList, WhereClause);
-            if (results.Length > 0)
-            {
-                var result = results.First();
+            var result = results.First();
 
-                GetImageFromServer(result.Url, LogoPath, LogoSize.t_thumb);
-                GetImageFromServer(result.Url, LogoPath, LogoSize.t_logo_med);
-
-                return result;
-            }
-            else
-            {
-                return null;
-            }
+            return result;
         }
-
-        private static void GetImageFromServer(string Url, string LogoPath, LogoSize logoSize)
+        
+        private static async void GetImageFromServer(string ImagePath, string ImageId)
         {
-            using (var client = new HttpClient())
-            {
-                string fileName = "Logo.jpg";
-                string extension = "jpg";
-                switch (logoSize)
-                {
-                    case LogoSize.t_thumb:
-                        fileName = "Logo_Thumb";
-                        extension = "jpg";
-                        break;
-                    case LogoSize.t_logo_med:
-                        fileName = "Logo_Medium";
-                        extension = "png";
-                        break;
-                    default:
-                        fileName = "Logo";
-                        extension = "jpg";
-                        break;
-                }
-                string imageUrl = Url.Replace(LogoSize.t_thumb.ToString(), logoSize.ToString()).Replace("jpg", extension);
+            Communications comms = new Communications();
+            List<Communications.IGDBAPI_ImageSize> imageSizes = new List<Communications.IGDBAPI_ImageSize>();
+            imageSizes.AddRange(Enum.GetValues(typeof(Communications.IGDBAPI_ImageSize)).Cast<Communications.IGDBAPI_ImageSize>());
 
-                using (var s = client.GetStreamAsync("https:" + imageUrl))
-                {
-                    if (!Directory.Exists(LogoPath)) { Directory.CreateDirectory(LogoPath); }
-                    using (var fs = new FileStream(Path.Combine(LogoPath, fileName + "." + extension), FileMode.OpenOrCreate))
-                    {
-                        s.Result.CopyTo(fs);
-                    }
-                }
-            }
-        }
-
-        private enum LogoSize
-        {
-            t_thumb,
-            t_logo_med
+            await comms.IGDBAPI_GetImage(imageSizes, ImageId, ImagePath);
         }
     }
 }

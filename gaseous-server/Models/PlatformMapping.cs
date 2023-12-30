@@ -358,7 +358,7 @@ namespace gaseous_server.Models
             return mapItem;
         }
 
-        public static void GetIGDBPlatformMapping(ref Models.Signatures_Games Signature, FileInfo RomFileInfo, bool SetSystemName)
+        public static void GetIGDBPlatformMapping(ref gaseous_server.Models.Signatures_Games Signature, FileInfo RomFileInfo, bool SetSystemName)
         {
             bool PlatformFound = false;
             foreach (Models.PlatformMapping.PlatformMapItem PlatformMapping in Models.PlatformMapping.PlatformMap)

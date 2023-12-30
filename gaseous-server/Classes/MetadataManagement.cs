@@ -13,7 +13,7 @@ namespace gaseous_server.Classes
 			DataTable dt = new DataTable();
 			
 			// disabling forceRefresh
-			forceRefresh = false;
+			forceRefresh = true;
 
 			// update platforms
 			sql = "SELECT Id, `Name` FROM Platform;";
@@ -59,7 +59,7 @@ namespace gaseous_server.Classes
 				try
 				{
 					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ")");
-					Metadata.Games.GetGame((long)dr["id"], true, false, forceRefresh);
+					Metadata.Games.GetGame((long)dr["id"], true, false, true);
 				}
 				catch (Exception ex)
 				{

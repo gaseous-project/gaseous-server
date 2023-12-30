@@ -260,7 +260,7 @@ function DropDownRenderGameOption(state) {
 
     if (state.cover) {
         response = $(
-            '<table class="dropdown-div"><tr><td class="dropdown-cover"><img src="https://images.igdb.com/igdb/image/upload/t_cover_small/' + state.cover.value.imageId + '.jpg" /></td><td class="dropdown-label"><span class="dropdown-title">' + state.text + '</span><span class="dropdown-releasedate">' + releaseDate + '</span></td></tr></table>'
+            '<table class="dropdown-div"><tr><td class="dropdown-cover"><img src="/api/v1.1/Games/' + state.id + '/cover/image/cover_small" /></td><td class="dropdown-label"><span class="dropdown-title">' + state.text + '</span><span class="dropdown-releasedate">' + releaseDate + '</span></td></tr></table>'
         );
     } else {
         response = $(

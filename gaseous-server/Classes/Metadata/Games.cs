@@ -129,7 +129,7 @@ namespace gaseous_server.Classes.Metadata
             {
                 try
                 {
-                    Cover GameCover = Covers.GetCover(Game.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
+                    Cover GameCover = Covers.GetCover(Game.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), false);
                 }
                 catch (Exception ex)
                 {
@@ -441,9 +441,9 @@ namespace gaseous_server.Classes.Metadata
                 {
                     Game game = new Game{
                         Id = (long)row["Id"],
-                        Name = (string)row["Name"],
-                        Slug = (string)row["Slug"],
-                        Summary = (string)row["Summary"]
+                        Name = (string)Common.ReturnValueIfNull(row["Name"], ""),
+                        Slug = (string)Common.ReturnValueIfNull(row["Slug"], ""),
+                        Summary = (string)Common.ReturnValueIfNull(row["Summary"], "")
                     };
                     searchResults.Add(game);
                 }

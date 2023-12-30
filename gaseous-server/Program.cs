@@ -50,7 +50,10 @@ Config.InitSettings();
 Config.UpdateConfig();
 
 // set api metadata source from config
-Communications.MetadataSource = Config.MetadataConfiguration.Source;
+Communications.MetadataSource = Config.MetadataConfiguration.MetadataSource;
+
+// set up hasheous client
+HasheousClient.WebApp.HttpHelper.BaseUri = Config.MetadataConfiguration.HasheousHost;
 
 // set initial values
 Guid APIKey = Guid.NewGuid();
@@ -106,6 +109,11 @@ builder.Services.AddControllers().AddJsonOptions(x =>
 builder.Services.AddResponseCaching();
 builder.Services.AddControllers(options =>
 {
+    options.CacheProfiles.Add("None",
+        new CacheProfile()
+        {
+            Duration = 1
+        });
     options.CacheProfiles.Add("Default30",
         new CacheProfile()
         {
