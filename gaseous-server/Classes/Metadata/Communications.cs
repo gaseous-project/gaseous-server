@@ -11,13 +11,23 @@ namespace gaseous_server.Classes.Metadata
     /// </summary>
     public class Communications
     {
+        static Communications()
+        {
+            var handler = new HttpClientHandler();
+            handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate;
+            client = new HttpClient(handler);
+
+            client.DefaultRequestHeaders.Add("Accept-Encoding", "gzip");
+            client.DefaultRequestHeaders.Add("Accept-Encoding", "deflate");
+        }
+
         private static IGDBClient igdb = new IGDBClient(
                     // Found in Twitch Developer portal for your app
                     Config.IGDB.ClientId,
                     Config.IGDB.Secret
                 );
 
-        private HttpClient client = new HttpClient();
+        private static HttpClient client = new HttpClient();
 
         /// <summary>
         /// Configure metadata API communications
@@ -238,84 +248,101 @@ namespace gaseous_server.Classes.Metadata
         private async Task<bool?> _DownloadFile(Uri uri, string DestinationFile)
         {
             string DestinationDirectory = new FileInfo(DestinationFile).Directory.FullName;
+            if (!Directory.Exists(DestinationDirectory))
+            {
+                Directory.CreateDirectory(DestinationDirectory);
+            }
 
             Logging.Log(Logging.LogType.Information, "Communications", "Downloading from " + uri.ToString() + " to " + DestinationFile);
 
             try
             {
-                using (var s = client.GetStreamAsync(uri))
+                using (HttpResponseMessage response = client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead).Result)
                 {
-                    s.ConfigureAwait(false);
+                    response.EnsureSuccessStatusCode();
 
-                    if (!Directory.Exists(DestinationDirectory))
-                    { 
-                        Directory.CreateDirectory(DestinationDirectory); 
-                    }
-                    
-                    using (var fs = new FileStream(DestinationFile, FileMode.OpenOrCreate))
+                    using (Stream contentStream = await response.Content.ReadAsStreamAsync(), fileStream = new FileStream(DestinationFile, FileMode.Create, FileAccess.Write, FileShare.None, 8192, true))
                     {
-                        s.Result.CopyTo(fs);
+                        var totalRead = 0L;
+                        var totalReads = 0L;
+                        var buffer = new byte[8192];
+                        var isMoreToRead = true;
+
+                        do
+                        {
+                            var read = await contentStream.ReadAsync(buffer, 0, buffer.Length);
+                            if (read == 0)
+                            {
+                                isMoreToRead = false;
+                            }
+                            else
+                            {
+                                await fileStream.WriteAsync(buffer, 0, read);
+
+                                totalRead += read;
+                                totalReads += 1;
+
+                                if (totalReads % 2000 == 0)
+                                {
+                                    Console.WriteLine(string.Format("total bytes downloaded so far: {0:n0}", totalRead));
+                                }
+                            }
+                        }
+                        while (isMoreToRead);
                     }
                 }
 
-                if (File.Exists(DestinationFile))
-                {
-                    FileInfo fi = new FileInfo(DestinationFile);
-                    if (fi.Length > 0)
-                    {
-                        return true;
-                    }
-                    else
-                    {
-                        File.Delete(DestinationFile);
-                        throw new Exception("Zero length file");
-                    }
-                }
-                else
-                {
-                    throw new Exception("Zero length file");
-                }
+                return true;
             }
-            catch (Exception ex)
+            catch (HttpRequestException ex)
             {
-                Logging.Log(Logging.LogType.Critical, "Communications", "Error while downloading from " + uri.ToString(), ex);
+                if (ex.StatusCode == HttpStatusCode.NotFound)
+                {
+                    if (File.Exists(DestinationFile))
+                    {
+                        FileInfo fi = new FileInfo(DestinationFile);
+                        if (fi.Length == 0)
+                        {
+                            File.Delete(DestinationFile);
+                        }
+                    }
+                }
 
-                throw;
+                Logging.Log(Logging.LogType.Warning, "Download Images", "Error downloading file: ", ex);
             }
 
             return false;
         }
 
-        public static async Task<string> GetSpecificImageFromServer(string ImagePath, string ImageId, IGDBAPI_ImageSize size, List<IGDBAPI_ImageSize>? FallbackSizes = null)
+        public async Task<string> GetSpecificImageFromServer(string ImagePath, string ImageId, IGDBAPI_ImageSize size, List<IGDBAPI_ImageSize>? FallbackSizes = null)
         {
+            string returnPath = "";
+
+            if (RateLimitResumeTime > DateTime.UtcNow)
+            {
+                Logging.Log(Logging.LogType.Information, "API Connection", "IGDB rate limit hit. Pausing API communications until " + RateLimitResumeTime.ToString() + ". Attempt " + RetryAttempts + " of " + RetryAttemptsMax + " retries.");
+                Thread.Sleep(RateLimitRecoveryWaitTime);
+            }
+
+            if (InRateLimitAvoidanceMode == true)
+            {
+                // sleep for a moment to help avoid hitting the rate limiter
+                Thread.Sleep(RateLimitAvoidanceWait);
+            }
+
             Communications comms = new Communications();
             List<IGDBAPI_ImageSize> imageSizes = new List<IGDBAPI_ImageSize>
             {
                 size
             };
 
-            string returnPath = "";
-            FileInfo? fi;
-
             // get the image
             try
             {
                 returnPath = Path.Combine(ImagePath, size.ToString(), ImageId + ".jpg");
 
-                if (!File.Exists(returnPath))
-                {
-                    await comms.IGDBAPI_GetImage(imageSizes, ImageId, ImagePath);
-                }
-                
-                if (File.Exists(returnPath))
-                {
-                    fi = new FileInfo(returnPath);
-                    if (fi.Length == 0 || fi.LastWriteTimeUtc.AddDays(7) < DateTime.UtcNow)
-                    {
-                        File.Delete(returnPath);
-                        await comms.IGDBAPI_GetImage(imageSizes, ImageId, ImagePath);
-                    }
-                }
+                if (File.Exists(returnPath)) { File.Delete(returnPath); }
+                await comms.IGDBAPI_GetImage(imageSizes, ImageId, ImagePath);
                 
             }
             catch (HttpRequestException ex)
@@ -334,6 +361,9 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
 
+            // increment rate limiter avoidance call count
+            RateLimitAvoidanceCallCount += 1;
+
             return returnPath;
         }
 
@@ -351,8 +381,25 @@ namespace gaseous_server.Classes.Metadata
                 string url = urlTemplate.Replace("{size}", Common.GetDescription(ImageSize)).Replace("{hash}", ImageId);
                 string newOutputPath = Path.Combine(OutputPath, Common.GetDescription(ImageSize));
                 string OutputFile = ImageId + ".jpg";
+                string fullPath = Path.Combine(newOutputPath, OutputFile);
                 
-                    await _DownloadFile(new Uri(url), Path.Combine(newOutputPath, OutputFile));
+                bool AllowDownload = true;
+
+                FileInfo fi;
+                if (File.Exists(fullPath))
+                {
+                    fi = new FileInfo(fullPath);
+                    if (fi.LastWriteTimeUtc.AddDays(14) < DateTime.UtcNow)
+                    {
+                        File.Delete(fullPath);
+                        AllowDownload = true;
+                    }
+                }
+
+                if (AllowDownload == true)
+                {
+                    await _DownloadFile(new Uri(url), fullPath);
+                }
             }
         }
 
