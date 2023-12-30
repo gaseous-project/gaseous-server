@@ -329,38 +329,40 @@ namespace gaseous_server.Classes
 				DataTable RetTable = new DataTable();
 
                 Logging.Log(Logging.LogType.Debug, "Database", "Connecting to database", null, true);
-                MySqlConnection conn = new MySqlConnection(DBConn);
-				conn.Open();
-
-				MySqlCommand cmd = new MySqlCommand
+                using (MySqlConnection conn = new MySqlConnection(DBConn))
 				{
-					Connection = conn,
-					CommandText = SQL,
-					CommandTimeout = Timeout
-				};
+					conn.Open();
 
-				foreach (string Parameter in Parameters.Keys)
-				{
-					cmd.Parameters.AddWithValue(Parameter, Parameters[Parameter]);
-				}
-
-				try
-				{
-                    Logging.Log(Logging.LogType.Debug, "Database", "Executing sql: '" + SQL + "'", null, true);
-					if (Parameters.Count > 0)
+					MySqlCommand cmd = new MySqlCommand
 					{
-						string dictValues = string.Join(";", Parameters.Select(x => string.Join("=", x.Key, x.Value)));
-						Logging.Log(Logging.LogType.Debug, "Database", "Parameters: " + dictValues, null, true);
-					}
-                    RetTable.Load(cmd.ExecuteReader());
-				} catch (Exception ex) {
-					Logging.Log(Logging.LogType.Critical, "Database", "Error while executing '" + SQL + "'", ex);
-					Trace.WriteLine("Error executing " + SQL);
-					Trace.WriteLine("Full exception: " + ex.ToString());
-				}
+						Connection = conn,
+						CommandText = SQL,
+						CommandTimeout = Timeout
+					};
 
-				Logging.Log(Logging.LogType.Debug, "Database", "Closing database connection", null, true);
-				conn.Close();
+					foreach (string Parameter in Parameters.Keys)
+					{
+						cmd.Parameters.AddWithValue(Parameter, Parameters[Parameter]);
+					}
+
+					try
+					{
+						Logging.Log(Logging.LogType.Debug, "Database", "Executing sql: '" + SQL + "'", null, true);
+						if (Parameters.Count > 0)
+						{
+							string dictValues = string.Join(";", Parameters.Select(x => string.Join("=", x.Key, x.Value)));
+							Logging.Log(Logging.LogType.Debug, "Database", "Parameters: " + dictValues, null, true);
+						}
+						RetTable.Load(cmd.ExecuteReader());
+					} catch (Exception ex) {
+						Logging.Log(Logging.LogType.Critical, "Database", "Error while executing '" + SQL + "'", ex);
+						Trace.WriteLine("Error executing " + SQL);
+						Trace.WriteLine("Full exception: " + ex.ToString());
+					}
+
+					Logging.Log(Logging.LogType.Debug, "Database", "Closing database connection", null, true);
+					conn.Close();
+				}
 
 				return RetTable;
 			}
@@ -370,60 +372,64 @@ namespace gaseous_server.Classes
 				int result = 0;
 
                 Logging.Log(Logging.LogType.Debug, "Database", "Connecting to database", null, true);
-                MySqlConnection conn = new MySqlConnection(DBConn);
-				conn.Open();
-
-				MySqlCommand cmd = new MySqlCommand
+                using (MySqlConnection conn = new MySqlConnection(DBConn))
 				{
-					Connection = conn,
-					CommandText = SQL,
-					CommandTimeout = Timeout
-				};
+					conn.Open();
 
-				foreach (string Parameter in Parameters.Keys)
-				{
-					cmd.Parameters.AddWithValue(Parameter, Parameters[Parameter]);
-				}
-
-				try
-				{
-                    Logging.Log(Logging.LogType.Debug, "Database", "Executing sql: '" + SQL + "'", null, true);
-					if (Parameters.Count > 0)
+					MySqlCommand cmd = new MySqlCommand
 					{
-						string dictValues = string.Join(";", Parameters.Select(x => string.Join("=", x.Key, x.Value)));
-						Logging.Log(Logging.LogType.Debug, "Database", "Parameters: " + dictValues, null, true);
-					}
-                    result = cmd.ExecuteNonQuery();
-				} catch (Exception ex) {
-					Logging.Log(Logging.LogType.Critical, "Database", "Error while executing '" + SQL + "'", ex);
-					Trace.WriteLine("Error executing " + SQL);
-					Trace.WriteLine("Full exception: " + ex.ToString());
-				}
+						Connection = conn,
+						CommandText = SQL,
+						CommandTimeout = Timeout
+					};
 
-				Logging.Log(Logging.LogType.Debug, "Database", "Closing database connection", null, true);
-				conn.Close();
+					foreach (string Parameter in Parameters.Keys)
+					{
+						cmd.Parameters.AddWithValue(Parameter, Parameters[Parameter]);
+					}
+
+					try
+					{
+						Logging.Log(Logging.LogType.Debug, "Database", "Executing sql: '" + SQL + "'", null, true);
+						if (Parameters.Count > 0)
+						{
+							string dictValues = string.Join(";", Parameters.Select(x => string.Join("=", x.Key, x.Value)));
+							Logging.Log(Logging.LogType.Debug, "Database", "Parameters: " + dictValues, null, true);
+						}
+						result = cmd.ExecuteNonQuery();
+					} catch (Exception ex) {
+						Logging.Log(Logging.LogType.Critical, "Database", "Error while executing '" + SQL + "'", ex);
+						Trace.WriteLine("Error executing " + SQL);
+						Trace.WriteLine("Full exception: " + ex.ToString());
+					}
+
+					Logging.Log(Logging.LogType.Debug, "Database", "Closing database connection", null, true);
+					conn.Close();
+				}
 
 				return result;
 			}
 
             public void TransactionExecCMD(List<Dictionary<string, object>> Parameters, int Timeout)
             {
-                var conn = new MySqlConnection(DBConn);
-                conn.Open();
-                var command = conn.CreateCommand();
-                MySqlTransaction transaction;
-                transaction = conn.BeginTransaction();
-                command.Connection = conn;
-                command.Transaction = transaction;
-                foreach (Dictionary<string, object> Parameter in Parameters)
+                using (MySqlConnection conn = new MySqlConnection(DBConn))
                 {
-                    var cmd = buildcommand(conn, Parameter["sql"].ToString(), (Dictionary<string, object>)Parameter["values"], Timeout);
-                    cmd.Transaction = transaction;
-                    cmd.ExecuteNonQuery();
-                }
+					conn.Open();
+					var command = conn.CreateCommand();
+					MySqlTransaction transaction;
+					transaction = conn.BeginTransaction();
+					command.Connection = conn;
+					command.Transaction = transaction;
+					foreach (Dictionary<string, object> Parameter in Parameters)
+					{
+						var cmd = buildcommand(conn, Parameter["sql"].ToString(), (Dictionary<string, object>)Parameter["values"], Timeout);
+						cmd.Transaction = transaction;
+						cmd.ExecuteNonQuery();
+					}
 
-                transaction.Commit();
-                conn.Close();
+					transaction.Commit();
+					conn.Close();
+				}
             }
 
             private MySqlCommand buildcommand(MySqlConnection Conn, string SQL, Dictionary<string, object> Parameters, int Timeout)
@@ -449,16 +455,18 @@ namespace gaseous_server.Classes
 
 			public bool TestConnection()
 			{
-				MySqlConnection conn = new MySqlConnection(DBConn);
-				try
+				using (MySqlConnection conn = new MySqlConnection(DBConn))
 				{
-					conn.Open();
-					conn.Close();
-					return true;
-				}
-				catch
-				{
-					return false;
+					try
+					{
+						conn.Open();
+						conn.Close();
+						return true;
+					}
+					catch
+					{
+						return false;
+					}
 				}
 			}
         }

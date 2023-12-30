@@ -94,13 +94,14 @@ namespace gaseous_server.Classes.Metadata
             if (returnValue != null)
             {
                 // check for presence of "original" quality file - download if absent or force download is true
-            string localFile = Path.Combine(ImagePath, Communications.IGDBAPI_ImageSize.original.ToString(), returnValue.ImageId + ".jpg");
-            if ((!File.Exists(localFile)) || forceImageDownload == true)
-            {
-                Logging.Log(Logging.LogType.Information, "Metadata: " + returnValue.GetType().Name, "Platform logo download forced.");
+                string localFile = Path.Combine(ImagePath, Communications.IGDBAPI_ImageSize.original.ToString(), returnValue.ImageId + ".jpg");
+                if ((!File.Exists(localFile)) || forceImageDownload == true)
+                {
+                    Logging.Log(Logging.LogType.Information, "Metadata: " + returnValue.GetType().Name, "Platform logo download forced.");
 
-                GetImageFromServer(ImagePath, returnValue.ImageId);
-            }
+                    Communications comms = new Communications();
+                    comms.GetSpecificImageFromServer(ImagePath, returnValue.ImageId, Communications.IGDBAPI_ImageSize.original, null);
+                }
             }
 
             return returnValue;
@@ -120,15 +121,6 @@ namespace gaseous_server.Classes.Metadata
             var result = results.First();
 
             return result;
-        }
-        
-        private static async void GetImageFromServer(string ImagePath, string ImageId)
-        {
-            Communications comms = new Communications();
-            List<Communications.IGDBAPI_ImageSize> imageSizes = new List<Communications.IGDBAPI_ImageSize>();
-            imageSizes.AddRange(Enum.GetValues(typeof(Communications.IGDBAPI_ImageSize)).Cast<Communications.IGDBAPI_ImageSize>());
-
-            comms.IGDBAPI_GetImage(imageSizes, ImageId, ImagePath);
         }
 	}
 }

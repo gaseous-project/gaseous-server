@@ -537,8 +537,18 @@ namespace gaseous_server.Controllers
                 try
                 {
                     IGDB.Models.Artwork artworkObject = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
+                    
                     if (artworkObject != null) {
-                        string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Artwork", size.ToString(), artworkObject.ImageId + ".jpg");
+                        //string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Artwork", size.ToString(), artworkObject.ImageId + ".jpg");
+
+                        string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Artwork");
+
+                        Communications comms = new Communications();
+                        Task<string> ImgFetch = comms.GetSpecificImageFromServer(basePath, artworkObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize>{ Communications.IGDBAPI_ImageSize.original });
+
+                        string coverFilePath = ImgFetch.Result;
+
+
                         if (System.IO.File.Exists(coverFilePath))
                         {
                             string filename = artworkObject.ImageId + ".jpg";
@@ -633,7 +643,8 @@ namespace gaseous_server.Controllers
                         IGDB.Models.Cover cover = Classes.Metadata.Covers.GetCover(gameObject.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), false);
                         string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Covers");
                         
-                        Task<string> ImgFetch = Communications.GetSpecificImageFromServer(basePath, cover.ImageId, size, new List<Communications.IGDBAPI_ImageSize>{ Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
+                        Communications comms = new Communications();
+                        Task<string> ImgFetch = comms.GetSpecificImageFromServer(basePath, cover.ImageId, size, new List<Communications.IGDBAPI_ImageSize>{ Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
 
                         string coverFilePath = ImgFetch.Result;
 
@@ -1346,7 +1357,15 @@ namespace gaseous_server.Controllers
 
                 IGDB.Models.Screenshot screenshotObject = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
 
-                string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Screenshots", Size.ToString(), screenshotObject.ImageId + ".jpg");
+                //string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Screenshots", Size.ToString(), screenshotObject.ImageId + ".jpg");
+
+                string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Screenshots");
+
+                Communications comms = new Communications();
+                Task<string> ImgFetch = comms.GetSpecificImageFromServer(basePath, screenshotObject.ImageId, Size, new List<Communications.IGDBAPI_ImageSize>{ Communications.IGDBAPI_ImageSize.original });
+
+                string coverFilePath = ImgFetch.Result;
+
                 if (System.IO.File.Exists(coverFilePath))
                 {
                     string filename = screenshotObject.ImageId + ".jpg";

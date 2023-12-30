@@ -13,7 +13,7 @@ namespace gaseous_server.Classes
 			DataTable dt = new DataTable();
 			
 			// disabling forceRefresh
-			forceRefresh = true;
+			forceRefresh = false;
 
 			// update platforms
 			sql = "SELECT Id, `Name` FROM Platform;";
