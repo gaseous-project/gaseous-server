@@ -10,13 +10,13 @@
         <div id="games_library_controls">
             <div id="games_library_orderby" class="games_library_controlblock">
                 <span>Order by: </span>
-                <select id="games_library_orderby_select" onchange="executeFilter1_1();">
+                <select id="games_library_orderby_select" onchange="executeFilter1_1(1);">
                     <option selected="selected" value="NameThe">Name, The</option>
                     <option value="Name">Name</option>
                     <option value="Rating">User Rating</option>
                     <option value="RatingCount">User Rating Count</option>
                 </select>
-                <select id="games_library_orderby_direction_select" onchange="executeFilter1_1();">
+                <select id="games_library_orderby_direction_select" onchange="executeFilter1_1(1);">
                     <option selected="selected" value="Ascending">Ascending</option>
                     <option value="Descending">Descending</option>
                 </select>
@@ -35,7 +35,8 @@
 <script type="text/javascript">
     ajaxCall('/api/v1.1/Filter', 'GET', function (result) {
         var filterElement = document.getElementById('games_filter');
-        formatFilterPanel(filterElement, result);
+        var scrollerElement = document.getElementById('games_filter_scroller');
+        formatFilterPanel(filterElement, scrollerElement, result);
 
         executeFilter1_1();
     });

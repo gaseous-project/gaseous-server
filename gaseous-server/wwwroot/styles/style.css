@@ -198,6 +198,54 @@ h3 {
     /* margin-right: 10px; */
 }
 
+#games_library_searchbuttons {
+    position: sticky;
+    position: -webkit-sticky;
+    bottom: 0;
+    margin-top: 5px;
+    width: 200px;
+    z-index: 1;
+    background-color: #5d5d5d;
+}
+
+#games_library_searchbutton {
+    position: sticky;
+    position: -webkit-sticky;
+    bottom: 0;
+    width: 180px;
+    height: 18px;
+    padding: 10px;
+    background-color: #352879;
+    color: white;
+    text-align: center;
+    font-family: Commodore64;
+    font-size: 16px;
+}
+
+#games_library_searchbutton:hover {
+    cursor: pointer;
+    background-color: #6C5EB5;
+}
+
+#games_library_resetbutton {
+    position: sticky;
+    position: -webkit-sticky;
+    bottom: 0;
+    width: 180px;
+    height: 18px;
+    padding: 10px;
+    background-color: #646464;
+    color: white;
+    text-align: center;
+    font-family: Commodore64;
+    font-size: 16px;
+}
+
+#games_library_resetbutton:hover {
+    cursor: pointer;
+    background-color: #adadad;
+}
+
 #games_filter {
     
     width: 200px;
@@ -215,6 +263,10 @@ h3 {
     font-weight: bold;
     padding: 10px;
     background-color: #2b2b2b;
+}
+
+.filter_header:hover {
+    background-color: #000000;
 }
 
 .filter_panel_box {
@@ -1163,16 +1215,17 @@ button:disabled {
     position: absolute;
     top: 0px;
     right: 0px;
-    text-align: center;
+    text-align: right;
     font-size: 10px;
 }
 
 .tagBoxItem {
+    display: block;
     padding-left: 0px;
     padding-right: 0px;
     padding-top: 0px;
     padding-bottom: 0px;
-    width: 10px;
+    min-width: 10px;
     height: 10px;
     background-color: darkslategray;
     color: white;

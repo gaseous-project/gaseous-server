@@ -1,4 +1,6 @@
-﻿function formatFilterPanel(targetElement, result) {
+﻿var existingSearchModel;
+
+function formatFilterPanel(targetElement, scrollerElement, result) {
     var panel = document.createElement('div');
     panel.id = 'filter_panel_box';
 
@@ -14,7 +16,6 @@
     containerPanelSearchField.id = 'filter_panel_search';
     containerPanelSearchField.type = 'text';
     containerPanelSearchField.placeholder = 'Search';
-    containerPanelSearchField.setAttribute('onkeydown', 'executeFilterDelayed();');
     containerPanelSearch.appendChild(containerPanelSearchField);
 
     panel.appendChild(containerPanelSearch);
@@ -27,7 +28,8 @@
     var containerPanelUserRatingCheckBox = document.createElement('input');
     containerPanelUserRatingCheckBox.id = 'filter_panel_userrating_enabled';
     containerPanelUserRatingCheckBox.type = 'checkbox';
-    containerPanelUserRatingCheckBox.setAttribute('oninput', 'executeFilterDelayed();');
+    containerPanelUserRatingCheckBox.className = 'filter_panel_item_checkbox';
+    containerPanelUserRatingCheckBox.setAttribute('onclick', 'filter_panel_userrating_enabled_check();');
     var ratingEnabledCookie = getCookie('filter_panel_userrating_enabled');
     if (ratingEnabledCookie) {
         if (ratingEnabledCookie == "true") {
@@ -46,10 +48,9 @@
     containerPanelUserRatingMinField.id = 'filter_panel_userrating_min';
     containerPanelUserRatingMinField.type = 'number';
     containerPanelUserRatingMinField.placeholder = '0';
-    containerPanelUserRatingMinField.setAttribute('onchange', 'executeFilterDelayed();');
-    containerPanelUserRatingMinField.setAttribute('onkeydown', 'executeFilterDelayed();');
     containerPanelUserRatingMinField.setAttribute('min', '0');
     containerPanelUserRatingMinField.setAttribute('max', '100');
+    containerPanelUserRatingMinField.setAttribute('oninput', 'filter_panel_userrating_value();');
     containerPanelUserRating.appendChild(containerPanelUserRatingMinField);
 
     var containerPanelUserRatingMaxField = document.createElement('input');
@@ -60,10 +61,9 @@
     containerPanelUserRatingMaxField.id = 'filter_panel_userrating_max';
     containerPanelUserRatingMaxField.type = 'number';
     containerPanelUserRatingMaxField.placeholder = '100';
-    containerPanelUserRatingMaxField.setAttribute('onchange', 'executeFilterDelayed();');
-    containerPanelUserRatingMaxField.setAttribute('onkeydown', 'executeFilterDelayed();');
     containerPanelUserRatingMaxField.setAttribute('min', '0');
     containerPanelUserRatingMaxField.setAttribute('max', '100');
+    containerPanelUserRatingMaxField.setAttribute('oninput', 'filter_panel_userrating_value();');
     containerPanelUserRating.appendChild(containerPanelUserRatingMaxField);
 
     panel.appendChild(containerPanelUserRating);
@@ -95,6 +95,27 @@
     }
 
     targetElement.appendChild(panel);
+
+    var buttonsDiv = document.createElement('div');
+    buttonsDiv.id = 'games_library_searchbuttons'
+
+    // add filter button
+    var searchButton = document.createElement('div');
+    searchButton.id = 'games_library_searchbutton';
+    searchButton.setAttribute('onclick', 'executeFilter1_1();');
+    searchButton.innerHTML = 'Apply';
+
+    buttonsDiv.appendChild(searchButton);
+
+    // add reset button
+    var resetButton = document.createElement('div');
+    resetButton.id = 'games_library_resetbutton';
+    resetButton.setAttribute('onclick', 'resetFilters();');
+    resetButton.innerHTML = 'Reset';
+
+    buttonsDiv.appendChild(resetButton);
+
+    scrollerElement.appendChild(buttonsDiv);
 
     // set order by values
     var orderByCookie = getCookie('games_library_orderby_select');
@@ -201,7 +222,6 @@ function buildFilterPanelItem(filterType, itemString, friendlyItemString, tags) 
     filterPanelItemCheckBoxItem.className = 'filter_panel_item_checkbox';
     filterPanelItemCheckBoxItem.name = 'filter_' + filterType;
     filterPanelItemCheckBoxItem.setAttribute('filter_id', itemString);
-    filterPanelItemCheckBoxItem.setAttribute('oninput' , 'executeFilter1_1();');
     if (checkState == true) {
         filterPanelItemCheckBoxItem.checked = true;
     }
@@ -252,50 +272,62 @@ function buildFilterTag(tags) {
     return boundingDiv;
 }
 
+function filter_panel_userrating_enabled_check() {
+    var ratingCheck = document.getElementById('filter_panel_userrating_enabled');
+    var minRatingValue = document.getElementById('filter_panel_userrating_min');
+    var maxRatingValue = document.getElementById('filter_panel_userrating_max');
+
+    if (ratingCheck.checked == false) {
+        minRatingValue.value = '';
+        maxRatingValue.value = '';
+    } else {
+        minRatingValue.value = 0;
+        maxRatingValue.value = 100;
+    }
+}
+
+function filter_panel_userrating_value() {
+    var ratingCheck = document.getElementById('filter_panel_userrating_enabled');
+    var minRatingValue = document.getElementById('filter_panel_userrating_min');
+    var maxRatingValue = document.getElementById('filter_panel_userrating_max');
+
+    if (minRatingValue.value || maxRatingValue.value) {
+        ratingCheck.checked = true;
+    } else {
+        ratingCheck.checked = false;
+    }
+}
+
+function resetFilters() {
+    // clear name
+    document.getElementById('filter_panel_search').value = '';
+
+    // clear filter check boxes
+    var filterChecks = document.getElementsByClassName('filter_panel_item_checkbox');
+    for (var i = 0; i < filterChecks.length; i++) {
+        filterChecks[i].checked = false;
+    }
+
+    // fire checkbox specific scripts
+    filter_panel_userrating_enabled_check();
+
+    executeFilter1_1();
+}
+
 function executeFilter1_1(pageNumber, pageSize) {
+    var freshSearch = false;
+
     if (!pageNumber) {
         pageNumber = 1;
+        freshSearch = true;
+        existingSearchModel = undefined;
     }
 
     if (!pageSize) {
         pageSize = 30;
     }
 
-    // user ratings
-    var userRatingEnabled = document.getElementById('filter_panel_userrating_enabled');
-
-    var minUserRating = -1;
-    var minUserRatingInput = document.getElementById('filter_panel_userrating_min');
-    if (minUserRatingInput.value) {
-        minUserRating = minUserRatingInput.value;
-        userRatingEnabled.checked = true;
-    }
-    setCookie(minUserRatingInput.id, minUserRatingInput.value);
-
-    var maxUserRating = -1;
-    var maxUserRatingInput = document.getElementById('filter_panel_userrating_max');
-    if (maxUserRatingInput.value) {
-        maxUserRating = maxUserRatingInput.value;
-        userRatingEnabled.checked = true;
-    }
-    setCookie(maxUserRatingInput.id, maxUserRatingInput.value);
-
-    if (minUserRating == -1 && maxUserRating == -1) {
-        userRatingEnabled.checked = false;
-    }
-
-    if (userRatingEnabled.checked == false) {
-        setCookie("filter_panel_userrating_enabled", false);
-
-        minUserRating = -1;
-        minUserRatingInput.value = "";
-        setCookie(minUserRatingInput.id, minUserRatingInput.value);
-        maxUserRating = -1;
-        maxUserRatingInput.value = "";
-        setCookie(maxUserRatingInput.id, maxUserRatingInput.value);
-    } else {
-        setCookie("filter_panel_userrating_enabled", true);
-    }
+    var model;
 
     // get order by
     var orderBy = document.getElementById('games_library_orderby_select').value;
@@ -309,36 +341,80 @@ function executeFilter1_1(pageNumber, pageSize) {
     }
     setCookie('games_library_orderby_direction_select', orderByDirectionSelect);
 
-    // build filter model
-    var ratingAgeGroups = GetFilterQuery1_1('agegroupings');
-    var ratingIncludeUnrated = false;
-    if (ratingAgeGroups.includes("0")) {
-        ratingIncludeUnrated = true;
-    }
+    if (existingSearchModel == undefined || freshSearch == true) {
+        // user ratings
+        var userRatingEnabled = document.getElementById('filter_panel_userrating_enabled');
 
-    var model = {
-        "Name": document.getElementById('filter_panel_search').value,
-        "Platform": GetFilterQuery1_1('platform'),
-        "Genre": GetFilterQuery1_1('genre'),
-        "GameMode": GetFilterQuery1_1('gamemode'),
-        "PlayerPerspective": GetFilterQuery1_1('playerperspective'),
-        "Theme": GetFilterQuery1_1('theme'),
-        "GameRating": {
-            "MinimumRating": minUserRating,
-            "MinimumRatingCount": -1,
-            "MaximumRating": maxUserRating,
-            "MaximumRatingCount": -1,
-            "IncludeUnrated": !userRatingEnabled
-        },
-        "GameAgeRating": {
-            "AgeGroupings": ratingAgeGroups,
-            "IncludeUnrated": ratingIncludeUnrated
-        },
-        "Sorting": {
-            "SortBy": orderBy,
-            "SortAscending": orderByDirection
+        var minUserRating = -1;
+        var minUserRatingInput = document.getElementById('filter_panel_userrating_min');
+        if (minUserRatingInput.value) {
+            minUserRating = minUserRatingInput.value;
+            userRatingEnabled.checked = true;
         }
-    };
+        setCookie(minUserRatingInput.id, minUserRatingInput.value);
+
+        var maxUserRating = -1;
+        var maxUserRatingInput = document.getElementById('filter_panel_userrating_max');
+        if (maxUserRatingInput.value) {
+            maxUserRating = maxUserRatingInput.value;
+            userRatingEnabled.checked = true;
+        }
+        setCookie(maxUserRatingInput.id, maxUserRatingInput.value);
+
+        if (minUserRating == -1 && maxUserRating == -1) {
+            userRatingEnabled.checked = false;
+        }
+
+        if (userRatingEnabled.checked == false) {
+            setCookie("filter_panel_userrating_enabled", false);
+
+            minUserRating = -1;
+            minUserRatingInput.value = "";
+            setCookie(minUserRatingInput.id, minUserRatingInput.value);
+            maxUserRating = -1;
+            maxUserRatingInput.value = "";
+            setCookie(maxUserRatingInput.id, maxUserRatingInput.value);
+        } else {
+            setCookie("filter_panel_userrating_enabled", true);
+        }
+
+        // build filter model
+        var ratingAgeGroups = GetFilterQuery1_1('agegroupings');
+        var ratingIncludeUnrated = false;
+        if (ratingAgeGroups.includes("0")) {
+            ratingIncludeUnrated = true;
+        }
+
+        model = {
+            "Name": document.getElementById('filter_panel_search').value,
+            "Platform": GetFilterQuery1_1('platform'),
+            "Genre": GetFilterQuery1_1('genre'),
+            "GameMode": GetFilterQuery1_1('gamemode'),
+            "PlayerPerspective": GetFilterQuery1_1('playerperspective'),
+            "Theme": GetFilterQuery1_1('theme'),
+            "GameRating": {
+                "MinimumRating": minUserRating,
+                "MinimumRatingCount": -1,
+                "MaximumRating": maxUserRating,
+                "MaximumRatingCount": -1,
+                "IncludeUnrated": !userRatingEnabled
+            },
+            "GameAgeRating": {
+                "AgeGroupings": ratingAgeGroups,
+                "IncludeUnrated": ratingIncludeUnrated
+            },
+            "Sorting": {
+                "SortBy": orderBy,
+                "SortAscending": orderByDirection
+            }
+        };
+
+        existingSearchModel = model;
+    } else {
+        existingSearchModel.Sorting.SortBy = orderBy;
+        existingSearchModel.Sorting.SortAscending = orderByDirection;
+        model = existingSearchModel;
+    }
 
     ajaxCall(
         '/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize,
