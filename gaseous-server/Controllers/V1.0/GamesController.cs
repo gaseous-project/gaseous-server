@@ -629,7 +629,6 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/cover/image/{size}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ResponseCache(CacheProfileName = "None")]
         public ActionResult GameCoverImage(long GameId, Communications.IGDBAPI_ImageSize size)
         {
             try
@@ -661,7 +660,7 @@ namespace gaseous_server.Controllers
                             };
 
                             Response.Headers.Add("Content-Disposition", cd.ToString());
-                            //Response.Headers.Add("Cache-Control", "public, max-age=604800");
+                            Response.Headers.Add("Cache-Control", "public, max-age=604800");
 
                             return File(filedata, contentType);
                         }
@@ -891,13 +890,13 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(Classes.Roms.GameRomObject), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         //[ResponseCache(CacheProfileName = "5Minute")]
-        public ActionResult GameRom(long GameId, int pageNumber = 0, int pageSize = 0, long PlatformId = -1)
+        public ActionResult GameRom(long GameId, int pageNumber = 0, int pageSize = 0, long PlatformId = -1, string NameSearch = "")
         {
             try
             {
                 Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
 
-                return Ok(Classes.Roms.GetRoms(GameId, PlatformId, pageNumber, pageSize));
+                return Ok(Classes.Roms.GetRoms(GameId, PlatformId, NameSearch, pageNumber, pageSize));
             }
             catch
             {

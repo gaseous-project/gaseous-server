@@ -18,7 +18,7 @@
             </tr>
             <tr>
                 <td>
-                    <select id="profile_pref-LibraryPagination" data-pref="LibraryPagination" onchange="SavePrefValue_Value(this);">
+                    <select id="profile_pref-LibraryPagination" data-pref="LibraryPagination" data-minimum-results-for-search="Infinity">
                         <option value="paged">Paged</option>
                         <option value="infinite">Infinite scrolling</option>
                     </select>
@@ -34,17 +34,17 @@
             </tr>
             <tr>
                 <td>
-                    <input type="checkbox" id="profile_pref_LibraryShowGameTitle" data-pref="LibraryShowGameTitle" onchange="SavePrefValue_Checkbox(this);"><label for="profile_pref_LibraryShowGameTitle"> Show title</label>
+                    <input type="checkbox" id="profile_pref_LibraryShowGameTitle" data-pref="LibraryShowGameTitle" data-minimum-results-for-search="Infinity"><label for="profile_pref_LibraryShowGameTitle"> Show title</label>
                 </td>
             </tr>
             <tr>
                 <td>
-                    <input type="checkbox" id="profile_pref_LibraryShowGameRating" data-pref="LibraryShowGameRating" onchange="SavePrefValue_Checkbox(this);"><label for="profile_pref_LibraryShowGameRating"> Show rating</label>
+                    <input type="checkbox" id="profile_pref_LibraryShowGameRating" data-pref="LibraryShowGameRating" data-minimum-results-for-search="Infinity"><label for="profile_pref_LibraryShowGameRating"> Show rating</label>
                 </td>
             </tr>
             <tr>
                 <td>
-                    <input type="checkbox" id="profile_pref_LibraryShowGameClassification" data-pref="LibraryShowGameClassification" onchange="SavePrefValue_Checkbox(this);"><label for="profile_pref_LibraryShowGameClassification"> Show age classification badges</label>
+                    <input type="checkbox" id="profile_pref_LibraryShowGameClassification" data-pref="LibraryShowGameClassification" onclick="updateDisplay(this.getAttribute('data-pref'), this.checked);"><label for="profile_pref_LibraryShowGameClassification"> Show age classification badges</label>
                 </td>
             </tr>
             <tr>
@@ -69,6 +69,11 @@
                             </td>
                         </tr>
                     </table>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: right;">
+                    <button id="profile_pref_ok" value="OK" onclick="SavePrefs();">OK</button>
                 </td>
             </tr>
         </table>
@@ -183,20 +188,40 @@
         }
     }
 
-    function SavePrefValue_Checkbox(e) {
-        var ValueName = e.getAttribute("data-pref");
-        SetPreference(ValueName, e.checked);
+    function SavePrefs() {
+        var model = [];
 
-        updateDisplay(ValueName, e.checked);
+        model.push(SavePrefValue_Checkbox(document.getElementById('profile_pref_LibraryShowGameTitle')));
+        model.push(SavePrefValue_Checkbox(document.getElementById('profile_pref_LibraryShowGameRating')));
+        model.push(SavePrefValue_Checkbox(document.getElementById('profile_pref_LibraryShowGameClassification')));
+
+
+        model.push(SavePrefValue_Value(document.getElementById('profile_pref-LibraryPagination')));
+        
+        model.push(
+            {
+                "setting": "LibraryGameClassificationDisplayOrder",
+                "value": JSON.stringify(SavePrefValue_ClassBadge(document.getElementById('profile_pref_LibraryPrimaryClassificationBadge')))
+            }
+        );
+        
+        SetPreference_Batch(model);
 
         executeFilter1_1(1);
+
+        closeDialog();
+    }
+
+    function SavePrefValue_Checkbox(e) {
+        var ValueName = e.getAttribute("data-pref");
+        
+        return { "setting": ValueName, "value": e.checked.toString() };
     }
 
     function SavePrefValue_Value(e) {
         var ValueName = e.getAttribute("data-pref");
-        SetPreference(ValueName, e.value);
-
-        executeFilter1_1(1);
+        
+        return { "setting": ValueName, "value": e.value };
     }
 
     function updateDisplay(ValueName, ValueSetting) {
@@ -232,6 +257,7 @@
             }
         }
 
+    
         // save values
         var model = [];
         if (secondary.value == '-') {
@@ -239,10 +265,8 @@
         } else {
             model = [ primary.value, secondary.value ];
         }
-        
-        SetPreference('LibraryGameClassificationDisplayOrder', JSON.stringify(model));
 
-        executeFilter1_1(1);
+        return model;
     }
 
     function checkPasswordsMatch() {
@@ -320,4 +344,8 @@
 
     ProfileSelectTab('general');
     GetPrefInitialValues();
+
+    $('#profile_pref-LibraryPagination').select2();
+    $('#profile_pref_LibraryPrimaryClassificationBadge').select2();
+    $('#profile_pref_LibraryFallbackClassificationBadge').select2();
 </script>

@@ -15,7 +15,7 @@ namespace gaseous_server.Classes
             {}
         }
 
-		public static GameRomObject GetRoms(long GameId, long PlatformId = -1, int pageNumber = 0, int pageSize = 0)
+		public static GameRomObject GetRoms(long GameId, long PlatformId = -1, string NameSearch = "", int pageNumber = 0, int pageSize = 0)
 		{
 			GameRomObject GameRoms = new GameRomObject();
 
@@ -24,10 +24,17 @@ namespace gaseous_server.Classes
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", GameId);
             
+			string NameSearchWhere = "";
+			if (NameSearch.Length > 0)
+			{
+				NameSearchWhere = " AND Games_Roms.`Name` LIKE @namesearch";
+				dbDict.Add("namesearch", '%' + NameSearch + '%');
+			}
+
 			if (PlatformId == -1) {
-				sql = "SELECT Games_Roms.*, Platform.`Name` AS platformname FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE Games_Roms.GameId = @id ORDER BY Platform.`Name`, Games_Roms.`Name`";
+				sql = "SELECT Games_Roms.*, Platform.`Name` AS platformname FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE Games_Roms.GameId = @id" + NameSearchWhere + " ORDER BY Platform.`Name`, Games_Roms.`Name` LIMIT 1000;";
 			} else {
-				sql = "SELECT Games_Roms.*, Platform.`Name` AS platformname FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE Games_Roms.GameId = @id AND Games_Roms.PlatformId = @platformid ORDER BY Platform.`Name`, Games_Roms.`Name`";
+				sql = "SELECT Games_Roms.*, Platform.`Name` AS platformname FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE Games_Roms.GameId = @id AND Games_Roms.PlatformId = @platformid" + NameSearchWhere + " ORDER BY Platform.`Name`, Games_Roms.`Name` LIMIT 1000;";
 				dbDict.Add("platformid", PlatformId);
 			}
             DataTable romDT = db.ExecuteCMD(sql, dbDict);

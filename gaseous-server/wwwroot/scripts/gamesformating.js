@@ -12,12 +12,14 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize) {
     console.log("Displaying page: " + pageNumber);
     console.log("Page size: " + pageSize);
 
-    window.scrollTo(0, 0);
-
     var pageMode = GetPreference('LibraryPagination', 'paged');
 
     if (pageNumber == 1 || pageMode == 'paged') {
         targetElement.innerHTML = ''; 
+    }
+
+    if (pageMode == 'paged') {
+        window.scrollTo(0, 0);
     }
 
     var pagerCheck = document.getElementById('games_library_pagerstore');
