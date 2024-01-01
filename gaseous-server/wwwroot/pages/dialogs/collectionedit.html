@@ -579,7 +579,7 @@
                     var gameImage = document.createElement('img');
                     gameImage.className = 'game_tile_image game_tile_image_small';
                     if (gameItem.cover) {
-                        gameImage.src = '/api/v1.1/Games/' + gameItem.id + '/cover/image';
+                        gameImage.src = '/api/v1.1/Games/' + gameItem.id + '/cover/image/cover_small';
                     } else {
                         gameImage.src = '/images/unknowngame.png';
                         gameImage.className = 'game_tile_image game_tile_image_small unknown';

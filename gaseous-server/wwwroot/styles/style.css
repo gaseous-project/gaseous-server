@@ -278,7 +278,7 @@ h3 {
 input[type='text'], input[type='number'], input[type="email"], input[type="password"], input[type="datetime-local"] {
     background-color: #2b2b2b;
     color: white;
-    padding: 5px;
+    padding: 4px;
     font-family: "PT Sans", Arial, Helvetica, sans-serif;
     font-kerning: normal;
     font-style: normal;
