@@ -265,7 +265,7 @@ h3 {
     background-color: #2b2b2b;
 }
 
-.filter_header:hover {
+.filter_header_toggleable:hover {
     background-color: #000000;
 }
 
@@ -287,7 +287,12 @@ input[type='text'], input[type='number'], input[type="email"], input[type="passw
     border-radius: 5px;
     border-width: 1px;
     border-style: solid;
-    border-color: lightgray;
+    /* border-color: lightgray; */
+    border-color: #2b2b2b;
+}
+
+input[type='text']:hover, input[type='number']:hover, input[type="email"]:hover, input[type="password"]:hover, input[type="datetime-local"]:hover {
+    border-color: #939393;
 }
 
 input[id='filter_panel_search'] {
@@ -893,8 +898,14 @@ div[name="properties_toc_item"]:hover,div[name="properties_user_toc_item"]:hover
 }
 
 .select2-container--default .select2-selection--multiple {
-    background-color: #2b2b2b !important;
+    background-color: #2b2b2b;
     color: white !important;
+    border: 1px solid #2b2b2b;
+    border-radius: 5px;
+}
+
+.select2-container--default:hover, .select2-selection--multiple:hover {
+    border-color: #939393;
 }
 
 .select2-container--open .select2-dropdown--below,
@@ -906,8 +917,23 @@ div[name="properties_toc_item"]:hover,div[name="properties_user_toc_item"]:hover
     border: 1px solid #2b2b2b;
 }
 
-.select2-selection__choice {
-    background-color: #2b2b2b !important;
+/* tag item */
+.select2-container--default .select2-selection--multiple .select2-selection__choice {
+    background-color: #575757 !important;
+    border: 1px solid #2b2b2b;
+    border-radius: 5px;
+}
+
+/* tag item delete button */
+.select2-container--default .select2-selection--multiple .select2-selection__choice__remove {
+    border-right: none;
+    background-color: #939393;
+    color: white;
+}
+
+/* tag item label */
+.select2-container--default .select2-selection--multiple .select2-selection__choice__display {
+    background-color: #4e4e4e;
 }
 
 .select2-selection__choice__display {
@@ -922,7 +948,23 @@ div[name="properties_toc_item"]:hover,div[name="properties_user_toc_item"]:hover
     background-color: #2b2b2b;
     color: white !important;
     border: 1px solid #2b2b2b;
+    border-radius: 5px;
 }
+
+.select2-selection--single:hover, .select2-selection__rendered:hover {
+    border-color: #939393;
+}
+
+.select2-container--default .select2-selection--single {
+    background-color: #2b2b2b;
+    color: white !important;
+    border: 1px solid #2b2b2b;
+    border-radius: 5px;
+}
+
+/* .select2-container--default:hover, .select2-selection--single:hover {
+    border-color: #939393;
+} */
 
 .select2-search__field {
     background-color: #2b2b2b;
@@ -998,9 +1040,21 @@ button:disabled {
 }
 
 #emulator {
+    
+}
+
+.emulator_partscreen {
     margin: 0 auto;
     width: 640px;
     padding-top: 100px;
+}
+
+.emulator_fullscreen {
+    position: fixed;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    top: 40px;
 }
 
 #emulatorbios {

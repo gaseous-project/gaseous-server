@@ -178,6 +178,7 @@ function buildFilterPanelHeader(headerString, friendlyHeaderString, showVisibleT
         header.appendChild(headerToggle);
         header.setAttribute('onclick', 'toggleFilterPanel("' + headerString + '");');
         header.style.cursor = 'pointer';
+        header.classList.add('filter_header_toggleable');
     }
 
     header.appendChild(headerLabel);

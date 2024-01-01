@@ -8,15 +8,15 @@
 <div id="games_home">
     <div id="games_home_box">
         <div id="games_library_controls">
-            <div id="games_library_orderby" class="games_library_controlblock">
+            <div id="games_library_orderby" class="games_library_controlblock" style="text-align: left;">
                 <span>Order by: </span>
-                <select id="games_library_orderby_select" onchange="executeFilter1_1(1);">
+                <select id="games_library_orderby_select" data-minimum-results-for-search="Infinity" onchange="executeFilter1_1(1);">
                     <option selected="selected" value="NameThe">Name, The</option>
                     <option value="Name">Name</option>
                     <option value="Rating">User Rating</option>
                     <option value="RatingCount">User Rating Count</option>
                 </select>
-                <select id="games_library_orderby_direction_select" onchange="executeFilter1_1(1);">
+                <select id="games_library_orderby_direction_select" data-minimum-results-for-search="Infinity" onchange="executeFilter1_1(1);">
                     <option selected="selected" value="Ascending">Ascending</option>
                     <option value="Descending">Descending</option>
                 </select>
@@ -40,4 +40,7 @@
 
         executeFilter1_1();
     });
+
+    $('#games_library_orderby_select').select2();
+    $('#games_library_orderby_direction_select').select2();
 </script>

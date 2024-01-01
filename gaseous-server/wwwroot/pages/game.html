@@ -680,7 +680,9 @@
             }
         }
         platformFilterBlock.appendChild(platformFilterOpt);
-        $(platformFilterOpt).select2();
+        $(platformFilterOpt).select2({
+            minimumResultsForSearch: Infinity
+        });
         filterControls.appendChild(platformFilterBlock);
 
         var searchButtonFilterBlock = document.createElement('div');

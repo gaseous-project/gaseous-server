@@ -459,6 +459,25 @@ function SetPreference(Setting, Value) {
     );
 }
 
+function SetPreference_Batch(model) {
+    console.log(model);
+    ajaxCall(
+        '/api/v1.1/Account/Preferences',
+        'POST',
+        function(result) {
+            for (var i = 0; i < model.length; i++) {
+                SetPreference_Local(model[i].setting, model[i].value.toString());
+            }
+        },
+        function(error) {
+            for (var i = 0; i < model.length; i++) {
+                SetPreference_Local(model[i].setting, model[i].value.toString());
+            }
+        },
+        JSON.stringify(model)
+    );
+}
+
 function SetPreference_Local(Setting, Value) {
     if (userProfile.userPreferences) {
         var prefFound = false;
