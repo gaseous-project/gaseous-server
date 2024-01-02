@@ -21,6 +21,8 @@ namespace gaseous_server.Classes
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
+			string sqlCount = "";
+			string sqlPlatform = "";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", GameId);
             
@@ -31,21 +33,32 @@ namespace gaseous_server.Classes
 				dbDict.Add("namesearch", '%' + NameSearch + '%');
 			}
 
+			// platform query
+			sqlPlatform = "SELECT DISTINCT Games_Roms.PlatformId, Platform.`Name` FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE GameId = @id ORDER BY Platform.`Name`;";
+
 			if (PlatformId == -1) {
+				// data query
 				sql = "SELECT Games_Roms.*, Platform.`Name` AS platformname FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE Games_Roms.GameId = @id" + NameSearchWhere + " ORDER BY Platform.`Name`, Games_Roms.`Name` LIMIT 1000;";
+				
+				// count query
+				sqlCount = "SELECT COUNT(Games_Roms.Id) AS RomCount FROM Games_Roms WHERE Games_Roms.GameId = @id" + NameSearchWhere + ";";
 			} else {
+				// data query
 				sql = "SELECT Games_Roms.*, Platform.`Name` AS platformname FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE Games_Roms.GameId = @id AND Games_Roms.PlatformId = @platformid" + NameSearchWhere + " ORDER BY Platform.`Name`, Games_Roms.`Name` LIMIT 1000;";
+
+				// count query
+				sqlCount = "SELECT COUNT(Games_Roms.Id) AS RomCount FROM Games_Roms WHERE Games_Roms.GameId = @id AND Games_Roms.PlatformId = @platformid" + NameSearchWhere + ";";
+
 				dbDict.Add("platformid", PlatformId);
 			}
             DataTable romDT = db.ExecuteCMD(sql, dbDict);
+			Dictionary<string, object> rowCount = db.ExecuteCMDDict(sqlCount, dbDict)[0];
+			DataTable platformDT = db.ExecuteCMD(sqlPlatform, dbDict);
 
             if (romDT.Rows.Count > 0)
             {
 				// set count of roms
-				GameRoms.Count = romDT.Rows.Count;
-				
-				// setup platforms list
-				Dictionary<long, string> platformDict = new Dictionary<long, string>();
+				GameRoms.Count = int.Parse((string)rowCount["RomCount"]);
 
 				int pageOffset = pageSize * (pageNumber - 1);
 				for (int i = 0; i < romDT.Rows.Count; i++)
@@ -56,18 +69,18 @@ namespace gaseous_server.Classes
 					{
 						GameRoms.GameRomItems.Add(gameRomItem);
 					}
-
-					if (!platformDict.ContainsKey(gameRomItem.PlatformId))
-					{
-						platformDict.Add(gameRomItem.PlatformId, gameRomItem.Platform);
-					}
 				}
 
 				// get rom media groups
 				GameRoms.MediaGroups = Classes.RomMediaGroup.GetMediaGroupsFromGameId(GameId);
 
 				// sort the platforms
-				GameRoms.Platforms = platformDict.OrderBy(x => x.Value).ToDictionary(x => x.Key, x => x.Value).ToList<KeyValuePair<long, string>>();
+				GameRoms.Platforms = new List<KeyValuePair<long, string>>();
+				foreach (DataRow platformRow in platformDT.Rows)
+				{
+					KeyValuePair<long, string> valuePair = new KeyValuePair<long, string>((long)platformRow["PlatformId"], (string)platformRow["Name"]);
+					GameRoms.Platforms.Add(valuePair);
+				}
 
 				return GameRoms;
             }
