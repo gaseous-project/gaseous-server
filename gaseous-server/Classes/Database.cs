@@ -235,7 +235,8 @@ namespace gaseous_server.Classes
             {
                 case databaseType.MySql:
                     MySQLServerConnector conn = new MySQLServerConnector(ConnectionString);
-                    return (int)conn.ExecNonQuery(Command, Parameters, Timeout);
+					int retVal = conn.ExecNonQuery(Command, Parameters, Timeout); 
+                    return retVal;
                 default:
                     return 0;
             }
