@@ -8,6 +8,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
+using gaseous_server.Models;
 using IGDB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -291,7 +292,7 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, forceRefresh, false, forceRefresh);
+                GaseousGame gameObject = new GaseousGame(Classes.Metadata.Games.GetGame(GameId, forceRefresh, false, forceRefresh));
 
                 if (gameObject != null)
                 {
@@ -377,87 +378,6 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/agerating/{RatingId}/image")]
-        [ProducesResponseType(typeof(FileContentResult), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameAgeClassification(long GameId, long RatingId)
-        {
-            try
-            {
-                GameAgeRating gameAgeRating = GetConsolidatedAgeRating(RatingId);
-
-                string fileExtension = "";
-                string fileType = "";
-                switch (gameAgeRating.RatingBoard)
-                {
-                    case AgeRatingCategory.ESRB:
-                        fileExtension = "svg";
-                        fileType = "image/svg+xml";
-                        break;
-                    case AgeRatingCategory.PEGI:
-                        fileExtension = "svg";
-                        fileType = "image/svg+xml";
-                        break;
-                    case AgeRatingCategory.ACB:
-                        fileExtension = "svg";
-                        fileType = "image/svg+xml";
-                        break;
-                    case AgeRatingCategory.CERO:
-                        fileExtension = "svg";
-                        fileType = "image/svg+xml";
-                        break;
-                    case AgeRatingCategory.USK:
-                        fileExtension = "svg";
-                        fileType = "image/svg+xml";
-                        break;
-                    case AgeRatingCategory.GRAC:
-                        fileExtension = "svg";
-                        fileType = "image/svg+xml";
-                        break;
-                    case AgeRatingCategory.CLASS_IND:
-                        fileExtension = "svg";
-                        fileType = "image/svg+xml";
-                        break;
-                }
-
-                string resourceName = "gaseous_server.Assets.Ratings." + gameAgeRating.RatingBoard.ToString() + "." + gameAgeRating.RatingTitle.ToString() + "." + fileExtension;
-
-                var assembly = Assembly.GetExecutingAssembly();
-                string[] resources = assembly.GetManifestResourceNames();
-                if (resources.Contains(resourceName))
-                {
-                    using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-                    using (StreamReader reader = new StreamReader(stream))
-                    {
-                        byte[] filedata = new byte[stream.Length];
-                        stream.Read(filedata, 0, filedata.Length);
-
-                        string filename = gameAgeRating.RatingBoard.ToString() + "-" + gameAgeRating.RatingTitle.ToString() + "." + fileExtension;
-                        string contentType = fileType;
-
-                        var cd = new System.Net.Mime.ContentDisposition
-                        {
-                            FileName = filename,
-                            Inline = true,
-                        };
-
-                        Response.Headers.Add("Content-Disposition", cd.ToString());
-                        Response.Headers.Add("Cache-Control", "public, max-age=604800");
-
-                        return File(filedata, contentType);
-                    }
-                }
-                return NotFound();
-            }
-            catch
-            {
-                return NotFound();
-            }
-        }
-
-        [MapToApiVersion("1.0")]
-        [MapToApiVersion("1.1")]
-        [HttpGet]
         [Route("{GameId}/artwork")]
         [ProducesResponseType(typeof(List<Artwork>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -473,7 +393,7 @@ namespace gaseous_server.Controllers
                 {
                     foreach (long ArtworkId in gameObject.Artworks.Ids)
                     {
-                        Artwork GameArtwork = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
+                        Artwork GameArtwork = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), false);
                         artworks.Add(GameArtwork);
                     }
                 }
@@ -501,7 +421,7 @@ namespace gaseous_server.Controllers
 
                 try
                 {
-                    IGDB.Models.Artwork artworkObject = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
+                    IGDB.Models.Artwork artworkObject = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), false);
                     if (artworkObject != null)
                     {
                         return Ok(artworkObject);
@@ -526,9 +446,10 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("{GameId}/artwork/{ArtworkId}/image/{size}")]
+        [Route("{GameId}/artwork/{ArtworkId}/image/{size}/{ImageName}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameCoverImage(long GameId, long ArtworkId, Communications.IGDBAPI_ImageSize size)
+        public ActionResult GameCoverImage(long GameId, long ArtworkId, Communications.IGDBAPI_ImageSize size, string ImageName)
         {
             try
             {
@@ -536,7 +457,7 @@ namespace gaseous_server.Controllers
 
                 try
                 {
-                    IGDB.Models.Artwork artworkObject = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
+                    IGDB.Models.Artwork artworkObject = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), true);
                     
                     if (artworkObject != null) {
                         //string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Artwork", size.ToString(), artworkObject.ImageId + ".jpg");
@@ -627,9 +548,10 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("{GameId}/cover/image/{size}")]
+        [Route("{GameId}/cover/image/{size}/{imagename}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameCoverImage(long GameId, Communications.IGDBAPI_ImageSize size)
+        public ActionResult GameCoverImage(long GameId, Communications.IGDBAPI_ImageSize size, string imagename = "")
         {
             try
             {
@@ -1295,7 +1217,7 @@ namespace gaseous_server.Controllers
                 {
                     foreach (long ScreenshotId in gameObject.Screenshots.Ids)
                     {
-                        Screenshot GameScreenshot = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
+                        Screenshot GameScreenshot = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), false);
                         screenshots.Add(GameScreenshot);
                     }
                 }
@@ -1321,7 +1243,7 @@ namespace gaseous_server.Controllers
             { 
                 IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
                 if (gameObject != null) { 
-                    IGDB.Models.Screenshot screenshotObject = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
+                    IGDB.Models.Screenshot screenshotObject = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), false);
                     if (screenshotObject != null)
                     {
                         return Ok(screenshotObject);
@@ -1346,17 +1268,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("{GameId}/screenshots/{ScreenshotId}/image/{size}")]
+        [Route("{GameId}/screenshots/{ScreenshotId}/image/{size}/{ImageName}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameScreenshotImage(long GameId, long ScreenshotId, Communications.IGDBAPI_ImageSize Size)
+        public ActionResult GameScreenshotImage(long GameId, long ScreenshotId, Communications.IGDBAPI_ImageSize Size, string ImageName)
         {
             try
             {
                 IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
 
-                IGDB.Models.Screenshot screenshotObject = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject));
-
-                //string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Screenshots", Size.ToString(), screenshotObject.ImageId + ".jpg");
+                IGDB.Models.Screenshot screenshotObject = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), true);
 
                 string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Screenshots");
 

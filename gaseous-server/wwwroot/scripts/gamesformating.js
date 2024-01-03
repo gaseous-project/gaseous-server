@@ -8,6 +8,53 @@
     "ACB":       "Australian Classification Board (ACB)"
 };
 
+var ClassificationRatings = {
+    "E":         "Everyone",
+    "E10":       "Everyone 10+",
+    "T":         "Teen",
+    "M":         "Mature 17+",
+    "AO":        "Adults Only 18+",
+    "RP":        "Rating Pending",
+
+    "Three":     "PEGI 3",
+    "Seven":     "PEGI 7",
+    "Twelve":    "PEGI 12",
+    "Sixteen":   "PEGI 16",
+    "Eighteen":  "PEGI 18",
+    
+    "CERO_A":    "All Ages",
+    "CERO_B":    "Ages 12 and up",
+    "CERO_C":    "Ages 15 and up",
+    "CERO_D":    "Ages 17 and up",
+    "CERO_Z":    "Ages 18 and up only",
+
+    "USK_0":     "Approved without age restriction",
+    "USK_6":     "Approved for children aged 6 and above",
+    "USK_12":    "Approved for children aged 12 and above",
+    "USK_16":    "Approved for children aged 16 and above",
+    "USK_18":    "Not approved for young persons",
+
+    "GRAC_All":  "All",
+    "GRAC_Twelve": "12+",
+    "GRAC_Fifteen": "15+",
+    "GRAC_Eighteen": "18+",
+    "GRAC_Testing": "Testing",
+
+    "CLASS_IND_L": "General Audiences",
+    "CLASS_IND_Ten": "Not recommended for minors under ten",
+    "CLASS_IND_Twelve": "Not recommended for minors under twelve",
+    "CLASS_IND_Fourteen": "Not recommended for minors under fourteen",
+    "CLASS_IND_Sixteen": "Not recommended for minors under sixteen",
+    "CLASS_IND_Eighteen": "Not recommended for minors under eighteen",
+
+    "ACB_G":     "General",
+    "ACB_PG":    "Parental Guidance",
+    "ACB_M":     "Mature",
+    "ACB_MA15":  "Mature Accompanied",
+    "ACB_R18":   "Restricted",
+    "ACB_RC":    "Refused Classification"
+};
+
 function formatGamesPanel(targetElement, result, pageNumber, pageSize) {
     console.log("Displaying page: " + pageNumber);
     console.log("Page size: " + pageSize);
@@ -194,7 +241,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
     }
     gameImage.src = '/images/unknowngame.png';
     if (gameObject.cover) {
-        gameImage.setAttribute('data-src', '/api/v1.1/Games/' + gameObject.id + '/cover/image/cover_big');
+        gameImage.setAttribute('data-src', '/api/v1.1/Games/' + gameObject.id + '/cover/image/cover_big/' + gameObject.cover.imageId + '.jpg');
     } else {
         gameImage.className = 'game_tile_image unknown';
     }
@@ -210,7 +257,8 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
                     if (gameObject.ageRatings[c].category == classificationDisplayOrder[b]) {
                         shownClassificationBoard = classificationDisplayOrder[b];
                         displayClassification = true;
-                        classificationPath = '/api/v1.1/Ratings/Images/' + classificationDisplayOrder[b] + '/' + getKeyByValue(AgeRatingStrings, gameObject.ageRatings[c].rating) + '/image.svg';
+                        //classificationPath = '/api/v1.1/Ratings/Images/' + classificationDisplayOrder[b] + '/' + getKeyByValue(AgeRatingStrings, gameObject.ageRatings[c].rating) + '/image.svg';
+                        classificationPath = '/images/Ratings/' + classificationDisplayOrder[b] + '/' + gameObject.ageRatings[c].rating + '.svg';
                     }
                 }
             } else {

@@ -27,12 +27,12 @@
         } else {
             if (result.cover) {
                 var bg = document.getElementById('bgImage');
-                bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/cover/image/original"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+                bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/cover/image/original/' + result.cover.imageId + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
             }
         }
 
         if (result.cover) {
-            emuBackground = '/api/v1.1/Games/' + gameId + '/cover/image/original';
+            emuBackground = '/api/v1.1/Games/' + gameId + '/cover/image/original/' + result.cover.imageId + '.jpg';
         }
 
         emuGameTitle = gameData.name;
@@ -59,7 +59,7 @@
                 artworksPosition = 0;
             }
             var bg = document.getElementById('bgImage');
-            bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/artwork/' + artworks[artworksPosition] + '/image/original"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+            bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/artwork/' + artworks[artworksPosition] + '/image/original/' + artworks[artworksPosition] + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
         }
     }
 </script>

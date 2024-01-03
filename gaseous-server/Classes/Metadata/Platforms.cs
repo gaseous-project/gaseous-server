@@ -39,8 +39,16 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<Platform> RetVal = _GetPlatform(SearchUsing.id, Id, forceRefresh);
-                return RetVal.Result;
+                try
+                {
+                    Task<Platform> RetVal = _GetPlatform(SearchUsing.id, Id, forceRefresh);
+                    return RetVal.Result;
+                }
+                catch(Exception ex)
+                {
+                    Logging.Log(Logging.LogType.Warning, "Metadata", "An error occurred fetching Platform Id " + Id, ex);
+                    return null;
+                }
             }
         }
 

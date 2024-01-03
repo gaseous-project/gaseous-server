@@ -34,17 +34,17 @@
             </tr>
             <tr>
                 <td>
-                    <input type="checkbox" id="profile_pref_LibraryShowGameTitle" data-pref="LibraryShowGameTitle" data-minimum-results-for-search="Infinity"><label for="profile_pref_LibraryShowGameTitle"> Show title</label>
+                    <input type="checkbox" id="profile_pref_LibraryShowGameTitle" data-pref="LibraryShowGameTitle"><label for="profile_pref_LibraryShowGameTitle"> Show title</label>
                 </td>
             </tr>
             <tr>
                 <td>
-                    <input type="checkbox" id="profile_pref_LibraryShowGameRating" data-pref="LibraryShowGameRating" data-minimum-results-for-search="Infinity"><label for="profile_pref_LibraryShowGameRating"> Show rating</label>
+                    <input type="checkbox" id="profile_pref_LibraryShowGameRating" data-pref="LibraryShowGameRating"><label for="profile_pref_LibraryShowGameRating"> Show rating</label>
                 </td>
             </tr>
             <tr>
                 <td>
-                    <input type="checkbox" id="profile_pref_LibraryShowGameClassification" data-pref="LibraryShowGameClassification" onclick="updateDisplay(this.getAttribute('data-pref'), this.checked);"><label for="profile_pref_LibraryShowGameClassification"> Show age classification badges</label>
+                    <input type="checkbox" id="profile_pref_LibraryShowGameClassification" data-pref="LibraryShowGameClassification"><label for="profile_pref_LibraryShowGameClassification"> Show age classification badges</label>
                 </td>
             </tr>
             <tr>
@@ -55,7 +55,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <select id="profile_pref_LibraryPrimaryClassificationBadge" data-primary="primary" onchange="SavePrefValue_ClassBadge(this);">
+                                <select id="profile_pref_LibraryPrimaryClassificationBadge" data-primary="primary" data-minimum-results-for-search="Infinity" onchange="SavePrefValue_ClassBadge(this);">
                                 </select>
                             </td>
                         </tr>
@@ -64,7 +64,7 @@
                         </tr>
                         <tr>
                             <td>
-                                <select id="profile_pref_LibraryFallbackClassificationBadge" onchange="SavePrefValue_ClassBadge(this);">
+                                <select id="profile_pref_LibraryFallbackClassificationBadge" onchange="SavePrefValue_ClassBadge(this);" data-minimum-results-for-search="Infinity">
                                 </select>
                             </td>
                         </tr>
@@ -206,8 +206,10 @@
         );
         
         SetPreference_Batch(model);
-
-        executeFilter1_1(1);
+        
+        if (getQueryString('page', 'string') == 'home' ||  getQueryString('page', 'string') == undefined) {
+            executeFilter1_1(1);
+        }
 
         closeDialog();
     }
@@ -227,12 +229,12 @@
     function updateDisplay(ValueName, ValueSetting) {
         switch(ValueName) {
             case "LibraryShowGameClassification":
-                var badgeSelector = document.getElementById("profile_pref_LibraryClassificationBadgeSelect");
-                if (ValueSetting == true || ValueSetting == "true") {
-                    badgeSelector.style.display = '';
-                } else {
-                    badgeSelector.style.display = 'none';
-                }
+                // var badgeSelector = document.getElementById("profile_pref_LibraryClassificationBadgeSelect");
+                // if (ValueSetting == true || ValueSetting == "true") {
+                //     badgeSelector.style.display = '';
+                // } else {
+                //     badgeSelector.style.display = 'none';
+                // }
                 break;
         }
     }

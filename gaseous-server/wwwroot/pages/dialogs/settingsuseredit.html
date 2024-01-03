@@ -208,7 +208,7 @@
 
                     for (var classBoard in classBoards) {
                         for (var rating in classBoards[classBoard]) {
-                            ratingsValues += "<img src='/api/v1.1/Ratings/Images/" + classBoard + "/" + classBoards[classBoard][rating] + "/image.svg' class='rating_image_mini' />";
+                            ratingsValues += "<img src='/images/Ratings/" + classBoard + "/" + AgeRatingStrings[classBoards[classBoard][rating]] + ".svg' class='rating_image_mini' />";
                         }
                     }
 

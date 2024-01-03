@@ -13,7 +13,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static Screenshot? GetScreenshot(long? Id, string ImagePath)
+        public static Screenshot? GetScreenshot(long? Id, string ImagePath, bool GetImages)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -21,18 +21,18 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<Screenshot> RetVal = _GetScreenshot(SearchUsing.id, Id, ImagePath);
+                Task<Screenshot> RetVal = _GetScreenshot(SearchUsing.id, Id, ImagePath, GetImages);
                 return RetVal.Result;
             }
         }
 
-        public static Screenshot GetScreenshot(string Slug, string ImagePath)
+        public static Screenshot GetScreenshot(string Slug, string ImagePath, bool GetImages)
         {
-            Task<Screenshot> RetVal = _GetScreenshot(SearchUsing.slug, Slug, ImagePath);
+            Task<Screenshot> RetVal = _GetScreenshot(SearchUsing.slug, Slug, ImagePath, GetImages);
             return RetVal.Result;
         }
 
-        private static async Task<Screenshot> _GetScreenshot(SearchUsing searchUsing, object searchValue, string ImagePath)
+        private static async Task<Screenshot> _GetScreenshot(SearchUsing searchUsing, object searchValue, string ImagePath, bool GetImages = true)
         {
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
@@ -67,14 +67,14 @@ namespace gaseous_server.Classes.Metadata
                 case Storage.CacheStatus.NotPresent:
                     returnValue = await GetObjectFromServer(WhereClause, ImagePath);
                     Storage.NewCacheValue(returnValue);
-                    forceImageDownload = true;
+                    if (GetImages == true) { forceImageDownload = true; }
                     break;  
                 case Storage.CacheStatus.Expired:
                     try
                     {
                         returnValue = await GetObjectFromServer(WhereClause, ImagePath);
                         Storage.NewCacheValue(returnValue, true);
-                        forceImageDownload = true;
+                        if (GetImages == true) { forceImageDownload = true; }
                     }
                     catch (Exception ex)
                     {

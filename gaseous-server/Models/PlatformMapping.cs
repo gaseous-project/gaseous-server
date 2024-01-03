@@ -253,109 +253,114 @@ namespace gaseous_server.Models
             string sql = "";
 
             // get platform data
-            IGDB.Models.Platform platform = Platforms.GetPlatform(IGDBId);
+            IGDB.Models.Platform? platform = Platforms.GetPlatform(IGDBId);
 
-            // get platform alternate names
-            sql = "SELECT * FROM PlatformMap_AlternateNames WHERE Id = @Id ORDER BY Name";
-            dbDict.Clear();
-            dbDict.Add("Id", IGDBId);
-            DataTable altTable = db.ExecuteCMD(sql, dbDict);
-
-            List<string> alternateNames = new List<string>();
-            foreach (DataRow altRow in altTable.Rows)
+            if (platform != null)
             {
-                string altVal = (string)altRow["Name"];
-                if (!alternateNames.Contains(altVal, StringComparer.OrdinalIgnoreCase))
+                // get platform alternate names
+                sql = "SELECT * FROM PlatformMap_AlternateNames WHERE Id = @Id ORDER BY Name";
+                dbDict.Clear();
+                dbDict.Add("Id", IGDBId);
+                DataTable altTable = db.ExecuteCMD(sql, dbDict);
+
+                List<string> alternateNames = new List<string>();
+                foreach (DataRow altRow in altTable.Rows)
                 {
-                    alternateNames.Add(altVal);
+                    string altVal = (string)altRow["Name"];
+                    if (!alternateNames.Contains(altVal, StringComparer.OrdinalIgnoreCase))
+                    {
+                        alternateNames.Add(altVal);
+                    }
                 }
-            }
-            if (platform.AlternativeName != null)
-            {
-                if (!alternateNames.Contains(platform.AlternativeName, StringComparer.OrdinalIgnoreCase))
+                if (platform.AlternativeName != null)
                 {
-                    alternateNames.Add(platform.AlternativeName);
+                    if (!alternateNames.Contains(platform.AlternativeName, StringComparer.OrdinalIgnoreCase))
+                    {
+                        alternateNames.Add(platform.AlternativeName);
+                    }
                 }
-            }
 
-            // get platform known extensions
-            sql = "SELECT * FROM PlatformMap_Extensions WHERE Id = @Id ORDER BY Extension";
-            dbDict.Clear();
-            dbDict.Add("Id", IGDBId);
-            DataTable extTable = db.ExecuteCMD(sql, dbDict);
+                // get platform known extensions
+                sql = "SELECT * FROM PlatformMap_Extensions WHERE Id = @Id ORDER BY Extension";
+                dbDict.Clear();
+                dbDict.Add("Id", IGDBId);
+                DataTable extTable = db.ExecuteCMD(sql, dbDict);
 
-            List<string> knownExtensions = new List<string>();
-            foreach (DataRow extRow in extTable.Rows)
-            {
-                string extVal = (string)extRow["Extension"];
-                if (!knownExtensions.Contains(extVal, StringComparer.OrdinalIgnoreCase))
+                List<string> knownExtensions = new List<string>();
+                foreach (DataRow extRow in extTable.Rows)
                 {
-                    knownExtensions.Add(extVal);
+                    string extVal = (string)extRow["Extension"];
+                    if (!knownExtensions.Contains(extVal, StringComparer.OrdinalIgnoreCase))
+                    {
+                        knownExtensions.Add(extVal);
+                    }
                 }
-            }
 
-            // get platform unique extensions
-            sql = "SELECT * FROM PlatformMap_UniqueExtensions WHERE Id = @Id ORDER BY Extension";
-            dbDict.Clear();
-            dbDict.Add("Id", IGDBId);
-            DataTable uextTable = db.ExecuteCMD(sql, dbDict);
+                // get platform unique extensions
+                sql = "SELECT * FROM PlatformMap_UniqueExtensions WHERE Id = @Id ORDER BY Extension";
+                dbDict.Clear();
+                dbDict.Add("Id", IGDBId);
+                DataTable uextTable = db.ExecuteCMD(sql, dbDict);
 
-            List<string> uniqueExtensions = new List<string>();
-            foreach (DataRow uextRow in uextTable.Rows)
-            {
-                string uextVal = (string)uextRow["Extension"];
-                if (!uniqueExtensions.Contains(uextVal, StringComparer.OrdinalIgnoreCase))
+                List<string> uniqueExtensions = new List<string>();
+                foreach (DataRow uextRow in uextTable.Rows)
                 {
-                    uniqueExtensions.Add(uextVal);
+                    string uextVal = (string)uextRow["Extension"];
+                    if (!uniqueExtensions.Contains(uextVal, StringComparer.OrdinalIgnoreCase))
+                    {
+                        uniqueExtensions.Add(uextVal);
+                    }
                 }
-            }
 
-            // get platform bios
-            sql = "SELECT * FROM PlatformMap_Bios WHERE Id = @Id ORDER BY Filename";
-            dbDict.Clear();
-            dbDict.Add("Id", IGDBId);
-            DataTable biosTable = db.ExecuteCMD(sql, dbDict);
+                // get platform bios
+                sql = "SELECT * FROM PlatformMap_Bios WHERE Id = @Id ORDER BY Filename";
+                dbDict.Clear();
+                dbDict.Add("Id", IGDBId);
+                DataTable biosTable = db.ExecuteCMD(sql, dbDict);
 
-            List<PlatformMapItem.EmulatorBiosItem> bioss = new List<PlatformMapItem.EmulatorBiosItem>();
-            foreach (DataRow biosRow in biosTable.Rows)
-            {
-                PlatformMapItem.EmulatorBiosItem bios = new PlatformMapItem.EmulatorBiosItem
+                List<PlatformMapItem.EmulatorBiosItem> bioss = new List<PlatformMapItem.EmulatorBiosItem>();
+                foreach (DataRow biosRow in biosTable.Rows)
                 {
-                    filename = (string)Common.ReturnValueIfNull(biosRow["Filename"], ""),
-                    description = (string)Common.ReturnValueIfNull(biosRow["Description"], ""),
-                    hash = ((string)Common.ReturnValueIfNull(biosRow["Hash"], "")).ToLower()
+                    PlatformMapItem.EmulatorBiosItem bios = new PlatformMapItem.EmulatorBiosItem
+                    {
+                        filename = (string)Common.ReturnValueIfNull(biosRow["Filename"], ""),
+                        description = (string)Common.ReturnValueIfNull(biosRow["Description"], ""),
+                        hash = ((string)Common.ReturnValueIfNull(biosRow["Hash"], "")).ToLower()
+                    };
+                    bioss.Add(bios);
+                }
+
+                // build item
+                PlatformMapItem mapItem = new PlatformMapItem();
+                mapItem.IGDBId = IGDBId;
+                mapItem.IGDBName = platform.Name;
+                mapItem.IGDBSlug = platform.Slug;
+                mapItem.AlternateNames = alternateNames;
+                mapItem.Extensions = new PlatformMapItem.FileExtensions{
+                    SupportedFileExtensions = knownExtensions,
+                    UniqueFileExtensions = uniqueExtensions
                 };
-                bioss.Add(bios);
+                mapItem.RetroPieDirectoryName = (string)Common.ReturnValueIfNull(row["RetroPieDirectoryName"], "");
+                mapItem.WebEmulator = new PlatformMapItem.WebEmulatorItem{
+                    Type = (string)Common.ReturnValueIfNull(row["WebEmulator_Type"], ""),
+                    Core = (string)Common.ReturnValueIfNull(row["WebEmulator_Core"], ""),
+                    AvailableWebEmulators = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PlatformMapItem.WebEmulatorItem.AvailableWebEmulatorItem>>((string)Common.ReturnValueIfNull(row["AvailableWebEmulators"], "[]"))
+                };
+                mapItem.Bios = bioss;
+                
+                if (PlatformMapCache.ContainsKey(IGDBId.ToString()))
+                {
+                    PlatformMapCache[IGDBId.ToString()] = mapItem;
+                }
+                else
+                {
+                    PlatformMapCache.Add(IGDBId.ToString(), mapItem);
+                }
+
+                return mapItem;
             }
 
-            // build item
-            PlatformMapItem mapItem = new PlatformMapItem();
-            mapItem.IGDBId = IGDBId;
-            mapItem.IGDBName = platform.Name;
-            mapItem.IGDBSlug = platform.Slug;
-            mapItem.AlternateNames = alternateNames;
-            mapItem.Extensions = new PlatformMapItem.FileExtensions{
-                SupportedFileExtensions = knownExtensions,
-                UniqueFileExtensions = uniqueExtensions
-            };
-            mapItem.RetroPieDirectoryName = (string)Common.ReturnValueIfNull(row["RetroPieDirectoryName"], "");
-            mapItem.WebEmulator = new PlatformMapItem.WebEmulatorItem{
-                Type = (string)Common.ReturnValueIfNull(row["WebEmulator_Type"], ""),
-                Core = (string)Common.ReturnValueIfNull(row["WebEmulator_Core"], ""),
-                AvailableWebEmulators = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PlatformMapItem.WebEmulatorItem.AvailableWebEmulatorItem>>((string)Common.ReturnValueIfNull(row["AvailableWebEmulators"], "[]"))
-            };
-            mapItem.Bios = bioss;
-            
-            if (PlatformMapCache.ContainsKey(IGDBId.ToString()))
-            {
-                PlatformMapCache[IGDBId.ToString()] = mapItem;
-            }
-            else
-            {
-                PlatformMapCache.Add(IGDBId.ToString(), mapItem);
-            }
-
-            return mapItem;
+            return null;
         }
 
         public static void GetIGDBPlatformMapping(ref gaseous_server.Models.Signatures_Games Signature, FileInfo RomFileInfo, bool SetSystemName)
