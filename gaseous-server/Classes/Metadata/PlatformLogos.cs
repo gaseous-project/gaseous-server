@@ -117,7 +117,7 @@ namespace gaseous_server.Classes.Metadata
         {
             // get Artwork metadata
             Communications comms = new Communications();
-            var results = await comms.APIComm<PlatformLogo>(IGDBClient.Endpoints.Artworks, fieldList, WhereClause);
+            var results = await comms.APIComm<PlatformLogo>(IGDBClient.Endpoints.PlatformLogos, fieldList, WhereClause);
             var result = results.First();
 
             return result;

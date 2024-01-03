@@ -289,6 +289,7 @@ input[type='text'], input[type='number'], input[type="email"], input[type="passw
     border-style: solid;
     /* border-color: lightgray; */
     border-color: #2b2b2b;
+    height: 21px;
 }
 
 input[type='text']:hover, input[type='number']:hover, input[type="email"]:hover, input[type="password"]:hover, input[type="datetime-local"]:hover {
@@ -448,13 +449,21 @@ input[id='filter_panel_userrating_max'] {
     border-color: #2b2b2b;
     border-radius: 5px;
     margin-bottom: 10px;
-    padding: 10px;
+    padding-top: 7px;
+    padding-bottom: 10px;
+    padding-right: 20px;
     text-align: right;
 }
 
 .games_library_controlblock {
-    margin-left: 20px;
+    margin-left: 10px;
     display: inline-block;
+    vertical-align: top;
+}
+
+.games_library_label {
+    display: inline-block;
+    padding-top: 7px;
 }
 
 #games_library {
@@ -636,13 +645,17 @@ input[id='filter_panel_userrating_max'] {
 
 .rating_image {
     display: inline-block;
+    height: 64px;
     max-width: 64px;
     max-height: 64px;
     margin-right: 20px;
-    margin-bottom: 20px;
-    box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
-    -webkit-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
-    -moz-box-shadow: 5px 5px 19px 0px rgba(0,0,0,0.44);
+    /* margin-bottom: 20px; */
+}
+
+.rating_image_logo_table {
+    min-height: 70px;
+    min-width: 70px;
+    text-align: center;
 }
 
 .rating_image_mini {
@@ -1001,7 +1014,7 @@ div[name="properties_toc_item"]:hover,div[name="properties_user_toc_item"]:hover
     color: lightgray;
 }
 
-button {
+button:not(.select2-selection__choice__remove):not(.ejs_menu_button) {
     background-color: #555;
     color: white;
     border-width: 1px;
@@ -1009,10 +1022,12 @@ button {
     border-style: solid;
     padding-top: 5px;
     padding-bottom: 5px;
-    padding-left: 10px;
-    padding-right: 10px;
+    padding-left: 15px;
+    padding-right: 15px;
     margin-right: 3px;
     margin-bottom: 3px;
+    font-size: 13px;
+    height: 30px;
 }
 
 button:hover {

@@ -8,8 +8,10 @@
 <div id="games_home">
     <div id="games_home_box">
         <div id="games_library_controls">
+            <div class="games_library_controlblock">
+                <span class="games_library_label">Order by: </span>
+            </div>
             <div id="games_library_orderby" class="games_library_controlblock" style="text-align: left;">
-                <span>Order by: </span>
                 <select id="games_library_orderby_select" data-minimum-results-for-search="Infinity" onchange="executeFilter1_1(1);">
                     <option selected="selected" value="NameThe">Name, The</option>
                     <option value="Name">Name</option>
@@ -21,7 +23,9 @@
                     <option value="Descending">Descending</option>
                 </select>
             </div>
-            <div id="games_library_recordcount" class="games_library_controlblock"></div>
+            <div class="games_library_controlblock">
+                <span id="games_library_recordcount" class="games_library_label"></span>
+            </div>
         </div>
         <div id="games_library"></div>
         <div id="games_library_pagerstore" style="display: none;">0</div>

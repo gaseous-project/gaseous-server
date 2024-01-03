@@ -13,7 +13,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static Artwork? GetArtwork(long? Id, string ImagePath)
+        public static Artwork? GetArtwork(long? Id, string ImagePath, bool GetImages)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -21,18 +21,18 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<Artwork> RetVal = _GetArtwork(SearchUsing.id, Id, ImagePath);
+                Task<Artwork> RetVal = _GetArtwork(SearchUsing.id, Id, ImagePath, GetImages);
                 return RetVal.Result;
             }
         }
 
-        public static Artwork GetArtwork(string Slug, string ImagePath)
+        public static Artwork GetArtwork(string Slug, string ImagePath, bool GetImages)
         {
-            Task<Artwork> RetVal = _GetArtwork(SearchUsing.slug, Slug, ImagePath);
+            Task<Artwork> RetVal = _GetArtwork(SearchUsing.slug, Slug, ImagePath, GetImages);
             return RetVal.Result;
         }
 
-        private static async Task<Artwork> _GetArtwork(SearchUsing searchUsing, object searchValue, string ImagePath)
+        private static async Task<Artwork> _GetArtwork(SearchUsing searchUsing, object searchValue, string ImagePath, bool GetImages = true)
         {
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
@@ -67,14 +67,14 @@ namespace gaseous_server.Classes.Metadata
                 case Storage.CacheStatus.NotPresent:
                     returnValue = await GetObjectFromServer(WhereClause, ImagePath);
                     Storage.NewCacheValue(returnValue);
-                    forceImageDownload = true;
+                    if (GetImages == true) { forceImageDownload = true; }
                     break;  
                 case Storage.CacheStatus.Expired:
                     try
                     {
                         returnValue = await GetObjectFromServer(WhereClause, ImagePath);
                         Storage.NewCacheValue(returnValue, true);
-                        forceImageDownload = true;
+                        if (GetImages == true) { forceImageDownload = true; }
                     }
                     catch (Exception ex)
                     {

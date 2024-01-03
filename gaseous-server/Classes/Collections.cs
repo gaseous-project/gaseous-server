@@ -792,6 +792,15 @@ namespace gaseous_server.Classes
                     public string Name { get; set; }
                     public string Slug { get; set; }
                     public long Cover { get; set;}
+                    public IGDB.Models.Cover CoverItem
+                    {
+                        get
+                        {
+                            IGDB.Models.Cover cover = Covers.GetCover(Cover, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory, "Games", Slug), false);
+
+                            return cover;
+                        }
+                    }
 
                     public CollectionItem.AlwaysIncludeItem InclusionStatus { get; set; }
 

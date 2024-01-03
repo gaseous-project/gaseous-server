@@ -1,7 +1,9 @@
 using System.ComponentModel;
+using System.Drawing;
 using System.Net;
 using Humanizer;
 using IGDB;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using RestEase;
 
 namespace gaseous_server.Classes.Metadata
@@ -318,51 +320,104 @@ namespace gaseous_server.Classes.Metadata
         {
             string returnPath = "";
 
-            if (RateLimitResumeTime > DateTime.UtcNow)
+            // check for artificial sizes first
+            switch (size)
             {
-                Logging.Log(Logging.LogType.Information, "API Connection", "IGDB rate limit hit. Pausing API communications until " + RateLimitResumeTime.ToString() + ". Attempt " + RetryAttempts + " of " + RetryAttemptsMax + " retries.");
-                Thread.Sleep(RateLimitRecoveryWaitTime);
-            }
-
-            if (InRateLimitAvoidanceMode == true)
-            {
-                // sleep for a moment to help avoid hitting the rate limiter
-                Thread.Sleep(RateLimitAvoidanceWait);
-            }
-
-            Communications comms = new Communications();
-            List<IGDBAPI_ImageSize> imageSizes = new List<IGDBAPI_ImageSize>
-            {
-                size
-            };
-
-            // get the image
-            try
-            {
-                returnPath = Path.Combine(ImagePath, size.ToString(), ImageId + ".jpg");
-
-                if (File.Exists(returnPath)) { File.Delete(returnPath); }
-                await comms.IGDBAPI_GetImage(imageSizes, ImageId, ImagePath);
-                
-            }
-            catch (HttpRequestException ex)
-            {
-                if (ex.StatusCode == HttpStatusCode.NotFound)
-                {
-                    Logging.Log(Logging.LogType.Information, "Image Download", "Image not found, trying a different size.");
-
-                    if (FallbackSizes != null)
+                case IGDBAPI_ImageSize.screenshot_small:
+                case IGDBAPI_ImageSize.screenshot_thumb:
+                    string BasePath = Path.Combine(ImagePath, size.ToString());
+                    if (!Directory.Exists(BasePath))
                     {
-                        foreach (Communications.IGDBAPI_ImageSize imageSize in FallbackSizes)
+                        Directory.CreateDirectory(BasePath);
+                    }
+                    returnPath = Path.Combine(BasePath, ImageId + ".jpg");
+                    if (!File.Exists(returnPath))
+                    {
+                        // get original size image and resize
+                        string originalSizePath = await GetSpecificImageFromServer(ImagePath, ImageId, IGDBAPI_ImageSize.original, null);
+
+                        int width = 0;
+                        int height = 0;
+                        
+                        switch (size)
                         {
-                            returnPath = await GetSpecificImageFromServer(ImagePath, ImageId, imageSize, null);
+                            case IGDBAPI_ImageSize.screenshot_small:
+                                // 235x128
+                                width = 235;
+                                height = 128;
+                                break;
+                            
+                            case IGDBAPI_ImageSize.screenshot_thumb:
+                                // 165x90
+                                width = 165;
+                                height = 90;
+                                break;
+
+                        }
+
+                        using (var image = new ImageMagick.MagickImage(originalSizePath))
+                        {
+                            image.Resize(width, height);
+                            image.Strip();
+                            image.Write(returnPath);
                         }
                     }
-                }
-            }
 
-            // increment rate limiter avoidance call count
-            RateLimitAvoidanceCallCount += 1;
+                    break;
+
+                default:
+                    // these sizes are IGDB native
+                    if (RateLimitResumeTime > DateTime.UtcNow)
+                    {
+                        Logging.Log(Logging.LogType.Information, "API Connection", "IGDB rate limit hit. Pausing API communications until " + RateLimitResumeTime.ToString() + ". Attempt " + RetryAttempts + " of " + RetryAttemptsMax + " retries.");
+                        Thread.Sleep(RateLimitRecoveryWaitTime);
+                    }
+
+                    if (InRateLimitAvoidanceMode == true)
+                    {
+                        // sleep for a moment to help avoid hitting the rate limiter
+                        Thread.Sleep(RateLimitAvoidanceWait);
+                    }
+
+                    Communications comms = new Communications();
+                    List<IGDBAPI_ImageSize> imageSizes = new List<IGDBAPI_ImageSize>
+                    {
+                        size
+                    };
+
+                    // get the image
+                    try
+                    {
+                        returnPath = Path.Combine(ImagePath, size.ToString(), ImageId + ".jpg");
+
+                        // fail early if the file is already downloaded
+                        if (!File.Exists(returnPath))
+                        {
+                            await comms.IGDBAPI_GetImage(imageSizes, ImageId, ImagePath);
+                        }
+                        
+                    }
+                    catch (HttpRequestException ex)
+                    {
+                        if (ex.StatusCode == HttpStatusCode.NotFound)
+                        {
+                            Logging.Log(Logging.LogType.Information, "Image Download", "Image not found, trying a different size.");
+
+                            if (FallbackSizes != null)
+                            {
+                                foreach (Communications.IGDBAPI_ImageSize imageSize in FallbackSizes)
+                                {
+                                    returnPath = await GetSpecificImageFromServer(ImagePath, ImageId, imageSize, null);
+                                }
+                            }
+                        }
+                    }
+
+                    // increment rate limiter avoidance call count
+                    RateLimitAvoidanceCallCount += 1;
+
+                    break;
+            }
 
             return returnPath;
         }
@@ -383,23 +438,7 @@ namespace gaseous_server.Classes.Metadata
                 string OutputFile = ImageId + ".jpg";
                 string fullPath = Path.Combine(newOutputPath, OutputFile);
                 
-                bool AllowDownload = true;
-
-                FileInfo fi;
-                if (File.Exists(fullPath))
-                {
-                    fi = new FileInfo(fullPath);
-                    if (fi.LastWriteTimeUtc.AddDays(14) < DateTime.UtcNow)
-                    {
-                        File.Delete(fullPath);
-                        AllowDownload = true;
-                    }
-                }
-
-                if (AllowDownload == true)
-                {
-                    await _DownloadFile(new Uri(url), fullPath);
-                }
+                await _DownloadFile(new Uri(url), fullPath);
             }
         }
 
@@ -416,6 +455,18 @@ namespace gaseous_server.Classes.Metadata
             /// </summary>
             [Description("cover_big")]
             cover_big,
+
+            /// <summary>
+            /// 165x90 Lfill, Centre gravity - resized by Gaseous and is not a real IGDB size
+            /// </summary>
+            [Description("screenshot_thumb")]
+            screenshot_thumb,
+
+            /// <summary>
+            /// 235x128 Lfill, Centre gravity - resized by Gaseous and is not a real IGDB size
+            /// </summary>
+            [Description("screenshot_small")]
+            screenshot_small,
 
             /// <summary>
             /// 589x320 Lfill, Centre gravity

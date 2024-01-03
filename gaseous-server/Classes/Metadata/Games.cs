@@ -98,14 +98,14 @@ namespace gaseous_server.Classes.Metadata
                 case Storage.CacheStatus.NotPresent:
                     returnValue = await GetObjectFromServer(WhereClause);
                     Storage.NewCacheValue(returnValue);
-                    UpdateSubClasses(returnValue, getAllMetadata, followSubGames);
+                    UpdateSubClasses(returnValue, getAllMetadata, followSubGames, forceRefresh);
                     return returnValue;
                 case Storage.CacheStatus.Expired:
                     try
                     {
                         returnValue = await GetObjectFromServer(WhereClause);
                         Storage.NewCacheValue(returnValue, true);
-                        UpdateSubClasses(returnValue, getAllMetadata, followSubGames);
+                        UpdateSubClasses(returnValue, getAllMetadata, followSubGames, forceRefresh);
                     }
                     catch (Exception ex)
                     {
@@ -115,21 +115,21 @@ namespace gaseous_server.Classes.Metadata
                     return returnValue;
                 case Storage.CacheStatus.Current:
                     returnValue = Storage.GetCacheValue<Game>(returnValue, "id", (long)searchValue);
-                    UpdateSubClasses(returnValue, false, false);
+                    UpdateSubClasses(returnValue, false, false, false);
                     return returnValue;
                 default:
                     throw new Exception("How did you get here?");
             }
         }
 
-        private static void UpdateSubClasses(Game Game, bool getAllMetadata, bool followSubGames)
+        private static void UpdateSubClasses(Game Game, bool getAllMetadata, bool followSubGames, bool forceRefresh)
         {
             // required metadata
             if (Game.Cover != null)
             {
                 try
                 {
-                    Cover GameCover = Covers.GetCover(Game.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), false);
+                    Cover GameCover = Covers.GetCover(Game.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), forceRefresh);
                 }
                 catch (Exception ex)
                 {
@@ -211,7 +211,7 @@ namespace gaseous_server.Classes.Metadata
                     {
                         try
                         {
-                            Artwork GameArtwork = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
+                            Artwork GameArtwork = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), forceRefresh);
                         }
                         catch (Exception ex)
                         {
@@ -285,7 +285,7 @@ namespace gaseous_server.Classes.Metadata
                     {
                         try
                         {
-                        Screenshot GameScreenshot = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game));
+                        Screenshot GameScreenshot = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), forceRefresh);
                         }
                         catch (Exception ex)
                         {

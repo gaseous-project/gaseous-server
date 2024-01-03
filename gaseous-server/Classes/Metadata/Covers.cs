@@ -15,7 +15,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static Cover? GetCover(long? Id, string ImagePath, bool GetImages = true)
+        public static Cover? GetCover(long? Id, string ImagePath, bool GetImages)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -28,7 +28,7 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        public static Cover GetCover(string Slug, string ImagePath, bool GetImages = true)
+        public static Cover GetCover(string Slug, string ImagePath, bool GetImages)
         {
             Task<Cover> RetVal = _GetCover(SearchUsing.slug, Slug, ImagePath, GetImages);
             return RetVal.Result;
@@ -91,7 +91,8 @@ namespace gaseous_server.Classes.Metadata
                     throw new Exception("How did you get here?");
             }
 
-            if (forceImageDownload == true)
+            string localFile = Path.Combine(ImagePath, Communications.IGDBAPI_ImageSize.original.ToString(), returnValue.ImageId + ".jpg");
+            if ((!File.Exists(localFile)) || forceImageDownload == true)
             {
                 Logging.Log(Logging.LogType.Information, "Metadata: " + returnValue.GetType().Name, "Cover download forced.");
 
@@ -105,7 +106,7 @@ namespace gaseous_server.Classes.Metadata
                 Communications comms = new Communications();
                 foreach (Communications.IGDBAPI_ImageSize size in imageSizes)
                 {
-                    string localFile = Path.Combine(ImagePath, size.ToString(), returnValue.ImageId + ".jpg");
+                    localFile = Path.Combine(ImagePath, size.ToString(), returnValue.ImageId + ".jpg");
                     if ((!File.Exists(localFile)) || forceImageDownload == true)
                     {
                         comms.GetSpecificImageFromServer(ImagePath, returnValue.ImageId, size, null);
