@@ -487,13 +487,15 @@ namespace gaseous_server.Classes
 
         public void LibraryScan()
         {
+            int maxWorkers = 4;
+
             // setup background tasks for each library
             foreach (GameLibrary.LibraryItem library in GameLibrary.GetLibraries)
             {
                 Logging.Log(Logging.LogType.Information, "Library Scan", "Starting worker process for library " + library.Name);
                 ProcessQueue.QueueItem queue = new ProcessQueue.QueueItem(
                     ProcessQueue.QueueItemType.LibraryScanWorker,
-                    0,
+                    1,
                     new List<ProcessQueue.QueueItemType>
                     {
                         ProcessQueue.QueueItemType.OrganiseLibrary,
@@ -502,11 +504,34 @@ namespace gaseous_server.Classes
                     false,
                     true);
                 queue.Options = library;
+                queue.ForceExecute();
 
                 ProcessQueue.QueueItems.Add(queue);
+
+                // check number of running tasks is less than maxWorkers
+                bool allowContinue;
+                do
+                {
+                    allowContinue = true;
+                    int currentWorkerCount = 0;
+                    List<ProcessQueue.QueueItem> queueItems = new List<ProcessQueue.QueueItem>();
+                    queueItems.AddRange(ProcessQueue.QueueItems);
+                    foreach (ProcessQueue.QueueItem item in queueItems)
+                    {
+                        if (item.ItemType == ProcessQueue.QueueItemType.LibraryScanWorker)
+                        {
+                            currentWorkerCount += 1;
+                        }
+                    }
+                    if (currentWorkerCount >= maxWorkers)
+                    {
+                        allowContinue = false;
+                        Thread.Sleep(60000);
+                    }
+                } while (allowContinue == false);
             }
 
-            bool WorkersStillWorking = false;
+            bool WorkersStillWorking;
             do
             {
                 WorkersStillWorking = false;

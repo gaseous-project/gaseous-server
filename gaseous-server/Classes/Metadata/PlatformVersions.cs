@@ -94,7 +94,14 @@ namespace gaseous_server.Classes.Metadata
         {
             if (platformVersion.PlatformLogo != null)
             {
-                PlatformLogo platformLogo = PlatformLogos.GetPlatformLogo(platformVersion.PlatformLogo.Id, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(ParentPlatform), "Versions", platformVersion.Slug));
+                try
+                {
+                    PlatformLogo platformLogo = PlatformLogos.GetPlatformLogo(platformVersion.PlatformLogo.Id, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(ParentPlatform), "Versions", platformVersion.Slug));
+                }
+                catch (Exception ex)
+                {
+                    Logging.Log(Logging.LogType.Warning, "Platform Update", "Unable to fetch platform logo", ex);
+                }
             }
         }
 

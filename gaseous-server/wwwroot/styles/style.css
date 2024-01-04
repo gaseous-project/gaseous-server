@@ -1014,7 +1014,7 @@ div[name="properties_toc_item"]:hover,div[name="properties_user_toc_item"]:hover
     color: lightgray;
 }
 
-button:not(.select2-selection__choice__remove):not(.ejs_menu_button) {
+button:not(.select2-selection__choice__remove):not(.ejs_menu_button):not(.bigbutton) {
     background-color: #555;
     color: white;
     border-width: 1px;
@@ -1035,10 +1035,25 @@ button:not(.select2-selection__choice__remove):not(.ejs_menu_button):hover {
     cursor: pointer;
 }
 
-button:disabled {
+button:not(.select2-selection__choice__remove):not(.ejs_menu_button):disabled {
     background-color: #555;
     color: #888;
     cursor: not-allowed;
+}
+
+.bigbutton {
+    background-color: #555;
+    color: white;
+    border-width: 1px;
+    border-color: #555;
+    border-style: solid;
+    margin-top: 10px;
+    width: 100%;
+    height: 42px;
+    font-size: 16px;
+    border-radius: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 .redbutton {
