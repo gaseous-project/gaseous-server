@@ -493,7 +493,7 @@ namespace gaseous_server.Classes
                 Logging.Log(Logging.LogType.Information, "Library Scan", "Starting worker process for library " + library.Name);
                 ProcessQueue.QueueItem queue = new ProcessQueue.QueueItem(
                     ProcessQueue.QueueItemType.LibraryScanWorker,
-                    0,
+                    1,
                     new List<ProcessQueue.QueueItemType>
                     {
                         ProcessQueue.QueueItemType.OrganiseLibrary,
@@ -502,6 +502,7 @@ namespace gaseous_server.Classes
                     false,
                     true);
                 queue.Options = library;
+                queue.ForceExecute();
 
                 ProcessQueue.QueueItems.Add(queue);
             }

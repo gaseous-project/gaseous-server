@@ -106,11 +106,19 @@ namespace gaseous_server.Models
                     long mapId = (long)row["Id"];
                     if (PlatformMapCache.ContainsKey(mapId.ToString()))
                     {
-                        platformMaps.Add(PlatformMapCache[mapId.ToString()]);
+                        PlatformMapItem mapItem = PlatformMapCache[mapId.ToString()];
+                        if (mapItem != null)
+                        {
+                            platformMaps.Add(mapItem);
+                        }
                     }
                     else
                     {
-                        platformMaps.Add(BuildPlatformMapItem(row));
+                        PlatformMapItem mapItem = BuildPlatformMapItem(row);
+                        if (mapItem != null)
+                        {
+                            platformMaps.Add(mapItem);
+                        }
                     }
                 }
 
