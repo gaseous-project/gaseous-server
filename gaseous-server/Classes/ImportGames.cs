@@ -621,16 +621,16 @@ namespace gaseous_server.Classes
                     if (romFound == false)
                     {
                         // file is not in database - process it
+                        Logging.Log(Logging.LogType.Information, "Library Scan", "Orphaned file found in library: " + LibraryFile);
+                        
                         Common.hashObject hash = new Common.hashObject(LibraryFile);
                         FileInfo fi = new FileInfo(LibraryFile);
 
                         gaseous_server.Models.Signatures_Games sig = GetFileSignature(hash, fi, LibraryFile);
 
-                        Logging.Log(Logging.LogType.Information, "Library Scan", "Orphaned file found in library: " + LibraryFile);
-
                         // get discovered platform
                         IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(sig.Flags.IGDBPlatformId);
-
+                        
                         IGDB.Models.Game determinedGame = new Game();
                         try
                         {
@@ -687,7 +687,12 @@ namespace gaseous_server.Classes
                         {
                             if (romPath != ComputeROMPath(romId))
                             {
+                                Logging.Log(Logging.LogType.Information, "Library Scan", "ROM at path " + romPath + " found, but needs to be moved");
                                 MoveGameFile(romId);
+                            }
+                            else
+                            {
+                                Logging.Log(Logging.LogType.Information, "Library Scan", "ROM at path " + romPath + " found");
                             }
                         }
                     }

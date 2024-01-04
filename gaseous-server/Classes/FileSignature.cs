@@ -11,6 +11,7 @@ namespace gaseous_server.Classes
     {
         public static gaseous_server.Models.Signatures_Games GetFileSignature(Common.hashObject hash, FileInfo fi, string GameFileImportPath)
         {
+            Logging.Log(Logging.LogType.Information, "Get Signature", "Getting signature for file: " + GameFileImportPath);
             gaseous_server.Models.Signatures_Games discoveredSignature = new gaseous_server.Models.Signatures_Games();
             discoveredSignature = _GetFileSignature(hash, fi, GameFileImportPath, false);
 
@@ -21,9 +22,8 @@ namespace gaseous_server.Classes
             {
                 // file is a zip and less than 1 GiB
                 // extract the zip file and search the contents
-                Logging.Log(Logging.LogType.Information, "Get Signature", "Decompressing " + GameFileImportPath + " to examine contents");
-
                 string ExtractPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, Path.GetRandomFileName());
+                Logging.Log(Logging.LogType.Information, "Get Signature", "Decompressing " + GameFileImportPath + " to " + ExtractPath + " examine contents");
                 if (!Directory.Exists(ExtractPath)) { Directory.CreateDirectory(ExtractPath); }
                 try
                 {
@@ -33,11 +33,11 @@ namespace gaseous_server.Classes
                             Logging.Log(Logging.LogType.Information, "Get Signature", "Decompressing using zip");
                             try
                             {
-                                //ZipFile.ExtractToDirectory(GameFileImportPath, ExtractPath);
                                 using (var archive = SharpCompress.Archives.Zip.ZipArchive.Open(GameFileImportPath))
                                 {
                                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                                     {
+                                        Logging.Log(Logging.LogType.Information, "Get Signature", "Extracting file: " + entry.Key);
                                         entry.WriteToDirectory(ExtractPath, new ExtractionOptions()
                                         {
                                             ExtractFullPath = true,
@@ -61,6 +61,7 @@ namespace gaseous_server.Classes
                                 {
                                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                                     {
+                                        Logging.Log(Logging.LogType.Information, "Get Signature", "Extracting file: " + entry.Key);
                                         entry.WriteToDirectory(ExtractPath, new ExtractionOptions()
                                         {
                                             ExtractFullPath = true,
@@ -84,6 +85,7 @@ namespace gaseous_server.Classes
                                 {
                                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                                     {
+                                        Logging.Log(Logging.LogType.Information, "Get Signature", "Extracting file: " + entry.Key);
                                         entry.WriteToDirectory(ExtractPath, new ExtractionOptions()
                                         {
                                             ExtractFullPath = true,
@@ -140,7 +142,12 @@ namespace gaseous_server.Classes
                     Logging.Log(Logging.LogType.Critical, "Get Signature", "Error processing compressed file: " + GameFileImportPath, ex);
                 }
 
-                if (Directory.Exists(ExtractPath)) { Directory.Delete(ExtractPath, true); }
+                if (Directory.Exists(ExtractPath)) 
+                {
+                    Logging.Log(Logging.LogType.Information, "Get Signature", "Deleting temporary decompress folder: " + ExtractPath);
+                 
+                    Directory.Delete(ExtractPath, true); 
+                }
             }
 
             return discoveredSignature;
@@ -156,6 +163,7 @@ namespace gaseous_server.Classes
             if (dbSignature != null)
             {
                 // local signature found
+                Logging.Log(Logging.LogType.Information, "Import Game", "Signature found in local database for game: " + dbSignature.Game.Name);
                 discoveredSignature = dbSignature;
             }
             else
@@ -166,12 +174,16 @@ namespace gaseous_server.Classes
                 if (dbSignature != null)
                 {
                     // signature retrieved from Hasheous
+                    Logging.Log(Logging.LogType.Information, "Import Game", "Signature retrieved from Hasheous for game: " + dbSignature.Game.Name);
+                
                     discoveredSignature = dbSignature;
                 }
                 else
                 {
                     // construct a signature from file data
                     dbSignature = _GetFileSignatureFromFileData(hash, fi, GameFileImportPath);
+                    Logging.Log(Logging.LogType.Information, "Import Game", "Signature generated from provided file for game: " + dbSignature.Game.Name);
+                
                     discoveredSignature = dbSignature;
                 }
             }
