@@ -487,163 +487,202 @@ namespace gaseous_server.Classes
 
         public void LibraryScan()
         {
+            // setup background tasks for each library
             foreach (GameLibrary.LibraryItem library in GameLibrary.GetLibraries)
             {
-                Logging.Log(Logging.LogType.Information, "Library Scan", "Starting library scan. Library " + library.Name);
+                Logging.Log(Logging.LogType.Information, "Library Scan", "Starting worker process for library " + library.Name);
+                ProcessQueue.QueueItem queue = new ProcessQueue.QueueItem(
+                    ProcessQueue.QueueItemType.LibraryScanWorker,
+                    0,
+                    new List<ProcessQueue.QueueItemType>
+                    {
+                        ProcessQueue.QueueItemType.OrganiseLibrary,
+                        ProcessQueue.QueueItemType.Rematcher
+                    },
+                    false,
+                    true);
+                queue.Options = library;
 
-                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                ProcessQueue.QueueItems.Add(queue);
+            }
 
-                Logging.Log(Logging.LogType.Information, "Library Scan", "Looking for duplicate library files to clean up");
-                string duplicateSql = "DELETE r1 FROM Games_Roms r1 INNER JOIN Games_Roms r2 WHERE r1.Id > r2.Id AND r1.MD5 = r2.MD5 AND r1.LibraryId=@libraryid AND r2.LibraryId=@libraryid;";
-                Dictionary<string, object> dupDict = new Dictionary<string, object>();
-                dupDict.Add("libraryid", library.Id);
-                db.ExecuteCMD(duplicateSql, dupDict);
-
-                string sql = "SELECT * FROM Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
-                Dictionary<string, object> dbDict = new Dictionary<string, object>();
-                dbDict.Add("libraryid", library.Id);
-                DataTable dtRoms = db.ExecuteCMD(sql, dbDict);
-
-                // clean out database entries in the import folder
-                if (dtRoms.Rows.Count > 0)
+            bool WorkersStillWorking = false;
+            do
+            {
+                WorkersStillWorking = false;
+                List<ProcessQueue.QueueItem> queueItems = new List<ProcessQueue.QueueItem>();
+                queueItems.AddRange(ProcessQueue.QueueItems);
+                foreach (ProcessQueue.QueueItem item in queueItems)
                 {
+                    if (item.ItemType == ProcessQueue.QueueItemType.LibraryScanWorker)
+                    {
+                        // workers are still running - sleep and keep looping
+                        WorkersStillWorking = true;
+                        Thread.Sleep(30000);
+                    }
+                }
+            } while (WorkersStillWorking == true);
+
+            Logging.Log(Logging.LogType.Information, "Library Scan", "Library scan complete. All workers stopped");
+        }
+
+        public void LibrarySpecificScan(GameLibrary.LibraryItem library)
+        {
+            
+            Logging.Log(Logging.LogType.Information, "Library Scan", "Starting scan of library: " + library.Name);
+
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
+            Logging.Log(Logging.LogType.Information, "Library Scan", "Looking for duplicate library files to clean up");
+            string duplicateSql = "DELETE r1 FROM Games_Roms r1 INNER JOIN Games_Roms r2 WHERE r1.Id > r2.Id AND r1.MD5 = r2.MD5 AND r1.LibraryId=@libraryid AND r2.LibraryId=@libraryid;";
+            Dictionary<string, object> dupDict = new Dictionary<string, object>();
+            dupDict.Add("libraryid", library.Id);
+            db.ExecuteCMD(duplicateSql, dupDict);
+
+            string sql = "SELECT * FROM Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            dbDict.Add("libraryid", library.Id);
+            DataTable dtRoms = db.ExecuteCMD(sql, dbDict);
+
+            // clean out database entries in the import folder
+            if (dtRoms.Rows.Count > 0)
+            {
+                for (var i = 0; i < dtRoms.Rows.Count; i++)
+                {
+                    long romId = (long)dtRoms.Rows[i]["Id"];
+                    string romPath = (string)dtRoms.Rows[i]["Path"];
+
+                    if (!romPath.StartsWith(library.Path))
+                    {
+                        Logging.Log(Logging.LogType.Information, "Library Scan", "Deleting database entry for files with incorrect directory " + romPath);
+                        string deleteSql = "DELETE FROM Games_Roms WHERE Id=@id AND LibraryId=@libraryid";
+                        Dictionary<string, object> deleteDict = new Dictionary<string, object>();
+                        deleteDict.Add("Id", romId);
+                        deleteDict.Add("libraryid", library.Id);
+                        db.ExecuteCMD(deleteSql, deleteDict);
+                    }
+                }
+            }
+
+            sql = "SELECT * FROM Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
+            dtRoms = db.ExecuteCMD(sql, dbDict);
+
+            // search for files in the library that aren't in the database
+            Logging.Log(Logging.LogType.Information, "Library Scan", "Looking for orphaned library files to add");
+            string[] LibraryFiles = Directory.GetFiles(library.Path, "*.*", SearchOption.AllDirectories);
+            int StatusCount = 0;
+            foreach (string LibraryFile in LibraryFiles)
+            {
+                SetStatus(StatusCount, LibraryFiles.Length, "Processing file " + LibraryFile);
+                if (!Common.SkippableFiles.Contains<string>(Path.GetFileName(LibraryFile), StringComparer.OrdinalIgnoreCase))
+                {
+                    Common.hashObject LibraryFileHash = new Common.hashObject(LibraryFile);
+
+                    // check if file is in database
+                    bool romFound = false;
                     for (var i = 0; i < dtRoms.Rows.Count; i++)
                     {
                         long romId = (long)dtRoms.Rows[i]["Id"];
                         string romPath = (string)dtRoms.Rows[i]["Path"];
+                        string romMd5 = (string)dtRoms.Rows[i]["MD5"];
 
-                        if (!romPath.StartsWith(library.Path))
+                        if ((LibraryFile == romPath) || (LibraryFileHash.md5hash == romMd5))
                         {
-                            Logging.Log(Logging.LogType.Information, "Library Scan", " Deleting database entry for files with incorrect directory " + romPath);
-                            string deleteSql = "DELETE FROM Games_Roms WHERE Id=@id AND LibraryId=@libraryid";
-                            Dictionary<string, object> deleteDict = new Dictionary<string, object>();
-                            deleteDict.Add("Id", romId);
-                            deleteDict.Add("libraryid", library.Id);
-                            db.ExecuteCMD(deleteSql, deleteDict);
+                            romFound = true;
+                            break;
                         }
                     }
-                }
 
-                sql = "SELECT * FROM Games_Roms ORDER BY `name`";
-                dtRoms = db.ExecuteCMD(sql, dbDict);
-
-                // search for files in the library that aren't in the database
-                Logging.Log(Logging.LogType.Information, "Library Scan", "Looking for orphaned library files to add");
-                string[] LibraryFiles = Directory.GetFiles(library.Path, "*.*", SearchOption.AllDirectories);
-                int StatusCount = 0;
-                foreach (string LibraryFile in LibraryFiles)
-                {
-                    SetStatus(StatusCount, LibraryFiles.Length, "Processing file " + LibraryFile);
-                    if (!Common.SkippableFiles.Contains<string>(Path.GetFileName(LibraryFile), StringComparer.OrdinalIgnoreCase))
+                    if (romFound == false)
                     {
-                        Common.hashObject LibraryFileHash = new Common.hashObject(LibraryFile);
+                        // file is not in database - process it
+                        Common.hashObject hash = new Common.hashObject(LibraryFile);
+                        FileInfo fi = new FileInfo(LibraryFile);
 
-                        // check if file is in database
-                        bool romFound = false;
-                        for (var i = 0; i < dtRoms.Rows.Count; i++)
+                        gaseous_server.Models.Signatures_Games sig = GetFileSignature(hash, fi, LibraryFile);
+
+                        Logging.Log(Logging.LogType.Information, "Library Scan", "Orphaned file found in library: " + LibraryFile);
+
+                        // get discovered platform
+                        IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(sig.Flags.IGDBPlatformId);
+
+                        IGDB.Models.Game determinedGame = new Game();
+                        try
                         {
-                            long romId = (long)dtRoms.Rows[i]["Id"];
-                            string romPath = (string)dtRoms.Rows[i]["Path"];
-                            string romMd5 = (string)dtRoms.Rows[i]["MD5"];
-
-                            if ((LibraryFile == romPath) || (LibraryFileHash.md5hash == romMd5))
+                            if (determinedPlatform == null)
                             {
-                                romFound = true;
-                                break;
-                            }
-                        }
-
-                        if (romFound == false)
-                        {
-                            // file is not in database - process it
-                            Common.hashObject hash = new Common.hashObject(LibraryFile);
-                            FileInfo fi = new FileInfo(LibraryFile);
-
-                            gaseous_server.Models.Signatures_Games sig = GetFileSignature(hash, fi, LibraryFile);
-
-                            Logging.Log(Logging.LogType.Information, "Library Scan", " Orphaned file found in library: " + LibraryFile);
-
-                            // get discovered platform
-                            IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(sig.Flags.IGDBPlatformId);
-
-                            IGDB.Models.Game determinedGame = new Game();
-                            try
-                            {
-                                if (determinedPlatform == null)
+                                if (library.DefaultPlatformId == 0)
                                 {
-                                    if (library.DefaultPlatformId == 0)
-                                    {
-                                        determinedPlatform = new IGDB.Models.Platform();
-                                        determinedGame = SearchForGame(sig, sig.Flags.IGDBPlatformId);
-                                    }
-                                    else
-                                    {
-                                        determinedPlatform = Platforms.GetPlatform(library.DefaultPlatformId);
-                                        determinedGame = SearchForGame(sig, library.DefaultPlatformId);
-                                    }
+                                    determinedPlatform = new IGDB.Models.Platform();
+                                    determinedGame = SearchForGame(sig, sig.Flags.IGDBPlatformId);
                                 }
                                 else
                                 {
-                                    determinedGame = SearchForGame(sig, (long)determinedPlatform.Id);
+                                    determinedPlatform = Platforms.GetPlatform(library.DefaultPlatformId);
+                                    determinedGame = SearchForGame(sig, library.DefaultPlatformId);
                                 }
-
-                                StoreROM(library, hash, determinedGame, determinedPlatform, sig, LibraryFile);
                             }
-                            catch (Exception ex)
+                            else
                             {
-                                Logging.Log(Logging.LogType.Warning, "Library Scan", " An error occurred while matching orphaned file: " + LibraryFile + ". Skipping.", ex);
+                                determinedGame = SearchForGame(sig, (long)determinedPlatform.Id);
+                            }
+
+                            StoreROM(library, hash, determinedGame, determinedPlatform, sig, LibraryFile);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Log(Logging.LogType.Warning, "Library Scan", "An error occurred while matching orphaned file: " + LibraryFile + ". Skipping.", ex);
+                        }
+                    }
+                }
+                StatusCount += 1;
+            }
+            ClearStatus();
+
+            sql = "SELECT * FROM Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
+            dtRoms = db.ExecuteCMD(sql, dbDict);
+
+            // check all roms to see if their local file still exists
+            Logging.Log(Logging.LogType.Information, "Library Scan", "Checking library files exist on disk");
+            StatusCount = 0;
+            if (dtRoms.Rows.Count > 0)
+            {
+                for (var i = 0; i < dtRoms.Rows.Count; i++)
+                {
+                    long romId = (long)dtRoms.Rows[i]["Id"];
+                    string romPath = (string)dtRoms.Rows[i]["Path"];
+                    gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType romMetadataSource = (gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType)(int)dtRoms.Rows[i]["MetadataSource"];
+
+                    SetStatus(StatusCount, dtRoms.Rows.Count, "Processing file " + romPath);
+                    Logging.Log(Logging.LogType.Information, "Library Scan", "Processing ROM at path " + romPath);
+
+                    if (File.Exists(romPath))
+                    {
+                        if (library.IsDefaultLibrary == true)
+                        {
+                            if (romPath != ComputeROMPath(romId))
+                            {
+                                MoveGameFile(romId);
                             }
                         }
                     }
+                    else
+                    {
+                        // file doesn't exist where it's supposed to be! delete it from the db
+                        Logging.Log(Logging.LogType.Warning, "Library Scan", "Deleting orphaned database entry for " + romPath);
+
+                        string deleteSql = "DELETE FROM Games_Roms WHERE Id = @id AND LibraryId = @libraryid";
+                        Dictionary<string, object> deleteDict = new Dictionary<string, object>();
+                        deleteDict.Add("id", romId);
+                        deleteDict.Add("libraryid", library.Id);
+                        db.ExecuteCMD(deleteSql, deleteDict);
+                    }
+
                     StatusCount += 1;
                 }
-                ClearStatus();
-
-                sql = "SELECT * FROM Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
-                dtRoms = db.ExecuteCMD(sql, dbDict);
-
-                // check all roms to see if their local file still exists
-                Logging.Log(Logging.LogType.Information, "Library Scan", "Checking library files exist on disk");
-                StatusCount = 0;
-                if (dtRoms.Rows.Count > 0)
-                {
-                    for (var i = 0; i < dtRoms.Rows.Count; i++)
-                    {
-                        long romId = (long)dtRoms.Rows[i]["Id"];
-                        string romPath = (string)dtRoms.Rows[i]["Path"];
-                        gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType romMetadataSource = (gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType)(int)dtRoms.Rows[i]["MetadataSource"];
-
-                        SetStatus(StatusCount, dtRoms.Rows.Count, "Processing file " + romPath);
-                        Logging.Log(Logging.LogType.Information, "Library Scan", " Processing ROM at path " + romPath);
-
-                        if (File.Exists(romPath))
-                        {
-                            if (library.IsDefaultLibrary == true)
-                            {
-                                if (romPath != ComputeROMPath(romId))
-                                {
-                                    MoveGameFile(romId);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            // file doesn't exist where it's supposed to be! delete it from the db
-                            Logging.Log(Logging.LogType.Warning, "Library Scan", " Deleting orphaned database entry for " + romPath);
-
-                            string deleteSql = "DELETE FROM Games_Roms WHERE Id = @id AND LibraryId = @libraryid";
-                            Dictionary<string, object> deleteDict = new Dictionary<string, object>();
-                            deleteDict.Add("id", romId);
-                            deleteDict.Add("libraryid", library.Id);
-                            db.ExecuteCMD(deleteSql, deleteDict);
-                        }
-
-                        StatusCount += 1;
-                    }
-                }
-
-                Logging.Log(Logging.LogType.Information, "Library Scan", "Library scan completed");
             }
+
+            Logging.Log(Logging.LogType.Information, "Library Scan", "Library scan completed");
         }
 
         public void Rematcher(bool ForceExecute = false)

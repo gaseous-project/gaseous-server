@@ -177,7 +177,7 @@ namespace gaseous_server
                                     break;
 
                                 case QueueItemType.LibraryScan:
-                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Library Scanner");
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Library Scanners");
                                     Classes.ImportGame import = new ImportGame
                                     {
                                         CallingQueueItem = this
@@ -185,6 +185,17 @@ namespace gaseous_server
                                     import.LibraryScan();
 
                                     _SaveLastRunTime = true;
+
+                                    break;
+
+                                case QueueItemType.LibraryScanWorker:
+                                    GameLibrary.LibraryItem library = (GameLibrary.LibraryItem)Options;
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Library Scanner worker for library " + library.Name);
+                                    Classes.ImportGame importLibraryScan = new ImportGame
+                                    {
+                                        CallingQueueItem = this
+                                    };
+                                    importLibraryScan.LibrarySpecificScan(library);
 
                                     break;
 
@@ -349,6 +360,11 @@ namespace gaseous_server
             /// Looks for orphaned files in the library and re-adds them to the database
             /// </summary>
             LibraryScan,
+
+            /// <summary>
+            /// Performs the work for the LibraryScan task
+            /// </summary>
+            LibraryScanWorker,
 
             /// <summary>
             /// Looks for roms in the library that have an unknown platform or game match

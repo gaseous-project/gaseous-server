@@ -1030,7 +1030,7 @@ button:not(.select2-selection__choice__remove):not(.ejs_menu_button) {
     height: 30px;
 }
 
-button:hover {
+button:not(.select2-selection__choice__remove):not(.ejs_menu_button):hover {
     background-color: #888;
     cursor: pointer;
 }

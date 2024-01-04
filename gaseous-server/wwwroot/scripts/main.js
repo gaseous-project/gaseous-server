@@ -411,6 +411,8 @@ function GetTaskFriendlyName(TaskName, options) {
             return "Organise library";
         case 'LibraryScan':
             return "Library scan";
+        case 'LibraryScanWorker':
+            return "Library scan worker: " + options.name;
         case 'CollectionCompiler':
             return "Compress collection id: " + options;
         case 'BackgroundDatabaseUpgrade':
