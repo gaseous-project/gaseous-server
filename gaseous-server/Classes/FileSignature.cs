@@ -2,6 +2,7 @@ using System.IO.Compression;
 using HasheousClient.Models;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
+using SharpCompress.Archives.Zip;
 using SharpCompress.Common;
 
 namespace gaseous_server.Classes
@@ -29,69 +30,114 @@ namespace gaseous_server.Classes
                     switch(ImportedFileExtension)
                     {
                         case ".zip":
-                            ZipFile.ExtractToDirectory(GameFileImportPath, ExtractPath);
+                            Logging.Log(Logging.LogType.Information, "Get Signature", "Decompressing using zip");
+                            try
+                            {
+                                //ZipFile.ExtractToDirectory(GameFileImportPath, ExtractPath);
+                                using (var archive = SharpCompress.Archives.Zip.ZipArchive.Open(GameFileImportPath))
+                                {
+                                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                                    {
+                                        entry.WriteToDirectory(ExtractPath, new ExtractionOptions()
+                                        {
+                                            ExtractFullPath = true,
+                                            Overwrite = true
+                                        });
+                                    }
+                                }
+                            }
+                            catch (Exception zipEx)
+                            {
+                                Logging.Log(Logging.LogType.Warning, "Get Signature", "Unzip error", zipEx);
+                                throw;
+                            }
                             break;
 
                         case ".rar":
-                            using (var archive = RarArchive.Open(GameFileImportPath))
+                            Logging.Log(Logging.LogType.Information, "Get Signature", "Decompressing using rar");
+                            try
                             {
-                                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                                using (var archive = RarArchive.Open(GameFileImportPath))
                                 {
-                                    entry.WriteToDirectory(ExtractPath, new ExtractionOptions()
+                                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                                     {
-                                        ExtractFullPath = true,
-                                        Overwrite = true
-                                    });
+                                        entry.WriteToDirectory(ExtractPath, new ExtractionOptions()
+                                        {
+                                            ExtractFullPath = true,
+                                            Overwrite = true
+                                        });
+                                    }
                                 }
+                            }
+                            catch (Exception zipEx)
+                            {
+                                Logging.Log(Logging.LogType.Warning, "Get Signature", "Unrar error", zipEx);
+                                throw;
                             }
                             break;
 
                         case ".7z":
-                            using (var archive = SharpCompress.Archives.SevenZip.SevenZipArchive.Open(GameFileImportPath))
+                            Logging.Log(Logging.LogType.Information, "Get Signature", "Decompressing using 7z");
+                            try
                             {
-                                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                                using (var archive = SharpCompress.Archives.SevenZip.SevenZipArchive.Open(GameFileImportPath))
                                 {
-                                    entry.WriteToDirectory(ExtractPath, new ExtractionOptions()
+                                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                                     {
-                                        ExtractFullPath = true,
-                                        Overwrite = true
-                                    });
+                                        entry.WriteToDirectory(ExtractPath, new ExtractionOptions()
+                                        {
+                                            ExtractFullPath = true,
+                                            Overwrite = true
+                                        });
+                                    }
                                 }
+                            }
+                            catch (Exception zipEx)
+                            {
+                                Logging.Log(Logging.LogType.Warning, "Get Signature", "7z error", zipEx);
+                                throw;
                             }
                             break;
                     }
                     
+                    Logging.Log(Logging.LogType.Information, "Get Signature", "Processing decompressed files for signature matches");
                     // loop through contents until we find the first signature match
                     foreach (string file in Directory.GetFiles(ExtractPath, "*.*", SearchOption.AllDirectories))
                     {
-                        FileInfo zfi = new FileInfo(file);
-                        Common.hashObject zhash = new Common.hashObject(file);
-
-                        gaseous_server.Models.Signatures_Games zDiscoveredSignature = _GetFileSignature(zhash, zfi, file, true);
-                        zDiscoveredSignature.Rom.Name = Path.ChangeExtension(zDiscoveredSignature.Rom.Name, ImportedFileExtension);
-
-                        if (zDiscoveredSignature.Score > discoveredSignature.Score)
+                        if (File.Exists(file))
                         {
-                            if (
-                                zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEArcade || 
-                                zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEMess
-                            )
-                            {
-                                zDiscoveredSignature.Rom.Name = zDiscoveredSignature.Game.Description + ImportedFileExtension;
-                            }
-                            zDiscoveredSignature.Rom.Crc = discoveredSignature.Rom.Crc;
-                            zDiscoveredSignature.Rom.Md5 = discoveredSignature.Rom.Md5;
-                            zDiscoveredSignature.Rom.Sha1 = discoveredSignature.Rom.Sha1;
-                            zDiscoveredSignature.Rom.Size = discoveredSignature.Rom.Size;
-                            discoveredSignature = zDiscoveredSignature;
+                            FileInfo zfi = new FileInfo(file);
+                            Common.hashObject zhash = new Common.hashObject(file);
 
-                            break;
+                            if (zfi != null)
+                            {
+                                gaseous_server.Models.Signatures_Games zDiscoveredSignature = _GetFileSignature(zhash, zfi, file, true);
+                                zDiscoveredSignature.Rom.Name = Path.ChangeExtension(zDiscoveredSignature.Rom.Name, ImportedFileExtension);
+
+                                if (zDiscoveredSignature.Score > discoveredSignature.Score)
+                                {
+                                    if (
+                                        zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEArcade || 
+                                        zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEMess
+                                    )
+                                    {
+                                        zDiscoveredSignature.Rom.Name = zDiscoveredSignature.Game.Description + ImportedFileExtension;
+                                    }
+                                    zDiscoveredSignature.Rom.Crc = discoveredSignature.Rom.Crc;
+                                    zDiscoveredSignature.Rom.Md5 = discoveredSignature.Rom.Md5;
+                                    zDiscoveredSignature.Rom.Sha1 = discoveredSignature.Rom.Sha1;
+                                    zDiscoveredSignature.Rom.Size = discoveredSignature.Rom.Size;
+                                    discoveredSignature = zDiscoveredSignature;
+
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logging.Log(Logging.LogType.Critical, "Get Signature", "Error processing zip file: " + GameFileImportPath, ex);
+                    Logging.Log(Logging.LogType.Critical, "Get Signature", "Error processing compressed file: " + GameFileImportPath, ex);
                 }
 
                 if (Directory.Exists(ExtractPath)) { Directory.Delete(ExtractPath, true); }
