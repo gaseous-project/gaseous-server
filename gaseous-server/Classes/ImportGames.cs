@@ -487,6 +487,8 @@ namespace gaseous_server.Classes
 
         public void LibraryScan()
         {
+            int maxWorkers = 4;
+
             // setup background tasks for each library
             foreach (GameLibrary.LibraryItem library in GameLibrary.GetLibraries)
             {
@@ -505,9 +507,31 @@ namespace gaseous_server.Classes
                 queue.ForceExecute();
 
                 ProcessQueue.QueueItems.Add(queue);
+
+                // check number of running tasks is less than maxWorkers
+                bool allowContinue;
+                do
+                {
+                    allowContinue = true;
+                    int currentWorkerCount = 0;
+                    List<ProcessQueue.QueueItem> queueItems = new List<ProcessQueue.QueueItem>();
+                    queueItems.AddRange(ProcessQueue.QueueItems);
+                    foreach (ProcessQueue.QueueItem item in queueItems)
+                    {
+                        if (item.ItemType == ProcessQueue.QueueItemType.LibraryScanWorker)
+                        {
+                            currentWorkerCount += 1;
+                        }
+                    }
+                    if (currentWorkerCount >= maxWorkers)
+                    {
+                        allowContinue = false;
+                        Thread.Sleep(60000);
+                    }
+                } while (allowContinue == false);
             }
 
-            bool WorkersStillWorking = false;
+            bool WorkersStillWorking;
             do
             {
                 WorkersStillWorking = false;
