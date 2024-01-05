@@ -1,6 +1,7 @@
 ﻿<div id="properties_toc">
     <div id="properties_toc_general" name="properties_toc_item" onclick="SelectTab('general');">General</div>
-    <div id="properties_toc_attributes" name="properties_toc_item" onclick="SelectTab('attributes');">Attributes</div>
+    <div id="properties_toc_archive" name="properties_toc_item" onclick="SelectTab('archive');" style="display: none;">Archive Contents</div>
+    <div id="properties_toc_attributes" name="properties_toc_item" onclick="SelectTab('attributes');" style="display: none;">Attributes</div>
     <div id="properties_toc_match" name="properties_toc_item" onclick="SelectTab('match');">Title Match</div>
     <!--<div id="properties_toc_manage" name="properties_toc_item" onclick="SelectTab('manage');">Manage</div>-->
 </div>
@@ -51,6 +52,10 @@
                 <td colspan="2" style="text-align: right;"><button id="romDelete" class="redbutton">Delete</button></td>
             </tr>
         </table>
+    </div>
+
+    <div id="properties_bodypanel_archive" name="properties_tab" style="display: none;">
+        <div id="properties_bodypanel_archive_content" style="height: 315px; overflow-x: scroll;"></div>
     </div>
 
     <div id="properties_bodypanel_attributes" name="properties_tab" style="display: none;">
@@ -120,7 +125,6 @@
 
     ajaxCall('/api/v1.1/Games/' + gameId + '/roms/' + modalVariables, 'GET', function (result) {
         romData = result;
-        console.log(romData);
         document.getElementById('modal-heading').innerHTML = result.name;
         document.getElementById('rominfo_library').innerHTML = result.library.name;
         document.getElementById('rominfo_platform').innerHTML = result.platform;
@@ -142,8 +146,7 @@
 
         if (result.attributes.length > 0) {
             document.getElementById('properties_bodypanel_attributes').appendChild(BuildAttributesTable(result.attributes, result.source));
-        } else {
-            document.getElementById('properties_toc_attributes').style.display = 'none';
+            document.getElementById('properties_bodypanel_archive_content').appendChild(BuildArchiveTable(result.attributes, result.source));
         }
     });
 
@@ -264,23 +267,78 @@
         aTable.style.width = '100%';
 
         for (var i = 0; i < attributes.length; i++) {
-            var aRow = document.createElement('tr');
+            if (attributes[i].key != "ZipContents") {
+                // show attributes button
+                document.getElementById('properties_toc_attributes').style.display = '';
+                var aRow = document.createElement('tr');
 
-            var aTitleCell = document.createElement('th');
-            aTitleCell.width = "25%";
-            if (sourceName == "TOSEC") {
-                aTitleCell.innerHTML = ConvertTOSECAttributeName(attributes[i].key);
-            } else {
-                aTitleCell.innerHTML = attributes[i].key;
+                var aTitleCell = document.createElement('th');
+                aTitleCell.width = "25%";
+                if (sourceName == "TOSEC") {
+                    aTitleCell.innerHTML = ConvertTOSECAttributeName(attributes[i].key);
+                } else {
+                    aTitleCell.innerHTML = attributes[i].key;
+                }
+                aRow.appendChild(aTitleCell);
+
+                var aValueCell = document.createElement('td');
+                aValueCell.width = "75%";
+                aValueCell.innerHTML = attributes[i].value;
+                aRow.appendChild(aValueCell);
+
+                aTable.appendChild(aRow);
             }
-            aRow.appendChild(aTitleCell);
+        }
 
-            var aValueCell = document.createElement('td');
-            aValueCell.width = "75%";
-            aValueCell.innerHTML = attributes[i].value;
-            aRow.appendChild(aValueCell);
+        return aTable;
+    }
 
-            aTable.appendChild(aRow);
+    function BuildArchiveTable(attributes, sourceName) {
+        for (var i = 0; i < attributes.length; i++) {
+            if (attributes[i].key == "ZipContents") {
+                var archiveContent = JSON.parse(attributes[i].value);
+                console.log(archiveContent);
+                
+                // show archive button
+                document.getElementById('properties_toc_archive').style.display = '';
+                
+                var aTable = document.createElement('table');
+                aTable.className = 'romtable';
+                aTable.setAttribute('cellspacing', 0);
+                aTable.style.width = '100%';
+
+                for (var r = 0; r < archiveContent.length; r++) {
+                    console.log(archiveContent[r]);
+
+                    var aBody = document.createElement('tbody');
+                    aBody.className = 'romrow';
+
+                    var aRow = document.createElement('tr');
+
+                    var aNameCell = document.createElement('th');
+                    aNameCell.className = 'romcell';
+                    aNameCell.innerHTML = archiveContent[r].FilePath + '/' + archiveContent[r].FileName;
+                    aRow.appendChild(aNameCell);
+
+                    var aSizeCell = document.createElement('td');
+                    aSizeCell.className = 'romcell';
+                    aSizeCell.innerHTML = formatBytes(archiveContent[r].Size);
+                    aRow.appendChild(aSizeCell);
+
+                    aBody.appendChild(aRow);
+
+                    var hRow = document.createElement('tr');
+
+                    var aHashCell = document.createElement('td');
+                    aHashCell.setAttribute('colspan', 2);
+                    aHashCell.style.paddingLeft = '20px';
+                    aHashCell.innerHTML = "MD5: " + archiveContent[r].MD5 + "<br />SHA1: " + archiveContent[r].SHA1;
+                    hRow.appendChild(aHashCell);
+                    aBody.appendChild(hRow);
+
+                    aTable.appendChild(aBody);
+                }
+            }
         }
 
         return aTable;

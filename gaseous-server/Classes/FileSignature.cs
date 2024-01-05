@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using HasheousClient.Models;
+using SevenZip;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
 using SharpCompress.Archives.Zip;
@@ -104,38 +105,58 @@ namespace gaseous_server.Classes
                     
                     Logging.Log(Logging.LogType.Information, "Get Signature", "Processing decompressed files for signature matches");
                     // loop through contents until we find the first signature match
+                    List<ArchiveData> archiveFiles = new List<ArchiveData>();
+                    bool signatureFound = false;
                     foreach (string file in Directory.GetFiles(ExtractPath, "*.*", SearchOption.AllDirectories))
                     {
                         if (File.Exists(file))
                         {
                             FileInfo zfi = new FileInfo(file);
                             Common.hashObject zhash = new Common.hashObject(file);
+                            
+                            Logging.Log(Logging.LogType.Information, "Get Signature", "Checking signature of decompressed file " + file);
 
                             if (zfi != null)
                             {
-                                gaseous_server.Models.Signatures_Games zDiscoveredSignature = _GetFileSignature(zhash, zfi, file, true);
-                                zDiscoveredSignature.Rom.Name = Path.ChangeExtension(zDiscoveredSignature.Rom.Name, ImportedFileExtension);
+                                ArchiveData archiveData = new ArchiveData{
+                                    FileName = Path.GetFileName(file),
+                                    FilePath = zfi.Directory.FullName.Replace(ExtractPath, ""),
+                                    Size = zfi.Length,
+                                    MD5 = hash.md5hash,
+                                    SHA1 = hash.sha1hash
+                                };
+                                archiveFiles.Add(archiveData);
 
-                                if (zDiscoveredSignature.Score > discoveredSignature.Score)
+                                if (signatureFound == false)
                                 {
-                                    if (
-                                        zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEArcade || 
-                                        zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEMess
-                                    )
-                                    {
-                                        zDiscoveredSignature.Rom.Name = zDiscoveredSignature.Game.Description + ImportedFileExtension;
-                                    }
-                                    zDiscoveredSignature.Rom.Crc = discoveredSignature.Rom.Crc;
-                                    zDiscoveredSignature.Rom.Md5 = discoveredSignature.Rom.Md5;
-                                    zDiscoveredSignature.Rom.Sha1 = discoveredSignature.Rom.Sha1;
-                                    zDiscoveredSignature.Rom.Size = discoveredSignature.Rom.Size;
-                                    discoveredSignature = zDiscoveredSignature;
+                                    gaseous_server.Models.Signatures_Games zDiscoveredSignature = _GetFileSignature(zhash, zfi, file, true);
+                                    zDiscoveredSignature.Rom.Name = Path.ChangeExtension(zDiscoveredSignature.Rom.Name, ImportedFileExtension);
 
-                                    break;
+                                    if (zDiscoveredSignature.Score > discoveredSignature.Score)
+                                    {
+                                        if (
+                                            zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEArcade || 
+                                            zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEMess
+                                        )
+                                        {
+                                            zDiscoveredSignature.Rom.Name = zDiscoveredSignature.Game.Description + ImportedFileExtension;
+                                        }
+                                        zDiscoveredSignature.Rom.Crc = discoveredSignature.Rom.Crc;
+                                        zDiscoveredSignature.Rom.Md5 = discoveredSignature.Rom.Md5;
+                                        zDiscoveredSignature.Rom.Sha1 = discoveredSignature.Rom.Sha1;
+                                        zDiscoveredSignature.Rom.Size = discoveredSignature.Rom.Size;
+                                        discoveredSignature = zDiscoveredSignature;
+
+                                        signatureFound = true;
+                                    }
                                 }
                             }
                         }
                     }
+
+                    discoveredSignature.Rom.Attributes.Add(new KeyValuePair<string, object>(
+                         "ZipContents", Newtonsoft.Json.JsonConvert.SerializeObject(archiveFiles)
+                    ));
                 }
                 catch (Exception ex)
                 {
@@ -339,6 +360,15 @@ namespace gaseous_server.Classes
 
                 return discoveredSignature;
             }
+        }
+
+        public class ArchiveData
+        {
+            public string FileName { get; set; }
+            public string FilePath { get; set; }
+            public long Size { get; set; }
+            public string MD5 { get; set; }
+            public string SHA1 { get; set; }
         }
     }
 }
