@@ -16,44 +16,35 @@ using HasheousClient.Models;
 
 namespace gaseous_server.Classes
 {
-	public class ImportGames : QueueItemStatus
+	public class ImportGame : QueueItemStatus
 	{
-		public ImportGames(string ImportPath)
-		{
-			if (Directory.Exists(ImportPath))
+        public void ProcessDirectory(string ImportPath)
+        {
+            if (Directory.Exists(ImportPath))
 			{
-				string[] importContents_Files = Directory.GetFiles(ImportPath);
-                string[] importContents_Directories = Directory.GetDirectories(ImportPath);
+				string[] importContents = Directory.GetFiles(ImportPath, "*.*", SearchOption.AllDirectories);
+
+                Logging.Log(Logging.LogType.Information, "Import Games", "Found " + importContents.Length + " files to process in import directory: " + ImportPath);
 
 				// import files first
                 int importCount = 1;
-				foreach (string importContent in importContents_Files) {
-                    SetStatus(importCount, importContents_Files.Length, "Importing file: " + importContent);
+				foreach (string importContent in importContents) {
+                    SetStatus(importCount, importContents.Length, "Importing file: " + importContent);
 
-					ImportGame.ImportGameFile(importContent, null);
+					ImportGameFile(importContent, null);
 
                     importCount += 1;
 				}
                 ClearStatus();
-
-                // import sub directories
-                foreach (string importDir in importContents_Directories) {
-                    Classes.ImportGames importGames = new Classes.ImportGames(importDir);
-                }
             }
 			else
 			{
 				Logging.Log(Logging.LogType.Critical, "Import Games", "The import directory " + ImportPath + " does not exist.");
 				throw new DirectoryNotFoundException("Invalid path: " + ImportPath);
 			}
-		}
+        }
 
-
-	}
-
-	public class ImportGame : QueueItemStatus
-	{
-        public static void ImportGameFile(string GameFileImportPath, IGDB.Models.Platform? OverridePlatform)
+        public void ImportGameFile(string GameFileImportPath, IGDB.Models.Platform? OverridePlatform)
 		{
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
@@ -443,7 +434,7 @@ namespace gaseous_server.Classes
             }
         }
 
-		public static void OrganiseLibrary()
+		public void OrganiseLibrary()
 		{
             Logging.Log(Logging.LogType.Information, "Organise Library", "Starting default library organisation");
 

@@ -477,16 +477,26 @@ namespace gaseous_server.Classes.Metadata
                     break;
             }
             
+            // check search cache
+            List<Game>? games = Communications.GetSearchCache<List<Game>>(searchFields, searchBody);
 
-            // get Game metadata
-            Communications comms = new Communications();
-            Game[]? results = new Game[0];
-            if (allowSearch == true)
-            {
-                results = await comms.APIComm<Game>(IGDBClient.Endpoints.Games, searchFields, searchBody);
+            if (games == null)
+            {   
+                // cache miss
+                // get Game metadata
+                Communications comms = new Communications();
+                Game[]? results = new Game[0];
+                if (allowSearch == true)
+                {
+                    results = await comms.APIComm<Game>(IGDBClient.Endpoints.Games, searchFields, searchBody);
+                }
+
+                return results;
             }
-
-            return results;
+            else
+            {
+                return games.ToArray();
+            }
         }
 
         public enum SearchType

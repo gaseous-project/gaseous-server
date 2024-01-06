@@ -202,12 +202,9 @@
 
     $('#properties_fixplatform').on('select2:select', function (e) {
         var platformData = e.params.data;
-        console.log(platformData);
 
         var gameValue = $('#properties_fixgame').select2('data');
         if (gameValue) {
-            console.log(gameValue[0]);
-
             setFixGameDropDown();
         }
     });
@@ -297,7 +294,6 @@
         for (var i = 0; i < attributes.length; i++) {
             if (attributes[i].key == "ZipContents") {
                 var archiveContent = JSON.parse(attributes[i].value);
-                console.log(archiveContent);
                 
                 // show archive button
                 document.getElementById('properties_toc_archive').style.display = '';
@@ -308,8 +304,6 @@
                 aTable.style.width = '100%';
 
                 for (var r = 0; r < archiveContent.length; r++) {
-                    console.log(archiveContent[r]);
-
                     var aBody = document.createElement('tbody');
                     aBody.className = 'romrow';
 
