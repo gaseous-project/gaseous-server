@@ -36,6 +36,8 @@ namespace gaseous_server.Classes
                     importCount += 1;
 				}
                 ClearStatus();
+
+                DeleteOrphanedDirectories(ImportPath);
             }
 			else
 			{
@@ -468,8 +470,12 @@ namespace gaseous_server.Classes
             foreach (var directory in Directory.GetDirectories(startLocation))
             {
                 DeleteOrphanedDirectories(directory);
-                if (Directory.GetFiles(directory).Length == 0 &&
-                    Directory.GetDirectories(directory).Length == 0)
+
+                string[] files = Directory.GetFiles(directory);
+                string[] directories = Directory.GetDirectories(directory);
+                
+                if (files.Length == 0 &&
+                    directories.Length == 0)
                 {
                     Directory.Delete(directory, false);
                 }
