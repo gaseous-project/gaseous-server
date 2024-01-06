@@ -144,10 +144,11 @@ namespace gaseous_server
 
                                 case QueueItemType.TitleIngestor:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Title Ingestor");
-                                    Classes.ImportGames importGames = new Classes.ImportGames(Config.LibraryConfiguration.LibraryImportDirectory)
+                                    Classes.ImportGame import = new ImportGame
                                     {
                                         CallingQueueItem = this
                                     };
+                                    import.ProcessDirectory(Config.LibraryConfiguration.LibraryImportDirectory);
 
                                     // clean up
                                     Classes.ImportGame.DeleteOrphanedDirectories(Config.LibraryConfiguration.LibraryImportDirectory);
@@ -170,7 +171,11 @@ namespace gaseous_server
 
                                 case QueueItemType.OrganiseLibrary:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Library Organiser");
-                                    Classes.ImportGame.OrganiseLibrary();
+                                    Classes.ImportGame importLibraryOrg = new ImportGame
+                                    {
+                                        CallingQueueItem = this
+                                    };
+                                    importLibraryOrg.OrganiseLibrary();
 
                                     _SaveLastRunTime = true;
 
@@ -178,11 +183,11 @@ namespace gaseous_server
 
                                 case QueueItemType.LibraryScan:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Library Scanners");
-                                    Classes.ImportGame import = new ImportGame
+                                    Classes.ImportGame libScan = new ImportGame
                                     {
                                         CallingQueueItem = this
                                     };
-                                    import.LibraryScan();
+                                    libScan.LibraryScan();
 
                                     _SaveLastRunTime = true;
 

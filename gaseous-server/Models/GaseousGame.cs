@@ -1,7 +1,7 @@
 using System.Reflection;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
-using IGDB;
+using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace gaseous_server.Models
 {

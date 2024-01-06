@@ -1,4 +1,5 @@
 using System.ComponentModel;
+using System.Data;
 using System.Drawing;
 using System.Net;
 using Humanizer;
@@ -420,6 +421,56 @@ namespace gaseous_server.Classes.Metadata
             }
 
             return returnPath;
+        }
+
+        public static T? GetSearchCache<T>(string SearchFields, string SearchString)
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT * FROM SearchCache WHERE SearchFields = @searchfields AND SearchString = @searchstring;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "searchfields", SearchFields },
+                { "searchstring", SearchString }
+            };
+            DataTable data = db.ExecuteCMD(sql, dbDict);
+            if (data.Rows.Count > 0)
+            {
+                // cache hit
+                string rawString = data.Rows[0]["Content"].ToString();
+                T ReturnValue = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(rawString);
+                if (ReturnValue != null)
+                {
+                    Logging.Log(Logging.LogType.Information, "Search Cache", "Found search result in cache. Search string: " + SearchString);
+                    return ReturnValue;
+                }
+                else
+                {
+                    Logging.Log(Logging.LogType.Information, "Search Cache", "Search result not found in cache.");
+                    return default;
+                }
+            }
+            else
+            {
+                // cache miss
+                Logging.Log(Logging.LogType.Information, "Search Cache", "Search result not found in cache.");
+                return default;
+            }
+        }
+
+        public static void SetSearchCache<T>(string SearchFields, string SearchString, T SearchResult)
+        {
+            Logging.Log(Logging.LogType.Information, "Search Cache", "Storing search results in cache. Search string: " + SearchString);
+
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "INSERT INTO SearchCache (SearchFields, SearchString, Content, LastSearch) VALUES (@searchfields, @searchstring, @content, @lastsearch);";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "searchfields", SearchFields },
+                { "searchstring", SearchString },
+                { "content", Newtonsoft.Json.JsonConvert.SerializeObject(SearchResult) },
+                { "lastsearch", DateTime.UtcNow }
+            };
+            db.ExecuteNonQuery(sql, dbDict);
         }
 
         /// <summary>

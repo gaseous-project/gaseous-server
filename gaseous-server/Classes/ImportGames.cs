@@ -16,44 +16,37 @@ using HasheousClient.Models;
 
 namespace gaseous_server.Classes
 {
-	public class ImportGames : QueueItemStatus
+	public class ImportGame : QueueItemStatus
 	{
-		public ImportGames(string ImportPath)
-		{
-			if (Directory.Exists(ImportPath))
+        public void ProcessDirectory(string ImportPath)
+        {
+            if (Directory.Exists(ImportPath))
 			{
-				string[] importContents_Files = Directory.GetFiles(ImportPath);
-                string[] importContents_Directories = Directory.GetDirectories(ImportPath);
+				string[] importContents = Directory.GetFiles(ImportPath, "*.*", SearchOption.AllDirectories);
+
+                Logging.Log(Logging.LogType.Information, "Import Games", "Found " + importContents.Length + " files to process in import directory: " + ImportPath);
 
 				// import files first
                 int importCount = 1;
-				foreach (string importContent in importContents_Files) {
-                    SetStatus(importCount, importContents_Files.Length, "Importing file: " + importContent);
+				foreach (string importContent in importContents) {
+                    SetStatus(importCount, importContents.Length, "Importing file: " + importContent);
 
-					ImportGame.ImportGameFile(importContent, null);
+					ImportGameFile(importContent, null);
 
                     importCount += 1;
 				}
                 ClearStatus();
 
-                // import sub directories
-                foreach (string importDir in importContents_Directories) {
-                    Classes.ImportGames importGames = new Classes.ImportGames(importDir);
-                }
+                DeleteOrphanedDirectories(ImportPath);
             }
 			else
 			{
 				Logging.Log(Logging.LogType.Critical, "Import Games", "The import directory " + ImportPath + " does not exist.");
 				throw new DirectoryNotFoundException("Invalid path: " + ImportPath);
 			}
-		}
+        }
 
-
-	}
-
-	public class ImportGame : QueueItemStatus
-	{
-        public static void ImportGameFile(string GameFileImportPath, IGDB.Models.Platform? OverridePlatform)
+        public void ImportGameFile(string GameFileImportPath, IGDB.Models.Platform? OverridePlatform)
 		{
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
@@ -443,7 +436,7 @@ namespace gaseous_server.Classes
             }
         }
 
-		public static void OrganiseLibrary()
+		public void OrganiseLibrary()
 		{
             Logging.Log(Logging.LogType.Information, "Organise Library", "Starting default library organisation");
 
@@ -477,8 +470,12 @@ namespace gaseous_server.Classes
             foreach (var directory in Directory.GetDirectories(startLocation))
             {
                 DeleteOrphanedDirectories(directory);
-                if (Directory.GetFiles(directory).Length == 0 &&
-                    Directory.GetDirectories(directory).Length == 0)
+
+                string[] files = Directory.GetFiles(directory);
+                string[] directories = Directory.GetDirectories(directory);
+                
+                if (files.Length == 0 &&
+                    directories.Length == 0)
                 {
                     Directory.Delete(directory, false);
                 }
@@ -621,16 +618,16 @@ namespace gaseous_server.Classes
                     if (romFound == false)
                     {
                         // file is not in database - process it
+                        Logging.Log(Logging.LogType.Information, "Library Scan", "Orphaned file found in library: " + LibraryFile);
+                        
                         Common.hashObject hash = new Common.hashObject(LibraryFile);
                         FileInfo fi = new FileInfo(LibraryFile);
 
                         gaseous_server.Models.Signatures_Games sig = GetFileSignature(hash, fi, LibraryFile);
 
-                        Logging.Log(Logging.LogType.Information, "Library Scan", "Orphaned file found in library: " + LibraryFile);
-
                         // get discovered platform
                         IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(sig.Flags.IGDBPlatformId);
-
+                        
                         IGDB.Models.Game determinedGame = new Game();
                         try
                         {
@@ -687,7 +684,12 @@ namespace gaseous_server.Classes
                         {
                             if (romPath != ComputeROMPath(romId))
                             {
+                                Logging.Log(Logging.LogType.Information, "Library Scan", "ROM at path " + romPath + " found, but needs to be moved");
                                 MoveGameFile(romId);
+                            }
+                            else
+                            {
+                                Logging.Log(Logging.LogType.Information, "Library Scan", "ROM at path " + romPath + " found");
                             }
                         }
                     }
