@@ -288,15 +288,15 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(Game), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "5Minute")]
-        public ActionResult Game(long GameId, bool forceRefresh = false)
+        public ActionResult Game(long GameId)
         {
             try
             {
-                GaseousGame gameObject = new GaseousGame(Classes.Metadata.Games.GetGame(GameId, forceRefresh, false, forceRefresh));
+                Game game = Classes.Metadata.Games.GetGame(GameId, false, false, false);
 
-                if (gameObject != null)
+                if (game != null)
                 {
-                    return Ok(gameObject);
+                    return Ok(game);
                 }
                 else
                 {
@@ -1174,7 +1174,7 @@ namespace gaseous_server.Controllers
                 {
                     Classes.Roms.GameRomItem romItem = Classes.Roms.GetRom(RomId);
                     Common.hashObject hash = new Common.hashObject(romItem.Path);
-                    gaseous_server.Models.Signatures_Games romSig = FileSignature.GetFileSignature(hash, new FileInfo(romItem.Path), romItem.Path);
+                    gaseous_server.Models.Signatures_Games romSig = FileSignature.GetFileSignature(romItem.Library, hash, new FileInfo(romItem.Path), romItem.Path);
                     List<Game> searchResults = Classes.ImportGame.SearchForGame_GetAll(romSig.Game.Name, romSig.Flags.IGDBPlatformId);
 
                     return Ok(searchResults);

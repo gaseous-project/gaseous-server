@@ -161,21 +161,30 @@
             gameSummaryLabel.setAttribute('style', 'display: none;');
         }
 
-        // load artwork
-        if (result.artworksItem) {
-            artworks = result.artworksItem;
-            var startPos = randomIntFromInterval(0, result.artworksItem.length);
-            artworksPosition = startPos;
-            rotateBackground();
+        // load cover
+        var gameSummaryCover = document.getElementById('gamesummary_cover');
+        var gameImage = document.createElement('img');
+        gameImage.className = 'game_cover_image';
+        if (result.cover) {
+            ajaxCall('/api/v1.1/games/' + gameId + '/cover', 'GET', function (coverResult) {
+                if (coverResult) {
+                    gameImage.src = '/api/v1.1/Games/' + gameId + '/cover/image/cover_big/' + coverResult.imageId + '.jpg';
+
+                    loadArtwork(result, coverResult);
+                } else {
+                    gameImage.src = '/images/unknowngame.png';
+                    gameImage.className = 'game_cover_image unknown';
+
+                    loadArtwork(result);
+                }
+            });
         } else {
-            var bg = document.getElementById('bgImage');
-            if (result.coverItem) {
-                bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/cover/image/original/' + result.coverItem.imageId + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
-            } else {
-                var randomInt = randomIntFromInterval(1, 3);
-                bg.setAttribute('style', 'background-image: url("/images/gamebg' + randomInt + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
-            }
+            gameImage.src = '/images/unknowngame.png';
+            gameImage.className = 'game_cover_image unknown';
+
+            loadArtwork(result);
         }
+        gameSummaryCover.appendChild(gameImage);
 
         // load companies
         var gameHeaderDeveloperLabel = document.getElementById('gamedeveloper_label');
@@ -230,18 +239,6 @@
             gameDeveloperLabel.setAttribute('style', 'display: none;');
             gamePublisherLabel.setAttribute('style', 'display: none;');
         }
-
-        // load cover
-        var gameSummaryCover = document.getElementById('gamesummary_cover');
-        var gameImage = document.createElement('img');
-        gameImage.className = 'game_cover_image';
-        if (result.cover) {
-            gameImage.src = '/api/v1.1/Games/' + result.id + '/cover/image/cover_big/' + result.coverItem.imageId + '.jpg';
-        } else {
-            gameImage.src = '/images/unknowngame.png';
-            gameImage.className = 'game_cover_image unknown';
-        }
-        gameSummaryCover.appendChild(gameImage);
 
         // load release date
         var gameSummaryRelease = document.getElementById('gamesummary_firstrelease');
@@ -325,19 +322,23 @@
             if (result.videos) {
                 imageIndex = result.videos.ids.length;
             }
-            if (result.screenshotsItem) {
-                for (var i = 0; i < result.screenshotsItem.length; i++) {
-                    var screenshotItem = document.createElement('div');
-                    screenshotItem.id = 'gamescreenshots_gallery_' + imageIndex;
-                    screenshotItem.setAttribute('name', 'gamescreenshots_gallery_item');
-                    screenshotItem.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/screenshots/' + result.screenshotsItem[i].id + '/image/screenshot_thumb/' + result.screenshotsItem[i].imageId + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
-                    screenshotItem.setAttribute('imageid', imageIndex);
-                    screenshotItem.setAttribute('imagetype', 0);
-                    screenshotItem.className = 'gamescreenshots_gallery_item';
-                    screenshotItem.setAttribute('onclick', 'selectScreenshot(' + imageIndex + ');');
-                    gameScreenshots_Gallery.appendChild(screenshotItem);
-                    imageIndex += 1;
-                }
+            if (result.screenshots) {
+                ajaxCall('/api/v1.1/Games/' + gameId + '/screenshots', 'GET', function (screenshotsItem) {
+                    for (var i = 0; i < screenshotsItem.length; i++) {
+                        var screenshotItem = document.createElement('div');
+                        screenshotItem.id = 'gamescreenshots_gallery_' + imageIndex;
+                        screenshotItem.setAttribute('name', 'gamescreenshots_gallery_item');
+                        screenshotItem.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/screenshots/' + screenshotsItem[i].id + '/image/screenshot_thumb/' + screenshotsItem[i].imageId + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
+                        screenshotItem.setAttribute('imageid', imageIndex);
+                        screenshotItem.setAttribute('imagetype', 0);
+                        screenshotItem.className = 'gamescreenshots_gallery_item';
+                        screenshotItem.setAttribute('onclick', 'selectScreenshot(' + imageIndex + ');');
+                        gameScreenshots_Gallery.appendChild(screenshotItem);
+                        imageIndex += 1;
+                    }
+
+                    selectScreenshot(0);
+                });
             }
 
             // load videos
@@ -387,7 +388,7 @@
                     selectScreenshot(0);
                 });
             } else {
-                selectScreenshot(0);
+                //selectScreenshot(0);
             }
         } else {
             gamescreenshots.setAttribute('style', 'display: none;');
@@ -747,6 +748,27 @@
         gameRoms.appendChild(filterControls);
     }
 
+    function loadArtwork(game, cover) {
+        // show default background
+        var bg = document.getElementById('bgImage');
+        if (cover) {
+            bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/cover/image/original/' + cover.imageId + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+        } else {
+            var randomInt = randomIntFromInterval(1, 3);
+            bg.setAttribute('style', 'background-image: url("/images/gamebg' + randomInt + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+        }
+
+        // // load artwork
+        // if (game.artworks) {
+        //     ajaxCall('/api/v1.1/games/' + gameId + '/artwork', 'GET', function (result) {
+        //         artworks = result;
+        //         var startPos = randomIntFromInterval(0, result.length);
+        //         artworksPosition = startPos;
+        //         rotateBackground();
+        //     });
+        // }
+    }
+
     function rotateBackground() {
         if (artworks) {
             artworksPosition += 1;
@@ -778,6 +800,7 @@
         gameScreenshots_Main.innerHTML = '';
         switch (gameScreenshots_Selected.getAttribute('imagetype')) {
             case "0":
+            default:
                 // screenshot
                 gameScreenshots_Main.setAttribute('style', gameScreenshots_Selected.getAttribute('style').replace("/image/screenshot_thumb", "/image/original"));
                 break;

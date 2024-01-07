@@ -67,14 +67,14 @@ namespace gaseous_server.Classes.Metadata
                 case Storage.CacheStatus.NotPresent:
                     returnValue = await GetObjectFromServer(WhereClause, ImagePath);
                     Storage.NewCacheValue(returnValue);
-                    if (GetImages == true) { forceImageDownload = true; }
+                    forceImageDownload = true;
                     break;  
                 case Storage.CacheStatus.Expired:
                     try
                     {
                         returnValue = await GetObjectFromServer(WhereClause, ImagePath);
                         Storage.NewCacheValue(returnValue, true);
-                        if (GetImages == true) { forceImageDownload = true; }
+                        forceImageDownload = true;
                     }
                     catch (Exception ex)
                     {
@@ -91,12 +91,15 @@ namespace gaseous_server.Classes.Metadata
 
             // check for presence of "original" quality file - download if absent or force download is true
             string localFile = Path.Combine(ImagePath, Communications.IGDBAPI_ImageSize.original.ToString(), returnValue.ImageId + ".jpg");
-            if ((!File.Exists(localFile)) || forceImageDownload == true)
+            if (GetImages == true)
             {
-                Logging.Log(Logging.LogType.Information, "Metadata: " + returnValue.GetType().Name, "Screenshot download forced.");
+                if ((!File.Exists(localFile)) || forceImageDownload == true)
+                {
+                    Logging.Log(Logging.LogType.Information, "Metadata: " + returnValue.GetType().Name, "Screenshot download forced.");
 
-                Communications comms = new Communications();
-                comms.GetSpecificImageFromServer(ImagePath, returnValue.ImageId, Communications.IGDBAPI_ImageSize.original, null);
+                    Communications comms = new Communications();
+                    comms.GetSpecificImageFromServer(ImagePath, returnValue.ImageId, Communications.IGDBAPI_ImageSize.original, null);
+                }
             }
 
             return returnValue;
