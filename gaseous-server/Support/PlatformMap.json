@@ -189,6 +189,91 @@
         ]
     },
     {
+        "igdbId": 114,
+        "igdbName": "Amiga CD32",
+        "igdbSlug": "amiga-cd32",
+        "alternateNames": [
+            "Amiga CD32",
+            "Commodore Amiga CD32"
+        ],
+        "extensions": {
+            "supportedFileExtensions": [
+                ".ZIP"
+            ],
+            "uniqueFileExtensions": [
+            ]
+        },
+        "retroPieDirectoryName": "amiga",
+        "webEmulator": {
+            "type": "EmulatorJS",
+            "core": "amiga",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "amiga",
+                            "alternateCoreName": "puae",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
+        },
+        "bios": [
+            {
+                "hash": "85ad74194e87c08904327de1a9443b7a",
+                "description": "Kickstart v1.2 rev 33.180",
+                "filename": "kick33180.A500"
+            },
+            {
+                "hash": "82a21c1890cae844b3df741f2762d48d",
+                "description": "Kickstart v1.3 rev 34.005",
+                "filename": "kick34005.A500"
+            },
+            {
+                "hash": "89da1838a24460e4b93f4f0c5d92d48d",
+                "description": "CDTV extended ROM v1.00",
+                "filename": "kick34005.CDTV"
+            },
+            {
+                "hash": "dc10d7bdd1b6f450773dfb558477c230",
+                "description": "Kickstart v2.04 rev 37.175",
+                "filename": "kick37175.A500"
+            },
+            {
+                "hash": "5f8924d013dd57a89cf349f4cdedc6b1",
+                "description": "CD32 Kickstart v3.1 rev 40.060",
+                "filename": "kick40060.CD32"
+            },
+            {
+                "hash": "f2f241bf094168cfb9e7805dc2856433",
+                "description": "CD32 KS + extended v3.1 rev 40.060",
+                "filename": "kick40060.CD32"
+            },
+            {
+                "hash": "bb72565701b1b6faece07d68ea5da639",
+                "description": "CD32 extended ROM rev 40.060",
+                "filename": "kick40060.CD32.ext"
+            },
+            {
+                "hash": "e40a5dfb3d017ba8779faba30cbd1c8e",
+                "description": "Kickstart v3.1 rev 40.063",
+                "filename": "kick40063.A600"
+            },
+            {
+                "hash": "646773759326fbac3b2311fd8c8793ee",
+                "description": "Kickstart v3.1 rev 40.068",
+                "filename": "kick40068.A1200"
+            },
+            {
+                "hash": "9bdedde6a4f33555b4a270c8ca53297d",
+                "description": "Kickstart v3.1 rev 40.068",
+                "filename": "kick40068.A4000"
+            }
+        ]
+    },
+    {
         "igdbId": 25,
         "igdbName": "Amstrad CPC",
         "igdbSlug": "acpc",
@@ -544,6 +629,48 @@
         ]
     },
     {
+        "igdbId": 68,
+        "igdbName": "ColecoVision",
+        "igdbSlug": "colecovision",
+        "alternateNames": [
+            "ColecoVision"
+        ],
+        "extensions": {
+            "supportedFileExtensions": [
+                ".BIN",
+                ".COL",
+                ".ROM",
+                ".ZIP"
+            ],
+            "uniqueFileExtensions": [
+            ]
+        },
+        "retroPieDirectoryName": "coleco",
+        "webEmulator": {
+            "type": "EmulatorJS",
+            "core": "coleco",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "coleco",
+                            "alternateCoreName": "coleco",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
+        },
+        "bios": [
+            {
+                "hash": "2c66f5911e5b42b8ebe113403548eee7",
+                "description": "ColecoVision BIOS - Mandatory",
+                "filename": "colecovision.rom"
+            }
+        ]
+    },
+    {
         "igdbId": 15,
         "igdbName": "Commodore C64/128/MAX",
         "igdbSlug": "c64",
@@ -617,6 +744,92 @@
                 "hash": "be09394f0576cf81fa8bacf634daf9a2",
                 "description": "JiffyDOS C64 Kernal",
                 "filename": "JiffyDOS_C64.bin"
+            }
+        ]
+    },
+    {
+        "igdbId": 158,
+        "igdbName": "Commodore CDTV",
+        "igdbSlug": "commodore-cdtv",
+        "alternateNames": [
+            "Commodore CDTV",
+            "Amiga CDTV",
+            "Commodore Amiga CDTV"
+        ],
+        "extensions": {
+            "supportedFileExtensions": [
+                ".ZIP"
+            ],
+            "uniqueFileExtensions": [
+            ]
+        },
+        "retroPieDirectoryName": "amiga",
+        "webEmulator": {
+            "type": "EmulatorJS",
+            "core": "amiga",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "amiga",
+                            "alternateCoreName": "puae",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
+        },
+        "bios": [
+            {
+                "hash": "85ad74194e87c08904327de1a9443b7a",
+                "description": "Kickstart v1.2 rev 33.180",
+                "filename": "kick33180.A500"
+            },
+            {
+                "hash": "82a21c1890cae844b3df741f2762d48d",
+                "description": "Kickstart v1.3 rev 34.005",
+                "filename": "kick34005.A500"
+            },
+            {
+                "hash": "89da1838a24460e4b93f4f0c5d92d48d",
+                "description": "CDTV extended ROM v1.00",
+                "filename": "kick34005.CDTV"
+            },
+            {
+                "hash": "dc10d7bdd1b6f450773dfb558477c230",
+                "description": "Kickstart v2.04 rev 37.175",
+                "filename": "kick37175.A500"
+            },
+            {
+                "hash": "5f8924d013dd57a89cf349f4cdedc6b1",
+                "description": "CD32 Kickstart v3.1 rev 40.060",
+                "filename": "kick40060.CD32"
+            },
+            {
+                "hash": "f2f241bf094168cfb9e7805dc2856433",
+                "description": "CD32 KS + extended v3.1 rev 40.060",
+                "filename": "kick40060.CD32"
+            },
+            {
+                "hash": "bb72565701b1b6faece07d68ea5da639",
+                "description": "CD32 extended ROM rev 40.060",
+                "filename": "kick40060.CD32.ext"
+            },
+            {
+                "hash": "e40a5dfb3d017ba8779faba30cbd1c8e",
+                "description": "Kickstart v3.1 rev 40.063",
+                "filename": "kick40063.A600"
+            },
+            {
+                "hash": "646773759326fbac3b2311fd8c8793ee",
+                "description": "Kickstart v3.1 rev 40.068",
+                "filename": "kick40068.A1200"
+            },
+            {
+                "hash": "9bdedde6a4f33555b4a270c8ca53297d",
+                "description": "Kickstart v3.1 rev 40.068",
+                "filename": "kick40068.A4000"
             }
         ]
     },

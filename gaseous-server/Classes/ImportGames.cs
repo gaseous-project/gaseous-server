@@ -98,7 +98,7 @@ namespace gaseous_server.Classes
                     {
                         Logging.Log(Logging.LogType.Information, "Import Game", "  " + GameFileImportPath + " not in database - processing");
 
-                        gaseous_server.Models.Signatures_Games discoveredSignature = GetFileSignature(GameLibrary.GetLibrary(0), hash, fi, GameFileImportPath);
+                        gaseous_server.Models.Signatures_Games discoveredSignature = GetFileSignature(GameLibrary.GetDefaultLibrary, hash, fi, GameFileImportPath);
 
                         // get discovered platform
                         IGDB.Models.Platform? determinedPlatform = null;
@@ -152,7 +152,7 @@ namespace gaseous_server.Classes
         {
             if (Signature.Flags != null)
             {
-                if (Signature.Flags.IGDBGameId != null)
+                if (Signature.Flags.IGDBGameId != null && Signature.Flags.IGDBGameId != 0)
                 {
                     // game was determined elsewhere - probably a Hasheous server
                     try
