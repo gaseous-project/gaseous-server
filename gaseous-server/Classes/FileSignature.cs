@@ -10,7 +10,7 @@ namespace gaseous_server.Classes
 {
     public class FileSignature
     {
-        public static gaseous_server.Models.Signatures_Games GetFileSignature(GameLibrary.LibraryItem library, Common.hashObject hash, FileInfo fi, string GameFileImportPath)
+        public gaseous_server.Models.Signatures_Games GetFileSignature(GameLibrary.LibraryItem library, Common.hashObject hash, FileInfo fi, string GameFileImportPath)
         {
             Logging.Log(Logging.LogType.Information, "Get Signature", "Getting signature for file: " + GameFileImportPath);
             gaseous_server.Models.Signatures_Games discoveredSignature = new gaseous_server.Models.Signatures_Games();
@@ -174,7 +174,7 @@ namespace gaseous_server.Classes
             return discoveredSignature;
         }
 
-        private static gaseous_server.Models.Signatures_Games _GetFileSignature(Common.hashObject hash, ref FileInfo fi, string GameFileImportPath, bool IsInZip)
+        private gaseous_server.Models.Signatures_Games _GetFileSignature(Common.hashObject hash, ref FileInfo fi, string GameFileImportPath, bool IsInZip)
         {
             gaseous_server.Models.Signatures_Games discoveredSignature = new gaseous_server.Models.Signatures_Games();
 
@@ -214,7 +214,7 @@ namespace gaseous_server.Classes
             return discoveredSignature;
         }
 
-		private static gaseous_server.Models.Signatures_Games? _GetFileSignatureFromDatabase(Common.hashObject hash, ref FileInfo fi, string GameFileImportPath)
+		private gaseous_server.Models.Signatures_Games? _GetFileSignatureFromDatabase(Common.hashObject hash, ref FileInfo fi, string GameFileImportPath)
 		{
             // check 1: do we have a signature for it?
             gaseous_server.Classes.SignatureManagement sc = new SignatureManagement();
@@ -252,7 +252,7 @@ namespace gaseous_server.Classes
             return null;
         }
 
-        private static gaseous_server.Models.Signatures_Games? _GetFileSignatureFromHasheous(Common.hashObject hash, ref FileInfo fi, string GameFileImportPath)
+        private gaseous_server.Models.Signatures_Games? _GetFileSignatureFromHasheous(Common.hashObject hash, ref FileInfo fi, string GameFileImportPath)
         {
             // check if hasheous is enabled, and if so use it's signature database
             if (Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous)
@@ -296,7 +296,7 @@ namespace gaseous_server.Classes
             return null;
         }
 
-        private static gaseous_server.Models.Signatures_Games _GetFileSignatureFromFileData(Common.hashObject hash, ref FileInfo fi, string GameFileImportPath)
+        private gaseous_server.Models.Signatures_Games _GetFileSignatureFromFileData(Common.hashObject hash, ref FileInfo fi, string GameFileImportPath)
         {
             SignatureManagement signatureManagement = new SignatureManagement();
 

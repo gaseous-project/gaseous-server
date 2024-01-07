@@ -98,7 +98,8 @@ namespace gaseous_server.Classes
                     {
                         Logging.Log(Logging.LogType.Information, "Import Game", "  " + GameFileImportPath + " not in database - processing");
 
-                        gaseous_server.Models.Signatures_Games discoveredSignature = GetFileSignature(GameLibrary.GetDefaultLibrary, hash, fi, GameFileImportPath);
+                        FileSignature fileSignature = new FileSignature();
+                        gaseous_server.Models.Signatures_Games discoveredSignature = fileSignature.GetFileSignature(GameLibrary.GetDefaultLibrary, hash, fi, GameFileImportPath);
 
                         // get discovered platform
                         IGDB.Models.Platform? determinedPlatform = null;
@@ -484,7 +485,7 @@ namespace gaseous_server.Classes
 
         public void LibraryScan(GameLibrary.LibraryItem? singleLibrary = null)
         {
-            int maxWorkers = 2;
+            int maxWorkers = 4;
 
             List<GameLibrary.LibraryItem> libraries = new List<GameLibrary.LibraryItem>();
             if (singleLibrary == null)
@@ -633,7 +634,8 @@ namespace gaseous_server.Classes
                         Common.hashObject hash = new Common.hashObject(LibraryFile);
                         FileInfo fi = new FileInfo(LibraryFile);
 
-                        gaseous_server.Models.Signatures_Games sig = GetFileSignature(library, hash, fi, LibraryFile);
+                        FileSignature fileSignature = new FileSignature();
+                        gaseous_server.Models.Signatures_Games sig = fileSignature.GetFileSignature(library, hash, fi, LibraryFile);
 
                         // get discovered platform
                         IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(sig.Flags.IGDBPlatformId);
@@ -765,7 +767,8 @@ namespace gaseous_server.Classes
                     Logging.Log(Logging.LogType.Information, "Rematch Scan", "Running rematch against " + romPath);
 
                     // determine rom signature
-                    gaseous_server.Models.Signatures_Games sig = GetFileSignature(library, hash, fi, romPath);
+                    FileSignature fileSignature = new FileSignature();
+                    gaseous_server.Models.Signatures_Games sig = fileSignature.GetFileSignature(library, hash, fi, romPath);
 
                     // determine rom platform
                     IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(sig.Flags.IGDBPlatformId);
