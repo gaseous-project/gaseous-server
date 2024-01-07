@@ -656,7 +656,8 @@ namespace gaseous_server.Classes
                             }
                             else
                             {
-                                determinedGame = SearchForGame(sig, (long)determinedPlatform.Id, true);
+                                determinedPlatform = Platforms.GetPlatform(library.DefaultPlatformId);
+                                determinedGame = SearchForGame(sig, library.DefaultPlatformId, true);
                             }
 
                             StoreROM(library, hash, determinedGame, determinedPlatform, sig, LibraryFile);
