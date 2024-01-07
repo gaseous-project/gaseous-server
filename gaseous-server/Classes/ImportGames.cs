@@ -484,7 +484,7 @@ namespace gaseous_server.Classes
 
         public void LibraryScan(GameLibrary.LibraryItem? singleLibrary = null)
         {
-            int maxWorkers = 4;
+            int maxWorkers = 2;
 
             List<GameLibrary.LibraryItem> libraries = new List<GameLibrary.LibraryItem>();
             if (singleLibrary == null)
@@ -769,12 +769,27 @@ namespace gaseous_server.Classes
 
                     // determine rom platform
                     IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(sig.Flags.IGDBPlatformId);
+
+                    IGDB.Models.Game determinedGame = new Game();
                     if (determinedPlatform == null)
                     {
-                        determinedPlatform = new IGDB.Models.Platform();
+                        if (library.DefaultPlatformId == 0)
+                        {
+                            determinedPlatform = new IGDB.Models.Platform();
+                            determinedGame = SearchForGame(sig, sig.Flags.IGDBPlatformId, true);
+                        }
+                        else
+                        {
+                            determinedPlatform = Platforms.GetPlatform(library.DefaultPlatformId);
+                            determinedGame = SearchForGame(sig, library.DefaultPlatformId, true);
+                        }
                     }
-
-                    IGDB.Models.Game determinedGame = SearchForGame(sig, sig.Flags.IGDBPlatformId, true);
+                    else
+                    {
+                        determinedPlatform = Platforms.GetPlatform(library.DefaultPlatformId);
+                        determinedGame = SearchForGame(sig, library.DefaultPlatformId, true);
+                    }
+                    determinedGame = SearchForGame(sig, sig.Flags.IGDBPlatformId, true);
 
                     StoreROM(library, hash, determinedGame, determinedPlatform, sig, romPath, romId);
 
