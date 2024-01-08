@@ -234,7 +234,7 @@ namespace gaseous_server.Classes
             {
                 // only 1 signature found!
                 discoveredSignature = signatures.ElementAt(0);
-                gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
+                gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, ref fi, false);
 
                 return discoveredSignature;
             }
@@ -246,7 +246,7 @@ namespace gaseous_server.Classes
                     if (Sig.Score > discoveredSignature.Score)
                     {
                         discoveredSignature = Sig;
-                        gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
+                        gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, ref fi, false);
                     }
                 }
 
@@ -290,7 +290,7 @@ namespace gaseous_server.Classes
                             }
                         }
     
-                        gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref signature, fi, false);
+                        gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref signature, ref fi, false);
 
                         return signature;
                     }
@@ -313,7 +313,7 @@ namespace gaseous_server.Classes
             {
                 // only 1 signature found!
                 discoveredSignature = signatures.ElementAt(0);
-                gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
+                gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, ref fi, false);
 
                 return discoveredSignature;
             }
@@ -325,7 +325,7 @@ namespace gaseous_server.Classes
                     if (Sig.Score > discoveredSignature.Score)
                     {
                         discoveredSignature = Sig;
-                        gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, false);
+                        gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, ref fi, false);
                     }
                 }
 
@@ -353,7 +353,7 @@ namespace gaseous_server.Classes
                 gi.Name = gi.Name.Replace("-", "").Trim();
 
                 // guess platform
-                gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, fi, true);
+                gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, ref fi, true);
 
                 // get rom data
                 ri.Name = Path.GetFileName(GameFileImportPath);
