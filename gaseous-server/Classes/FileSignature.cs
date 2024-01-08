@@ -225,7 +225,7 @@ namespace gaseous_server.Classes
             // check 1: do we have a signature for it?
             gaseous_server.Classes.SignatureManagement sc = new SignatureManagement();
             List<gaseous_server.Models.Signatures_Games> signatures = sc.GetSignature(hash.md5hash);
-            if (signatures.Count == 0)
+            if (signatures == null || signatures.Count == 0)
             {
                 Logging.Log(Logging.LogType.Information, "Get Signature", "Checking local database for SHA1: " + hash.sha1hash);
 
