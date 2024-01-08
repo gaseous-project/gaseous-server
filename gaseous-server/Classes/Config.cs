@@ -507,7 +507,7 @@ namespace gaseous_server.Classes
                 {
                     get
                     {
-                        return 2;
+                        return 4;
                     }
                 }
 
