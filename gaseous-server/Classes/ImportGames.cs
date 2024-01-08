@@ -637,30 +637,25 @@ namespace gaseous_server.Classes
                         FileSignature fileSignature = new FileSignature();
                         gaseous_server.Models.Signatures_Games sig = fileSignature.GetFileSignature(library, hash, fi, LibraryFile);
 
-                        // get discovered platform
-                        IGDB.Models.Platform determinedPlatform = Metadata.Platforms.GetPlatform(sig.Flags.IGDBPlatformId);
-                        
-                        IGDB.Models.Game determinedGame = new Game();
                         try
                         {
-                            if (determinedPlatform == null)
+                            // get discovered platform
+                            long PlatformId;
+                            IGDB.Models.Platform determinedPlatform;
+                            
+                            if (sig.Flags.IGDBPlatformId == null || sig.Flags.IGDBPlatformId == 0 )
                             {
-                                if (library.DefaultPlatformId == 0)
-                                {
-                                    determinedPlatform = new IGDB.Models.Platform();
-                                    determinedGame = SearchForGame(sig, sig.Flags.IGDBPlatformId, true);
-                                }
-                                else
-                                {
-                                    determinedPlatform = Platforms.GetPlatform(library.DefaultPlatformId);
-                                    determinedGame = SearchForGame(sig, library.DefaultPlatformId, true);
-                                }
+                                // no platform discovered in the signature
+                                PlatformId = library.DefaultPlatformId;
                             }
                             else
                             {
-                                determinedPlatform = Platforms.GetPlatform(library.DefaultPlatformId);
-                                determinedGame = SearchForGame(sig, library.DefaultPlatformId, true);
+                                // use the platform discovered in the signature
+                                PlatformId = sig.Flags.IGDBPlatformId;
                             }
+                            determinedPlatform = Platforms.GetPlatform(PlatformId);
+
+                            IGDB.Models.Game determinedGame = SearchForGame(sig, PlatformId, true);
 
                             StoreROM(library, hash, determinedGame, determinedPlatform, sig, LibraryFile);
                         }
