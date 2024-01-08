@@ -1,5 +1,6 @@
 using System.IO.Compression;
 using HasheousClient.Models;
+using NuGet.Common;
 using SevenZip;
 using SharpCompress.Archives;
 using SharpCompress.Archives.Rar;
@@ -11,7 +12,7 @@ namespace gaseous_server.Classes
     public class FileSignature
     {
         // flag to pause decompressions, so that only one may happen at a time
-        private static bool DecompressionInProgress = false;
+        public static Dictionary<string, DateTime> TemporaryDirectoriesToDelete = new Dictionary<string, DateTime>();
 
         public gaseous_server.Models.Signatures_Games GetFileSignature(GameLibrary.LibraryItem library, Common.hashObject hash, FileInfo fi, string GameFileImportPath)
         {
@@ -26,18 +27,6 @@ namespace gaseous_server.Classes
             {
                 // file is a zip and less than 1 GiB
                 // extract the zip file and search the contents
-
-                if (DecompressionInProgress == true)
-                {
-                    do
-                    {
-                        Console.WriteLine("Waiting for decompressor to become available.");
-                        Thread.Sleep(10000);
-                    }
-                    while (DecompressionInProgress == true);
-                }
-
-                DecompressionInProgress = true;
 
                 string ExtractPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, library.Id.ToString(), Path.GetRandomFileName());
                 Logging.Log(Logging.LogType.Information, "Get Signature", "Decompressing " + GameFileImportPath + " to " + ExtractPath + " examine contents");
@@ -179,14 +168,8 @@ namespace gaseous_server.Classes
                     Logging.Log(Logging.LogType.Critical, "Get Signature", "Error processing compressed file: " + GameFileImportPath, ex);
                 }
 
-                if (Directory.Exists(ExtractPath)) 
-                {
-                    Logging.Log(Logging.LogType.Information, "Get Signature", "Deleting temporary decompress folder: " + ExtractPath);
-                 
-                    Directory.Delete(ExtractPath, true); 
-                }
-
-                DecompressionInProgress = false;
+                // mark extration path for deletion
+                TemporaryDirectoriesToDelete.Add(ExtractPath, DateTime.UtcNow);
             }
 
             return discoveredSignature;

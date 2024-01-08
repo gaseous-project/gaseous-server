@@ -2,6 +2,7 @@
 using System.ComponentModel.Design.Serialization;
 using System.Data;
 using gaseous_server.Classes;
+using NuGet.Packaging;
 
 namespace gaseous_server
 {
@@ -239,6 +240,29 @@ namespace gaseous_server
                                     maintenance.RunMaintenance();
                                     break;
 
+                                case QueueItemType.TempCleanup:
+                                    Dictionary<string, DateTime> tempTempList = new Dictionary<string, DateTime>();
+                                    tempTempList.AddRange(FileSignature.TemporaryDirectoriesToDelete);
+                                    foreach (KeyValuePair<string, DateTime> tempPair in tempTempList)
+                                    {
+                                        if (Directory.Exists(tempPair.Key))
+                                        {
+                                            if (tempPair.Value.AddMinutes(5) < DateTime.UtcNow)
+                                            {
+                                                // path is valid candidate to delete
+                                                Logging.Log(Logging.LogType.Information, "Get Signature", "Deleting temporary decompress folder: " + tempPair.Key);
+                                                Directory.Delete(tempPair.Key, true);
+                                                FileSignature.TemporaryDirectoriesToDelete.Remove(tempPair.Key);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            // path doesn't exist - no point keeping it here
+                                            FileSignature.TemporaryDirectoriesToDelete.Remove(tempPair.Key);
+                                        }
+                                    }
+                                    break;
+
                             }
                         }
                         catch (Exception ex)
@@ -394,7 +418,12 @@ namespace gaseous_server
             /// <summary>
             /// Performs a clean up of old files, and optimises the database
             /// </summary>
-            Maintainer
+            Maintainer,
+
+            /// <summary>
+            /// Cleans up marked paths in the temporary directory
+            /// </summary>
+            TempCleanup
         }
 
         public enum QueueItemState

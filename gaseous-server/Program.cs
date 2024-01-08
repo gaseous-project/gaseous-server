@@ -476,6 +476,16 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     })
     );
 
+ProcessQueue.QueueItem tempCleanup = new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.TempCleanup,
+    1,
+    new List<ProcessQueue.QueueItemType>(),
+    false,
+    false
+    );
+tempCleanup.ForceExecute();
+ProcessQueue.QueueItems.Add(tempCleanup);
+
 Logging.WriteToDiskOnly = false;
 
 // start the app
