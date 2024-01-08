@@ -10,6 +10,9 @@ namespace gaseous_server.Classes
 {
     public class FileSignature
     {
+        // flag to pause decompressions, so that only one may happen at a time
+        private static bool DecompressionInProgress = false;
+
         public gaseous_server.Models.Signatures_Games GetFileSignature(GameLibrary.LibraryItem library, Common.hashObject hash, FileInfo fi, string GameFileImportPath)
         {
             Logging.Log(Logging.LogType.Information, "Get Signature", "Getting signature for file: " + GameFileImportPath);
@@ -23,6 +26,19 @@ namespace gaseous_server.Classes
             {
                 // file is a zip and less than 1 GiB
                 // extract the zip file and search the contents
+
+                if (DecompressionInProgress == true)
+                {
+                    do
+                    {
+                        Console.WriteLine("Waiting for decompressor to become available.");
+                        Thread.Sleep(10000);
+                    }
+                    while (DecompressionInProgress == true);
+                }
+
+                DecompressionInProgress = true;
+
                 string ExtractPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, library.Id.ToString(), Path.GetRandomFileName());
                 Logging.Log(Logging.LogType.Information, "Get Signature", "Decompressing " + GameFileImportPath + " to " + ExtractPath + " examine contents");
                 if (!Directory.Exists(ExtractPath)) { Directory.CreateDirectory(ExtractPath); }
@@ -169,6 +185,8 @@ namespace gaseous_server.Classes
                  
                     Directory.Delete(ExtractPath, true); 
                 }
+
+                DecompressionInProgress = false;
             }
 
             return discoveredSignature;
@@ -176,6 +194,9 @@ namespace gaseous_server.Classes
 
         private gaseous_server.Models.Signatures_Games _GetFileSignature(Common.hashObject hash, ref FileInfo fi, string GameFileImportPath, bool IsInZip)
         {
+            Logging.Log(Logging.LogType.Information, "Import Game", "Checking signature for file: " + GameFileImportPath + "\nMD5 hash: " + hash.md5hash + "\nSHA1 hash: " + hash.sha1hash);
+
+
             gaseous_server.Models.Signatures_Games discoveredSignature = new gaseous_server.Models.Signatures_Games();
 
             // do database search first

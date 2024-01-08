@@ -71,7 +71,7 @@ namespace gaseous_server.Classes
             }
 
             Logging.Log(Logging.LogType.Information, "Maintenance", "Optimising database tables");
-            sql = "SHOW TABLES;";
+            sql = "SHOW FULL TABLES WHERE Table_Type = 'BASE TABLE';";
             DataTable tables = db.ExecuteCMD(sql);
 
             int StatusCounter = 1;
