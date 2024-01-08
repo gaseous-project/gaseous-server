@@ -55,7 +55,9 @@ var ClassificationRatings = {
     "ACB_RC":    "Refused Classification"
 };
 
-function formatGamesPanel(targetElement, result, pageNumber, pageSize) {
+var pageReloadInterval;
+
+function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScrollTop) {
     console.log("Displaying page: " + pageNumber);
     console.log("Page size: " + pageSize);
 
@@ -66,7 +68,9 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize) {
     }
 
     if (pageMode == 'paged') {
-        window.scrollTo(0, 0);
+        if (forceScrollTop == true) {
+            window.scrollTo(0, 0);
+        }
     }
 
     var pagerCheck = document.getElementById('games_library_pagerstore');
@@ -193,6 +197,18 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize) {
                 break;
         }
     }
+
+    var pageReloadFunction = function() {
+        formatGamesPanel(targetElement, result, pageNumber, pageSize, false);
+
+        ajaxCall('/api/v1.1/Filter', 'GET', function (result) {
+            var scrollerElement = document.getElementById('games_filter_scroller');
+            formatFilterPanel(scrollerElement, result);
+        })
+    };
+
+    window.clearTimeout(pageReloadInterval);
+    pageReloadInterval = setTimeout(pageReloadFunction, 10000);
 }
 
 function isScrolledIntoView(elem) {

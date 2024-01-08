@@ -1,6 +1,11 @@
 ﻿var existingSearchModel;
 
-function formatFilterPanel(targetElement, scrollerElement, result) {
+function formatFilterPanel(containerElement, result) {
+    containerElement.innerHTML = '';
+
+    var targetElement = document.createElement('div');
+    targetElement.id = 'games_filter';
+
     var panel = document.createElement('div');
     panel.id = 'filter_panel_box';
 
@@ -115,8 +120,6 @@ function formatFilterPanel(targetElement, scrollerElement, result) {
 
     buttonsDiv.appendChild(resetButton);
 
-    scrollerElement.appendChild(buttonsDiv);
-
     // set order by values
     var orderByCookie = getCookie('games_library_orderby_select');
     if (orderByCookie) {
@@ -126,6 +129,10 @@ function formatFilterPanel(targetElement, scrollerElement, result) {
     if (orderByDirectionCookie) {
         document.getElementById('games_library_orderby_direction_select').value = orderByDirectionCookie;
     }
+
+    containerElement.appendChild(targetElement);
+
+    containerElement.appendChild(buttonsDiv);
 }
 
 function buildFilterPanel(targetElement, headerString, friendlyHeaderString, valueList, showToggle, initialDisplay) {
@@ -422,7 +429,7 @@ function executeFilter1_1(pageNumber, pageSize) {
         'POST',
         function (result) {
             var gameElement = document.getElementById('games_library');
-            formatGamesPanel(gameElement, result, pageNumber, pageSize);
+            formatGamesPanel(gameElement, result, pageNumber, pageSize, true);
         },
         function (error) {
             console.log('An error occurred: ' + JSON.stringify(error));
