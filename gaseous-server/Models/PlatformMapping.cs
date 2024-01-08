@@ -371,14 +371,14 @@ namespace gaseous_server.Models
             return null;
         }
 
-        public static void GetIGDBPlatformMapping(ref gaseous_server.Models.Signatures_Games Signature, ref FileInfo RomFileInfo, bool SetSystemName)
+        public static void GetIGDBPlatformMapping(ref gaseous_server.Models.Signatures_Games Signature, string ImageExtension, bool SetSystemName)
         {
             bool PlatformFound = false;
             foreach (Models.PlatformMapping.PlatformMapItem PlatformMapping in Models.PlatformMapping.PlatformMap)
             {
                 if (PlatformMapping.Extensions != null)
                 {
-                    if (PlatformMapping.Extensions.UniqueFileExtensions.Contains(RomFileInfo.Extension, StringComparer.OrdinalIgnoreCase))
+                    if (PlatformMapping.Extensions.UniqueFileExtensions.Contains(ImageExtension, StringComparer.OrdinalIgnoreCase))
                     {
                         if (SetSystemName == true)
                         {
