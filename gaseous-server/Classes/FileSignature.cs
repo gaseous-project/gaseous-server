@@ -220,11 +220,15 @@ namespace gaseous_server.Classes
 
 		private gaseous_server.Models.Signatures_Games? _GetFileSignatureFromDatabase(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
 		{
+            Logging.Log(Logging.LogType.Information, "Get Signature", "Checking local database for MD5: " + hash.md5hash);
+
             // check 1: do we have a signature for it?
             gaseous_server.Classes.SignatureManagement sc = new SignatureManagement();
             List<gaseous_server.Models.Signatures_Games> signatures = sc.GetSignature(hash.md5hash);
             if (signatures.Count == 0)
             {
+                Logging.Log(Logging.LogType.Information, "Get Signature", "Checking local database for SHA1: " + hash.sha1hash);
+
                 // no md5 signature found - try sha1
                 signatures = sc.GetSignature("", hash.sha1hash);
             }
