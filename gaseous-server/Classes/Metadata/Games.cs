@@ -478,7 +478,7 @@ namespace gaseous_server.Classes.Metadata
             }
             
             // check search cache
-            List<Game>? games = Communications.GetSearchCache<List<Game>>(searchFields, searchBody);
+            Game[]? games = Communications.GetSearchCache<Game[]?>(searchFields, searchBody);
 
             if (games == null)
             {   
@@ -489,6 +489,8 @@ namespace gaseous_server.Classes.Metadata
                 if (allowSearch == true)
                 {
                     results = await comms.APIComm<Game>(IGDBClient.Endpoints.Games, searchFields, searchBody);
+
+                    Communications.SetSearchCache<Game[]?>(searchFields, searchBody, results);
                 }
 
                 return results;
