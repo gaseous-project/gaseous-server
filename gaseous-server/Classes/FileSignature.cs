@@ -169,7 +169,17 @@ namespace gaseous_server.Classes
                 }
 
                 // mark extration path for deletion
-                TemporaryDirectoriesToDelete.Add(ExtractPath, DateTime.UtcNow);
+                if (ExtractPath != null)
+                {
+                    try
+                    {
+                        TemporaryDirectoriesToDelete.Add(ExtractPath, DateTime.UtcNow);
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Log(Logging.LogType.Warning, "Get Signature", "An error occurred while adding " + ExtractPath + " to the clean up list.", ex);
+                    }
+                }
             }
 
             return discoveredSignature;
