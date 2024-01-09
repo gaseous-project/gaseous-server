@@ -71,6 +71,7 @@
         </div>
         <div id="gamesummarymediagroups" style="display: none;">
             <h3>Media Groups</h3>
+            <div id="gamesummarymediagroupscontent"></div>
         </div>
         <div id="gamesummaryroms">
             <span id="rom_edit" class="romlink" onclick="DisplayROMCheckboxes(true);">Edit</span>
@@ -85,6 +86,21 @@
                     <button id="rom_edit_creategroup" onclick="createMgGroup();" disabled="disabled">Create Media Group</button>
                 </div>
             </div>
+            <div id="games_library_controls">
+                <div class="games_library_controlblock">
+                    <input id="name_filter" type="text" placeholder="Name Search">
+                </div>
+                <div class="games_library_controlblock">
+                    <select id="platform_filter"></select>
+                </div>
+                <div class="games_library_controlblock">
+                    <button value="Search" onclick="loadRoms();">Search</button>
+                </div>
+                <div class="games_library_controlblock">
+                    <span class="games_library_label">0 ROMs</span>
+                </div>
+            </div>
+            <div id="gamesummaryromscontent"></div>
         </div>
         <div id="gamesummarysimilar" style="display: none;">
             <h3>Similar Games</h3>
@@ -311,6 +327,34 @@
             gameSummaryGenres.setAttribute('style', 'display: none;');
         }
 
+        // get platforms
+        var platformFilter = document.getElementById('platform_filter');
+        platformFilter.style.width = "200px";
+        $(platformFilter).select2({
+            minimumResultsForSearch: Infinity
+        });
+        ajaxCall('/api/v1.1/Games/' + gameId + '/platforms', 'GET', function (result) {
+            // add default option
+            var platformFilter_default = document.createElement('option');
+            platformFilter_default.value = "-1";
+            platformFilter_default.innerHTML = "All Platforms";
+            platformFilter_default.selected = "selected";
+            platformFilter.appendChild(platformFilter_default);
+
+            for (var i = 0; i < result.length; i++) {
+                var platformFilter_opt = document.createElement('option');
+                platformFilter_opt.value = result[i].key;
+                platformFilter_opt.innerHTML = result[i].value;
+                platformFilter.appendChild(platformFilter_opt);
+            }
+
+            // load media groups
+            loadMediaGroups();
+
+            // load roms
+            loadRoms(false, 1);
+        });
+
         // load screenshots
         var gameScreenshots = document.getElementById('gamescreenshots');
         if (result.screenshots || result.videos) {
@@ -415,28 +459,123 @@
                 gameSummarySimilar.setAttribute('style', 'display: none;');
             }
         });
-        
-        // load roms
-        loadRoms(false);
     });
 
-    function loadRoms(displayCheckboxes, pageNumber, selectedPlatform, nameSearch) {
+    function loadMediaGroups() {
+        ajaxCall('/api/v1.1/Games/' + gameId + '/romgroup', 'GET', function (result) {
+            // display media groups
+            var mediaGroup = document.getElementById('gamesummarymediagroups');
+            var mediaGroupDiv = document.getElementById('gamesummarymediagroupscontent');
+            if (result.length == 0) {
+                mediaGroup.style.display = 'none';
+            } else {
+                console.log(result);
+                mediaGroup.style.display = '';
+                mediaGroupDiv.innerHTML = '';
+                var mgTable = document.createElement('table');
+                mgTable.id = 'mediagrouptable';
+                mgTable.className = 'romtable';
+                mgTable.setAttribute('cellspacing', 0);
+                mgTable.appendChild(createTableRow(true, ['Platform', 'Images', 'Size', '', '', '']));
+
+                lastPlatform = '';
+                for (var i = 0; i < result.length; i++) {
+                    var mediaGroup = result[i];
+
+                    // get rom details including emulator and friendly platform name
+                    var launchButton = '';
+                    if (mediaGroup.emulator) {
+                        if (mediaGroup.emulator.type.length > 0) {
+                            launchButton = '<a href="/index.html?page=emulator&engine=' + mediaGroup.emulator.type + '&core=' + mediaGroup.emulator.core + '&platformid=' + mediaGroup.platformId + '&gameid=' + gameId + '&rompath=' + encodeURIComponent('/api/v1.1/Games/' + gameId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '(' + mediaGroup.id + ')' + '.zip') + '" class="romstart">Launch</a>';
+                        }
+                    }    
+            
+                    var statusText = mediaGroup.status;
+                    var downloadLink = '';
+                    var packageSize = '-';
+                    var launchButtonContent = '';
+                    var inProgress = false;
+                    switch (mediaGroup.status) {
+                        case 'NoStatus':
+                            statusText = '-';
+                            break;
+                        case "WaitingForBuild":
+                            statusText = 'Build pending';
+                            inProgress = true;
+                            break;
+                        case "Building":
+                            statusText = 'Building';
+                            inProgress = true;
+                            break;
+                        case "Completed":
+                            statusText = 'Available';
+                            downloadLink = '<a href="/api/v1.1/Games/' + gameId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '.zip" class="romlink"><img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" /></a>';
+                            packageSize = formatBytes(mediaGroup.size);
+                            launchButtonContent = launchButton;
+                            break;
+                        case "Failed":
+                            statusText = 'Build error';
+                            break;
+                        default:
+                            statusText = result[i].buildStatus;
+                            break;
+                    }
+
+                    if (inProgress == true) {
+                        setTimeout(loadMediaGroups, 10000);
+                    }
+
+                    var deleteButton = '<a href="#" onclick="showSubDialog(\'mediagroupdelete\', ' + mediaGroup.id + ');" class="romlink"><img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" /></a>';
+
+                    var newRow = [
+                        mediaGroup.platform,
+                        mediaGroup.romIds.length,
+                        packageSize,
+                        statusText,
+                        launchButtonContent,
+                        '<div style="text-align: right;">' + downloadLink + deleteButton + '</div>'
+                    ]
+
+                    mgTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
+
+                    var mgRomRow = document.createElement('tr');
+                    var mgRomCell = document.createElement('td');
+                    mgRomCell.setAttribute('colspan', 6);
+                    mgRomCell.className = 'romGroupTitles';
+                    
+                    
+                    // iterate the group members
+                    var groupMembers = [];
+                    for (var r = 0; r < mediaGroup.roms.length; r++) {
+                        groupMembers.push(mediaGroup.roms[r]);
+                    }
+
+                    groupMembers.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
+                    var groupMemberNames = [];
+                    for (var r = 0; r < groupMembers.length; r++) {
+                        groupMemberNames.push(groupMembers[r].name);
+                    }
+                    mgRomCell.innerHTML = groupMemberNames.join("<br />");
+                    mgRomRow.appendChild(mgRomCell);
+                    mgTable.appendChild(mgRomRow);
+                }
+
+                mediaGroupDiv.appendChild(mgTable);
+            }
+        });
+    }
+
+    function loadRoms(displayCheckboxes, pageNumber) {
         if (!pageNumber) {
             pageNumber = 1;
         }
 
-        if (selectedPlatform == undefined) {
-            selectedPlatform = -1;
-        }
+        selectedPlatform = $('#platform_filter').select2('data')[0].id;
 
         var nameSearchQuery = '';
-        if (nameSearch != undefined) {
+        var nameSearch = document.getElementById('name_filter').value;
+        if (nameSearch != undefined && nameSearch != "") {
             nameSearchQuery = '&NameSearch=' + encodeURIComponent(nameSearch);
-        }
-
-        var filterControlBlock = document.getElementById('games_library_controls');
-        if (filterControlBlock) {
-            filterControlBlock.remove();
         }
 
         var existingTable = document.getElementById('romtable');
@@ -449,11 +588,6 @@
             romPager.remove();
         }
 
-        var existingMgTable = document.getElementById('mediagrouptable');
-        if (existingMgTable) {
-            existingMgTable.remove();
-        }
-
         if (displayCheckboxes == undefined) {
             if (document.getElementById('rom_edit_panel').style.display == 'none') {
                 displayCheckboxes = false;
@@ -462,14 +596,12 @@
             }
         }
 
-        var gameRoms = document.getElementById('gamesummaryroms');
+        var gameRomsSection = document.getElementById('gamesummaryroms');
+        var gameRoms = document.getElementById('gamesummaryromscontent');
         var pageSize = 20;
         ajaxCall('/api/v1.1/Games/' + gameId + '/roms?pageNumber=' + pageNumber + '&pageSize=' + pageSize + '&platformId=' + selectedPlatform + nameSearchQuery, 'GET', function (result) {
-            drawRomFilterTools(result, gameRoms, displayCheckboxes, pageNumber, selectedPlatform, nameSearch);
-
             if (result.gameRomItems) {
                 var gameRomItems = result.gameRomItems;
-                var mediaGroups = result.mediaGroups;
 
                 // display roms
                 var newTable = document.createElement('table');
@@ -559,193 +691,16 @@
                     romPaginator.appendChild(nextPage);
 
                     gameRoms.appendChild(romPaginator);
-                }
-                
-                // display media groups
-                var mediaGroupDiv = document.getElementById('gamesummarymediagroups');
-                if (mediaGroups.length == 0) {
-                    mediaGroupDiv.style.display = 'none';
-                } else {
-                    mediaGroupDiv.style.display = '';
-                    var mgTable = document.createElement('table');
-                    mgTable.id = 'mediagrouptable';
-                    mgTable.className = 'romtable';
-                    mgTable.setAttribute('cellspacing', 0);
-                    mgTable.appendChild(createTableRow(true, ['Platform', 'Images', 'Size', '', '', '']));
 
-                    lastPlatform = '';
-                    for (var i = 0; i < mediaGroups.length; i++) {
-                        var mediaGroup = mediaGroups[i];
-
-                        // get rom details including emulator and friendly platform name
-                        var launchButton = '';
-                        for (var r = 0; r < gameRomItems.length; r++) {
-                            var gameRomItem = gameRomItems[r];
-                            if (gameRomItem.platformId == mediaGroup.platformId) {
-                                if (gameRomItem.emulator) {
-                                    if (gameRomItem.emulator.type.length > 0) {
-                                        launchButton = '<a href="/index.html?page=emulator&engine=' + gameRomItem.emulator.type + '&core=' + gameRomItem.emulator.core + '&platformid=' + gameRomItem.platformId + '&gameid=' + gameId + '&rompath=' + encodeURIComponent('/api/v1.1/Games/' + gameId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '(' + mediaGroup.id + ')' + '.zip') + '" class="romstart">Launch</a>';
-                                        break;
-                                    }
-                                }    
-                            }
-                        }
-
-                        var statusText = mediaGroup.status;
-                        var downloadLink = '';
-                        var packageSize = '-';
-                        var launchButtonContent = '';
-                        switch (mediaGroup.status) {
-                            case 'NoStatus':
-                                statusText = '-';
-                                break;
-                            case "WaitingForBuild":
-                                statusText = 'Build pending';
-                                break;
-                            case "Building":
-                                statusText = 'Building';
-                                break;
-                            case "Completed":
-                                statusText = 'Available';
-                                downloadLink = '<a href="/api/v1.1/Games/' + gameId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '.zip" class="romlink"><img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" /></a>';
-                                packageSize = formatBytes(mediaGroup.size);
-                                launchButtonContent = launchButton;
-                                break;
-                            case "Failed":
-                                statusText = 'Build error';
-                                break;
-                            default:
-                                statusText = result[i].buildStatus;
-                                break;
-                        }
-
-                        var deleteButton = '<a href="#" onclick="showSubDialog(\'mediagroupdelete\', ' + mediaGroup.id + ');" class="romlink"><img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" /></a>';
-
-                        var newRow = [
-                            mediaGroup.platformName,
-                            mediaGroup.romIds.length,
-                            packageSize,
-                            statusText,
-                            launchButtonContent,
-                            '<div style="text-align: right;">' + downloadLink + deleteButton + '</div>'
-                        ]
-
-                        mgTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
-
-                        var mgRomRow = document.createElement('tr');
-                        var mgRomCell = document.createElement('td');
-                        mgRomCell.setAttribute('colspan', 6);
-                        mgRomCell.className = 'romGroupTitles';
-                        
-                        // iterate the group members
-                        var groupMembers = [];
-                        for (var r = 0; r < mediaGroup.romIds.length; r++) {
-                            for (var x = 0; x < gameRomItems.length; x++) {
-                                if (mediaGroup.romIds[r] == gameRomItems[x].id) {
-                                    groupMembers.push(gameRomItems[x]);
-                                }
-                            }
-                        }
-
-                        groupMembers.sort((a, b) => (a.name > b.name) ? 1 : ((b.name > a.name) ? -1 : 0));
-                        var groupMemberNames = [];
-                        for (var r = 0; r < groupMembers.length; r++) {
-                            groupMemberNames.push(groupMembers[r].name);
-                        }
-                        mgRomCell.innerHTML = groupMemberNames.join("<br />");
-                        
-                        mgRomRow.appendChild(mgRomCell);
-                        mgTable.appendChild(mgRomRow);
-                    }
-
-                    mediaGroupDiv.appendChild(mgTable);
+                    gameRomsSection.appendChild(gameRoms);
                 }
             } else {
-                gameRoms.setAttribute('style', 'display: none;');
+                gameRomsSection.setAttribute('style', 'display: none;');
             }
         },
         function(error) {
-            drawRomFilterTools(error, gameRoms, displayCheckboxes, pageNumber, selectedPlatform, nameSearch);
+            
         });
-    }
-
-    function drawRomFilterTools(result, gameRoms, displayCheckboxes, pageNumber, selectedPlatform, nameSearch) {
-        // display filter tools
-        var filterControls = document.createElement('div');
-        filterControls.id = "games_library_controls";
-
-        var nameSearchFilterBlock = document.createElement('div');
-        nameSearchFilterBlock.className = 'games_library_controlblock';
-
-        var nameSearchbox = document.createElement('input');
-        nameSearchbox.id = 'name_filter';
-        nameSearchbox.type = 'text';
-        if (nameSearch) {
-            nameSearchbox.value = nameSearch;
-        }
-        nameSearchbox.setAttribute('placeholder', "Name Search");
-        nameSearchFilterBlock.appendChild(nameSearchbox);
-        filterControls.appendChild(nameSearchFilterBlock);
-
-        var platformFilterBlock = document.createElement('div');
-        platformFilterBlock.className = 'games_library_controlblock';
-
-        var platformFilterOpt = document.createElement('select');
-        platformFilterOpt.id = "platform_filter";
-
-        var platformFilterOptDefault = document.createElement('option');
-        platformFilterOptDefault.value = '-1';
-        platformFilterOptDefault.innerHTML = 'All Platforms';
-        if (selectedPlatform == -1) {
-            platformFilterOptDefault.selected = 'selected';
-        }
-        platformFilterOpt.appendChild(platformFilterOptDefault);
-
-        if (result.platforms) {
-            for (var i = 0; i < result.platforms.length; i++) {
-                var platformFilterOptValue = document.createElement('option');
-                platformFilterOptValue.value = result.platforms[i].key;
-                platformFilterOptValue.innerHTML = result.platforms[i].value;
-                if (selectedPlatform == Number(result.platforms[i].key)) {
-                    platformFilterOptValue.selected = 'selected';
-                }
-                platformFilterOpt.appendChild(platformFilterOptValue);
-            }
-        }
-        platformFilterBlock.appendChild(platformFilterOpt);
-        $(platformFilterOpt).select2({
-            minimumResultsForSearch: Infinity
-        });
-        filterControls.appendChild(platformFilterBlock);
-
-        var searchButtonFilterBlock = document.createElement('div');
-        searchButtonFilterBlock.className = 'games_library_controlblock';
-
-        var searchButton = document.createElement('button');
-        searchButton.value = 'Search';
-        searchButton.innerHTML = 'Search';
-        searchButton.setAttribute('onclick', 'loadRoms(' + undefined + ', ' + 1 + ', Number(document.getElementById("platform_filter").value), document.getElementById("name_filter").value);');
-        searchButtonFilterBlock.appendChild(searchButton);
-        filterControls.appendChild(searchButtonFilterBlock);
-
-        var romCounter = document.createElement('div');
-        romCounter.className = 'games_library_controlblock';
-
-        var romCounterLabel = document.createElement('span');
-        romCounterLabel.className = 'games_library_label';
-        if (result.count) {
-            if (result.count < 1000) {
-                romCounterLabel.innerHTML = result.count + ' ROMs';
-            } else {
-                romCounterLabel.innerHTML = 'Maximum of 1000 ROMs';
-            }
-        } else {
-            romCounterLabel.innerHTML = '0 ROMs';
-        }
-        romCounter.appendChild(romCounterLabel);
-        filterControls.appendChild(romCounter);
-
-        gameRoms.appendChild(filterControls);
     }
 
     function loadArtwork(game, cover) {
@@ -1119,10 +1074,12 @@
             function (result) {
                 DisplayROMCheckboxes(false);
                 loadRoms();
+                loadMediaGroups();
             },
             function (error) {
                 DisplayROMCheckboxes(false);
                 loadRoms();
+                loadMediaGroups();
             },
             JSON.stringify(romIds)
         );

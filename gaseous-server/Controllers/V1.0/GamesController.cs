@@ -770,6 +770,24 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
+        [Route("{GameId}/platforms")]
+        [ProducesResponseType(typeof(List<KeyValuePair<long, string>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GamePlatforms(long GameId)
+        {
+            try
+            {
+                return Ok(Games.GetAvailablePlatforms(GameId));
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpGet]
         [Route("{GameId}/releasedates")]
         [ProducesResponseType(typeof(List<ReleaseDate>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -1012,6 +1030,34 @@ namespace gaseous_server.Controllers
                     return Ok(rom);
                 }
                 else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpGet]
+        [Authorize(Roles = "Admin,Gamer")]
+        [Route("{GameId}/romgroup")]
+        [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GetGameRomGroup(long GameId)
+        {
+            try
+            {
+                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+
+                try
+                {
+                    return Ok(RomMediaGroup.GetMediaGroupsFromGameId(GameId));
+                }
+                catch
                 {
                     return NotFound();
                 }

@@ -16,10 +16,12 @@
             'DELETE', 
             function (result) {
                 loadRoms();
+                loadMediaGroups();
                 closeSubDialog();
             },
             function (error) {
                 loadRoms();
+                loadMediaGroups();
                 closeSubDialog();
             }
         );

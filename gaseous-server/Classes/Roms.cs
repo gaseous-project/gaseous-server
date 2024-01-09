@@ -71,17 +71,6 @@ namespace gaseous_server.Classes
 					}
 				}
 
-				// get rom media groups
-				GameRoms.MediaGroups = Classes.RomMediaGroup.GetMediaGroupsFromGameId(GameId);
-
-				// sort the platforms
-				GameRoms.Platforms = new List<KeyValuePair<long, string>>();
-				foreach (DataRow platformRow in platformDT.Rows)
-				{
-					KeyValuePair<long, string> valuePair = new KeyValuePair<long, string>((long)platformRow["PlatformId"], (string)platformRow["Name"]);
-					GameRoms.Platforms.Add(valuePair);
-				}
-
 				return GameRoms;
             }
             else
@@ -190,46 +179,17 @@ namespace gaseous_server.Classes
 
 		public class GameRomObject
 		{
-			public List<GameRomMediaGroupItem> MediaGroups { get; set; } = new List<GameRomMediaGroupItem>();
 			public List<GameRomItem> GameRomItems { get; set; } = new List<GameRomItem>();
 			public int Count { get; set; }
-			public List<KeyValuePair<long, string>> Platforms { get; set; }
 		}
 
 		public class GameRomItem : HasheousClient.Models.LookupResponseModel.RomItem
 		{
-			//public long Id { get; set; }
 			public long PlatformId { get; set; }
 			public string Platform { get; set; }
-			//public Dictionary<string, object>? Emulator { get; set; }
             public Models.PlatformMapping.PlatformMapItem.WebEmulatorItem? Emulator { get; set; }
             public long GameId { get; set; }
-			//public string? Name { get; set; }
-			//public long Size { get; set; }
-			//public string? CRC { get; set; }
-			//public string? MD5 { get; set; }
-			//public string? SHA1 { get; set; }
-			//public string? DevelopmentStatus { get; set; }
-			//public string[]? Flags { get; set; }
-			//public List<KeyValuePair<string, object>>? Attributes { get; set;}
-			//public int RomType { get; set; }
-			//public string? RomTypeMedia { get; set; }
-			// public MediaType? MediaDetail {
-			// 	get
-			// 	{
-			// 		if (RomTypeMedia != null)
-			// 		{
-			// 			return new MediaType(Source, RomTypeMedia);
-			// 		}
-			// 		else
-			// 		{
-			// 			return null;
-			// 		}
-			// 	}
-			// }
-			// public string? MediaLabel { get; set; }
 			public string? Path { get; set; }
-            //public SignatureSourceType Source { get; set; }
 			public string? SignatureSourceGameTitle { get; set;}
 			public GameLibrary.LibraryItem Library { get; set; }
         }

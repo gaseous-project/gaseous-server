@@ -91,7 +91,7 @@ namespace gaseous_server.Classes
                 mediaGroupItems.Add(BuildMediaGroupFromRow(row));
             }
 
-            mediaGroupItems.Sort((x, y) => x.PlatformName.CompareTo(y.PlatformName));
+            mediaGroupItems.Sort((x, y) => x.Platform.CompareTo(y.Platform));
 
             return mediaGroupItems;
         }
@@ -176,6 +176,7 @@ namespace gaseous_server.Classes
             mediaGroupItem.PlatformId = (long)row["PlatformId"];
             mediaGroupItem.GameId = (long)row["GameId"];
             mediaGroupItem.RomIds = new List<long>();
+            mediaGroupItem.Roms = new List<Roms.GameRomItem>();
 
             // get members
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -186,7 +187,20 @@ namespace gaseous_server.Classes
             foreach (DataRow dataRow in data.Rows)
             {
                 mediaGroupItem.RomIds.Add((long)dataRow["RomId"]);
+                mediaGroupItem.Roms.Add(Roms.GetRom((long)dataRow["RomId"]));
             }
+
+            // check for a web emulator and update the romItem
+			foreach (Models.PlatformMapping.PlatformMapItem platformMapping in Models.PlatformMapping.PlatformMap)
+			{
+				if (platformMapping.IGDBId == mediaGroupItem.PlatformId)
+				{
+					if (platformMapping.WebEmulator != null)
+					{
+						mediaGroupItem.Emulator = platformMapping.WebEmulator;
+					}
+				}
+			}
 
             return mediaGroupItem;
         }
@@ -360,7 +374,7 @@ namespace gaseous_server.Classes
 			public long Id { get; set; }
 			public long GameId { get; set; }
 			public long PlatformId { get; set; }
-            public string PlatformName {
+            public string Platform {
                 get
                 {
                     try
@@ -373,7 +387,9 @@ namespace gaseous_server.Classes
                     }
                 }
             }
+            public Models.PlatformMapping.PlatformMapItem.WebEmulatorItem? Emulator { get; set; }
 			public List<long> RomIds { get; set; }
+            public List<Roms.GameRomItem> Roms { get; set; }
 			private GroupBuildStatus _Status { get; set; }
 			public GroupBuildStatus Status {
 				get
