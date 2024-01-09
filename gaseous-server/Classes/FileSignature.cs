@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.IO.Compression;
 using HasheousClient.Models;
 using NuGet.Common;
@@ -11,9 +12,6 @@ namespace gaseous_server.Classes
 {
     public class FileSignature
     {
-        // flag to pause decompressions, so that only one may happen at a time
-        public static Dictionary<string, DateTime> TemporaryDirectoriesToDelete = new Dictionary<string, DateTime>();
-
         public gaseous_server.Models.Signatures_Games GetFileSignature(GameLibrary.LibraryItem library, Common.hashObject hash, FileInfo fi, string GameFileImportPath)
         {
             Logging.Log(Logging.LogType.Information, "Get Signature", "Getting signature for file: " + GameFileImportPath);
@@ -166,19 +164,6 @@ namespace gaseous_server.Classes
                 catch (Exception ex)
                 {
                     Logging.Log(Logging.LogType.Critical, "Get Signature", "Error processing compressed file: " + GameFileImportPath, ex);
-                }
-
-                // mark extration path for deletion
-                if (ExtractPath != null)
-                {
-                    try
-                    {
-                        TemporaryDirectoriesToDelete.Add(ExtractPath, DateTime.UtcNow);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Log(Logging.LogType.Warning, "Get Signature", "An error occurred while adding " + ExtractPath + " to the clean up list.", ex);
-                    }
                 }
             }
 

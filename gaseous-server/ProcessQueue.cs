@@ -2,6 +2,7 @@
 using System.ComponentModel.Design.Serialization;
 using System.Data;
 using gaseous_server.Classes;
+using NuGet.Common;
 using NuGet.Packaging;
 
 namespace gaseous_server
@@ -243,31 +244,20 @@ namespace gaseous_server
                                 case QueueItemType.TempCleanup:
                                     try
                                     {
-                                        Dictionary<string, DateTime> tempTempList = new Dictionary<string, DateTime>();
-                                        tempTempList.AddRange(FileSignature.TemporaryDirectoriesToDelete);
-                                        foreach (KeyValuePair<string, DateTime> tempPair in tempTempList)
+                                        foreach (GameLibrary.LibraryItem libraryItem in GameLibrary.GetLibraries)
                                         {
-                                            try
+                                            string rootPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, libraryItem.Id.ToString());
+                                            if (Directory.Exists(rootPath))
                                             {
-                                                if (Directory.Exists(tempPair.Key))
+                                                foreach (string directory in Directory.GetDirectories(rootPath))
                                                 {
-                                                    if (tempPair.Value.AddMinutes(5) < DateTime.UtcNow)
+                                                    DirectoryInfo info = new DirectoryInfo(directory);
+                                                    if (info.LastWriteTimeUtc.AddMinutes(5) < DateTime.UtcNow)
                                                     {
-                                                        // path is valid candidate to delete
-                                                        Logging.Log(Logging.LogType.Information, "Get Signature", "Deleting temporary decompress folder: " + tempPair.Key);
-                                                        Directory.Delete(tempPair.Key, true);
-                                                        FileSignature.TemporaryDirectoriesToDelete.Remove(tempPair.Key);
+                                                        Logging.Log(Logging.LogType.Information, "Get Signature", "Deleting temporary decompress folder: " + directory);
+                                                        Directory.Delete(directory, true);
                                                     }
                                                 }
-                                                else
-                                                {
-                                                    // path doesn't exist - no point keeping it here
-                                                    FileSignature.TemporaryDirectoriesToDelete.Remove(tempPair.Key);
-                                                }
-                                            }
-                                            catch (Exception tcDEx)
-                                            {
-                                                Logging.Log(Logging.LogType.Warning, "Get Signature", "An error occurred while cleaning " + tempPair.Key, tcDEx);
                                             }
                                         }
                                     }

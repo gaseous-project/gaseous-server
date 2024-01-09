@@ -415,6 +415,8 @@ function GetTaskFriendlyName(TaskName, options) {
             return "Compress collection id: " + options;
         case 'BackgroundDatabaseUpgrade':
             return "Background database upgrade";
+        case 'TempCleanup':
+            return "Temporary directory cleanup";
         default:
             return TaskName;
     }
