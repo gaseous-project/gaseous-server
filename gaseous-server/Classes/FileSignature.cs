@@ -213,7 +213,10 @@ namespace gaseous_server.Classes
                 }
             }
 
+            gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, ImageExtension, false);
+
             Logging.Log(Logging.LogType.Information, "Import Game", "  Determined import file as: " + discoveredSignature.Game.Name + " (" + discoveredSignature.Game.Year + ") " + discoveredSignature.Game.System);
+            Logging.Log(Logging.LogType.Information, "Import Game", "  Platform determined to be: " + discoveredSignature.Flags.IGDBPlatformName + " (" + discoveredSignature.Flags.IGDBPlatformId + ")");
 
             return discoveredSignature;
         }
@@ -238,26 +241,19 @@ namespace gaseous_server.Classes
             {
                 // only 1 signature found!
                 discoveredSignature = signatures.ElementAt(0);
-                gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, ImageExtension, false);
 
                 return discoveredSignature;
             }
             else if (signatures.Count > 1)
             {
                 // more than one signature found - find one with highest score
+                // start with first returned element
+                discoveredSignature = signatures.First();
                 foreach (gaseous_server.Models.Signatures_Games Sig in signatures)
                 {
-                    if (discoveredSignature == null)
+                    if (Sig.Score > discoveredSignature.Score)
                     {
                         discoveredSignature = Sig;
-                    }
-                    else
-                    {
-                        if (Sig.Score > discoveredSignature.Score)
-                        {
-                            discoveredSignature = Sig;
-                            gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, ImageExtension, false);
-                        }
                     }
                 }
 
@@ -300,8 +296,6 @@ namespace gaseous_server.Classes
                                 }
                             }
                         }
-    
-                        gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref signature, ImageExtension, false);
 
                         return signature;
                     }
@@ -324,7 +318,6 @@ namespace gaseous_server.Classes
             {
                 // only 1 signature found!
                 discoveredSignature = signatures.ElementAt(0);
-                gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, ImageExtension, false);
 
                 return discoveredSignature;
             }
@@ -336,7 +329,6 @@ namespace gaseous_server.Classes
                     if (Sig.Score > discoveredSignature.Score)
                     {
                         discoveredSignature = Sig;
-                        gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, ImageExtension, false);
                     }
                 }
 
@@ -362,9 +354,6 @@ namespace gaseous_server.Classes
 
                 // remove special characters like dashes
                 gi.Name = gi.Name.Replace("-", "").Trim();
-
-                // guess platform
-                gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, ImageExtension, true);
 
                 // get rom data
                 ri.Name = Path.GetFileName(GameFileImportPath);
