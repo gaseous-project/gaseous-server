@@ -373,6 +373,11 @@ namespace gaseous_server.Models
 
         public static void GetIGDBPlatformMapping(ref gaseous_server.Models.Signatures_Games Signature, string ImageExtension, bool SetSystemName)
         {
+            if (Signature.Game != null)
+            {
+                Logging.Log(Logging.LogType.Information, "Platform Mapping", "Determining platform based on extension " + ImageExtension + " or \"" + Signature.Game.System + "\"");
+            }
+
             bool PlatformFound = false;
             foreach (Models.PlatformMapping.PlatformMapItem PlatformMapping in Models.PlatformMapping.PlatformMap)
             {
@@ -388,6 +393,8 @@ namespace gaseous_server.Models
                         Signature.Flags.IGDBPlatformName = PlatformMapping.IGDBName;
 
                         PlatformFound = true;
+
+                        Logging.Log(Logging.LogType.Information, "Platform Mapping", "Platform id " + PlatformMapping.IGDBId + " determined from file extension");
                         break;
                     }
                 }
@@ -410,9 +417,16 @@ namespace gaseous_server.Models
                         Signature.Flags.IGDBPlatformName = PlatformMapping.IGDBName;
 
                         PlatformFound = true;
+
+                        Logging.Log(Logging.LogType.Information, "Platform Mapping", "Platform id " + PlatformMapping.IGDBId + " determined from signature system to platform map");
                         break;
                     }
                 }
+            }
+
+            if (PlatformFound == false)
+            {
+                Logging.Log(Logging.LogType.Information, "Platform Mapping", "Unable to determine platform");
             }
         }
 
