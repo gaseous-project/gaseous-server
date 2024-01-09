@@ -198,17 +198,17 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
         }
     }
 
-    var pageReloadFunction = function() {
-        formatGamesPanel(targetElement, result, pageNumber, pageSize, false);
+    // var pageReloadFunction = function() {
+    //     formatGamesPanel(targetElement, result, pageNumber, pageSize, false);
 
-        ajaxCall('/api/v1.1/Filter', 'GET', function (result) {
-            var scrollerElement = document.getElementById('games_filter_scroller');
-            formatFilterPanel(scrollerElement, result);
-        })
-    };
+    //     ajaxCall('/api/v1.1/Filter', 'GET', function (result) {
+    //         var scrollerElement = document.getElementById('games_filter_scroller');
+    //         formatFilterPanel(scrollerElement, result);
+    //     })
+    // };
 
-    window.clearTimeout(pageReloadInterval);
-    pageReloadInterval = setTimeout(pageReloadFunction, 10000);
+    // window.clearTimeout(pageReloadInterval);
+    // pageReloadInterval = setTimeout(pageReloadFunction, 10000);
 }
 
 function isScrolledIntoView(elem) {
