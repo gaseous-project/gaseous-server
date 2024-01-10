@@ -1045,7 +1045,7 @@ namespace gaseous_server.Controllers
         [HttpGet]
         [Authorize(Roles = "Admin,Gamer")]
         [Route("{GameId}/romgroup")]
-        [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<RomMediaGroup.GameRomMediaGroupItem>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public ActionResult GetGameRomGroup(long GameId)
         {

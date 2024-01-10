@@ -187,7 +187,14 @@ namespace gaseous_server.Classes
             foreach (DataRow dataRow in data.Rows)
             {
                 mediaGroupItem.RomIds.Add((long)dataRow["RomId"]);
-                mediaGroupItem.Roms.Add(Roms.GetRom((long)dataRow["RomId"]));
+                try
+                {
+                    mediaGroupItem.Roms.Add(Roms.GetRom((long)dataRow["RomId"]));
+                }
+                catch (Exception ex)
+                {
+                    Logging.Log(Logging.LogType.Warning, "Rom Group", "Unable to load ROM data", ex);
+                }
             }
 
             // check for a web emulator and update the romItem
