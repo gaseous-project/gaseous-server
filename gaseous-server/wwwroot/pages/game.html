@@ -160,9 +160,9 @@
         var gameSummaryLabel = document.getElementById('gamesummarytext_label');
         if (result.summary || result.storyline) {
             if (result.summary) {
-                gameSummaryLabel.innerHTML = result.summary;
+                gameSummaryLabel.innerHTML = result.summary.replaceAll("\n", "<br />");
             } else {
-                gameSummaryLabel.innerHTML = result.storyline;
+                gameSummaryLabel.innerHTML = result.storyline.replaceAll("\n", "<br />");
             }
 
             if (gameSummaryLabel.offsetHeight < gameSummaryLabel.scrollHeight ||
