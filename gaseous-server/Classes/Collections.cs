@@ -12,6 +12,7 @@ using IGDB.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;
+using SharpCompress.Common;
 
 namespace gaseous_server.Classes
 {
@@ -66,7 +67,7 @@ namespace gaseous_server.Classes
         public static CollectionItem NewCollection(CollectionItem item)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "INSERT INTO RomCollections (`Name`, Description, Platforms, Genres, Players, PlayerPerspectives, Themes, MinimumRating, MaximumRating, MaximumRomsPerPlatform, MaximumBytesPerPlatform, MaximumCollectionSizeInBytes, FolderStructure, IncludeBIOSFiles, AlwaysInclude, BuiltStatus) VALUES (@name, @description, @platforms, @genres, @players, @playerperspectives, @themes, @minimumrating, @maximumrating, @maximumromsperplatform, @maximumbytesperplatform, @maximumcollectionsizeinbytes, @folderstructure, @includebiosfiles, @alwaysinclude, @builtstatus); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+            string sql = "INSERT INTO RomCollections (`Name`, Description, Platforms, Genres, Players, PlayerPerspectives, Themes, MinimumRating, MaximumRating, MaximumRomsPerPlatform, MaximumBytesPerPlatform, MaximumCollectionSizeInBytes, FolderStructure, IncludeBIOSFiles, ArchiveType, AlwaysInclude, BuiltStatus) VALUES (@name, @description, @platforms, @genres, @players, @playerperspectives, @themes, @minimumrating, @maximumrating, @maximumromsperplatform, @maximumbytesperplatform, @maximumcollectionsizeinbytes, @folderstructure, @includebiosfiles, @archivetype, @alwaysinclude, @builtstatus); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("name", item.Name);
             dbDict.Add("description", item.Description);
@@ -82,6 +83,7 @@ namespace gaseous_server.Classes
             dbDict.Add("maximumcollectionsizeinbytes", Common.ReturnValueIfNull(item.MaximumCollectionSizeInBytes, -1));
             dbDict.Add("folderstructure", Common.ReturnValueIfNull(item.FolderStructure, CollectionItem.FolderStructures.Gaseous));
             dbDict.Add("includebiosfiles", Common.ReturnValueIfNull(item.IncludeBIOSFiles, 0));
+            dbDict.Add("archivetype", Common.ReturnValueIfNull(item.ArchiveType, CollectionItem.ArchiveTypes.Zip));
             dbDict.Add("alwaysinclude", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.AlwaysInclude, new List<CollectionItem.AlwaysIncludeItem>())));
             dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.WaitingForBuild);
             DataTable romDT = db.ExecuteCMD(sql, dbDict);
@@ -97,7 +99,7 @@ namespace gaseous_server.Classes
         public static CollectionItem EditCollection(long Id, CollectionItem item, bool ForceRebuild = true)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "UPDATE RomCollections SET `Name`=@name, Description=@description, Platforms=@platforms, Genres=@genres, Players=@players, PlayerPerspectives=@playerperspectives, Themes=@themes, MinimumRating=@minimumrating, MaximumRating=@maximumrating, MaximumRomsPerPlatform=@maximumromsperplatform, MaximumBytesPerPlatform=@maximumbytesperplatform, MaximumCollectionSizeInBytes=@maximumcollectionsizeinbytes, FolderStructure=@folderstructure, IncludeBIOSFiles=@includebiosfiles, AlwaysInclude=@alwaysinclude, BuiltStatus=@builtstatus WHERE Id=@id";
+            string sql = "UPDATE RomCollections SET `Name`=@name, Description=@description, Platforms=@platforms, Genres=@genres, Players=@players, PlayerPerspectives=@playerperspectives, Themes=@themes, MinimumRating=@minimumrating, MaximumRating=@maximumrating, MaximumRomsPerPlatform=@maximumromsperplatform, MaximumBytesPerPlatform=@maximumbytesperplatform, MaximumCollectionSizeInBytes=@maximumcollectionsizeinbytes, FolderStructure=@folderstructure, IncludeBIOSFiles=@includebiosfiles, ArchiveType=@archivetype, AlwaysInclude=@alwaysinclude, BuiltStatus=@builtstatus WHERE Id=@id";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", Id);
             dbDict.Add("name", item.Name);
@@ -115,8 +117,9 @@ namespace gaseous_server.Classes
             dbDict.Add("folderstructure", Common.ReturnValueIfNull(item.FolderStructure, CollectionItem.FolderStructures.Gaseous));
             dbDict.Add("includebiosfiles", Common.ReturnValueIfNull(item.IncludeBIOSFiles, 0));
             dbDict.Add("alwaysinclude", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.AlwaysInclude, new List<CollectionItem.AlwaysIncludeItem>())));
+            dbDict.Add("archivetype", Common.ReturnValueIfNull(item.ArchiveType, CollectionItem.ArchiveTypes.Zip));
             
-            string CollectionZipFile = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, Id + ".zip");
+            string CollectionZipFile = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, Id + item.ArchiveExtension);
             if (ForceRebuild == true) 
             {
                 dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.WaitingForBuild);
@@ -389,7 +392,7 @@ namespace gaseous_server.Classes
                 db.ExecuteCMD(sql, dbDict);
 
                 List<CollectionContents.CollectionPlatformItem> collectionPlatformItems = GetCollectionContent(collectionItem).Collection;
-                string ZipFilePath = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, collectionItem.Id + ".zip");
+                string ZipFilePath = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, collectionItem.Id + collectionItem.ArchiveExtension);
                 string ZipFileTempPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, collectionItem.Id.ToString());
 
                 try
@@ -508,7 +511,21 @@ namespace gaseous_server.Classes
 
                     // compress to zip
                     Logging.Log(Logging.LogType.Information, "Collections", "Compressing collection");
-                    ZipFile.CreateFromDirectory(ZipFileTempPath, ZipFilePath, CompressionLevel.SmallestSize, false);
+                    switch(collectionItem.ArchiveType)
+                    {
+                        case CollectionItem.ArchiveTypes.Zip:
+                            ZipFile.CreateFromDirectory(ZipFileTempPath, ZipFilePath, CompressionLevel.SmallestSize, false);
+                            break;
+
+                        case CollectionItem.ArchiveTypes.RAR:
+
+                            break;
+
+                        case CollectionItem.ArchiveTypes.SevenZip:
+                            
+                            break;
+                    }
+                    
 
                     // clean up
                     if (Directory.Exists(ZipFileTempPath))
@@ -567,6 +584,7 @@ namespace gaseous_server.Classes
             item.MaximumCollectionSizeInBytes = (long)Common.ReturnValueIfNull(row["MaximumCollectionSizeInBytes"], (long)-1);
             item.FolderStructure = (CollectionItem.FolderStructures)(int)Common.ReturnValueIfNull(row["FolderStructure"], 0);
             item.IncludeBIOSFiles = (bool)row["IncludeBIOSFiles"];
+            item.ArchiveType = (CollectionItem.ArchiveTypes)(int)Common.ReturnValueIfNull(row["ArchiveType"], 0);
             item.AlwaysInclude = Newtonsoft.Json.JsonConvert.DeserializeObject<List<CollectionItem.AlwaysIncludeItem>>(strAlwaysInclude);
             item.BuildStatus = (CollectionItem.CollectionBuildStatus)(int)Common.ReturnValueIfNull(row["BuiltStatus"], 0);
 
@@ -595,6 +613,32 @@ namespace gaseous_server.Classes
             public long? MaximumCollectionSizeInBytes { get; set; }
             public FolderStructures FolderStructure { get; set; } = FolderStructures.Gaseous;
             public bool IncludeBIOSFiles { get; set; } = true;
+            public ArchiveTypes ArchiveType { get; set; } = CollectionItem.ArchiveTypes.Zip;
+            public string ArchiveExtension
+            {
+                get
+                {
+                    if (ArchiveType != null)
+                    {
+                        switch (ArchiveType)
+                        {
+                            case ArchiveTypes.Zip:
+                            default:
+                                return ".zip";
+                            
+                            case ArchiveTypes.RAR:
+                                return ".rar";
+
+                            case ArchiveTypes.SevenZip:
+                                return ".7z";
+                        }
+                    }
+                    else
+                    {
+                        return ".zip";
+                    }
+                }
+            }
             public List<AlwaysIncludeItem> AlwaysInclude { get; set; }
 
             [JsonIgnore]
@@ -604,7 +648,7 @@ namespace gaseous_server.Classes
                 {
                     if (_BuildStatus == CollectionBuildStatus.Completed)
                     {
-                        if (File.Exists(Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, Id + ".zip")))
+                        if (File.Exists(Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, Id + ArchiveExtension)))
                         {
                             return CollectionBuildStatus.Completed;
                         }
@@ -632,7 +676,7 @@ namespace gaseous_server.Classes
                 {
                     if (BuildStatus == CollectionBuildStatus.Completed)
                     {
-                        string ZipFilePath = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, Id + ".zip");
+                        string ZipFilePath = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, Id + ArchiveExtension);
                         if (File.Exists(ZipFilePath))
                         {
                             FileInfo fi = new FileInfo(ZipFilePath);
@@ -663,6 +707,13 @@ namespace gaseous_server.Classes
             {
                 Gaseous = 0,
                 RetroPie = 1
+            }
+
+            public enum ArchiveTypes
+            {
+                Zip = 0,
+                RAR = 1,
+                SevenZip = 2
             }
 
             public class AlwaysIncludeItem
