@@ -69,14 +69,14 @@ namespace gaseous_server.Classes.Metadata
                 case Storage.CacheStatus.NotPresent:
                     returnValue = await GetObjectFromServer(WhereClause, ImagePath);
                     Storage.NewCacheValue(returnValue);
-                    if (GetImages == true) { forceImageDownload = true; }
+                    forceImageDownload = true;
                     break;  
                 case Storage.CacheStatus.Expired:
                     try
                     {
                         returnValue = await GetObjectFromServer(WhereClause, ImagePath);
                         Storage.NewCacheValue(returnValue, true);
-                        if (GetImages == true) { forceImageDownload = true; }
+                        forceImageDownload = true;
                     }
                     catch (Exception ex)
                     {
@@ -92,24 +92,27 @@ namespace gaseous_server.Classes.Metadata
             }
 
             string localFile = Path.Combine(ImagePath, Communications.IGDBAPI_ImageSize.original.ToString(), returnValue.ImageId + ".jpg");
-            if ((!File.Exists(localFile)) || forceImageDownload == true)
+            if (GetImages == true)
             {
-                Logging.Log(Logging.LogType.Information, "Metadata: " + returnValue.GetType().Name, "Cover download forced.");
-
-                // check for presence of image file - download if absent or force download is true
-                List<Communications.IGDBAPI_ImageSize> imageSizes = new List<Communications.IGDBAPI_ImageSize>{
-                    Communications.IGDBAPI_ImageSize.cover_big,
-                    Communications.IGDBAPI_ImageSize.cover_small,
-                    Communications.IGDBAPI_ImageSize.original
-                };
-
-                Communications comms = new Communications();
-                foreach (Communications.IGDBAPI_ImageSize size in imageSizes)
+                if ((!File.Exists(localFile)) || forceImageDownload == true)
                 {
-                    localFile = Path.Combine(ImagePath, size.ToString(), returnValue.ImageId + ".jpg");
-                    if ((!File.Exists(localFile)) || forceImageDownload == true)
+                    Logging.Log(Logging.LogType.Information, "Metadata: " + returnValue.GetType().Name, "Cover download forced.");
+
+                    // check for presence of image file - download if absent or force download is true
+                    List<Communications.IGDBAPI_ImageSize> imageSizes = new List<Communications.IGDBAPI_ImageSize>{
+                        Communications.IGDBAPI_ImageSize.cover_big,
+                        Communications.IGDBAPI_ImageSize.cover_small,
+                        Communications.IGDBAPI_ImageSize.original
+                    };
+
+                    Communications comms = new Communications();
+                    foreach (Communications.IGDBAPI_ImageSize size in imageSizes)
                     {
-                        comms.GetSpecificImageFromServer(ImagePath, returnValue.ImageId, size, null);
+                        localFile = Path.Combine(ImagePath, size.ToString(), returnValue.ImageId + ".jpg");
+                        if ((!File.Exists(localFile)) || forceImageDownload == true)
+                        {
+                            comms.GetSpecificImageFromServer(ImagePath, returnValue.ImageId, size, null);
+                        }
                     }
                 }
             }

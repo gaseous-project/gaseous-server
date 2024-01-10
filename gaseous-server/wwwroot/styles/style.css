@@ -459,6 +459,7 @@ input[id='filter_panel_userrating_max'] {
     margin-left: 10px;
     display: inline-block;
     vertical-align: top;
+    text-align: left;
 }
 
 .games_library_label {

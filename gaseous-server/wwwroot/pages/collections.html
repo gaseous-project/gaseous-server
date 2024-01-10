@@ -42,15 +42,18 @@
                     var statusText = result[i].buildStatus;
                     var downloadLink = '';
                     var packageSize = '-';
+                    var inProgress = false;
                     switch (result[i].buildStatus) {
                         case 'NoStatus':
                             statusText = '-';
                             break;
                         case "WaitingForBuild":
                             statusText = 'Build pending';
+                            inProgress = true;
                             break;
                         case "Building":
                             statusText = 'Building';
+                            inProgress = true;
                             break;
                         case "Completed":
                             statusText = 'Available';
@@ -63,6 +66,10 @@
                         default:
                             statusText = result[i].buildStatus;
                             break;
+                    }
+                    
+                    if (inProgress == true) {
+                        setTimeout(GetCollections, 10000);
                     }
 
                     var editButton = '';

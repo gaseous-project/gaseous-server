@@ -149,7 +149,7 @@
                         moment(result[i].eventTime).format("YYYY-MM-DD h:mm:ss a"),
                         result[i].eventType,
                         result[i].process,
-                        result[i].message
+                        result[i].message.replaceAll("\n", "<br />")
                     ];
 
                     surroundingRow.appendChild(createTableRow(false, newRow, '', 'romcell logs_table_cell'));

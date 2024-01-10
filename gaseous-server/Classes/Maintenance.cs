@@ -11,6 +11,32 @@ namespace gaseous_server.Classes
 
         public void RunMaintenance()
         {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+
+            // remove any entries from the library that have an invalid id
+            string LibraryWhereClause = "";
+            foreach (GameLibrary.LibraryItem library in GameLibrary.GetLibraries)
+            {
+                if (LibraryWhereClause.Length > 0)
+                {
+                    LibraryWhereClause += ", ";
+                }
+                LibraryWhereClause += library.Id;
+            }
+            string sqlLibraryWhereClause = "";
+            if (LibraryWhereClause.Length > 0)
+            {
+                sqlLibraryWhereClause = "DELETE FROM Games_Roms WHERE LibraryId NOT IN ( " + LibraryWhereClause + " );";
+                db.ExecuteCMD(sqlLibraryWhereClause);
+            }
+
+            // delete old logs
+            sql = "DELETE FROM ServerLogs WHERE EventTime < @EventRententionDate;";
+            dbDict.Add("EventRententionDate", DateTime.UtcNow.AddDays(Config.LoggingConfiguration.LogRetention * -1));
+            db.ExecuteCMD(sql, dbDict);
+
             // delete files and directories older than 7 days in PathsToClean
             List<string> PathsToClean = new List<string>();
             PathsToClean.Add(Config.LibraryConfiguration.LibraryUploadDirectory);
@@ -45,8 +71,7 @@ namespace gaseous_server.Classes
             }
 
             Logging.Log(Logging.LogType.Information, "Maintenance", "Optimising database tables");
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SHOW TABLES;";
+            sql = "SHOW FULL TABLES WHERE Table_Type = 'BASE TABLE';";
             DataTable tables = db.ExecuteCMD(sql);
 
             int StatusCounter = 1;

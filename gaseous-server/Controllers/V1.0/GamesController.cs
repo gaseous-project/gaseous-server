@@ -288,15 +288,15 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(Game), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "5Minute")]
-        public ActionResult Game(long GameId, bool forceRefresh = false)
+        public ActionResult Game(long GameId)
         {
             try
             {
-                GaseousGame gameObject = new GaseousGame(Classes.Metadata.Games.GetGame(GameId, forceRefresh, false, forceRefresh));
+                Game game = Classes.Metadata.Games.GetGame(GameId, false, false, false);
 
-                if (gameObject != null)
+                if (game != null)
                 {
-                    return Ok(gameObject);
+                    return Ok(game);
                 }
                 else
                 {
@@ -770,6 +770,24 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
+        [Route("{GameId}/platforms")]
+        [ProducesResponseType(typeof(List<KeyValuePair<long, string>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GamePlatforms(long GameId)
+        {
+            try
+            {
+                return Ok(Games.GetAvailablePlatforms(GameId));
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpGet]
         [Route("{GameId}/releasedates")]
         [ProducesResponseType(typeof(List<ReleaseDate>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -1024,6 +1042,35 @@ namespace gaseous_server.Controllers
 
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
+        [HttpGet]
+        [Authorize(Roles = "Admin,Gamer")]
+        [Route("{GameId}/romgroup")]
+        [ProducesResponseType(typeof(List<RomMediaGroup.GameRomMediaGroupItem>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GetGameRomGroup(long GameId)
+        {
+            try
+            {
+                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+
+                try
+                {
+                    return Ok(RomMediaGroup.GetMediaGroupsFromGameId(GameId));
+                }
+                catch (Exception ex)
+                {
+                    Logging.Log(Logging.LogType.Critical, "Rom Group", "An error occurred", ex);
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpPost]
         [Authorize(Roles = "Admin,Gamer")]
         [Route("{GameId}/romgroup")]
@@ -1174,7 +1221,8 @@ namespace gaseous_server.Controllers
                 {
                     Classes.Roms.GameRomItem romItem = Classes.Roms.GetRom(RomId);
                     Common.hashObject hash = new Common.hashObject(romItem.Path);
-                    gaseous_server.Models.Signatures_Games romSig = FileSignature.GetFileSignature(hash, new FileInfo(romItem.Path), romItem.Path);
+                    FileSignature fileSignature = new FileSignature();
+                    gaseous_server.Models.Signatures_Games romSig = fileSignature.GetFileSignature(romItem.Library, hash, new FileInfo(romItem.Path), romItem.Path);
                     List<Game> searchResults = Classes.ImportGame.SearchForGame_GetAll(romSig.Game.Name, romSig.Flags.IGDBPlatformId);
 
                     return Ok(searchResults);

@@ -478,7 +478,7 @@ namespace gaseous_server.Classes.Metadata
             }
             
             // check search cache
-            List<Game>? games = Communications.GetSearchCache<List<Game>>(searchFields, searchBody);
+            Game[]? games = Communications.GetSearchCache<Game[]?>(searchFields, searchBody);
 
             if (games == null)
             {   
@@ -489,6 +489,8 @@ namespace gaseous_server.Classes.Metadata
                 if (allowSearch == true)
                 {
                     results = await comms.APIComm<Game>(IGDBClient.Endpoints.Games, searchFields, searchBody);
+
+                    Communications.SetSearchCache<Game[]?>(searchFields, searchBody, results);
                 }
 
                 return results;
@@ -497,6 +499,24 @@ namespace gaseous_server.Classes.Metadata
             {
                 return games.ToArray();
             }
+        }
+
+        public static List<KeyValuePair<long, string>> GetAvailablePlatforms(long GameId)
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT DISTINCT Games_Roms.PlatformId, Platform.`Name` FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE Games_Roms.GameId = @gameid ORDER BY Platform.`Name`;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            dbDict.Add("gameid", GameId);
+            DataTable data = db.ExecuteCMD(sql, dbDict);
+
+            List<KeyValuePair<long, string>> platforms = new List<KeyValuePair<long, string>>();
+            foreach (DataRow row in data.Rows)
+            {
+                KeyValuePair<long, string> valuePair = new KeyValuePair<long, string>((long)row["PlatformId"], (string)row["Name"]);
+				platforms.Add(valuePair);
+            }
+
+            return platforms;
         }
 
         public enum SearchType

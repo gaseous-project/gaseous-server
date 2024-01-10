@@ -127,9 +127,8 @@ namespace gaseous_server.Classes
                     }
 
                     Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                    string sql = "DELETE FROM ServerLogs WHERE EventTime < @EventRententionDate; INSERT INTO ServerLogs (EventTime, EventType, Process, Message, Exception, CorrelationId, CallingProcess, CallingUser) VALUES (@EventTime, @EventType, @Process, @Message, @Exception, @correlationid, @callingprocess, @callinguser);";
+                    string sql = "INSERT INTO ServerLogs (EventTime, EventType, Process, Message, Exception, CorrelationId, CallingProcess, CallingUser) VALUES (@EventTime, @EventType, @Process, @Message, @Exception, @correlationid, @callingprocess, @callinguser);";
                     Dictionary<string, object> dbDict = new Dictionary<string, object>();
-                    dbDict.Add("EventRententionDate", DateTime.UtcNow.AddDays(Config.LoggingConfiguration.LogRetention * -1));
                     dbDict.Add("EventTime", logItem.EventTime);
                     dbDict.Add("EventType", logItem.EventType);
                     dbDict.Add("Process", logItem.Process);

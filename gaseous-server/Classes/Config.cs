@@ -503,6 +503,14 @@ namespace gaseous_server.Classes
                     }
                 }
 
+                private static int _MaxLibraryScanWorkers
+                {
+                    get
+                    {
+                        return 4;
+                    }
+                }
+
                 private static string _HasheousHost
                 {
                     get
@@ -521,6 +529,8 @@ namespace gaseous_server.Classes
                 public HasheousClient.Models.MetadataModel.MetadataSources MetadataSource = _MetadataSource;
 
                 public HasheousClient.Models.MetadataModel.SignatureSources SignatureSource = _SignatureSource;
+
+                public int MaxLibraryScanWorkers = _MaxLibraryScanWorkers;
 
                 public string HasheousHost = _HasheousHost;
             }

@@ -58,6 +58,7 @@
     <None Remove="Support\Database\MySQL\gaseous-1011.sql" />
     <None Remove="Support\Database\MySQL\gaseous-1012.sql" />
     <None Remove="Support\Database\MySQL\gaseous-1013.sql" />
+    <None Remove="Support\Database\MySQL\gaseous-1014.sql" />
     <None Remove="Classes\Metadata\" />
   </ItemGroup>
   <ItemGroup>
@@ -93,5 +94,6 @@
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1011.sql" />
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1012.sql" />
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1013.sql" />
+    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1014.sql" />
   </ItemGroup>
 </Project>

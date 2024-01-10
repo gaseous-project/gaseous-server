@@ -3,7 +3,6 @@
 </div>
 
 <div id="games_filter_scroller">
-    <div id="games_filter"></div>
 </div>
 <div id="games_home">
     <div id="games_home_box">
@@ -38,9 +37,8 @@
 
 <script type="text/javascript">
     ajaxCall('/api/v1.1/Filter', 'GET', function (result) {
-        var filterElement = document.getElementById('games_filter');
         var scrollerElement = document.getElementById('games_filter_scroller');
-        formatFilterPanel(filterElement, scrollerElement, result);
+        formatFilterPanel(scrollerElement, result);
 
         executeFilter1_1();
     });

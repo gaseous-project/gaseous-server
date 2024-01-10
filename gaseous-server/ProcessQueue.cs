@@ -2,6 +2,8 @@
 using System.ComponentModel.Design.Serialization;
 using System.Data;
 using gaseous_server.Classes;
+using NuGet.Common;
+using NuGet.Packaging;
 
 namespace gaseous_server
 {
@@ -239,6 +241,32 @@ namespace gaseous_server
                                     maintenance.RunMaintenance();
                                     break;
 
+                                case QueueItemType.TempCleanup:
+                                    try
+                                    {
+                                        foreach (GameLibrary.LibraryItem libraryItem in GameLibrary.GetLibraries)
+                                        {
+                                            string rootPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, libraryItem.Id.ToString());
+                                            if (Directory.Exists(rootPath))
+                                            {
+                                                foreach (string directory in Directory.GetDirectories(rootPath))
+                                                {
+                                                    DirectoryInfo info = new DirectoryInfo(directory);
+                                                    if (info.LastWriteTimeUtc.AddMinutes(5) < DateTime.UtcNow)
+                                                    {
+                                                        Logging.Log(Logging.LogType.Information, "Get Signature", "Deleting temporary decompress folder: " + directory);
+                                                        Directory.Delete(directory, true);
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                    catch (Exception tcEx)
+                                    {
+                                        Logging.Log(Logging.LogType.Warning, "Get Signature", "An error occurred while cleaning temporary files", tcEx);
+                                    }
+                                    break;
+
                             }
                         }
                         catch (Exception ex)
@@ -394,7 +422,12 @@ namespace gaseous_server
             /// <summary>
             /// Performs a clean up of old files, and optimises the database
             /// </summary>
-            Maintainer
+            Maintainer,
+
+            /// <summary>
+            /// Cleans up marked paths in the temporary directory
+            /// </summary>
+            TempCleanup
         }
 
         public enum QueueItemState

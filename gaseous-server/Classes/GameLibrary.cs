@@ -34,6 +34,12 @@ namespace gaseous_server
             {}
         }
 
+        public class CannotDeleteLibraryWhileScanIsActive : Exception
+        {
+            public CannotDeleteLibraryWhileScanIsActive() : base("Unable to delete library while a library scan is active. Wait for all scans to complete and try again")
+            {}
+        }
+
         // code
         public static LibraryItem GetDefaultLibrary
         {
@@ -110,21 +116,42 @@ namespace gaseous_server
             
             int newLibraryId = (int)(long)data.Rows[0][0];
 
-            return GetLibrary(newLibraryId);
+            Logging.Log(Logging.LogType.Information, "Library Management", "Created library " + Name + " at directory " + PathName);
+
+            LibraryItem library = GetLibrary(newLibraryId);
+
+            return library;
         }
 
         public static void DeleteLibrary(int LibraryId)
         {
-            if (GetLibrary(LibraryId).IsDefaultLibrary == false)
+            LibraryItem library = GetLibrary(LibraryId);
+            if (library.IsDefaultLibrary == false)
             {
+                // check for active library scans
+                foreach(ProcessQueue.QueueItem item in ProcessQueue.QueueItems)
+                {
+                    if (
+                        (item.ItemType == ProcessQueue.QueueItemType.LibraryScan && item.ItemState == ProcessQueue.QueueItemState.Running) || 
+                        (item.ItemType == ProcessQueue.QueueItemType.LibraryScanWorker && item.ItemState == ProcessQueue.QueueItemState.Running)
+                    )
+                    {
+                        Logging.Log(Logging.LogType.Warning, "Library Management", "Unable to delete libraries while a library scan is running. Wait until the the library scan is completed and try again.");
+                        throw new CannotDeleteLibraryWhileScanIsActive();
+                    }
+                }
+
                 Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
                 string sql = "DELETE FROM Games_Roms WHERE LibraryId=@id; DELETE FROM GameLibraries WHERE Id=@id;";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
                 dbDict.Add("id", LibraryId);
                 db.ExecuteCMD(sql, dbDict);
+
+                Logging.Log(Logging.LogType.Information, "Library Management", "Deleted library " + library.Name + " at path " + library.Path);
             }
             else
             {
+                Logging.Log(Logging.LogType.Warning, "Library Management", "Unable to delete the default library.");
                 throw new CannotDeleteDefaultLibrary();
             }
         }
