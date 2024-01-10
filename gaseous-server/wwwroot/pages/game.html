@@ -713,15 +713,17 @@
             bg.setAttribute('style', 'background-image: url("/images/gamebg' + randomInt + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
         }
 
-        // // load artwork
-        // if (game.artworks) {
-        //     ajaxCall('/api/v1.1/games/' + gameId + '/artwork', 'GET', function (result) {
-        //         artworks = result;
-        //         var startPos = randomIntFromInterval(0, result.length);
-        //         artworksPosition = startPos;
-        //         rotateBackground();
-        //     });
-        // }
+        // load artwork
+        if (!artworks) {
+            if (game.artworks) {
+                ajaxCall('/api/v1.1/games/' + gameId + '/artwork', 'GET', function (result) {
+                    artworks = result;
+                    var startPos = randomIntFromInterval(0, result.length);
+                    artworksPosition = startPos;
+                    rotateBackground();
+                });
+            }
+        }
     }
 
     function rotateBackground() {
