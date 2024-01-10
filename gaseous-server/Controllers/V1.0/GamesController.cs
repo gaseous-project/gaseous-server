@@ -1057,8 +1057,9 @@ namespace gaseous_server.Controllers
                 {
                     return Ok(RomMediaGroup.GetMediaGroupsFromGameId(GameId));
                 }
-                catch
+                catch (Exception ex)
                 {
+                    Logging.Log(Logging.LogType.Critical, "Rom Group", "An error occurred", ex);
                     return NotFound();
                 }
             }
