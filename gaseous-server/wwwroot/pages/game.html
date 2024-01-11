@@ -486,7 +486,7 @@
                     var launchButton = '';
                     if (mediaGroup.emulator) {
                         if (mediaGroup.emulator.type.length > 0) {
-                            launchButton = '<a href="/index.html?page=emulator&engine=' + mediaGroup.emulator.type + '&core=' + mediaGroup.emulator.core + '&platformid=' + mediaGroup.platformId + '&gameid=' + gameId + '&rompath=' + encodeURIComponent('/api/v1.1/Games/' + gameId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '(' + mediaGroup.id + ')' + '.zip') + '" class="romstart">Launch</a>';
+                            launchButton = '<a href="/index.html?page=emulator&engine=' + mediaGroup.emulator.type + '&core=' + mediaGroup.emulator.core + '&platformid=' + mediaGroup.platformId + '&gameid=' + gameId + '&romid=' + mediaGroup.id + '&mediagroup=1&rompath=' + encodeURIComponent('/api/v1.1/Games/' + gameId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '(' + mediaGroup.id + ')' + '.zip') + '" class="romstart">Launch</a>';
                         }
                     }    
             
@@ -626,7 +626,7 @@
                     if (result.gameRomItems[i].emulator) {
                         if (gameRomItems[i].emulator.type) {
                             if (gameRomItems[i].emulator.type.length > 0) {
-                                launchButton = '<a href="/index.html?page=emulator&engine=' + gameRomItems[i].emulator.type + '&core=' + gameRomItems[i].emulator.core + '&platformid=' + gameRomItems[i].platformId + '&gameid=' + gameId + '&rompath=' + encodeURIComponent('/api/v1.1/Games/' + gameId + '/roms/' + gameRomItems[i].id + '/' + encodeURIComponent(gameRomItems[i].name)) + '" class="romstart">Launch</a>';
+                                launchButton = '<a href="/index.html?page=emulator&engine=' + gameRomItems[i].emulator.type + '&core=' + gameRomItems[i].emulator.core + '&platformid=' + gameRomItems[i].platformId + '&gameid=' + gameId + '&romid=' + gameRomItems[i].id + '&mediagroup=0&rompath=' + encodeURIComponent('/api/v1.1/Games/' + gameId + '/roms/' + gameRomItems[i].id + '/' + encodeURIComponent(gameRomItems[i].name)) + '" class="romstart">Launch</a>';
                             }
                         }
                     }
@@ -697,6 +697,8 @@
             } else {
                 gameRomsSection.setAttribute('style', 'display: none;');
             }
+
+            displayNotification('State Saved', 'Game state has been saved.', '/api/v1.1/StateManager/1/22/Screenshot/image.png?IsMediaGroup=true');
         },
         function(error) {
             

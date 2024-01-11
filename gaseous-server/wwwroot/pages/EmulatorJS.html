@@ -28,8 +28,37 @@
     EJS_backgroundImage = emuBackground;
     EJS_backgroundBlur = true;
 
+    EJS_fullscreenOnLoaded = false;
+
     EJS_gameName = emuGameTitle;
 
     EJS_threads = false;
+
+    EJS_onSaveState = function(e) {
+        var returnValue = {
+            "ScreenshotByteArrayBase64": btoa(Uint8ToString(e.screenshot)),
+            "StateByteArrayBase64": btoa(Uint8ToString(e.state))
+        };
+
+        var url = '/api/v1.1/StateManager/' + romId + '?IsMediaGroup=' + IsMediaGroup;
+
+        ajaxCall(
+            url,
+            'POST',
+            function (result) {
+                console.log("Upload complete");
+                console.log(result);
+
+                displayNotification('State Saved', 'Game state has been saved.', '/api/v1.1/StateManager/' + romId + '/' + result.value.id + '/Screenshot/image.png?IsMediaGroup=' + IsMediaGroup);
+            },
+            function (error) {
+                console.log("An error occurred");
+                console.log(error);
+            },
+            JSON.stringify(returnValue)
+        );
+
+        returnValue = undefined;
+    }
 </script>
 <script src='/emulators/EmulatorJS/data/loader.js'></script>
