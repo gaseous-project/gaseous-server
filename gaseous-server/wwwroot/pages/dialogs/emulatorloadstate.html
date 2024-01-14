@@ -1,0 +1,129 @@
+<div id="saved_states">
+
+</div>
+
+<script text="text/javascript">
+    document.getElementById('modal-heading').innerHTML = "Load saved state";
+
+    console.log(modalVariables);
+
+    function LoadStates() {
+        ajaxCall(
+            '/api/v1.1/StateManager/' + modalVariables.romId,
+            'GET',
+            function(result) {
+                var statesBox = document.getElementById('saved_states');
+                statesBox.innerHTML = '';
+
+                for (var i = 0; i < result.length; i++) {
+                    var stateBox = document.createElement('div');
+                    stateBox.id = 'stateBox_' + result[i].id;
+                    stateBox.className = 'saved_state_box';
+
+                    // screenshot panel
+                    var stateImageBox = document.createElement('div');
+                    stateImageBox.id = 'stateImageBox_' + result[i].id;
+                    stateImageBox.className = 'saved_state_image_box';
+
+                    if (result[i].hasScreenshot == true) {
+                        var stateImage = document.createElement('img');
+                        stateImage.className = 'saved_state_image_image';
+                        stateImage.src = '/api/v1.1/StateManager/' + modalVariables.romId + '/' + result[i].id + '/Screenshot/image.png?IsMediaGroup=' + modalVariables.IsMediaGroup;
+                        stateImageBox.appendChild(stateImage);
+                    }
+                    stateBox.appendChild(stateImageBox);
+
+                    // main panel
+                    var stateMainPanel = document.createElement('div');
+                    stateMainPanel.id = 'stateMainPanel_' + result[i].id;
+                    stateMainPanel.className = 'saved_state_main_box';
+
+                    var stateName = document.createElement('input');
+                    stateName.id = 'stateName_' + result[i].id;
+                    stateName.type = 'text';
+                    stateName.className = 'saved_state_name';
+                    stateName.setAttribute('onblur', 'UpdateStateSave(' + result[i].id + ');');
+                    if (result[i].name) {
+                        stateName.value = result[i].name;
+                    } else {
+                        stateName.setAttribute('placeholder', "Untitled");
+                    }
+                    stateMainPanel.appendChild(stateName);
+
+                    var stateTime = document.createElement('div');
+                    stateTime.id = 'stateTime_' + result[i].id;
+                    stateTime.className = 'saved_state_date';
+                    stateTime.innerHTML = moment(result[i].saveTime).format("YYYY-MM-DD h:mm:ss a");
+                    stateMainPanel.appendChild(stateTime);
+
+                    var stateControls = document.createElement('div');
+                    stateControls.id = 'stateControls_' + result[i].id;
+                    stateControls.className = 'saved_state_controls';
+
+                    var stateControlsLaunch= document.createElement('span');
+                    stateControlsLaunch.id = 'stateControlsLaunch_' + result[i].id;
+                    stateControlsLaunch.className = 'romstart';
+                    stateControlsLaunch.setAttribute("onclick", 'window.location.replace("/index.html?page=emulator&engine=' + getQueryString('engine', 'string') + '&core=' + getQueryString('core', 'string') + '&platformid=' + getQueryString('platformid', 'int') + '&gameid=' + getQueryString('gameid', 'int') + '&romid=' + getQueryString('romid', 'int') + '&mediagroup=' + getQueryString('mediagroup', 'int') + '&rompath=' + getQueryString('rompath', 'string') + '&stateid=' + result[i].id + '");');
+                    stateControlsLaunch.innerHTML = 'Launch';
+                    stateControlsLaunch.style.float = 'right';
+                    stateControls.appendChild(stateControlsLaunch);
+
+                    var stateControlsDownload = document.createElement('a');
+                    stateControlsDownload.id = 'stateControlsDownload_' + result[i].id;
+                    stateControlsDownload.className = 'saved_state_buttonlink';
+                    stateControlsDownload.href = '/api/v1.1/StateManager/' + modalVariables.romId + '/' + result[i].id + '/State/savestate.state?IsMediaGroup=' + modalVariables.IsMediaGroup;
+                    stateControlsDownload.innerHTML = '<img src="/images/Download.svg" class="banner_button_image" alt="Download" title="Download" />';
+                    stateControls.appendChild(stateControlsDownload);
+
+                    var stateControlsDelete = document.createElement('span');
+                    stateControlsDelete.id = 'stateControlsDelete_' + result[i].id;
+                    stateControlsDelete.className = 'saved_state_buttonlink';
+                    stateControlsDelete.setAttribute('onclick', 'DeleteStateSave(' + result[i].id + ');');
+                    stateControlsDelete.innerHTML = '<img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" />';
+                    stateControls.appendChild(stateControlsDelete);
+
+                    stateMainPanel.appendChild(stateControls);
+
+                    stateBox.appendChild(stateMainPanel);
+
+                    statesBox.appendChild(stateBox);
+                }
+            }
+        );
+    }
+
+    LoadStates();
+
+    function DeleteStateSave(StateId) {
+        ajaxCall(
+            '/api/v1.1/StateManager/' + modalVariables.romId + '/' + StateId,
+            'DELETE',
+            function(success) {
+                LoadStates();
+            },
+            function (error) {
+                LoadStates();
+            }
+        );
+    }
+
+    function UpdateStateSave(StateId) {
+        var stateName = document.getElementById('stateName_' + StateId);
+
+        var model = {
+            "name": stateName.value
+        };
+
+        ajaxCall(
+            '/api/v1.1/StateManager/' + modalVariables.romId + '/' + StateId,
+            'PUT',
+            function(success) {
+                LoadStates();
+            },
+            function (error) {
+                LoadStates();
+            },
+            JSON.stringify(model)
+        );
+    }
+</script>

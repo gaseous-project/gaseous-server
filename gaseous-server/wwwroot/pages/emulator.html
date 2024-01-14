@@ -11,6 +11,10 @@
     var IsMediaGroupInt = getQueryString('mediagroup', 'int');
     var IsMediaGroup = false;
     if (IsMediaGroupInt == 1) { IsMediaGroup = true; }
+    var StateUrl = undefined;
+    if (getQueryString('stateid', 'int')) {
+        StateUrl = '/api/v1.1/StateManager/' + romId + '/' + getQueryString('stateid', 'int') + '/State/savestate.state?IsMediaGroup=' + IsMediaGroup;
+    }
     var gameData;
     var artworks = null;
     var artworksPosition = 0;

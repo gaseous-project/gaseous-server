@@ -1417,3 +1417,48 @@ button:not(.select2-selection__choice__remove):not(.ejs_menu_button):disabled {
     margin-left: 5px;
     margin-right: 5px;
 }
+
+#saved_states {
+    overflow-x: scroll;
+    height: 350px;
+}
+
+.saved_state_box {
+    display: flex;
+    flex-direction: column nowrap;
+    padding: 10px;
+}
+
+.saved_state_image_box {
+    flex-basis: 128px;
+}
+
+.saved_state_image_image {
+    width: 128px;
+    margin: 0px;
+}
+
+.saved_state_main_box {
+    flex-grow: 1;
+    padding-left: 20px;
+    padding-right: 20px;
+}
+
+.saved_state_name {
+    font-size: 15px;
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.saved_state_date {
+    color: #888;
+}
+
+.saved_state_controls {
+    margin-top: 10px;
+    text-align: left;
+}
+
+.saved_state_buttonlink {
+    cursor: pointer;
+}

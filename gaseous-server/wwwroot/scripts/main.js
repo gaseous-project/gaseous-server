@@ -504,4 +504,4 @@ function Uint8ToString(u8a){
       c.push(String.fromCharCode.apply(null, u8a.subarray(i, i+CHUNK_SZ)));
     }
     return c.join("");
-  }
+}

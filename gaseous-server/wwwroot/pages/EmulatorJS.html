@@ -18,12 +18,17 @@
     // URL to Game rom
     EJS_gameUrl = decodeURIComponent(getQueryString('rompath', 'string'));
 
+    // load state if defined
+    if (StateUrl) {
+        console.log('Loading saved state from: ' + StateUrl);
+        EJS_loadStateURL = StateUrl;
+        EJS_startOnLoaded = true;
+    }
+
     // Path to the data directory
     EJS_pathtodata = '/emulators/EmulatorJS/data/';
 
     EJS_DEBUG_XX = false;
-
-    EJS_startOnLoaded = false;
 
     EJS_backgroundImage = emuBackground;
     EJS_backgroundBlur = true;
@@ -59,6 +64,10 @@
         );
 
         returnValue = undefined;
+    }
+
+    EJS_onLoadState = function(e) {
+        showDialog('emulatorloadstate', { "romId": romId, "IsMediaGroup": IsMediaGroup });
     }
 </script>
 <script src='/emulators/EmulatorJS/data/loader.js'></script>

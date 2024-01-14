@@ -65,7 +65,7 @@ namespace gaseous_server.Controllers.v1_1
         {
             var user = await _userManager.GetUserAsync(User);
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT Id, StateDateTime, `Name`, Screenshot FROM GameState WHERE RomId = @romid AND IsMediaGroup = @ismediagroup AND UserId = @userid;";
+            string sql = "SELECT Id, StateDateTime, `Name`, Screenshot FROM GameState WHERE RomId = @romid AND IsMediaGroup = @ismediagroup AND UserId = @userid ORDER BY StateDateTime DESC;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>
             {
                 { "romid", RomId },
@@ -143,6 +143,31 @@ namespace gaseous_server.Controllers.v1_1
 
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
+        [HttpPut]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Route("{RomId}/{StateId}")]
+        public async Task<ActionResult> EditStateAsync(long RomId, long StateId, GameStateItemUpdateModel model, bool IsMediaGroup = false)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "UPDATE GameState SET `Name` = @name WHERE Id = @id AND RomId = @romid AND IsMediaGroup = @ismediagroup AND UserId = @userid;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "id", StateId },
+                { "romid", RomId },
+                { "userid", user.Id },
+                { "ismediagroup", IsMediaGroup },
+                { "name", model.Name }
+            };
+            db.ExecuteNonQuery(sql, dbDict);
+            
+            return Ok();
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [Authorize]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
@@ -187,6 +212,52 @@ namespace gaseous_server.Controllers.v1_1
             }
         }
 
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpGet]
+        [Authorize]
+        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Route("{RomId}/{StateId}/State/")]
+        [Route("{RomId}/{StateId}/State/savestate.state")]
+        public async Task<ActionResult> GetStateDataAsync(long RomId, long StateId, bool IsMediaGroup = false)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT State FROM GameState WHERE Id = @id AND RomId = @romid AND IsMediaGroup = @ismediagroup AND UserId = @userid;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "id", StateId },
+                { "romid", RomId },
+                { "userid", user.Id },
+                { "ismediagroup", IsMediaGroup }
+            };
+            DataTable data = db.ExecuteCMD(sql, dbDict);
+            
+            if (data.Rows.Count == 0)
+            {
+                // invalid match - return not found
+                return NotFound();
+            }
+            else
+            {
+                string filename = "savestate.state";
+                byte[] bytes = (byte[])data.Rows[0][0];
+                string contentType = "application/octet-stream";
+
+                var cd = new System.Net.Mime.ContentDisposition
+                {
+                    FileName = filename,
+                    Inline = true,
+                };
+
+                Response.Headers.Add("Content-Disposition", cd.ToString());
+                Response.Headers.Add("Cache-Control", "public, max-age=604800");
+
+                return File(bytes, contentType);
+            }
+        }
+
         private Models.GameStateItem BuildGameStateItem(DataRow dr)
         {
             bool HasScreenshot = true;
@@ -198,7 +269,7 @@ namespace gaseous_server.Controllers.v1_1
             {
                 Id = (long)dr["Id"],
                 Name = (string)dr["Name"],
-                SaveTime = (DateTime)dr["StateDateTime"],
+                SaveTime = DateTime.Parse(((DateTime)dr["StateDateTime"]).ToString("yyyy-MM-ddThh:mm:ss") + 'Z'),
                 HasScreenshot = HasScreenshot
             };
 

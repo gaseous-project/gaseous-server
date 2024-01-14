@@ -23,8 +23,13 @@ namespace gaseous_server.Models
     public class GameStateItem
     {
         public long Id { get; set; }
-        public string Name = "";
+        public string Name { get; set; } = "";
         public DateTime SaveTime { get; set; }
         public bool HasScreenshot { get; set; }
+    }
+
+    public class GameStateItemUpdateModel
+    {
+        public string Name { get; set; } = "";
     }
 }
