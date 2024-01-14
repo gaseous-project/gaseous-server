@@ -792,8 +792,18 @@ table .romrow:nth-child(odd) {
     background: rgba(56, 56, 56, 0.3);
 }
 
+.romrow.romrowgamepage {
+    height: 42px;
+}
+
 .romcell {
     padding: 5px;
+}
+
+.savedstateicon {
+    height: 24px;
+    width: 24px;
+    margin-top: 4px;
 }
 
 th {

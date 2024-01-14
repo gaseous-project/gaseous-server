@@ -7,9 +7,11 @@
 
     console.log(modalVariables);
 
+    var statesUrl = '/api/v1.1/StateManager/' + modalVariables.romId + '?IsMediaGroup=' + modalVariables.IsMediaGroup;
+    console.log(statesUrl);
     function LoadStates() {
         ajaxCall(
-            '/api/v1.1/StateManager/' + modalVariables.romId,
+            statesUrl,
             'GET',
             function(result) {
                 var statesBox = document.getElementById('saved_states');
@@ -42,7 +44,7 @@
                     stateName.id = 'stateName_' + result[i].id;
                     stateName.type = 'text';
                     stateName.className = 'saved_state_name';
-                    stateName.setAttribute('onblur', 'UpdateStateSave(' + result[i].id + ');');
+                    stateName.setAttribute('onblur', 'UpdateStateSave(' + result[i].id + ', ' + modalVariables.IsMediaGroup + ');');
                     if (result[i].name) {
                         stateName.value = result[i].name;
                     } else {
@@ -63,7 +65,35 @@
                     var stateControlsLaunch= document.createElement('span');
                     stateControlsLaunch.id = 'stateControlsLaunch_' + result[i].id;
                     stateControlsLaunch.className = 'romstart';
-                    stateControlsLaunch.setAttribute("onclick", 'window.location.replace("/index.html?page=emulator&engine=' + getQueryString('engine', 'string') + '&core=' + getQueryString('core', 'string') + '&platformid=' + getQueryString('platformid', 'int') + '&gameid=' + getQueryString('gameid', 'int') + '&romid=' + getQueryString('romid', 'int') + '&mediagroup=' + getQueryString('mediagroup', 'int') + '&rompath=' + getQueryString('rompath', 'string') + '&stateid=' + result[i].id + '");');
+                    var emulatorTarget = '/index.html?page=emulator&engine=@engine&core=@core&platformid=@platformid&gameid=@gameid&romid=@romid&mediagroup=@mediagroup&rompath=@rompath&stateid=' + result[i].id;
+                    switch (getQueryString('page', 'string')) {
+                        case 'emulator':
+                            var mediagroupint = 0;
+                            if (modalVariables.IsMediaGroup == true) {
+                                mediagroupint = 1;
+                            }
+                            emulatorTarget = emulatorTarget.replaceAll('@engine', getQueryString('engine', 'string'));
+                            emulatorTarget = emulatorTarget.replaceAll('@core', getQueryString('core', 'string'));
+                            emulatorTarget = emulatorTarget.replaceAll('@platformid', getQueryString('platformid', 'string'));
+                            emulatorTarget = emulatorTarget.replaceAll('@gameid', getQueryString('gameid', 'string'));
+                            emulatorTarget = emulatorTarget.replaceAll('@romid', getQueryString('romid', 'string'));
+                            emulatorTarget = emulatorTarget.replaceAll('@mediagroup', mediagroupint);
+                            emulatorTarget = emulatorTarget.replaceAll('@rompath', getQueryString('rompath', 'string'));
+                            stateControlsLaunch.setAttribute("onclick", 'window.location.replace("' + emulatorTarget + '")');
+                            break;
+                        case 'game':
+                            console.log(modalVariables);
+                            emulatorTarget = emulatorTarget.replaceAll('@engine', modalVariables.engine);
+                            emulatorTarget = emulatorTarget.replaceAll('@core', modalVariables.core);
+                            emulatorTarget = emulatorTarget.replaceAll('@platformid', modalVariables.platformid);
+                            emulatorTarget = emulatorTarget.replaceAll('@gameid', modalVariables.gameid);
+                            emulatorTarget = emulatorTarget.replaceAll('@romid', modalVariables.romId);
+                            emulatorTarget = emulatorTarget.replaceAll('@mediagroup', modalVariables.mediagroup);
+                            emulatorTarget = emulatorTarget.replaceAll('@rompath', modalVariables.rompath);
+                            stateControlsLaunch.setAttribute("onclick", 'window.location.href = "' + emulatorTarget + '"');
+                            break;
+                    }
+
                     stateControlsLaunch.innerHTML = 'Launch';
                     stateControlsLaunch.style.float = 'right';
                     stateControls.appendChild(stateControlsLaunch);
@@ -78,7 +108,7 @@
                     var stateControlsDelete = document.createElement('span');
                     stateControlsDelete.id = 'stateControlsDelete_' + result[i].id;
                     stateControlsDelete.className = 'saved_state_buttonlink';
-                    stateControlsDelete.setAttribute('onclick', 'DeleteStateSave(' + result[i].id + ');');
+                    stateControlsDelete.setAttribute('onclick', 'DeleteStateSave(' + result[i].id + ', ' + modalVariables.IsMediaGroup + ');');
                     stateControlsDelete.innerHTML = '<img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" />';
                     stateControls.appendChild(stateControlsDelete);
 
@@ -94,9 +124,9 @@
 
     LoadStates();
 
-    function DeleteStateSave(StateId) {
+    function DeleteStateSave(StateId, IsMediaGroup) {
         ajaxCall(
-            '/api/v1.1/StateManager/' + modalVariables.romId + '/' + StateId,
+            '/api/v1.1/StateManager/' + modalVariables.romId + '/' + StateId + '?IsMediaGroup=' + IsMediaGroup,
             'DELETE',
             function(success) {
                 LoadStates();
@@ -107,7 +137,7 @@
         );
     }
 
-    function UpdateStateSave(StateId) {
+    function UpdateStateSave(StateId, IsMediaGroup) {
         var stateName = document.getElementById('stateName_' + StateId);
 
         var model = {
@@ -115,7 +145,7 @@
         };
 
         ajaxCall(
-            '/api/v1.1/StateManager/' + modalVariables.romId + '/' + StateId,
+            '/api/v1.1/StateManager/' + modalVariables.romId + '/' + StateId + '?IsMediaGroup=' + IsMediaGroup,
             'PUT',
             function(success) {
                 LoadStates();

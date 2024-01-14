@@ -6,12 +6,14 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
+using Authentication;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
 using IGDB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Scripting;
 using static gaseous_server.Classes.Metadata.AgeRatings;
@@ -25,6 +27,18 @@ namespace gaseous_server.Controllers
     [ApiController]
     public class GamesController : Controller
     {
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+        
+        public GamesController(
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager
+        )
+        {
+            _userManager = userManager;
+            _signInManager = signInManager;
+        }
+
         [MapToApiVersion("1.0")]
         [HttpGet]
         [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]
@@ -830,13 +844,15 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(Classes.Roms.GameRomObject), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         //[ResponseCache(CacheProfileName = "5Minute")]
-        public ActionResult GameRom(long GameId, int pageNumber = 0, int pageSize = 0, long PlatformId = -1, string NameSearch = "")
+        public async Task<ActionResult> GameRomAsync(long GameId, int pageNumber = 0, int pageSize = 0, long PlatformId = -1, string NameSearch = "")
         {
+            var user = await _userManager.GetUserAsync(User);
+            
             try
             {
                 Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
 
-                return Ok(Classes.Roms.GetRoms(GameId, PlatformId, NameSearch, pageNumber, pageSize));
+                return Ok(Classes.Roms.GetRoms(GameId, PlatformId, NameSearch, pageNumber, pageSize, user.Id));
             }
             catch
             {
