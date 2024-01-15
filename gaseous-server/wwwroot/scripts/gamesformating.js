@@ -283,6 +283,14 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
         }
     }
 
+    // add save game icon
+    if (gameObject.hasSavedGame == true) {
+        var gameSaveIcon = document.createElement('img');
+        gameSaveIcon.src = '/images/SaveStates.png';
+        gameSaveIcon.className = 'game_tile_box_savedgame savedstateicon';
+        gameImageBox.appendChild(gameSaveIcon);
+    }
+
     if (gameObject.totalRating || displayClassification == true) {
         var gameImageRatingBanner = document.createElement('div');
         gameImageRatingBanner.className = 'game_tile_box_ratingbanner';

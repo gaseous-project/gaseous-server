@@ -55,12 +55,15 @@ namespace gaseous_server.Classes
             return GetMediaGroup(mgId);
         }
 
-        public static GameRomMediaGroupItem GetMediaGroup(long Id)
+        public static GameRomMediaGroupItem GetMediaGroup(long Id, string userid = "")
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT DISTINCT RomMediaGroup.*, GameState.RomId AS GameStateRomId FROM gaseous.RomMediaGroup LEFT JOIN GameState ON RomMediaGroup.Id = GameState.RomId AND GameState.IsMediaGroup = 1 WHERE RomMediaGroup.Id=@id;";
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
-            dbDict.Add("id", Id);
+            string sql = "SELECT DISTINCT RomMediaGroup.*, GameState.RomId AS GameStateRomId FROM gaseous.RomMediaGroup LEFT JOIN GameState ON RomMediaGroup.Id = GameState.RomId AND GameState.IsMediaGroup = 1 AND GameState.UserId = @userid WHERE RomMediaGroup.Id=@id;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "id", Id },
+                { "userid", userid }
+            };
 
             DataTable dataTable = db.ExecuteCMD(sql, dbDict);
 
@@ -75,12 +78,15 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static List<GameRomMediaGroupItem> GetMediaGroupsFromGameId(long GameId)
+        public static List<GameRomMediaGroupItem> GetMediaGroupsFromGameId(long GameId, string userid = "")
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT DISTINCT RomMediaGroup.*, GameState.RomId AS GameStateRomId FROM gaseous.RomMediaGroup LEFT JOIN GameState ON RomMediaGroup.Id = GameState.RomId AND GameState.IsMediaGroup = 1 WHERE RomMediaGroup.GameId=@gameid;";
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
-            dbDict.Add("gameid", GameId);
+            string sql = "SELECT DISTINCT RomMediaGroup.*, GameState.RomId AS GameStateRomId FROM gaseous.RomMediaGroup LEFT JOIN GameState ON RomMediaGroup.Id = GameState.RomId AND GameState.IsMediaGroup = 1 AND GameState.UserId = @userid WHERE RomMediaGroup.GameId=@gameid;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "gameid", GameId },
+                { "userid", userid }
+            };
 
             DataTable dataTable = db.ExecuteCMD(sql, dbDict);
 

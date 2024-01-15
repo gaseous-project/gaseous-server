@@ -500,8 +500,7 @@
                                     "mediagroup": 1,
                                     "rompath": romPath
                                 };
-                                saveStatesButton = document.createElement('a');
-                                saveStatesButton.href = '#';
+                                saveStatesButton = document.createElement('div');
                                 saveStatesButton.setAttribute('onclick', 'showDialog("emulatorloadstate", ' + JSON.stringify(modalVariables) + ');');
                                 saveStatesButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstateicon" />';
                             }
@@ -672,8 +671,7 @@
                                         "mediagroup": 0,
                                         "rompath": romPath
                                     };
-                                    saveStatesButton = document.createElement('a');
-                                    saveStatesButton.href = '#';
+                                    saveStatesButton = document.createElement('div');
                                     saveStatesButton.setAttribute('onclick', 'showDialog("emulatorloadstate", ' + JSON.stringify(modalVariables) + ');');
                                     saveStatesButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstateicon" />';
                                 }

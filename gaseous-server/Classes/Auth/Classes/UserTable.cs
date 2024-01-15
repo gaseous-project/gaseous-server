@@ -289,7 +289,7 @@ namespace Authentication
         /// <returns></returns>
         private int Delete(string userId)
         {
-            string commandText = "Delete from Users where Id = @userId; Delete from User_Settings where Id = @userId;";
+            string commandText = "Delete from Users where Id = @userId; Delete from User_Settings where Id = @userId; Delete from GameState where UserId = @userId;";
             Dictionary<string, object> parameters = new Dictionary<string, object>();
             parameters.Add("@userId", userId);
 

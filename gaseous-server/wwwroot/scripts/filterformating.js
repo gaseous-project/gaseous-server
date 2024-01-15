@@ -21,6 +21,14 @@ function formatFilterPanel(containerElement, result) {
     containerPanelSearchField.id = 'filter_panel_search';
     containerPanelSearchField.type = 'text';
     containerPanelSearchField.placeholder = 'Search';
+    containerPanelSearchField.addEventListener("keypress", function(event) {
+        if (event.key === "Enter") {
+            // Cancel the default action, if needed
+            event.preventDefault();
+            // Trigger the button element with a click
+            executeFilter1_1();
+        }
+    });
     containerPanelSearch.appendChild(containerPanelSearchField);
 
     panel.appendChild(containerPanelSearch);
@@ -72,6 +80,8 @@ function formatFilterPanel(containerElement, result) {
     containerPanelUserRating.appendChild(containerPanelUserRatingMaxField);
 
     panel.appendChild(containerPanelUserRating);
+
+    buildFilterPanel(panel, 'settings', 'Settings', [{ "id": "savestatesavailable", "name": "Game has save states avaialble", "gameCount": 0 }], true, true);
 
     if (result.platforms) {
         buildFilterPanel(panel, 'platform', 'Platforms', result.platforms, true, true);
@@ -350,6 +360,9 @@ function executeFilter1_1(pageNumber, pageSize) {
     setCookie('games_library_orderby_direction_select', orderByDirectionSelect);
 
     if (existingSearchModel == undefined || freshSearch == true) {
+        // search name
+        setCookie('filter_panel_search', document.getElementById('filter_panel_search').value);
+
         // user ratings
         var userRatingEnabled = document.getElementById('filter_panel_userrating_enabled');
 
@@ -386,6 +399,9 @@ function executeFilter1_1(pageNumber, pageSize) {
             setCookie("filter_panel_userrating_enabled", true);
         }
 
+        // save cookies for settings
+        GetFilterQuery1_1('settings');
+
         // build filter model
         var ratingAgeGroups = GetFilterQuery1_1('agegroupings');
         var ratingIncludeUnrated = false;
@@ -395,6 +411,7 @@ function executeFilter1_1(pageNumber, pageSize) {
 
         model = {
             "Name": document.getElementById('filter_panel_search').value,
+            "HasSavedGame": document.getElementById('filter_panel_item_settings_checkbox_savestatesavailable').checked,
             "Platform": GetFilterQuery1_1('platform'),
             "Genre": GetFilterQuery1_1('genre'),
             "GameMode": GetFilterQuery1_1('gamemode'),

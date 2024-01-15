@@ -1034,13 +1034,15 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         //[ResponseCache(CacheProfileName = "5Minute")]
-        public ActionResult GameRomGroup(long GameId, long RomGroupId)
+        public async Task<ActionResult> GameRomGroupAsync(long GameId, long RomGroupId)
         {
+            var user = await _userManager.GetUserAsync(User);
+            
             try
             {
                 Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
 
-                Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomGroupId);
+                Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomGroupId, user.Id);
                 if (rom.GameId == GameId)
                 {
                     return Ok(rom);
@@ -1063,15 +1065,17 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/romgroup")]
         [ProducesResponseType(typeof(List<RomMediaGroup.GameRomMediaGroupItem>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GetGameRomGroup(long GameId)
+        public async Task<ActionResult> GetGameRomGroupAsync(long GameId)
         {
+            var user = await _userManager.GetUserAsync(User);
+            
             try
             {
                 Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
 
                 try
                 {
-                    return Ok(RomMediaGroup.GetMediaGroupsFromGameId(GameId));
+                    return Ok(RomMediaGroup.GetMediaGroupsFromGameId(GameId, user.Id));
                 }
                 catch (Exception ex)
                 {
@@ -1121,13 +1125,15 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/romgroup/{RomId}")]
         [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameRomGroupMembers(long GameId, long RomGroupId, [FromBody] List<long> RomIds)
+        public async Task<ActionResult> GameRomGroupMembersAsync(long GameId, long RomGroupId, [FromBody] List<long> RomIds)
         {
+            var user = await _userManager.GetUserAsync(User);
+            
             try
             {
                 Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
 
-                Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomGroupId);
+                Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomGroupId, user.Id);
                 if (rom.GameId == GameId)
                 {
                     rom = Classes.RomMediaGroup.EditMediaGroup(RomGroupId, RomIds);

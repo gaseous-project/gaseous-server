@@ -529,6 +529,11 @@ namespace gaseous_server.Classes.Metadata
 
         public class MinimalGameItem
         {
+            public MinimalGameItem()
+            {
+
+            }
+            
             public MinimalGameItem(Game gameObject)
             {
                 this.Id = gameObject.Id;
@@ -558,6 +563,7 @@ namespace gaseous_server.Classes.Metadata
             public string Name { get; set; }
             public double? TotalRating { get; set; }
             public int? TotalRatingCount { get; set; }
+            public bool HasSavedGame { get; set; } = false;
             public DateTimeOffset? FirstReleaseDate { get; set; }
             public IGDB.IdentityOrValue<IGDB.Models.Cover> Cover { get; set; }
             public IGDB.IdentitiesOrValues<IGDB.Models.Artwork> Artworks { get; set; }
