@@ -18,18 +18,56 @@
     // URL to Game rom
     EJS_gameUrl = decodeURIComponent(getQueryString('rompath', 'string'));
 
+    // load state if defined
+    if (StateUrl) {
+        console.log('Loading saved state from: ' + StateUrl);
+        EJS_loadStateURL = StateUrl;
+        EJS_startOnLoaded = true;
+    }
+
     // Path to the data directory
     EJS_pathtodata = '/emulators/EmulatorJS/data/';
 
     EJS_DEBUG_XX = false;
 
-    EJS_startOnLoaded = false;
-
     EJS_backgroundImage = emuBackground;
     EJS_backgroundBlur = true;
+
+    EJS_fullscreenOnLoaded = false;
 
     EJS_gameName = emuGameTitle;
 
     EJS_threads = false;
+
+    EJS_onSaveState = function(e) {
+        var returnValue = {
+            "ScreenshotByteArrayBase64": btoa(Uint8ToString(e.screenshot)),
+            "StateByteArrayBase64": btoa(Uint8ToString(e.state))
+        };
+
+        var url = '/api/v1.1/StateManager/' + romId + '?IsMediaGroup=' + IsMediaGroup;
+
+        ajaxCall(
+            url,
+            'POST',
+            function (result) {
+                console.log("Upload complete");
+                console.log(result);
+
+                displayNotification('State Saved', 'Game state has been saved.', '/api/v1.1/StateManager/' + romId + '/' + result.value.id + '/Screenshot/image.png?IsMediaGroup=' + IsMediaGroup);
+            },
+            function (error) {
+                console.log("An error occurred");
+                console.log(error);
+            },
+            JSON.stringify(returnValue)
+        );
+
+        returnValue = undefined;
+    }
+
+    EJS_onLoadState = function(e) {
+        showDialog('emulatorloadstate', { "romId": romId, "IsMediaGroup": IsMediaGroup });
+    }
 </script>
 <script src='/emulators/EmulatorJS/data/loader.js'></script>

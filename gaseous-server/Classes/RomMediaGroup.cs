@@ -58,7 +58,7 @@ namespace gaseous_server.Classes
         public static GameRomMediaGroupItem GetMediaGroup(long Id)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM RomMediaGroup WHERE Id=@id;";
+            string sql = "SELECT DISTINCT RomMediaGroup.*, GameState.RomId AS GameStateRomId FROM gaseous.RomMediaGroup LEFT JOIN GameState ON RomMediaGroup.Id = GameState.RomId AND GameState.IsMediaGroup = 1 WHERE RomMediaGroup.Id=@id;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", Id);
 
@@ -78,7 +78,7 @@ namespace gaseous_server.Classes
         public static List<GameRomMediaGroupItem> GetMediaGroupsFromGameId(long GameId)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM RomMediaGroup WHERE GameId=@gameid;";
+            string sql = "SELECT DISTINCT RomMediaGroup.*, GameState.RomId AS GameStateRomId FROM gaseous.RomMediaGroup LEFT JOIN GameState ON RomMediaGroup.Id = GameState.RomId AND GameState.IsMediaGroup = 1 WHERE RomMediaGroup.GameId=@gameid;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("gameid", GameId);
 
@@ -156,7 +156,7 @@ namespace gaseous_server.Classes
         public static void DeleteMediaGroup(long Id)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "DELETE FROM RomMediaGroup WHERE Id=@id;";
+            string sql = "DELETE FROM RomMediaGroup WHERE Id=@id; DELETE FROM GameState WHERE RomId=@id AND IsMediaGroup=1;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", Id);
             db.ExecuteCMD(sql, dbDict);
@@ -170,6 +170,15 @@ namespace gaseous_server.Classes
 
         internal static GameRomMediaGroupItem BuildMediaGroupFromRow(DataRow row)
         {
+            bool hasSaveStates = false;
+			if (row.Table.Columns.Contains("GameStateRomId"))
+			{
+				if (row["GameStateRomId"] != DBNull.Value)
+				{
+					hasSaveStates = true;
+				}
+			}
+
             GameRomMediaGroupItem mediaGroupItem = new GameRomMediaGroupItem();
             mediaGroupItem.Id = (long)row["Id"];
             mediaGroupItem.Status = (GameRomMediaGroupItem.GroupBuildStatus)row["Status"];
@@ -177,6 +186,7 @@ namespace gaseous_server.Classes
             mediaGroupItem.GameId = (long)row["GameId"];
             mediaGroupItem.RomIds = new List<long>();
             mediaGroupItem.Roms = new List<Roms.GameRomItem>();
+            mediaGroupItem.HasSaveStates = hasSaveStates;
 
             // get members
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -397,6 +407,7 @@ namespace gaseous_server.Classes
             public Models.PlatformMapping.PlatformMapItem.WebEmulatorItem? Emulator { get; set; }
 			public List<long> RomIds { get; set; }
             public List<Roms.GameRomItem> Roms { get; set; }
+            public bool HasSaveStates { get; set; } = false;
 			private GroupBuildStatus _Status { get; set; }
 			public GroupBuildStatus Status {
 				get

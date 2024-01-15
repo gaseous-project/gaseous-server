@@ -15,7 +15,7 @@ namespace gaseous_server.Classes
             {}
         }
 
-		public static GameRomObject GetRoms(long GameId, long PlatformId = -1, string NameSearch = "", int pageNumber = 0, int pageSize = 0)
+		public static GameRomObject GetRoms(long GameId, long PlatformId = -1, string NameSearch = "", int pageNumber = 0, int pageSize = 0, string userid = "")
 		{
 			GameRomObject GameRoms = new GameRomObject();
 
@@ -25,6 +25,7 @@ namespace gaseous_server.Classes
 			string sqlPlatform = "";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", GameId);
+			dbDict.Add("userid", userid);
             
 			string NameSearchWhere = "";
 			if (NameSearch.Length > 0)
@@ -38,13 +39,13 @@ namespace gaseous_server.Classes
 
 			if (PlatformId == -1) {
 				// data query
-				sql = "SELECT Games_Roms.*, Platform.`Name` AS platformname FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE Games_Roms.GameId = @id" + NameSearchWhere + " ORDER BY Platform.`Name`, Games_Roms.`Name` LIMIT 1000;";
+				sql = "SELECT DISTINCT Games_Roms.*, Platform.`Name` AS platformname, GameState.RomId AS SavedStateRomId FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id LEFT JOIN GameState ON (Games_Roms.Id = GameState.RomId AND GameState.UserId = @userid AND GameState.IsMediaGroup = 0) WHERE Games_Roms.GameId = @id" + NameSearchWhere + " ORDER BY Platform.`Name`, Games_Roms.`Name` LIMIT 1000;";
 				
 				// count query
 				sqlCount = "SELECT COUNT(Games_Roms.Id) AS RomCount FROM Games_Roms WHERE Games_Roms.GameId = @id" + NameSearchWhere + ";";
 			} else {
 				// data query
-				sql = "SELECT Games_Roms.*, Platform.`Name` AS platformname FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE Games_Roms.GameId = @id AND Games_Roms.PlatformId = @platformid" + NameSearchWhere + " ORDER BY Platform.`Name`, Games_Roms.`Name` LIMIT 1000;";
+				sql = "SELECT DISTINCT Games_Roms.*, Platform.`Name` AS platformname, GameState.RomId AS SavedStateRomId FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id LEFT JOIN GameState ON (Games_Roms.Id = GameState.RomId AND GameState.UserId = @userid AND GameState.IsMediaGroup = 0) WHERE Games_Roms.GameId = @id AND Games_Roms.PlatformId = @platformid" + NameSearchWhere + " ORDER BY Platform.`Name`, Games_Roms.`Name` LIMIT 1000;";
 
 				// count query
 				sqlCount = "SELECT COUNT(Games_Roms.Id) AS RomCount FROM Games_Roms WHERE Games_Roms.GameId = @id AND Games_Roms.PlatformId = @platformid" + NameSearchWhere + ";";
@@ -131,7 +132,7 @@ namespace gaseous_server.Classes
 				}
 
 				Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-				string sql = "DELETE FROM Games_Roms WHERE Id = @id";
+				string sql = "DELETE FROM Games_Roms WHERE Id = @id; DELETE FROM GameState WHERE RomId = @id;";
 				Dictionary<string, object> dbDict = new Dictionary<string, object>();
 				dbDict.Add("id", RomId);
 				db.ExecuteCMD(sql, dbDict);
@@ -140,6 +141,15 @@ namespace gaseous_server.Classes
 
 		private static GameRomItem BuildRom(DataRow romDR)
 		{
+			bool hasSaveStates = false;
+			if (romDR.Table.Columns.Contains("SavedStateRomId"))
+			{
+				if (romDR["SavedStateRomId"] != DBNull.Value)
+				{
+					hasSaveStates = true;
+				}
+			}
+
 			GameRomItem romItem = new GameRomItem
             {
                 Id = (long)romDR["id"],
@@ -159,6 +169,7 @@ namespace gaseous_server.Classes
                 Path = (string)romDR["path"],
 				SignatureSource = (gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType)(Int32)romDR["metadatasource"],
 				SignatureSourceGameTitle = (string)Common.ReturnValueIfNull(romDR["MetadataGameName"], ""),
+				HasSaveStates = hasSaveStates,
 				Library = GameLibrary.GetLibrary((int)romDR["LibraryId"])
             };
 
@@ -191,6 +202,7 @@ namespace gaseous_server.Classes
             public long GameId { get; set; }
 			public string? Path { get; set; }
 			public string? SignatureSourceGameTitle { get; set;}
+			public bool HasSaveStates { get; set; } = false;
 			public GameLibrary.LibraryItem Library { get; set; }
         }
     }
