@@ -10,10 +10,10 @@ RUN dotnet restore "gaseous-server/gaseous-server.csproj"
 RUN dotnet publish "gaseous-server/gaseous-server.csproj" --use-current-runtime --self-contained false -c Release -o out
 
 # download and unzip EmulatorJS from CDN
-RUN apt-get update && apt-get install unzip
+RUN apt-get update && apt-get install -y p7zip-full
 RUN mkdir -p out/wwwroot/emulators/EmulatorJS
-RUN wget https://cdn.emulatorjs.org/releases/4.0.9.zip
-RUN unzip 4.0.9.zip -d out/wwwroot/emulators/EmulatorJS
+RUN wget https://cdn.emulatorjs.org/releases/4.0.9.7z
+RUN 7z x -y -oout/wwwroot/emulators/EmulatorJS 4.0.9.7z
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:7.0
