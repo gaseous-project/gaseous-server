@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Scripting;
 using Microsoft.AspNetCore.Authorization;
+using System.Text;
 
 namespace gaseous_server.Controllers
 {
@@ -35,6 +36,32 @@ namespace gaseous_server.Controllers
             }
 
             return Ok(PlatformMapping.PlatformMap);
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpGet]
+        [Route("PlatformMap.json")]
+        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult DownloadPlatformMap()
+        {
+            string srcJson = Newtonsoft.Json.JsonConvert.SerializeObject(PlatformMapping.PlatformMap, Newtonsoft.Json.Formatting.Indented);
+
+            string filename = "PlatformMap.json";
+            byte[] bytes = Encoding.UTF8.GetBytes(srcJson);
+            string contentType = "application/json";
+
+            var cd = new System.Net.Mime.ContentDisposition
+            {
+                FileName = filename,
+                Inline = true,
+                DispositionType = "attachment"
+            };
+
+            Response.Headers.Add("Content-Disposition", cd.ToString());
+
+            return File(bytes, contentType);
         }
 
         [MapToApiVersion("1.0")]
