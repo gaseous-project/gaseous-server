@@ -213,13 +213,13 @@ h3 {
     position: -webkit-sticky;
     bottom: 0;
     width: 180px;
-    height: 18px;
+    height: 15px;
     padding: 10px;
     background-color: #352879;
     color: white;
     text-align: center;
     font-family: Commodore64;
-    font-size: 16px;
+    font-size: 13px;
 }
 
 #games_library_searchbutton:hover {
@@ -232,13 +232,13 @@ h3 {
     position: -webkit-sticky;
     bottom: 0;
     width: 180px;
-    height: 18px;
+    height: 15px;
     padding: 10px;
     background-color: #646464;
     color: white;
     text-align: center;
     font-family: Commodore64;
-    font-size: 16px;
+    font-size: 13px;
 }
 
 #games_library_resetbutton:hover {
