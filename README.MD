@@ -85,10 +85,9 @@ Dockerfile and docker-compose.yml files have been provided to make deployment of
 Dockerfile and docker-compose-build.yml files have been provided to make deployment of the server as easy as possible.
 1. Clone the repo with ```git clone https://github.com/gaseous-project/gaseous-server.git```
 2. Change into the gaseous-server directory
-3. Clone the submodules with the command ```git submodule update --init```
-4. Open the docker-compose-{database}-build.yml file and edit the igdbclientid and igdbclientsecret to the values retrieved from your IGDB account
-5. Run the command ```docker-compose --file docker-compose-{database}-build.yml up -d```
-6. Connect to the host on port 5198
+3. Open the docker-compose-{database}-build.yml file and edit the igdbclientid and igdbclientsecret to the values retrieved from your IGDB account
+4. Run the command ```docker-compose --file docker-compose-{database}-build.yml up -d```
+5. Connect to the host on port 5198
 
 ## Source
 ### Build and deploy
@@ -100,8 +99,7 @@ Dockerfile and docker-compose-build.yml files have been provided to make deploym
 5. Change into the gaseous-server directory
 6. As the main branch is the development branch, you might want to change to a stable version - these are tagged with a version number. For example to change to the 1.5.0 release, use the command ```git checkout v1.5.0```
     * Check the releases page for the version you would like to run: https://github.com/gaseous-project/gaseous-server/releases
-7. Clone the submodules with the command ```git submodule update --init --recursive```
-    * This command will clone the code that the server uses from other projects (currently only EmulatorJS)
+7. Download the emulator files from ```https://cdn.emulatorjs.org/releases/4.0.9.zip``` and extract the files to ```gaseous-server/wwwroot/emulators/EmulatorJS```
 8. Create a directory in the home directory of the user that will run the server. For example, if running as the user ```gaseous```, create the directory ```/home/gaseous/.gaseous-server```
 9. Change into the ```.gaseous-server``` directory created in the previous step
 10. Copy the JSON from the config file above into a new file named ```config.json```
@@ -115,11 +113,6 @@ Dockerfile and docker-compose-build.yml files have been provided to make deploym
 
 **Note**: The above instructions were tested on macOS Ventura, and Ubuntu 22.04.3. There was a report that Debian 11 had an issue with the git submodule commands (see: https://github.com/gaseous-project/gaseous-server/issues/71). This was possibly due to an older git package.
 
-If the git submodule commands aren't working, you can:
-1. change to the ```gaseous-server/wwwroot/emulators``` directory
-2. delete the ```EmulatorJS``` directory
-3. clone the EmulatorJS repository with ```git clone https://github.com/EmulatorJS/EmulatorJS.git```
-
 ### Updating from source
 1. Stop the server
 2. Switch to the source directory
@@ -128,8 +121,7 @@ If the git submodule commands aren't working, you can:
     * If running from another branch or tag, run:
       * ```git fetch```
       * ```git checkout <branch or tag name>```
-4. Update the submodules with ```git submodule update --recursive```
-5. Run steps 12 and 13 from the above Build guide
+4. Run steps 12 and 13 from the above Build guide
 
 # Adding Content
 While games can be added to the server without them, it is recommended adding some signature DAT files beforehand to allow for better matching of ROMs to games.

@@ -213,13 +213,13 @@ h3 {
     position: -webkit-sticky;
     bottom: 0;
     width: 180px;
-    height: 18px;
+    height: 15px;
     padding: 10px;
     background-color: #352879;
     color: white;
     text-align: center;
     font-family: Commodore64;
-    font-size: 16px;
+    font-size: 13px;
 }
 
 #games_library_searchbutton:hover {
@@ -232,13 +232,13 @@ h3 {
     position: -webkit-sticky;
     bottom: 0;
     width: 180px;
-    height: 18px;
+    height: 15px;
     padding: 10px;
     background-color: #646464;
     color: white;
     text-align: center;
     font-family: Commodore64;
-    font-size: 16px;
+    font-size: 13px;
 }
 
 #games_library_resetbutton:hover {
@@ -557,6 +557,12 @@ input[id='filter_panel_userrating_max'] {
     -webkit-backdrop-filter: blur(8px);
 }
 
+.game_tile_box_savedgame {
+    position: absolute;
+    top: 1px;
+    right: 5px;
+}
+
 .game_tile_image {
     max-width: 200px;
     min-width: 150px;
@@ -804,6 +810,7 @@ table .romrow:nth-child(odd) {
     height: 24px;
     width: 24px;
     margin-top: 4px;
+    cursor: pointer;
 }
 
 th {

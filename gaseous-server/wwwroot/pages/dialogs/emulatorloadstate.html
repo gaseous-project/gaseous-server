@@ -102,7 +102,7 @@
                     stateControlsDownload.id = 'stateControlsDownload_' + result[i].id;
                     stateControlsDownload.className = 'saved_state_buttonlink';
                     stateControlsDownload.href = '/api/v1.1/StateManager/' + modalVariables.romId + '/' + result[i].id + '/State/savestate.state?IsMediaGroup=' + modalVariables.IsMediaGroup;
-                    stateControlsDownload.innerHTML = '<img src="/images/Download.svg" class="banner_button_image" alt="Download" title="Download" />';
+                    stateControlsDownload.innerHTML = '<img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" />';
                     stateControls.appendChild(stateControlsDownload);
 
                     var stateControlsDelete = document.createElement('span');

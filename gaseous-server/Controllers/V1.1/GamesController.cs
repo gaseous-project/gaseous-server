@@ -85,7 +85,7 @@ namespace gaseous_server.Controllers.v1_1
                     model.GameAgeRating.IncludeUnrated = false;
                 }
 
-                return Ok(GetGames(model, pageNumber, pageSize));
+                return Ok(GetGames(model, user.Id, pageNumber, pageSize));
             }
             else
             {
@@ -144,6 +144,7 @@ namespace gaseous_server.Controllers.v1_1
             public GameRatingItem GameRating { get; set; } = new GameRatingItem();
             public GameAgeRatingItem GameAgeRating { get; set; } = new GameAgeRatingItem();
             public GameSortingItem Sorting { get; set; } = new GameSortingItem();
+            public bool HasSavedGame { get; set; }
             
 
             public class GameRatingItem
@@ -181,11 +182,12 @@ namespace gaseous_server.Controllers.v1_1
             }
         }
     
-        public static GameReturnPackage GetGames(GameSearchModel model, int pageNumber = 0, int pageSize = 0)
+        public static GameReturnPackage GetGames(GameSearchModel model, string userid, int pageNumber = 0, int pageSize = 0)
         {
             string whereClause = "";
             string havingClause = "";
             Dictionary<string, object> whereParams = new Dictionary<string, object>();
+            whereParams.Add("userid", userid);
 
             List<string> whereClauses = new List<string>();
             List<string> havingClauses = new List<string>();
@@ -200,6 +202,12 @@ namespace gaseous_server.Controllers.v1_1
                 // havingClauses.Add(tempVal);
                 nameWhereClause = "WHERE (MATCH(Game.`Name`) AGAINST (@Name IN BOOLEAN MODE) OR MATCH(AlternativeName.`Name`) AGAINST (@Name IN BOOLEAN MODE))";
                 whereParams.Add("@Name", "(*" + model.Name + "*) (" + model.Name + ") ");
+            }
+
+            if (model.HasSavedGame == true)
+            {
+                string hasSavesTemp = "(RomSavedStates.RomSaveCount IS NOT NULL OR RomGroupSavedStates.MediaGroupSaveCount IS NOT NULL)";
+                whereClauses.Add(hasSavesTemp);
             }
 
             if (model.GameRating != null)
@@ -444,9 +452,71 @@ namespace gaseous_server.Controllers.v1_1
             string orderByClause = "ORDER BY `" + orderByField + "` " + orderByOrder;
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT DISTINCT Game.Id, Game.`Name`, Game.NameThe, Game.PlatformId, Game.TotalRating, Game.TotalRatingCount, Game.Cover, Game.Artworks, Game.FirstReleaseDate, Game.Category, Game.ParentGame, Game.AgeRatings, Game.AgeGroupId, Game.RomCount FROM (SELECT DISTINCT Game.*, CASE WHEN Game.`Name` LIKE 'The %' THEN CONCAT(TRIM(SUBSTR(Game.`Name` FROM 4)), ', The') ELSE Game.`Name` END AS NameThe, Games_Roms.PlatformId, AgeGroup.AgeGroupId, COUNT(Games_Roms.Id) AS RomCount FROM Game LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId LEFT JOIN Games_Roms ON Game.Id = Games_Roms.GameId" + platformWhereClause + " LEFT JOIN AlternativeName ON Game.Id = AlternativeName.Game " + nameWhereClause + " GROUP BY Game.Id HAVING RomCount > 0) Game LEFT JOIN Relation_Game_Genres ON Game.Id = Relation_Game_Genres.GameId LEFT JOIN Relation_Game_GameModes ON Game.Id = Relation_Game_GameModes.GameId LEFT JOIN Relation_Game_PlayerPerspectives ON Game.Id = Relation_Game_PlayerPerspectives.GameId LEFT JOIN Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId " + whereClause + " " + havingClause + " " + orderByClause;
-
-            List<IGDB.Models.Game> RetVal = new List<IGDB.Models.Game>();
+            
+            string sql = @"
+SELECT DISTINCT
+    Game.Id,
+    Game.`Name`,
+    Game.NameThe,
+    Game.PlatformId,
+    Game.TotalRating,
+    Game.TotalRatingCount,
+    Game.Cover,
+    Game.Artworks,
+    Game.FirstReleaseDate,
+    Game.Category,
+    Game.ParentGame,
+    Game.AgeRatings,
+    Game.AgeGroupId,
+    Game.RomCount,
+    RomSavedStates.RomSaveCount,
+    RomGroupSavedStates.MediaGroupSaveCount
+FROM
+    (SELECT DISTINCT
+        Game.*,
+            CASE
+                WHEN Game.`Name` LIKE 'The %' THEN CONCAT(TRIM(SUBSTR(Game.`Name` FROM 4)), ', The')
+                ELSE Game.`Name`
+            END AS NameThe,
+            Games_Roms.PlatformId,
+            AgeGroup.AgeGroupId,
+            COUNT(Games_Roms.Id) AS RomCount
+    FROM
+        Game
+    LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId
+    LEFT JOIN Games_Roms ON Game.Id = Games_Roms.GameId" + platformWhereClause + @"
+    LEFT JOIN AlternativeName ON Game.Id = AlternativeName.Game " + nameWhereClause + @"
+    GROUP BY Game.Id
+    HAVING RomCount > 0) Game
+        LEFT JOIN
+    (SELECT 
+        Games_Roms.GameId, COUNT(GameState.Id) AS RomSaveCount
+    FROM
+        GameState
+    JOIN Games_Roms ON GameState.RomId = Games_Roms.Id
+    WHERE
+        GameState.IsMediaGroup = 0
+            AND GameState.UserId = @userid
+    GROUP BY Games_Roms.GameId) RomSavedStates ON Game.Id = RomSavedStates.GameId
+        LEFT JOIN
+    (SELECT 
+        RomMediaGroup.GameId,
+            COUNT(RomMediaGroup.GameId) AS MediaGroupSaveCount
+    FROM
+        RomMediaGroup
+    JOIN GameState ON RomMediaGroup.Id = GameState.RomId
+        AND GameState.IsMediaGroup = 1
+        AND GameState.UserId = @userid
+    GROUP BY RomMediaGroup.GameId) RomGroupSavedStates ON Game.Id = RomGroupSavedStates.GameId
+        LEFT JOIN
+    Relation_Game_Genres ON Game.Id = Relation_Game_Genres.GameId
+        LEFT JOIN
+    Relation_Game_GameModes ON Game.Id = Relation_Game_GameModes.GameId
+        LEFT JOIN
+    Relation_Game_PlayerPerspectives ON Game.Id = Relation_Game_PlayerPerspectives.GameId
+        LEFT JOIN
+    Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId " + whereClause + " " + havingClause + " " + orderByClause;
+            List<Games.MinimalGameItem> RetVal = new List<Games.MinimalGameItem>();
 
             DataTable dbResponse = db.ExecuteCMD(sql, whereParams);
 
@@ -463,10 +533,24 @@ namespace gaseous_server.Controllers.v1_1
                 }
 
                 Game retGame = Storage.BuildCacheObject<Game>(new Game() , dbResponse.Rows[i]);
-                RetVal.Add(retGame);
+                Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
+                if (dbResponse.Rows[i]["RomSaveCount"] != DBNull.Value || dbResponse.Rows[i]["MediaGroupSaveCount"] != DBNull.Value)
+                {
+                    retMinGame.HasSavedGame = true;
+                }
+                else
+                {
+                    retMinGame.HasSavedGame = false;
+                }
+
+                RetVal.Add(retMinGame);
             }
 
-            GameReturnPackage gameReturn = new GameReturnPackage(RecordCount, RetVal);
+            GameReturnPackage gameReturn = new GameReturnPackage
+            {
+                Count = RecordCount,
+                Games = RetVal
+            };
 
             return gameReturn;
         }
