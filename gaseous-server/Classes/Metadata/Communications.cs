@@ -224,6 +224,22 @@ namespace gaseous_server.Classes.Metadata
 
                             return await IGDBAPI<T>(Endpoint, Fields, Query);
                         }
+                    
+                    case HttpStatusCode.Unauthorized:
+                        Logging.Log(Logging.LogType.Information, "API Connection", "IGDB API unauthorised error while accessing endpoint " + Endpoint + ". Waiting " + RateLimitAvoidanceWait + " milliseconds and resetting IGDB client.", apiEx);
+                        
+                        Thread.Sleep(RateLimitAvoidanceWait);
+
+                        igdb = new IGDBClient(
+                            // Found in Twitch Developer portal for your app
+                            Config.IGDB.ClientId,
+                            Config.IGDB.Secret
+                        );
+
+                        RetryAttempts += 1;
+
+                        return await IGDBAPI<T>(Endpoint, Fields, Query);
+
                     default:
                         Logging.Log(Logging.LogType.Warning, "API Connection", "Exception when accessing endpoint " + Endpoint, apiEx);
                         throw;

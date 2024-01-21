@@ -522,7 +522,7 @@ FROM
 
             // get count
             int RecordCount = dbResponse.Rows.Count;
-            
+
             // compile data for return
             int pageOffset = pageSize * (pageNumber - 1);
             for (int i = pageOffset; i < dbResponse.Rows.Count; i++)
@@ -546,10 +546,33 @@ FROM
                 RetVal.Add(retMinGame);
             }
 
+            // build alpha list
+            Dictionary<string, int> AlphaList = new Dictionary<string, int>();
+            int CurrentPage = 0;
+            int NextPageIndex = 0;
+            for (int i = 0; i < dbResponse.Rows.Count; i++)
+            {
+                string firstChar = dbResponse.Rows[i]["NameThe"].ToString().Substring(0, 1).ToUpperInvariant();
+                if (!"ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(firstChar))
+                {
+                    firstChar = "#";
+                }
+                if (!AlphaList.ContainsKey(firstChar))
+                {
+                    AlphaList.Add(firstChar, CurrentPage);
+                }
+                if (NextPageIndex == i)
+                {
+                    NextPageIndex += pageSize;
+                    CurrentPage += 1;
+                }
+            }
+
             GameReturnPackage gameReturn = new GameReturnPackage
             {
                 Count = RecordCount,
-                Games = RetVal
+                Games = RetVal,
+                AlphaList = AlphaList
             };
 
             return gameReturn;
@@ -577,6 +600,7 @@ FROM
 
             public int Count { get; set; }
             public List<Games.MinimalGameItem> Games { get; set; } = new List<Games.MinimalGameItem>();
+            public Dictionary<string, int> AlphaList { get; set; }
         }
     }
 }

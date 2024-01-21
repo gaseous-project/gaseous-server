@@ -112,6 +112,9 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
         var pager = document.getElementById('games_pager');
         pager.style.display = 'none';
 
+        var alphaPager = document.getElementById('games_library_alpha_pager');
+        alphaPager.innerHTML = '';
+
         switch(pageMode) {
             case 'infinite':
                 if (result.games.length == pageSize) {
@@ -126,6 +129,14 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
                 break;
 
             case 'paged':
+                for (const [key, value] of Object.entries(result.alphaList)) {
+                    var letterPager = document.createElement('span');
+                    letterPager.className = 'games_library_alpha_pager_letter';
+                    letterPager.setAttribute('onclick', 'executeFilter1_1(' + value + ');');
+                    letterPager.innerHTML = key;
+                    alphaPager.appendChild(letterPager);
+                }
+
                 if (result.count > pageSize) {
                     // add some padding to the bottom of the games list
                     var loadPageButton = document.createElement("div");
@@ -133,6 +144,16 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
                     targetElement.appendChild(loadPageButton);
 
                     var pageCount = Math.ceil(result.count / pageSize);
+
+                    // add first page button
+                    var firstPage = document.createElement('span');
+                    firstPage.innerHTML = '&#124;&lt;';
+                    if (pageNumber == 1) {
+                        firstPage.className = 'games_pager_number_disabled';
+                    } else {
+                        firstPage.className = 'games_pager_number';
+                        firstPage.setAttribute('onclick', 'executeFilter1_1(1);');
+                    }
 
                     // add previous page button
                     var prevPage = document.createElement('span');
@@ -187,10 +208,22 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
                         nextPage.setAttribute('onclick', 'executeFilter1_1(' + (pageNumber + 1) + ');');
                     }
 
+                    // add last page button
+                    var lastPage = document.createElement('span');
+                    lastPage.innerHTML = '&gt;&#124;';
+                    if (pageNumber == pageCount) {
+                        lastPage.className = 'games_pager_number_disabled';
+                    } else {
+                        lastPage.className = 'games_pager_number';
+                        lastPage.setAttribute('onclick', 'executeFilter1_1(' + pageCount + ');');
+                    }
+
                     pager.innerHTML = '';
+                    pager.appendChild(firstPage);
                     pager.appendChild(prevPage);
                     pager.appendChild(pageNumbers);
                     pager.appendChild(nextPage);
+                    pager.appendChild(lastPage);
 
                     pager.style.display = '';
                 }
@@ -236,30 +269,36 @@ function IsInView() {
 
 $(window).scroll(IsInView);
 
-function renderGameIcon(gameObject, showTitle, showRatings, showClassification, classificationDisplayOrder, useSmallCover) {
+function renderGameIcon(gameObject, showTitle, showRatings, showClassification, classificationDisplayOrder, useSmallCover, listView) {
+    if (listView == undefined) {
+        listView = false;
+    }
+
+    var classes = getViewModeClasses(listView);
+
     var gameBox = document.createElement('div');
     gameBox.id = "game_tile_" + gameObject.id;
     if (useSmallCover == true) {
-        gameBox.className = 'game_tile game_tile_small';
+        gameBox.className = classes['game_tile game_tile_small'];
     } else {
-        gameBox.className = 'game_tile';
+        gameBox.className = classes['game_tile'];
     }
     gameBox.setAttribute('onclick', 'window.location.href = "/index.html?page=game&id=' + gameObject.id + '";');
 
     var gameImageBox = document.createElement('div');
-    gameImageBox.className = 'game_tile_box';
+    gameImageBox.className = classes['game_tile_box'];
 
     var gameImage = document.createElement('img');
     if (useSmallCover == true) {
-        gameImage.className = 'game_tile_image game_tile_image_small lazy';
+        gameImage.className = classes['game_tile_image game_tile_image_small lazy'];
     } else {
-        gameImage.className = 'game_tile_image lazy';
+        gameImage.className = classes['game_tile_image lazy'];
     }
     gameImage.src = '/images/unknowngame.png';
     if (gameObject.cover) {
         gameImage.setAttribute('data-src', '/api/v1.1/Games/' + gameObject.id + '/cover/image/cover_big/' + gameObject.cover.imageId + '.jpg');
     } else {
-        gameImage.className = 'game_tile_image unknown';
+        gameImage.className = classes['game_tile_image unknown'];
     }
     gameImageBox.appendChild(gameImage);
 
@@ -287,13 +326,13 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
     if (gameObject.hasSavedGame == true) {
         var gameSaveIcon = document.createElement('img');
         gameSaveIcon.src = '/images/SaveStates.png';
-        gameSaveIcon.className = 'game_tile_box_savedgame savedstateicon';
+        gameSaveIcon.className = classes['game_tile_box_savedgame savedstateicon'];
         gameImageBox.appendChild(gameSaveIcon);
     }
 
     if (gameObject.totalRating || displayClassification == true) {
         var gameImageRatingBanner = document.createElement('div');
-        gameImageRatingBanner.className = 'game_tile_box_ratingbanner';
+        gameImageRatingBanner.className = classes['game_tile_box_ratingbanner'];
 
         if (showRatings == true || displayClassification == true) {
             if (showRatings == true) {
@@ -314,7 +353,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
             if (displayClassification == true) {
                 var gameImageClassificationLogo = document.createElement('img');
                 gameImageClassificationLogo.src = classificationPath;
-                gameImageClassificationLogo.className = 'rating_image_overlay';
+                gameImageClassificationLogo.className = classes['rating_image_overlay'];
                 gameImageBox.appendChild(gameImageClassificationLogo);
             }
         }
@@ -323,10 +362,40 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
 
     if (showTitle == true) {
         var gameBoxTitle = document.createElement('div');
-        gameBoxTitle.class = 'game_tile_label';
+        gameBoxTitle.className = classes['game_tile_label'];
         gameBoxTitle.innerHTML = gameObject.name;
         gameBox.appendChild(gameBoxTitle);
     }
 
     return gameBox;
+}
+
+function getViewModeClasses(listView) {
+    if (listView == false) {
+        return {
+            "game_tile game_tile_small": "game_tile game_tile_small",
+            "game_tile": "game_tile",
+            "game_tile_box": "game_tile_box",
+            "game_tile_image game_tile_image_small lazy": "game_tile_image game_tile_image_small lazy",
+            "game_tile_image lazy": "game_tile_image lazy",
+            "game_tile_image unknown": "game_tile_image unknown",
+            "game_tile_box_savedgame savedstateicon": "game_tile_box_savedgame savedstateicon",
+            "game_tile_box_ratingbanner": "game_tile_box_ratingbanner",
+            "rating_image_overlay": "rating_image_overlay",
+            "game_tile_label": "game_tile_label"
+        };
+    } else {
+        return {
+            "game_tile game_tile_small": "game_tile_row game_tile_small",
+            "game_tile": "game_tile_row",
+            "game_tile_box": "game_tile_box_row",
+            "game_tile_image game_tile_image_small lazy": "game_tile_image_row game_tile_image_small lazy",
+            "game_tile_image lazy": "game_tile_image_row lazy",
+            "game_tile_image unknown": "game_tile_image_row unknown",
+            "game_tile_box_savedgame savedstateicon": "game_tile_box_savedgame_row savedstateicon",
+            "game_tile_box_ratingbanner": "game_tile_box_ratingbanner_row",
+            "rating_image_overlay": "rating_image_overlay_row",
+            "game_tile_label": "game_tile_label_row"
+        };
+    }
 }
