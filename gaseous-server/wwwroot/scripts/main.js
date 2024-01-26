@@ -410,13 +410,25 @@ function GetTaskFriendlyName(TaskName, options) {
         case 'LibraryScan':
             return "Library scan";
         case 'LibraryScanWorker':
-            return "Library scan worker: " + options.name;
+            if (options) {
+                return "Library scan worker: " + options.name;
+            } else {
+                return "Library scan worker";
+            }
         case 'CollectionCompiler':
-            return "Compress collection id: " + options;
+            if (options) {
+                return "Compress collection id: " + options;
+            } else {
+                return "Compress collection";
+            }
         case 'BackgroundDatabaseUpgrade':
             return "Background database upgrade";
         case 'TempCleanup':
             return "Temporary directory cleanup";
+        case 'DailyMaintainer':
+            return "Daily maintenance";
+        case 'WeeklyMaintainer':
+            return "Weekly maintenance";
         default:
             return TaskName;
     }

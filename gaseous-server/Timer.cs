@@ -20,8 +20,8 @@ namespace gaseous_server
             //_logger.LogInformation("Timed Hosted Service running.");
             Logging.Log(Logging.LogType.Debug, "Background", "Starting background task monitor");
 
-            _timer = new Timer(DoWork, null, TimeSpan.Zero,
-                TimeSpan.FromSeconds(5));
+            _timer = new Timer(DoWork, null, TimeSpan.FromSeconds(30),
+                TimeSpan.FromSeconds(30));
 
             return Task.CompletedTask;
         }
@@ -36,20 +36,23 @@ namespace gaseous_server
             List<ProcessQueue.QueueItem> ActiveList = new List<ProcessQueue.QueueItem>();
             ActiveList.AddRange(ProcessQueue.QueueItems);
             foreach (ProcessQueue.QueueItem qi in ActiveList) {
-                if (CheckIfProcessIsBlockedByOthers(qi) == false) {
-                    qi.BlockedState(false);
-                    if (DateTime.UtcNow > qi.NextRunTime || qi.Force == true)
-                    {
-                        qi.Execute();
-                        if (qi.RemoveWhenStopped == true && qi.ItemState == ProcessQueue.QueueItemState.Stopped)
+                if (qi.ItemState != ProcessQueue.QueueItemState.Disabled)
+                {
+                    if (CheckIfProcessIsBlockedByOthers(qi) == false) {
+                        qi.BlockedState(false);
+                        if (DateTime.UtcNow > qi.NextRunTime || qi.Force == true)
                         {
-                            ProcessQueue.QueueItems.Remove(qi);
+                            qi.Execute();
+                            if (qi.RemoveWhenStopped == true && qi.ItemState == ProcessQueue.QueueItemState.Stopped)
+                            {
+                                ProcessQueue.QueueItems.Remove(qi);
+                            }
                         }
                     }
-                }
-                else
-                {
-                    qi.BlockedState(true);
+                    else
+                    {
+                        qi.BlockedState(true);
+                    }
                 }
             }
         }

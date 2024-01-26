@@ -285,7 +285,7 @@
         } else {
             if (newPassword == conPassword) {
                 // check if password meets requirements
-                if (newPassword.length > 10) {
+                if (newPassword.length >= 10) {
                     errorLabel.innerHTML = "";
                     submitButton.removeAttribute('disabled');
                 } else {

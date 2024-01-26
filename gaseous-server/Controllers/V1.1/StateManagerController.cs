@@ -36,9 +36,11 @@ namespace gaseous_server.Controllers.v1_1
         public async Task<ActionResult> SaveStateAsync(long RomId, UploadStateModel uploadState, bool IsMediaGroup = false)
         {
             var user = await _userManager.GetUserAsync(User);
+
+            byte[] CompressedState = Common.Compress(uploadState.StateByteArray);
             
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "INSERT INTO GameState (UserId, RomId, IsMediaGroup, StateDateTime, Name, Screenshot, State) VALUES (@userid, @romid, @ismediagroup, @statedatetime, @name, @screenshot, @state); SELECT LAST_INSERT_ID();";
+            string sql = "INSERT INTO GameState (UserId, RomId, IsMediaGroup, StateDateTime, Name, Screenshot, State, Zipped) VALUES (@userid, @romid, @ismediagroup, @statedatetime, @name, @screenshot, @state, @zipped); SELECT LAST_INSERT_ID();";
             Dictionary<string, object> dbDict = new Dictionary<string, object>
             {
                 { "userid", user.Id },
@@ -47,9 +49,19 @@ namespace gaseous_server.Controllers.v1_1
                 { "statedatetime", DateTime.UtcNow },
                 { "name", "" },
                 { "screenshot", uploadState.ScreenshotByteArray },
-                { "state", uploadState.StateByteArray }
+                { "state", CompressedState },
+                { "zipped", true }
             };
             DataTable data = db.ExecuteCMD(sql, dbDict);
+
+            if (IsMediaGroup == false)
+            {
+                Logging.Log(Logging.LogType.Information, "Save State", "Saved state for rom id " + RomId + ". State size: " + uploadState.StateByteArrayBase64.Length + " Compressed size: " + CompressedState.Length);
+            }
+            else
+            {
+                Logging.Log(Logging.LogType.Information, "Save State", "Saved state for media group id " + RomId + ". State size: " + uploadState.StateByteArrayBase64.Length + " Compressed size: " + CompressedState.Length);
+            }
 
             return Ok(await GetStateAsync(RomId, (long)(ulong)data.Rows[0][0], IsMediaGroup));
         }
@@ -224,7 +236,7 @@ namespace gaseous_server.Controllers.v1_1
         {
             var user = await _userManager.GetUserAsync(User);
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT State FROM GameState WHERE Id = @id AND RomId = @romid AND IsMediaGroup = @ismediagroup AND UserId = @userid;";
+            string sql = "SELECT Zipped, State FROM GameState WHERE Id = @id AND RomId = @romid AND IsMediaGroup = @ismediagroup AND UserId = @userid;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>
             {
                 { "id", StateId },
@@ -242,7 +254,15 @@ namespace gaseous_server.Controllers.v1_1
             else
             {
                 string filename = "savestate.state";
-                byte[] bytes = (byte[])data.Rows[0][0];
+                byte[] bytes;
+                if ((bool)data.Rows[0]["Zipped"] == false)
+                {
+                    bytes = (byte[])data.Rows[0]["State"];
+                }
+                else
+                {
+                    bytes = Common.Decompress((byte[])data.Rows[0]["State"]);
+                }
                 string contentType = "application/octet-stream";
 
                 var cd = new System.Net.Mime.ContentDisposition

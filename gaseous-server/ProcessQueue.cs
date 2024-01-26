@@ -2,6 +2,7 @@
 using System.ComponentModel.Design.Serialization;
 using System.Data;
 using gaseous_server.Classes;
+using gaseous_server.Controllers;
 using NuGet.Common;
 using NuGet.Packaging;
 
@@ -13,25 +14,63 @@ namespace gaseous_server
 
         public class QueueItem
         {
+            public QueueItem(QueueItemType ItemType, bool AllowManualStart = true, bool RemoveWhenStopped = false)
+            {
+                _ItemType = ItemType;
+                _ItemState = QueueItemState.NeverStarted;
+                _LastRunTime = Config.ReadSetting<DateTime>("LastRun_" + _ItemType.ToString(), DateTime.UtcNow.AddMinutes(-5));
+                _AllowManualStart = AllowManualStart;
+                _RemoveWhenStopped = RemoveWhenStopped;
+
+                // load queueitem configuration
+                BackgroundTaskItem defaultItem = new BackgroundTaskItem(ItemType);
+                Enabled(defaultItem.Enabled);
+                _Interval = defaultItem.Interval;
+                _AllowedDays = defaultItem.AllowedDays;
+                AllowedStartHours = defaultItem.AllowedStartHours;
+                AllowedStartMinutes = defaultItem.AllowedStartMinutes;
+                AllowedEndHours = defaultItem.AllowedEndHours;
+                AllowedEndMinutes = defaultItem.AllowedEndMinutes;
+                _Blocks = defaultItem.Blocks;
+            }
+
             public QueueItem(QueueItemType ItemType, int ExecutionInterval, bool AllowManualStart = true, bool RemoveWhenStopped = false)
             {
                 _ItemType = ItemType;
                 _ItemState = QueueItemState.NeverStarted;
-                _LastRunTime = DateTime.Parse(Config.ReadSetting("LastRun_" + _ItemType.ToString(), DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:ssZ"))).AddMinutes(-5);
+                _LastRunTime = Config.ReadSetting<DateTime>("LastRun_" + _ItemType.ToString(), DateTime.UtcNow.AddMinutes(-5));
                 _Interval = ExecutionInterval;
                 _AllowManualStart = AllowManualStart;
                 _RemoveWhenStopped = RemoveWhenStopped;
+
+                // load timing defaults
+                BackgroundTaskItem defaultItem = new BackgroundTaskItem(ItemType);
+                Enabled(defaultItem.Enabled);
+                _AllowedDays = defaultItem.AllowedDays;
+                AllowedStartHours = defaultItem.AllowedStartHours;
+                AllowedStartMinutes = defaultItem.AllowedStartMinutes;
+                AllowedEndHours = defaultItem.AllowedEndHours;
+                AllowedEndMinutes = defaultItem.AllowedEndMinutes;
             }
 
             public QueueItem(QueueItemType ItemType, int ExecutionInterval, List<QueueItemType> Blocks, bool AllowManualStart = true, bool RemoveWhenStopped = false)
             {
                 _ItemType = ItemType;
                 _ItemState = QueueItemState.NeverStarted;
-                _LastRunTime = DateTime.Parse(Config.ReadSetting("LastRun_" + _ItemType.ToString(), DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:ssZ"))).AddMinutes(-5);
+                _LastRunTime = Config.ReadSetting<DateTime>("LastRun_" + _ItemType.ToString(), DateTime.UtcNow.AddMinutes(-5));
                 _Interval = ExecutionInterval;
                 _AllowManualStart = AllowManualStart;
                 _RemoveWhenStopped = RemoveWhenStopped;
                 _Blocks = Blocks;
+
+                // load timing defaults
+                BackgroundTaskItem defaultItem = new BackgroundTaskItem(ItemType);
+                Enabled(defaultItem.Enabled);
+                _AllowedDays = defaultItem.AllowedDays;
+                AllowedStartHours = defaultItem.AllowedStartHours;
+                AllowedStartMinutes = defaultItem.AllowedStartMinutes;
+                AllowedEndHours = defaultItem.AllowedEndHours;
+                AllowedEndMinutes = defaultItem.AllowedEndMinutes;
             }
 
             private QueueItemType _ItemType = QueueItemType.NotConfigured;
@@ -42,13 +81,15 @@ namespace gaseous_server
             {
                 get
                 {
-                    return DateTime.Parse(Config.ReadSetting("LastRun_" + _ItemType.ToString(), DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:ssZ")));
+                    // return DateTime.Parse(Config.ReadSetting("LastRun_" + _ItemType.ToString(), DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:ssZ")));
+                    return Config.ReadSetting<DateTime>("LastRun_" + _ItemType.ToString(), DateTime.UtcNow);
                 }
                 set
                 {
                     if (_SaveLastRunTime == true)
                     {
-                        Config.SetSetting("LastRun_" + _ItemType.ToString(), value.ToString("yyyy-MM-ddThh:mm:ssZ"));
+                        //Config.SetSetting("LastRun_" + _ItemType.ToString(), value.ToString("yyyy-MM-ddThh:mm:ssZ"));
+                        Config.SetSetting<DateTime>("LastRun_" + _ItemType.ToString(), value);
                     }
                 }
             }
@@ -61,8 +102,33 @@ namespace gaseous_server
             private bool _RemoveWhenStopped = false;
             private bool _IsBlocked = false;
             private string _CorrelationId = "";
+            private List<DayOfWeek> _AllowedDays = new List<DayOfWeek>
+            {
+                DayOfWeek.Sunday,
+                DayOfWeek.Monday,
+                DayOfWeek.Tuesday,
+                DayOfWeek.Wednesday,
+                DayOfWeek.Thursday,
+                DayOfWeek.Friday,
+                DayOfWeek.Saturday
+            };
             private List<QueueItemType> _Blocks = new List<QueueItemType>();
 
+            public List<DayOfWeek> AllowedDays 
+            { 
+                get
+                {
+                    return _AllowedDays;
+                }
+                set
+                {
+                    _AllowedDays = value;
+                } 
+            }
+            public int AllowedStartHours { get; set; } = 0;
+            public int AllowedStartMinutes { get; set; } = 0;
+            public int AllowedEndHours { get; set; } = 23;
+            public int AllowedEndMinutes { get; set; } = 59;
             public QueueItemType ItemType => _ItemType;
             public QueueItemState ItemState => _ItemState;
             public DateTime LastRunTime => _LastRunTime;
@@ -72,9 +138,52 @@ namespace gaseous_server
             {
                 get
                 {
-                    return LastRunTime.AddMinutes(Interval);
+                    // next run time
+                    DateTime tempNextRun = LastRunTime.ToLocalTime().AddMinutes(Interval);
+                    // if (tempNextRun < DateTime.Now)
+                    // {
+                    //     tempNextRun = DateTime.Now;
+                    // }
+                    DayOfWeek nextWeekDay = tempNextRun.DayOfWeek;
+
+                    // create local start and end times
+                    DateTime tempStartTime = new DateTime(tempNextRun.Year, tempNextRun.Month, tempNextRun.Day, AllowedStartHours, AllowedStartMinutes, 0, DateTimeKind.Local);
+                    DateTime tempEndTime = new DateTime(tempNextRun.Year, tempNextRun.Month, tempNextRun.Day, AllowedEndHours, AllowedEndMinutes, 0, DateTimeKind.Local);
+
+                    // bump the next run time to the next allowed day and hour range
+                    if (AllowedDays.Contains(nextWeekDay))
+                    {
+                        // next run day is allowed, nothing to do
+                    }
+                    else
+                    {
+                        // keep bumping the day forward until the a weekday is found
+                        do
+                        {
+                            tempNextRun = tempNextRun.AddDays(1);
+                            nextWeekDay = tempNextRun.DayOfWeek;
+                        }
+                        while (!AllowedDays.Contains(nextWeekDay));
+
+                        // update windows
+                        tempStartTime = new DateTime(tempNextRun.Year, tempNextRun.Month, tempNextRun.Day, AllowedStartHours, AllowedStartMinutes, 0, DateTimeKind.Local);
+                        tempEndTime = new DateTime(tempNextRun.Year, tempNextRun.Month, tempNextRun.Day, AllowedEndHours, AllowedEndMinutes, 0, DateTimeKind.Local);
+                    }
+
+                    // are the hours in the right range
+                    TimeSpan spanNextRun = tempNextRun.TimeOfDay;
+                    if (spanNextRun >= tempStartTime.TimeOfDay && spanNextRun <= tempEndTime.TimeOfDay)
+                    {
+                        // all good - return nextRun
+                        return tempNextRun.ToUniversalTime();
+                    }
+                    else
+                    {
+                        return tempStartTime.ToUniversalTime();
+                    }
                 }
             }
+
             public int Interval
             {
                 get
@@ -233,12 +342,25 @@ namespace gaseous_server
                                     DatabaseMigration.UpgradeScriptBackgroundTasks();
                                     break;
 
-                                case QueueItemType.Maintainer:
-                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Maintenance");
+                                case QueueItemType.DailyMaintainer:
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Daily Maintenance");
                                     Classes.Maintenance maintenance = new Maintenance{
                                         CallingQueueItem = this
                                     };
-                                    maintenance.RunMaintenance();
+                                    maintenance.RunDailyMaintenance();
+
+                                    _SaveLastRunTime = true;
+
+                                    break;
+
+                                case QueueItemType.WeeklyMaintainer:
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Weekly Maintenance");
+                                    Classes.Maintenance weeklyMaintenance = new Maintenance{
+                                        CallingQueueItem = this
+                                    };
+                                    weeklyMaintenance.RunWeeklyMaintenance();
+
+                                    _SaveLastRunTime = true;
                                     break;
 
                                 case QueueItemType.TempCleanup:
@@ -294,6 +416,21 @@ namespace gaseous_server
             public void BlockedState(bool BlockState)
             {
                 _IsBlocked = BlockState;
+            }
+
+            public void Enabled(bool Enabled)
+            {
+                if (Enabled == true)
+                {
+                    if (_ItemState == QueueItemState.Disabled)
+                    {
+                        _ItemState = QueueItemState.Stopped;
+                    }
+                }
+                else
+                {
+                    _ItemState = QueueItemState.Disabled;
+                }
             }
 
             public HasErrorsItem HasErrors
@@ -420,9 +557,14 @@ namespace gaseous_server
             BackgroundDatabaseUpgrade,
 
             /// <summary>
-            /// Performs a clean up of old files, and optimises the database
+            /// Performs a clean up of old files, and purge old logs
             /// </summary>
-            Maintainer,
+            DailyMaintainer,
+
+            /// <summary>
+            /// Performs more intensive cleanups and optimises the database
+            /// </summary>
+            WeeklyMaintainer,
 
             /// <summary>
             /// Cleans up marked paths in the temporary directory

@@ -73,55 +73,8 @@ When Gaseous-Server is started for the first time, it creates a configuration fi
 
 ```
 
-## Docker
-### Deploy with the prebuilt Docker image
-Dockerfile and docker-compose.yml files have been provided to make deployment of the server as easy as possible.
-1. Download the docker-compose-{database}.yml file for the database type you would like to use.
-2. Open the docker-compose.yml file and edit the igdbclientid and igdbclientsecret to the values retrieved from your IGDB account
-3. Run the command ```docker-compose up -d```
-4. Connect to the host on port 5198
-
-### Build and deploy a Docker image from source
-Dockerfile and docker-compose-build.yml files have been provided to make deployment of the server as easy as possible.
-1. Clone the repo with ```git clone https://github.com/gaseous-project/gaseous-server.git```
-2. Change into the gaseous-server directory
-3. Open the docker-compose-{database}-build.yml file and edit the igdbclientid and igdbclientsecret to the values retrieved from your IGDB account
-4. Run the command ```docker-compose --file docker-compose-{database}-build.yml up -d```
-5. Connect to the host on port 5198
-
-## Source
-### Build and deploy
-1. Install and configure a MariaDB or MySQL instance - this is beyond the scope of this document
-2. Install the dotnet 7.0 packages appropriate for your operating system
-    * See: https://learn.microsoft.com/en-us/dotnet/core/install/linux
-3. Create a database user with permission to create a databse. Gaseous will create the new database and apply the database schema on it's first startup.
-4. Clone the repo with ```git clone https://github.com/gaseous-project/gaseous-server.git```
-5. Change into the gaseous-server directory
-6. As the main branch is the development branch, you might want to change to a stable version - these are tagged with a version number. For example to change to the 1.5.0 release, use the command ```git checkout v1.5.0```
-    * Check the releases page for the version you would like to run: https://github.com/gaseous-project/gaseous-server/releases
-7. Download the emulator files from ```https://cdn.emulatorjs.org/releases/4.0.9.zip``` and extract the files to ```gaseous-server/wwwroot/emulators/EmulatorJS```
-8. Create a directory in the home directory of the user that will run the server. For example, if running as the user ```gaseous```, create the directory ```/home/gaseous/.gaseous-server```
-9. Change into the ```.gaseous-server``` directory created in the previous step
-10. Copy the JSON from the config file above into a new file named ```config.json```
-11. Update the database section with the database server hostname, username, password, and port
-12. Compile the server by changing back to the repo cloned earlier and executing:
-    * ```dotnet restore "gaseous-server/gaseous-server.csproj"```
-    * ```dotnet publish "gaseous-server/gaseous-server.csproj" --use-current-runtime --self-contained false -c Release -o <output directory>```
-    * replace ```<output directory>``` with the directory of your choosing. The compiled application will be copied there. For this example we'll use ```/opt/gaseous-server```
-13. The server can then be started by executing ```dotnet /opt/gaseous-server/gaseous-server.dll```
-    * If you would like the server to run on a different ip address and port (for example 0.0.0.0:8080), add the --urls argument: ```dotnet /opt/gaseous-server/gaseous-server.dll --urls http://0.0.0.0:8080```
-
-**Note**: The above instructions were tested on macOS Ventura, and Ubuntu 22.04.3. There was a report that Debian 11 had an issue with the git submodule commands (see: https://github.com/gaseous-project/gaseous-server/issues/71). This was possibly due to an older git package.
-
-### Updating from source
-1. Stop the server
-2. Switch to the source directory
-3. Update your repo:
-    * If running from the main branch, run ```git pull``` to update the repo
-    * If running from another branch or tag, run:
-      * ```git fetch```
-      * ```git checkout <branch or tag name>```
-4. Run steps 12 and 13 from the above Build guide
+# Installation
+See https://github.com/gaseous-project/gaseous-server/wiki/Installation for installation instructions.
 
 # Adding Content
 While games can be added to the server without them, it is recommended adding some signature DAT files beforehand to allow for better matching of ROMs to games.

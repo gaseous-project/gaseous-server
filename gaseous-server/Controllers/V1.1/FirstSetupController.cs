@@ -40,7 +40,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult> CreateAdminAccount(Authentication.RegisterViewModel model)
         {
-            if (Config.ReadSetting("FirstRunStatus", "0") == "0")
+            if (Config.ReadSetting<string>("FirstRunStatus", "0") == "0")
             {
                 if (ModelState.IsValid)
                 {
@@ -68,7 +68,7 @@ namespace gaseous_server.Controllers
                         await _signInManager.SignInAsync(user, isPersistent: true);
                         
                         Logging.Log(Logging.LogType.Information, "First Run", "Setting first run state to 1");
-                        Config.SetSetting("FirstRunStatus", "1");
+                        Config.SetSetting<string>("FirstRunStatus", "1");
 
                         return Ok(result);
                     }

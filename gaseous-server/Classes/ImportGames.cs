@@ -452,13 +452,15 @@ namespace gaseous_server.Classes
 
             if (romDT.Rows.Count > 0)
 			{
-				foreach (DataRow dr in romDT.Rows)
+				for (int i = 0; i < romDT.Rows.Count; i++)
 				{
-					Logging.Log(Logging.LogType.Information, "Organise Library", "Processing ROM " + dr["name"]);
-                    long RomId = (long)dr["id"];
+                    SetStatus(i, romDT.Rows.Count, "Processing file " + romDT.Rows[i]["name"]);
+					Logging.Log(Logging.LogType.Information, "Organise Library", "(" + i + "/" + romDT.Rows.Count + ") Processing ROM " + romDT.Rows[i]["name"]);
+                    long RomId = (long)romDT.Rows[i]["id"];
 					MoveGameFile(RomId);
 				}
 			}
+            ClearStatus();
 
 			// clean up empty directories
 			DeleteOrphanedDirectories(GameLibrary.GetDefaultLibrary.Path);
