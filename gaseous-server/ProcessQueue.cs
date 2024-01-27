@@ -3,6 +3,7 @@ using System.ComponentModel.Design.Serialization;
 using System.Data;
 using gaseous_server.Classes;
 using gaseous_server.Controllers;
+using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal;
 using NuGet.Common;
 using NuGet.Packaging;
 
@@ -172,7 +173,11 @@ namespace gaseous_server
 
                     // are the hours in the right range
                     TimeSpan spanNextRun = tempNextRun.TimeOfDay;
-                    if (spanNextRun >= tempStartTime.TimeOfDay && spanNextRun <= tempEndTime.TimeOfDay)
+                    if (LastRunTime.ToLocalTime().AddMinutes(Interval) < tempStartTime)
+                    {
+                        return tempStartTime.ToUniversalTime();
+                    }
+                    else if (spanNextRun >= tempStartTime.TimeOfDay && spanNextRun <= tempEndTime.TimeOfDay)
                     {
                         // all good - return nextRun
                         return tempNextRun.ToUniversalTime();
@@ -399,7 +404,14 @@ namespace gaseous_server
                         }
 
                         _ForceExecute = false;
-                        _ItemState = QueueItemState.Stopped;
+                        if (_DisableWhenComplete == false)
+                        {
+                            _ItemState = QueueItemState.Stopped;
+                        }
+                        else
+                        {
+                            _ItemState = QueueItemState.Disabled;
+                        }
                         _LastFinishTime = DateTime.UtcNow;
                         _LastRunDuration = Math.Round((DateTime.UtcNow - _LastRunTime).TotalSeconds, 2);
 
@@ -418,8 +430,10 @@ namespace gaseous_server
                 _IsBlocked = BlockState;
             }
 
+            private bool _DisableWhenComplete = false;
             public void Enabled(bool Enabled)
             {
+                _DisableWhenComplete = !Enabled;
                 if (Enabled == true)
                 {
                     if (_ItemState == QueueItemState.Disabled)
@@ -429,7 +443,10 @@ namespace gaseous_server
                 }
                 else
                 {
-                    _ItemState = QueueItemState.Disabled;
+                    if (_ItemState == QueueItemState.Stopped || _ItemState == QueueItemState.NeverStarted)
+                    {
+                        _ItemState = QueueItemState.Disabled;
+                    }
                 }
             }
 
