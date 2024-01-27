@@ -249,6 +249,8 @@ namespace gaseous_server.Classes
             }
             catch (InvalidCastException castEx)
             {
+                Logging.Log(Logging.LogType.Warning, "Settings", "Exception when reading server setting " + SettingName + ". Resetting to default.", castEx);
+
                 // delete broken setting and return the default
                 // this error is probably generated during an upgrade
                 if (AppSettings.ContainsKey(SettingName))
@@ -266,7 +268,7 @@ namespace gaseous_server.Classes
             }
             catch (Exception ex)
             {
-                Logging.Log(Logging.LogType.Critical, "Settings", "Exception when reading server settings.", ex);
+                Logging.Log(Logging.LogType.Critical, "Settings", "Exception when reading server setting " + SettingName + ".", ex);
                 throw;
             }
         }
