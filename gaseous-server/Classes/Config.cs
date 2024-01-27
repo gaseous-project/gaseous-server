@@ -199,49 +199,75 @@ namespace gaseous_server.Classes
 
         public static T ReadSetting<T>(string SettingName, T DefaultValue)
         {
-            if (AppSettings.ContainsKey(SettingName))
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            try
             {
-                return (T)AppSettings[SettingName];
+                if (AppSettings.ContainsKey(SettingName))
+                {
+                    return (T)AppSettings[SettingName];
+                }
+                else
+                {
+                    
+                    string sql = "SELECT Value, ValueDate FROM Settings WHERE Setting = @SettingName";
+                    Dictionary<string, object> dbDict = new Dictionary<string, object>
+                    {
+                        { "SettingName", SettingName }
+                    };
+
+                    try
+                    {
+                        Logging.Log(Logging.LogType.Debug, "Database", "Reading setting '" + SettingName + "'");
+                        DataTable dbResponse = db.ExecuteCMD(sql, dbDict);
+                        Type type = typeof(T);
+                        if (dbResponse.Rows.Count == 0)
+                        {
+                            // no value with that name stored - respond with the default value
+                            SetSetting<T>(SettingName, DefaultValue);
+                            return DefaultValue;
+                        }
+                        else
+                        {
+                            if (type.ToString() == "System.DateTime")
+                            {
+                                AppSettings.Add(SettingName, dbResponse.Rows[0]["ValueDate"]);
+                                return (T)dbResponse.Rows[0]["ValueDate"];
+                            }
+                            else
+                            {
+                                AppSettings.Add(SettingName, dbResponse.Rows[0]["Value"]);
+                                return (T)dbResponse.Rows[0]["Value"];
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Log(Logging.LogType.Critical, "Database", "Failed reading setting " + SettingName, ex);
+                        throw;
+                    }
+                }
             }
-            else
+            catch (InvalidCastException castEx)
             {
-                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                string sql = "SELECT Value, ValueDate FROM Settings WHERE Setting = @SettingName";
+                // delete broken setting and return the default
+                // this error is probably generated during an upgrade
+                if (AppSettings.ContainsKey(SettingName))
+                {
+                    AppSettings.Remove(SettingName);
+                }
+
+                string sql = "DELETE FROM Settings WHERE Setting = @SettingName";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>
                 {
                     { "SettingName", SettingName }
                 };
 
-                try
-                {
-                    Logging.Log(Logging.LogType.Debug, "Database", "Reading setting '" + SettingName + "'");
-                    DataTable dbResponse = db.ExecuteCMD(sql, dbDict);
-                    Type type = typeof(T);
-                    if (dbResponse.Rows.Count == 0)
-                    {
-                        // no value with that name stored - respond with the default value
-                        SetSetting<T>(SettingName, DefaultValue);
-                        return DefaultValue;
-                    }
-                    else
-                    {
-                        if (type.ToString() == "System.DateTime")
-                        {
-                            AppSettings.Add(SettingName, dbResponse.Rows[0]["ValueDate"]);
-                            return (T)dbResponse.Rows[0]["ValueDate"];
-                        }
-                        else
-                        {
-                            AppSettings.Add(SettingName, dbResponse.Rows[0]["Value"]);
-                            return (T)dbResponse.Rows[0]["Value"];
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Logging.Log(Logging.LogType.Critical, "Database", "Failed reading setting " + SettingName, ex);
-                    throw;
-                }
+                return DefaultValue;
+            }
+            catch (Exception ex)
+            {
+                Logging.Log(Logging.LogType.Critical, "Settings", "Exception when reading server settings.", ex);
+                throw;
             }
         }
 
