@@ -3,6 +3,7 @@ using System.Data;
 using Newtonsoft.Json;
 using IGDB.Models;
 using gaseous_server.Classes.Metadata;
+using NuGet.Common;
 
 namespace gaseous_server.Classes
 {
@@ -161,7 +162,7 @@ namespace gaseous_server.Classes
             File.WriteAllText(ConfigurationFilePath, configRaw);
         }
 
-        private static Dictionary<string, string> AppSettings = new Dictionary<string, string>();
+        private static Dictionary<string, object> AppSettings = new Dictionary<string, object>();
 
         public static void InitSettings()
         {
@@ -173,43 +174,67 @@ namespace gaseous_server.Classes
             {
                 if (AppSettings.ContainsKey((string)dataRow["Setting"]))
                 {
-                    AppSettings[(string)dataRow["Setting"]] = (string)dataRow["Value"];
+                    if ((int)dataRow["ValueType"] == 0)
+                    {
+                        AppSettings[(string)dataRow["Setting"]] = (string)dataRow["Value"];
+                    }
+                    else
+                    {
+                        AppSettings[(string)dataRow["Setting"]] = (DateTime)dataRow["ValueDate"];
+                    }
                 }
                 else
                 {
-                    AppSettings.Add((string)dataRow["Setting"], (string)dataRow["Value"]);
+                    if ((int)dataRow["ValueType"] == 0)
+                    {
+                        AppSettings.Add((string)dataRow["Setting"], (string)dataRow["Value"]);
+                    }
+                    else
+                    {
+                        AppSettings.Add((string)dataRow["Setting"], (DateTime)dataRow["ValueDate"]);
+                    }
                 }
             }
         }
 
-        public static string ReadSetting(string SettingName, string DefaultValue)
+        public static T ReadSetting<T>(string SettingName, T DefaultValue)
         {
             if (AppSettings.ContainsKey(SettingName))
             {
-                return AppSettings[SettingName];
+                return (T)AppSettings[SettingName];
             }
             else
             {
                 Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                string sql = "SELECT Value FROM Settings WHERE Setting = @SettingName";
-                Dictionary<string, object> dbDict = new Dictionary<string, object>();
-                dbDict.Add("SettingName", SettingName);
-                dbDict.Add("Value", DefaultValue);
+                string sql = "SELECT Value, ValueDate FROM Settings WHERE Setting = @SettingName";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>
+                {
+                    { "SettingName", SettingName }
+                };
 
                 try
                 {
                     Logging.Log(Logging.LogType.Debug, "Database", "Reading setting '" + SettingName + "'");
                     DataTable dbResponse = db.ExecuteCMD(sql, dbDict);
+                    Type type = typeof(T);
                     if (dbResponse.Rows.Count == 0)
                     {
                         // no value with that name stored - respond with the default value
-                        SetSetting(SettingName, DefaultValue);
+                        SetSetting<T>(SettingName, DefaultValue);
                         return DefaultValue;
                     }
                     else
                     {
-                        AppSettings.Add(SettingName, (string)dbResponse.Rows[0][0]);
-                        return (string)dbResponse.Rows[0][0];
+                        if (type.ToString() == "System.DateTime")
+                        {
+                            AppSettings.Add(SettingName, dbResponse.Rows[0]["ValueDate"]);
+                            return (T)dbResponse.Rows[0]["ValueDate"];
+                        }
+                        else
+                        {
+                            AppSettings.Add(SettingName, dbResponse.Rows[0]["Value"]);
+                            return (T)dbResponse.Rows[0]["Value"];
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -220,13 +245,32 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static void SetSetting(string SettingName, string Value)
+        public static void SetSetting<T>(string SettingName, T Value)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "REPLACE INTO Settings (Setting, Value) VALUES (@SettingName, @Value)";
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
-            dbDict.Add("SettingName", SettingName);
-            dbDict.Add("Value", Value);
+            string sql = "REPLACE INTO Settings (Setting, ValueType, Value, ValueDate) VALUES (@SettingName, @ValueType, @Value, @ValueDate)";
+            Dictionary<string, object> dbDict;
+            Type type = typeof(T);
+            if (type.ToString() == "System.DateTime")
+            {
+                dbDict = new Dictionary<string, object>
+                {
+                    { "SettingName", SettingName },
+                    { "ValueType", 1 },
+                    { "Value", null },
+                    { "ValueDate", Value }
+                };
+            }
+            else
+            {
+                dbDict = new Dictionary<string, object>
+                {
+                    { "SettingName", SettingName },
+                    { "ValueType", 0 },
+                    { "Value", Value },
+                    { "ValueDate", null }
+                };
+            }
 
             Logging.Log(Logging.LogType.Debug, "Database", "Storing setting '" + SettingName + "' to value: '" + Value + "'");
             try
@@ -341,11 +385,11 @@ namespace gaseous_server.Classes
                 {
                     get
                     {
-                        return ReadSetting("LibraryRootDirectory", Path.Combine(Config.ConfigurationPath, "Data"));
+                        return ReadSetting<string>("LibraryRootDirectory", Path.Combine(Config.ConfigurationPath, "Data"));
                     }
                     set
                     {
-                        SetSetting("LibraryRootDirectory", value);
+                        SetSetting<string>("LibraryRootDirectory", value);
                     }
                 }
 

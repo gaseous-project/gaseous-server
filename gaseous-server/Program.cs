@@ -55,15 +55,6 @@ Communications.MetadataSource = Config.MetadataConfiguration.MetadataSource;
 // set up hasheous client
 HasheousClient.WebApp.HttpHelper.BaseUri = Config.MetadataConfiguration.HasheousHost;
 
-// set initial values
-Guid APIKey = Guid.NewGuid();
-if (Config.ReadSetting("API Key", "Test API Key") == "Test API Key")
-{
-    // it's a new api key save it
-    Logging.Log(Logging.LogType.Information, "Startup", "Setting initial API key");
-    Config.SetSetting("API Key", APIKey.ToString());
-}
-
 // clean up storage
 if (Directory.Exists(Config.LibraryConfiguration.LibraryTempDirectory))
 {
@@ -421,69 +412,38 @@ var platformMap = PlatformMapping.PlatformMap;
 
 // add background tasks
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.SignatureIngestor,
-    int.Parse(Config.ReadSetting("Interval_SignatureIngestor", "60"))
-    )
+    ProcessQueue.QueueItemType.SignatureIngestor)
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.TitleIngestor,
-    int.Parse(Config.ReadSetting("Interval_TitleIngestor", "1")),
-    new List<ProcessQueue.QueueItemType>
-    {
-        ProcessQueue.QueueItemType.OrganiseLibrary,
-        ProcessQueue.QueueItemType.LibraryScan
-    })
+    ProcessQueue.QueueItemType.TitleIngestor)
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.MetadataRefresh,
-    int.Parse(Config.ReadSetting("Interval_MetadataRefresh", "360"))
-    )
+    ProcessQueue.QueueItemType.MetadataRefresh)
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.OrganiseLibrary,
-    int.Parse(Config.ReadSetting("Interval_OrganiseLibrary", "1440")),
-    new List<ProcessQueue.QueueItemType>
-    {
-        ProcessQueue.QueueItemType.LibraryScan,
-        ProcessQueue.QueueItemType.TitleIngestor,
-        ProcessQueue.QueueItemType.Rematcher
-    })
+    ProcessQueue.QueueItemType.OrganiseLibrary)
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.LibraryScan,
-    int.Parse(Config.ReadSetting("Interval_LibraryScan", "1440")),
-    new List<ProcessQueue.QueueItemType>
-    {
-        ProcessQueue.QueueItemType.OrganiseLibrary,
-        ProcessQueue.QueueItemType.Rematcher
-    })
+    ProcessQueue.QueueItemType.LibraryScan)
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.Rematcher,
-    int.Parse(Config.ReadSetting("Interval_Rematcher", "1440")),
-    new List<ProcessQueue.QueueItemType>
-    {
-        ProcessQueue.QueueItemType.OrganiseLibrary,
-        ProcessQueue.QueueItemType.LibraryScan
-    })
-    );
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.Maintainer,
-    int.Parse(Config.ReadSetting("Interval_Maintainer", "10080")),
-    new List<ProcessQueue.QueueItemType>
-    {
-        ProcessQueue.QueueItemType.All
-    })
+    ProcessQueue.QueueItemType.Rematcher)
     );
 
-ProcessQueue.QueueItem tempCleanup = new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.TempCleanup,
-    1,
-    new List<ProcessQueue.QueueItemType>(),
-    false,
-    false
+// maintenance tasks
+ProcessQueue.QueueItem dailyMaintenance = new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.DailyMaintainer
     );
-tempCleanup.ForceExecute();
+ProcessQueue.QueueItems.Add(dailyMaintenance);
+
+ProcessQueue.QueueItem weeklyMaintenance = new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.WeeklyMaintainer
+    );
+ProcessQueue.QueueItems.Add(weeklyMaintenance);
+
+ProcessQueue.QueueItem tempCleanup = new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.TempCleanup
+    );
 ProcessQueue.QueueItems.Add(tempCleanup);
 
 Logging.WriteToDiskOnly = false;

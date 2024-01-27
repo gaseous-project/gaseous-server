@@ -9,7 +9,7 @@ namespace gaseous_server.Classes
     {
         const int MaxFileAge = 30;
 
-        public void RunMaintenance()
+        public void RunDailyMaintenance()
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
@@ -33,8 +33,8 @@ namespace gaseous_server.Classes
             }
 
             // delete old logs
-            sql = "DELETE FROM ServerLogs WHERE EventTime < @EventRententionDate;";
-            dbDict.Add("EventRententionDate", DateTime.UtcNow.AddDays(Config.LoggingConfiguration.LogRetention * -1));
+            sql = "DELETE FROM ServerLogs WHERE EventTime < @EventRetentionDate;";
+            dbDict.Add("EventRetentionDate", DateTime.UtcNow.AddDays(Config.LoggingConfiguration.LogRetention * -1));
             db.ExecuteCMD(sql, dbDict);
 
             // delete files and directories older than 7 days in PathsToClean
@@ -69,6 +69,13 @@ namespace gaseous_server.Classes
                     }
                 }
             }
+        }
+
+        public void RunWeeklyMaintenance()
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
 
             Logging.Log(Logging.LogType.Information, "Maintenance", "Optimising database tables");
             sql = "SHOW FULL TABLES WHERE Table_Type = 'BASE TABLE';";

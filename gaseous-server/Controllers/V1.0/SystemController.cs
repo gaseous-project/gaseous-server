@@ -12,6 +12,7 @@ using gaseous_server.Classes.Metadata;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Razor.Hosting;
+using RestEase;
 
 namespace gaseous_server.Controllers
 {
@@ -96,7 +97,7 @@ namespace gaseous_server.Controllers
 
             string ver = "var AppVersion = \"" + Assembly.GetExecutingAssembly().GetName().Version.ToString() + "\";" + Environment.NewLine +
                 "var DBSchemaVersion = \"" + db.GetDatabaseSchemaVersion() + "\";" + Environment.NewLine +
-                "var FirstRunStatus = " + Config.ReadSetting("FirstRunStatus", "0") + ";" + Environment.NewLine +
+                "var FirstRunStatus = " + Config.ReadSetting<string>("FirstRunStatus", "0") + ";" + Environment.NewLine +
                 "var AgeRatingBoardsStrings = " + JsonSerializer.Serialize(ClassificationBoardsStrings, new JsonSerializerOptions{
                     WriteIndented = true
                 }) + ";" + Environment.NewLine +
@@ -113,19 +114,23 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("Settings/BackgroundTasks/Intervals")]
+        [Route("Settings/BackgroundTasks/Configuration")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult GetBackgroundTasks()
         {
             Dictionary<string, BackgroundTaskItem> Intervals = new Dictionary<string, BackgroundTaskItem>();
-            Intervals.Add(ProcessQueue.QueueItemType.SignatureIngestor.ToString(), new BackgroundTaskItem(ProcessQueue.QueueItemType.SignatureIngestor));
-            Intervals.Add(ProcessQueue.QueueItemType.TitleIngestor.ToString(), new BackgroundTaskItem(ProcessQueue.QueueItemType.TitleIngestor));
-            Intervals.Add(ProcessQueue.QueueItemType.MetadataRefresh.ToString(), new BackgroundTaskItem(ProcessQueue.QueueItemType.MetadataRefresh));
-            Intervals.Add(ProcessQueue.QueueItemType.OrganiseLibrary.ToString(), new BackgroundTaskItem(ProcessQueue.QueueItemType.OrganiseLibrary));
-            Intervals.Add(ProcessQueue.QueueItemType.LibraryScan.ToString(), new BackgroundTaskItem(ProcessQueue.QueueItemType.LibraryScan));
-            Intervals.Add(ProcessQueue.QueueItemType.Rematcher.ToString(), new BackgroundTaskItem(ProcessQueue.QueueItemType.Rematcher));
-            Intervals.Add(ProcessQueue.QueueItemType.Maintainer.ToString(), new BackgroundTaskItem(ProcessQueue.QueueItemType.Maintainer));
+            foreach (ProcessQueue.QueueItemType itemType in Enum.GetValues(typeof(ProcessQueue.QueueItemType)))
+            {
+                BackgroundTaskItem taskItem = new BackgroundTaskItem(itemType);
+                if (taskItem.UserManageable == true)
+                {
+                    if (!Intervals.ContainsKey(itemType.ToString()))
+                    {
+                        Intervals.Add(itemType.ToString(), taskItem);
+                    }
+                }
+            }
 
             return Ok(Intervals);
         }
@@ -133,45 +138,102 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpPost]
-        [Route("Settings/BackgroundTasks/Intervals")]
+        [Route("Settings/BackgroundTasks/Configuration")]
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public ActionResult SetBackgroundTasks(Dictionary<string, int> Intervals)
+        public ActionResult SetBackgroundTasks([FromBody] List<BackgroundTaskSettingsItem> model)
         {
-            foreach (KeyValuePair<string, int> Interval in Intervals)
+            foreach (BackgroundTaskSettingsItem TaskConfiguration in model)
             {
-                if (Enum.IsDefined(typeof(ProcessQueue.QueueItemType), Interval.Key))
+                if (Enum.IsDefined(typeof(ProcessQueue.QueueItemType), TaskConfiguration.Task))
                 {
                     try
                     {
                         BackgroundTaskItem taskItem = new BackgroundTaskItem(
-                            (ProcessQueue.QueueItemType)Enum.Parse(typeof(ProcessQueue.QueueItemType), Interval.Key)
+                            (ProcessQueue.QueueItemType)Enum.Parse(typeof(ProcessQueue.QueueItemType), TaskConfiguration.Task)
                         );
 
-                        if (Interval.Value >= taskItem.MinimumAllowedValue)
+                        if (taskItem.UserManageable == true)
                         {
-                            Logging.Log(Logging.LogType.Information, "Update Background Task", "Updating task " + Interval.Key + " with new interval " + Interval.Value);
+                            // update task enabled
+                            Logging.Log(Logging.LogType.Information, "Update Background Task", "Updating task " + TaskConfiguration.Task + " with enabled value " + TaskConfiguration.Enabled.ToString());
                             
-                            Config.SetSetting("Interval_" + Interval.Key, Interval.Value.ToString());
+                            Config.SetSetting<string>("Enabled_" + TaskConfiguration.Task, TaskConfiguration.Enabled.ToString());
 
                             // update existing process
                             foreach (ProcessQueue.QueueItem item in ProcessQueue.QueueItems)
                             {
-                                if (item.ItemType.ToString().ToLower() == Interval.Key.ToLower())
+                                if (item.ItemType.ToString().ToLower() == TaskConfiguration.Task.ToLower())
                                 {
-                                    item.Interval = Interval.Value;
+                                    item.Enabled(Boolean.Parse(TaskConfiguration.Enabled.ToString()));
                                 }
                             }
+                        
+                            // update task interval
+                            if (TaskConfiguration.Interval >= taskItem.MinimumAllowedInterval)
+                            {
+                                Logging.Log(Logging.LogType.Information, "Update Background Task", "Updating task " + TaskConfiguration.Task + " with new interval " + TaskConfiguration.Interval);
+                                
+                                Config.SetSetting<string>("Interval_" + TaskConfiguration.Task, TaskConfiguration.Interval.ToString());
+
+                                // update existing process
+                                foreach (ProcessQueue.QueueItem item in ProcessQueue.QueueItems)
+                                {
+                                    if (item.ItemType.ToString().ToLower() == TaskConfiguration.Task.ToLower())
+                                    {
+                                        item.Interval = TaskConfiguration.Interval;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                Logging.Log(Logging.LogType.Warning, "Update Background Task", "Interval " + TaskConfiguration.Interval.ToString() + " for task " + TaskConfiguration.Task + " is below the minimum allowed value of " + taskItem.MinimumAllowedInterval + ". Skipping.");
+                            }
+
+                            // update task weekdays
+                            Logging.Log(Logging.LogType.Information, "Update Background Task", "Updating task " + TaskConfiguration.Task + " with new weekdays " + String.Join(", ", TaskConfiguration.AllowedDays));
+                            
+                            Config.SetSetting<string>("AllowedDays_" + TaskConfiguration.Task, Newtonsoft.Json.JsonConvert.SerializeObject(TaskConfiguration.AllowedDays));
+
+                            // update existing process
+                            foreach (ProcessQueue.QueueItem item in ProcessQueue.QueueItems)
+                            {
+                                if (item.ItemType.ToString().ToLower() == TaskConfiguration.Task.ToLower())
+                                {
+                                    item.AllowedDays = TaskConfiguration.AllowedDays;
+                                }
+                            }
+
+                            // update task hours
+                            Logging.Log(Logging.LogType.Information, "Update Background Task", "Updating task " + TaskConfiguration.Task + " with new hours " + TaskConfiguration.AllowedStartHours + ":" + TaskConfiguration.AllowedStartMinutes.ToString("00") + " to " + TaskConfiguration.AllowedEndHours + ":" + TaskConfiguration.AllowedEndMinutes.ToString("00"));
+                            
+                            Config.SetSetting<string>("AllowedStartHours_" + TaskConfiguration.Task, TaskConfiguration.AllowedStartHours.ToString());
+                            Config.SetSetting<string>("AllowedStartMinutes_" + TaskConfiguration.Task, TaskConfiguration.AllowedStartMinutes.ToString());
+                            Config.SetSetting<string>("AllowedEndHours_" + TaskConfiguration.Task, TaskConfiguration.AllowedEndHours.ToString());
+                            Config.SetSetting<string>("AllowedEndMinutes_" + TaskConfiguration.Task, TaskConfiguration.AllowedEndMinutes.ToString());
+
+                            // update existing process
+                            foreach (ProcessQueue.QueueItem item in ProcessQueue.QueueItems)
+                            {
+                                if (item.ItemType.ToString().ToLower() == TaskConfiguration.Task.ToLower())
+                                {
+                                    item.AllowedStartHours = TaskConfiguration.AllowedStartHours;
+                                    item.AllowedStartMinutes = TaskConfiguration.AllowedStartMinutes;
+                                    item.AllowedEndHours = TaskConfiguration.AllowedEndHours;
+                                    item.AllowedEndMinutes = TaskConfiguration.AllowedEndMinutes;
+                                }
+                            }
+                        
                         }
                         else
                         {
-                            Logging.Log(Logging.LogType.Warning, "Update Background Task", "Interval " + Interval.Value + " for task " + Interval.Key + " is below the minimum allowed value of " + taskItem.MinimumAllowedValue + ". Skipping.");
+                            Logging.Log(Logging.LogType.Warning, "Update Background Task", "Unable to update non-user manageable task " + TaskConfiguration.Task + ". Skipping.");
                         }
                     }
                     catch
                     {
                         // task name not defined
-                        Logging.Log(Logging.LogType.Warning, "Update Background Task", "Task " + Interval.Key + " is not user definable. Skipping.");
+                        Logging.Log(Logging.LogType.Warning, "Update Background Task", "Task " + TaskConfiguration.Task + " is not user definable. Skipping.");
                     }
                 }
             }
@@ -256,61 +318,387 @@ namespace gaseous_server.Controllers
 
     public class BackgroundTaskItem
     {
+        public BackgroundTaskItem()
+        {
+
+        }
+
         public BackgroundTaskItem(ProcessQueue.QueueItemType TaskName)
         {
             this.Task = TaskName.ToString();
+            this.TaskEnum = TaskName;
 
             switch (TaskName)
             {
                 case ProcessQueue.QueueItemType.SignatureIngestor:
+                    this._UserManageable = true;
                     this.DefaultInterval = 60;
-                    this.MinimumAllowedValue = 20;
+                    this.MinimumAllowedInterval = 20;
+                    this.DefaultAllowedDays = new List<DayOfWeek>{
+                        DayOfWeek.Sunday,
+                        DayOfWeek.Monday,
+                        DayOfWeek.Tuesday,
+                        DayOfWeek.Wednesday,
+                        DayOfWeek.Thursday,
+                        DayOfWeek.Friday,
+                        DayOfWeek.Saturday
+                    };
+                    this.DefaultAllowedStartHours = 0;
+                    this.DefaultAllowedStartMinutes = 0;
+                    this.DefaultAllowedEndHours = 23;
+                    this.DefaultAllowedEndMinutes = 59;
                     break;
                 
                 case ProcessQueue.QueueItemType.TitleIngestor:
+                    this._UserManageable = true;
                     this.DefaultInterval = 1;
-                    this.MinimumAllowedValue = 1;
+                    this.MinimumAllowedInterval = 1;
+                    this.DefaultAllowedDays = new List<DayOfWeek>{
+                        DayOfWeek.Sunday,
+                        DayOfWeek.Monday,
+                        DayOfWeek.Tuesday,
+                        DayOfWeek.Wednesday,
+                        DayOfWeek.Thursday,
+                        DayOfWeek.Friday,
+                        DayOfWeek.Saturday
+                    };
+                    this.DefaultAllowedStartHours = 0;
+                    this.DefaultAllowedStartMinutes = 0;
+                    this.DefaultAllowedEndHours = 23;
+                    this.DefaultAllowedEndMinutes = 59;
+                    this._Blocks = new List<ProcessQueue.QueueItemType>{
+                        ProcessQueue.QueueItemType.OrganiseLibrary,
+                        ProcessQueue.QueueItemType.LibraryScan,
+                        ProcessQueue.QueueItemType.LibraryScanWorker
+                    };
                     break;
 
                 case ProcessQueue.QueueItemType.MetadataRefresh:
+                    this._UserManageable = true;
                     this.DefaultInterval = 360;
-                    this.MinimumAllowedValue = 360;
+                    this.MinimumAllowedInterval = 360;
+                    this.DefaultAllowedDays = new List<DayOfWeek>{
+                        DayOfWeek.Sunday,
+                        DayOfWeek.Monday,
+                        DayOfWeek.Tuesday,
+                        DayOfWeek.Wednesday,
+                        DayOfWeek.Thursday,
+                        DayOfWeek.Friday,
+                        DayOfWeek.Saturday
+                    };
+                    this.DefaultAllowedStartHours = 0;
+                    this.DefaultAllowedStartMinutes = 0;
+                    this.DefaultAllowedEndHours = 23;
+                    this.DefaultAllowedEndMinutes = 59;
                     break;
 
                 case ProcessQueue.QueueItemType.OrganiseLibrary:
+                    this._UserManageable = true;
                     this.DefaultInterval = 1440;
-                    this.MinimumAllowedValue = 120;
+                    this.MinimumAllowedInterval = 120;
+                    this.DefaultAllowedDays = new List<DayOfWeek>{
+                        DayOfWeek.Sunday,
+                        DayOfWeek.Monday,
+                        DayOfWeek.Tuesday,
+                        DayOfWeek.Wednesday,
+                        DayOfWeek.Thursday,
+                        DayOfWeek.Friday,
+                        DayOfWeek.Saturday
+                    };
+                    this.DefaultAllowedStartHours = 0;
+                    this.DefaultAllowedStartMinutes = 0;
+                    this.DefaultAllowedEndHours = 23;
+                    this.DefaultAllowedEndMinutes = 59;
+                    this._Blocks = new List<ProcessQueue.QueueItemType>{
+                        ProcessQueue.QueueItemType.LibraryScan,
+                        ProcessQueue.QueueItemType.LibraryScanWorker,
+                        ProcessQueue.QueueItemType.TitleIngestor,
+                        ProcessQueue.QueueItemType.Rematcher
+                    };
                     break;
 
                 case ProcessQueue.QueueItemType.LibraryScan:
+                    this._UserManageable = true;
                     this.DefaultInterval = 1440;
-                    this.MinimumAllowedValue = 120;
+                    this.MinimumAllowedInterval = 120;
+                    this.DefaultAllowedDays = new List<DayOfWeek>{
+                        DayOfWeek.Sunday,
+                        DayOfWeek.Monday,
+                        DayOfWeek.Tuesday,
+                        DayOfWeek.Wednesday,
+                        DayOfWeek.Thursday,
+                        DayOfWeek.Friday,
+                        DayOfWeek.Saturday
+                    };
+                    this.DefaultAllowedStartHours = 0;
+                    this.DefaultAllowedStartMinutes = 0;
+                    this.DefaultAllowedEndHours = 23;
+                    this.DefaultAllowedEndMinutes = 59;
+                    this._Blocks = new List<ProcessQueue.QueueItemType>{
+                        ProcessQueue.QueueItemType.OrganiseLibrary,
+                        ProcessQueue.QueueItemType.Rematcher
+                    };
                     break;
 
                 case ProcessQueue.QueueItemType.Rematcher:
+                    this._UserManageable = true;
                     this.DefaultInterval = 1440;
-                    this.MinimumAllowedValue = 360;
+                    this.MinimumAllowedInterval = 360;
+                    this.DefaultAllowedDays = new List<DayOfWeek>{
+                        DayOfWeek.Sunday,
+                        DayOfWeek.Monday,
+                        DayOfWeek.Tuesday,
+                        DayOfWeek.Wednesday,
+                        DayOfWeek.Thursday,
+                        DayOfWeek.Friday,
+                        DayOfWeek.Saturday
+                    };
+                    this.DefaultAllowedStartHours = 0;
+                    this.DefaultAllowedStartMinutes = 0;
+                    this.DefaultAllowedEndHours = 23;
+                    this.DefaultAllowedEndMinutes = 59;
+                    this._Blocks = new List<ProcessQueue.QueueItemType>{
+                        ProcessQueue.QueueItemType.OrganiseLibrary,
+                        ProcessQueue.QueueItemType.LibraryScan,
+                        ProcessQueue.QueueItemType.LibraryScanWorker
+                    };
                     break;
 
-                case ProcessQueue.QueueItemType.Maintainer:
+                case ProcessQueue.QueueItemType.DailyMaintainer:
+                    this._UserManageable = true;
+                    this.DefaultInterval = 1440;
+                    this.MinimumAllowedInterval = 1440;
+                    this.DefaultAllowedDays = new List<DayOfWeek>{
+                        DayOfWeek.Sunday,
+                        DayOfWeek.Monday,
+                        DayOfWeek.Tuesday,
+                        DayOfWeek.Wednesday,
+                        DayOfWeek.Thursday,
+                        DayOfWeek.Friday,
+                        DayOfWeek.Saturday
+                    };
+                    this.DefaultAllowedStartHours = 1;
+                    this.DefaultAllowedStartMinutes = 0;
+                    this.DefaultAllowedEndHours = 5;
+                    this.DefaultAllowedEndMinutes = 59;
+                    this._Blocks = new List<ProcessQueue.QueueItemType>{
+                        ProcessQueue.QueueItemType.All
+                    };
+                    break;
+
+                case ProcessQueue.QueueItemType.WeeklyMaintainer:
+                    this._UserManageable = true;
                     this.DefaultInterval = 10080;
-                    this.MinimumAllowedValue = 10080;
+                    this.MinimumAllowedInterval = 10080;
+                    this.DefaultAllowedDays = new List<DayOfWeek>{
+                        DayOfWeek.Monday
+                    };
+                    this.DefaultAllowedStartHours = 1;
+                    this.DefaultAllowedStartMinutes = 0;
+                    this.DefaultAllowedEndHours = 5;
+                    this.DefaultAllowedEndMinutes = 59;
+                    this._Blocks = new List<ProcessQueue.QueueItemType>{
+                        ProcessQueue.QueueItemType.All
+                    };
+                    break;
+
+                case ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade:
+                    this._UserManageable = false;
+                    this.DefaultInterval = 1;
+                    this.MinimumAllowedInterval = 1;
+                    this.DefaultAllowedDays = new List<DayOfWeek>{
+                        DayOfWeek.Sunday,
+                        DayOfWeek.Monday,
+                        DayOfWeek.Tuesday,
+                        DayOfWeek.Wednesday,
+                        DayOfWeek.Thursday,
+                        DayOfWeek.Friday,
+                        DayOfWeek.Saturday
+                    };
+                    this.DefaultAllowedStartHours = 0;
+                    this.DefaultAllowedStartMinutes = 0;
+                    this.DefaultAllowedEndHours = 23;
+                    this.DefaultAllowedEndMinutes = 59;
+                    this._Blocks.Add(ProcessQueue.QueueItemType.All);
+                    break;
+
+                case ProcessQueue.QueueItemType.TempCleanup:
+                    this._UserManageable = true;
+                    this.DefaultInterval = 1;
+                    this.MinimumAllowedInterval = 1;
+                    this.DefaultAllowedDays = new List<DayOfWeek>{
+                        DayOfWeek.Sunday,
+                        DayOfWeek.Monday,
+                        DayOfWeek.Tuesday,
+                        DayOfWeek.Wednesday,
+                        DayOfWeek.Thursday,
+                        DayOfWeek.Friday,
+                        DayOfWeek.Saturday
+                    };
+                    this.DefaultAllowedStartHours = 0;
+                    this.DefaultAllowedStartMinutes = 0;
+                    this.DefaultAllowedEndHours = 23;
+                    this.DefaultAllowedEndMinutes = 59;
                     break;
 
                 default:
-                    throw new Exception("Invalid task");
+                    this._UserManageable = false;
+                    this.DefaultAllowedDays = new List<DayOfWeek>{
+                        DayOfWeek.Sunday,
+                        DayOfWeek.Monday,
+                        DayOfWeek.Tuesday,
+                        DayOfWeek.Wednesday,
+                        DayOfWeek.Thursday,
+                        DayOfWeek.Friday,
+                        DayOfWeek.Saturday
+                    };
+                    this.DefaultAllowedStartHours = 0;
+                    this.DefaultAllowedStartMinutes = 0;
+                    this.DefaultAllowedEndHours = 23;
+                    this.DefaultAllowedEndMinutes = 59;
+                    break;
             }
         }
 
         public string Task { get; set; }
+        public ProcessQueue.QueueItemType TaskEnum { get; set; }
+        public bool Enabled
+        {
+            get
+            {
+                if (_UserManageable == true)
+                {
+                    return bool.Parse(Config.ReadSetting<string>("Enabled_" + Task, true.ToString()));
+                }
+                else
+                {
+                    return true;
+                }
+            }
+            set
+            {
+                if (_UserManageable == true)
+                {
+                    Config.SetSetting<string>("Enabled_" + Task, value.ToString());
+                }
+            }
+        }
+        private bool _UserManageable;
+        public bool UserManageable => _UserManageable;
         public int Interval {
             get
             {
-                return int.Parse(Config.ReadSetting("Interval_" + Task, DefaultInterval.ToString()));
+                return int.Parse(Config.ReadSetting<string>("Interval_" + Task, DefaultInterval.ToString()));
             }
         }
         public int DefaultInterval { get; set; }
-        public int MinimumAllowedValue { get; set; }
+        public int MinimumAllowedInterval { get; set; }
+        public List<DayOfWeek> AllowedDays
+        {
+            get
+            {
+                string jsonDefaultAllowedDays = Newtonsoft.Json.JsonConvert.SerializeObject(DefaultAllowedDays);
+                return Newtonsoft.Json.JsonConvert.DeserializeObject<List<DayOfWeek>>(Config.ReadSetting<string>("AllowedDays_" + Task, jsonDefaultAllowedDays));
+            }
+        }
+        public int AllowedStartHours
+        {
+            get
+            {
+                return int.Parse(Config.ReadSetting<string>("AllowedStartHours_" + Task, DefaultAllowedStartHours.ToString()));
+            }
+        }
+        public int AllowedStartMinutes
+        {
+            get
+            {
+                return int.Parse(Config.ReadSetting<string>("AllowedStartMinutes_" + Task, DefaultAllowedStartMinutes.ToString()));
+            }
+        }
+        public int AllowedEndHours
+        {
+            get
+            {
+                return int.Parse(Config.ReadSetting<string>("AllowedEndHours_" + Task, DefaultAllowedEndHours.ToString()));
+            }
+        }
+        public int AllowedEndMinutes
+        {
+            get
+            {
+                return int.Parse(Config.ReadSetting<string>("AllowedEndMinutes_" + Task, DefaultAllowedEndMinutes.ToString()));
+            }
+        }
+        public List<DayOfWeek> DefaultAllowedDays { get; set; }
+        public int DefaultAllowedStartHours { get; set; }
+        public int DefaultAllowedStartMinutes { get; set; }
+        public int DefaultAllowedEndHours { get; set; }
+        public int DefaultAllowedEndMinutes { get; set; }
+        private List<ProcessQueue.QueueItemType> _Blocks = new List<ProcessQueue.QueueItemType>();
+        public List<ProcessQueue.QueueItemType> Blocks
+        {
+            get
+            {   
+                if (_Blocks.Contains(ProcessQueue.QueueItemType.All))
+                {
+                    List<ProcessQueue.QueueItemType> blockList = new List<ProcessQueue.QueueItemType>();
+                    List<ProcessQueue.QueueItemType> skipBlockItems = new List<ProcessQueue.QueueItemType>{
+                        ProcessQueue.QueueItemType.All,
+                        ProcessQueue.QueueItemType.NotConfigured,
+                        this.TaskEnum
+                    };
+                    foreach (ProcessQueue.QueueItemType blockType in Enum.GetValues(typeof(ProcessQueue.QueueItemType)))
+                    {
+                        if (!skipBlockItems.Contains(blockType))
+                        {
+                            blockList.Add(blockType);
+                        }
+                    }
+                    return blockList;
+                }
+                else
+                {
+                    return _Blocks;
+                }
+            }
+        }
+        public List<ProcessQueue.QueueItemType> BlockedBy
+        {
+            get
+            {
+                List<ProcessQueue.QueueItemType> blockedBy = new List<ProcessQueue.QueueItemType>();
+
+                List<BackgroundTaskItem> backgroundTaskItems = new List<BackgroundTaskItem>();
+                foreach (ProcessQueue.QueueItemType blockType in Enum.GetValues(typeof(ProcessQueue.QueueItemType)))
+                {
+                    if (blockType != this.TaskEnum)
+                    {
+                        BackgroundTaskItem taskItem = new BackgroundTaskItem(blockType);
+                        if (taskItem.Blocks.Contains(this.TaskEnum))
+                        {
+                            if (!blockedBy.Contains(blockType))
+                            {
+                                blockedBy.Add(blockType);
+                            }
+                        }
+                    }
+                }
+
+                return blockedBy;
+            }
+        }
+    }
+
+    public class BackgroundTaskSettingsItem
+    {
+        public string Task { get; set; }
+        public bool Enabled { get; set; }
+        public int Interval { get; set; }
+        public List<DayOfWeek> AllowedDays { get; set; }
+        public int AllowedStartHours { get; set; }
+        public int AllowedStartMinutes { get; set; }
+        public int AllowedEndHours { get; set; }
+        public int AllowedEndMinutes { get; set; }
     }
 
     public class SystemSettingsModel
