@@ -15,6 +15,7 @@ namespace gaseous_server.Classes
         public static void PostUpgradeScript(int TargetSchemaVersion, Database.databaseType? DatabaseType) 
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
 
             switch(DatabaseType)
@@ -32,7 +33,7 @@ namespace gaseous_server.Classes
 
                             // copy root path to new libraries format
                             string oldRoot = Path.Combine(Config.LibraryConfiguration.LibraryRootDirectory, "Library");
-                            string sql = "INSERT INTO GameLibraries (Name, Path, DefaultLibrary, DefaultPlatform) VALUES (@name, @path, @defaultlibrary, @defaultplatform); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+                            sql = "INSERT INTO GameLibraries (Name, Path, DefaultLibrary, DefaultPlatform) VALUES (@name, @path, @defaultlibrary, @defaultplatform); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
                             dbDict.Add("name", "Default");
                             dbDict.Add("path", oldRoot);
                             dbDict.Add("defaultlibrary", 1);
@@ -46,6 +47,11 @@ namespace gaseous_server.Classes
                             db.ExecuteCMD(sql, dbDict);
                             break;
 
+                        case 1016:
+                            // delete old format LastRun_* settings from settings table
+                            sql = "DELETE FROM Settings WHERE Setting LIKE 'LastRun_%';";
+                            db.ExecuteNonQuery(sql);
+                            break;
                     }
                     break;
             }
