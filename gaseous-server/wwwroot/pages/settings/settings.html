@@ -16,8 +16,11 @@
 </table>
 <div style="text-align: right;"><button id="settings_tasktimers_default" onclick="defaultTaskTimers();">Reset to Default</button><button id="settings_tasktimers_new" onclick="saveTaskTimers();">Save</button></div>
 
-<h3>Logging</h3>
+<h3>System Settings</h3>
 <table cellspacing="0" style="width: 100%;">
+    <tr>
+        <th colspan="2">Logging</th>
+    </tr>
     <tr>
         <th>
             Write logs
@@ -44,8 +47,15 @@
         </td>
     </tr>
     <tr>
+        <th colspan="2">Emulator</th>
+    </tr>
+    <tr>
+        <th>Enable debug mode</th>
+        <td><input type="checkbox" name="settings_emulator" id="settings_emulator_debug" checked="checked" /></td>
+    </tr>
+    <tr>
         <td colspan="2" style="text-align: right;">
-            <button id="settings_tasktimers_new" onclick="setLoggingSettings();">Save</button>
+            <button id="settings_tasktimers_new" onclick="setSystemSettings();">Save</button>
         </td>
     </tr>
 </table>
@@ -379,7 +389,7 @@
         saveTaskTimers();
     }
 
-    function getLoggingSettings() {
+    function getSystemSettings() {
         ajaxCall(
             '/api/v1/System/Settings/System',
             'GET',
@@ -391,11 +401,13 @@
                 document.getElementById(optionToSelect).checked = true;
 
                 document.getElementById('settings_logs_retention').value = result.minimumLogRetentionPeriod;
+
+                document.getElementById('settings_emulator_debug').checked = result.emulatorDebugMode;
             }
         );
     }
 
-    function setLoggingSettings() {
+    function setSystemSettings() {
         var alwaysLogToDisk = false;
         if ($("input[type='radio'][name='settings_logs_write']:checked").val() == "true") {
             alwaysLogToDisk = true;
@@ -411,17 +423,18 @@
 
         var model = {
             "alwaysLogToDisk": alwaysLogToDisk,
-            "minimumLogRetentionPeriod": retentionValue
+            "minimumLogRetentionPeriod": retentionValue,
+            "emulatorDebugMode": document.getElementById('settings_emulator_debug').checked
         };
 
         ajaxCall(
             '/api/v1/System/Settings/System',
             'POST',
             function(result) {
-                getLoggingSettings();
+                getSystemSettings();
             },
             function(error) {
-                getLoggingSettings();
+                getSystemSettings();
             },
             JSON.stringify(model)
         );
@@ -429,5 +442,5 @@
 
     drawLibrary();
     getBackgroundTaskTimers();
-    getLoggingSettings();
+    getSystemSettings();
 </script>
