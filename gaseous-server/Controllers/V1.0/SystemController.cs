@@ -106,7 +106,8 @@ namespace gaseous_server.Controllers
                 }) + ";" + Environment.NewLine +
                 "var AgeRatingGroups = " + JsonSerializer.Serialize(AgeGroups.AgeGroupingsFlat, new JsonSerializerOptions{
                     WriteIndented = true
-                }) + ";";
+                }) + ";" + Environment.NewLine +
+                "var emulatorDebugMode = " + Config.ReadSetting<string>("emulatorDebugMode", false.ToString()).ToLower() + ";";
             byte[] bytes = Encoding.UTF8.GetBytes(ver);
             return File(bytes, "text/javascript");
         }
@@ -251,7 +252,8 @@ namespace gaseous_server.Controllers
         {
             SystemSettingsModel systemSettingsModel = new SystemSettingsModel{
                 AlwaysLogToDisk = Config.LoggingConfiguration.AlwaysLogToDisk,
-                MinimumLogRetentionPeriod = Config.LoggingConfiguration.LogRetention
+                MinimumLogRetentionPeriod = Config.LoggingConfiguration.LogRetention,
+                EmulatorDebugMode = Boolean.Parse(Config.ReadSetting<string>("emulatorDebugMode", false.ToString()))
             };
 
             return Ok(systemSettingsModel);
@@ -269,6 +271,7 @@ namespace gaseous_server.Controllers
             {
                 Config.LoggingConfiguration.AlwaysLogToDisk = model.AlwaysLogToDisk;
                 Config.LoggingConfiguration.LogRetention = model.MinimumLogRetentionPeriod;
+                Config.SetSetting<string>("emulatorDebugMode", model.EmulatorDebugMode.ToString());
                 Config.UpdateConfig();
             }
 
@@ -705,5 +708,6 @@ namespace gaseous_server.Controllers
     {
         public bool AlwaysLogToDisk { get; set; }
         public int MinimumLogRetentionPeriod { get; set; }
+        public bool EmulatorDebugMode { get; set; }
     }
 }
