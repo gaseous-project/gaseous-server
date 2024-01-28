@@ -5,8 +5,12 @@ changelog:
         - '*'
       exclude:
         labels:
+          - note
           - bug
           - dependencies
+    - title: Notes
+      labels:
+        - note
     - title: Bug Fixes
       labels:
         - bug
