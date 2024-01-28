@@ -172,27 +172,46 @@ namespace gaseous_server.Classes
             DataTable dbResponse = db.ExecuteCMD(sql);
             foreach (DataRow dataRow in dbResponse.Rows)
             {
-                if (AppSettings.ContainsKey((string)dataRow["Setting"]))
+                string SettingName = (string)dataRow["Setting"];
+
+                if (AppSettings.ContainsKey(SettingName))
                 {
-                    if ((int)dataRow["ValueType"] == 0)
+                    AppSettings.Remove(SettingName);
+                }
+                
+                Logging.Log(Logging.LogType.Information, "Load Settings", "Loading setting " + SettingName + " from database");
+                
+                try
+                {
+                    switch ((int)dataRow["ValueType"])
                     {
-                        AppSettings[(string)dataRow["Setting"]] = (string)dataRow["Value"];
-                    }
-                    else
-                    {
-                        AppSettings[(string)dataRow["Setting"]] = (DateTime)dataRow["ValueDate"];
+                        case 0:
+                        default:
+                            // value is a string
+                            AppSettings.Add(SettingName, dataRow["Value"]);
+                            break;
+
+                        case 1:
+                            // value is a datetime
+                            AppSettings.Add(SettingName, dataRow["ValueDate"]);
+                            break;
                     }
                 }
-                else
+                catch (InvalidCastException castEx)
                 {
-                    if ((int)dataRow["ValueType"] == 0)
+                    Logging.Log(Logging.LogType.Warning, "Settings", "Exception when reading server setting " + SettingName + ". Resetting to default.", castEx);
+
+                    // delete broken setting and return the default
+                    // this error is probably generated during an upgrade
+                    sql = "DELETE FROM Settings WHERE Setting = @SettingName";
+                    Dictionary<string, object> dbDict = new Dictionary<string, object>
                     {
-                        AppSettings.Add((string)dataRow["Setting"], (string)dataRow["Value"]);
-                    }
-                    else
-                    {
-                        AppSettings.Add((string)dataRow["Setting"], (DateTime)dataRow["ValueDate"]);
-                    }
+                        { "SettingName", SettingName }
+                    };
+                }
+                catch (Exception ex)
+                {
+                    Logging.Log(Logging.LogType.Critical, "Settings", "Exception when reading server setting " + SettingName + ".", ex);
                 }
             }
         }
