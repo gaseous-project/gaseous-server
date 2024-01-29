@@ -300,12 +300,12 @@ input[id='filter_panel_search'] {
     width: 160px;
 }
 
-input[id='filter_panel_userrating_min'] {
+input[name='filter_panel_range_min'] {
     width: 50px;
     margin-right: 5px;
 }
 
-input[id='filter_panel_userrating_max'] {
+input[name='filter_panel_range_max'] {
     width: 50px;
 }
 

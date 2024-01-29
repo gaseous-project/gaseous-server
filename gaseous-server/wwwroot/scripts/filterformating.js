@@ -11,6 +11,7 @@ function formatFilterPanel(containerElement, result) {
 
     panel.appendChild(buildFilterPanelHeader('filter', 'Filter'));
 
+    // free text search
     var containerPanelSearch = document.createElement('div');
     containerPanelSearch.className = 'filter_panel_box';
     var containerPanelSearchField = document.createElement('input');
@@ -33,56 +34,31 @@ function formatFilterPanel(containerElement, result) {
 
     panel.appendChild(containerPanelSearch);
 
+    // user rating
     panel.appendChild(buildFilterPanelHeader('userrating', 'User Rating', true, false));
-    var containerPanelUserRating = document.createElement('div');
-    containerPanelUserRating.id = 'filter_panel_box_userrating';
-    containerPanelUserRating.className = 'filter_panel_box';
-
-    var containerPanelUserRatingCheckBox = document.createElement('input');
-    containerPanelUserRatingCheckBox.id = 'filter_panel_userrating_enabled';
-    containerPanelUserRatingCheckBox.type = 'checkbox';
-    containerPanelUserRatingCheckBox.className = 'filter_panel_item_checkbox';
-    containerPanelUserRatingCheckBox.setAttribute('onclick', 'filter_panel_userrating_enabled_check();');
-    var ratingEnabledCookie = getCookie('filter_panel_userrating_enabled');
-    if (ratingEnabledCookie) {
-        if (ratingEnabledCookie == "true") {
-            containerPanelUserRatingCheckBox.checked = true;
-        } else {
-            containerPanelUserRatingCheckBox.checked = false;
-        }
-    }
-    containerPanelUserRating.appendChild(containerPanelUserRatingCheckBox);
-
-    var containerPanelUserRatingMinField = document.createElement('input');
-    var minRatingCookie = getCookie('filter_panel_userrating_min');
-    if (minRatingCookie) {
-        containerPanelUserRatingMinField.value = minRatingCookie;
-    }
-    containerPanelUserRatingMinField.id = 'filter_panel_userrating_min';
-    containerPanelUserRatingMinField.type = 'number';
-    containerPanelUserRatingMinField.placeholder = '0';
-    containerPanelUserRatingMinField.setAttribute('min', '0');
-    containerPanelUserRatingMinField.setAttribute('max', '100');
-    containerPanelUserRatingMinField.setAttribute('oninput', 'filter_panel_userrating_value();');
-    containerPanelUserRating.appendChild(containerPanelUserRatingMinField);
-
-    var containerPanelUserRatingMaxField = document.createElement('input');
-    var maxRatingCookie = getCookie('filter_panel_userrating_max');
-    if (maxRatingCookie) {
-        containerPanelUserRatingMaxField.value = maxRatingCookie;
-    }
-    containerPanelUserRatingMaxField.id = 'filter_panel_userrating_max';
-    containerPanelUserRatingMaxField.type = 'number';
-    containerPanelUserRatingMaxField.placeholder = '100';
-    containerPanelUserRatingMaxField.setAttribute('min', '0');
-    containerPanelUserRatingMaxField.setAttribute('max', '100');
-    containerPanelUserRatingMaxField.setAttribute('oninput', 'filter_panel_userrating_value();');
-    containerPanelUserRating.appendChild(containerPanelUserRatingMaxField);
-
+    var containerPanelUserRating = buildFilterRange('userrating', 0, 100);
     panel.appendChild(containerPanelUserRating);
 
-    buildFilterPanel(panel, 'settings', 'Settings', [{ "id": "savestatesavailable", "name": "Game has save states avaialble", "gameCount": 0 }], true, true);
+    // user vote count
+    panel.appendChild(buildFilterPanelHeader('uservotes', 'User Votes', true, false));
+    var containerPanelUserVotes = buildFilterRange('uservotes', 0, 1000000);
+    panel.appendChild(containerPanelUserVotes);
 
+    // release year
+    panel.appendChild(buildFilterPanelHeader('releaseyear', 'Release Year', true, false));
+    var containerPanelReleaseYear = buildFilterRange('releaseyear', 1960, (new Date()).getFullYear());
+    panel.appendChild(containerPanelReleaseYear);
+
+    // settings
+    buildFilterPanel(panel, 'settings', 'Settings', [
+        { 
+            "id": "savestatesavailable",
+            "name": "Game has save states avaialble",
+            "gameCount": 0
+        }
+    ], true, true);
+
+    // server provided filters
     if (result.platforms) {
         buildFilterPanel(panel, 'platform', 'Platforms', result.platforms, true, true);
     }
@@ -111,6 +87,7 @@ function formatFilterPanel(containerElement, result) {
 
     targetElement.appendChild(panel);
 
+    // filter controls
     var buttonsDiv = document.createElement('div');
     buttonsDiv.id = 'games_library_searchbuttons'
 
@@ -260,6 +237,59 @@ function buildFilterPanelItem(filterType, itemString, friendlyItemString, tags) 
     return filterPanelItem;
 }
 
+function buildFilterRange(name, min, max) {
+    var containerPanelUserRating = document.createElement('div');
+    containerPanelUserRating.id = 'filter_panel_box_' + name + '';
+    containerPanelUserRating.className = 'filter_panel_box';
+
+    var containerPanelUserRatingCheckBox = document.createElement('input');
+    containerPanelUserRatingCheckBox.id = 'filter_panel_' + name + '_enabled';
+    containerPanelUserRatingCheckBox.name = 'filter_panel_range_enabled_check';
+    containerPanelUserRatingCheckBox.setAttribute('data-name', name);
+    containerPanelUserRatingCheckBox.type = 'checkbox';
+    containerPanelUserRatingCheckBox.className = 'filter_panel_item_checkbox';
+    containerPanelUserRatingCheckBox.setAttribute('onclick', 'filter_panel_range_enabled_check("' + name + '");');
+    var ratingEnabledCookie = getCookie('filter_panel_' + name + '_enabled');
+    if (ratingEnabledCookie) {
+        if (ratingEnabledCookie == "true") {
+            containerPanelUserRatingCheckBox.checked = true;
+        } else {
+            containerPanelUserRatingCheckBox.checked = false;
+        }
+    }
+    containerPanelUserRating.appendChild(containerPanelUserRatingCheckBox);
+
+    var containerPanelUserRatingMinField = document.createElement('input');
+    var minRatingCookie = getCookie('filter_panel_' + name + '_min');
+    if (minRatingCookie) {
+        containerPanelUserRatingMinField.value = minRatingCookie;
+    }
+    containerPanelUserRatingMinField.id = 'filter_panel_' + name + '_min';
+    containerPanelUserRatingMinField.name = 'filter_panel_range_min';
+    containerPanelUserRatingMinField.type = 'number';
+    containerPanelUserRatingMinField.placeholder = min;
+    containerPanelUserRatingMinField.setAttribute('min', min);
+    containerPanelUserRatingMinField.setAttribute('max', max);
+    containerPanelUserRatingMinField.setAttribute('oninput', 'filter_panel_range_value("' + name + '");');
+    containerPanelUserRating.appendChild(containerPanelUserRatingMinField);
+
+    var containerPanelUserRatingMaxField = document.createElement('input');
+    var maxRatingCookie = getCookie('filter_panel_' + name + '_max');
+    if (maxRatingCookie) {
+        containerPanelUserRatingMaxField.value = maxRatingCookie;
+    }
+    containerPanelUserRatingMaxField.id = 'filter_panel_' + name + '_max';
+    containerPanelUserRatingMaxField.name = 'filter_panel_range_max';
+    containerPanelUserRatingMaxField.type = 'number';
+    containerPanelUserRatingMaxField.placeholder = max;
+    containerPanelUserRatingMaxField.setAttribute('min', min);
+    containerPanelUserRatingMaxField.setAttribute('max', max);
+    containerPanelUserRatingMaxField.setAttribute('oninput', 'filter_panel_range_value("' + name + '");');
+    containerPanelUserRating.appendChild(containerPanelUserRatingMaxField);
+
+    return containerPanelUserRating;
+}
+
 var filterExecutor = null;
 function executeFilterDelayed() {
     if (filterExecutor) {
@@ -290,24 +320,24 @@ function buildFilterTag(tags) {
     return boundingDiv;
 }
 
-function filter_panel_userrating_enabled_check() {
-    var ratingCheck = document.getElementById('filter_panel_userrating_enabled');
-    var minRatingValue = document.getElementById('filter_panel_userrating_min');
-    var maxRatingValue = document.getElementById('filter_panel_userrating_max');
+function filter_panel_range_enabled_check(name) {
+    var ratingCheck = document.getElementById('filter_panel_' + name + '_enabled');
+    var minRatingValue = document.getElementById('filter_panel_' + name + '_min');
+    var maxRatingValue = document.getElementById('filter_panel_' + name + '_max');
 
     if (ratingCheck.checked == false) {
         minRatingValue.value = '';
         maxRatingValue.value = '';
     } else {
-        minRatingValue.value = 0;
-        maxRatingValue.value = 100;
+        minRatingValue.value = minRatingValue.min;
+        maxRatingValue.value = maxRatingValue.max;
     }
 }
 
-function filter_panel_userrating_value() {
-    var ratingCheck = document.getElementById('filter_panel_userrating_enabled');
-    var minRatingValue = document.getElementById('filter_panel_userrating_min');
-    var maxRatingValue = document.getElementById('filter_panel_userrating_max');
+function filter_panel_range_value(name) {
+    var ratingCheck = document.getElementById('filter_panel_' + name + '_enabled');
+    var minRatingValue = document.getElementById('filter_panel_' + name + '_min');
+    var maxRatingValue = document.getElementById('filter_panel_' + name + '_max');
 
     if (minRatingValue.value || maxRatingValue.value) {
         ratingCheck.checked = true;
@@ -327,7 +357,10 @@ function resetFilters() {
     }
 
     // fire checkbox specific scripts
-    filter_panel_userrating_enabled_check();
+    var rangeCheckboxes = document.getElementsByName('filter_panel_range_enabled_check');
+    for (var i = 0; i < rangeCheckboxes.length; i++) {
+        filter_panel_range_enabled_check(rangeCheckboxes[i].getAttribute('data-name'));
+    }
 
     executeFilter1_1();
 }
@@ -399,6 +432,78 @@ function executeFilter1_1(pageNumber, pageSize) {
             setCookie("filter_panel_userrating_enabled", true);
         }
 
+        // user votes
+        var userVotesEnabled = document.getElementById('filter_panel_uservotes_enabled');
+
+        var minUserVotes = -1;
+        var minUserVotesInput = document.getElementById('filter_panel_uservotes_min');
+        if (minUserVotesInput.value) {
+            minUserVotes = minUserVotesInput.value;
+            userVotesEnabled.checked = true;
+        }
+        setCookie(minUserVotesInput.id, minUserVotesInput.value);
+
+        var maxUserVotes = -1;
+        var maxUserVotesInput = document.getElementById('filter_panel_uservotes_max');
+        if (maxUserVotesInput.value) {
+            maxUserVotes = maxUserVotesInput.value;
+            userVotesEnabled.checked = true;
+        }
+        setCookie(maxUserVotesInput.id, maxUserVotesInput.value);
+
+        if (minUserVotes == -1 && maxUserVotes == -1) {
+            userVotesEnabled.checked = false;
+        }
+
+        if (userVotesEnabled.checked == false) {
+            setCookie("filter_panel_uservotes_enabled", false);
+
+            minUserVotes = -1;
+            minUserVotesInput.value = "";
+            setCookie(minUserVotesInput.id, minUserVotesInput.value);
+            maxUserVotes = -1;
+            maxUserVotesInput.value = "";
+            setCookie(maxUserVotesInput.id, maxUserVotesInput.value);
+        } else {
+            setCookie("filter_panel_uservotes_enabled", true);
+        }
+
+        // release year
+        var releaseYearEnabled = document.getElementById('filter_panel_releaseyear_enabled');
+
+        var minReleaseYear = -1;
+        var minReleaseYearInput = document.getElementById('filter_panel_releaseyear_min');
+        if (minReleaseYearInput.value) {
+            minReleaseYear = minReleaseYearInput.value;
+            releaseYearEnabled.checked = true;
+        }
+        setCookie(minReleaseYearInput.id, minReleaseYearInput.value);
+
+        var maxReleaseYear = -1;
+        var maxReleaseYearInput = document.getElementById('filter_panel_releaseyear_max');
+        if (maxReleaseYearInput.value) {
+            maxReleaseYear = maxReleaseYearInput.value;
+            releaseYearEnabled.checked = true;
+        }
+        setCookie(maxReleaseYearInput.id, maxReleaseYearInput.value);
+
+        if (minReleaseYear == -1 && maxReleaseYear == -1) {
+            releaseYearEnabled.checked = false;
+        }
+
+        if (releaseYearEnabled.checked == false) {
+            setCookie("filter_panel_releaseyear_enabled", false);
+
+            minReleaseYear = -1;
+            minReleaseYearInput.value = "";
+            setCookie(minReleaseYearInput.id, minReleaseYearInput.value);
+            maxReleaseYear = -1;
+            maxReleaseYearInput.value = "";
+            setCookie(maxReleaseYearInput.id, maxReleaseYearInput.value);
+        } else {
+            setCookie("filter_panel_releaseyear_enabled", true);
+        }
+
         // save cookies for settings
         GetFilterQuery1_1('settings');
 
@@ -417,11 +522,13 @@ function executeFilter1_1(pageNumber, pageSize) {
             "GameMode": GetFilterQuery1_1('gamemode'),
             "PlayerPerspective": GetFilterQuery1_1('playerperspective'),
             "Theme": GetFilterQuery1_1('theme'),
+            "MinimumReleaseYear": minReleaseYear,
+            "MaximumReleaseYear": maxReleaseYear,
             "GameRating": {
                 "MinimumRating": minUserRating,
-                "MinimumRatingCount": -1,
+                "MinimumRatingCount": minUserVotes,
                 "MaximumRating": maxUserRating,
-                "MaximumRatingCount": -1,
+                "MaximumRatingCount": maxUserVotes,
                 "IncludeUnrated": !userRatingEnabled
             },
             "GameAgeRating": {
