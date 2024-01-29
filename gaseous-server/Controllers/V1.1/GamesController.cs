@@ -141,6 +141,8 @@ namespace gaseous_server.Controllers.v1_1
             public List<string> GameMode { get; set; }
             public List<string> PlayerPerspective { get; set; }
             public List<string> Theme { get; set; }
+            public int MinimumReleaseYear { get; set; } = -1;
+            public int MaximumReleaseYear { get; set; } = -1;
             public GameRatingItem GameRating { get; set; } = new GameRatingItem();
             public GameAgeRatingItem GameAgeRating { get; set; } = new GameAgeRatingItem();
             public GameSortingItem Sorting { get; set; } = new GameSortingItem();
@@ -208,6 +210,20 @@ namespace gaseous_server.Controllers.v1_1
             {
                 string hasSavesTemp = "(RomSavedStates.RomSaveCount IS NOT NULL OR RomGroupSavedStates.MediaGroupSaveCount IS NOT NULL)";
                 whereClauses.Add(hasSavesTemp);
+            }
+
+            if (model.MinimumReleaseYear != -1)
+            {
+                string releaseTempMinVal = "FirstReleaseDate >= @minreleasedate";
+                whereParams.Add("minreleasedate", new DateTime(model.MinimumReleaseYear, 1, 1));
+                havingClauses.Add(releaseTempMinVal);
+            }
+
+            if (model.MaximumReleaseYear != -1)
+            {
+                string releaseTempMaxVal = "FirstReleaseDate <= @maxreleasedate";
+                whereParams.Add("maxreleasedate", new DateTime(model.MaximumReleaseYear, 12, 31, 23, 59, 59));
+                havingClauses.Add(releaseTempMaxVal);
             }
 
             if (model.GameRating != null)
