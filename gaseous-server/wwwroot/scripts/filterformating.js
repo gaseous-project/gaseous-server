@@ -110,16 +110,30 @@ function formatFilterPanel(containerElement, result) {
     // set order by values
     var orderByCookie = getCookie('games_library_orderby_select');
     if (orderByCookie) {
-        document.getElementById('games_library_orderby_select').value = orderByCookie;
+        var orderBySelector = document.getElementById('games_library_orderby_select');
+        $(orderBySelector).select2('destroy');
+        $(orderBySelector).val(orderByCookie).select2();
     }
     var orderByDirectionCookie = getCookie('games_library_orderby_direction_select');
     if (orderByDirectionCookie) {
-        document.getElementById('games_library_orderby_direction_select').value = orderByDirectionCookie;
+        var orderByDirectionSelector = document.getElementById('games_library_orderby_direction_select');
+        $(orderByDirectionSelector).select2('destroy');
+        $(orderByDirectionSelector).val(orderByDirectionCookie).select2();
     }
 
     containerElement.appendChild(targetElement);
 
     containerElement.appendChild(buttonsDiv);
+
+    console.log('Filter generated - execute filter');
+    var pageNumber = undefined;
+    if (getCookie('games_library_last_page') == "") {
+        pageNumber = undefined;
+    } else {
+        pageNumber = Number(getCookie('games_library_last_page'));
+    }
+
+    executeFilter1_1(pageNumber);
 }
 
 function buildFilterPanel(targetElement, headerString, friendlyHeaderString, valueList, showToggle, initialDisplay) {
@@ -381,10 +395,10 @@ function executeFilter1_1(pageNumber, pageSize) {
     var model;
 
     // get order by
-    var orderBy = document.getElementById('games_library_orderby_select').value;
+    var orderBy = $('#games_library_orderby_select').val();
     setCookie('games_library_orderby_select', orderBy);
     var orderByDirection = true;
-    var orderByDirectionSelect = document.getElementById('games_library_orderby_direction_select').value;
+    var orderByDirectionSelect = $('#games_library_orderby_direction_select').val();
     if (orderByDirectionSelect == "Ascending") {
         orderByDirection = true;
     } else {
@@ -553,6 +567,7 @@ function executeFilter1_1(pageNumber, pageSize) {
         'POST',
         function (result) {
             var gameElement = document.getElementById('games_library');
+            setCookie('games_library_last_page', pageNumber);
             formatGamesPanel(gameElement, result, pageNumber, pageSize, true);
         },
         function (error) {
