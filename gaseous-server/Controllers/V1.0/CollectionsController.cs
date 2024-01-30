@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
+using Authentication;
 using gaseous_server.Classes;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 
 namespace gaseous_server.Controllers
@@ -16,6 +18,17 @@ namespace gaseous_server.Controllers
     [Authorize]
     public class CollectionsController : Controller
     {
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+
+        public CollectionsController(
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager)
+        {
+            _userManager = userManager;
+            _signInManager = signInManager;
+        }
+        
         /// <summary>
         /// Gets all ROM collections
         /// </summary>
@@ -24,9 +37,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public List<Classes.Collections.CollectionItem> GetCollections()
+        public async Task<ActionResult> GetCollectionsAsync()
         {
-            return Classes.Collections.GetCollections();
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user != null)
+            {
+                return Ok(Classes.Collections.GetCollections(user.Id));
+            }
+
+            return NotFound();
         }
 
         /// <summary>
@@ -41,18 +61,27 @@ namespace gaseous_server.Controllers
         [Route("{CollectionId}")]
         [ProducesResponseType(typeof(Classes.Collections.CollectionItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GetCollection(long CollectionId, bool Build = false)
+        public async Task<ActionResult> GetCollection(long CollectionId, bool Build = false)
         {
-            try
-            {
-                if (Build == true)
-                {
-                    Classes.Collections.StartCollectionItemBuild(CollectionId);
-                }
+            var user = await _userManager.GetUserAsync(User);
 
-                return Ok(Classes.Collections.GetCollection(CollectionId));
+            if (user != null)
+            {
+                try
+                {
+                    if (Build == true)
+                    {
+                        Classes.Collections.StartCollectionItemBuild(CollectionId, user.Id);
+                    }
+
+                    return Ok(Classes.Collections.GetCollection(CollectionId, user.Id));
+                }
+                catch
+                {
+                    return NotFound();
+                }
             }
-            catch
+            else
             {
                 return NotFound();
             }
@@ -69,14 +98,23 @@ namespace gaseous_server.Controllers
         [Route("{CollectionId}/Roms")]
         [ProducesResponseType(typeof(List<Classes.Collections.CollectionContents.CollectionPlatformItem>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GetCollectionRoms(long CollectionId)
+        public async Task<ActionResult> GetCollectionRoms(long CollectionId)
         {
-            try
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user != null)
             {
-                Classes.Collections.CollectionItem collectionItem = Classes.Collections.GetCollection(CollectionId);
-                return Ok(Classes.Collections.GetCollectionContent(collectionItem));
+                try
+                {
+                    Classes.Collections.CollectionItem collectionItem = Classes.Collections.GetCollection(CollectionId, user.Id);
+                    return Ok(Classes.Collections.GetCollectionContent(collectionItem, user.Id));
+                }
+                catch
+                {
+                    return NotFound();
+                }
             }
-            catch
+            else
             {
                 return NotFound();
             }
@@ -94,15 +132,24 @@ namespace gaseous_server.Controllers
         [Authorize(Roles = "Admin,Gamer")]
         [ProducesResponseType(typeof(List<Classes.Collections.CollectionContents.CollectionPlatformItem>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GetCollectionRomsPreview(Classes.Collections.CollectionItem Item)
+        public async Task<ActionResult> GetCollectionRomsPreview(Classes.Collections.CollectionItem Item)
         {
-            try
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user != null)
             {
-                return Ok(Classes.Collections.GetCollectionContent(Item));
+                try
+                {
+                    return Ok(Classes.Collections.GetCollectionContent(Item, user.Id));
+                }
+                catch (Exception ex)
+                {
+                return NotFound(ex);
+                }
             }
-            catch (Exception ex)
+            else
             {
-               return NotFound(ex);
+                return NotFound();
             }
         }
 
@@ -117,25 +164,34 @@ namespace gaseous_server.Controllers
         [Route("{CollectionId}/Roms/Zip")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GetCollectionRomsZip(long CollectionId)
+        public async Task<ActionResult> GetCollectionRomsZip(long CollectionId)
         {
-            try
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user != null)
             {
-                Classes.Collections.CollectionItem collectionItem = Classes.Collections.GetCollection(CollectionId);
-
-                string ZipFilePath = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, CollectionId + ".zip");
-
-                if (System.IO.File.Exists(ZipFilePath))
+                try
                 {
-                    var stream = new FileStream(ZipFilePath, FileMode.Open);
-                    return File(stream, "application/zip", collectionItem.Name + ".zip");
+                    Classes.Collections.CollectionItem collectionItem = Classes.Collections.GetCollection(CollectionId, user.Id);
+
+                    string ZipFilePath = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, CollectionId + ".zip");
+
+                    if (System.IO.File.Exists(ZipFilePath))
+                    {
+                        var stream = new FileStream(ZipFilePath, FileMode.Open);
+                        return File(stream, "application/zip", collectionItem.Name + ".zip");
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
                 }
-                else
+                catch
                 {
                     return NotFound();
                 }
             }
-            catch
+            else
             {
                 return NotFound();
             }
@@ -152,15 +208,24 @@ namespace gaseous_server.Controllers
         [Authorize(Roles = "Admin,Gamer")]
         [ProducesResponseType(typeof(Classes.Collections.CollectionItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public ActionResult NewCollection(Classes.Collections.CollectionItem Item)
+        public async Task<ActionResult> NewCollectionAsync(Classes.Collections.CollectionItem Item)
         {
-            try
+            var user = await _userManager.GetUserAsync(User);
+            
+            if (user != null)
             {
-                return Ok(Classes.Collections.NewCollection(Item));
+                try
+                {
+                    return Ok(Classes.Collections.NewCollection(Item, user.Id));
+                }
+                catch (Exception ex)
+                {
+                    return BadRequest(ex);
+                }
             }
-            catch (Exception ex)
+            else
             {
-                return BadRequest(ex);
+                return NotFound();
             }
         }
 
@@ -177,13 +242,22 @@ namespace gaseous_server.Controllers
         [Authorize(Roles = "Admin,Gamer")]
         [ProducesResponseType(typeof(Classes.Collections.CollectionItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult EditCollection(long CollectionId, Classes.Collections.CollectionItem Item)
+        public async Task<ActionResult> EditCollection(long CollectionId, Classes.Collections.CollectionItem Item)
         {
-            try
+            var user = await _userManager.GetUserAsync(User);
+            
+            if (user != null)
             {
-                return Ok(Classes.Collections.EditCollection(CollectionId, Item, true));
+                try
+                {
+                    return Ok(Classes.Collections.EditCollection(CollectionId, Item, user.Id, true));
+                }
+                catch
+                {
+                    return NotFound();
+                }
             }
-            catch
+            else
             {
                 return NotFound();
             }
@@ -202,27 +276,36 @@ namespace gaseous_server.Controllers
         [Route("{CollectionId}/AlwaysInclude")]
         [ProducesResponseType(typeof(Classes.Collections.CollectionItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult EditCollectionAlwaysInclude(long CollectionId, [FromQuery]bool Rebuild, [FromBody]Collections.CollectionItem.AlwaysIncludeItem Inclusion)
+        public async Task<ActionResult> EditCollectionAlwaysInclude(long CollectionId, [FromQuery]bool Rebuild, [FromBody]Collections.CollectionItem.AlwaysIncludeItem Inclusion)
         {
-            try
+            var user = await _userManager.GetUserAsync(User);
+            
+            if (user != null)
             {
-                Collections.CollectionItem collectionItem = Classes.Collections.GetCollection(CollectionId);
-                bool ItemFound = false;
-                foreach (Collections.CollectionItem.AlwaysIncludeItem includeItem in collectionItem.AlwaysInclude)
+                try
                 {
-                    if (includeItem.PlatformId == Inclusion.PlatformId && includeItem.GameId == Inclusion.GameId)
+                    Collections.CollectionItem collectionItem = Classes.Collections.GetCollection(CollectionId, user.Id);
+                    bool ItemFound = false;
+                    foreach (Collections.CollectionItem.AlwaysIncludeItem includeItem in collectionItem.AlwaysInclude)
                     {
-                        ItemFound = true;
+                        if (includeItem.PlatformId == Inclusion.PlatformId && includeItem.GameId == Inclusion.GameId)
+                        {
+                            ItemFound = true;
+                        }
                     }
-                }
-                if (ItemFound == false)
-                {
-                    collectionItem.AlwaysInclude.Add(Inclusion);
-                }
+                    if (ItemFound == false)
+                    {
+                        collectionItem.AlwaysInclude.Add(Inclusion);
+                    }
 
-                return Ok(Classes.Collections.EditCollection(CollectionId, collectionItem, Rebuild));
+                    return Ok(Classes.Collections.EditCollection(CollectionId, collectionItem, user.Id, Rebuild));
+                }
+                catch
+                {
+                    return NotFound();
+                }
             }
-            catch
+            else
             {
                 return NotFound();
             }
@@ -239,14 +322,23 @@ namespace gaseous_server.Controllers
         [Route("{CollectionId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult DeleteCollection(long CollectionId)
+        public async Task<ActionResult> DeleteCollection(long CollectionId)
         {
-            try
+            var user = await _userManager.GetUserAsync(User);
+            
+            if (user != null)
             {
-                Classes.Collections.DeleteCollection(CollectionId);
-                return Ok();
+                try
+                {
+                    Classes.Collections.DeleteCollection(CollectionId, user.Id);
+                    return Ok();
+                }
+                catch
+                {
+                    return NotFound();
+                }
             }
-            catch
+            else
             {
                 return NotFound();
             }

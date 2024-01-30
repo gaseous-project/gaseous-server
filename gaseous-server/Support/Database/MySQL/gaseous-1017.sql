@@ -1,0 +1,4 @@
+ALTER TABLE `RomCollections` 
+ADD COLUMN `OwnedBy` VARCHAR(45) NULL,
+ADD COLUMN `AgeGroup` INT NULL,
+ADD COLUMN `AgeGroupUnclassified` BOOLEAN NULL;

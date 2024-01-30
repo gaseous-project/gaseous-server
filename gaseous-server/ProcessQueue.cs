@@ -334,7 +334,8 @@ namespace gaseous_server
 
                                 case QueueItemType.CollectionCompiler:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Collection Compiler");
-                                    Classes.Collections.CompileCollections((long)Options);
+                                    Dictionary<string, object> collectionOptions = (Dictionary<string, object>)Options;
+                                    Classes.Collections.CompileCollections((long)collectionOptions["Id"], (string)collectionOptions["UserId"]);
                                     break;
 
                                 case QueueItemType.MediaGroupCompiler:

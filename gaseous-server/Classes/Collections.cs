@@ -7,33 +7,26 @@ using System.Security.Cryptography;
 using Authentication;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
+using gaseous_server.Controllers.v1_1;
 using gaseous_server.Models;
 using IGDB.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;
 using SharpCompress.Common;
+using static gaseous_server.Classes.Metadata.Games;
 
 namespace gaseous_server.Classes
 {
 	public class Collections
 	{
-        private readonly UserManager<ApplicationUser> _userManager;
-        private readonly SignInManager<ApplicationUser> _signInManager;
-
-		public Collections(
-            UserManager<ApplicationUser> userManager,
-            SignInManager<ApplicationUser> signInManager)
-        {
-            _userManager = userManager;
-            _signInManager = signInManager;
-        }
-
-        public static List<CollectionItem> GetCollections() {
+        public static List<CollectionItem> GetCollections(string userid) {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM RomCollections ORDER BY `Name`";
-
-            DataTable data = db.ExecuteCMD(sql);
+            string sql = "SELECT * FROM RomCollections WHERE OwnedBy=@ownedby ORDER BY `Name`";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>{
+                { "ownedby", userid }
+            };
+            DataTable data = db.ExecuteCMD(sql, dbDict);
 
             List<CollectionItem> collectionItems = new List<CollectionItem>();
 
@@ -44,11 +37,24 @@ namespace gaseous_server.Classes
             return collectionItems;
         }
 
-        public static CollectionItem GetCollection(long Id) {
+        public static CollectionItem GetCollection(long Id, string userid) {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "SELECT * FROM RomCollections WHERE Id = @id ORDER BY `Name`";
-			Dictionary<string, object> dbDict = new Dictionary<string, object>();
-			dbDict.Add("id", Id);
+			string sql;
+            if (userid == "")
+            {
+                // reserved for internal operations
+                sql = "SELECT * FROM RomCollections WHERE Id = @id ORDER BY `Name`";
+            }
+            else
+            {
+                // instigated by a user
+                sql = "SELECT * FROM RomCollections WHERE Id = @id AND OwnedBy = @ownedby ORDER BY `Name`";
+            }
+			Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "id", Id },
+                { "ownedby", userid }
+            };
 			DataTable romDT = db.ExecuteCMD(sql, dbDict);
 
 			if (romDT.Rows.Count > 0)
@@ -64,60 +70,66 @@ namespace gaseous_server.Classes
 			}
         }
 
-        public static CollectionItem NewCollection(CollectionItem item)
+        public static CollectionItem NewCollection(CollectionItem item, string userid)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "INSERT INTO RomCollections (`Name`, Description, Platforms, Genres, Players, PlayerPerspectives, Themes, MinimumRating, MaximumRating, MaximumRomsPerPlatform, MaximumBytesPerPlatform, MaximumCollectionSizeInBytes, FolderStructure, IncludeBIOSFiles, ArchiveType, AlwaysInclude, BuiltStatus) VALUES (@name, @description, @platforms, @genres, @players, @playerperspectives, @themes, @minimumrating, @maximumrating, @maximumromsperplatform, @maximumbytesperplatform, @maximumcollectionsizeinbytes, @folderstructure, @includebiosfiles, @archivetype, @alwaysinclude, @builtstatus); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
-            dbDict.Add("name", item.Name);
-            dbDict.Add("description", item.Description);
-            dbDict.Add("platforms", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Platforms, new List<long>())));
-            dbDict.Add("genres", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Genres, new List<long>())));
-            dbDict.Add("players", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Players, new List<long>())));
-            dbDict.Add("playerperspectives", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.PlayerPerspectives, new List<long>())));
-            dbDict.Add("themes", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Themes, new List<long>())));
-            dbDict.Add("minimumrating", Common.ReturnValueIfNull(item.MinimumRating, -1));
-            dbDict.Add("maximumrating", Common.ReturnValueIfNull(item.MaximumRating, -1));
-            dbDict.Add("maximumromsperplatform", Common.ReturnValueIfNull(item.MaximumRomsPerPlatform, -1));
-            dbDict.Add("maximumbytesperplatform", Common.ReturnValueIfNull(item.MaximumBytesPerPlatform, -1));
-            dbDict.Add("maximumcollectionsizeinbytes", Common.ReturnValueIfNull(item.MaximumCollectionSizeInBytes, -1));
-            dbDict.Add("folderstructure", Common.ReturnValueIfNull(item.FolderStructure, CollectionItem.FolderStructures.Gaseous));
-            dbDict.Add("includebiosfiles", Common.ReturnValueIfNull(item.IncludeBIOSFiles, 0));
-            dbDict.Add("archivetype", Common.ReturnValueIfNull(item.ArchiveType, CollectionItem.ArchiveTypes.Zip));
-            dbDict.Add("alwaysinclude", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.AlwaysInclude, new List<CollectionItem.AlwaysIncludeItem>())));
-            dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.WaitingForBuild);
+            string sql = "INSERT INTO RomCollections (`Name`, Description, Platforms, Genres, Players, PlayerPerspectives, Themes, MinimumRating, MaximumRating, MaximumRomsPerPlatform, MaximumBytesPerPlatform, MaximumCollectionSizeInBytes, FolderStructure, IncludeBIOSFiles, ArchiveType, AlwaysInclude, BuiltStatus, OwnedBy) VALUES (@name, @description, @platforms, @genres, @players, @playerperspectives, @themes, @minimumrating, @maximumrating, @maximumromsperplatform, @maximumbytesperplatform, @maximumcollectionsizeinbytes, @folderstructure, @includebiosfiles, @archivetype, @alwaysinclude, @builtstatus, @ownedby); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "name", item.Name },
+                { "description", item.Description },
+                { "platforms", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Platforms, new List<long>())) },
+                { "genres", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Genres, new List<long>())) },
+                { "players", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Players, new List<long>())) },
+                { "playerperspectives", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.PlayerPerspectives, new List<long>())) },
+                { "themes", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Themes, new List<long>())) },
+                { "minimumrating", Common.ReturnValueIfNull(item.MinimumRating, -1) },
+                { "maximumrating", Common.ReturnValueIfNull(item.MaximumRating, -1) },
+                { "maximumromsperplatform", Common.ReturnValueIfNull(item.MaximumRomsPerPlatform, -1) },
+                { "maximumbytesperplatform", Common.ReturnValueIfNull(item.MaximumBytesPerPlatform, -1) },
+                { "maximumcollectionsizeinbytes", Common.ReturnValueIfNull(item.MaximumCollectionSizeInBytes, -1) },
+                { "folderstructure", Common.ReturnValueIfNull(item.FolderStructure, CollectionItem.FolderStructures.Gaseous) },
+                { "includebiosfiles", Common.ReturnValueIfNull(item.IncludeBIOSFiles, 0) },
+                { "archivetype", Common.ReturnValueIfNull(item.ArchiveType, CollectionItem.ArchiveTypes.Zip) },
+                { "alwaysinclude", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.AlwaysInclude, new List<CollectionItem.AlwaysIncludeItem>())) },
+                { "builtstatus", CollectionItem.CollectionBuildStatus.WaitingForBuild },
+                { "ownedby", userid }
+            };
             DataTable romDT = db.ExecuteCMD(sql, dbDict);
             long CollectionId = (long)romDT.Rows[0][0];
 
-            CollectionItem collectionItem = GetCollection(CollectionId);
+            CollectionItem collectionItem = GetCollection(CollectionId, userid);
 
-            StartCollectionItemBuild(CollectionId);
+            StartCollectionItemBuild(CollectionId, userid);
 
             return collectionItem;
         }
 
-        public static CollectionItem EditCollection(long Id, CollectionItem item, bool ForceRebuild = true)
+        public static CollectionItem EditCollection(long Id, CollectionItem item, string userid, bool ForceRebuild = true)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "UPDATE RomCollections SET `Name`=@name, Description=@description, Platforms=@platforms, Genres=@genres, Players=@players, PlayerPerspectives=@playerperspectives, Themes=@themes, MinimumRating=@minimumrating, MaximumRating=@maximumrating, MaximumRomsPerPlatform=@maximumromsperplatform, MaximumBytesPerPlatform=@maximumbytesperplatform, MaximumCollectionSizeInBytes=@maximumcollectionsizeinbytes, FolderStructure=@folderstructure, IncludeBIOSFiles=@includebiosfiles, ArchiveType=@archivetype, AlwaysInclude=@alwaysinclude, BuiltStatus=@builtstatus WHERE Id=@id";
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
-            dbDict.Add("id", Id);
-            dbDict.Add("name", item.Name);
-            dbDict.Add("description", item.Description);
-            dbDict.Add("platforms", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Platforms, new List<long>())));
-            dbDict.Add("genres", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Genres, new List<long>())));
-            dbDict.Add("players", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Players, new List<long>())));
-            dbDict.Add("playerperspectives", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.PlayerPerspectives, new List<long>())));
-            dbDict.Add("themes", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Themes, new List<long>())));
-            dbDict.Add("minimumrating", Common.ReturnValueIfNull(item.MinimumRating, -1));
-            dbDict.Add("maximumrating", Common.ReturnValueIfNull(item.MaximumRating, -1));
-            dbDict.Add("maximumromsperplatform", Common.ReturnValueIfNull(item.MaximumRomsPerPlatform, -1));
-            dbDict.Add("maximumbytesperplatform", Common.ReturnValueIfNull(item.MaximumBytesPerPlatform, -1));
-            dbDict.Add("maximumcollectionsizeinbytes", Common.ReturnValueIfNull(item.MaximumCollectionSizeInBytes, -1));
-            dbDict.Add("folderstructure", Common.ReturnValueIfNull(item.FolderStructure, CollectionItem.FolderStructures.Gaseous));
-            dbDict.Add("includebiosfiles", Common.ReturnValueIfNull(item.IncludeBIOSFiles, 0));
-            dbDict.Add("alwaysinclude", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.AlwaysInclude, new List<CollectionItem.AlwaysIncludeItem>())));
-            dbDict.Add("archivetype", Common.ReturnValueIfNull(item.ArchiveType, CollectionItem.ArchiveTypes.Zip));
+            string sql = "UPDATE RomCollections SET `Name`=@name, Description=@description, Platforms=@platforms, Genres=@genres, Players=@players, PlayerPerspectives=@playerperspectives, Themes=@themes, MinimumRating=@minimumrating, MaximumRating=@maximumrating, MaximumRomsPerPlatform=@maximumromsperplatform, MaximumBytesPerPlatform=@maximumbytesperplatform, MaximumCollectionSizeInBytes=@maximumcollectionsizeinbytes, FolderStructure=@folderstructure, IncludeBIOSFiles=@includebiosfiles, ArchiveType=@archivetype, AlwaysInclude=@alwaysinclude, BuiltStatus=@builtstatus WHERE Id=@id AND OwnedBy=@ownedby";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "id", Id },
+                { "name", item.Name },
+                { "description", item.Description },
+                { "platforms", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Platforms, new List<long>())) },
+                { "genres", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Genres, new List<long>())) },
+                { "players", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Players, new List<long>())) },
+                { "playerperspectives", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.PlayerPerspectives, new List<long>())) },
+                { "themes", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.Themes, new List<long>())) },
+                { "minimumrating", Common.ReturnValueIfNull(item.MinimumRating, -1) },
+                { "maximumrating", Common.ReturnValueIfNull(item.MaximumRating, -1) },
+                { "maximumromsperplatform", Common.ReturnValueIfNull(item.MaximumRomsPerPlatform, -1) },
+                { "maximumbytesperplatform", Common.ReturnValueIfNull(item.MaximumBytesPerPlatform, -1) },
+                { "maximumcollectionsizeinbytes", Common.ReturnValueIfNull(item.MaximumCollectionSizeInBytes, -1) },
+                { "folderstructure", Common.ReturnValueIfNull(item.FolderStructure, CollectionItem.FolderStructures.Gaseous) },
+                { "includebiosfiles", Common.ReturnValueIfNull(item.IncludeBIOSFiles, 0) },
+                { "alwaysinclude", Newtonsoft.Json.JsonConvert.SerializeObject(Common.ReturnValueIfNull(item.AlwaysInclude, new List<CollectionItem.AlwaysIncludeItem>())) },
+                { "archivetype", Common.ReturnValueIfNull(item.ArchiveType, CollectionItem.ArchiveTypes.Zip) },
+                { "ownedby", userid }
+            };
             
             string CollectionZipFile = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, Id + item.ArchiveExtension);
             if (ForceRebuild == true) 
@@ -142,22 +154,25 @@ namespace gaseous_server.Classes
             }
             db.ExecuteCMD(sql, dbDict);
             
-            CollectionItem collectionItem = GetCollection(Id);
+            CollectionItem collectionItem = GetCollection(Id, userid);
 
             if (collectionItem.BuildStatus == CollectionItem.CollectionBuildStatus.WaitingForBuild)
             {
-                StartCollectionItemBuild(Id);
+                StartCollectionItemBuild(Id, userid);
             }
 
             return collectionItem;
         }
 
-        public static void DeleteCollection(long Id)
+        public static void DeleteCollection(long Id, string userid)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "DELETE FROM RomCollections WHERE Id=@id";
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
-            dbDict.Add("id", Id);
+            string sql = "DELETE FROM RomCollections WHERE Id=@id AND OwnedBy=@ownedby";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "id", Id },
+                { "ownedby", userid }
+            };
             db.ExecuteCMD(sql, dbDict);
 
             string CollectionZipFile = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, Id + ".zip");
@@ -167,9 +182,10 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static void StartCollectionItemBuild(long Id)
+        public static void StartCollectionItemBuild(long Id, string userid)
         {
-            CollectionItem collectionItem = GetCollection(Id);
+            // send blank user id to getcollection as this is not a user initiated process
+            CollectionItem collectionItem = GetCollection(Id, userid);
 
             if (collectionItem.BuildStatus != CollectionItem.CollectionBuildStatus.Building)
             {
@@ -183,13 +199,40 @@ namespace gaseous_server.Classes
 
                 // start background task
                 ProcessQueue.QueueItem queueItem = new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.CollectionCompiler, 1, false, true);
-                queueItem.Options = Id;
+                queueItem.Options = new Dictionary<string, object>{
+                    { "Id", Id },
+                    { "UserId", userid }
+                };
                 queueItem.ForceExecute();
                 ProcessQueue.QueueItems.Add(queueItem);
             }
         }
 
-        public static CollectionContents GetCollectionContent(CollectionItem collectionItem) {
+        public static CollectionContents GetCollectionContent(CollectionItem collectionItem, string userid) {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
+            // get age ratings for specified user
+            List<AgeGroups.AgeRestrictionGroupings> UserAgeGroupings = new List<AgeGroups.AgeRestrictionGroupings>();
+            bool UserAgeGroupIncludeUnrated = true;
+            if (userid != "")
+            {
+                Authentication.UserTable<Authentication.ApplicationUser> userTable = new UserTable<ApplicationUser>(db);
+                var user = userTable.GetUserById(userid);
+
+                if (user.SecurityProfile.AgeRestrictionPolicy.IncludeUnrated == false)
+                {
+                    UserAgeGroupIncludeUnrated = false;
+                }
+
+                foreach (AgeGroups.AgeRestrictionGroupings ageGrouping in Enum.GetValues(typeof(AgeGroups.AgeRestrictionGroupings)))
+                {
+                    if (ageGrouping <= user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction && ageGrouping != AgeGroups.AgeRestrictionGroupings.Unclassified)
+                    {
+                        UserAgeGroupings.Add(ageGrouping);
+                    }
+                }
+            }
+
             List<CollectionContents.CollectionPlatformItem> collectionPlatformItems = new List<CollectionContents.CollectionPlatformItem>();
 
             // get platforms
@@ -230,6 +273,10 @@ namespace gaseous_server.Classes
                 }
             }
 
+            // age ratings
+            AgeGroups.AgeRestrictionGroupings AgeGrouping = AgeGroups.AgeRestrictionGroupings.Unclassified;
+            bool ContainsUnclassifiedAgeGroup = false;
+
             // build collection
             List<CollectionContents.CollectionPlatformItem> platformItems = new List<CollectionContents.CollectionPlatformItem>();
 
@@ -247,18 +294,29 @@ namespace gaseous_server.Classes
                     isDynamic = true;
                 }
 
-                List<Game> games = new List<Game>();
+                Controllers.v1_1.GamesController.GameReturnPackage games = new Controllers.v1_1.GamesController.GameReturnPackage();
                 if (isDynamic == true)
                 {
-                    games = GamesController.GetGames("",
-                        platform.Id.ToString(),
-                        string.Join(",", collectionItem.Genres),
-                        string.Join(",", collectionItem.Players),
-                        string.Join(",", collectionItem.PlayerPerspectives),
-                        string.Join(",", collectionItem.Themes),
-                        collectionItem.MinimumRating,
-                        collectionItem.MaximumRating
-                    );
+                    Controllers.v1_1.GamesController.GameSearchModel searchModel = new Controllers.v1_1.GamesController.GameSearchModel{
+                        Name = "",
+                        Platform = new List<string>{
+                            platform.Id.ToString()
+                        },
+                        Genre = collectionItem.Genres.ConvertAll(s => s.ToString()),
+                        GameMode = collectionItem.Players.ConvertAll(s => s.ToString()),
+                        PlayerPerspective = collectionItem.PlayerPerspectives.ConvertAll(s => s.ToString()),
+                        Theme = collectionItem.Themes.ConvertAll(s => s.ToString()),
+                        GameRating = new Controllers.v1_1.GamesController.GameSearchModel.GameRatingItem{
+                            MinimumRating = collectionItem.MinimumRating,
+                            MaximumRating = collectionItem.MaximumRating
+                        },
+                        GameAgeRating = new Controllers.v1_1.GamesController.GameSearchModel.GameAgeRatingItem{
+                            AgeGroupings = UserAgeGroupings,
+                            IncludeUnrated = UserAgeGroupIncludeUnrated
+                        }
+                    };
+                    games = Controllers.v1_1.GamesController.GetGames(searchModel, userid);
+                    
                 }
 
                 CollectionContents.CollectionPlatformItem collectionPlatformItem = new CollectionContents.CollectionPlatformItem(platform);
@@ -274,7 +332,7 @@ namespace gaseous_server.Classes
                         ) && alwaysIncludeItem.PlatformId == platform.Id
                         ) 
                         {
-                            Game AlwaysIncludeGame = Games.GetGame(alwaysIncludeItem.GameId, false, false, false);
+                            MinimalGameItem AlwaysIncludeGame = new MinimalGameItem(Games.GetGame(alwaysIncludeItem.GameId, false, false, false));
                             CollectionContents.CollectionPlatformItem.CollectionGameItem gameItem = new CollectionContents.CollectionPlatformItem.CollectionGameItem(AlwaysIncludeGame);
                             gameItem.InclusionStatus = new CollectionItem.AlwaysIncludeItem();
                             gameItem.InclusionStatus.PlatformId = alwaysIncludeItem.PlatformId;
@@ -286,7 +344,7 @@ namespace gaseous_server.Classes
                     }
                 }
 
-                foreach (Game game in games) {
+                foreach (MinimalGameItem game in games.Games) {
                     bool gameAlreadyInList = false;
                     foreach (CollectionContents.CollectionPlatformItem.CollectionGameItem existingGame in collectionPlatformItem.Games) 
                     {
@@ -341,6 +399,17 @@ namespace gaseous_server.Classes
                             }
                         }
                     }
+
+                    // handle age grouping
+                    AgeGroups.AgeRestrictionGroupings CurrentAgeGroup = AgeGroups.GetAgeGroupFromAgeRatings(game.AgeRatings);
+                    if (CurrentAgeGroup > AgeGrouping)
+                    {
+                        AgeGrouping = CurrentAgeGroup;
+                    }
+                    if (CurrentAgeGroup == AgeGroups.AgeRestrictionGroupings.Unclassified)
+                    {
+                        ContainsUnclassifiedAgeGroup = true;
+                    }
                 }
 
                 collectionPlatformItem.Games.Sort((x, y) => x.Name.CompareTo(y.Name));
@@ -369,29 +438,39 @@ namespace gaseous_server.Classes
 
             collectionPlatformItems.Sort((x, y) => x.Name.CompareTo(y.Name));
 
-            CollectionContents collectionContents = new CollectionContents();
-            collectionContents.Collection = collectionPlatformItems;
+            CollectionContents collectionContents = new CollectionContents
+            {
+                Collection = collectionPlatformItems,
+                AgeGroup = AgeGrouping,
+                ContainsUnclassifiedAgeGroup = ContainsUnclassifiedAgeGroup
+            };
 
             return collectionContents;
         }
 
-        public static void CompileCollections(long CollectionId)
+        public static void CompileCollections(long CollectionId, string userid)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
-            CollectionItem collectionItem = GetCollection(CollectionId);
+            CollectionItem collectionItem = GetCollection(CollectionId, userid);
             if (collectionItem.BuildStatus == CollectionItem.CollectionBuildStatus.WaitingForBuild)
             {
                 Logging.Log(Logging.LogType.Information, "Collections", "Beginning build of collection: " + collectionItem.Name);
 
-                // set starting
-                string sql = "UPDATE RomCollections SET BuiltStatus=@bs WHERE Id=@id";
-                Dictionary<string, object> dbDict = new Dictionary<string, object>();
-                dbDict.Add("id", collectionItem.Id);
-                dbDict.Add("bs", CollectionItem.CollectionBuildStatus.Building);
-                db.ExecuteCMD(sql, dbDict);
+                CollectionContents collectionContents = GetCollectionContent(collectionItem, userid);
 
-                List<CollectionContents.CollectionPlatformItem> collectionPlatformItems = GetCollectionContent(collectionItem).Collection;
+                // set starting
+                string sql = "UPDATE RomCollections SET BuiltStatus=@bs, AgeGroup=@ag, AgeGroupUnclassified=@agu WHERE Id=@id";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>
+                {
+                    { "id", collectionItem.Id },
+                    { "bs", CollectionItem.CollectionBuildStatus.Building },
+                    { "ag", collectionContents.AgeGroup },
+                    { "agu", collectionContents.ContainsUnclassifiedAgeGroup }
+                };
+                db.ExecuteCMD(sql, dbDict);
+                
+                List<CollectionContents.CollectionPlatformItem> collectionPlatformItems = collectionContents.Collection;
                 string ZipFilePath = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, collectionItem.Id + collectionItem.ArchiveExtension);
                 string ZipFileTempPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, collectionItem.Id.ToString());
 
@@ -758,6 +837,9 @@ namespace gaseous_server.Classes
                 }
             }
 
+            public AgeGroups.AgeRestrictionGroupings AgeGroup { get; set; }
+            public bool ContainsUnclassifiedAgeGroup { get; set; }
+
             public class CollectionPlatformItem {
                 public CollectionPlatformItem(IGDB.Models.Platform platform) {
                     string[] PropertyWhitelist = new string[] { "Id", "Name", "Slug" };
@@ -808,48 +890,43 @@ namespace gaseous_server.Classes
                     }
                 }
 
-                public class CollectionGameItem {
-                    public CollectionGameItem(IGDB.Models.Game game) {
-                        string[] PropertyWhitelist = new string[] { "Id", "Name", "Slug", "Cover" };
-                        PropertyInfo[] srcProperties = typeof(IGDB.Models.Game).GetProperties();
-                        PropertyInfo[] dstProperties = typeof(CollectionPlatformItem.CollectionGameItem).GetProperties();
-                        foreach (PropertyInfo srcProperty in srcProperties) {
-                            if (PropertyWhitelist.Contains<string>(srcProperty.Name))
+                public class CollectionGameItem : MinimalGameItem
+                {
+                    public CollectionGameItem(MinimalGameItem gameObject)
+                    {
+                        this.Id = gameObject.Id;
+                        this.Name = gameObject.Name;
+                        this.Slug = gameObject.Slug;
+                        this.TotalRating = gameObject.TotalRating;
+                        this.TotalRatingCount = gameObject.TotalRatingCount;
+                        this.Cover = gameObject.Cover;
+                        this.Artworks = gameObject.Artworks;
+                        this.FirstReleaseDate = gameObject.FirstReleaseDate;
+                        this.AgeRatings = gameObject.AgeRatings;
+                    }
+                    
+                    public IGDB.Models.Cover? CoverItem
+                    {
+                        get
+                        {
+                            if (Cover != null)
                             {
-                                foreach (PropertyInfo dstProperty in dstProperties)
-                                {
-                                    if (srcProperty.Name == dstProperty.Name)
-                                    {
-                                        if (srcProperty.GetValue(game) != null) {
-                                            string compareName = srcProperty.PropertyType.Name.ToLower().Split("`")[0];
-                                            switch(compareName) {
-                                                case "identityorvalue":
-                                                    string newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(srcProperty.GetValue(game));
-                                                    Dictionary<string, object> newDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(newObjectValue);
-                                                    dstProperty.SetValue(this, newDict["Id"]);
-                                                    break;
-                                                default:
-                                                    dstProperty.SetValue(this, srcProperty.GetValue(game));
-                                                    break;
-                                            }
-                                        }
-                                    }
-                                }
+                                IGDB.Models.Cover cover = Covers.GetCover(Cover.Id, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory, "Games", Slug), false);
+
+                                return cover;
+                            }
+                            else
+                            {
+                                return null;
                             }
                         }
                     }
 
-                    public long Id { get; set; }
-                    public string Name { get; set; }
-                    public string Slug { get; set; }
-                    public long Cover { get; set;}
-                    public IGDB.Models.Cover CoverItem
-                    {
+                    public AgeGroups.AgeRestrictionGroupings AgeGrouping
+                    { 
                         get
                         {
-                            IGDB.Models.Cover cover = Covers.GetCover(Cover, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory, "Games", Slug), false);
-
-                            return cover;
+                            return AgeGroups.GetAgeGroupFromAgeRatings(this.AgeRatings);
                         }
                     }
 

@@ -474,6 +474,7 @@ SELECT DISTINCT
     Game.Id,
     Game.`Name`,
     Game.NameThe,
+    Game.Slug,
     Game.PlatformId,
     Game.TotalRating,
     Game.TotalRatingCount,
@@ -543,9 +544,12 @@ FROM
             int pageOffset = pageSize * (pageNumber - 1);
             for (int i = pageOffset; i < dbResponse.Rows.Count; i++)
             {
-                if (i >= (pageOffset + pageSize))
+                if (pageNumber != 0 && pageSize != 0)
                 {
-                    break;
+                    if (i >= (pageOffset + pageSize))
+                    {
+                        break;
+                    }
                 }
 
                 Game retGame = Storage.BuildCacheObject<Game>(new Game() , dbResponse.Rows[i]);

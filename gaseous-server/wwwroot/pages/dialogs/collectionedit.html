@@ -59,7 +59,7 @@
                 <tr>
                     <th>Directory Layout</th>
                     <td>
-                        <select id="collection_directorylayout" style="width: 100%;" onchange="DisplayDirectoryLabel();">
+                        <select id="collection_directorylayout" style="width: 100%;" data-minimum-results-for-search="Infinity" onchange="DisplayDirectoryLabel();">
                             <option id="collection_directorylayout_gaseous" selected="selected" value="Gaseous">Standard</option>
                             <option id="collection_directorylayout_retropie" value="RetroPie">RetroPie</option>
                         </select>
@@ -85,7 +85,7 @@
                         Include BIOS files (if available)
                     </th>
                     <td>
-                        <select id="collection_includebios" style="width: 100%;">
+                        <select id="collection_includebios" style="width: 100%;" data-minimum-results-for-search="Infinity">
                             <option id="collection_includebios_yes" selected="selected" value="true">Yes</option>
                             <option id="collection_includebios_no" value="false">No</option>
                         </select>
@@ -589,11 +589,11 @@
                     gameCoverCell.className = 'collections_preview_gamecovercell';
                     
                     var gameImage = document.createElement('img');
-                    gameImage.className = 'game_tile_image game_tile_image_small';
+                    gameImage.className = 'game_tile_image game_tile_image_small lazy';
+                    gameImage.src = '/images/unknowngame.png';
                     if (gameItem.cover) {
-                        gameImage.src = '/api/v1.1/Games/' + gameItem.id + '/cover/image/cover_small/' + gameItem.coverItem.imageId + '.jpg';
+                        gameImage.setAttribute('data-src', '/api/v1.1/Games/' + gameItem.id + '/cover/image/cover_small/' + gameItem.coverItem.imageId + '.jpg');
                     } else {
-                        gameImage.src = '/images/unknowngame.png';
                         gameImage.className = 'game_tile_image game_tile_image_small unknown';
                     }
                     gameCoverCell.appendChild(gameImage);
@@ -626,6 +626,13 @@
             var collectionSize = document.getElementById('collectionedit_previewbox_size');
             collectionSize.innerHTML = "Estimated uncompressed collection size: " + formatBytes(data.collectionProjectedSizeBytes);
         }
+
+        $('#collectionedit_previewbox .lazy').Lazy({
+            scrollDirection: 'vertical',
+            effect: 'fadeIn',
+            visibleOnly: true,
+            appendScroll: $('#collectionedit_previewbox')
+        });
     }
 
     function DisplayFormattedBytes(inputElement, labelElement) {
