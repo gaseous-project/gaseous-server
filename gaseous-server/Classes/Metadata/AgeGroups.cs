@@ -72,32 +72,7 @@ namespace gaseous_server.Classes.Metadata
                         }
 
                         // compile the ratings values into the ratings groups
-                        AgeRestrictionGroupings highestAgeGroup = AgeRestrictionGroupings.Unclassified;
-                        foreach (AgeRating ageRating in ageRatings)
-                        {
-                            foreach (KeyValuePair<AgeRestrictionGroupings, AgeGroupItem> ageGroupItem in AgeGroupingsFlat)
-                            {
-                                
-                                PropertyInfo[] groupProps = typeof(AgeGroupItem).GetProperties();
-                                foreach (PropertyInfo property in groupProps)
-                                {
-                                    if (RatingsBoards.Contains(property.Name))
-                                    {
-                                        List<AgeRatingTitle> ratingBoard = (List<AgeRatingTitle>)property.GetValue(ageGroupItem.Value);
-                                        foreach (AgeRatingTitle ratingTitle in ratingBoard)
-                                        {
-                                            if (ageRating.Rating == ratingTitle)
-                                            {
-                                                if (highestAgeGroup < ageGroupItem.Key)
-                                                {
-                                                    highestAgeGroup = ageGroupItem.Key;
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        AgeRestrictionGroupings highestAgeGroup = GetAgeGroupFromAgeRatings(ageRatings);
                         
                         // return the compiled ratings group
                         AgeGroup ageGroup = new AgeGroup();
@@ -136,6 +111,39 @@ namespace gaseous_server.Classes.Metadata
             }
             
             return null;
+        }
+
+        public static AgeRestrictionGroupings GetAgeGroupFromAgeRatings(List<AgeRating> ageRatings)
+        {
+            // compile the ratings values into the ratings groups
+            AgeRestrictionGroupings highestAgeGroup = AgeRestrictionGroupings.Unclassified;
+            foreach (AgeRating ageRating in ageRatings)
+            {
+                foreach (KeyValuePair<AgeRestrictionGroupings, AgeGroupItem> ageGroupItem in AgeGroupingsFlat)
+                {
+                    
+                    PropertyInfo[] groupProps = typeof(AgeGroupItem).GetProperties();
+                    foreach (PropertyInfo property in groupProps)
+                    {
+                        if (RatingsBoards.Contains(property.Name))
+                        {
+                            List<AgeRatingTitle> ratingBoard = (List<AgeRatingTitle>)property.GetValue(ageGroupItem.Value);
+                            foreach (AgeRatingTitle ratingTitle in ratingBoard)
+                            {
+                                if (ageRating.Rating == ratingTitle)
+                                {
+                                    if (highestAgeGroup < ageGroupItem.Key)
+                                    {
+                                        highestAgeGroup = ageGroupItem.Key;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return highestAgeGroup;
         }
 
         public class AgeGroup
