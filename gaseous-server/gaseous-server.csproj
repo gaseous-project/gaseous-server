@@ -22,7 +22,7 @@
     <PackageReference Include="gaseous.IGDB" Version="1.0.1" />
     <PackageReference Include="hasheous-client" Version="0.1.0" />
     <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="13.5.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="7.0.13" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="7.0.15" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning" Version="5.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Versioning.ApiExplorer" Version="5.1.0" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="7.0.12" />
