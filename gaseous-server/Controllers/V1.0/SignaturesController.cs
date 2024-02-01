@@ -8,6 +8,7 @@ using gaseous_server.Classes;
 using gaseous_signature_parser.models.RomSignatureObject;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 
 // For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 

@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Razor.Hosting;
 using RestEase;
+using Asp.Versioning;
 
 namespace gaseous_server.Controllers
 {

@@ -12,7 +12,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NuGet.Common;
 using static gaseous_server.Classes.Metadata.Games;
-
+using Asp.Versioning;
 
 namespace gaseous_server.Controllers
 {
