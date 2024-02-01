@@ -1,13 +1,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
+ARG TARGETARCH
 WORKDIR /App
 EXPOSE 80
 
 # Copy everything
 COPY . ./
 # Restore as distinct layers
-RUN dotnet restore "gaseous-server/gaseous-server.csproj"
+RUN dotnet restore "gaseous-server/gaseous-server.csproj" -a $TARGETARCH
 # Build and publish a release
-RUN dotnet publish "gaseous-server/gaseous-server.csproj" --use-current-runtime --self-contained false -c Release -o out
+RUN dotnet publish "gaseous-server/gaseous-server.csproj" --use-current-runtime --self-contained false -c Release -o out -a $TARGETARCH
 
 # download and unzip EmulatorJS from CDN
 RUN apt-get update && apt-get install -y p7zip-full
