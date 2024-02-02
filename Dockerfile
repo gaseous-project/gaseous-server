@@ -22,6 +22,7 @@ RUN 7z x -y -oout/wwwroot/emulators/EmulatorJS 4.0.9.7z
 
 # Build runtime image
 FROM mcr.microsoft.com/dotnet/aspnet:8.0
+ENV INDOCKER=1
 WORKDIR /App
 COPY --from=build-env /App/out .
 ENTRYPOINT ["dotnet", "gaseous-server.dll"]
