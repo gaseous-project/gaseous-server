@@ -71,6 +71,15 @@ namespace gaseous_server.Controllers
                         Logging.Log(Logging.LogType.Information, "First Run", "Setting first run state to 1");
                         Config.SetSetting<string>("FirstRunStatus", "1");
 
+                        Logging.Log(Logging.LogType.Information, "First Run", "Migrating existing collections to newly created user (for upgrades from v1.6.1 and earlier)");
+                        Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                        string sql = "UPDATE RomCollections SET OwnedBy=@userid WHERE OwnedBy IS NULL;";
+                        Dictionary<string, object> dbDict = new Dictionary<string, object>
+                        {
+                            { "userid", user.Id }
+                        };
+                        db.ExecuteCMD(sql, dbDict);
+
                         return Ok(result);
                     }
                     else
