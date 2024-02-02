@@ -3,18 +3,14 @@ using System.Text.Json.Serialization;
 using gaseous_server;
 using gaseous_server.Classes;
 using gaseous_server.Models;
-using gaseous_server.SignatureIngestors.XML;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Versioning;
-using Microsoft.Extensions.DependencyInjection;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.OpenApi.Models;
 using Authentication;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.UI.Services;
-using IGDB.Models;
 using gaseous_server.Classes.Metadata;
+using Asp.Versioning;
 
 Logging.WriteToDiskOnly = true;
 Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server " + Assembly.GetExecutingAssembly().GetName().Version);
@@ -131,12 +127,7 @@ builder.Services.AddApiVersioning(config =>
     config.ApiVersionReader = ApiVersionReader.Combine(new UrlSegmentApiVersionReader(),
                                                     new HeaderApiVersionReader("x-api-version"),
                                                     new MediaTypeApiVersionReader("x-api-version"));
-});
-// builder.Services.AddApiVersioning(setup =>
-// {
-//     setup.ApiVersionReader = new UrlSegmentApiVersionReader();
-// });
-builder.Services.AddVersionedApiExplorer(setup =>
+}).AddApiExplorer(setup =>
 {
     setup.GroupNameFormat = "'v'VVV";
     setup.SubstituteApiVersionInUrl = true;
@@ -233,15 +224,6 @@ builder.Services.ConfigureApplicationCookie(options =>
             options.Cookie.SecurePolicy = CookieSecurePolicy.SameAsRequest;
             options.Cookie.SameSite = SameSiteMode.Strict;
         });
-// builder.Services.AddIdentityCore<ApplicationUser>(options => {
-//         options.SignIn.RequireConfirmedAccount = false;
-//         options.User.RequireUniqueEmail = true;
-//         options.Password.RequireDigit = false;
-//         options.Password.RequiredLength = 10;
-//         options.Password.RequireNonAlphanumeric = false;
-//         options.Password.RequireUppercase = false;
-//         options.Password.RequireLowercase = false;
-//     });
 builder.Services.AddScoped<UserStore>();
 builder.Services.AddScoped<RoleStore>();
 
@@ -268,8 +250,16 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint($"/swagger/v1/swagger.json", "v1.0");
-        options.SwaggerEndpoint($"/swagger/v1.1/swagger.json", "v1.1");
+        // options.SwaggerEndpoint($"/swagger/v1/swagger.json", "v1.0");
+        // options.SwaggerEndpoint($"/swagger/v1.1/swagger.json", "v1.1");
+
+        var descriptions = app.DescribeApiVersions();
+        foreach (var description in descriptions)
+        {
+            var url = $"/swagger/{description.GroupName}/swagger.json";
+            var name = description.GroupName.ToUpperInvariant();
+            options.SwaggerEndpoint(url, name);
+        }
     }
 );
 //}

@@ -5,6 +5,7 @@ using gaseous_server.Classes;
 using Authentication;
 using Microsoft.AspNetCore.Identity;
 using System.Data;
+using Asp.Versioning;
 
 namespace gaseous_server.Controllers.v1_1
 {

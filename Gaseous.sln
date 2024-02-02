@@ -1,9 +1,9 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 25.0.1704.4
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-server", "gaseous-server\gaseous-server.csproj", "{A01D2EFF-C82E-473B-84D7-7C25E736F5D2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "gaseous-server", "gaseous-server\gaseous-server.csproj", "{A01D2EFF-C82E-473B-84D7-7C25E736F5D2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{17FA6F12-8532-420C-9489-CB8FDE42137C}"
 	ProjectSection(SolutionItems) = preProject
