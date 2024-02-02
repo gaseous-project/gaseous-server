@@ -77,7 +77,11 @@
 
 <script type="text/javascript">
     var versionBox = document.getElementById('settings_appversion');
-    versionBox.innerHTML = AppVersion;
+    if (AppVersion == "1.5.0.0") {
+        versionBox.innerHTML = "Built from source";
+    } else {
+        versionBox.innerHTML = AppVersion;
+    }
 
     var versionBox = document.getElementById('settings_dbversion');
     versionBox.innerHTML = DBSchemaVersion;
