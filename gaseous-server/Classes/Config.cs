@@ -118,11 +118,33 @@ namespace gaseous_server.Classes
                     if (_tempConfig != null)
                     {
                         _config = _tempConfig;
-                    } else
+
+                        // load environment variables if we're in a docker container
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("INDOCKER")))
+                        {
+                            if (Environment.GetEnvironmentVariable("INDOCKER") == "1")
+                            {
+                                Console.WriteLine("Running in Docker - setting configuration from variables");
+                                _config.DatabaseConfiguration.HostName = (string)Common.GetEnvVar("dbhost", _config.DatabaseConfiguration.HostName);
+                                _config.DatabaseConfiguration.UserName = (string)Common.GetEnvVar("dbuser", _config.DatabaseConfiguration.UserName);
+                                _config.DatabaseConfiguration.Password = (string)Common.GetEnvVar("dbpass", _config.DatabaseConfiguration.Password);
+                                _config.DatabaseConfiguration.DatabaseName = (string)Common.GetEnvVar("dbname", _config.DatabaseConfiguration.DatabaseName);
+                                _config.DatabaseConfiguration.Port = int.Parse((string)Common.GetEnvVar("dbport", _config.DatabaseConfiguration.Port.ToString()));
+                                _config.MetadataConfiguration.MetadataSource = (HasheousClient.Models.MetadataModel.MetadataSources)Enum.Parse(typeof(HasheousClient.Models.MetadataModel.MetadataSources), (string)Common.GetEnvVar("metadatasource", _config.MetadataConfiguration.MetadataSource.ToString()));
+                                _config.MetadataConfiguration.SignatureSource = (HasheousClient.Models.MetadataModel.SignatureSources)Enum.Parse(typeof(HasheousClient.Models.MetadataModel.SignatureSources), (string)Common.GetEnvVar("signaturesource", _config.MetadataConfiguration.SignatureSource.ToString()));;
+                                _config.MetadataConfiguration.MaxLibraryScanWorkers = int.Parse((string)Common.GetEnvVar("maxlibraryscanworkers", _config.MetadataConfiguration.MaxLibraryScanWorkers.ToString()));
+                                _config.MetadataConfiguration.HasheousHost = (string)Common.GetEnvVar("hasheoushost", _config.MetadataConfiguration.HasheousHost);
+                                _config.IGDBConfiguration.ClientId = (string)Common.GetEnvVar("igdbclientid", _config.IGDBConfiguration.ClientId);
+                                _config.IGDBConfiguration.Secret = (string)Common.GetEnvVar("igdbclientsecret", _config.IGDBConfiguration.Secret);
+                            }
+                        }
+                    }
+                    else
                     {
                         throw new Exception("There was an error reading the config file: Json returned null");
                     }
-                } else
+                }
+                else
                 {
                     // no config file!
                     // use defaults and save
@@ -399,11 +421,41 @@ namespace gaseous_server.Classes
                     }
                 }
 
+                private static string _DefaultDatabaseName
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("dbname")))
+                        {
+                            return Environment.GetEnvironmentVariable("dbname");
+                        }
+                        else
+                        {
+                            return "gaseous";
+                        }
+                    }
+                }
+
+                private static int _DefaultDatabasePort
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("dbport")))
+                        {
+                            return int.Parse(Environment.GetEnvironmentVariable("dbport"));
+                        }
+                        else
+                        {
+                            return 3306;
+                        }
+                    }
+                }
+
                 public string HostName = _DefaultHostName;
                 public string UserName = _DefaultUserName;
                 public string Password = _DefaultPassword;
-                public string DatabaseName = "gaseous";
-                public int Port = 3306;
+                public string DatabaseName = _DefaultDatabaseName;
+                public int Port = _DefaultDatabasePort;
 
                 [JsonIgnore]
                 public string ConnectionString
@@ -598,7 +650,14 @@ namespace gaseous_server.Classes
                 {
                     get
                     {
-                        return 4;
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("maxlibraryscanworkers")))
+                        {
+                            return int.Parse(Environment.GetEnvironmentVariable("maxlibraryscanworkers"));
+                        }
+                        else
+                        {
+                            return 4;
+                        }
                     }
                 }
 
@@ -606,9 +665,9 @@ namespace gaseous_server.Classes
                 {
                     get
                     {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("hasheoushoust")))
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("hasheoushost")))
                         {
-                            return Environment.GetEnvironmentVariable("hasheoushoust");
+                            return Environment.GetEnvironmentVariable("hasheoushost");
                         }
                         else
                         {

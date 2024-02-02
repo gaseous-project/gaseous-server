@@ -143,6 +143,18 @@ namespace gaseous_server.Classes
 			}
 			return output.ToArray();
 		}
+
+		public static object GetEnvVar(string envName, string defaultValue)
+		{
+			if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable(envName)))
+			{
+				return Environment.GetEnvironmentVariable(envName);
+			}
+			else
+			{
+				return defaultValue;
+			}
+		}
     }
 
 	/// <summary>
