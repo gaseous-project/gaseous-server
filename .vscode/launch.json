@@ -10,14 +10,14 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/gaseous-server/bin/Debug/net7.0/gaseous-server.dll",
+            "program": "${workspaceFolder}/gaseous-server/bin/Debug/net8.0/gaseous-server.dll",
             "args": [],
             "cwd": "${workspaceFolder}/gaseous-server",
             "stopAtEntry": false,
             // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
             "serverReadyAction": {
                 "action": "openExternally",
-                "pattern": "\\bNow listening on:\\s+(https?://\\S+)"
+                "pattern": "\\bNow listening on:\\s+(http?://\\S+)"
             },
             "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development"
