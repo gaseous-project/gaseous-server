@@ -20,7 +20,7 @@ namespace gaseous_server
             //_logger.LogInformation("Timed Hosted Service running.");
             Logging.Log(Logging.LogType.Debug, "Background", "Starting background task monitor");
 
-            _timer = new Timer(DoWork, null, TimeSpan.FromSeconds(30),
+            _timer = new Timer(DoWork, null, TimeSpan.FromSeconds(10),
                 TimeSpan.FromSeconds(30));
 
             return Task.CompletedTask;

@@ -352,6 +352,9 @@
                         },
                         {
                             "core": "fbalpha2012_cps2"
+                        },
+                        {
+                            "core": "mame"
                         }
                     ]
                 }
@@ -717,8 +720,11 @@
                     "availableWebEmulatorCores": [
                         {
                             "core": "c64",
-                            "alternateCoreName": "vice_x64",
+                            "alternateCoreName": "vice_x64sc",
                             "default": true
+                        },
+                        {
+                            "core": "vice_x64"
                         }
                     ]
                 }
@@ -745,6 +751,169 @@
                 "description": "JiffyDOS C64 Kernal",
                 "filename": "JiffyDOS_C64.bin"
             }
+        ]
+    },
+    {
+        "igdbId": 90,
+        "igdbName": "Commodore PET",
+        "igdbSlug": "cpet",
+        "alternateNames": [
+            "cpet",
+            "PET",
+            "Commodore PET"
+        ],
+        "extensions": {
+            "supportedFileExtensions": [
+                ".CRT",
+                ".D64",
+                ".D80",
+                ".D81",
+                ".G64",
+                ".M3U",
+                ".PRG",
+                ".T64",
+                ".TAP",
+                ".X64",
+                ".ZIP"
+            ],
+            "uniqueFileExtensions": [
+                ".CRT",
+                ".D64",
+                ".D80",
+                ".D81",
+                ".G64",
+                ".PRG",
+                ".T64",
+                ".X64"
+            ]
+        },
+        "retroPieDirectoryName": "c64",
+        "webEmulator": {
+            "type": "EmulatorJS",
+            "core": "vice_xpet",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "pet",
+                            "alternateCoreName": "vice_xpet",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
+        },
+        "bios": [
+        ]
+    },
+    {
+        "igdbId": 94,
+        "igdbName": "Commodore Plus/4",
+        "igdbSlug": "c-plus-4",
+        "alternateNames": [
+            "C+4",
+            "c-plus-4",
+            "Plus/4",
+            "Commodore Plus/4"
+        ],
+        "extensions": {
+            "supportedFileExtensions": [
+                ".CRT",
+                ".D64",
+                ".D80",
+                ".D81",
+                ".G64",
+                ".M3U",
+                ".PRG",
+                ".T64",
+                ".TAP",
+                ".X64",
+                ".ZIP"
+            ],
+            "uniqueFileExtensions": [
+                ".CRT",
+                ".D64",
+                ".D80",
+                ".D81",
+                ".G64",
+                ".PRG",
+                ".T64",
+                ".X64"
+            ]
+        },
+        "retroPieDirectoryName": "c64",
+        "webEmulator": {
+            "type": "EmulatorJS",
+            "core": "vice_xplus4",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "plus4",
+                            "alternateCoreName": "vice_xplus4",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
+        },
+        "bios": [
+        ]
+    },
+    {
+        "igdbId": 71,
+        "igdbName": "Commodore VIC-20",
+        "igdbSlug": "vic-20",
+        "alternateNames": [
+            "VIC20",
+            "VIC-20",
+            "Commodore VIC-20"
+        ],
+        "extensions": {
+            "supportedFileExtensions": [
+                ".CRT",
+                ".D64",
+                ".D80",
+                ".D81",
+                ".G64",
+                ".M3U",
+                ".PRG",
+                ".T64",
+                ".TAP",
+                ".X64",
+                ".ZIP"
+            ],
+            "uniqueFileExtensions": [
+                ".CRT",
+                ".D64",
+                ".D80",
+                ".D81",
+                ".G64",
+                ".PRG",
+                ".T64",
+                ".X64"
+            ]
+        },
+        "retroPieDirectoryName": "c64",
+        "webEmulator": {
+            "type": "EmulatorJS",
+            "core": "vice_xvic",
+            "availableWebEmulators": [
+                {
+                    "emulatorType": "EmulatorJS",
+                    "availableWebEmulatorCores": [
+                        {
+                            "core": "vic20",
+                            "alternateCoreName": "vice_xvic",
+                            "default": true
+                        }
+                    ]
+                }
+            ]
+        },
+        "bios": [
         ]
     },
     {
@@ -1428,8 +1597,11 @@
                     "availableWebEmulatorCores": [
                         {
                             "core": "segaMS",
-                            "alternateCoreName": "genesis_plus_gx",
+                            "alternateCoreName": "picodrive",
                             "default": true
+                        },
+                        {
+                            "core": "genesis_plus_gx"
                         }
                     ]
                 }
