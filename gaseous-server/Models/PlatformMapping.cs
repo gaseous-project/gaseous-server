@@ -42,6 +42,7 @@ namespace gaseous_server.Models
                         // exists
                         if (ResetToDefault == false)
                         {
+                            WriteAvailableEmulators(mapItem);
                             Logging.Log(Logging.LogType.Information, "Platform Map", "Skipping import of " + mapItem.IGDBName + " - already in database.");
                         }
                         else
@@ -251,6 +252,30 @@ namespace gaseous_server.Models
             {
                 PlatformMapCache.Remove(item.IGDBId.ToString());
             }
+        }
+
+        public static void WriteAvailableEmulators (PlatformMapItem item)
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            sql = "UPDATE PlatformMap SET RetroPieDirectoryName=@RetroPieDirectoryName, WebEmulator_Type=@WebEmulator_Type, WebEmulator_Core=@WebEmulator_Core, AvailableWebEmulators=@AvailableWebEmulators WHERE Id = @Id; ";
+
+            dbDict.Add("Id", item.IGDBId);
+            dbDict.Add("RetroPieDirectoryName", item.RetroPieDirectoryName);
+            if (item.WebEmulator != null)
+            {
+                dbDict.Add("WebEmulator_Type", item.WebEmulator.Type);
+                dbDict.Add("WebEmulator_Core", item.WebEmulator.Core);
+                dbDict.Add("AvailableWebEmulators", Newtonsoft.Json.JsonConvert.SerializeObject(item.WebEmulator.AvailableWebEmulators));
+            }
+            else
+            {
+                dbDict.Add("WebEmulator_Type", "");
+                dbDict.Add("WebEmulator_Core", "");
+                dbDict.Add("AvailableWebEmulators", "");
+            }
+            db.ExecuteCMD(sql, dbDict);
         }
 
         static PlatformMapItem BuildPlatformMapItem(DataRow row)
