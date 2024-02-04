@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using System.Reflection;
 
 namespace gaseous_server.Classes
 {
@@ -9,7 +10,56 @@ namespace gaseous_server.Classes
 
         public static void PreUpgradeScript(int TargetSchemaVersion, Database.databaseType? DatabaseType) 
         {
+            // load resources
+            var assembly = Assembly.GetExecutingAssembly();
 
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            DataTable data;
+
+            Logging.Log(Logging.LogType.Information, "Database", "Checking for pre-upgrade for schema version " + TargetSchemaVersion);
+
+            switch(DatabaseType)
+            {
+                case Database.databaseType.MySql:
+                    switch (TargetSchemaVersion)
+                    {
+                        case 1005:
+                            Logging.Log(Logging.LogType.Information, "Database", "Running pre-upgrade for schema version " + TargetSchemaVersion);
+                            
+                            // there was a mistake at dbschema version 1004-1005
+                            // the first preview release of v1.7 reused dbschema version 1004
+                            // if table "Relation_Game_AgeRatings" exists - then we need to apply the gaseous-fix-1005.sql script before applying the standard 1005 script
+                            sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = @dbname AND table_name = @tablename;";
+                            dbDict.Add("dbname", Config.DatabaseConfiguration.DatabaseName);
+                            dbDict.Add("tablename", "Relation_Game_AgeRatings");
+                            data = db.ExecuteCMD(sql, dbDict);
+                            if (data.Rows.Count == 0)
+                            {
+                                Logging.Log(Logging.LogType.Information, "Database", "Schema version " + TargetSchemaVersion + " requires a table which is missing.");
+
+                                string resourceName = "gaseous_server.Support.Database.MySQL.gaseous-fix-1005.sql";
+                                string dbScript = "";
+
+                                string[] resources = Assembly.GetExecutingAssembly().GetManifestResourceNames();
+                                if (resources.Contains(resourceName))
+                                {
+                                    using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+                                    using (StreamReader reader = new StreamReader(stream))
+                                    {
+                                        dbScript = reader.ReadToEnd();
+
+                                        // apply schema!
+                                        Logging.Log(Logging.LogType.Information, "Database", "Applying schema version fix prior to version 1005");
+                                        db.ExecuteCMD(dbScript, dbDict, 180);
+                                    }
+                                }
+                            }
+                            break;
+                    }
+                    break;
+            }
         }
 
         public static void PostUpgradeScript(int TargetSchemaVersion, Database.databaseType? DatabaseType) 
@@ -17,6 +67,7 @@ namespace gaseous_server.Classes
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            DataTable data;
 
             switch(DatabaseType)
             {
@@ -38,7 +89,7 @@ namespace gaseous_server.Classes
                             dbDict.Add("path", oldRoot);
                             dbDict.Add("defaultlibrary", 1);
                             dbDict.Add("defaultplatform", 0);
-                            DataTable data = db.ExecuteCMD(sql, dbDict);
+                            data = db.ExecuteCMD(sql, dbDict);
 
                             // apply the new library id to the existing roms
                             sql = "UPDATE Games_Roms SET LibraryId=@libraryid;";
