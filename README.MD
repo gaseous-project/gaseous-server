@@ -15,11 +15,9 @@ Version 1.7.0 and later contain user authentication, and can be exposed to the i
 While we do our best to stay on top of server security, if you expose the server to the internet **you do so at your own risk**.
 
 ## Screenshots
-|     |                               |
-| ------- | --------------------------------------- |
-| Game Library | ![Library](./screenshots/Library.png)   |
-| Game metadata and ROM display | ![Game](./screenshots/Game.png)         |
-| Emulator | ![Emulator](./screenshots/Emulator.png) |
+![Library](./screenshots/Library.png)
+![Game](./screenshots/Game.png)
+![Emulator](./screenshots/Emulator.png)
 
 
 ## Requirements
@@ -31,13 +29,17 @@ While we do our best to stay on top of server security, if you expose the server
 
 If using the provided docker-compose.yml, MariaDB will be installed for you.
 
+## Friends of Gaseous
+* [EmulatorJS](https://github.com/EmulatorJS/EmulatorJS): A fantastic (and fast) Javascript based implementation of RetroArch, supporting a wide variety of platforms. Discord: https://discord.gg/6akryGkETU
+* [RomM](https://github.com/zurdi15/romm): Another self hosted ROM manager. Discord: https://discord.gg/P5HtHnhUDH
+
 ## Third Party Projects
 The following projects are used by Gaseous
-* https://dotnet.microsoft.com/en-us/apps/aspnet
-* https://github.com/JamesNK/Newtonsoft.Json
-* https://www.nuget.org/packages/MySql.Data/8.0.32.1
-* https://github.com/kamranayub/igdb-dotnet
-* https://github.com/EmulatorJS/EmulatorJS
+* [ASP.NET](https://dotnet.microsoft.com/en-us/apps/aspnet)
+* [Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json)
+* [MySQLConnector](https://mysqlconnector.net)
+* [IGDB-DOTNET](https://github.com/kamranayub/igdb-dotnet)
+* [EmulatorJS](https://github.com/EmulatorJS/EmulatorJS)
 
 ## Discord Server
 [![Join our Discord server!](https://invite.casperiv.dev/?inviteCode=Nhu7wpT3k4&format=svg)](https://discord.gg/Nhu7wpT3k4)

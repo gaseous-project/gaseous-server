@@ -46,6 +46,7 @@
     <None Remove="Support\Database\MySQL\gaseous-1002.sql" />
     <None Remove="Support\Database\MySQL\gaseous-1003.sql" />
     <None Remove="Support\Database\MySQL\gaseous-1004.sql" />
+    <None Remove="Support\Database\MySQL\gaseous-fix-1005.sql" />
     <None Remove="Support\Database\MySQL\gaseous-1005.sql" />
     <None Remove="Support\Database\MySQL\gaseous-1006.sql" />
     <None Remove="Support\Database\MySQL\gaseous-1007.sql" />
@@ -86,6 +87,7 @@
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1002.sql" />
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1003.sql" />
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1004.sql" />
+    <EmbeddedResource Include="Support\Database\MySQL\gaseous-fix-1005.sql" />
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1005.sql" />
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1006.sql" />
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1007.sql" />

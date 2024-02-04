@@ -26,18 +26,17 @@ SELECT
     *
 FROM
     (SELECT DISTINCT
-        row_number() over (partition by Id order by AgeGroupId desc) as seqnum, view_GamesWithRoms.*,
-            (SELECT 
-                    AgeGroupId
-                FROM
-                    ClassificationMap
-                WHERE
-                    RatingId = AgeRating.Rating
-                ORDER BY AgeGroupId DESC) AgeGroupId
+        row_number() over (partition by Id order by AgeGroup.AgeGroupId desc) as seqnum, view_GamesWithRoms.*,
+            AgeGroup.AgeGroupId AS AgeGroupId
     FROM
         view_GamesWithRoms
     LEFT JOIN Relation_Game_AgeRatings ON view_GamesWithRoms.Id = Relation_Game_AgeRatings.GameId
     LEFT JOIN AgeRating ON Relation_Game_AgeRatings.AgeRatingsId = AgeRating.Id
+    LEFT JOIN (SELECT 
+                    AgeGroupId, RatingId
+                FROM
+                    ClassificationMap
+                ORDER BY AgeGroupId DESC) AgeGroup ON AgeRating.Rating = AgeGroup.RatingId
     ) g
 WHERE g.seqnum = 1;
 
