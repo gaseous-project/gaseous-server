@@ -517,3 +517,25 @@ function Uint8ToString(u8a){
     }
     return c.join("");
 }
+
+function loadAvatar(AvatarId) {
+    // load user avatar
+    var bannerAvatar = document.getElementById('banner_user_image');
+    var bannerAvatarButton = document.getElementById('banner_user');
+
+    if (bannerAvatar && bannerAvatarButton) {
+        if (AvatarId != "00000000-0000-0000-0000-000000000000") {
+            bannerAvatar.setAttribute("src", "/api/v1.1/Account/Avatar/" + AvatarId + ".jpg");
+            bannerAvatar.className = "banner_button_avatar";
+
+            bannerAvatarButton.classList.add('banner_button_avatar_image');
+            bannerAvatarButton.classList.remove('banner_button');
+        } else {
+            bannerAvatar.setAttribute("src", "/images/user.svg");
+            bannerAvatar.className = "banner_button_image";
+
+            bannerAvatarButton.classList.remove('banner_button_avatar_image');
+            bannerAvatarButton.classList.add('banner_button');
+        }
+    }
+}

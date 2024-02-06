@@ -1,5 +1,6 @@
 <div id="properties_toc">
     <div id="properties_profile_toc_general" name="properties_profile_toc_item" onclick="ProfileSelectTab('general');">Preferences</div>
+    <div id="properties_profile_toc_avatar" name="properties_profile_toc_item" onclick="ProfileSelectTab('avatar');">Avatar</div>
     <div id="properties_profile_toc_account" name="properties_profile_toc_item" onclick="ProfileSelectTab('account');">Account</div>
 </div>
 <div id="properties_bodypanel">
@@ -77,6 +78,17 @@
                 </td>
             </tr>
         </table>
+    </div>
+    <div id="properties_bodypanel_avatar" name="properties_profile_tab" style="display: none;">
+        <h3>Avatar</h3>
+        <div style="width: 100%; text-align: center;">
+            <div>
+                <img id="properties_bodypanel_avatar_image" style="width: 200px; height: 200px;" src="/images/user.svg"/>
+            </div>
+            <form id="properties_bodypanel_avatar_form" onsubmit="return false">
+                <input type="file" name="file" id="properties_bodypanel_avatar_upload" accept="image/*" /><button value="Save" onclick="SaveAvatar();">Save</button><button value="Delete" onclick="SaveAvatar(true);">Delete</button>
+            </form>
+        </div>
     </div>
     <div id="properties_bodypanel_account" name="properties_profile_tab" style="display: none;">
         <h3>Reset Password</h3>
@@ -344,8 +356,86 @@
         }
     }
 
+    function SaveAvatar(DeleteExisting) {
+        if (DeleteExisting == true) {
+            ajaxCall(
+                '/api/v1.1/Account/Avatar/' + userProfile.avatar + '.jpg',
+                'DELETE',
+                function (success) {
+                    userProfile.avatar = "00000000-0000-0000-0000-000000000000";
+                    loadAvatar(userProfile.avatar);
+                    displayAvatarPreview("/images/user.svg");
+                },
+                function (error) {
+                    userProfile.avatar = "00000000-0000-0000-0000-000000000000";
+                    loadAvatar(userProfile.avatar);
+                    displayAvatarPreview("/images/user.svg");
+                }
+            );
+        } else {
+            var form = $('#properties_bodypanel_avatar_form')[0];
+            var formData = new FormData(form);
+            formData.append("file", document.getElementById("properties_bodypanel_avatar_upload").files[0]);
+
+            $.ajax({
+
+                // Our sample url to make request
+                url:
+                '/api/v1.1/Account/Avatar',
+
+                // Type of Request
+                type: 'POST',
+
+                // data to send to the server
+                data: formData,
+
+                contentType: false,
+                processData: false,
+
+                // Function to call when to
+                // request is ok
+                success: function (data) {
+                    var x = JSON.stringify(data);
+                    console.log(x);
+
+                    loadAvatar(data);
+                    userProfile.avatar = data;
+                    displayAvatarPreview("/api/v1.1/Account/Avatar/" + data + ".jpg");
+                },
+
+                // Error handling
+                error: function (error) {
+                    console.log(`Error ${JSON.stringify(error)}`);
+                }
+            });
+        }
+    }
+
+    function displayAvatarPreview(previewImg) {
+        var previewPath;
+        if (previewImg) {
+            previewPath = previewImg;
+        } else {
+            if (userProfile.avatar == "00000000-0000-0000-0000-000000000000") {
+                previewPath = "/images/user.svg";
+            } else {
+                previewPath = "/api/v1.1/Account/Avatar/" + userProfile.avatar + ".jpg";
+            }
+        }
+
+        var previewElement = document.getElementById('properties_bodypanel_avatar_image')
+        previewElement.setAttribute("src", previewPath);
+
+        if (previewPath != "/images/user.svg") {
+            previewElement.style.filter = "";
+        } else {
+            previewElement.style.filter = "invert(100%)";
+        }
+    }
+
     ProfileSelectTab('general');
     GetPrefInitialValues();
+    displayAvatarPreview();
 
     $('#profile_pref-LibraryPagination').select2();
     $('#profile_pref_LibraryPrimaryClassificationBadge').select2();

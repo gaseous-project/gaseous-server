@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Asp.Versioning;
+using IGDB;
 
 namespace gaseous_server.Controllers
 {
@@ -98,6 +99,7 @@ namespace gaseous_server.Controllers
             profile.Roles = new List<string>(await _userManager.GetRolesAsync(user));
             profile.SecurityProfile = user.SecurityProfile;
             profile.UserPreferences = user.UserPreferences;
+            profile.Avatar = user.Avatar;
             profile.Roles.Sort();
 
             return Ok(profile);
@@ -186,6 +188,7 @@ namespace gaseous_server.Controllers
                 user.LockoutEnabled = rawUser.LockoutEnabled;
                 user.LockoutEnd = rawUser.LockoutEnd;
                 user.SecurityProfile = rawUser.SecurityProfile;
+                user.Avatar = rawUser.Avatar;
                 
                 // get roles
                 ApplicationUser? aUser = await _userManager.FindByIdAsync(rawUser.Id);
@@ -413,6 +416,116 @@ namespace gaseous_server.Controllers
                 
                 return Ok();
             }
+        }
+
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [RequestSizeLimit(long.MaxValue)]
+        [Consumes("multipart/form-data")]
+        [DisableRequestSizeLimit, RequestFormLimits(MultipartBodyLengthLimit = long.MaxValue, ValueLengthLimit = int.MaxValue)]
+        [Route("Avatar")]
+        public async Task<IActionResult> UploadAvatar(IFormFile file)
+        {
+            ApplicationUser? user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+            else
+            {
+                Guid avatarId = Guid.Empty;
+
+                if (file.Length > 0)
+                {
+                    using (var ms = new MemoryStream())
+                    {
+                        file.CopyTo(ms);
+                        byte[] fileBytes = ms.ToArray();
+                        byte[] targetBytes;
+
+                        using (var image = new ImageMagick.MagickImage(fileBytes))
+                        {
+                            ImageMagick.MagickGeometry size = new ImageMagick.MagickGeometry(256, 256);
+
+                            // This will resize the image to a fixed size without maintaining the aspect ratio.
+                            // Normally an image will be resized to fit inside the specified size.
+                            size.IgnoreAspectRatio = true;
+
+                            image.Resize(size);
+                            var newMs = new MemoryStream();
+                            image.Resize(size);
+                            image.Strip();
+                            image.Write(newMs, ImageMagick.MagickFormat.Jpg);
+
+                            targetBytes = newMs.ToArray();
+                        }
+
+                        Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                        UserTable<ApplicationUser> userTable = new UserTable<ApplicationUser>(db);
+                        avatarId = userTable.SetAvatar(user, targetBytes);
+                    }
+                }
+
+                return Ok(avatarId);
+            }
+        }
+
+        [HttpGet]
+        [Route("Avatar/{id}.jpg")]
+        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult GetAvatar(Guid id)
+        {
+            if (id == Guid.Empty)
+            {
+                return NotFound();
+            }
+            else
+            {
+                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                string sql = "SELECT * FROM UserAvatars WHERE Id = @id";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>{
+                    { "id", id }
+                };
+
+                DataTable data = db.ExecuteCMD(sql, dbDict);
+
+                if (data.Rows.Count > 0)
+                {
+                    string filename = id.ToString() + ".jpg";
+                    byte[] filedata = (byte[])data.Rows[0]["Avatar"];
+                    string contentType = "image/jpg";
+
+                    var cd = new System.Net.Mime.ContentDisposition
+                    {
+                        FileName = filename,
+                        Inline = true,
+                    };
+
+                    Response.Headers.Add("Content-Disposition", cd.ToString());
+                    Response.Headers.Add("Cache-Control", "public, max-age=604800");
+
+                    return File(filedata, contentType);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+        }
+
+        [HttpDelete]
+        [Route("Avatar/{id}.jpg")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public async Task<ActionResult> DeleteAvatarAsync()
+        {
+            ApplicationUser? user = await _userManager.GetUserAsync(User);
+
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            UserTable<ApplicationUser> userTable = new UserTable<ApplicationUser>(db);
+            userTable.SetAvatar(user, new byte[0]);
+
+            return Ok();
         }
     }
 }

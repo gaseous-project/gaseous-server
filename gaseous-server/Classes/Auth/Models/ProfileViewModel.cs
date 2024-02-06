@@ -8,6 +8,7 @@ namespace Authentication
         public List<String> Roles { get; set; }
         public SecurityProfileViewModel SecurityProfile { get; set; }
         public List<UserPreferenceViewModel> UserPreferences { get; set; }
+        public Guid Avatar { get; set; }
         public string HighestRole {
             get
             {

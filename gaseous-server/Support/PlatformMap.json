@@ -1590,18 +1590,18 @@
         "retroPieDirectoryName": "mastersystem",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "segaMS",
+            "core": "picodrive",
             "availableWebEmulators": [
                 {
                     "emulatorType": "EmulatorJS",
                     "availableWebEmulatorCores": [
                         {
-                            "core": "segaMS",
-                            "alternateCoreName": "picodrive",
+                            "core": "picodrive",
                             "default": true
                         },
                         {
-                            "core": "genesis_plus_gx"
+                            "core": "segaMS",
+                            "alternateCoreName": "genesis_plus_gx"
                         }
                     ]
                 }
