@@ -130,6 +130,8 @@
                 console.log("User is logged in");
                 userProfile = result;
 
+                loadAvatar(userProfile.avatar);
+
                 // hide the upload button if it's not permitted
                 var uploadButton = document.getElementById('banner_upload');
                 if (!userProfile.roles.includes("Admin") && !userProfile.roles.includes("Gamer")) {

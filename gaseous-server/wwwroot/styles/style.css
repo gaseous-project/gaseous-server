@@ -146,10 +146,31 @@ h3 {
     filter: invert(100%);
 }
 
+.user_list_icon {
+    width: 35px;
+    height: 35px;
+    margin-bottom: -5px;
+}
+
+.user_list_icon_reversed {
+    filter: invert(100%);
+}
+
 .banner_button_image_smaller {
     height: 16px;
     width: 16px;
     margin-left: 5px;
+}
+
+.banner_button_avatar {
+    margin-top: -10px;
+    height: 40px;
+    width: 40px;
+    cursor: pointer;
+}
+
+.banner_button_avatar_image:hover {
+    cursor: pointer;
 }
 
 #banner_header {
