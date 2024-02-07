@@ -63,6 +63,16 @@
                 <div id="gamescreenshots_gallery_panel"></div>
             </div>
         </div>
+        <div id="gamestatistics">
+            <div id="gamestatistics_lastplayed" class="gamestatistics_box">
+                <span class="gamestatistics_label">Last Played</span>
+                <span id="gamestatistics_lastplayed_value" class="gamestatistics_value">-</span>
+            </div>
+            <div id="gamestatistics_timeplayed" class="gamestatistics_box">
+                <span class="gamestatistics_label">Total Play Time</span>
+                <span id="gamestatistics_timeplayed_value" class="gamestatistics_value">-</span>
+            </div>
+        </div>
         <div id="gamesummarytext">
             <span id="gamesummarytext_label" class="line-clamp-4"></span>
             <p id="gamesummarytext_label_button_expand" class="text_link" style="display: none;" onclick="document.querySelector('#gamesummarytext_label').classList.remove('line-clamp-4'); document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', 'display: none;'); document.querySelector('#gamesummarytext_label_button_contract').setAttribute('style', '');">Read more...</p>
@@ -255,6 +265,30 @@
             gameDeveloperLabel.setAttribute('style', 'display: none;');
             gamePublisherLabel.setAttribute('style', 'display: none;');
         }
+
+        // load statistics
+        ajaxCall('/api/v1.1/Statistics/Games/' + gameId, 'GET', function (result) {
+            var gameStat_lastPlayed = document.getElementById('gamestatistics_lastplayed_value');
+            var gameStat_timePlayed = document.getElementById('gamestatistics_timeplayed_value');
+            if (result) {
+                // gameStat_lastPlayed.innerHTML = moment(result.sessionEnd).format("YYYY-MM-DD h:mm:ss a");
+                const dateOptions = {
+                    //weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                };
+                gameStat_lastPlayed.innerHTML = new Date(result.sessionEnd).toLocaleDateString(undefined, dateOptions);
+                if (result.sessionLength >= 60) {
+                    gameStat_timePlayed.innerHTML = Number(result.sessionLength / 60) + " hours";
+                } else {
+                    gameStat_timePlayed.innerHTML = Number(result.sessionLength) + " minutes";
+                }
+            } else {
+                gameStat_lastPlayed.innerHTML = '-';
+                gameStat_timePlayed.innerHTML = '-';
+            }
+        });
 
         // load release date
         var gameSummaryRelease = document.getElementById('gamesummary_firstrelease');
