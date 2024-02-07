@@ -70,4 +70,30 @@
             bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/artwork/' + artworks[artworksPosition] + '/image/original/' + artworks[artworksPosition] + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
         }
     }
+
+    // statistics
+    var SessionId = undefined;
+
+    function SaveStatistics() {
+        var model;
+        if (SessionId == undefined) {
+            ajaxCall(
+                '/api/v1.1/Statistics/Games/' + gameId,
+                'POST',
+                function (success) {
+                    SessionId = success.sessionId;
+                }
+            );
+        } else {
+            ajaxCall(
+                '/api/v1.1/Statistics/Games/' + gameId + '/' + SessionId,
+                'PUT',
+                function (success) {
+                    
+                }
+            );
+        }
+    }
+    
+    setInterval(SaveStatistics, 60000);
 </script>
