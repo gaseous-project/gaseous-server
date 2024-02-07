@@ -1,3 +1,4 @@
+[![.NET](https://github.com/gaseous-project/gaseous-server/actions/workflows/dotnet.yml/badge.svg)](https://github.com/gaseous-project/gaseous-server/actions/workflows/dotnet.yml) [![CodeQL](https://github.com/gaseous-project/gaseous-server/actions/workflows/codeql.yml/badge.svg)](https://github.com/gaseous-project/gaseous-server/actions/workflows/codeql.yml) [![Build Release Docker Image](https://github.com/gaseous-project/gaseous-server/actions/workflows/BuildDockerOnTag-Release.yml/badge.svg)](https://github.com/gaseous-project/gaseous-server/actions/workflows/BuildDockerOnTag-Release.yml)
 # Gaseous Server
 
 This is the server for the Gaseous system. It offers ROM and title management, as well as some basic in browser emulation of those ROMs.
