@@ -1,0 +1,46 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/dotnet
+{
+	"name": "C# (.NET)",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	//"image": "mcr.microsoft.com/devcontainers/dotnet:1-8.0-bookworm",
+	"dockerComposeFile": "docker-compose.yml",
+	"service": "development",
+	"workspaceFolder": "/workspace",
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	"forwardPorts": [5198],
+	"portsAttributes": {
+			"5198": {
+				"protocol": "http"
+			}
+	},
+
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "dotnet restore",
+
+	// Configure tool-specific properties.
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"cweijan.vscode-mysql-client2",
+				"ms-dotnettools.csdevkit",
+				"ms-dotnettools.csharp",
+				"ms-dotnettools.vscode-dotnet-runtime",
+				"ecmel.vscode-html-css",
+				"github.vscode-github-actions",
+				"GitHub.vscode-pull-request-github",
+				"AndersEAndersen.html-class-suggestions",
+				"george-alisson.html-preview-vscode",
+				"ms-dotnettools.vscodeintellicode-csharp",
+				"Zignd.html-css-class-completion"
+			]
+		}
+	}
+
+	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "root"
+}

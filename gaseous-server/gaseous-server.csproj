@@ -9,11 +9,11 @@
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'http' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\net7.0\gaseous-server.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\net8.0\gaseous-server.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\net7.0\gaseous-server.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\net8.0\gaseous-server.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Asp.Versioning.Mvc" Version="8.0.0" />
@@ -61,6 +61,9 @@
     <None Remove="Support\Database\MySQL\gaseous-1016.sql" />
     <None Remove="Support\Database\MySQL\gaseous-1017.sql" />
     <None Remove="Support\Database\MySQL\gaseous-1018.sql" />
+    <None Remove="Support\Database\MySQL\gaseous-1019.sql" />
+    <None Remove="Support\Database\MySQL\gaseous-1020.sql" />
+    <None Remove="Support\Database\MySQL\gaseous-1021.sql" />
     <None Remove="Classes\Metadata\" />
   </ItemGroup>
   <ItemGroup>
@@ -102,5 +105,8 @@
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1016.sql" />
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1017.sql" />
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-1018.sql" />
+    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1019.sql" />
+    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1020.sql" />
+    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1021.sql" />
   </ItemGroup>
 </Project>

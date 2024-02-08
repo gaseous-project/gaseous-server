@@ -18,6 +18,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Scripting;
 using static gaseous_server.Classes.Metadata.AgeRatings;
 using Asp.Versioning;
+using Humanizer;
 
 namespace gaseous_server.Controllers.v1_1
 {
@@ -148,6 +149,7 @@ namespace gaseous_server.Controllers.v1_1
             public GameAgeRatingItem GameAgeRating { get; set; } = new GameAgeRatingItem();
             public GameSortingItem Sorting { get; set; } = new GameSortingItem();
             public bool HasSavedGame { get; set; }
+            public bool IsFavourite { get; set; }
             
 
             public class GameRatingItem
@@ -211,6 +213,12 @@ namespace gaseous_server.Controllers.v1_1
             {
                 string hasSavesTemp = "(RomSavedStates.RomSaveCount IS NOT NULL OR RomGroupSavedStates.MediaGroupSaveCount IS NOT NULL)";
                 whereClauses.Add(hasSavesTemp);
+            }
+
+            if (model.IsFavourite == true)
+            {
+                string isFavTemp = "Favourite = 1";
+                havingClauses.Add(isFavTemp);
             }
 
             if (model.MinimumReleaseYear != -1)
@@ -488,7 +496,11 @@ SELECT DISTINCT
     Game.AgeGroupId,
     Game.RomCount,
     RomSavedStates.RomSaveCount,
-    RomGroupSavedStates.MediaGroupSaveCount
+    RomGroupSavedStates.MediaGroupSaveCount,
+    CASE
+        WHEN Favourites.UserId IS NULL THEN 0
+        ELSE 1
+    END AS Favourite
 FROM
     (SELECT DISTINCT
         Game.*,
@@ -533,7 +545,9 @@ FROM
         LEFT JOIN
     Relation_Game_PlayerPerspectives ON Game.Id = Relation_Game_PlayerPerspectives.GameId
         LEFT JOIN
-    Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId " + whereClause + " " + havingClause + " " + orderByClause;
+    Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId
+        LEFT JOIN
+    Favourites ON Game.Id = Favourites.GameId AND Favourites.UserId = @userid " + whereClause + " " + havingClause + " " + orderByClause;
             List<Games.MinimalGameItem> RetVal = new List<Games.MinimalGameItem>();
 
             DataTable dbResponse = db.ExecuteCMD(sql, whereParams);
@@ -562,6 +576,14 @@ FROM
                 else
                 {
                     retMinGame.HasSavedGame = false;
+                }
+                if ((int)dbResponse.Rows[i]["Favourite"] == 0)
+                {
+                    retMinGame.IsFavourite = false;
+                }
+                else
+                {
+                    retMinGame.IsFavourite = true;
                 }
 
                 RetVal.Add(retMinGame);

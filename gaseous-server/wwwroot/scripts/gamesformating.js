@@ -330,6 +330,14 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
         gameImageBox.appendChild(gameSaveIcon);
     }
 
+    // add favourite game icon
+    if (gameObject.isFavourite == true) {
+        var gameFavIcon = document.createElement('img');
+        gameFavIcon.src = '/images/favourite-filled.svg';
+        gameFavIcon.className = classes['game_tile_box_favouritegame favouriteicon'];
+        gameImageBox.appendChild(gameFavIcon);
+    }
+
     if (gameObject.totalRating || displayClassification == true) {
         var gameImageRatingBanner = document.createElement('div');
         gameImageRatingBanner.className = classes['game_tile_box_ratingbanner'];
@@ -380,6 +388,7 @@ function getViewModeClasses(listView) {
             "game_tile_image lazy": "game_tile_image lazy",
             "game_tile_image unknown": "game_tile_image unknown",
             "game_tile_box_savedgame savedstateicon": "game_tile_box_savedgame savedstateicon",
+            "game_tile_box_favouritegame favouriteicon": "game_tile_box_favouritegame favouriteicon",
             "game_tile_box_ratingbanner": "game_tile_box_ratingbanner",
             "rating_image_overlay": "rating_image_overlay",
             "game_tile_label": "game_tile_label"
@@ -393,6 +402,7 @@ function getViewModeClasses(listView) {
             "game_tile_image lazy": "game_tile_image_row lazy",
             "game_tile_image unknown": "game_tile_image_row unknown",
             "game_tile_box_savedgame savedstateicon": "game_tile_box_savedgame_row savedstateicon",
+            "game_tile_box_favouritegame favouriteicon": "game_tile_box_favouritegame_row favouriteicon",
             "game_tile_box_ratingbanner": "game_tile_box_ratingbanner_row",
             "rating_image_overlay": "rating_image_overlay_row",
             "game_tile_label": "game_tile_label_row"

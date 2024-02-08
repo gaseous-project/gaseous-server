@@ -75,7 +75,7 @@ namespace Authentication
         public TUser GetUserById(string userId)
         {
             TUser user = null;
-            string commandText = "Select * from Users where Id = @id";
+            string commandText = "Select * from Users LEFT JOIN (SELECT UserId, Id AS AvatarId FROM UserAvatars) UserAvatars ON users.Id = UserAvatars.UserId where Id = @id";
             Dictionary<string, object> parameters = new Dictionary<string, object>() { { "@id", userId } };
 
             var rows = _database.ExecuteCMDDict(commandText, parameters);
@@ -100,6 +100,7 @@ namespace Authentication
                 user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true:false;
                 user.SecurityProfile = GetSecurityProfile(user);
                 user.UserPreferences = GetPreferences(user);
+                user.Avatar = string.IsNullOrEmpty((string?)row["AvatarId"]) ? Guid.Empty : Guid.Parse((string?)row["AvatarId"]);
             }
 
             return user;
@@ -113,7 +114,7 @@ namespace Authentication
         public List<TUser> GetUserByName(string normalizedUserName)
         {
             List<TUser> users = new List<TUser>();
-            string commandText = "Select * from Users where NormalizedEmail = @name";
+            string commandText = "Select * from Users LEFT JOIN (SELECT UserId, Id AS AvatarId FROM UserAvatars) UserAvatars ON users.Id = UserAvatars.UserId where NormalizedEmail = @name";
             Dictionary<string, object> parameters = new Dictionary<string, object>() { { "@name", normalizedUserName } };
 
             var rows = _database.ExecuteCMDDict(commandText, parameters);
@@ -137,6 +138,7 @@ namespace Authentication
                 user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true:false;
                 user.SecurityProfile = GetSecurityProfile(user);
                 user.UserPreferences = GetPreferences(user);
+                user.Avatar = string.IsNullOrEmpty((string?)row["AvatarId"]) ? Guid.Empty : Guid.Parse((string?)row["AvatarId"]);
                 users.Add(user);
             }
 
@@ -146,7 +148,7 @@ namespace Authentication
         public List<TUser> GetUsers()
         {
             List<TUser> users = new List<TUser>();
-            string commandText = "Select * from Users order by NormalizedUserName";
+            string commandText = "Select * from Users LEFT JOIN (SELECT UserId, Id AS AvatarId FROM UserAvatars) UserAvatars ON users.Id = UserAvatars.UserId order by NormalizedUserName";
             
             var rows = _database.ExecuteCMDDict(commandText);
             foreach(Dictionary<string, object> row in rows)
@@ -169,6 +171,7 @@ namespace Authentication
                 user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true:false;
                 user.SecurityProfile = GetSecurityProfile(user);
                 user.UserPreferences = GetPreferences(user);
+                user.Avatar = string.IsNullOrEmpty((string?)row["AvatarId"]) ? Guid.Empty : Guid.Parse((string?)row["AvatarId"]);
                 users.Add(user);
             }
 
@@ -435,6 +438,31 @@ namespace Authentication
             else
             {
                 return 0;
+            }
+        }
+
+        public Guid SetAvatar(TUser user, byte[] bytes)
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql;
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "userid", user.Id }
+            };
+            
+            if (bytes.Length == 0)
+            {
+                sql = "DELETE FROM UserAvatars WHERE UserId = @userid";
+                db.ExecuteNonQuery(sql, dbDict);
+                return Guid.Empty;
+            }
+            else
+            {
+                sql = "DELETE FROM UserAvatars WHERE UserId = @userid; INSERT INTO UserAvatars (UserId, Id, Avatar) VALUES (@userid, @id, @avatar);";
+                dbDict.Add("id", Guid.NewGuid());
+                dbDict.Add("avatar", bytes);
+                db.ExecuteNonQuery(sql, dbDict);
+                return (Guid)dbDict["id"];
             }
         }
     }
