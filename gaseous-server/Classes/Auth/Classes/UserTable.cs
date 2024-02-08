@@ -75,7 +75,7 @@ namespace Authentication
         public TUser GetUserById(string userId)
         {
             TUser user = null;
-            string commandText = "Select * from Users LEFT JOIN (SELECT UserId, Id AS AvatarId FROM UserAvatars) UserAvatars ON users.Id = UserAvatars.UserId where Id = @id";
+            string commandText = "Select * from Users LEFT JOIN (SELECT UserId, Id AS AvatarId FROM UserAvatars) UserAvatars ON Users.Id = UserAvatars.UserId where Id = @id";
             Dictionary<string, object> parameters = new Dictionary<string, object>() { { "@id", userId } };
 
             var rows = _database.ExecuteCMDDict(commandText, parameters);
@@ -114,7 +114,7 @@ namespace Authentication
         public List<TUser> GetUserByName(string normalizedUserName)
         {
             List<TUser> users = new List<TUser>();
-            string commandText = "Select * from Users LEFT JOIN (SELECT UserId, Id AS AvatarId FROM UserAvatars) UserAvatars ON users.Id = UserAvatars.UserId where NormalizedEmail = @name";
+            string commandText = "Select * from Users LEFT JOIN (SELECT UserId, Id AS AvatarId FROM UserAvatars) UserAvatars ON Users.Id = UserAvatars.UserId where NormalizedEmail = @name";
             Dictionary<string, object> parameters = new Dictionary<string, object>() { { "@name", normalizedUserName } };
 
             var rows = _database.ExecuteCMDDict(commandText, parameters);
@@ -148,7 +148,7 @@ namespace Authentication
         public List<TUser> GetUsers()
         {
             List<TUser> users = new List<TUser>();
-            string commandText = "Select * from Users LEFT JOIN (SELECT UserId, Id AS AvatarId FROM UserAvatars) UserAvatars ON users.Id = UserAvatars.UserId order by NormalizedUserName";
+            string commandText = "Select * from Users LEFT JOIN (SELECT UserId, Id AS AvatarId FROM UserAvatars) UserAvatars ON Users.Id = UserAvatars.UserId order by NormalizedUserName";
             
             var rows = _database.ExecuteCMDDict(commandText);
             foreach(Dictionary<string, object> row in rows)
