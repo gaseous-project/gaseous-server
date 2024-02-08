@@ -611,6 +611,81 @@ namespace gaseous_server.Controllers
             }
         }
 
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpGet]
+        [Route("{GameId}/favourite")]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult> GameGetFavouriteAsync(long GameId)
+        {
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+
+                if (gameObject != null)
+                {
+                    var user = await _userManager.GetUserAsync(User);
+                    
+                    if (user != null)
+                    {
+                        Favourites favourites = new Favourites();
+                        return Ok(favourites.GetFavourite(user.Id, GameId));
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpPost]
+        [Route("{GameId}/favourite")]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult> GameSetFavouriteAsync(long GameId, bool favourite)
+        {
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+
+                if (gameObject != null)
+                {
+                    var user = await _userManager.GetUserAsync(User);
+                    
+                    if (user != null)
+                    {
+                        Favourites favourites = new Favourites();
+                        return Ok(favourites.SetFavourite(user.Id, GameId, favourite));
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]

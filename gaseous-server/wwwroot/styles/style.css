@@ -671,6 +671,18 @@ input[name='filter_panel_range_max'] {
     right: 10px;
 }
 
+.game_tile_box_favouritegame {
+    position: absolute;
+    top: 1px;
+    left: 5px;
+}
+
+.game_tile_box_favouritegame_row {
+    position: absolute;
+    top: 30%;
+    right: 10px;
+}
+
 .game_tile_image {
     max-width: 200px;
     min-width: 150px;
@@ -930,6 +942,31 @@ iframe {
     padding: 3px;
 }
 
+#gamestatistics_favourite {
+    float: right;
+}
+
+#gamestatistics_favourite_button {
+    margin: 5px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    padding-left: 2px;
+    padding-right: 7px;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    background-color: rgba(56, 56, 56, 0.3);
+    border-radius: 5px;
+    border-style: solid;
+    border-color: transparent;
+    border-width: 0px;
+    cursor: pointer;
+}
+
+#gamestatistics_favourite_button:hover {
+    background-color: rgba(56, 56, 56, 0.9);
+}
+
 #gamesummarytext_label {
     
 }
@@ -967,6 +1004,14 @@ table .romrow:nth-child(odd) {
     width: 24px;
     margin-top: 4px;
     cursor: pointer;
+}
+
+.favouriteicon {
+    height: 24px;
+    width: 24px;
+    margin-top: 4px;
+    cursor: pointer;
+    filter: invert(11%) sepia(100%) saturate(6854%) hue-rotate(359deg) brightness(103%) contrast(122%) drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));
 }
 
 th {
