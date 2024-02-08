@@ -55,6 +55,11 @@ function formatFilterPanel(containerElement, result) {
             "id": "savestatesavailable",
             "name": "Game has save states avaialble",
             "gameCount": 0
+        },
+        {
+            "id": "favourite",
+            "name": "Favourite",
+            "gameCount": 0
         }
     ], true, true);
 
@@ -531,6 +536,7 @@ function executeFilter1_1(pageNumber, pageSize) {
         model = {
             "Name": document.getElementById('filter_panel_search').value,
             "HasSavedGame": document.getElementById('filter_panel_item_settings_checkbox_savestatesavailable').checked,
+            "isFavourite": document.getElementById('filter_panel_item_settings_checkbox_favourite').checked,
             "Platform": GetFilterQuery1_1('platform'),
             "Genre": GetFilterQuery1_1('genre'),
             "GameMode": GetFilterQuery1_1('gamemode'),
@@ -554,6 +560,7 @@ function executeFilter1_1(pageNumber, pageSize) {
                 "SortAscending": orderByDirection
             }
         };
+        console.log(model);
 
         existingSearchModel = model;
     } else {
