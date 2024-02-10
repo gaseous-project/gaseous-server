@@ -205,18 +205,25 @@ namespace gaseous_server.Classes
                 
                 try
                 {
-                    switch ((int)dataRow["ValueType"])
+                    if (Database.schema_version >= 1016)
                     {
-                        case 0:
-                        default:
-                            // value is a string
-                            AppSettings.Add(SettingName, dataRow["Value"]);
-                            break;
+                        switch ((int)dataRow["ValueType"])
+                        {
+                            case 0:
+                            default:
+                                // value is a string
+                                AppSettings.Add(SettingName, dataRow["Value"]);
+                                break;
 
-                        case 1:
-                            // value is a datetime
-                            AppSettings.Add(SettingName, dataRow["ValueDate"]);
-                            break;
+                            case 1:
+                                // value is a datetime
+                                AppSettings.Add(SettingName, dataRow["ValueDate"]);
+                                break;
+                        }
+                    }
+                    else
+                    {
+                        AppSettings.Add(SettingName, dataRow["Value"]);
                     }
                 }
                 catch (InvalidCastException castEx)
@@ -249,34 +256,58 @@ namespace gaseous_server.Classes
                 }
                 else
                 {
-                    
-                    string sql = "SELECT Value, ValueDate FROM Settings WHERE Setting = @SettingName";
+                    string sql;
                     Dictionary<string, object> dbDict = new Dictionary<string, object>
                     {
                         { "SettingName", SettingName }
                     };
+                    DataTable dbResponse;
 
                     try
                     {
                         Logging.Log(Logging.LogType.Debug, "Database", "Reading setting '" + SettingName + "'");
-                        DataTable dbResponse = db.ExecuteCMD(sql, dbDict);
-                        Type type = typeof(T);
-                        if (dbResponse.Rows.Count == 0)
+
+                        if (Database.schema_version >= 1016)
                         {
-                            // no value with that name stored - respond with the default value
-                            SetSetting<T>(SettingName, DefaultValue);
-                            return DefaultValue;
-                        }
-                        else
-                        {
-                            if (type.ToString() == "System.DateTime")
+                            sql = "SELECT Value, ValueDate FROM Settings WHERE Setting = @SettingName";
+                            
+                            dbResponse = db.ExecuteCMD(sql, dbDict);
+                            Type type = typeof(T);
+                            if (dbResponse.Rows.Count == 0)
                             {
-                                AppSettings.Add(SettingName, dbResponse.Rows[0]["ValueDate"]);
-                                return (T)dbResponse.Rows[0]["ValueDate"];
+                                // no value with that name stored - respond with the default value
+                                SetSetting<T>(SettingName, DefaultValue);
+                                return DefaultValue;
                             }
                             else
                             {
-                                AppSettings.Add(SettingName, dbResponse.Rows[0]["Value"]);
+                                if (type.ToString() == "System.DateTime")
+                                {
+                                    AppSettings.Add(SettingName, (T)dbResponse.Rows[0]["ValueDate"]);
+                                    return (T)dbResponse.Rows[0]["ValueDate"];
+                                }
+                                else
+                                {
+                                    AppSettings.Add(SettingName, (T)dbResponse.Rows[0]["Value"]);
+                                    return (T)dbResponse.Rows[0]["Value"];
+                                }
+                            }
+                        }
+                        else
+                        {
+                            sql = "SELECT Value FROM Settings WHERE Setting = @SettingName";
+                            
+                            dbResponse = db.ExecuteCMD(sql, dbDict);
+                            Type type = typeof(T);
+                            if (dbResponse.Rows.Count == 0)
+                            {
+                                // no value with that name stored - respond with the default value
+                                SetSetting<T>(SettingName, DefaultValue);
+                                return DefaultValue;
+                            }
+                            else
+                            {
+                                AppSettings.Add(SettingName, (T)dbResponse.Rows[0]["Value"]);
                                 return (T)dbResponse.Rows[0]["Value"];
                             }
                         }
@@ -317,27 +348,41 @@ namespace gaseous_server.Classes
         public static void SetSetting<T>(string SettingName, T Value)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "REPLACE INTO Settings (Setting, ValueType, Value, ValueDate) VALUES (@SettingName, @ValueType, @Value, @ValueDate)";
+            string sql;
             Dictionary<string, object> dbDict;
-            Type type = typeof(T);
-            if (type.ToString() == "System.DateTime")
+                
+            if (Database.schema_version >= 1016)
             {
-                dbDict = new Dictionary<string, object>
+                sql = "REPLACE INTO Settings (Setting, ValueType, Value, ValueDate) VALUES (@SettingName, @ValueType, @Value, @ValueDate)";
+                Type type = typeof(T);
+                if (type.ToString() == "System.DateTime")
                 {
-                    { "SettingName", SettingName },
-                    { "ValueType", 1 },
-                    { "Value", null },
-                    { "ValueDate", Value }
-                };
+                    dbDict = new Dictionary<string, object>
+                    {
+                        { "SettingName", SettingName },
+                        { "ValueType", 1 },
+                        { "Value", null },
+                        { "ValueDate", Value }
+                    };
+                }
+                else
+                {
+                    dbDict = new Dictionary<string, object>
+                    {
+                        { "SettingName", SettingName },
+                        { "ValueType", 0 },
+                        { "Value", Value },
+                        { "ValueDate", null }
+                    };
+                }
             }
             else
             {
+                sql = "REPLACE INTO Settings (Setting, Value) VALUES (@SettingName, @Value)";
                 dbDict = new Dictionary<string, object>
                 {
                     { "SettingName", SettingName },
-                    { "ValueType", 0 },
-                    { "Value", Value },
-                    { "ValueDate", null }
+                    { "Value", Value }
                 };
             }
 

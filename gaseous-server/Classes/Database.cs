@@ -9,6 +9,8 @@ namespace gaseous_server.Classes
 {
 	public class Database
 	{
+		public static int schema_version = 0;
+
 		public Database()
 		{
 
@@ -123,6 +125,9 @@ namespace gaseous_server.Classes
 
 											// run post-upgrade code
 											DatabaseMigration.PostUpgradeScript(i, _ConnectorType);
+
+											// update schema version variable
+											Database.schema_version = i;
 										}
 										catch (Exception ex)
 										{
