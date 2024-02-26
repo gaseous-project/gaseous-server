@@ -9,8 +9,21 @@ namespace gaseous_server.Classes
 {
 	public class Database
 	{
-		public static int schema_version = 0;
-
+		private static int _schema_version { get; set; } = 0;
+		public static int schema_version
+		{
+			get
+			{
+				//Logging.Log(Logging.LogType.Information, "Database Schema", "Schema version is " + _schema_version);
+				return _schema_version;
+			}
+			set
+			{
+				//Logging.Log(Logging.LogType.Information, "Database Schema", "Setting schema version " + _schema_version);
+				_schema_version = value;
+			}
+		}
+		
 		public Database()
 		{
 
@@ -80,7 +93,16 @@ namespace gaseous_server.Classes
 						ExecuteCMD(sql, dbDict);
 					}
 
-                    for (int i = 1000; i < 10000; i++)
+					sql = "SELECT schema_version FROM schema_version;";
+					dbDict = new Dictionary<string, object>();
+					DataTable SchemaVersion = ExecuteCMD(sql, dbDict);
+					int OuterSchemaVer = (int)SchemaVersion.Rows[0][0];
+					if (OuterSchemaVer == 0)
+					{
+						OuterSchemaVer = 1000;
+					}
+
+                    for (int i = OuterSchemaVer; i < 10000; i++)
 					{
 						string resourceName = "gaseous_server.Support.Database.MySQL.gaseous-" + i + ".sql";
 						string dbScript = "";
@@ -96,7 +118,7 @@ namespace gaseous_server.Classes
 								// apply script
 								sql = "SELECT schema_version FROM schema_version;";
 								dbDict = new Dictionary<string, object>();
-								DataTable SchemaVersion = ExecuteCMD(sql, dbDict);
+								SchemaVersion = ExecuteCMD(sql, dbDict);
 								if (SchemaVersion.Rows.Count == 0)
 								{
                                     // something is broken here... where's the table?
@@ -107,6 +129,8 @@ namespace gaseous_server.Classes
 								{
 									int SchemaVer = (int)SchemaVersion.Rows[0][0];
                                     Logging.Log(Logging.LogType.Information, "Database", "Schema version is " + SchemaVer);
+									// update schema version variable
+									Database.schema_version = SchemaVer;
                                     if (SchemaVer < i)
 									{
 										try
@@ -125,9 +149,6 @@ namespace gaseous_server.Classes
 
 											// run post-upgrade code
 											DatabaseMigration.PostUpgradeScript(i, _ConnectorType);
-
-											// update schema version variable
-											Database.schema_version = i;
 										}
 										catch (Exception ex)
 										{
