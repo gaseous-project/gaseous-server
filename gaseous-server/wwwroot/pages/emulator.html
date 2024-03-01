@@ -23,6 +23,8 @@
     var emuBios = '';
     var emuBackground = '';
 
+    console.log("Loading rom url: " + decodeURIComponent(getQueryString('rompath', 'string')));
+
     ajaxCall('/api/v1.1/Games/' + gameId, 'GET', function (result) {
         gameData = result;
 
