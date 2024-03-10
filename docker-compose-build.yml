@@ -22,16 +22,16 @@ services:
       - igdbclientsecret=<clientsecret>
   gsdb:
     container_name: gsdb
-    image: mysql
+    image: mariadb
     restart: unless-stopped
     networks:
       - gaseous
     volumes:
       - gsdb:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD=gaseous
-      - MYSQL_USER=gaseous
-      - MYSQL_PASSWORD=gaseous
+      - MARIADB_ROOT_PASSWORD=gaseous
+      - MARIADB_USER=gaseous
+      - MARIADB_PASSWORD=gaseous
     ports:
       - 3307:3306
 networks:
