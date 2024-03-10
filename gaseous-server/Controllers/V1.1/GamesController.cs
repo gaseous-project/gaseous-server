@@ -479,6 +479,7 @@ namespace gaseous_server.Controllers.v1_1
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             
             string sql = @"
+SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
 SELECT DISTINCT
     Game.Id,
     Game.`Name`,
