@@ -32,8 +32,6 @@ services:
       - MARIADB_ROOT_PASSWORD=gaseous
       - MARIADB_USER=gaseous
       - MARIADB_PASSWORD=gaseous
-    ports:
-      - 3307:3306
 networks:
   gaseous:
     driver: bridge
