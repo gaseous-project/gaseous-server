@@ -570,6 +570,7 @@ FROM
 
                 Game retGame = Storage.BuildCacheObject<Game>(new Game() , dbResponse.Rows[i]);
                 Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
+                retMinGame.Index = i;
                 if (dbResponse.Rows[i]["RomSaveCount"] != DBNull.Value || dbResponse.Rows[i]["MediaGroupSaveCount"] != DBNull.Value)
                 {
                     retMinGame.HasSavedGame = true;
