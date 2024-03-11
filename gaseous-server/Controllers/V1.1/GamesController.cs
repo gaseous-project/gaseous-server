@@ -479,6 +479,7 @@ namespace gaseous_server.Controllers.v1_1
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             
             string sql = @"
+SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
 SELECT DISTINCT
     Game.Id,
     Game.`Name`,
@@ -569,6 +570,7 @@ FROM
 
                 Game retGame = Storage.BuildCacheObject<Game>(new Game() , dbResponse.Rows[i]);
                 Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
+                retMinGame.Index = i;
                 if (dbResponse.Rows[i]["RomSaveCount"] != DBNull.Value || dbResponse.Rows[i]["MediaGroupSaveCount"] != DBNull.Value)
                 {
                     retMinGame.HasSavedGame = true;

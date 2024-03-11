@@ -78,7 +78,7 @@
                 <td style="width: 75%;"><select id="properties_fixgame" style="width: 100%;"></select></td>
             </tr>
             <tr>
-                <td colspan="2" style="text-align: right;"><button id="properties_fixsave" value="Save Match" onclick="SaveFixedGame();">Save Match</button></td>
+                <td colspan="2" style="text-align: right;"><button id="properties_fixclear" value="Clear Match" onclick="ClearFixedGame();">Clear Match</button><button id="properties_fixsave" value="Save Match" onclick="SaveFixedGame();">Save Match</button></td>
             </tr>
         </table>
     </div>
@@ -252,9 +252,22 @@
         var fixplatform = $('#properties_fixplatform').select2('data');
         var fixgame = $('#properties_fixgame').select2('data');
 
+        document.getElementById('properties_fixclear').setAttribute("disabled", "disabled");
         document.getElementById('properties_fixsave').setAttribute("disabled", "disabled");
 
         ajaxCall('/api/v1.1/Games/' + gameId + '/roms/' + modalVariables + '?NewPlatformId=' + fixplatform[0].id + '&NewGameId=' + fixgame[0].id, 'PATCH', function (result) {
+            window.location.reload();
+        });
+    }
+
+    function ClearFixedGame() {
+        var fixplatform = 0;
+        var fixgame = 0;
+
+        document.getElementById('properties_fixclear').setAttribute("disabled", "disabled");
+        document.getElementById('properties_fixsave').setAttribute("disabled", "disabled");
+
+        ajaxCall('/api/v1.1/Games/' + gameId + '/roms/' + modalVariables + '?NewPlatformId=' + fixplatform + '&NewGameId=' + fixgame, 'PATCH', function (result) {
             window.location.reload();
         });
     }

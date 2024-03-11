@@ -40,6 +40,11 @@
 
     EJS_threads = false;
 
+    EJS_Buttons = {
+        saveSavFiles: false,
+        loadSavFiles: false
+    }
+
     EJS_onSaveState = function(e) {
         var returnValue = {
             "ScreenshotByteArrayBase64": btoa(Uint8ToString(e.screenshot)),

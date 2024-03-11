@@ -561,6 +561,7 @@ namespace gaseous_server.Classes.Metadata
             }
 
             public long? Id { get; set; }
+            public long Index { get; set; }
             public string Name { get; set; }
             public string Slug { get; set; }
             public double? TotalRating { get; set; }

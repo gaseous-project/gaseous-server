@@ -545,7 +545,7 @@
                     var saveStatesButton = '';
                     if (mediaGroup.emulator) {
                         if (mediaGroup.emulator.type.length > 0) {
-                            var romPath = encodeURIComponent('/api/v1.1/Games/' + gameId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '(' + mediaGroup.id + ')' + '.zip');
+                            var romPath = encodeURIComponent('/api/v1.1/Games/' + gameId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '.zip');
 
                             if (mediaGroup.hasSaveStates == true) {
                                 var modalVariables = {
