@@ -76,6 +76,7 @@ namespace gaseous_server.Controllers
             string searchFields = "fields cover,first_release_date,name,platforms,slug; ";
             searchBody += "search \"" + SearchString + "\";";
             searchBody += "where platforms = (" + PlatformId + ");";
+            searchBody += "limit 100;";
 
             List<GaseousGame>? searchCache = Communications.GetSearchCache<List<GaseousGame>>(searchFields, searchBody);
 
