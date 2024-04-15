@@ -1233,6 +1233,9 @@
                             "default": true
                         },
                         {
+                            "core": "desmume"
+                        },
+                        {
                             "core": "desmume2015"
                         }
                     ]
@@ -1590,18 +1593,21 @@
         "retroPieDirectoryName": "mastersystem",
         "webEmulator": {
             "type": "EmulatorJS",
-            "core": "picodrive",
+            "core": "smsplus",
             "availableWebEmulators": [
                 {
                     "emulatorType": "EmulatorJS",
                     "availableWebEmulatorCores": [
                         {
-                            "core": "picodrive",
+                            "core": "segaMS",
+                            "alternateCoreName": "smsplus",
                             "default": true
                         },
                         {
-                            "core": "segaMS",
-                            "alternateCoreName": "genesis_plus_gx"
+                            "core": "picodrive"
+                        },
+                        {
+                            "core": "genesis_plus_gx"
                         }
                     ]
                 }
