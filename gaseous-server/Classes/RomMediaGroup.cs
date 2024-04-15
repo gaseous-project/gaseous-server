@@ -5,6 +5,9 @@ using Microsoft.VisualBasic;
 using IGDB.Models;
 using gaseous_server.Classes.Metadata;
 using System.IO.Compression;
+using SharpCompress.Archives;
+using SharpCompress.Common;
+using gaseous_server.Models;
 
 namespace gaseous_server.Classes
 {
@@ -259,6 +262,7 @@ namespace gaseous_server.Classes
             {
                 Game GameObject = Games.GetGame(mediaGroupItem.GameId, false, false, false);
                 Platform PlatformObject = Platforms.GetPlatform(mediaGroupItem.PlatformId, false);
+                PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(mediaGroupItem.PlatformId);
 
                 Logging.Log(Logging.LogType.Information, "Media Group", "Beginning build of media group: " + GameObject.Name + " for platform " + PlatformObject.Name);
 
@@ -293,10 +297,124 @@ namespace gaseous_server.Classes
                     foreach (long RomId in mediaGroupItem.RomIds)
                     {
                         Roms.GameRomItem rom = Roms.GetRom(RomId);
+                        bool fileNameFound = false;
                         if (File.Exists(rom.Path))
                         {
-                            Logging.Log(Logging.LogType.Information, "Media Group", "Copying ROM: " + rom.Name);
-                            File.Copy(rom.Path, Path.Combine(ZipFileTempPath, Path.GetFileName(rom.Path)));
+                            string romExt = Path.GetExtension(rom.Path);
+                            if (new string[]{ ".zip", ".rar", ".7z" }.Contains(romExt))
+                            {
+                                Logging.Log(Logging.LogType.Information, "Media Group", "Decompressing ROM: " + rom.Name);
+
+                                // is compressed
+                                switch (romExt)
+                                {
+                                    case ".zip":
+                                        try
+                                        {
+                                            using (var archive = SharpCompress.Archives.Zip.ZipArchive.Open(rom.Path))
+                                            {
+                                                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                                                {
+                                                    Logging.Log(Logging.LogType.Information, "Media Group", "Extracting file: " + entry.Key);
+                                                    if (fileNameFound == false)
+                                                    {
+                                                        //check if extension is in valid extensions
+                                                        if (platformMapItem.Extensions.SupportedFileExtensions.Contains(Path.GetExtension(entry.Key), StringComparer.InvariantCultureIgnoreCase))
+                                                        {
+                                                            // update rom file name
+                                                            rom.Name = entry.Key;
+                                                            fileNameFound = true;
+                                                        }
+                                                    }
+                                                    entry.WriteToDirectory(ZipFileTempPath, new ExtractionOptions()
+                                                    {
+                                                        ExtractFullPath = true,
+                                                        Overwrite = true
+                                                    });
+                                                }
+                                            }
+                                        }
+                                        catch (Exception zipEx)
+                                        {
+                                            Logging.Log(Logging.LogType.Warning, "Media Group", "Unzip error", zipEx);
+                                            throw;
+                                        }
+                                        break;
+
+                                    case ".rar":
+                                        try
+                                        {
+                                            using (var archive = SharpCompress.Archives.Rar.RarArchive.Open(rom.Path))
+                                            {
+                                                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                                                {
+                                                    Logging.Log(Logging.LogType.Information, "Media Group", "Extracting file: " + entry.Key);
+                                                    if (fileNameFound == false)
+                                                    {
+                                                        //check if extension is in valid extensions
+                                                        if (platformMapItem.Extensions.SupportedFileExtensions.Contains(Path.GetExtension(entry.Key), StringComparer.InvariantCultureIgnoreCase))
+                                                        {
+                                                            // update rom file name
+                                                            rom.Name = entry.Key;
+                                                            fileNameFound = true;
+                                                        }
+                                                    }
+                                                    entry.WriteToDirectory(ZipFileTempPath, new ExtractionOptions()
+                                                    {
+                                                        ExtractFullPath = true,
+                                                        Overwrite = true
+                                                    });
+                                                }
+                                            }
+                                        }
+                                        catch (Exception zipEx)
+                                        {
+                                            Logging.Log(Logging.LogType.Warning, "Media Group", "Unrar error", zipEx);
+                                            throw;
+                                        }
+                                        break;
+
+                                    case ".7z":
+                                        try
+                                        {
+                                            using (var archive = SharpCompress.Archives.SevenZip.SevenZipArchive.Open(rom.Path))
+                                            {
+                                                foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
+                                                {
+                                                    Logging.Log(Logging.LogType.Information, "Media Group", "Extracting file: " + entry.Key);
+                                                    if (fileNameFound == false)
+                                                    {
+                                                        //check if extension is in valid extensions
+                                                        if (platformMapItem.Extensions.SupportedFileExtensions.Contains(Path.GetExtension(entry.Key), StringComparer.InvariantCultureIgnoreCase))
+                                                        {
+                                                            // update rom file name
+                                                            rom.Name = entry.Key;
+                                                            fileNameFound = true;
+                                                        }
+                                                    }
+                                                    entry.WriteToDirectory(ZipFileTempPath, new ExtractionOptions()
+                                                    {
+                                                        ExtractFullPath = true,
+                                                        Overwrite = true
+                                                    });
+                                                }
+                                            }
+                                        }
+                                        catch (Exception zipEx)
+                                        {
+                                            Logging.Log(Logging.LogType.Warning, "Media Group", "7z error", zipEx);
+                                            throw;
+                                        }
+                                        break;
+
+                                }
+                            }
+                            else
+                            {
+                                // is uncompressed
+                                Logging.Log(Logging.LogType.Information, "Media Group", "Copying ROM: " + rom.Name);
+                                File.Copy(rom.Path, Path.Combine(ZipFileTempPath, Path.GetFileName(rom.Path)));
+                            }
 
                             romItems.Add(rom);
                         }

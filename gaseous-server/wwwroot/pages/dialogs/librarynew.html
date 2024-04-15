@@ -1,34 +1,30 @@
-<div style="padding-top: 5px;">
-    <strong>New Library</strong>
-</div>
+<table style="width: 98%; margin-top: 15px; margin-bottom: 15px;">
+    <tr>
+        <th style="width: 20%;">Name</th>
+        <td style="width: 80%;"><input type="text" id="newlibrary_name" style="width: 98%;" /></td>
+    </tr>
+    <tr>
+        <th>Default Platform</th>
+        <td><select id="newlibrary_defaultplatform" style="width: 100%;"></select></td>
+    </tr>
+    <tr>
+        <th>Path</th>
+        <td><input type="text" id="newlibrary_path" style="width: 98%;" /></td>
+    </tr>
+</table>
 
-<div style="width: 300px;">
-    <table style="width: 98%; margin-top: 15px; margin-bottom: 15px;">
-        <tr>
-            <th>Name</th>
-            <td><input type="text" id="newlibrary_name" style="width: 95%;" /></td>
-        </tr>
-        <tr>
-            <th>Default Platform</th>
-            <td><select id="newlibrary_defaultplatform" style="width: 100%;"></select></td>
-        </tr>
-        <tr>
-            <th>Path</th>
-            <td><input type="text" id="newlibrary_path" style="width: 95%;" /></td>
-        </tr>
-    </table>
-
-    <div style="width: 100%; text-align: right;">
-        <div style="display: inline-block; margin-right: 20px;">
-            <button value="OK" onclick="newLibrary();">OK</button>
-        </div>
-        <div style="display: inline-block;">
-            <button value="Cancel" onclick="closeSubDialog();">Cancel</button>
-        </div>
+<div style="width: 100%; text-align: right; margin-top: 160px;">
+    <div style="display: inline-block; margin-right: 20px;">
+        <button value="OK" onclick="newLibrary();">OK</button>
+    </div>
+    <div style="display: inline-block;">
+        <button value="Cancel" onclick="closeDialog();">Cancel</button>
     </div>
 </div>
 
 <script type="text/javascript">
+    document.getElementById('modal-heading').innerHTML = "New Library";
+
     $('#newlibrary_defaultplatform').select2({
         minimumInputLength: 3,
         ajax: {

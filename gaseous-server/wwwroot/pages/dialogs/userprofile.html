@@ -220,7 +220,8 @@
         SetPreference_Batch(model);
         
         if (getQueryString('page', 'string') == 'home' ||  getQueryString('page', 'string') == undefined) {
-            executeFilter1_1(1);
+            setCookie('games_library_last_page', 1);
+            location.reload();
         }
 
         closeDialog();
