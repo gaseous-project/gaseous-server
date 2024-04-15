@@ -23,6 +23,8 @@
     var emuBios = '';
     var emuBackground = '';
 
+    console.log("Loading rom url: " + decodeURIComponent(getQueryString('rompath', 'string')));
+
     ajaxCall('/api/v1.1/Games/' + gameId, 'GET', function (result) {
         gameData = result;
 
@@ -51,10 +53,14 @@
             emuBios = '';
         } else {
             emuBios = '/api/v1.1/Bios/zip/' + platformId;
+            console.log("Using BIOS link: " + emuBios);
         }
 
         switch (getQueryString('engine', 'string')) {
             case 'EmulatorJS':
+                console.log("Emulator: " + getQueryString('engine', 'string'));
+                console.log("Core: " + getQueryString('core', 'string'));
+    
                 $('#emulator').load('/emulators/EmulatorJS.html?v=' + AppVersion);
                 break;
         }

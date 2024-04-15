@@ -27,7 +27,7 @@ function formatFilterPanel(containerElement, result) {
             // Cancel the default action, if needed
             event.preventDefault();
             // Trigger the button element with a click
-            executeFilter1_1();
+            applyFilters();
         }
     });
     containerPanelSearch.appendChild(containerPanelSearchField);
@@ -99,7 +99,7 @@ function formatFilterPanel(containerElement, result) {
     // add filter button
     var searchButton = document.createElement('div');
     searchButton.id = 'games_library_searchbutton';
-    searchButton.setAttribute('onclick', 'executeFilter1_1();');
+    searchButton.setAttribute('onclick', 'applyFilters();');
     searchButton.innerHTML = 'Apply';
 
     buttonsDiv.appendChild(searchButton);
@@ -365,6 +365,12 @@ function filter_panel_range_value(name) {
     }
 }
 
+function applyFilters() {
+    document.getElementById('games_library').innerHTML = '';
+
+    executeFilter1_1();
+}
+
 function resetFilters() {
     // clear name
     document.getElementById('filter_panel_search').value = '';
@@ -381,6 +387,7 @@ function resetFilters() {
         filter_panel_range_enabled_check(rangeCheckboxes[i].getAttribute('data-name'));
     }
 
+    document.getElementById('games_library').innerHTML = '';
     executeFilter1_1();
 }
 
@@ -393,8 +400,18 @@ function executeFilter1_1(pageNumber, pageSize) {
         existingSearchModel = undefined;
     }
 
+    let pageMode = GetPreference('LibraryPagination', 'paged');
+
     if (!pageSize) {
-        pageSize = 30;
+        switch (pageMode) {
+            case "infinite":
+                pageSize = 5;
+                break;
+            case "paged":
+            default:
+                pageSize = 30;
+                break;
+        }
     }
 
     var model;
