@@ -77,7 +77,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
             break;
         case 'infinite':
             var gamePlaceholders = document.getElementsByName('GamePlaceholder');
-            
+
             let currentPage = 1;
             let totalPages = Math.ceil(result.count / pageSize);
             let startIndex = 0;
@@ -390,7 +390,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
     } else {
         gameImage.classList.add(...classes['game_tile_image lazy']);
     }
-    //gameImage.src = '/images/unknowngame.png';
+    // gameImage.src = '/images/unknowngame.png';
     if (gameObject.cover) {
         gameImage.setAttribute('data-src', '/api/v1.1/Games/' + gameObject.id + '/cover/image/cover_big/' + gameObject.cover.imageId + '.jpg');
     } else {
