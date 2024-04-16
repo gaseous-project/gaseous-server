@@ -43,7 +43,7 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [HttpGet]
         [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]
-        public ActionResult Game(
+        public async Task<ActionResult> Game(
             string name = "",
             string platform = "",
             string genre = "",
@@ -303,7 +303,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(Game), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "5Minute")]
-        public ActionResult Game(long GameId)
+        public async Task<ActionResult> Game(long GameId)
         {
             try
             {
@@ -331,7 +331,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<AlternativeName>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public ActionResult GameAlternativeNames(long GameId)
+        public async Task<ActionResult> GameAlternativeNames(long GameId)
         {
             try
             {
@@ -364,7 +364,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<AgeRatings.GameAgeRating>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public ActionResult GameAgeClassification(long GameId)
+        public async Task<ActionResult> GameAgeClassification(long GameId)
         {
             try
             {
@@ -397,7 +397,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<Artwork>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public ActionResult GameArtwork(long GameId)
+        public async Task<ActionResult> GameArtwork(long GameId)
         {
             try
             {
@@ -428,7 +428,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(Artwork), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public ActionResult GameArtwork(long GameId, long ArtworkId)
+        public async Task<ActionResult> GameArtwork(long GameId, long ArtworkId)
         {
             try
             {
@@ -464,7 +464,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/artwork/{ArtworkId}/image/{size}/{ImageName}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameCoverImage(long GameId, long ArtworkId, Communications.IGDBAPI_ImageSize size, string ImageName)
+        public async Task<ActionResult> GameCoverImage(long GameId, long ArtworkId, Communications.IGDBAPI_ImageSize size, string ImageName)
         {
             try
             {
@@ -531,7 +531,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(Cover), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public ActionResult GameCover(long GameId)
+        public async Task<ActionResult> GameCover(long GameId)
         {
             try
             {
@@ -566,7 +566,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/cover/image/{size}/{imagename}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameCoverImage(long GameId, Communications.IGDBAPI_ImageSize size, string imagename = "")
+        public async Task<ActionResult> GameCoverImage(long GameId, Communications.IGDBAPI_ImageSize size, string imagename = "")
         {
             try
             {
@@ -693,7 +693,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<Genre>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public ActionResult GameGenre(long GameId)
+        public async Task<ActionResult> GameGenre(long GameId)
         {
             try
             {
@@ -731,7 +731,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<Dictionary<string, object>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public ActionResult GameInvolvedCompanies(long GameId)
+        public async Task<ActionResult> GameInvolvedCompanies(long GameId)
         {
             try
             {
@@ -776,7 +776,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(Dictionary<string, object>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public ActionResult GameInvolvedCompanies(long GameId, long CompanyId)
+        public async Task<ActionResult> GameInvolvedCompanies(long GameId, long CompanyId)
         {
             try
             {
@@ -818,7 +818,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/companies/{CompanyId}/image")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameCompanyImage(long GameId, long CompanyId)
+        public async Task<ActionResult> GameCompanyImage(long GameId, long CompanyId)
         {
             try
             {
@@ -863,7 +863,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/platforms")]
         [ProducesResponseType(typeof(List<KeyValuePair<long, string>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GamePlatforms(long GameId)
+        public async Task<ActionResult> GamePlatforms(long GameId)
         {
             try
             {
@@ -882,7 +882,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<ReleaseDate>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public ActionResult GameReleaseDates(long GameId)
+        public async Task<ActionResult> GameReleaseDates(long GameId)
         {
             try
             {
@@ -943,7 +943,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(Classes.Roms.GameRomItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         //[ResponseCache(CacheProfileName = "5Minute")]
-        public ActionResult GameRom(long GameId, long RomId)
+        public async Task<ActionResult> GameRom(long GameId, long RomId)
         {
             try
             {
@@ -972,7 +972,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/roms/{RomId}")]
         [ProducesResponseType(typeof(Classes.Roms.GameRomItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameRomRename(long GameId, long RomId, long NewPlatformId, long NewGameId)
+        public async Task<ActionResult> GameRomRename(long GameId, long RomId, long NewPlatformId, long NewGameId)
         {
             try
             {
@@ -1002,7 +1002,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/roms/{RomId}")]
         [ProducesResponseType(typeof(Classes.Roms.GameRomItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameRomDelete(long GameId, long RomId)
+        public async Task<ActionResult> GameRomDelete(long GameId, long RomId)
         {
             try
             {
@@ -1034,7 +1034,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/roms/{RomId}/file")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameRomFile(long GameId, long RomId)
+        public async Task<ActionResult> GameRomFile(long GameId, long RomId)
         {
             try
             {
@@ -1073,7 +1073,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/roms/{RomId}/{FileName}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameRomFile(long GameId, long RomId, string FileName)
+        public async Task<ActionResult> GameRomFile(long GameId, long RomId, string FileName)
         {
             try
             {
@@ -1172,7 +1172,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/romgroup")]
         [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult NewGameRomGroup(long GameId, long PlatformId, [FromBody] List<long> RomIds)
+        public async Task<ActionResult> NewGameRomGroup(long GameId, long PlatformId, [FromBody] List<long> RomIds)
         {
             try
             {
@@ -1233,7 +1233,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/romgroup/{RomGroupId}")]
         [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameRomGroupDelete(long GameId, long RomGroupId)
+        public async Task<ActionResult> GameRomGroupDelete(long GameId, long RomGroupId)
         {
             try
             {
@@ -1266,7 +1266,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/romgroup/{RomGroupId}/{filename}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameRomGroupFile(long GameId, long RomGroupId, string filename = "")
+        public async Task<ActionResult> GameRomGroupFile(long GameId, long RomGroupId, string filename = "")
         {
             try
             {
@@ -1311,7 +1311,7 @@ namespace gaseous_server.Controllers
         [Route("search")]
         [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameSearch(long RomId = 0, string SearchString = "")
+        public async Task<ActionResult> GameSearch(long RomId = 0, string SearchString = "")
         {
             try
             {
@@ -1352,7 +1352,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<Screenshot>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public ActionResult GameScreenshot(long GameId)
+        public async Task<ActionResult> GameScreenshot(long GameId)
         {
             try
             {
@@ -1383,7 +1383,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(Screenshot), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public ActionResult GameScreenshot(long GameId, long ScreenshotId)
+        public async Task<ActionResult> GameScreenshot(long GameId, long ScreenshotId)
         {
             try
             { 
@@ -1417,7 +1417,7 @@ namespace gaseous_server.Controllers
         [Route("{GameId}/screenshots/{ScreenshotId}/image/{size}/{ImageName}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GameScreenshotImage(long GameId, long ScreenshotId, Communications.IGDBAPI_ImageSize Size, string ImageName)
+        public async Task<ActionResult> GameScreenshotImage(long GameId, long ScreenshotId, Communications.IGDBAPI_ImageSize Size, string ImageName)
         {
             try
             {
@@ -1468,7 +1468,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<GameVideo>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public ActionResult GameVideo(long GameId)
+        public async Task<ActionResult> GameVideo(long GameId)
         {
             try
             {

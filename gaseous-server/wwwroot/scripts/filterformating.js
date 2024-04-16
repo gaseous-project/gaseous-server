@@ -405,7 +405,7 @@ function executeFilter1_1(pageNumber, pageSize) {
     if (!pageSize) {
         switch (pageMode) {
             case "infinite":
-                pageSize = 5;
+                pageSize = 30;
                 break;
             case "paged":
             default:
