@@ -77,52 +77,54 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
             break;
         case 'infinite':
             var gamePlaceholders = document.getElementsByName('GamePlaceholder');
-            let currentPageValue = 0;
-            let nextPageThreshold = -1;
-            for (var i = 0; i < result.count; i++) {
-                if (i >= nextPageThreshold) {
-                    // new page
-                    currentPageValue ++;
-                    nextPageThreshold = i + pageSize;
 
-                    if (currentPageValue > 0) {
-                        if (!document.getElementById('pageFooterAnchor' + (currentPageValue - 1))) {
-                            let newFooterPageAnchor = document.createElement('a');
-                            newFooterPageAnchor.id = 'pageFooterAnchor' + (currentPageValue - 1);
-                            newFooterPageAnchor.setAttribute('name', 'pageAnchor' + (currentPageValue - 1));
-                            newFooterPageAnchor.className = 'pageFooterAnchor';
-                            newFooterPageAnchor.setAttribute('data-page', (currentPageValue - 1));
-                            newFooterPageAnchor.setAttribute('data-loaded', "0");
-                            targetElement.appendChild(newFooterPageAnchor);
+            let currentPage = 1;
+            let totalPages = Math.ceil(result.count / pageSize);
+            let startIndex = 0;
+            let endIndex = pageSize;
+            for (let p = currentPage; p < totalPages + 1; p++) {
+                //console.log("Page: " + p + " - StartIndex: " + startIndex + " - EndIndex: " + endIndex);
+
+                let newPageAnchor = document.getElementById('pageAnchor' + p);
+                if (!newPageAnchor) {
+                    newPageAnchor = document.createElement('span');
+                    newPageAnchor.id = 'pageAnchor' + p;
+                    newPageAnchor.setAttribute('name', 'pageAnchor' + p);
+                    newPageAnchor.className = 'pageAnchor';
+                    newPageAnchor.setAttribute('data-page', p);
+                    newPageAnchor.setAttribute('data-loaded', "0");
+                    targetElement.appendChild(newPageAnchor);
+                }
+
+                if (endIndex > result.count) {
+                    endIndex = result.count;
+                }
+
+                for (let i = startIndex; i < endIndex; i++) {
+                    var placeHolderpresent = false;
+                    for (var x = 0; x < gamePlaceholders.length; x++) {
+                        if (gamePlaceholders[x].getAttribute('data-index') == i) {
+                            placeHolderpresent = true;
                         }
                     }
-
-                    if (!document.getElementById('pageAnchor' + currentPageValue)) {
-                        let newPageAnchor = document.createElement('a');
-                        newPageAnchor.id = 'pageAnchor' + currentPageValue;
-                        newPageAnchor.setAttribute('name', 'pageAnchor' + currentPageValue);
-                        newPageAnchor.className = 'pageAnchor';
-                        newPageAnchor.setAttribute('data-page', currentPageValue);
-                        newPageAnchor.setAttribute('data-loaded', "0");
-                        targetElement.appendChild(newPageAnchor);
+                    if (placeHolderpresent == false) {
+                        var gamePlaceholder = document.createElement('div');
+                        gamePlaceholder.setAttribute('name', 'GamePlaceholder');
+                        gamePlaceholder.id = 'GamePlaceholder' + i;
+                        gamePlaceholder.setAttribute('data-index', i);
+                        gamePlaceholder.className = 'game_tile';
+                        newPageAnchor.appendChild(gamePlaceholder);
                     }
                 }
 
-                var placeHolderpresent = false;
-                for (var x = 0; x < gamePlaceholders.length; x++) {
-                    if (gamePlaceholders[x].getAttribute('data-index') == i) {
-                        placeHolderpresent = true;
-                    }
-                }
-                if (placeHolderpresent == false) {
-                    var gamePlaceholder = document.createElement('div');
-                    gamePlaceholder.setAttribute('name', 'GamePlaceholder');
-                    gamePlaceholder.id = 'GamePlaceholder' + i;
-                    gamePlaceholder.setAttribute('data-index', i);
-                    gamePlaceholder.className = 'game_tile';
-                    targetElement.appendChild(gamePlaceholder);
+                startIndex = endIndex;
+                endIndex = startIndex + pageSize;
+
+                if (startIndex > result.count) {
+                    break;
                 }
             }
+
             break;
     }
 
@@ -160,6 +162,8 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
                 break;
 
         }
+
+        $(game).fadeIn(500);
     }
 
     var pager = document.getElementById('games_pager');
@@ -173,7 +177,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
             for (const [key, value] of Object.entries(result.alphaList)) {
                 var letterPager = document.createElement('span');
                 letterPager.className = 'games_library_alpha_pager_letter';
-                letterPager.setAttribute('onclick', 'document.location.hash = "#pageAnchor' + value + '"; executeFilter1_1(' + value + ');');
+                letterPager.setAttribute('onclick', 'document.location.hash = "#pageAnchor' + (value) + '"; executeFilter1_1(' + (value) + ');');
                 letterPager.innerHTML = key;
                 alphaPager.appendChild(letterPager);
             }
@@ -289,8 +293,13 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
 
     $('.lazy').Lazy({
         effect: 'show',
-        effectTime: 100,
-        visibleOnly: true
+        effectTime: 500,
+        visibleOnly: true,
+        defaultImage: '/images/unknowngame.png',
+        delay: 250,
+        afterLoad: function(element) {
+            //console.log(element[0].getAttribute('data-id'));
+        }
     });
 }
 
@@ -306,13 +315,24 @@ function isScrolledIntoView(elem) {
     }
 }
 
+const elementIsVisibleInViewport = (el, partiallyVisible = false) => {
+    const { top, left, bottom, right } = el.getBoundingClientRect();
+    const { innerHeight, innerWidth } = window;
+    return partiallyVisible
+      ? ((top > 0 && top < innerHeight) ||
+          (bottom > 0 && bottom < innerHeight)) &&
+          ((left > 0 && left < innerWidth) || (right > 0 && right < innerWidth))
+      : top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
+  };
+
 function IsInView() {
     var pageMode = GetPreference('LibraryPagination', 'paged');
     switch (pageMode) {
         case "paged":
             var loadElement = document.getElementById('games_library_loadmore');
             if (loadElement) {
-                if (isScrolledIntoView(loadElement)) {
+                //if (isScrolledIntoView(loadElement)) {
+                if (elementIsVisibleInViewport(loadElement, true)) {
                     var pageNumber = Number(document.getElementById('games_library_loadmore').getAttribute('data-pagenumber'));
                     var pageSize = document.getElementById('games_library_loadmore').getAttribute('data-pagesize');
                     executeFilter1_1(pageNumber);
@@ -326,17 +346,14 @@ function IsInView() {
 
             // load page
             let anchors = document.getElementsByClassName('pageAnchor');
-            let footAnchors = document.getElementsByClassName('pageFooterAnchor');
             for (let i = 0; i < anchors.length; i++) {
-                if (isScrolledIntoView(anchors[i]) && anchors[i].getAttribute('data-loaded') == "0") {
-                    document.getElementById(anchors[i].id).setAttribute('data-loaded', "1");
-                    executeFilter1_1(Number(anchors[i].getAttribute('data-page')));
-                }
-            }
-            for (let i = 0; i < footAnchors.length; i++) {
-                if (isScrolledIntoView(footAnchors[i]) && footAnchors[i].getAttribute('data-loaded') == "0") {
-                    document.getElementById(footAnchors[i].id).setAttribute('data-loaded', "1");
-                    executeFilter1_1(Number(footAnchors[i].getAttribute('data-page')));
+                //if (isScrolledIntoView(anchors[i])) {
+                if (elementIsVisibleInViewport(anchors[i], true)) {
+                    if (anchors[i].getAttribute('data-loaded') == "0") {
+                        console.log("Loading page: " + anchors[i].getAttribute('data-page'));
+                        document.getElementById(anchors[i].id).setAttribute('data-loaded', "1");
+                        executeFilter1_1(Number(anchors[i].getAttribute('data-page')));
+                    }
                 }
             }
             break;
@@ -360,12 +377,14 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
         gameBox.classList.add(...classes['game_tile']);
     }
     gameBox.setAttribute('onclick', 'window.location.href = "/index.html?page=game&id=' + gameObject.id + '";');
+    gameBox.style.display = 'none';
 
     var gameImageBox = document.createElement('div');
     gameImageBox.classList.add(...classes['game_tile_box']);
 
     var gameImage = document.createElement('img');
     gameImage.id = 'game_tile_cover_' + gameObject.id;
+    gameImage.setAttribute('data-id', gameObject.id);
     if (useSmallCover == true) {
         gameImage.classList.add(...classes['game_tile_image game_tile_image_small lazy']);
     } else {
