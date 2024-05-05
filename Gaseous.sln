@@ -1,4 +1,4 @@
-
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 25.0.1704.4
@@ -20,6 +20,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "screenshots", "screenshots"
 		screenshots\Library.png = screenshots\Library.png
 		screenshots\Game.png = screenshots\Game.png
 	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hasheous-client", "..\hasheous-client\hasheous-client\hasheous-client.csproj", "{5A99413F-BA1E-4B7D-B8E5-2BABF0933E6A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -43,6 +45,10 @@ Global
 		{B07A4655-A003-416B-A790-ADAA5B548E1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B07A4655-A003-416B-A790-ADAA5B548E1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B07A4655-A003-416B-A790-ADAA5B548E1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A99413F-BA1E-4B7D-B8E5-2BABF0933E6A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A99413F-BA1E-4B7D-B8E5-2BABF0933E6A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A99413F-BA1E-4B7D-B8E5-2BABF0933E6A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A99413F-BA1E-4B7D-B8E5-2BABF0933E6A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

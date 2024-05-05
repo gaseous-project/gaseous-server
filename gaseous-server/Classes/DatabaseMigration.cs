@@ -4,11 +4,11 @@ using System.Reflection;
 
 namespace gaseous_server.Classes
 {
-	public static class DatabaseMigration
-	{
+    public static class DatabaseMigration
+    {
         public static List<int> BackgroundUpgradeTargetSchemaVersions = new List<int>();
 
-        public static void PreUpgradeScript(int TargetSchemaVersion, Database.databaseType? DatabaseType) 
+        public static void PreUpgradeScript(int TargetSchemaVersion, Database.databaseType? DatabaseType)
         {
             // load resources
             var assembly = Assembly.GetExecutingAssembly();
@@ -20,14 +20,14 @@ namespace gaseous_server.Classes
 
             Logging.Log(Logging.LogType.Information, "Database", "Checking for pre-upgrade for schema version " + TargetSchemaVersion);
 
-            switch(DatabaseType)
+            switch (DatabaseType)
             {
                 case Database.databaseType.MySql:
                     switch (TargetSchemaVersion)
                     {
                         case 1005:
                             Logging.Log(Logging.LogType.Information, "Database", "Running pre-upgrade for schema version " + TargetSchemaVersion);
-                            
+
                             // there was a mistake at dbschema version 1004-1005
                             // the first preview release of v1.7 reused dbschema version 1004
                             // if table "Relation_Game_AgeRatings" exists - then we need to apply the gaseous-fix-1005.sql script before applying the standard 1005 script
@@ -62,14 +62,16 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static void PostUpgradeScript(int TargetSchemaVersion, Database.databaseType? DatabaseType) 
+        public static void PostUpgradeScript(int TargetSchemaVersion, Database.databaseType? DatabaseType)
         {
+            var assembly = Assembly.GetExecutingAssembly();
+
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             DataTable data;
 
-            switch(DatabaseType)
+            switch (DatabaseType)
             {
                 case Database.databaseType.MySql:
                     switch (TargetSchemaVersion)
@@ -78,7 +80,7 @@ namespace gaseous_server.Classes
                             // this is a safe background task
                             BackgroundUpgradeTargetSchemaVersions.Add(1002);
                             break;
-                        
+
                         case 1004:
                             // needs to run on start up
 
@@ -103,6 +105,48 @@ namespace gaseous_server.Classes
                             sql = "DELETE FROM Settings WHERE Setting LIKE 'LastRun_%';";
                             db.ExecuteNonQuery(sql);
                             break;
+
+                        case 1022:
+                            // load country list
+                            Logging.Log(Logging.LogType.Information, "Database Upgrade", "Adding country look up table contents");
+
+                            string countryResourceName = "gaseous_server.Support.Country.txt";
+                            using (Stream stream = assembly.GetManifestResourceStream(countryResourceName))
+                            using (StreamReader reader = new StreamReader(stream))
+                            {
+                                do
+                                {
+                                    string[] line = reader.ReadLine().Split("|");
+
+                                    sql = "INSERT INTO Country (Code, Value) VALUES (@code, @value);";
+                                    dbDict = new Dictionary<string, object>{
+                                { "code", line[0] },
+                                { "value", line[1] }
+                            };
+                                    db.ExecuteNonQuery(sql, dbDict);
+                                } while (reader.EndOfStream == false);
+                            }
+
+                            // load language list
+                            Logging.Log(Logging.LogType.Information, "Database Upgrade", "Adding language look up table contents");
+
+                            string languageResourceName = "gaseous_server.Support.Language.txt";
+                            using (Stream stream = assembly.GetManifestResourceStream(languageResourceName))
+                            using (StreamReader reader = new StreamReader(stream))
+                            {
+                                do
+                                {
+                                    string[] line = reader.ReadLine().Split("|");
+
+                                    sql = "INSERT INTO Language (Code, Value) VALUES (@code, @value);";
+                                    dbDict = new Dictionary<string, object>{
+                                { "code", line[0] },
+                                { "value", line[1] }
+                            };
+                                    db.ExecuteNonQuery(sql, dbDict);
+                                } while (reader.EndOfStream == false);
+                            }
+                            break;
                     }
                     break;
             }
@@ -121,7 +165,8 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static void MySql_1002_MigrateMetadataVersion() {
+        public static void MySql_1002_MigrateMetadataVersion()
+        {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
@@ -134,7 +179,7 @@ namespace gaseous_server.Classes
                 Logging.Log(Logging.LogType.Information, "Signature Ingestor - Database Update", "Updating " + data.Rows.Count + " database entries");
                 int Counter = 0;
                 int LastCounterCheck = 0;
-                foreach (DataRow row in data.Rows) 
+                foreach (DataRow row in data.Rows)
                 {
                     List<string> Flags = Newtonsoft.Json.JsonConvert.DeserializeObject<List<string>>((string)Common.ReturnValueIfNull(row["flags"], "[]"));
                     List<KeyValuePair<string, object>> Attributes = new List<KeyValuePair<string, object>>();
@@ -207,7 +252,7 @@ namespace gaseous_server.Classes
                     dbDict.Add("id", (int)row["Id"]);
                     db.ExecuteCMD(updateSQL, dbDict);
 
-                    if ((Counter - LastCounterCheck) > 10) 
+                    if ((Counter - LastCounterCheck) > 10)
                     {
                         LastCounterCheck = Counter;
                         Logging.Log(Logging.LogType.Information, "Signature Ingestor - Database Update", "Updating " + Counter + " / " + data.Rows.Count + " database entries");

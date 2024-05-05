@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.IO.Compression;
+using gaseous_server.Classes.Metadata;
 using HasheousClient.Models;
 using NuGet.Common;
 using SevenZip;
@@ -31,7 +32,7 @@ namespace gaseous_server.Classes
                 if (!Directory.Exists(ExtractPath)) { Directory.CreateDirectory(ExtractPath); }
                 try
                 {
-                    switch(ImportedFileExtension)
+                    switch (ImportedFileExtension)
                     {
                         case ".zip":
                             Logging.Log(Logging.LogType.Information, "Get Signature", "Decompressing using zip");
@@ -105,7 +106,7 @@ namespace gaseous_server.Classes
                             }
                             break;
                     }
-                    
+
                     Logging.Log(Logging.LogType.Information, "Get Signature", "Processing decompressed files for signature matches");
                     // loop through contents until we find the first signature match
                     List<ArchiveData> archiveFiles = new List<ArchiveData>();
@@ -116,17 +117,18 @@ namespace gaseous_server.Classes
                         {
                             FileInfo zfi = new FileInfo(file);
                             Common.hashObject zhash = new Common.hashObject(file);
-                            
+
                             Logging.Log(Logging.LogType.Information, "Get Signature", "Checking signature of decompressed file " + file);
 
                             if (zfi != null)
                             {
-                                ArchiveData archiveData = new ArchiveData{
+                                ArchiveData archiveData = new ArchiveData
+                                {
                                     FileName = Path.GetFileName(file),
                                     FilePath = zfi.Directory.FullName.Replace(ExtractPath, ""),
                                     Size = zfi.Length,
-                                    MD5 = hash.md5hash,
-                                    SHA1 = hash.sha1hash
+                                    MD5 = zhash.md5hash,
+                                    SHA1 = zhash.sha1hash
                                 };
                                 archiveFiles.Add(archiveData);
 
@@ -138,7 +140,7 @@ namespace gaseous_server.Classes
                                     if (zDiscoveredSignature.Score > discoveredSignature.Score)
                                     {
                                         if (
-                                            zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEArcade || 
+                                            zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEArcade ||
                                             zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEMess
                                         )
                                         {
@@ -157,9 +159,9 @@ namespace gaseous_server.Classes
                         }
                     }
 
-                    discoveredSignature.Rom.Attributes.Add(new KeyValuePair<string, object>(
+                    discoveredSignature.Rom.Attributes.Add(
                          "ZipContents", Newtonsoft.Json.JsonConvert.SerializeObject(archiveFiles)
-                    ));
+                    );
                 }
                 catch (Exception ex)
                 {
@@ -195,7 +197,7 @@ namespace gaseous_server.Classes
                 {
                     // signature retrieved from Hasheous
                     Logging.Log(Logging.LogType.Information, "Import Game", "Signature retrieved from Hasheous for game: " + dbSignature.Game.Name);
-                
+
                     discoveredSignature = dbSignature;
                 }
                 else
@@ -203,7 +205,7 @@ namespace gaseous_server.Classes
                     // construct a signature from file data
                     dbSignature = _GetFileSignatureFromFileData(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
                     Logging.Log(Logging.LogType.Information, "Import Game", "Signature generated from provided file for game: " + dbSignature.Game.Name);
-                
+
                     discoveredSignature = dbSignature;
                 }
             }
@@ -216,8 +218,8 @@ namespace gaseous_server.Classes
             return discoveredSignature;
         }
 
-		private gaseous_server.Models.Signatures_Games? _GetFileSignatureFromDatabase(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
-		{
+        private gaseous_server.Models.Signatures_Games? _GetFileSignatureFromDatabase(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
+        {
             Logging.Log(Logging.LogType.Information, "Get Signature", "Checking local database for MD5: " + hash.md5hash);
 
             // check 1: do we have a signature for it?
@@ -264,7 +266,9 @@ namespace gaseous_server.Classes
             if (Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous)
             {
                 HasheousClient.Hasheous hasheous = new HasheousClient.Hasheous();
-                SignatureLookupItem? HasheousResult = hasheous.RetrieveFromHasheousAsync(new HashLookupModel{
+                Console.WriteLine(HasheousClient.WebApp.HttpHelper.BaseUri);
+                LookupItemModel? HasheousResult = hasheous.RetrieveFromHasheous(new HashLookupModel
+                {
                     MD5 = hash.md5hash,
                     SHA1 = hash.sha1hash
                 });
@@ -274,19 +278,34 @@ namespace gaseous_server.Classes
                     if (HasheousResult.Signature != null)
                     {
                         gaseous_server.Models.Signatures_Games signature = new Models.Signatures_Games();
-                        signature.Game = HasheousResult.Signature.Game;
-                        signature.Rom = HasheousResult.Signature.Rom;
-                        
-                        if (HasheousResult.MetadataResults != null)
+                        signature.Game = (Models.Signatures_Games.GameItem)HasheousResult.Signature.Game;
+                        signature.Rom = (Models.Signatures_Games.RomItem)HasheousResult.Signature.Rom;
+
+                        // get platform metadata
+                        if (HasheousResult.Platform != null)
                         {
-                            if (HasheousResult.MetadataResults.Count > 0)
+                            if (HasheousResult.Platform.metadata.Count > 0)
                             {
-                                foreach (SignatureLookupItem.MetadataResult metadataResult in HasheousResult.MetadataResults)
+                                foreach (HasheousClient.Models.MetadataItem metadataResult in HasheousResult.Platform.metadata)
                                 {
-                                    if (metadataResult.Source == MetadataModel.MetadataSources.IGDB)
+                                    if (metadataResult.Source.Equals(MetadataModel.MetadataSources.IGDB))
                                     {
-                                        signature.Flags.IGDBPlatformId = (long)metadataResult.PlatformId;
-                                        signature.Flags.IGDBGameId = (long)metadataResult.GameId;
+                                        signature.Flags.IGDBPlatformId = (long)Platforms.GetPlatform(metadataResult.Id, false).Id;
+                                    }
+                                }
+                            }
+                        }
+
+                        // get game metadata
+                        if (HasheousResult.Metadata != null)
+                        {
+                            if (HasheousResult.Metadata.Count > 0)
+                            {
+                                foreach (HasheousClient.Models.MetadataItem metadataResult in HasheousResult.Metadata)
+                                {
+                                    if (metadataResult.Source.Equals(MetadataModel.MetadataSources.IGDB))
+                                    {
+                                        signature.Flags.IGDBGameId = (long)Games.GetGame(metadataResult.Id, false, false, false).Id;
                                     }
                                 }
                             }
