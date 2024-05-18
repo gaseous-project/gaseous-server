@@ -7,16 +7,16 @@ using IGDB.Models;
 namespace gaseous_server.Classes.Metadata
 {
     public class Platforms
-	{
+    {
         const string fieldList = "fields abbreviation,alternative_name,category,checksum,created_at,generation,name,platform_family,platform_logo,slug,summary,updated_at,url,versions,websites;";
 
         public Platforms()
-		{
+        {
 
-		}
+        }
 
         public static Platform? GetPlatform(long Id, bool forceRefresh = false)
-		{
+        {
             if (Id == 0)
             {
                 Platform returnValue = new Platform();
@@ -44,7 +44,7 @@ namespace gaseous_server.Classes.Metadata
                     Task<Platform> RetVal = _GetPlatform(SearchUsing.id, Id, forceRefresh);
                     return RetVal.Result;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Logging.Log(Logging.LogType.Warning, "Metadata", "An error occurred fetching Platform Id " + Id, ex);
                     return null;
@@ -52,14 +52,14 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-		public static Platform GetPlatform(string Slug, bool forceRefresh = false)
-		{
-			Task<Platform> RetVal = _GetPlatform(SearchUsing.slug, Slug, forceRefresh);
-			return RetVal.Result;
-		}
+        public static Platform GetPlatform(string Slug, bool forceRefresh = false)
+        {
+            Task<Platform> RetVal = _GetPlatform(SearchUsing.slug, Slug, forceRefresh);
+            return RetVal.Result;
+        }
 
-		private static async Task<Platform> _GetPlatform(SearchUsing searchUsing, object searchValue, bool forceRefresh)
-		{
+        private static async Task<Platform> _GetPlatform(SearchUsing searchUsing, object searchValue, bool forceRefresh)
+        {
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
             if (searchUsing == SearchUsing.id)
@@ -78,13 +78,16 @@ namespace gaseous_server.Classes.Metadata
 
             // set up where clause
             string WhereClause = "";
+            string searchField = "";
             switch (searchUsing)
             {
                 case SearchUsing.id:
                     WhereClause = "where id = " + searchValue;
+                    searchField = "id";
                     break;
                 case SearchUsing.slug:
-                    WhereClause = "where slug = " + searchValue;
+                    WhereClause = "where slug = \"" + searchValue + "\"";
+                    searchField = "slug";
                     break;
                 default:
                     throw new Exception("Invalid search type");
@@ -111,10 +114,10 @@ namespace gaseous_server.Classes.Metadata
                     catch (Exception ex)
                     {
                         Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
-                        return Storage.GetCacheValue<Platform>(returnValue, "id", (long)searchValue);
+                        return Storage.GetCacheValue<Platform>(returnValue, searchField, searchValue);
                     }
                 case Storage.CacheStatus.Current:
-                    return Storage.GetCacheValue<Platform>(returnValue, "id", (long)searchValue);
+                    return Storage.GetCacheValue<Platform>(returnValue, searchField, searchValue);
                 default:
                     throw new Exception("How did you get here?");
             }
@@ -158,11 +161,12 @@ namespace gaseous_server.Classes.Metadata
             {
                 Logging.Log(Logging.LogType.Information, "Platform Map", "Importing " + platform.Name + " from predefined data.");
                 // doesn't exist - add it
-                item = new Models.PlatformMapping.PlatformMapItem{
+                item = new Models.PlatformMapping.PlatformMapItem
+                {
                     IGDBId = (long)platform.Id,
                     IGDBName = platform.Name,
                     IGDBSlug = platform.Slug,
-                    AlternateNames = new List<string>{ platform.AlternativeName }
+                    AlternateNames = new List<string> { platform.AlternativeName }
                 };
                 Models.PlatformMapping.WritePlatformMap(item, false, true);
             }

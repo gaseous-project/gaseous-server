@@ -80,7 +80,8 @@ namespace gaseous_server.Classes
             get
             {
                 string logPath = Path.Combine(ConfigurationPath, "Logs");
-                if (!Directory.Exists(logPath)) {
+                if (!Directory.Exists(logPath))
+                {
                     Directory.CreateDirectory(logPath);
                 }
                 return logPath;
@@ -92,7 +93,7 @@ namespace gaseous_server.Classes
             get
             {
                 string logFileExtension = "txt";
-                
+
                 string logPathName = Path.Combine(LogPath, "Server Log " + DateTime.Now.ToUniversalTime().ToString("yyyyMMdd") + "." + logFileExtension);
                 return logPathName;
             }
@@ -131,7 +132,7 @@ namespace gaseous_server.Classes
                                 _config.DatabaseConfiguration.DatabaseName = (string)Common.GetEnvVar("dbname", _config.DatabaseConfiguration.DatabaseName);
                                 _config.DatabaseConfiguration.Port = int.Parse((string)Common.GetEnvVar("dbport", _config.DatabaseConfiguration.Port.ToString()));
                                 _config.MetadataConfiguration.MetadataSource = (HasheousClient.Models.MetadataModel.MetadataSources)Enum.Parse(typeof(HasheousClient.Models.MetadataModel.MetadataSources), (string)Common.GetEnvVar("metadatasource", _config.MetadataConfiguration.MetadataSource.ToString()));
-                                _config.MetadataConfiguration.SignatureSource = (HasheousClient.Models.MetadataModel.SignatureSources)Enum.Parse(typeof(HasheousClient.Models.MetadataModel.SignatureSources), (string)Common.GetEnvVar("signaturesource", _config.MetadataConfiguration.SignatureSource.ToString()));;
+                                _config.MetadataConfiguration.SignatureSource = (HasheousClient.Models.MetadataModel.SignatureSources)Enum.Parse(typeof(HasheousClient.Models.MetadataModel.SignatureSources), (string)Common.GetEnvVar("signaturesource", _config.MetadataConfiguration.SignatureSource.ToString())); ;
                                 _config.MetadataConfiguration.MaxLibraryScanWorkers = int.Parse((string)Common.GetEnvVar("maxlibraryscanworkers", _config.MetadataConfiguration.MaxLibraryScanWorkers.ToString()));
                                 _config.MetadataConfiguration.HasheousHost = (string)Common.GetEnvVar("hasheoushost", _config.MetadataConfiguration.HasheousHost);
                                 _config.IGDBConfiguration.ClientId = (string)Common.GetEnvVar("igdbclientid", _config.IGDBConfiguration.ClientId);
@@ -205,9 +206,9 @@ namespace gaseous_server.Classes
                 {
                     AppSettings.Remove(SettingName);
                 }
-                
+
                 Logging.Log(Logging.LogType.Information, "Load Settings", "Loading setting " + SettingName + " from database");
-                
+
                 try
                 {
                     if (Database.schema_version >= 1016)
@@ -275,7 +276,7 @@ namespace gaseous_server.Classes
                         if (Database.schema_version >= 1016)
                         {
                             sql = "SELECT Value, ValueDate FROM Settings WHERE Setting = @SettingName";
-                            
+
                             dbResponse = db.ExecuteCMD(sql, dbDict);
                             Type type = typeof(T);
                             if (dbResponse.Rows.Count == 0)
@@ -301,7 +302,7 @@ namespace gaseous_server.Classes
                         else
                         {
                             sql = "SELECT Value FROM Settings WHERE Setting = @SettingName";
-                            
+
                             dbResponse = db.ExecuteCMD(sql, dbDict);
                             Type type = typeof(T);
                             if (dbResponse.Rows.Count == 0)
@@ -355,7 +356,7 @@ namespace gaseous_server.Classes
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql;
             Dictionary<string, object> dbDict;
-                
+
             if (Database.schema_version >= 1016)
             {
                 sql = "REPLACE INTO Settings (Setting, ValueType, Value, ValueDate) VALUES (@SettingName, @ValueType, @Value, @ValueDate)";
@@ -427,7 +428,8 @@ namespace gaseous_server.Classes
 
             public class Database
             {
-                private static string _DefaultHostName {
+                private static string _DefaultHostName
+                {
                     get
                     {
                         if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("dbhost")))
@@ -643,11 +645,19 @@ namespace gaseous_server.Classes
                     return MetadataPath;
                 }
 
-                public string LibrarySignatureImportDirectory
+                public string LibrarySignaturesDirectory
                 {
                     get
                     {
                         return Path.Combine(LibraryRootDirectory, "Signatures");
+                    }
+                }
+
+                public string LibrarySignaturesProcessedDirectory
+                {
+                    get
+                    {
+                        return Path.Combine(LibraryRootDirectory, "Signatures - Processed");
                     }
                 }
 
@@ -660,7 +670,8 @@ namespace gaseous_server.Classes
                     if (!Directory.Exists(LibraryMetadataDirectory)) { Directory.CreateDirectory(LibraryMetadataDirectory); }
                     if (!Directory.Exists(LibraryTempDirectory)) { Directory.CreateDirectory(LibraryTempDirectory); }
                     if (!Directory.Exists(LibraryCollectionsDirectory)) { Directory.CreateDirectory(LibraryCollectionsDirectory); }
-                    if (!Directory.Exists(LibrarySignatureImportDirectory)) { Directory.CreateDirectory(LibrarySignatureImportDirectory); }
+                    if (!Directory.Exists(LibrarySignaturesDirectory)) { Directory.CreateDirectory(LibrarySignaturesDirectory); }
+                    if (!Directory.Exists(LibrarySignaturesProcessedDirectory)) { Directory.CreateDirectory(LibrarySignaturesProcessedDirectory); }
                 }
             }
 
@@ -696,6 +707,10 @@ namespace gaseous_server.Classes
                     }
                 }
 
+                private static bool _HasheousSubmitFixes { get; set; } = false;
+
+                private static string _HasheousAPIKey { get; set; } = "";
+
                 private static int _MaxLibraryScanWorkers
                 {
                     get
@@ -729,6 +744,10 @@ namespace gaseous_server.Classes
                 public HasheousClient.Models.MetadataModel.MetadataSources MetadataSource = _MetadataSource;
 
                 public HasheousClient.Models.MetadataModel.SignatureSources SignatureSource = _SignatureSource;
+
+                public bool HasheousSubmitFixes = _HasheousSubmitFixes;
+
+                public string HasheousAPIKey = _HasheousAPIKey;
 
                 public int MaxLibraryScanWorkers = _MaxLibraryScanWorkers;
 
