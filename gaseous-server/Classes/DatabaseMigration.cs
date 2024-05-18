@@ -1,6 +1,9 @@
 using System;
 using System.Data;
 using System.Reflection;
+using gaseous_server.Classes.Metadata;
+using gaseous_server.Models;
+using IGDB.Models;
 
 namespace gaseous_server.Classes
 {
@@ -146,6 +149,9 @@ namespace gaseous_server.Classes
                                     db.ExecuteNonQuery(sql, dbDict);
                                 } while (reader.EndOfStream == false);
                             }
+
+                            // this is a safe background task
+                            BackgroundUpgradeTargetSchemaVersions.Add(1022);
                             break;
                     }
                     break;
@@ -160,6 +166,10 @@ namespace gaseous_server.Classes
                 {
                     case 1002:
                         MySql_1002_MigrateMetadataVersion();
+                        break;
+
+                    case 1022:
+                        MySql_1022_MigrateMetadataVersion();
                         break;
                 }
             }
@@ -259,6 +269,37 @@ namespace gaseous_server.Classes
                     }
                     Counter += 1;
                 }
+            }
+        }
+
+        public static void MySql_1022_MigrateMetadataVersion()
+        {
+            FileSignature fileSignature = new FileSignature();
+
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT * FROM Games_Roms WHERE RomDataVersion = 1;";
+            DataTable data = db.ExecuteCMD(sql);
+            foreach (DataRow row in data.Rows)
+            {
+                Logging.Log(Logging.LogType.Information, "Database Migration", "Updating ROM table for ROM: " + (string)row["Name"]);
+
+                GameLibrary.LibraryItem library = GameLibrary.GetLibrary((int)row["LibraryId"]);
+                Common.hashObject hash = new Common.hashObject()
+                {
+                    md5hash = (string)row["MD5"],
+                    sha1hash = (string)row["SHA1"]
+                };
+                Signatures_Games signature = fileSignature.GetFileSignature(
+                    library,
+                    hash,
+                    new FileInfo((string)row["Path"]),
+                    (string)row["Path"]
+                );
+
+                Platform platform = Platforms.GetPlatform((long)row["PlatformId"], false);
+                Game game = Games.GetGame((long)row["GameId"], false, false, false);
+
+                ImportGame.StoreROM(library, hash, game, platform, signature, (string)row["Path"], (long)row["Id"]);
             }
         }
     }

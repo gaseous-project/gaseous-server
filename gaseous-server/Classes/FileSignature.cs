@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.IO.Compression;
 using gaseous_server.Classes.Metadata;
 using HasheousClient.Models;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NuGet.Common;
 using SevenZip;
 using SharpCompress.Archives;
@@ -111,8 +112,10 @@ namespace gaseous_server.Classes
                     // loop through contents until we find the first signature match
                     List<ArchiveData> archiveFiles = new List<ArchiveData>();
                     bool signatureFound = false;
+                    bool signatureSelectorAlreadyApplied = false;
                     foreach (string file in Directory.GetFiles(ExtractPath, "*.*", SearchOption.AllDirectories))
                     {
+                        bool signatureSelector = false;
                         if (File.Exists(file))
                         {
                             FileInfo zfi = new FileInfo(file);
@@ -122,16 +125,6 @@ namespace gaseous_server.Classes
 
                             if (zfi != null)
                             {
-                                ArchiveData archiveData = new ArchiveData
-                                {
-                                    FileName = Path.GetFileName(file),
-                                    FilePath = zfi.Directory.FullName.Replace(ExtractPath, ""),
-                                    Size = zfi.Length,
-                                    MD5 = zhash.md5hash,
-                                    SHA1 = zhash.sha1hash
-                                };
-                                archiveFiles.Add(archiveData);
-
                                 if (signatureFound == false)
                                 {
                                     gaseous_server.Models.Signatures_Games zDiscoveredSignature = _GetFileSignature(zhash, zfi.Name, zfi.Extension, zfi.Length, file, true);
@@ -153,10 +146,32 @@ namespace gaseous_server.Classes
                                         discoveredSignature = zDiscoveredSignature;
 
                                         signatureFound = true;
+
+                                        if (signatureSelectorAlreadyApplied == false)
+                                        {
+                                            signatureSelector = true;
+                                            signatureSelectorAlreadyApplied = true;
+                                        }
                                     }
                                 }
+
+                                ArchiveData archiveData = new ArchiveData
+                                {
+                                    FileName = Path.GetFileName(file),
+                                    FilePath = zfi.Directory.FullName.Replace(ExtractPath, ""),
+                                    Size = zfi.Length,
+                                    MD5 = zhash.md5hash,
+                                    SHA1 = zhash.sha1hash,
+                                    isSignatureSelector = signatureSelector
+                                };
+                                archiveFiles.Add(archiveData);
                             }
                         }
+                    }
+
+                    if (discoveredSignature.Rom.Attributes == null)
+                    {
+                        discoveredSignature.Rom.Attributes = new Dictionary<string, object>();
                     }
 
                     discoveredSignature.Rom.Attributes.Add(
@@ -267,19 +282,30 @@ namespace gaseous_server.Classes
             {
                 HasheousClient.Hasheous hasheous = new HasheousClient.Hasheous();
                 Console.WriteLine(HasheousClient.WebApp.HttpHelper.BaseUri);
-                LookupItemModel? HasheousResult = hasheous.RetrieveFromHasheous(new HashLookupModel
+                LookupItemModel? HasheousResult = null;
+                try
                 {
-                    MD5 = hash.md5hash,
-                    SHA1 = hash.sha1hash
-                });
+                    HasheousResult = hasheous.RetrieveFromHasheous(new HashLookupModel
+                    {
+                        MD5 = hash.md5hash,
+                        SHA1 = hash.sha1hash
+                    });
+                }
+                catch (Exception ex)
+                {
+                    Logging.Log(Logging.LogType.Warning, "Import Game", "An error occurred while importing " + ImageName, ex);
+                    return null;
+                }
 
                 if (HasheousResult != null)
                 {
                     if (HasheousResult.Signature != null)
                     {
                         gaseous_server.Models.Signatures_Games signature = new Models.Signatures_Games();
-                        signature.Game = (Models.Signatures_Games.GameItem)HasheousResult.Signature.Game;
-                        signature.Rom = (Models.Signatures_Games.RomItem)HasheousResult.Signature.Rom;
+                        string gameJson = Newtonsoft.Json.JsonConvert.SerializeObject(HasheousResult.Signature.Game);
+                        string romJson = Newtonsoft.Json.JsonConvert.SerializeObject(HasheousResult.Signature.Rom);
+                        signature.Game = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.Signatures_Games.GameItem>(gameJson);
+                        signature.Rom = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.Signatures_Games.RomItem>(romJson);
 
                         // get platform metadata
                         if (HasheousResult.Platform != null)
@@ -288,9 +314,14 @@ namespace gaseous_server.Classes
                             {
                                 foreach (HasheousClient.Models.MetadataItem metadataResult in HasheousResult.Platform.metadata)
                                 {
-                                    if (metadataResult.Source.Equals(MetadataModel.MetadataSources.IGDB))
+                                    if (metadataResult.Id.Length > 0)
                                     {
-                                        signature.Flags.IGDBPlatformId = (long)Platforms.GetPlatform(metadataResult.Id, false).Id;
+                                        switch (metadataResult.Source)
+                                        {
+                                            case HasheousClient.Models.MetadataSources.IGDB:
+                                                signature.Flags.IGDBPlatformId = (long)Platforms.GetPlatform(metadataResult.Id, false).Id;
+                                                break;
+                                        }
                                     }
                                 }
                             }
@@ -303,9 +334,14 @@ namespace gaseous_server.Classes
                             {
                                 foreach (HasheousClient.Models.MetadataItem metadataResult in HasheousResult.Metadata)
                                 {
-                                    if (metadataResult.Source.Equals(MetadataModel.MetadataSources.IGDB))
+                                    if (metadataResult.Id.Length > 0)
                                     {
-                                        signature.Flags.IGDBGameId = (long)Games.GetGame(metadataResult.Id, false, false, false).Id;
+                                        switch (metadataResult.Source)
+                                        {
+                                            case HasheousClient.Models.MetadataSources.IGDB:
+                                                signature.Flags.IGDBGameId = (long)Games.GetGame(metadataResult.Id, false, false, false).Id;
+                                                break;
+                                        }
                                     }
                                 }
                             }
@@ -387,6 +423,7 @@ namespace gaseous_server.Classes
             public long Size { get; set; }
             public string MD5 { get; set; }
             public string SHA1 { get; set; }
+            public bool isSignatureSelector { get; set; } = false;
         }
     }
 }

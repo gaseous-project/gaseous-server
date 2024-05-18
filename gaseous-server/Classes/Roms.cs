@@ -4,6 +4,9 @@ using gaseous_signature_parser.models.RomSignatureObject;
 using static gaseous_server.Classes.RomMediaGroup;
 using gaseous_server.Classes.Metadata;
 using IGDB.Models;
+using static HasheousClient.Models.FixMatchModel;
+using NuGet.Protocol.Core.Types;
+using static gaseous_server.Classes.FileSignature;
 
 namespace gaseous_server.Classes
 {
@@ -121,6 +124,53 @@ namespace gaseous_server.Classes
 
 			GameRomItem rom = GetRom(RomId);
 
+			// send update to Hasheous if enabled
+			if (PlatformId != 0 && GameId != 0)
+			{
+				if (Config.MetadataConfiguration.HasheousSubmitFixes == true)
+				{
+					if (
+						Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous &&
+						(
+							Config.MetadataConfiguration.HasheousAPIKey != null &&
+							Config.MetadataConfiguration.HasheousAPIKey != "")
+						)
+					{
+						try
+						{
+							// find signature used for identifing the rom
+							string md5String = rom.Md5;
+							string sha1String = rom.Sha1;
+							if (rom.Attributes.ContainsKey("ZipContents"))
+							{
+								bool selectorFound = false;
+								List<ArchiveData> archiveDataValues = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ArchiveData>>(rom.Attributes["ZipContents"].ToString());
+								foreach (ArchiveData archiveData in archiveDataValues)
+								{
+									if (archiveData.isSignatureSelector == true)
+									{
+										md5String = archiveData.MD5;
+										sha1String = archiveData.SHA1;
+										selectorFound = true;
+										break;
+									}
+								}
+							}
+
+							HasheousClient.WebApp.HttpHelper.AddHeader("X-API-Key", Config.MetadataConfiguration.HasheousAPIKey);
+							HasheousClient.Hasheous hasheousClient = new HasheousClient.Hasheous();
+							List<MetadataMatch> metadataMatchList = new List<MetadataMatch>();
+							metadataMatchList.Add(new MetadataMatch(HasheousClient.Models.MetadataSources.IGDB, platform.Slug, game.Slug));
+							hasheousClient.FixMatch(new HasheousClient.Models.FixMatchModel(md5String, sha1String, metadataMatchList));
+						}
+						catch (Exception ex)
+						{
+							Logging.Log(Logging.LogType.Critical, "Fix Match", "An error occurred while sending a fixed match to Hasheous.", ex);
+						}
+					}
+				}
+			}
+
 			return rom;
 		}
 
@@ -156,7 +206,17 @@ namespace gaseous_server.Classes
 			Dictionary<string, object> romAttributes = new Dictionary<string, object>();
 			if (romDR["attributes"] != DBNull.Value)
 			{
-				romAttributes = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>((string)romDR["attributes"]);
+				try
+				{
+					if ((string)romDR["attributes"] != "[ ]")
+					{
+						romAttributes = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>((string)romDR["attributes"]);
+					}
+				}
+				catch (Exception ex)
+				{
+					Logging.Log(Logging.LogType.Warning, "Roms", "Error parsing rom attributes: " + ex.Message);
+				}
 			}
 
 			GameRomItem romItem = new GameRomItem

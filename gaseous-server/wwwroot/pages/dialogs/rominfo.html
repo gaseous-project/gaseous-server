@@ -347,6 +347,17 @@
                     hRow.appendChild(aHashCell);
                     aBody.appendChild(hRow);
 
+                    if (archiveContent[r].isSignatureSelector == true) {
+                        var sigRow = document.createElement('tr');
+
+                        var sigCell = document.createElement('td');
+                        sigCell.setAttribute('colspan', 2);
+                        sigCell.style.paddingLeft = '20px';
+                        sigCell.innerHTML = "Hash used to identify this archive";
+                        sigRow.appendChild(sigCell);
+                        aBody.appendChild(sigRow);
+                    }
+
                     aTable.appendChild(aBody);
                 }
             }

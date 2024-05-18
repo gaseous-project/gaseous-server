@@ -35,3 +35,6 @@ CREATE TABLE `Language` (
   INDEX `id_Code` (`Code` ASC) VISIBLE,
   INDEX `id_Value` (`Value` ASC) VISIBLE
 );
+
+ALTER TABLE `Games_Roms` 
+ADD COLUMN `RomDataVersion` INT DEFAULT 1;

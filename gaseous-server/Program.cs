@@ -64,6 +64,7 @@ if (Directory.Exists(Config.LibraryConfiguration.LibraryUploadDirectory))
 // kick off any delayed upgrade tasks
 // run 1002 background updates in the background on every start
 DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1002);
+DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1022);
 // start the task
 ProcessQueue.QueueItem queueItem = new ProcessQueue.QueueItem(
         ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade,
@@ -273,7 +274,7 @@ using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleStore>();
     var roles = new[] { "Admin", "Gamer", "Player" };
- 
+
     foreach (var role in roles)
     {
         if (await roleManager.FindByNameAsync(role, CancellationToken.None) == null)
@@ -303,11 +304,11 @@ app.Use(async (context, next) =>
     string correlationId = Guid.NewGuid().ToString();
     CallContext.SetData("CorrelationId", correlationId);
     CallContext.SetData("CallingProcess", context.Request.Method + ": " + context.Request.Path);
-    
+
     string userIdentity;
     try
     {
-        userIdentity = context.User.Claims.Where(x=>x.Type==System.Security.Claims.ClaimTypes.NameIdentifier).FirstOrDefault().Value;
+        userIdentity = context.User.Claims.Where(x => x.Type == System.Security.Claims.ClaimTypes.NameIdentifier).FirstOrDefault().Value;
     }
     catch
     {
@@ -329,7 +330,7 @@ app.Use(async (context, next) =>
 // - the server will not start while the RecoverAccount.txt file exists
 string PasswordRecoveryFile = Path.Combine(Config.LibraryConfiguration.LibraryRootDirectory, "RecoverAccount.txt");
 if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("recoveraccount")))
-{   
+{
     if (File.Exists(PasswordRecoveryFile))
     {
         // password has already been set - do nothing and just exit
@@ -345,7 +346,7 @@ if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("recoveraccount")))
         string password = new string(Enumerable.Repeat(chars, length).Select(s => s[random.Next(s.Length)]).ToArray());
 
         File.WriteAllText(PasswordRecoveryFile, password);
-        
+
         // reset the password
         using (var scope = app.Services.CreateScope())
         {
