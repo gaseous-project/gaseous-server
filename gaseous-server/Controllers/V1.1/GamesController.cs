@@ -26,11 +26,11 @@ namespace gaseous_server.Controllers.v1_1
     [ApiVersion("1.1")]
     [ApiController]
     [Authorize]
-    public class GamesController: ControllerBase
+    public class GamesController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        
+
         public GamesController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager)
@@ -106,7 +106,8 @@ namespace gaseous_server.Controllers.v1_1
             if (user != null)
             {
                 string IncludeUnrated = "";
-                if (user.SecurityProfile.AgeRestrictionPolicy.IncludeUnrated == true) {
+                if (user.SecurityProfile.AgeRestrictionPolicy.IncludeUnrated == true)
+                {
                     IncludeUnrated = " OR view_Games.AgeGroupId IS NULL";
                 }
 
@@ -150,7 +151,7 @@ namespace gaseous_server.Controllers.v1_1
             public GameSortingItem Sorting { get; set; } = new GameSortingItem();
             public bool HasSavedGame { get; set; }
             public bool IsFavourite { get; set; }
-            
+
 
             public class GameRatingItem
             {
@@ -163,7 +164,7 @@ namespace gaseous_server.Controllers.v1_1
 
             public class GameAgeRatingItem
             {
-                public List<AgeGroups.AgeRestrictionGroupings> AgeGroupings { get; set; } = new List<AgeGroups.AgeRestrictionGroupings>{ 
+                public List<AgeGroups.AgeRestrictionGroupings> AgeGroupings { get; set; } = new List<AgeGroups.AgeRestrictionGroupings>{
                     AgeGroups.AgeRestrictionGroupings.Child,
                     AgeGroups.AgeRestrictionGroupings.Teen,
                     AgeGroups.AgeRestrictionGroupings.Mature,
@@ -186,7 +187,7 @@ namespace gaseous_server.Controllers.v1_1
                 }
             }
         }
-    
+
         public static GameReturnPackage GetGames(GameSearchModel model, string userid, int pageNumber = 0, int pageSize = 0)
         {
             string whereClause = "";
@@ -446,7 +447,7 @@ namespace gaseous_server.Controllers.v1_1
             string orderByOrder = "ASC";
             if (model.Sorting != null)
             {
-                switch(model.Sorting.SortBy)
+                switch (model.Sorting.SortBy)
                 {
                     case GameSearchModel.GameSortingItem.SortField.NameThe:
                         orderByField = "NameThe";
@@ -477,7 +478,7 @@ namespace gaseous_server.Controllers.v1_1
             string orderByClause = "ORDER BY `" + orderByField + "` " + orderByOrder;
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            
+
             string sql = @"
 SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
 SELECT DISTINCT
@@ -485,6 +486,7 @@ SELECT DISTINCT
     Game.`Name`,
     Game.NameThe,
     Game.Slug,
+    Game.Summary,
     Game.PlatformId,
     Game.TotalRating,
     Game.TotalRatingCount,
@@ -568,7 +570,7 @@ FROM
                     }
                 }
 
-                Game retGame = Storage.BuildCacheObject<Game>(new Game() , dbResponse.Rows[i]);
+                Game retGame = Storage.BuildCacheObject<Game>(new Game(), dbResponse.Rows[i]);
                 Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
                 retMinGame.Index = i;
                 if (dbResponse.Rows[i]["RomSaveCount"] != DBNull.Value || dbResponse.Rows[i]["MediaGroupSaveCount"] != DBNull.Value)

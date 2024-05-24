@@ -22,7 +22,7 @@ function formatFilterPanel(containerElement, result) {
     containerPanelSearchField.id = 'filter_panel_search';
     containerPanelSearchField.type = 'text';
     containerPanelSearchField.placeholder = 'Search';
-    containerPanelSearchField.addEventListener("keypress", function(event) {
+    containerPanelSearchField.addEventListener("keypress", function (event) {
         if (event.key === "Enter") {
             // Cancel the default action, if needed
             event.preventDefault();
@@ -51,7 +51,7 @@ function formatFilterPanel(containerElement, result) {
 
     // settings
     buildFilterPanel(panel, 'settings', 'Settings', [
-        { 
+        {
             "id": "savestatesavailable",
             "name": "Game has save states avaialble",
             "gameCount": 0
@@ -157,7 +157,7 @@ function buildFilterPanel(targetElement, headerString, friendlyHeaderString, val
     }
     for (var i = 0; i < valueList.length; i++) {
         var tags;
-        
+
         if (valueList[i].gameCount) {
             tags = [
                 {
@@ -179,7 +179,7 @@ function buildFilterPanelHeader(headerString, friendlyHeaderString, showVisibleT
     } else {
         headerToggle.innerHTML = '+';
     }
-    
+
     var headerLabel = document.createElement('span');
     headerLabel.innerHTML = friendlyHeaderString;
 
@@ -252,7 +252,7 @@ function buildFilterPanelItem(filterType, itemString, friendlyItemString, tags) 
     }
     filterPanelItem.appendChild(filterPanelItemCheckBox);
     filterPanelItem.appendChild(filterPanelItemLabel);
-    
+
     return filterPanelItem;
 }
 
@@ -321,7 +321,7 @@ function executeFilterDelayed() {
 function buildFilterTag(tags) {
     // accepts an array of numbers + classes for styling (optional)
     // example [ { label: "G: 13", class: "tag_Green" }, { label: "R: 17", class: "tag_Orange" } ]
-    
+
     var boundingDiv = document.createElement('div');
     boundingDiv.className = 'tagBox';
 
@@ -405,7 +405,7 @@ function executeFilter1_1(pageNumber, pageSize) {
     if (!pageSize) {
         switch (pageMode) {
             case "infinite":
-                pageSize = 30;
+                pageSize = 20;
                 break;
             case "paged":
             default:
@@ -590,6 +590,7 @@ function executeFilter1_1(pageNumber, pageSize) {
         '/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize,
         'POST',
         function (result) {
+            console.log(result);
             var gameElement = document.getElementById('games_library');
             setCookie('games_library_last_page', pageNumber);
             formatGamesPanel(gameElement, result, pageNumber, pageSize, true);

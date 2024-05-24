@@ -1,0 +1,64 @@
+/* variables */
+:root {
+    /* fonts */
+    --pixel-font: Commodore64;
+    /* --page-font: "PT Sans",
+        Arial,
+        Helvetica,
+        sans-serif; */
+    --standard-font: -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        Roboto,
+        Oxygen-Sans,
+        Ubuntu,
+        Cantarell,
+        "Helvetica Neue",
+        sans-serif;
+    --mono-font: 'Courier New',
+        Courier,
+        monospace;
+
+    /* colour palette */
+    /* ------------------------------------------- */
+
+    /* page */
+    --page-font-colour: rgb(255, 255, 255);
+
+    /* scroll bar */
+    --scrollbar-track: rgb(56, 56, 56);
+    --scrollbar-thumb: rgb(136, 136, 136);
+    --scrollbar-thumb-hover: rgb(0, 0, 0);
+
+    /* input */
+    --input-background: rgb(43, 43, 43);
+    --input-border: rgb(43, 43, 43);
+    --input-border-hover: rgb(147, 147, 147);
+    --input-font-colour: var(--page-font-colour);
+
+    /* select2 */
+    --select2-background: var(--input-background);
+    --select2-border: var(--input-border);
+    --select2-border-hover: var(--input-border-hover);
+    --select2-font-colour: var(--input-font-colour);
+    --select2-dropdown-selection-background: rgb(0, 0, 170);
+    --select2-dropdown-selection-font-colour: var(--page-font-colour);
+    --select2-dropdown-selected-background: rgb(91, 91, 91);
+    --select2-dropdown-selected-font-colour: var(--page-font-colour);
+    --select2-tag-delete-button: rgb(255, 255, 255);
+    --select2-tag-delete-background: rgb(147, 147, 147);
+    --select2-tag-background: rgb(78, 78, 78);
+
+    /* section */
+    /* ------------------------------------------- */
+    /* secion header */
+    --section-header-background: rgba(43, 43, 43, 0.5);
+    --section-header-background-hover: rgba(0, 0, 0, 0.5);
+    /* section body */
+    --section-body-background: rgba(56, 56, 56, 0.3);
+    --section-heading-underline: rgba(56, 56, 56, 1);
+
+    /* fancy button */
+    --fancybutton-background: rgba(56, 56, 56, 0.3);
+    --fancybutton-background-hover: rgba(56, 56, 56, 0.9);
+}

@@ -542,6 +542,7 @@ namespace gaseous_server.Classes.Metadata
                 this.Id = gameObject.Id;
                 this.Name = gameObject.Name;
                 this.Slug = gameObject.Slug;
+                this.Summary = gameObject.Summary;
                 this.TotalRating = gameObject.TotalRating;
                 this.TotalRatingCount = gameObject.TotalRatingCount;
                 this.Cover = gameObject.Cover;
@@ -567,6 +568,7 @@ namespace gaseous_server.Classes.Metadata
             public long Index { get; set; }
             public string Name { get; set; }
             public string Slug { get; set; }
+            public string Summary { get; set; }
             public double? TotalRating { get; set; }
             public int? TotalRatingCount { get; set; }
             public bool HasSavedGame { get; set; } = false;

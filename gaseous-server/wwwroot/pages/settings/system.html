@@ -2,28 +2,45 @@
     <h1 id="gametitle_label">System</h1>
 </div>
 
-<h3>Background Tasks</h3>
-<div id="system_tasks"></div>
-
-<h3>Usage</h3>
-<p><strong>Disk</strong></p>
-<div id="system_disks"></div>
-<p><strong>Library</strong></p>
-<div>
-    <table cellspacing="0" style="width: 100%;">
-        <tr>
-            <td id="system_platforms"></td>
-        </tr>
-        <tr>
-            <td id="system_platforms_legend"></td>
-        </tr>
-    </table>
+<div class="section">
+    <div class="section-header">Background Tasks</div>
+    <div id="system_tasks" class="section-body"></div>
 </div>
-<p><strong>Database</strong></p>
-<div id="system_database"></div>
 
-<h3>Local Database Signatures</h3>
-<div id="system_signatures"></div>
+<div class="section">
+    <div class="section-header">Disk Usage</div>
+    <div class="section-body">
+        <div id="system_disks"></div>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-header">Library</div>
+    <div class="section-body">
+        <table cellspacing="0" style="width: 100%;">
+            <tr>
+                <td id="system_platforms"></td>
+            </tr>
+            <tr>
+                <td id="system_platforms_legend"></td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-header">Database</div>
+    <div class="section-body">
+        <div id="system_database"></div>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-header">Local Database Signatures</div>
+    <div class="section-body">
+        <div id="system_signatures"></div>
+    </div>
+</div>
 
 <script type="text/javascript">
     function SystemLoadStatus() {
@@ -225,7 +242,7 @@
 
             var legendLabel = document.createElement('div');
             legendLabel.className = 'legend_label';
-            legendLabel.innerHTML = LibraryStatistics[i].platform + '<br />' + formatBytes(LibraryStatistics[i].totalSize) + '<br />Images: ' + LibraryStatistics[i].romCount;
+            legendLabel.innerHTML = '<strong>' + LibraryStatistics[i].platform + '</strong><br />' + formatBytes(LibraryStatistics[i].totalSize) + '<br />ROMs: ' + LibraryStatistics[i].romCount;
 
             legend.appendChild(legendColour);
             legend.appendChild(legendLabel);

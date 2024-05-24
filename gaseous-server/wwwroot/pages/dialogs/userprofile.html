@@ -1,7 +1,10 @@
 <div id="properties_toc">
-    <div id="properties_profile_toc_general" name="properties_profile_toc_item" onclick="ProfileSelectTab('general');">Preferences</div>
-    <div id="properties_profile_toc_avatar" name="properties_profile_toc_item" onclick="ProfileSelectTab('avatar');">Avatar</div>
-    <div id="properties_profile_toc_account" name="properties_profile_toc_item" onclick="ProfileSelectTab('account');">Account</div>
+    <div id="properties_profile_toc_general" name="properties_profile_toc_item" onclick="ProfileSelectTab('general');">
+        Preferences</div>
+    <div id="properties_profile_toc_avatar" name="properties_profile_toc_item" onclick="ProfileSelectTab('avatar');">
+        Avatar</div>
+    <div id="properties_profile_toc_account" name="properties_profile_toc_item" onclick="ProfileSelectTab('account');">
+        Account</div>
 </div>
 <div id="properties_bodypanel">
     <div id="properties_bodypanel_general" name="properties_profile_tab" style="display: none;">
@@ -19,9 +22,24 @@
             </tr>
             <tr>
                 <td>
-                    <select id="profile_pref-LibraryPagination" data-pref="LibraryPagination" data-minimum-results-for-search="Infinity">
+                    <select id="profile_pref-LibraryPagination" data-pref="LibraryPagination"
+                        data-minimum-results-for-search="Infinity">
                         <option value="paged">Paged</option>
                         <option value="infinite">Infinite scrolling</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    View mode:
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <select id="profile_pref-LibraryListView" data-pref="LibraryListView"
+                        data-minimum-results-for-search="Infinity">
+                        <option value="false">Icon</option>
+                        <option value="true">List</option>
                     </select>
                 </td>
             </tr>
@@ -35,17 +53,23 @@
             </tr>
             <tr>
                 <td>
-                    <input type="checkbox" id="profile_pref_LibraryShowGameTitle" data-pref="LibraryShowGameTitle"><label for="profile_pref_LibraryShowGameTitle"> Show title</label>
+                    <input type="checkbox" id="profile_pref_LibraryShowGameTitle"
+                        data-pref="LibraryShowGameTitle"><label for="profile_pref_LibraryShowGameTitle"> Show
+                        title</label>
                 </td>
             </tr>
             <tr>
                 <td>
-                    <input type="checkbox" id="profile_pref_LibraryShowGameRating" data-pref="LibraryShowGameRating"><label for="profile_pref_LibraryShowGameRating"> Show rating</label>
+                    <input type="checkbox" id="profile_pref_LibraryShowGameRating"
+                        data-pref="LibraryShowGameRating"><label for="profile_pref_LibraryShowGameRating"> Show
+                        rating</label>
                 </td>
             </tr>
             <tr>
                 <td>
-                    <input type="checkbox" id="profile_pref_LibraryShowGameClassification" data-pref="LibraryShowGameClassification"><label for="profile_pref_LibraryShowGameClassification"> Show age classification badges</label>
+                    <input type="checkbox" id="profile_pref_LibraryShowGameClassification"
+                        data-pref="LibraryShowGameClassification"><label
+                        for="profile_pref_LibraryShowGameClassification"> Show age classification badges</label>
                 </td>
             </tr>
             <tr>
@@ -56,7 +80,9 @@
                         </tr>
                         <tr>
                             <td>
-                                <select id="profile_pref_LibraryPrimaryClassificationBadge" data-primary="primary" data-minimum-results-for-search="Infinity" onchange="SavePrefValue_ClassBadge(this);">
+                                <select id="profile_pref_LibraryPrimaryClassificationBadge" data-primary="primary"
+                                    data-minimum-results-for-search="Infinity"
+                                    onchange="SavePrefValue_ClassBadge(this);">
                                 </select>
                             </td>
                         </tr>
@@ -65,7 +91,9 @@
                         </tr>
                         <tr>
                             <td>
-                                <select id="profile_pref_LibraryFallbackClassificationBadge" onchange="SavePrefValue_ClassBadge(this);" data-minimum-results-for-search="Infinity">
+                                <select id="profile_pref_LibraryFallbackClassificationBadge"
+                                    onchange="SavePrefValue_ClassBadge(this);"
+                                    data-minimum-results-for-search="Infinity">
                                 </select>
                             </td>
                         </tr>
@@ -88,10 +116,13 @@
         <h3>Avatar</h3>
         <div style="width: 100%; text-align: center;">
             <div>
-                <img id="properties_bodypanel_avatar_image" style="width: 200px; height: 200px;" src="/images/user.svg"/>
+                <img id="properties_bodypanel_avatar_image" style="width: 200px; height: 200px;"
+                    src="/images/user.svg" />
             </div>
             <form id="properties_bodypanel_avatar_form" onsubmit="return false">
-                <input type="file" name="file" id="properties_bodypanel_avatar_upload" accept="image/*" /><button value="Save" onclick="SaveAvatar();">Save</button><button value="Delete" onclick="SaveAvatar(true);">Delete</button>
+                <input type="file" name="file" id="properties_bodypanel_avatar_upload" accept="image/*" /><button
+                    value="Save" onclick="SaveAvatar();">Save</button><button value="Delete"
+                    onclick="SaveAvatar(true);">Delete</button>
             </form>
         </div>
     </div>
@@ -104,11 +135,13 @@
             </tr>
             <tr>
                 <th>New Password</th>
-                <td><input type="password" id="profile_newpassword" style="width: 95%;" onkeyup="checkPasswordsMatch();" /></td>
+                <td><input type="password" id="profile_newpassword" style="width: 95%;"
+                        onkeyup="checkPasswordsMatch();" /></td>
             </tr>
             <tr>
                 <th>Confirm Password</th>
-                <td><input type="password" id="profile_confirmpassword" style="width: 95%;" onkeyup="checkPasswordsMatch();" /></td>
+                <td><input type="password" id="profile_confirmpassword" style="width: 95%;"
+                        onkeyup="checkPasswordsMatch();" /></td>
             </tr>
             <tr>
                 <td colspan="2" id="profile_passwordnotice"></td>
@@ -118,7 +151,8 @@
             </tr>
             <tr>
                 <td colspan="2" style="text-align: right;">
-                    <button id="profile_resetpassword" value="Reset Password" disabled="disabled" onclick="ResetPassword();">Reset Password</button>
+                    <button id="profile_resetpassword" value="Reset Password" disabled="disabled"
+                        onclick="ResetPassword();">Reset Password</button>
                 </td>
             </tr>
         </table>
@@ -152,6 +186,9 @@
         var paginationMode = document.getElementById('profile_pref-LibraryPagination');
         paginationMode.value = GetPreference('LibraryPagination', 'paged');
 
+        var listMode = document.getElementById('profile_pref-LibraryListView');
+        listMode.value = GetPreference('LibraryListView', 'false');
+
         ConfigurePrefInitialValue_Checkbox("LibraryShowGameTitle", GetPreference("LibraryShowGameTitle", true));
         ConfigurePrefInitialValue_Checkbox("LibraryShowGameRating", GetPreference("LibraryShowGameRating", true));
         ConfigurePrefInitialValue_Checkbox("LibraryShowGameClassification", GetPreference("LibraryShowGameClassification", true));
@@ -161,7 +198,7 @@
         PopulateClassificationMenus(primary);
         PopulateClassificationMenus(secondary, true);
 
-        var classificationOrder = JSON.parse(GetPreference("LibraryGameClassificationDisplayOrder", JSON.stringify([ "ESRB" ])));
+        var classificationOrder = JSON.parse(GetPreference("LibraryGameClassificationDisplayOrder", JSON.stringify(["ESRB"])));
         primary.value = classificationOrder[0];
         if (classificationOrder[1]) {
             secondary.value = classificationOrder[1];
@@ -214,17 +251,19 @@
 
 
         model.push(SavePrefValue_Value(document.getElementById('profile_pref-LibraryPagination')));
-        
+        model.push(SavePrefValue_Value(document.getElementById
+            ('profile_pref-LibraryListView')));
+
         model.push(
             {
                 "setting": "LibraryGameClassificationDisplayOrder",
                 "value": JSON.stringify(SavePrefValue_ClassBadge(document.getElementById('profile_pref_LibraryPrimaryClassificationBadge')))
             }
         );
-        
+
         SetPreference_Batch(model);
-        
-        if (getQueryString('page', 'string') == 'home' ||  getQueryString('page', 'string') == undefined) {
+
+        if (getQueryString('page', 'string') == 'home' || getQueryString('page', 'string') == undefined) {
             setCookie('games_library_last_page', 1);
             //location.reload();
         }
@@ -234,18 +273,18 @@
 
     function SavePrefValue_Checkbox(e) {
         var ValueName = e.getAttribute("data-pref");
-        
+
         return { "setting": ValueName, "value": e.checked.toString() };
     }
 
     function SavePrefValue_Value(e) {
         var ValueName = e.getAttribute("data-pref");
-        
+
         return { "setting": ValueName, "value": e.value };
     }
 
     function updateDisplay(ValueName, ValueSetting) {
-        switch(ValueName) {
+        switch (ValueName) {
             case "LibraryShowGameClassification":
                 // var badgeSelector = document.getElementById("profile_pref_LibraryClassificationBadgeSelect");
                 // if (ValueSetting == true || ValueSetting == "true") {
@@ -277,13 +316,13 @@
             }
         }
 
-    
+
         // save values
         var model = [];
         if (secondary.value == '-') {
-            model = [ primary.value ];
+            model = [primary.value];
         } else {
-            model = [ primary.value, secondary.value ];
+            model = [primary.value, secondary.value];
         }
 
         return model;
@@ -331,10 +370,10 @@
         ajaxCall(
             '/api/v1.1/Account/ChangePassword',
             'POST',
-            function(result) {
+            function (result) {
                 ResetPasswordCallback(result);
             },
-            function(error) {
+            function (error) {
                 ResetPasswordCallback(error);
             },
             JSON.stringify(model)
@@ -387,7 +426,7 @@
 
                 // Our sample url to make request
                 url:
-                '/api/v1.1/Account/Avatar',
+                    '/api/v1.1/Account/Avatar',
 
                 // Type of Request
                 type: 'POST',
@@ -444,6 +483,7 @@
     displayAvatarPreview();
 
     $('#profile_pref-LibraryPagination').select2();
+    $('#profile_pref-LibraryListView').select2();
     $('#profile_pref_LibraryPrimaryClassificationBadge').select2();
     $('#profile_pref_LibraryFallbackClassificationBadge').select2();
 </script>

@@ -1,40 +1,40 @@
 ﻿var ClassificationBoards = {
-    "ESRB":      "Entertainment Software Rating Board (ESRB)",
-    "PEGI":      "Pan European Game Information (PEGI)",
-    "CERO":      "Computer Entertainment Rating Organisation (CERO)",
-    "USK":       "Unterhaltungssoftware Selbstkontrolle (USK)",
-    "GRAC":      "Game Rating and Administration Committee (GRAC)",
+    "ESRB": "Entertainment Software Rating Board (ESRB)",
+    "PEGI": "Pan European Game Information (PEGI)",
+    "CERO": "Computer Entertainment Rating Organisation (CERO)",
+    "USK": "Unterhaltungssoftware Selbstkontrolle (USK)",
+    "GRAC": "Game Rating and Administration Committee (GRAC)",
     "CLASS_IND": "Brazilian advisory rating system",
-    "ACB":       "Australian Classification Board (ACB)"
+    "ACB": "Australian Classification Board (ACB)"
 };
 
 var ClassificationRatings = {
-    "E":         "Everyone",
-    "E10":       "Everyone 10+",
-    "T":         "Teen",
-    "M":         "Mature 17+",
-    "AO":        "Adults Only 18+",
-    "RP":        "Rating Pending",
+    "E": "Everyone",
+    "E10": "Everyone 10+",
+    "T": "Teen",
+    "M": "Mature 17+",
+    "AO": "Adults Only 18+",
+    "RP": "Rating Pending",
 
-    "Three":     "PEGI 3",
-    "Seven":     "PEGI 7",
-    "Twelve":    "PEGI 12",
-    "Sixteen":   "PEGI 16",
-    "Eighteen":  "PEGI 18",
-    
-    "CERO_A":    "All Ages",
-    "CERO_B":    "Ages 12 and up",
-    "CERO_C":    "Ages 15 and up",
-    "CERO_D":    "Ages 17 and up",
-    "CERO_Z":    "Ages 18 and up only",
+    "Three": "PEGI 3",
+    "Seven": "PEGI 7",
+    "Twelve": "PEGI 12",
+    "Sixteen": "PEGI 16",
+    "Eighteen": "PEGI 18",
 
-    "USK_0":     "Approved without age restriction",
-    "USK_6":     "Approved for children aged 6 and above",
-    "USK_12":    "Approved for children aged 12 and above",
-    "USK_16":    "Approved for children aged 16 and above",
-    "USK_18":    "Not approved for young persons",
+    "CERO_A": "All Ages",
+    "CERO_B": "Ages 12 and up",
+    "CERO_C": "Ages 15 and up",
+    "CERO_D": "Ages 17 and up",
+    "CERO_Z": "Ages 18 and up only",
 
-    "GRAC_All":  "All",
+    "USK_0": "Approved without age restriction",
+    "USK_6": "Approved for children aged 6 and above",
+    "USK_12": "Approved for children aged 12 and above",
+    "USK_16": "Approved for children aged 16 and above",
+    "USK_18": "Not approved for young persons",
+
+    "GRAC_All": "All",
     "GRAC_Twelve": "12+",
     "GRAC_Fifteen": "15+",
     "GRAC_Eighteen": "18+",
@@ -47,12 +47,12 @@ var ClassificationRatings = {
     "CLASS_IND_Sixteen": "Not recommended for minors under sixteen",
     "CLASS_IND_Eighteen": "Not recommended for minors under eighteen",
 
-    "ACB_G":     "General",
-    "ACB_PG":    "Parental Guidance",
-    "ACB_M":     "Mature",
-    "ACB_MA15":  "Mature Accompanied",
-    "ACB_R18":   "Restricted",
-    "ACB_RC":    "Refused Classification"
+    "ACB_G": "General",
+    "ACB_PG": "Parental Guidance",
+    "ACB_M": "Mature",
+    "ACB_MA15": "Mature Accompanied",
+    "ACB_R18": "Restricted",
+    "ACB_RC": "Refused Classification"
 };
 
 var pageReloadInterval;
@@ -60,6 +60,11 @@ var firstLoad = true;
 
 function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScrollTop) {
     var pageMode = GetPreference('LibraryPagination', 'paged');
+    let listViewRaw = GetPreference('LibraryListView', 'false');
+    let listView = false;
+    if (listViewRaw == 'true') {
+        listView = true;
+    }
 
     if (pageNumber == 1) {
         localStorage.setItem("gaseous-library-scrollpos", 0);
@@ -139,14 +144,21 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
     var showTitle = GetPreference("LibraryShowGameTitle", true);
     var showRatings = GetPreference("LibraryShowGameRating", true);
     var showClassification = GetPreference("LibraryShowGameClassification", true);
-    var classificationDisplayOrderString = GetPreference("LibraryGameClassificationDisplayOrder", JSON.stringify([ "ESRB" ]));
+    var classificationDisplayOrderString = GetPreference("LibraryGameClassificationDisplayOrder", JSON.stringify(["ESRB"]));
     var classificationDisplayOrder = JSON.parse(classificationDisplayOrderString);
     if (showTitle == "true") { showTitle = true; } else { showTitle = false; }
     if (showRatings == "true") { showRatings = true; } else { showRatings = false; }
     if (showClassification == "true") { showClassification = true; } else { showClassification = false; }
 
+    let tileWrapperClass = '';
+    if (listView === true) {
+        tileWrapperClass = 'game_tile_wrapper_list';
+    } else {
+        tileWrapperClass = 'game_tile_wrapper_icon';
+    }
+
     for (var i = 0; i < result.games.length; i++) {
-        var game = renderGameIcon(result.games[i], showTitle, showRatings, showClassification, classificationDisplayOrder, false);
+        var game = renderGameIcon(result.games[i], showTitle, showRatings, showClassification, classificationDisplayOrder, false, listView);
         switch (pageMode) {
             case "paged":
                 targetElement.appendChild(game);
@@ -154,8 +166,8 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
 
             case "infinite":
                 var placeholderElement = document.getElementById('GamePlaceholder' + result.games[i].index);
-                if (placeholderElement.className != 'game_tile_wrapper') {
-                    placeholderElement.className = 'game_tile_wrapper';
+                if (placeholderElement.className != tileWrapperClass) {
+                    placeholderElement.className = tileWrapperClass;
                     placeholderElement.innerHTML = '';
                     placeholderElement.appendChild(game);
                 }
@@ -172,7 +184,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
     var alphaPager = document.getElementById('games_library_alpha_pager');
     alphaPager.innerHTML = '';
 
-    switch(pageMode) {
+    switch (pageMode) {
         case 'infinite':
             for (const [key, value] of Object.entries(result.alphaList)) {
                 var letterPager = document.createElement('span');
@@ -181,7 +193,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
                 letterPager.innerHTML = key;
                 alphaPager.appendChild(letterPager);
             }
-            
+
             if (firstLoad == true) {
                 if (localStorage.getItem("gaseous-library-scrollpos") != null) {
                     $(window).scrollTop(localStorage.getItem("gaseous-library-scrollpos"));
@@ -297,7 +309,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
         visibleOnly: true,
         defaultImage: '/images/unknowngame.png',
         delay: 250,
-        afterLoad: function(element) {
+        afterLoad: function (element) {
             //console.log(element[0].getAttribute('data-id'));
         }
     });
@@ -319,11 +331,11 @@ const elementIsVisibleInViewport = (el, partiallyVisible = false) => {
     const { top, left, bottom, right } = el.getBoundingClientRect();
     const { innerHeight, innerWidth } = window;
     return partiallyVisible
-      ? ((top > 0 && top < innerHeight) ||
-          (bottom > 0 && bottom < innerHeight)) &&
-          ((left > 0 && left < innerWidth) || (right > 0 && right < innerWidth))
-      : top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
-  };
+        ? ((top > 0 && top < innerHeight) ||
+            (bottom > 0 && bottom < innerHeight)) &&
+        ((left > 0 && left < innerWidth) || (right > 0 && right < innerWidth))
+        : top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
+};
 
 function IsInView() {
     var pageMode = GetPreference('LibraryPagination', 'paged');
@@ -377,7 +389,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
         gameBox.classList.add(...classes['game_tile']);
     }
     gameBox.setAttribute('onclick', 'window.location.href = "/index.html?page=game&id=' + gameObject.id + '";');
-    gameBox.style.display = 'none';
+    // gameBox.style.display = 'none';
 
     var gameImageBox = document.createElement('div');
     gameImageBox.classList.add(...classes['game_tile_box']);
@@ -445,7 +457,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
                     gameImageRatingBannerLogo.src = '/images/IGDB_logo.svg';
                     gameImageRatingBannerLogo.setAttribute('style', 'filter: invert(100%); height: 10px; margin-right: 5px; padding-top: 4px;');
                     gameImageRatingBanner.appendChild(gameImageRatingBannerLogo);
-    
+
                     var gameImageRatingBannerValue = document.createElement('span');
                     gameImageRatingBannerValue.innerHTML = Math.floor(gameObject.totalRating) + '% / ' + gameObject.totalRatingCount;
                     gameImageRatingBanner.appendChild(gameImageRatingBannerValue);
@@ -453,7 +465,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
             }
 
             gameImageBox.appendChild(gameImageRatingBanner);
-            
+
             if (displayClassification == true) {
                 var gameImageClassificationLogo = document.createElement('img');
                 gameImageClassificationLogo.src = classificationPath;
@@ -469,6 +481,15 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
         gameBoxTitle.classList.add(...classes['game_tile_label']);
         gameBoxTitle.innerHTML = gameObject.name;
         gameBox.appendChild(gameBoxTitle);
+
+        if (listView == true) {
+            if (gameObject.summary) {
+                let gameBoxSummary = document.createElement('div');
+                gameBoxSummary.classList.add(...classes['game_tile_summary']);
+                gameBoxSummary.innerHTML = gameObject.summary;
+                gameBox.appendChild(gameBoxSummary);
+            }
+        }
     }
 
     return gameBox;
@@ -477,31 +498,33 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
 function getViewModeClasses(listView) {
     if (listView == false) {
         return {
-            "game_tile game_tile_small": [ "game_tile", "game_tile_small" ],
-            "game_tile": [ "game_tile" ],
-            "game_tile_box": [ "game_tile_box" ],
-            "game_tile_image game_tile_image_small lazy": [ "game_tile_image", "game_tile_image_small", "lazy" ],
-            "game_tile_image lazy": [ "game_tile_image", "lazy" ],
-            "game_tile_image unknown": [ "game_tile_image", "unknown" ],
-            "game_tile_box_savedgame savedstateicon": [ "game_tile_box_savedgame", "savedstateicon" ],
-            "game_tile_box_favouritegame favouriteicon": [ "game_tile_box_favouritegame", "favouriteicon" ],
-            "game_tile_box_ratingbanner": [ "game_tile_box_ratingbanner" ],
-            "rating_image_overlay": [ "rating_image_overlay" ],
-            "game_tile_label": [ "game_tile_label" ]
+            "game_tile game_tile_small": ["game_tile", "game_tile_small"],
+            "game_tile": ["game_tile"],
+            "game_tile_box": ["game_tile_box"],
+            "game_tile_image game_tile_image_small lazy": ["game_tile_image", "game_tile_image_small", "lazy"],
+            "game_tile_image lazy": ["game_tile_image", "lazy"],
+            "game_tile_image unknown": ["game_tile_image", "unknown"],
+            "game_tile_box_savedgame savedstateicon": ["game_tile_box_savedgame", "savedstateicon"],
+            "game_tile_box_favouritegame favouriteicon": ["game_tile_box_favouritegame", "favouriteicon"],
+            "game_tile_box_ratingbanner": ["game_tile_box_ratingbanner"],
+            "rating_image_overlay": ["rating_image_overlay"],
+            "game_tile_label": ["game_tile_label"],
+            "game_tile_summary": ["game_tile_summary"]
         };
     } else {
         return {
-            "game_tile game_tile_small": [ "game_tile_row", "game_tile_small" ],
-            "game_tile": [ "game_tile_row" ],
-            "game_tile_box": [ "game_tile_box_row" ],
-            "game_tile_image game_tile_image_small lazy": [ "game_tile_image_row", "game_tile_image_small", "lazy" ],
-            "game_tile_image lazy": [ "game_tile_image_row", "lazy" ],
-            "game_tile_image unknown": [ "game_tile_image_row", "unknown" ],
-            "game_tile_box_savedgame savedstateicon": [ "game_tile_box_savedgame_row", "savedstateicon" ],
-            "game_tile_box_favouritegame favouriteicon": [ "game_tile_box_favouritegame_row", "favouriteicon" ],
-            "game_tile_box_ratingbanner": [ "game_tile_box_ratingbanner_row" ],
-            "rating_image_overlay": [ "rating_image_overlay_row" ],
-            "game_tile_label": [ "game_tile_label_row" ]
+            "game_tile game_tile_small": ["game_tile_row", "game_tile_small"],
+            "game_tile": ["game_tile_row"],
+            "game_tile_box": ["game_tile_box_row"],
+            "game_tile_image game_tile_image_small lazy": ["game_tile_image_row", "game_tile_image_small", "lazy"],
+            "game_tile_image lazy": ["game_tile_image_row", "lazy"],
+            "game_tile_image unknown": ["game_tile_image_row", "unknown"],
+            "game_tile_box_savedgame savedstateicon": ["game_tile_box_savedgame_row", "savedstateicon"],
+            "game_tile_box_favouritegame favouriteicon": ["game_tile_box_favouritegame_row", "favouriteicon"],
+            "game_tile_box_ratingbanner": ["game_tile_box_ratingbanner_row"],
+            "rating_image_overlay": ["rating_image_overlay_row"],
+            "game_tile_label": ["game_tile_label_row"],
+            "game_tile_summary": ["game_tile_summary_row"]
         };
     }
 }
