@@ -101,11 +101,6 @@
                 </td>
             </tr>
             <tr>
-                <td>
-                    <strong>Note</strong>: The page will need to be reloaded for changes to take effect.
-                </td>
-            </tr>
-            <tr>
                 <td style="text-align: right;">
                     <button id="profile_pref_ok" value="OK" onclick="SavePrefs();">OK</button>
                 </td>
@@ -261,7 +256,17 @@
             }
         );
 
-        SetPreference_Batch(model);
+        SetPreference_Batch(
+            model,
+            function () {
+                console.log('Success: Preferences saved');
+                executeFilter1_1();
+            },
+            function () {
+                console.log('Error: Preferences saved');
+                executeFilter1_1();
+            }
+        );
 
         if (getQueryString('page', 'string') == 'home' || getQueryString('page', 'string') == undefined) {
             setCookie('games_library_last_page', 1);

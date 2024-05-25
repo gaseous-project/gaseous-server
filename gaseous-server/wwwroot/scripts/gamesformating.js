@@ -59,11 +59,34 @@ var pageReloadInterval;
 var firstLoad = true;
 
 function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScrollTop) {
-    var pageMode = GetPreference('LibraryPagination', 'paged');
+    // set page mode buttons
+    let pageViewButton = document.getElementById('games_library_button_pagedview');
+    let infiniteViewButton = document.getElementById('games_library_button_infiniteview');
+    let pageMode = GetPreference('LibraryPagination', 'paged');
+    switch (pageMode) {
+        case 'paged':
+            pageViewButton.classList.add('games_library_button_selected');
+            infiniteViewButton.classList.remove('games_library_button_selected');
+            break;
+
+        case 'infinite':
+            pageViewButton.classList.remove('games_library_button_selected');
+            infiniteViewButton.classList.add('games_library_button_selected');
+            break;
+    }
+
+    // set view mode buttons
+    let listViewButton = document.getElementById('games_library_button_listview');
+    let iconViewButton = document.getElementById('games_library_button_iconview');
     let listViewRaw = GetPreference('LibraryListView', 'false');
     let listView = false;
     if (listViewRaw == 'true') {
         listView = true;
+        listViewButton.classList.add('games_library_button_selected');
+        iconViewButton.classList.remove('games_library_button_selected');
+    } else {
+        listViewButton.classList.remove('games_library_button_selected');
+        iconViewButton.classList.add('games_library_button_selected');
     }
 
     if (pageNumber == 1) {

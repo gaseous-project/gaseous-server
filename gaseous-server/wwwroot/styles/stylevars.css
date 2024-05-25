@@ -24,6 +24,8 @@
 
     /* page */
     --page-font-colour: rgb(255, 255, 255);
+    --selected-item: rgb(0, 0, 170);
+    --selected-item-hover: rgb(0, 0, 255);
 
     /* scroll bar */
     --scrollbar-track: rgb(56, 56, 56);
@@ -41,7 +43,7 @@
     --select2-border: var(--input-border);
     --select2-border-hover: var(--input-border-hover);
     --select2-font-colour: var(--input-font-colour);
-    --select2-dropdown-selection-background: rgb(0, 0, 170);
+    --select2-dropdown-selection-background: var(--selected-item);
     --select2-dropdown-selection-font-colour: var(--page-font-colour);
     --select2-dropdown-selected-background: rgb(91, 91, 91);
     --select2-dropdown-selected-font-colour: var(--page-font-colour);

@@ -6,7 +6,7 @@ body {
     font-family: var(--standard-font);
     font-kerning: normal;
     font-style: normal;
-    font-weight: 100;
+    font-weight: 250;
     font-size: 13px;
 }
 
@@ -329,7 +329,7 @@ textarea {
     font-family: var(--standard-font);
     font-kerning: normal;
     font-style: normal;
-    font-weight: 100;
+    font-weight: 250;
     font-size: 13px;
     border-radius: 5px;
     border-width: 1px;
@@ -517,6 +517,44 @@ input[name='filter_panel_range_max'] {
     display: inline-block;
     vertical-align: top;
     text-align: left;
+}
+
+.games_library_button {
+    display: inline-block;
+    padding: 5px;
+    width: 15px;
+    height: 15px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    margin-right: 2px;
+    border-radius: 5px;
+    border-width: 1px;
+    border-style: solid;
+    border-color: var(--input-border);
+    background-color: var(--input-border);
+    text-align: center;
+}
+
+.games_library_button_selected {
+    border-color: var(--selected-item);
+    background-color: var(--selected-item);
+}
+
+.games_library_button_selected:hover {
+    border-color: var(--selected-item-hover) !important;
+    background-color: var(--selected-item-hover) !important;
+}
+
+.games_library_button:hover {
+    cursor: pointer;
+    border-color: var(--input-border-hover);
+    background-color: var(--input-border-hover);
+}
+
+.games_library_button_icon {
+    height: 12px;
+    width: 12px;
+    filter: invert(100%);
 }
 
 .games_library_label {
@@ -1090,7 +1128,15 @@ table .romrow:nth-child(odd) {
 }
 
 .romcell {
-    padding: 5px;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-top: 7px;
+    padding-bottom: 7px;
+}
+
+.romcell-headercell {
+    font-weight: bold;
+    width: 25%;
 }
 
 .savedstateicon {
@@ -1111,6 +1157,7 @@ table .romrow:nth-child(odd) {
 th {
     text-align: left;
     padding: 5px;
+    background-color: var(--section-header-background);
 }
 
 .romlink {
@@ -1361,16 +1408,16 @@ button:not(.select2-selection__choice__remove):not(.ejs_menu_button):disabled {
 }
 
 .redbutton {
-    background-color: darkred;
-    border-color: darkred;
+    background-color: darkred !important;
+    border-color: darkred !important;
 }
 
 .redbutton:hover {
-    background-color: red;
+    background-color: red !important;
 }
 
 .redbutton:disabled {
-    background-color: #555;
+    background-color: #555 !important;
 }
 
 #emulator {}
@@ -1451,7 +1498,9 @@ button:not(.select2-selection__choice__remove):not(.ejs_menu_button):disabled {
     margin-left: 15px;
 }
 
-.rom_checkbox_box {}
+.rom_checkbox_box {
+    padding-left: 10px;
+}
 
 .rom_checkbox_box_hidden {
     display: none;
@@ -1460,6 +1509,10 @@ button:not(.select2-selection__choice__remove):not(.ejs_menu_button):disabled {
 #rom_edit,
 #rom_edit_delete {
     float: right;
+}
+
+#rom_edit {
+    padding: 10px;
 }
 
 #rom_edit_panel {

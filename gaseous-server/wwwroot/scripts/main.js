@@ -39,7 +39,7 @@ function ajaxCall(endpoint, method, successFunction, errorFunction, body) {
 
 function getQueryString(stringName, type) {
     const urlParams = new URLSearchParams(window.location.search);
-    var myParam =  urlParams.get(stringName);
+    var myParam = urlParams.get(stringName);
 
     switch (type) {
         case "int":
@@ -63,9 +63,9 @@ function getQueryString(stringName, type) {
 
 function setCookie(cname, cvalue, exdays) {
     const d = new Date();
-    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
     if (exdays) {
-        let expires = "expires="+ d.toUTCString();
+        let expires = "expires=" + d.toUTCString();
         document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
     } else {
         document.cookie = cname + "=" + cvalue + ";path=/";
@@ -76,14 +76,14 @@ function getCookie(cname) {
     let name = cname + "=";
     let decodedCookie = decodeURIComponent(document.cookie);
     let ca = decodedCookie.split(';');
-    for(let i = 0; i <ca.length; i++) {
-      let c = ca[i];
-      while (c.charAt(0) == ' ') {
-        c = c.substring(1);
-      }
-      if (c.indexOf(name) == 0) {
-        return c.substring(name.length, c.length);
-      }
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
     }
     return "";
 }
@@ -207,7 +207,7 @@ function createTableRow(isHeader, row, rowClass, cellClass) {
         }
 
         var newCell = document.createElement(cellType);
-        if (typeof(row[i]) != "object") {
+        if (typeof (row[i]) != "object") {
             newCell.innerHTML = row[i];
             newCell.className = cellClass;
         } else {
@@ -317,8 +317,8 @@ function CreateEditableTable(TableName, Headers) {
     var addButton = document.createElement('button');
     addButton.value = 'Add Row';
     addButton.innerHTML = 'Add Row';
-    
-    $(addButton).click(function() {
+
+    $(addButton).click(function () {
         eTable.appendChild(AddEditableTableRow(Headers));
     });
 
@@ -452,7 +452,7 @@ function GetPreference(Setting, DefaultValue) {
     return DefaultValue;
 }
 
-function SetPreference(Setting, Value) {
+function SetPreference(Setting, Value, callbackSuccess, callbackError) {
     var model = [
         {
             "setting": Setting,
@@ -463,29 +463,45 @@ function SetPreference(Setting, Value) {
     ajaxCall(
         '/api/v1.1/Account/Preferences',
         'POST',
-        function(result) {
+        function (result) {
             SetPreference_Local(Setting, Value);
+
+            if (callbackSuccess) {
+                callbackSuccess();
+            }
         },
-        function(error) {
+        function (error) {
             SetPreference_Local(Setting, Value);
+
+            if (callbackError) {
+                callbackError();
+            }
         },
         JSON.stringify(model)
     );
 }
 
-function SetPreference_Batch(model) {
+function SetPreference_Batch(model, callbackSuccess, callbackError) {
     console.log(model);
     ajaxCall(
         '/api/v1.1/Account/Preferences',
         'POST',
-        function(result) {
+        function (result) {
             for (var i = 0; i < model.length; i++) {
                 SetPreference_Local(model[i].setting, model[i].value.toString());
             }
+
+            if (callbackSuccess) {
+                callbackSuccess();
+            }
         },
-        function(error) {
+        function (error) {
             for (var i = 0; i < model.length; i++) {
                 SetPreference_Local(model[i].setting, model[i].value.toString());
+            }
+
+            if (callbackError) {
+                callbackError();
             }
         },
         JSON.stringify(model)
@@ -509,11 +525,11 @@ function SetPreference_Local(Setting, Value) {
     }
 }
 
-function Uint8ToString(u8a){
+function Uint8ToString(u8a) {
     var CHUNK_SZ = 0x8000;
     var c = [];
-    for (var i=0; i < u8a.length; i+=CHUNK_SZ) {
-      c.push(String.fromCharCode.apply(null, u8a.subarray(i, i+CHUNK_SZ)));
+    for (var i = 0; i < u8a.length; i += CHUNK_SZ) {
+        c.push(String.fromCharCode.apply(null, u8a.subarray(i, i + CHUNK_SZ)));
     }
     return c.join("");
 }

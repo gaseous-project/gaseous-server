@@ -2,10 +2,16 @@
     <h1 id="gametitle_label">Users</h1>
 </div>
 
-<button id="settings_users_new" value="New User" style="float: right;" onclick="showSubDialog('settingsusernew');">New User</button>
+<div class="section">
+    <div class="section-body">
+        <div id="settings_users_table_container">
 
-<div id="settings_users_table_container">
-
+        </div>
+        <div style="text-align: right;"><button id="settings_users_new" value="New User"
+                onclick="showSubDialog('settingsusernew');">New
+                User</button>
+        </div>
+    </div>
 </div>
 
 <script type="text/javascript">
@@ -16,7 +22,7 @@
         ajaxCall(
             '/api/v1.1/Account/Users',
             'GET',
-            function(result) {
+            function (result) {
                 var newTable = document.createElement('table');
                 newTable.className = 'romtable';
                 newTable.style.width = '100%';
@@ -24,8 +30,8 @@
 
                 newTable.appendChild(
                     createTableRow(
-                        true, 
-                        [ 
+                        true,
+                        [
                             '',
                             'Email',
                             'Role',
@@ -34,8 +40,8 @@
                         ],
                         '',
                         ''
-                        )
-                    );
+                    )
+                );
 
                 for (var i = 0; i < result.length; i++) {
                     var userAvatar = document.createElement('img');
@@ -48,7 +54,7 @@
                     }
 
                     var roleDiv = document.createElement('div');
-                    
+
                     var roleItem = CreateBadge(result[i].highestRole);
                     roleDiv.appendChild(roleItem);
 
@@ -91,10 +97,10 @@
                         )
                     );
                 }
-                
+
                 targetDiv.appendChild(newTable);
             }
-        );        
+        );
     }
 
     GetUsers();

@@ -2,17 +2,30 @@
     <h1 id="gametitle_label">Platform Mapping</h1>
 </div>
 
-<p>When determining the platform of a ROM or image (which is later used when determining the game title), only the "Unique File Extensions" are used. All other extensions are ignored as they will limit the ability of Gaseous to determine the game title (see <a href="https://github.com/gaseous-project/gaseous-server#game-image-title-matching" class="romlink">https://github.com/gaseous-project/gaseous-server#game-image-title-matching</a> for more information on how matching works).</p>
+<div class="section">
+    <div class="section-body">
+        <p>When determining the platform of a ROM or image (which is later used when determining the game title), only
+            the "Unique File Extensions" are used. All other extensions are ignored as they will limit the ability of
+            Gaseous to determine the game title (see <a
+                href="https://github.com/gaseous-project/gaseous-server#game-image-title-matching"
+                class="romlink">https://github.com/gaseous-project/gaseous-server#game-image-title-matching</a> for more
+            information on how matching works).</p>
 
-<p>This list is pre-populated with some of the more common platforms. New platforms will appear in this list as titles are added.</p>
+        <p>This list is pre-populated with some of the more common platforms. New platforms will appear in this list as
+            titles are added.</p>
 
-<p id="settings_mapping_import" style="display: none;"><button value="Export to JSON" onclick="DownloadJSON();">Export to JSON</button><button id="importjson" value="Import JSON">Import JSON</button><button value="Reset to Default" onclick="loadPlatformMapping(true);">Reset to Default</button></p>
+        <p id="settings_mapping_import" style="display: none;"><button value="Export to JSON"
+                onclick="DownloadJSON();">Export to JSON</button><button id="importjson" value="Import JSON">Import
+                JSON</button><button value="Reset to Default" onclick="loadPlatformMapping(true);">Reset to
+                Default</button></p>
 
-<input id='uploadjson' type='file' name='files' hidden/>
+        <input id='uploadjson' type='file' name='files' hidden />
 
-<table id="settings_mapping_table" style="width: 100%;" cellspacing="0">
-    
-</table>
+        <table id="settings_mapping_table" style="width: 100%;" cellspacing="0">
+
+        </table>
+    </div>
+</div>
 
 <script type="text/javascript">
     if (userProfile.roles.includes("Admin")) {
@@ -33,8 +46,8 @@
                 newTable.innerHTML = '';
                 newTable.appendChild(
                     createTableRow(
-                        true, 
-                        [ 
+                        true,
+                        [
                             'Platform',
                             'Supported File Extensions',
                             'Unique File Extensions',
@@ -42,8 +55,8 @@
                         ],
                         '',
                         ''
-                        )
-                    );
+                    )
+                );
 
                 for (var i = 0; i < result.length; i++) {
                     var hasWebEmulator = '';
@@ -87,7 +100,7 @@
                 //upload started
                 console.log("JSON upload started");
             },
-            success: function(data){
+            success: function (data) {
                 //upload successful
                 window.location.reload();
             }

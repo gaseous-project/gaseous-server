@@ -2,17 +2,24 @@
     <h1 id="gametitle_label">Firmware</h1>
 </div>
 
-<h3>Firmware Availablility <span id="firmware_totalcount" style="float: right;"></span></h3>
-<p>
-    Display:
-    <ul style="list-style-type:none;">
-        <li><input type="checkbox" id="firmware_showavailable" checked="checked" onclick="displayFirmwareList();"/><label for="firmware_showavailable"> Available</label></li>
-        <li><input type="checkbox" id="firmware_showunavailable" checked="checked" onclick="displayFirmwareList();"/><label for="firmware_showunavailable"> Unavailable</label></li>
-    </ul>
-</p>
-<table id="table_firmware" class="romtable" cellspacing="0">
+<div class="section">
+    <div class="section-header">Firmware Availablility <span id="firmware_totalcount" style="float: right;"></span>
+    </div>
+    <div class="section-body">
+        <p>
+            Display:
+        <ul style="list-style-type:none;">
+            <li><input type="checkbox" id="firmware_showavailable" checked="checked"
+                    onclick="displayFirmwareList();" /><label for="firmware_showavailable"> Available</label></li>
+            <li><input type="checkbox" id="firmware_showunavailable" checked="checked"
+                    onclick="displayFirmwareList();" /><label for="firmware_showunavailable"> Unavailable</label></li>
+        </ul>
+        </p>
+        <table id="table_firmware" class="romtable" cellspacing="0">
 
-</table>
+        </table>
+    </div>
+</div>
 
 <script type="text/javascript">
     var biosDict = {};
@@ -64,7 +71,7 @@
 
             platformRow.appendChild(platformHeader);
             newTable.appendChild(platformRow);
-            
+
             var totalPlatformAvailable = 0;
 
             var showAvailable = document.getElementById('firmware_showavailable').checked;

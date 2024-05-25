@@ -595,28 +595,43 @@ FROM
 
             // build alpha list
             Dictionary<string, int> AlphaList = new Dictionary<string, int>();
-            int CurrentPage = 1;
-            int NextPageIndex = pageSize;
-            for (int i = 0; i < dbResponse.Rows.Count; i++)
+            if (orderByField == "NameThe" || orderByField == "Name")
             {
-                string firstChar = dbResponse.Rows[i]["NameThe"].ToString().Substring(0, 1).ToUpperInvariant();
-                if (!"ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(firstChar))
+                int CurrentPage = 1;
+                int NextPageIndex = pageSize;
+
+                string alphaSearchField;
+                if (orderByField == "NameThe")
                 {
-                    if (!AlphaList.ContainsKey("#"))
-                    {
-                        AlphaList.Add("#", 1);
-                    }
+                    alphaSearchField = "NameThe";
                 }
                 else
                 {
-                    if (!AlphaList.ContainsKey(firstChar))
-                    {
-                        AlphaList.Add(firstChar, CurrentPage);
-                    }
+                    alphaSearchField = "Name";
+                }
+
+                for (int i = 0; i < dbResponse.Rows.Count; i++)
+                {
                     if (NextPageIndex == i + 1)
                     {
                         NextPageIndex += pageSize;
                         CurrentPage += 1;
+                    }
+
+                    string firstChar = dbResponse.Rows[i][alphaSearchField].ToString().Substring(0, 1).ToUpperInvariant();
+                    if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(firstChar))
+                    {
+                        if (!AlphaList.ContainsKey(firstChar))
+                        {
+                            AlphaList.Add(firstChar, CurrentPage);
+                        }
+                    }
+                    else
+                    {
+                        if (!AlphaList.ContainsKey("#"))
+                        {
+                            AlphaList.Add("#", 1);
+                        }
                     }
                 }
             }

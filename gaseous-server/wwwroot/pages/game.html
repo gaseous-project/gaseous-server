@@ -725,7 +725,7 @@
                             lastPlatform = gameRomItems[i].platform;
                             var platformRow = document.createElement('tr');
                             var platformHeader = document.createElement('th');
-                            platformHeader.setAttribute('colspan', 6);
+                            platformHeader.setAttribute('colspan', 8);
                             platformHeader.innerHTML = '<a href="#" onclick="ShowPlatformMappingDialog(' + gameRomItems[i].platformId + ');" style="float: right; text-decoration: none;" class="romlink"><img src="/images/map.svg" class="banner_button_image banner_button_image_smaller" alt="Edit platform mapping" title="Edit platform mapping" /></a><a href="#" onclick="ShowCollectionDialog(' + gameRomItems[i].platformId + ');" style="float: right; text-decoration: none;" class="romlink"><img src="/images/collections.svg" class="banner_button_image banner_button_image_smaller" alt="Add to collection" title="Add to collection" /></a>' + gameRomItems[i].platform;
                             platformRow.appendChild(platformHeader);
                             newTable.appendChild(platformRow);

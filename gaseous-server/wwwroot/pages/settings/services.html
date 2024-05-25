@@ -1,11 +1,14 @@
 <div id="gametitle">
     <h1 id="gametitle_label">Services</h1>
 </div>
-<table id="settings_tasktimers" class="romtable" style="width: 100%;" cellspacing="0">
 
-</table>
-<div style="text-align: right;"><button id="settings_tasktimers_default" onclick="defaultTaskTimers();">Reset to
-        Default</button><button id="settings_tasktimers_new" onclick="saveTaskTimers();">Save</button></div>
+<div class="section">
+    <div id="settings_tasktimers" style="width: 100%;">
+
+    </div>
+    <div style="text-align: right;"><button id="settings_tasktimers_default" onclick="defaultTaskTimers();">Reset to
+            Default</button><button id="settings_tasktimers_new" onclick="saveTaskTimers();">Save</button></div>
+</div>
 
 <script type="text/javascript">
     function getBackgroundTaskTimers() {
@@ -17,45 +20,71 @@
                 targetTable.innerHTML = '';
 
                 for (const [key, value] of Object.entries(result)) {
-                    var newTableRowBody = document.createElement('tbody');
-                    newTableRowBody.className = 'romrow';
-
                     var enabledString = "";
                     if (value.enabled == true) {
                         enabledString = 'checked="checked"';
                     }
 
-                    var newTableIntervalRow = createTableRow(
-                        false,
-                        [
-                            GetTaskFriendlyName(value.task),
-                            'Enabled',
-                            '<input id="settings_enabled_' + value.task + '" name="settings_tasktimers_enabled" type="checkbox" ' + enabledString + '/>',
-                        ],
-                        '',
-                        'romcell'
-                    );
-                    newTableRowBody.appendChild(newTableIntervalRow);
+                    // add heading
+                    let serviceHeader = document.createElement('div');
+                    serviceHeader.className = 'section-header';
+                    serviceHeader.innerHTML = GetTaskFriendlyName(value.task);
+                    targetTable.appendChild(serviceHeader);
 
-                    var newTableRow = createTableRow(
-                        false,
-                        [
-                            '',
-                            'Minimum Interval (Minutes):',
-                            '<input id="settings_tasktimers_' + value.task + '" name="settings_tasktimers_values" data-name="' + value.task + '" data-default="' + value.defaultInterval + '" type="number" placeholder="' + value.defaultInterval + '" min="' + value.minimumAllowedInterval + '" value="' + value.interval + '" />'
-                        ],
-                        '',
-                        'romcell'
-                    );
-                    newTableRowBody.appendChild(newTableRow);
+                    // create table for each service
+                    let serviceTable = document.createElement('table');
+                    serviceTable.style.width = '100%';
+                    serviceTable.classList.add('section-body');
+
+                    // add enabled
+                    let newEnabledRow = document.createElement('tr');
+
+                    let newEnabledTitle = document.createElement('td');
+                    newEnabledTitle.className = 'romcell romcell-headercell';
+                    newEnabledTitle.innerHTML = "Enabled:";
+                    newEnabledRow.appendChild(newEnabledTitle);
+
+                    let newEnabledContent = document.createElement('td');
+                    newEnabledContent.className = 'romcell';
+                    let newEnabledCheckbox = document.createElement('input');
+                    newEnabledCheckbox.id = 'settings_enabled_' + value.task;
+                    newEnabledCheckbox.name = 'settings_tasktimers_enabled';
+                    newEnabledCheckbox.type = 'checkbox';
+                    newEnabledCheckbox.checked = value.enabled;
+                    newEnabledContent.appendChild(newEnabledCheckbox);
+                    newEnabledRow.appendChild(newEnabledContent);
+
+                    serviceTable.appendChild(newEnabledRow);
+
+                    // add interval
+                    let newIntervalRow = document.createElement('tr');
+
+                    let newIntervalTitle = document.createElement('td');
+                    newIntervalTitle.className = 'romcell romcell-headercell';
+                    newIntervalTitle.innerHTML = "Minimum Interval (Minutes):";
+                    newIntervalRow.appendChild(newIntervalTitle);
+
+                    let newIntervalContent = document.createElement('td');
+                    newIntervalContent.className = 'romcell';
+                    let newIntervalInput = document.createElement('input');
+                    newIntervalInput.id = 'settings_tasktimers_' + value.task;
+                    newIntervalInput.name = 'settings_tasktimers_values';
+                    newIntervalInput.setAttribute('data-name', value.task);
+                    newIntervalInput.setAttribute('data-default', value.defaultInterval);
+                    newIntervalInput.type = 'number';
+                    newIntervalInput.placeholder = value.defaultInterval;
+                    newIntervalInput.min = value.minimumAllowedInterval;
+                    newIntervalInput.value = value.interval;
+                    newIntervalContent.appendChild(newIntervalInput);
+                    newIntervalRow.appendChild(newIntervalContent);
+
+                    serviceTable.appendChild(newIntervalRow);
 
                     // allowed time periods row
                     var newTableRowTime = document.createElement('tr');
-                    var rowTimeSpace = document.createElement('td');
-                    newTableRowTime.appendChild(rowTimeSpace);
 
                     var rowTimeContentTitle = document.createElement('td');
-                    rowTimeContentTitle.className = 'romcell';
+                    rowTimeContentTitle.className = 'romcell romcell-headercell';
                     rowTimeContentTitle.innerHTML = "Allowed Days:";
                     newTableRowTime.appendChild(rowTimeContentTitle);
 
@@ -84,15 +113,13 @@
                     });
                     newTableRowTime.appendChild(rowTimeContent);
 
-                    newTableRowBody.appendChild(newTableRowTime);
+                    serviceTable.appendChild(newTableRowTime);
 
                     // add start and end times
                     var newTableRowClock = document.createElement('tr');
-                    var rowClockSpace = document.createElement('td');
-                    newTableRowClock.appendChild(rowClockSpace);
 
                     var rowClockContentTitle = document.createElement('td');
-                    rowClockContentTitle.className = 'romcell';
+                    rowClockContentTitle.className = 'romcell romcell-headercell';
                     rowClockContentTitle.innerHTML = "Time Range:";
                     newTableRowClock.appendChild(rowClockContentTitle);
 
@@ -110,15 +137,13 @@
 
                     newTableRowClock.appendChild(rowClockContent);
 
-                    newTableRowBody.appendChild(newTableRowClock);
+                    serviceTable.appendChild(newTableRowClock);
 
                     // blocks tasks
                     var newTableRowBlocks = document.createElement('tr');
-                    var rowBlocksSpace = document.createElement('td');
-                    newTableRowBlocks.appendChild(rowBlocksSpace);
 
                     var rowBlocksContentTitle = document.createElement('td');
-                    rowBlocksContentTitle.className = 'romcell';
+                    rowBlocksContentTitle.className = 'romcell romcell-headercell';
                     rowBlocksContentTitle.innerHTML = "Blocks:";
                     newTableRowBlocks.appendChild(rowBlocksContentTitle);
 
@@ -134,15 +159,13 @@
                     rowBlocksContent.innerHTML = blocksString;
                     newTableRowBlocks.appendChild(rowBlocksContent);
 
-                    newTableRowBody.appendChild(newTableRowBlocks);
+                    serviceTable.appendChild(newTableRowBlocks);
 
                     // blocked by tasks
                     var newTableRowBlockedBy = document.createElement('tr');
-                    var rowBlockedBySpace = document.createElement('td');
-                    newTableRowBlockedBy.appendChild(rowBlockedBySpace);
 
                     var rowBlockedByContentTitle = document.createElement('td');
-                    rowBlockedByContentTitle.className = 'romcell';
+                    rowBlockedByContentTitle.className = 'romcell romcell-headercell';
                     rowBlockedByContentTitle.innerHTML = "Blocked By:";
                     newTableRowBlockedBy.appendChild(rowBlockedByContentTitle);
 
@@ -158,10 +181,10 @@
                     rowBlockedByContent.innerHTML = BlockedByString;
                     newTableRowBlockedBy.appendChild(rowBlockedByContent);
 
-                    newTableRowBody.appendChild(newTableRowBlockedBy);
+                    serviceTable.appendChild(newTableRowBlockedBy);
 
                     // complete row
-                    targetTable.appendChild(newTableRowBody);
+                    targetTable.appendChild(serviceTable);
                 }
             }
         );
