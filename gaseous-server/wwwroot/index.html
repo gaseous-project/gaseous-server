@@ -38,8 +38,13 @@
                 newLink.href = headLinks[i].getAttribute('dat-href') + '?v=' + AppVersion;
                 newLink.type = "text/css";
 
-                headLinks[i].parentElement.removeChild(headLinks[i]);
                 head.appendChild(newLink);
+            }
+        }
+        // remove used links
+        for (var i = 0; i < headLinks.length; i++) {
+            if (headLinks[i].getAttribute('dat-href') && headLinks[i].rel == "stylesheet") {
+                headLinks[i].remove();
             }
         }
 
