@@ -279,9 +279,10 @@ namespace gaseous_server.Classes
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM Games_Roms WHERE RomDataVersion = 1;";
             DataTable data = db.ExecuteCMD(sql);
+            long count = 1;
             foreach (DataRow row in data.Rows)
             {
-                Logging.Log(Logging.LogType.Information, "Database Migration", "Updating ROM table for ROM: " + (string)row["Name"]);
+                Logging.Log(Logging.LogType.Information, "Database Migration", "Updating ROM table for ROM (" + count + " / " + data.Rows.Count + "): " + (string)row["Name"]);
 
                 GameLibrary.LibraryItem library = GameLibrary.GetLibrary((int)row["LibraryId"]);
                 Common.hashObject hash = new Common.hashObject()
@@ -300,6 +301,8 @@ namespace gaseous_server.Classes
                 Game game = Games.GetGame((long)row["GameId"], false, false, false);
 
                 ImportGame.StoreROM(library, hash, game, platform, signature, (string)row["Path"], (long)row["Id"]);
+
+                count += 1;
             }
         }
     }

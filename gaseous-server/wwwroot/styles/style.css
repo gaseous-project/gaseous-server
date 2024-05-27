@@ -500,14 +500,35 @@ input[name='filter_panel_range_max'] {
 }
 
 #games_library_controls {
-    display: absolute;
+    position: fixed;
+    z-index: 10;
+    left: 225px;
+    right: 10px;
+    background-color: var(--section-header-background);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     border-style: solid;
     border-width: 1px;
     border-color: var(--section-header-background);
     border-radius: 5px;
     margin-bottom: 10px;
     padding-top: 7px;
-    padding-bottom: 10px;
+    padding-bottom: 7px;
+    padding-right: 20px;
+    text-align: right;
+}
+
+#rom_library_controls {
+    left: 225px;
+    right: 10px;
+    background-color: var(--section-header-background);
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--section-header-background);
+    border-radius: 5px;
+    margin-bottom: 10px;
+    padding-top: 7px;
+    padding-bottom: 7px;
     padding-right: 20px;
     text-align: right;
 }
@@ -565,6 +586,7 @@ input[name='filter_panel_range_max'] {
 #games_library {
     display: block;
     margin-right: 50px;
+    padding-top: 50px;
     /* width: 90%; */
     /* border-style: solid;
     border-width: 1px;
