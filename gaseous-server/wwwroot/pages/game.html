@@ -1,8 +1,4 @@
-﻿<div id="bgImage">
-    <div id="bgImage_Opacity"></div>
-</div>
-
-<!-- The Modal -->
+﻿<!-- The Modal -->
 <div id="myModalProgress" class="modal">
 
     <!-- Modal content -->
@@ -35,6 +31,10 @@
 
     <div id="gamesummary">
         <div id="gamesummary_cover"></div>
+        <div id="gamesummary_ratings" class="section">
+            <!-- <div class="section-header">Age Rating</div> -->
+            <div id="gamesummary_ratings_content" class="section-body"></div>
+        </div>
         <div id="gamesummary_firstrelease" class="section">
             <div class="section-header">First Released</div>
             <div id="gamesummary_firstrelease_content" class="section-body"></div>
@@ -50,10 +50,6 @@
         <div id="gamesummary_publishers" class="section">
             <div class="section-header">Publishers</div>
             <div id="gamesummary_publishers_content" class="section-body"></div>
-        </div>
-        <div id="gamesummary_ratings" class="section">
-            <div class="section-header">Age Ratings</div>
-            <div id="gamesummary_ratings_content" class="section-body"></div>
         </div>
     </div>
 
@@ -344,46 +340,53 @@
             }
 
             // load ratings
-            var gameSummaryRatings = document.getElementById('gamesummary_ratings');
-            var gameSummaryRatingsContent = document.getElementById('gamesummary_ratings_content');
+            let gameSummaryRatings = document.getElementById('gamesummary_ratings');
+            let gameSummaryRatingsContent = document.getElementById('gamesummary_ratings_content');
             if (result.ageRatings) {
                 ajaxCall('/api/v1.1/games/' + gameId + '/agerating', 'GET', function (result) {
-                    var classTable = document.createElement('table');
-                    var gameRatingsSml = document.createElement('div');
+                    let classTable = document.createElement('table');
 
-                    var SpotlightClassifications = GetPreference("LibraryGameClassificationDisplayOrder", JSON.stringify(["ESRB"]));
+                    let SpotlightClassifications = GetRatingsBoards();
 
-                    for (var i = 0; i < result.length; i++) {
-                        var ratingImage = document.createElement('img');
-                        ratingImage.src = '/images/Ratings/' + result[i].ratingBoard + '/' + result[i].ratingTitle + '.svg';
-                        var ratingString = ClassificationBoards[result[i].ratingBoard] + "\nRating: " + ClassificationRatings[result[i].ratingTitle];
-                        if (result[i].descriptions.length > 0) {
-                            ratingString += '\nContains: ' + result[i].descriptions.join(', ');
-                        }
-                        ratingImage.title = ratingString;
-                        if (SpotlightClassifications.includes(result[i].ratingBoard)) {
-                            ratingImage.className = 'rating_image';
+                    let ratingSelected = false;
+                    for (let r = 0; r < SpotlightClassifications.length; r++) {
+                        for (let i = 0; i < result.length; i++) {
+                            if (result[i].ratingBoard == SpotlightClassifications[r]) {
+                                let ratingImage = document.createElement('img');
+                                ratingImage.src = '/images/Ratings/' + result[i].ratingBoard + '/' + result[i].ratingTitle + '.svg';
+                                let ratingString = ClassificationBoards[result[i].ratingBoard] + "\nRating: " + ClassificationRatings[result[i].ratingTitle];
+                                if (result[i].descriptions.length > 0) {
+                                    ratingString += '\nContains: ' + result[i].descriptions.join(', ');
+                                }
+                                ratingImage.title = ratingString;
 
-                            var classTableRow = document.createElement('tr');
-                            var classTableLogo = document.createElement('td');
-                            classTableLogo.className = 'rating_image_logo_table';
-                            classTableLogo.appendChild(ratingImage);
-                            classTableRow.appendChild(classTableLogo);
-                            var classTableDescription = document.createElement('td');
-                            if (result[i].descriptions.length > 0) {
-                                classTableDescription.innerHTML = result[i].descriptions.join('<br />');
-                            } else {
-                                classTableDescription.innerHTML = ClassificationRatings[result[i].ratingTitle];
+                                ratingImage.className = 'rating_image';
+
+                                let classTableRow = document.createElement('tr');
+                                let classTableLogo = document.createElement('td');
+                                classTableLogo.className = 'rating_image_logo_table';
+                                classTableLogo.appendChild(ratingImage);
+                                classTableRow.appendChild(classTableLogo);
+                                let classTableDescription = document.createElement('td');
+                                if (result[i].descriptions.length > 0) {
+                                    classTableDescription.innerHTML = result[i].descriptions.join('<br />');
+                                } else {
+                                    classTableDescription.innerHTML = ClassificationRatings[result[i].ratingTitle];
+                                }
+                                classTableRow.appendChild(classTableDescription);
+                                classTable.appendChild(classTableRow);
+
+                                gameSummaryRatingsContent.appendChild(classTable);
+                                ratingSelected = true;
+                                break;
                             }
-                            classTableRow.appendChild(classTableDescription);
-                            classTable.appendChild(classTableRow);
-                        } else {
-                            ratingImage.className = 'rating_image rating_image_mini';
-                            gameRatingsSml.appendChild(ratingImage);
                         }
+                        if (ratingSelected == true) { break; }
                     }
-                    gameSummaryRatingsContent.appendChild(classTable);
-                    gameSummaryRatingsContent.appendChild(gameRatingsSml);
+
+                    if (ratingSelected == false) {
+                        gameSummaryRatings.setAttribute('style', 'display: none;');
+                    }
                 });
             } else {
                 gameSummaryRatings.setAttribute('style', 'display: none;');
@@ -834,13 +837,15 @@
 
         function loadArtwork(game, cover) {
             // show default background
-            var bg = document.getElementById('bgImage');
+            let bg = document.getElementById('bgImage');
+            let bgPath;
             if (cover) {
-                bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/cover/image/original/' + cover.imageId + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+                bgPath = "/api/v1.1/Games/" + gameId + "/cover/image/original/" + cover.imageId + ".jpg";
             } else {
                 var randomInt = randomIntFromInterval(1, 3);
-                bg.setAttribute('style', 'background-image: url("/images/gamebg' + randomInt + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+                bgPath = "/images/gamebg" + randomInt + ".jpg";
             }
+            bg.setAttribute('style', 'background-image: url(' + bgPath + ');');
 
             // load artwork
             if (!artworks) {
@@ -862,7 +867,7 @@
                     artworksPosition = 0;
                 }
                 var bg = document.getElementById('bgImage');
-                bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/artwork/' + artworks[artworksPosition].id + '/image/original/' + artworks[artworksPosition].imageId + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+                bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/artwork/' + artworks[artworksPosition].id + '/image/original/' + artworks[artworksPosition].imageId + '.jpg");');
                 artworksTimer = setTimeout(rotateBackground, 60000);
             }
         }

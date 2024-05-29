@@ -112,14 +112,22 @@ function formatFilterPanel(containerElement, result) {
 
     buttonsDiv.appendChild(resetButton);
 
+    // set page size value
+    var pageSizeCookie = GetPreference('LibraryPageSize', '20');
+    if (pageSizeCookie) {
+        var pageSizeSelector = document.getElementById('games_library_pagesize_select');
+        $(pageSizeSelector).select2('destroy');
+        $(pageSizeSelector).val(pageSizeCookie).select2();
+    }
+
     // set order by values
-    var orderByCookie = getCookie('games_library_orderby_select');
+    var orderByCookie = GetPreference('LibraryOrderBy', 'NameThe');
     if (orderByCookie) {
         var orderBySelector = document.getElementById('games_library_orderby_select');
         $(orderBySelector).select2('destroy');
         $(orderBySelector).val(orderByCookie).select2();
     }
-    var orderByDirectionCookie = getCookie('games_library_orderby_direction_select');
+    var orderByDirectionCookie = GetPreference('LibraryOrderByDirection', 'Ascending');
     if (orderByDirectionCookie) {
         var orderByDirectionSelector = document.getElementById('games_library_orderby_direction_select');
         $(orderByDirectionSelector).select2('destroy');
@@ -391,7 +399,7 @@ function resetFilters() {
     executeFilter1_1();
 }
 
-function executeFilter1_1(pageNumber, pageSize) {
+function executeFilter1_1(pageNumber) {
     var freshSearch = false;
 
     if (!pageNumber) {
@@ -400,33 +408,20 @@ function executeFilter1_1(pageNumber, pageSize) {
         existingSearchModel = undefined;
     }
 
-    let pageMode = GetPreference('LibraryPagination', 'paged');
-
-    if (!pageSize) {
-        switch (pageMode) {
-            case "infinite":
-                pageSize = 20;
-                break;
-            case "paged":
-            default:
-                pageSize = 30;
-                break;
-        }
-    }
+    // get settings
+    let pageSize = Number($('#games_library_pagesize_select').val());
+    let orderBy = $('#games_library_orderby_select').val();
+    let orderByDirectionSelect = $('#games_library_orderby_direction_select').val();
 
     var model;
 
     // get order by
-    var orderBy = $('#games_library_orderby_select').val();
-    setCookie('games_library_orderby_select', orderBy);
     var orderByDirection = true;
-    var orderByDirectionSelect = $('#games_library_orderby_direction_select').val();
     if (orderByDirectionSelect == "Ascending") {
         orderByDirection = true;
     } else {
         orderByDirection = false;
     }
-    setCookie('games_library_orderby_direction_select', orderByDirectionSelect);
 
     if (existingSearchModel == undefined || freshSearch == true) {
         // search name
@@ -586,8 +581,10 @@ function executeFilter1_1(pageNumber, pageSize) {
         model = existingSearchModel;
     }
 
+    let gamesCallURL = '/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize;
+    console.log(gamesCallURL);
     ajaxCall(
-        '/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize,
+        gamesCallURL,
         'POST',
         function (result) {
             console.log(result);

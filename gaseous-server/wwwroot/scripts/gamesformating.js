@@ -107,11 +107,11 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
             var gamePlaceholders = document.getElementsByName('GamePlaceholder');
 
             let currentPage = 1;
-            let totalPages = Math.ceil(result.count / pageSize);
+            let totalPages = Math.ceil(result.count / Number(pageSize));
             let startIndex = 0;
-            let endIndex = pageSize;
+            let endIndex = 0 + Number(pageSize);
             for (let p = currentPage; p < totalPages + 1; p++) {
-                //console.log("Page: " + p + " - StartIndex: " + startIndex + " - EndIndex: " + endIndex);
+                // console.log("Page: " + p + " - StartIndex: " + startIndex + " - EndIndex: " + endIndex);
 
                 let newPageAnchor = document.getElementById('pageAnchor' + p);
                 if (!newPageAnchor) {
@@ -146,7 +146,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
                 }
 
                 startIndex = endIndex;
-                endIndex = startIndex + pageSize;
+                endIndex = startIndex + Number(pageSize);
 
                 if (startIndex > result.count) {
                     break;
@@ -167,8 +167,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
     var showTitle = GetPreference("LibraryShowGameTitle", true);
     var showRatings = GetPreference("LibraryShowGameRating", true);
     var showClassification = GetPreference("LibraryShowGameClassification", true);
-    var classificationDisplayOrderString = GetPreference("LibraryGameClassificationDisplayOrder", JSON.stringify(["ESRB"]));
-    var classificationDisplayOrder = JSON.parse(classificationDisplayOrderString);
+    var classificationDisplayOrder = GetRatingsBoards();
     if (showTitle == "true") { showTitle = true; } else { showTitle = false; }
     if (showRatings == "true") { showRatings = true; } else { showRatings = false; }
     if (showClassification == "true") { showClassification = true; } else { showClassification = false; }
@@ -394,8 +393,6 @@ function IsInView() {
             break;
     }
 }
-
-$(window).scroll(IsInView);
 
 function renderGameIcon(gameObject, showTitle, showRatings, showClassification, classificationDisplayOrder, useSmallCover, listView) {
     if (listView == undefined) {

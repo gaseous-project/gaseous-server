@@ -442,6 +442,7 @@ function GetPreference(Setting, DefaultValue) {
     if (userProfile.userPreferences) {
         for (var i = 0; i < userProfile.userPreferences.length; i++) {
             if (userProfile.userPreferences[i].setting == Setting) {
+                // console.log("Get Preference: " + Setting + " : " + userProfile.userPreferences[i].value.toString());
                 return userProfile.userPreferences[i].value.toString();
             }
         }
@@ -449,10 +450,12 @@ function GetPreference(Setting, DefaultValue) {
 
     SetPreference(Setting, DefaultValue);
 
+    console.log("Get Preference: " + Setting + " : " + DefaultValue);
     return DefaultValue;
 }
 
 function SetPreference(Setting, Value, callbackSuccess, callbackError) {
+    console.log("Set Preference: " + Setting + " : " + Value.toString());
     var model = [
         {
             "setting": Setting,
@@ -554,4 +557,19 @@ function loadAvatar(AvatarId) {
             bannerAvatarButton.classList.add('banner_button');
         }
     }
+}
+
+function GetRatingsBoards() {
+    let ratingsBoards = JSON.parse(GetPreference("LibraryGameClassificationDisplayOrder", JSON.stringify(["ESRB"])));
+
+    // add fallback ratings boards
+    if (!ratingsBoards.includes("ESRB")) { ratingsBoards.push("ESRB"); }
+    if (!ratingsBoards.includes("ACB")) { ratingsBoards.push("ACB"); }
+    if (!ratingsBoards.includes("PEGI")) { ratingsBoards.push("PEGI"); }
+    if (!ratingsBoards.includes("USK")) { ratingsBoards.push("USK"); }
+    if (!ratingsBoards.includes("CERO")) { ratingsBoards.push("CERO"); }
+    if (!ratingsBoards.includes("CLASS_IND")) { ratingsBoards.push("CLASS_IND"); }
+    if (!ratingsBoards.includes("GRAC")) { ratingsBoards.push("GRAC"); }
+
+    return ratingsBoards;
 }

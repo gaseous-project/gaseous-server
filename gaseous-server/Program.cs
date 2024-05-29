@@ -71,7 +71,7 @@ ProcessQueue.QueueItem queueItem = new ProcessQueue.QueueItem(
         1,
         new List<ProcessQueue.QueueItemType>
         {
-            ProcessQueue.QueueItemType.All
+            ProcessQueue.QueueItemType.SignatureIngestor
         },
         false,
         true

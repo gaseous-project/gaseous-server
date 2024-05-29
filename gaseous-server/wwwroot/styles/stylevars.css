@@ -26,6 +26,7 @@
     --page-font-colour: rgb(255, 255, 255);
     --selected-item: rgb(0, 0, 170);
     --selected-item-hover: rgb(0, 0, 255);
+    --hover-selectable: rgb(255, 255, 0);
 
     /* scroll bar */
     --scrollbar-track: rgb(56, 56, 56);
