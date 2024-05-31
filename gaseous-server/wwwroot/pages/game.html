@@ -144,6 +144,9 @@
         var artworksTimer = null;
         var selectedScreenshot = 0;
 
+        let dialogTest = new Modal("rominfo");
+        dialogTest.open();
+
         ajaxCall('/api/v1.1/Games/' + gameId, 'GET', function (result) {
             // populate games page
             gameData = result;

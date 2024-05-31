@@ -30,6 +30,7 @@ h3 {
     padding-bottom: 1px;
 }
 
+/* old modal style */
 /* The Modal (background) */
 .modal {
     display: none;
@@ -109,6 +110,175 @@ h3 {
     text-decoration: none;
     cursor: pointer;
 }
+
+/* old model style end */
+
+/* new modal style */
+.modal-background {
+    position: fixed;
+    z-index: 100;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: none;
+    background-color: var(--modal-background-color);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.modal-window {
+    position: absolute;
+    display: flex;
+    flex-direction: row;
+    top: 50%;
+    left: 50%;
+    margin-right: -50%;
+    transform: translate(-50%, -50%);
+    width: 700px;
+    height: 388px;
+    border-radius: 10px;
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--modal-border-color);
+    overflow: hidden;
+    box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+    -webkit-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+    -moz-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+}
+
+.modal-window-close {
+    position: absolute;
+    font-size: 28px;
+    font-weight: bold;
+    top: 0px;
+    right: 0px;
+    width: 36px;
+    height: 36px;
+    text-align: center;
+    color: var(--modal-window-header-text-color);
+}
+
+.modal-window-close:hover,
+.modal-window-close:focus {
+    cursor: pointer;
+    text-decoration: none;
+    background-color: black;
+}
+
+.modal-window-tabs {
+    background-color: var(--modal-tabs-background-color);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    width: 30%;
+    height: 100%;
+    display: inline-block;
+    padding-top: 35px;
+    padding-left: 0px;
+    padding-right: 1px;
+    padding-bottom: 10px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.modal-tab-button {
+    display: block;
+    padding: 10px;
+}
+
+.modal-tab-button:hover,
+.modal-tab-button:focus {
+    cursor: pointer;
+    background-color: var(--modal-window-background-color);
+}
+
+.model-tab-button-selected {
+    background-color: var(--selected-item);
+}
+
+.modal-window-body {
+    background-color: var(--modal-window-background-color);
+    width: 100%;
+    /* height: 100%; */
+    top: 0px;
+    bottom: 0px;
+    display: inline-block;
+    position: relative;
+    /* padding-top: 10px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px; */
+    padding: 0px;
+}
+
+.modal-window-header {
+    position: absolute;
+    display: block;
+    font-weight: bold;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    height: 19px;
+    padding: 8px;
+    color: var(--modal-window-header-text-color);
+    background-color: var(--modal-window-header-background-color);
+    border-bottom-color: black;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+}
+
+#modal-header-text {
+    overflow: hidden;
+    white-space: nowrap;
+    max-height: 30px;
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    right: 40px;
+}
+
+#modal-header-text:after {
+    content: "";
+    /* Needed to render the pseudo */
+    background-image: linear-gradient(to right, transparent, var(--modal-window-header-background-color) 80%);
+    position: absolute;
+    inset-inline-end: 0;
+    width: 100px;
+    height: 30px;
+    /* Logical property equivalent to `right: 0` */
+}
+
+.modal-window-content {
+    position: absolute;
+    display: block;
+    top: 36px;
+    left: 0px;
+    right: 0px;
+    bottom: 52px;
+    /* background-color: black; */
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+.modal-window-footer {
+    position: absolute;
+    display: block;
+    font-weight: bold;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    height: 40px;
+    padding-top: 10px;
+    padding-right: 5px;
+    text-align: right;
+    color: var(--modal-window-header-text-color);
+    background-color: var(--modal-window-header-background-color);
+    border-top-color: black;
+    border-top-width: 1px;
+    border-top-style: solid;
+}
+
+/* end new modal style */
 
 #banner_icon {
     background-color: white;
