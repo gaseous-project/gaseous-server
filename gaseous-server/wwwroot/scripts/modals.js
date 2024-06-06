@@ -1,20 +1,17 @@
 class Modal {
-    constructor(contentUrl, value) {
+    constructor(contentUrl, buttons) {
         this.contentUrl = contentUrl;
-        this.value = value;
+        this.buttons = buttons;
         this.modalBackground = null;
+        this.buttons = [];
+        this.#buildModal();
     }
 
-    async open(value) {
-        if (value) {
-            this.value = value;
-        }
-
-        document.body.style.overflow = 'hidden';
-
+    async #buildModal() {
         // Create the modal background
         this.modalBackground = document.createElement('div');
         this.modalBackground.classList.add('modal-background');
+        this.modalBackground.style.display = 'none';
 
         // Create the modal element
         this.modalElement = document.createElement('div');
@@ -27,19 +24,6 @@ class Modal {
         // Load the content from the HTML file
         const response = await fetch("/pages/modals/" + this.contentUrl + ".html");
         const content = await response.text();
-
-        // Get the modal javascript
-        fetch("/pages/modals/" + this.contentUrl + ".js", { method: "HEAD" }
-        ).then((res) => {
-            if (res.ok) {
-                // file is present at URL
-                this.modalScript = document.createElement('script');
-                this.modalScript.src = "/pages/modals/" + this.contentUrl + ".js";
-                this.modalBackground.appendChild(this.modalScript);
-            } else {
-                // file is not present at URL
-            }
-        });
 
         // Set the content of the modal
         this.modalElement.innerHTML = templateContent;
@@ -93,6 +77,37 @@ class Modal {
                 this.close();
             }
         });
+
+        // Add event listener to close the modal when the escape key is pressed
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                this.close();
+            }
+        });
+    }
+
+    async open() {
+        // hide the scroll bar for the page
+        document.body.style.overflow = 'hidden';
+
+        // buttons
+        const buttonContainer = this.modalElement.querySelector('#modal-footer');
+        if (this.buttons.length > 0) {
+            this.buttons.forEach((button) => {
+                buttonContainer.appendChild(button.render());
+            });
+        } else {
+            const closeButton = document.createElement('button');
+            closeButton.classList.add('modal-button');
+            closeButton.innerHTML = 'OK';
+            closeButton.addEventListener('click', () => {
+                this.close();
+            });
+            buttonContainer.appendChild(closeButton);
+        }
+
+        // show the modal
+        this.modalBackground.style.display = 'block';
     }
 
     close() {
@@ -102,8 +117,44 @@ class Modal {
             this.modalBackground = null;
         }
 
+        // Show the scroll bar for the page
         if (document.getElementsByClassName('modal-window-body').length === 0) {
             document.body.style.overflow = 'auto';
         }
+    }
+
+    addButton(button) {
+        this.buttons.push(button);
+    }
+
+    removeTab(tabId) {
+        const tab = this.modalElement.querySelector('#tab-' + tabId);
+        if (tab) {
+            tab.style.display = 'none';
+        }
+    }
+}
+
+class ModalButton {
+    constructor(text, isRed, callingObject, callback) {
+        this.text = text;
+        this.isRed = isRed;
+        this.callingObject = callingObject;
+        this.callback = callback;
+    }
+
+    render() {
+        const button = document.createElement('button');
+        button.classList.add('modal-button');
+        if (this.isRed) {
+            button.classList.add('redbutton');
+        }
+        button.innerHTML = this.text;
+        let callback = this.callback;
+        let callingObject = this.callingObject;
+        button.addEventListener('click', function () {
+            callback(callingObject);
+        });
+        return button;
     }
 }

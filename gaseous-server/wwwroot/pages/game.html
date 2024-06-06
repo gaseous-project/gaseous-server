@@ -28,114 +28,119 @@
         <p id="gamedeveloper_label"></p>
     </div>
 
+    <div id="gamepagecontent">
+        <div id="gamesummary">
+            <div id="gamesummary_cover"></div>
+            <div id="gamesummary_ratings" class="section">
+                <!-- <div class="section-header">Age Rating</div> -->
+                <div id="gamesummary_ratings_content" class="section-body"></div>
+            </div>
+            <div id="gamesummary_firstrelease" class="section">
+                <div class="section-header">First Released</div>
+                <div id="gamesummary_firstrelease_content" class="section-body"></div>
+            </div>
+            <div id="gamesumarry_genres" class="section">
+                <div class="section-header">Genres</div>
+                <div id="gamesumarry_genres_content" class="section-body"></div>
+            </div>
+            <div id="gamesummary_developer" class="section">
+                <div class="section-header">Developers</div>
+                <div id="gamesummary_developer_content" class="section-body"></div>
+            </div>
+            <div id="gamesummary_publishers" class="section">
+                <div class="section-header">Publishers</div>
+                <div id="gamesummary_publishers_content" class="section-body"></div>
+            </div>
+        </div>
 
-    <div id="gamesummary">
-        <div id="gamesummary_cover"></div>
-        <div id="gamesummary_ratings" class="section">
-            <!-- <div class="section-header">Age Rating</div> -->
-            <div id="gamesummary_ratings_content" class="section-body"></div>
-        </div>
-        <div id="gamesummary_firstrelease" class="section">
-            <div class="section-header">First Released</div>
-            <div id="gamesummary_firstrelease_content" class="section-body"></div>
-        </div>
-        <div id="gamesumarry_genres" class="section">
-            <div class="section-header">Genres</div>
-            <div id="gamesumarry_genres_content" class="section-body"></div>
-        </div>
-        <div id="gamesummary_developer" class="section">
-            <div class="section-header">Developers</div>
-            <div id="gamesummary_developer_content" class="section-body"></div>
-        </div>
-        <div id="gamesummary_publishers" class="section">
-            <div class="section-header">Publishers</div>
-            <div id="gamesummary_publishers_content" class="section-body"></div>
+        <div id="mainbody">
+            <div id="gamescreenshots">
+                <div id="gamescreenshots_portal">
+                    <div id="gamescreenshots_left_arrow" onclick="selectScreenshot_Prev();"
+                        class="gamescreenshots_arrows">
+                        <img src="/images/arrow-left.svg" class="gamescreenshots_arrow_image" />
+                    </div>
+                    <div id="gamescreenshots_right_arrow" onclick="selectScreenshot_Next();"
+                        class="gamescreenshots_arrows">
+                        <img src="/images/arrow-right.svg" class="gamescreenshots_arrow_image" />
+                    </div>
+                    <div id="gamescreenshots_main"></div>
+                </div>
+                <!-- <div id="gamescreenshots_gallery"> -->
+                <ul id="gamescreenshots_gallery_panel"></ul>
+                <!-- </div> -->
+            </div>
+            <div id="gamestatistics" class="section">
+                <div id="gamestatistics_lastplayed" class="gamestatistics_box">
+                    <span class="gamestatistics_label">Last Played</span>
+                    <span id="gamestatistics_lastplayed_value" class="gamestatistics_value">-</span>
+                </div>
+                <div id="gamestatistics_timeplayed" class="gamestatistics_box">
+                    <span class="gamestatistics_label">Total Play Time</span>
+                    <span id="gamestatistics_timeplayed_value" class="gamestatistics_value">-</span>
+                </div>
+
+                <div id="gamestatistics_favourite" class="gamestatistics_box">
+                    <div id="gamestatistics_favourite_button">
+
+                    </div>
+                </div>
+            </div>
+            <div id="gamesummarytext" class="section section-body">
+                <span id="gamesummarytext_label" class="line-clamp-4"></span>
+                <p id="gamesummarytext_label_button_expand" class="text_link" style="display: none;"
+                    onclick="document.querySelector('#gamesummarytext_label').classList.remove('line-clamp-4'); document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', 'display: none;'); document.querySelector('#gamesummarytext_label_button_contract').setAttribute('style', '');">
+                    Read more...</p>
+
+                <p id="gamesummarytext_label_button_contract" class="text_link" style="display: none;"
+                    onclick="document.querySelector('#gamesummarytext_label').classList.add('line-clamp-4'); document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', ''); document.querySelector('#gamesummarytext_label_button_contract').setAttribute('style', 'display: none;');">
+                    Read less...</p>
+            </div>
+            <div id="gamesummarymediagroups" class="section" style="display: none;">
+                <div class="section-header">Media Groups</div>
+                <div id="gamesummarymediagroupscontent" class="section-body"></div>
+            </div>
+            <div id="gamesummaryroms" class="section">
+                <span id="rom_edit" class="romlink" onclick="DisplayROMCheckboxes(true);">Edit</span>
+                <div class="section-header">ROMs/Images</div>
+                <div class="section-body">
+                    <div id="rom_edit_panel" style="display: none;">
+                        <div id="rom_edit_panel_center">
+                            <button id="rom_edit_delete" class="redbutton" onclick="deleteGameRoms();">Delete</button>
+
+                            <select id="rom_edit_fixplatform" style="width: 150px;"></select>
+                            <select id="rom_edit_fixgame" style="width: 300px;"></select>
+                            <button id="rom_edit_update" onclick="remapTitles();">Update</button>
+                            <button id="rom_edit_creategroup" onclick="createMgGroup();" disabled="disabled">Create
+                                Media
+                                Group</button>
+                        </div>
+                    </div>
+                    <div id="rom_library_controls">
+                        <div class="games_library_controlblock">
+                            <input id="name_filter" type="text" placeholder="Name Search">
+                        </div>
+                        <div class="games_library_controlblock">
+                            <select id="platform_filter"></select>
+                        </div>
+                        <div class="games_library_controlblock">
+                            <button value="Search" onclick="loadRoms();">Search</button>
+                        </div>
+                        <div class="games_library_controlblock">
+                            <span id="games_roms_count" class="games_library_label">0 ROMs</span>
+                        </div>
+                    </div>
+                    <div id="gamesummaryromscontent"></div>
+                </div>
+            </div>
+            <div id="gamesummarysimilar" class="section" style="display: none;">
+                <div class="section-header">Similar Games</div>
+                <div id="gamesummarysimilarcontent" class="section-body"></div>
+            </div>
         </div>
     </div>
 
-    <div id="mainbody">
-        <div id="gamescreenshots">
-            <div id="gamescreenshots_portal">
-                <div id="gamescreenshots_left_arrow" onclick="selectScreenshot_Prev();" class="gamescreenshots_arrows">
-                    <img src="/images/arrow-left.svg" class="gamescreenshots_arrow_image" />
-                </div>
-                <div id="gamescreenshots_right_arrow" onclick="selectScreenshot_Next();" class="gamescreenshots_arrows">
-                    <img src="/images/arrow-right.svg" class="gamescreenshots_arrow_image" />
-                </div>
-                <div id="gamescreenshots_main"></div>
-            </div>
-            <div id="gamescreenshots_gallery">
-                <div id="gamescreenshots_gallery_panel"></div>
-            </div>
-        </div>
-        <div id="gamestatistics">
-            <div id="gamestatistics_lastplayed" class="gamestatistics_box">
-                <span class="gamestatistics_label">Last Played</span>
-                <span id="gamestatistics_lastplayed_value" class="gamestatistics_value">-</span>
-            </div>
-            <div id="gamestatistics_timeplayed" class="gamestatistics_box">
-                <span class="gamestatistics_label">Total Play Time</span>
-                <span id="gamestatistics_timeplayed_value" class="gamestatistics_value">-</span>
-            </div>
-
-            <div id="gamestatistics_favourite" class="gamestatistics_box">
-                <div id="gamestatistics_favourite_button">
-
-                </div>
-            </div>
-        </div>
-        <div id="gamesummarytext" class="section section-body">
-            <span id="gamesummarytext_label" class="line-clamp-4"></span>
-            <p id="gamesummarytext_label_button_expand" class="text_link" style="display: none;"
-                onclick="document.querySelector('#gamesummarytext_label').classList.remove('line-clamp-4'); document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', 'display: none;'); document.querySelector('#gamesummarytext_label_button_contract').setAttribute('style', '');">
-                Read more...</p>
-
-            <p id="gamesummarytext_label_button_contract" class="text_link" style="display: none;"
-                onclick="document.querySelector('#gamesummarytext_label').classList.add('line-clamp-4'); document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', ''); document.querySelector('#gamesummarytext_label_button_contract').setAttribute('style', 'display: none;');">
-                Read less...</p>
-        </div>
-        <div id="gamesummarymediagroups" class="section" style="display: none;">
-            <div class="section-header">Media Groups</div>
-            <div id="gamesummarymediagroupscontent" class="section-body"></div>
-        </div>
-        <div id="gamesummaryroms" class="section">
-            <span id="rom_edit" class="romlink" onclick="DisplayROMCheckboxes(true);">Edit</span>
-            <div class="section-header">ROMs/Images</div>
-            <div class="section-body">
-                <div id="rom_edit_panel" style="display: none;">
-                    <div id="rom_edit_panel_center">
-                        <button id="rom_edit_delete" class="redbutton" onclick="deleteGameRoms();">Delete</button>
-
-                        <select id="rom_edit_fixplatform" style="width: 150px;"></select>
-                        <select id="rom_edit_fixgame" style="width: 300px;"></select>
-                        <button id="rom_edit_update" onclick="remapTitles();">Update</button>
-                        <button id="rom_edit_creategroup" onclick="createMgGroup();" disabled="disabled">Create Media
-                            Group</button>
-                    </div>
-                </div>
-                <div id="rom_library_controls">
-                    <div class="games_library_controlblock">
-                        <input id="name_filter" type="text" placeholder="Name Search">
-                    </div>
-                    <div class="games_library_controlblock">
-                        <select id="platform_filter"></select>
-                    </div>
-                    <div class="games_library_controlblock">
-                        <button value="Search" onclick="loadRoms();">Search</button>
-                    </div>
-                    <div class="games_library_controlblock">
-                        <span id="games_roms_count" class="games_library_label">0 ROMs</span>
-                    </div>
-                </div>
-                <div id="gamesummaryromscontent"></div>
-            </div>
-        </div>
-        <div id="gamesummarysimilar" class="section" style="display: none;">
-            <div class="section-header">Similar Games</div>
-            <div id="gamesummarysimilarcontent" class="section-body"></div>
-        </div>
-    </div>
-
+    <!-- page code -->
     <script type="text/javascript">
         var gameId = getQueryString('id', 'int');
         var gameData;
@@ -143,9 +148,6 @@
         var artworksPosition = 0;
         var artworksTimer = null;
         var selectedScreenshot = 0;
-
-        let dialogTest = new Modal("rominfo");
-        dialogTest.open();
 
         ajaxCall('/api/v1.1/Games/' + gameId, 'GET', function (result) {
             // populate games page
@@ -454,7 +456,7 @@
                 if (result.screenshots) {
                     ajaxCall('/api/v1.1/Games/' + gameId + '/screenshots', 'GET', function (screenshotsItem) {
                         for (var i = 0; i < screenshotsItem.length; i++) {
-                            var screenshotItem = document.createElement('div');
+                            var screenshotItem = document.createElement('li');
                             screenshotItem.id = 'gamescreenshots_gallery_' + imageIndex;
                             screenshotItem.setAttribute('name', 'gamescreenshots_gallery_item');
                             screenshotItem.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/screenshots/' + screenshotsItem[i].id + '/image/screenshot_thumb/' + screenshotsItem[i].imageId + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
@@ -475,7 +477,7 @@
                     ajaxCall('/api/v1.1/Games/' + gameId + '/videos', 'GET', function (result) {
                         var gameScreenshots_vGallery = document.getElementById('gamescreenshots_gallery_panel');
                         for (var i = 0; i < result.length; i++) {
-                            var vScreenshotItem = document.createElement('div');
+                            var vScreenshotItem = document.createElement('li');
                             vScreenshotItem.id = 'gamescreenshots_gallery_' + i;
                             vScreenshotItem.setAttribute('name', 'gamescreenshots_gallery_item');
                             vScreenshotItem.setAttribute('style', 'background-image: url("https://i.ytimg.com/vi/' + result[i].videoId + '/hqdefault.jpg"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
@@ -532,7 +534,7 @@
 
                     var gameSummarySimilarContent = document.getElementById('gamesummarysimilarcontent');
                     for (var i = 0; i < result.games.length; i++) {
-                        var similarObject = renderGameIcon(result.games[i], true, false, false, null, false, false);
+                        var similarObject = renderGameIcon(result.games[i], true, false, false, null, false, true);
                         gameSummarySimilarContent.appendChild(similarObject);
                     }
 
@@ -765,6 +767,17 @@
                             }
                         }
 
+                        let romInfoButton = document.createElement('div');
+                        romInfoButton.className = 'properties_button';
+                        //romInfoButton.setAttribute('onclick', 'showDialog(\'rominfo\', ' + gameRomItems[i].id + ');');
+                        romInfoButton.setAttribute('data-romid', gameRomItems[i].id);
+                        romInfoButton.addEventListener('click', function () {
+                            const romInfoDialog = new rominfodialog(gameId, this.getAttribute('data-romid'));
+                            romInfoDialog.open();
+                        });
+                        romInfoButton.innerHTML = 'i';
+
+
                         var newRow = [
                             ['<input type="checkbox" name="rom_checkbox" data-gameid="' + gameData.id + '" data-platformid="' + gameRomItems[i].platformId + '" data-romid="' + gameRomItems[i].id + '" onclick="handleChecks();" />', 'rom_checkbox_box_hidden', 'rom_edit_checkbox'],
                             '<a href="/api/v1.1/Games/' + gameId + '/roms/' + gameRomItems[i].id + '/' + encodeURIComponent(gameRomItems[i].name) + '" class="romlink">' + gameRomItems[i].name + '</a>',
@@ -773,7 +786,7 @@
                             gameRomItems[i].mediaLabel,
                             saveStatesButton,
                             launchButton,
-                            '<div class="properties_button" onclick="showDialog(\'rominfo\', ' + gameRomItems[i].id + ');">i</div>'
+                            romInfoButton
                         ];
                         newTable.appendChild(createTableRow(false, newRow, 'romrow romrowgamepage', 'romcell'));
                     }

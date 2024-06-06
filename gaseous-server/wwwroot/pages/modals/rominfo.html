@@ -1,52 +1,134 @@
 <div id="tab1" name="modalTab" data-tabname="ROM Info">
     <table cellspacing="0" style="width: 100%;">
         <tr class="romrow">
-            <td class="romcell">Library</td>
+            <th class="romcell">Library</td>
             <td id="rominfo_library" class="romcell"></td>
         </tr>
         <tr class="romrow">
-            <td class="romcell">Platform</td>
+            <th class="romcell">Platform</td>
             <td id="rominfo_platform" class="romcell"></td>
         </tr>
         <tr class="romrow">
-            <td class="romcell">Size</td>
+            <th class="romcell">Size</td>
             <td id="rominfo_size" class="romcell"></td>
         </tr>
         <tr class="romrow">
-            <td class="romcell">ROM Type</td>
+            <th class="romcell">ROM Type</td>
             <td id="rominfo_type" class="romcell"></td>
         </tr>
         <tr class="romrow">
-            <td class="romcell">Media Type</td>
+            <th class="romcell">Media Type</td>
             <td id="rominfo_mediatype" class="romcell"></td>
         </tr>
         <tr class="romrow">
-            <td class="romcell">Media Label</td>
+            <th class="romcell">Media Label</td>
             <td id="rominfo_medialabel" class="romcell"></td>
         </tr>
         <tr class="romrow">
-            <td class="romcell">MD5</td>
+            <th class="romcell">MD5</td>
             <td id="rominfo_md5" class="romcell"></td>
         </tr>
         <tr class="romrow">
-            <td class="romcell">SHA1</td>
+            <th class="romcell">SHA1</td>
             <td id="rominfo_sha1" class="romcell"></td>
         </tr>
         <tr class="romrow">
-            <td class="romcell">Signature Matched From</td>
+            <th class="romcell">Signature Matched From</td>
             <td id="rominfo_signaturematch" class="romcell"></td>
         </tr>
         <tr class="romrow">
-            <td class="romcell">Signature Game Title</td>
+            <th class="romcell">Signature Game Title</td>
             <td id="rominfo_signaturetitle" class="romcell"></td>
         </tr>
+        <tr class="romrow">
+            <th class="romcell">ROM Attributes</td>
+            <td id="rominfo_signatureattributes" class="romcell"></td>
     </table>
 </div>
 
 <div id="tab2" name="modalTab" data-tabname="Archive Content">
-    Tab2
+
 </div>
 
 <div id="tab3" name="modalTab" data-tabname="Title Matching">
-    Tab3
+    <table cellspacing="0" style="width: 100%;">
+        <tbody class="romrow">
+            <tr>
+                <th class="romcell" style="width: 25%;">Signature Match</th>
+                <td class="romcell"></td>
+            </tr>
+        </tbody>
+        <tbody class="romrow">
+            <tr>
+                <th class="romcell">Preferred Metadata Source</th>
+                <td class="romcell">
+                    <table cellspacing="0" style="display: 100%;">
+                        <tr>
+                            <td style="width: 30px;">
+                                <input type="radio" id="rominfo_metadata_source_none" name="rominfo_metadata_source"
+                                    value="0" disabled="disabled">
+                            </td>
+                            <td>
+                                <label for="rominfo_metadata_source_none">None</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 30px;">
+                                <input type="radio" id="rominfo_metadata_source_igdb" name="rominfo_metadata_source"
+                                    value="1" checked="checked">
+                            </td>
+                            <td>
+                                <label for="rominfo_metadata_source_igdb">IGDB</label>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+        <tbody class="romrow">
+            <tr>
+                <th class="romcell">Internet Game Database Match</th>
+                <td class="romcell">
+                    <table cellspacing="0" style="width: 100%;">
+                        <tr>
+                            <td style="width: 30px;">
+                                <input type="radio" id="rominfo_metadata_match_none" name="rominfo_metadata_match"
+                                    value="0" checked>
+                            </td>
+                            <td colspan="2">
+                                <label for="rominfo_metadata_match_none">None</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="width: 30px;">
+                                <input type="radio" id="rominfo_metadata_match_match" name="rominfo_metadata_match"
+                                    value="1">
+                            </td>
+                            <td colspan="2">
+                                <label for="rominfo_metadata_match_match">Matched to:</label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td style="width: 100px;">
+                                Platform:
+                            </td>
+                            <td>
+                                <select id="properties_fixplatform" style="width: 100%;"></select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>
+                                Game:
+                            </td>
+                            <td>
+                                <select id="properties_fixgame" style="width: 100%;"></select>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </tbody>
+    </table>
 </div>

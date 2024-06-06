@@ -408,11 +408,15 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
     } else {
         gameBox.classList.add(...classes['game_tile']);
     }
-    gameBox.setAttribute('onclick', 'window.location.href = "/index.html?page=game&id=' + gameObject.id + '";');
     // gameBox.style.display = 'none';
 
     var gameImageBox = document.createElement('div');
     gameImageBox.classList.add(...classes['game_tile_box']);
+    if (listView == true) {
+        gameBox.setAttribute('onclick', 'window.location.href = "/index.html?page=game&id=' + gameObject.id + '";');
+    } else {
+        gameImageBox.setAttribute('onclick', 'window.location.href = "/index.html?page=game&id=' + gameObject.id + '";');
+    }
 
     var gameImage = document.createElement('img');
     gameImage.id = 'game_tile_cover_' + gameObject.id;

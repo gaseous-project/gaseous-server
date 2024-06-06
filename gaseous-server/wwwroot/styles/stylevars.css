@@ -24,9 +24,10 @@
 
     /* page */
     --page-font-colour: rgb(255, 255, 255);
-    --selected-item: rgb(0, 0, 170);
+    --selected-item: rgba(0, 0, 170, 0.5);
     --selected-item-hover: rgb(0, 0, 255);
     --hover-selectable: rgb(255, 255, 0);
+    --standard-radius: 7px;
 
     /* scroll bar */
     --scrollbar-track: rgb(56, 56, 56);
@@ -38,6 +39,26 @@
     --input-border: rgb(43, 43, 43);
     --input-border-hover: rgb(147, 147, 147);
     --input-font-colour: var(--page-font-colour);
+
+    /* button */
+    --button-background: rgb(85, 85, 85);
+    --button-background-hover: rgb(136, 136, 136);
+    --button-background-disabled: var(--button-background-hover);
+    --button-border: rgb(85, 85, 85);
+    --button-border-hover: rgb(136, 136, 136);
+    --button-border-disabled: var(--button-border-hover);
+    --button-font-colour: rgb(255, 255, 255);
+    --button-font-colour-hover: var(--button-font-colour);
+    --button-font-colour-disabled: var(--button-border-hover);
+    --button-red-background: darkred;
+    --button-red-background-hover: red;
+    --button-red-background-disabled: rgb(85, 85, 85);
+    --button-red-border: darkred;
+    --button-red-border-hover: red;
+    --button-red-border-disabled: rgb(85, 85, 85);
+    --button-red-font-colour: rgb(255, 255, 255);
+    --button-red-font-colour-hover: var(--button-red-font-colour);
+    --button-red-font-colour-disabled: var(--button-red-font-colour);
 
     /* select2 */
     --select2-background: var(--input-background);

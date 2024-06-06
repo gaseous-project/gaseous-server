@@ -128,15 +128,19 @@ h3 {
 }
 
 .modal-window {
-    position: absolute;
+    position: relative;
     display: flex;
     flex-direction: row;
     top: 50%;
     left: 50%;
     margin-right: -50%;
     transform: translate(-50%, -50%);
-    width: 700px;
-    height: 388px;
+    min-width: 700px;
+    max-width: 1000px;
+    width: 60%;
+    min-height: 388px;
+    max-height: 500px;
+    height: 60%;
     border-radius: 10px;
     border-style: solid;
     border-width: 1px;
@@ -166,19 +170,41 @@ h3 {
     background-color: black;
 }
 
+.modal-window-inner-content {
+    position: absolute;
+    top: 36px;
+    bottom: 48px;
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: normal;
+    align-items: normal;
+    align-content: normal;
+}
+
 .modal-window-tabs {
     background-color: var(--modal-tabs-background-color);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
-    width: 30%;
-    height: 100%;
-    display: inline-block;
-    padding-top: 35px;
+    display: block;
+    flex-grow: 0;
+    flex-shrink: 1;
+    flex-basis: auto;
+    align-self: auto;
+    order: 0;
+    width: 200px;
+    min-width: 200px;
+    max-width: 200px;
+    padding-top: 0px;
     padding-left: 0px;
-    padding-right: 1px;
-    padding-bottom: 10px;
+    padding-right: 0px;
+    padding-bottom: 0px;
     overflow-y: auto;
     overflow-x: hidden;
+    border-right-color: black;
+    border-right-width: 1px;
+    border-right-style: solid;
 }
 
 .modal-tab-button {
@@ -192,23 +218,25 @@ h3 {
     background-color: var(--modal-window-background-color);
 }
 
-.model-tab-button-selected {
+.model-tab-button-selected,
+.model-tab-button-selected:hover {
     background-color: var(--selected-item);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 }
 
 .modal-window-body {
     background-color: var(--modal-window-background-color);
-    width: 100%;
-    /* height: 100%; */
-    top: 0px;
-    bottom: 0px;
-    display: inline-block;
-    position: relative;
-    /* padding-top: 10px;
-    padding-left: 10px;
-    padding-right: 10px;
-    padding-bottom: 10px; */
-    padding: 0px;
+    display: block;
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: auto;
+    align-self: auto;
+    order: 0;
+    padding: 10px;
+    text-align: top;
+    overflow-y: scroll;
+    overflow-x: hidden;
 }
 
 .modal-window-header {
@@ -249,15 +277,16 @@ h3 {
 }
 
 .modal-window-content {
-    position: absolute;
+    /* position: absolute;
     display: block;
-    top: 36px;
+    top: 0px;
     left: 0px;
     right: 0px;
-    bottom: 52px;
-    /* background-color: black; */
+    bottom: 52px; */
+    /* padding: 10px;
+    text-align: top;
     overflow-y: scroll;
-    overflow-x: hidden;
+    overflow-x: hidden; */
 }
 
 .modal-window-footer {
@@ -268,8 +297,8 @@ h3 {
     left: 0px;
     right: 0px;
     height: 40px;
-    padding-top: 10px;
-    padding-right: 5px;
+    padding-top: 7px;
+    padding-right: 6px;
     text-align: right;
     color: var(--modal-window-header-text-color);
     background-color: var(--modal-window-header-background-color);
@@ -339,6 +368,7 @@ h3 {
     width: 35px;
     height: 35px;
     margin-bottom: -5px;
+    border-radius: 17px;
 }
 
 .user_list_icon_reversed {
@@ -352,10 +382,22 @@ h3 {
 }
 
 .banner_button_avatar {
-    margin-top: -10px;
-    height: 40px;
-    width: 40px;
+    margin-top: -8px;
+    height: 36px;
+    width: 36px;
+    margin-left: 1px;
+    margin-right: 3px;
     cursor: pointer;
+    border-radius: 18px;
+    overflow: hidden;
+}
+
+#properties_bodypanel_avatar_image {
+    height: 200px;
+    width: 200px;
+    cursor: pointer;
+    border-radius: 100px;
+    overflow: hidden;
 }
 
 .banner_button_avatar_image:hover {
@@ -492,6 +534,8 @@ input[type="email"],
 input[type="password"],
 input[type="datetime-local"],
 input[type="url"],
+input[type="radio"],
+select,
 textarea {
     background-color: var(--input-background);
     color: var(--input-font-colour);
@@ -515,6 +559,8 @@ input[type="email"]:hover,
 input[type="password"]:hover,
 input[type="datetime-local"]:hover,
 input[type="url"]:hover,
+input[type="radio"]:hover,
+select,
 textarea:hover {
     border-color: var(--input-border-hover);
 }
@@ -680,7 +726,7 @@ input[name='filter_panel_range_max'] {
     border-style: solid;
     border-width: 1px;
     border-color: var(--section-header-background);
-    border-radius: 5px;
+    border-radius: var(--standard-radius);
     margin-bottom: 10px;
     padding-top: 7px;
     padding-bottom: 7px;
@@ -698,7 +744,7 @@ input[name='filter_panel_range_max'] {
     border-style: solid;
     border-width: 1px;
     border-color: var(--section-header-background);
-    border-radius: 5px;
+    border-radius: var(--standard-radius);
     margin-bottom: 10px;
     padding-top: 7px;
     padding-bottom: 7px;
@@ -721,7 +767,7 @@ input[name='filter_panel_range_max'] {
     margin-top: 0px;
     margin-bottom: 0px;
     margin-right: 2px;
-    border-radius: 5px;
+    border-radius: var(--standard-radius);
     border-width: 1px;
     border-style: solid;
     border-color: var(--input-border);
@@ -844,9 +890,9 @@ input[name='filter_panel_range_max'] {
     text-align: center;
     vertical-align: top;
     margin-bottom: 10px;
-    border-radius: 10px 10px 10px 10px;
-    -webkit-border-radius: 10px 10px 10px 10px;
-    -moz-border-radius: 10px 10px 10px 10px;
+    border-radius: var(--standard-radius);
+    -webkit-border-radius: var(--standard-radius);
+    -moz-border-radius: var(--standard-radius);
     border: 1px solid transparent;
 }
 
@@ -857,7 +903,7 @@ input[name='filter_panel_range_max'] {
 }
 
 .game_tile:hover {
-    cursor: pointer;
+    /* cursor: pointer; */
     /* text-decoration: underline;
     background-color: var(--section-header-background);
     border-radius: 10px 10px 10px 10px;
@@ -867,7 +913,7 @@ input[name='filter_panel_range_max'] {
 }
 
 .game_tile_small:hover {
-    cursor: pointer;
+    /* cursor: pointer; */
     /* text-decoration: underline;
     background-color: var(--section-header-background);
     border-radius: 10px 10px 10px 10px;
@@ -884,6 +930,7 @@ input[name='filter_panel_range_max'] {
     min-height: 100px;
     align-items: left;
     vertical-align: top;
+    border-radius: var(--standard-radius);
 }
 
 .game_tile_row:hover {
@@ -897,15 +944,17 @@ input[name='filter_panel_range_max'] {
     display: inline-block;
     max-width: 200px;
     max-height: 200px;
-    border-radius: 7px;
+    border-radius: var(--standard-radius);
     border-width: 2px;
     border-style: solid;
     border-color: transparent;
     overflow: hidden;
 }
 
-.game_tile:hover .game_tile_box {
+/* .game_tile:hover .game_tile_box { */
+.game_tile_box:hover {
     border-color: yellow;
+    cursor: pointer;
     outline-width: 2px;
     outline-style: solid;
     outline-offset: -3px;
@@ -1026,6 +1075,7 @@ input[name='filter_panel_range_max'] {
     min-height: 75px;
     margin-left: 10px;
     background-color: transparent;
+    border-radius: var(--standard-radius);
 }
 
 .game_tile_image,
@@ -1075,7 +1125,7 @@ input[name='filter_panel_range_max'] {
     left: 0;
     right: 0;
     margin: auto;
-    width: 90%;
+    /* width: 90%; */
     min-width: 911px;
     max-width: 1122px;
     min-height: 550px;
@@ -1084,16 +1134,46 @@ input[name='filter_panel_range_max'] {
     padding-left: 20px;
     padding-right: 20px;
     padding-bottom: 20px;
+
+    position: relative;
 }
 
-#mainbody {
-    margin-left: 270px;
+#gamepagecontent {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: normal;
+    align-items: normal;
+    align-content: normal;
+    position: relative;
+    min-height: 0px;
+    min-width: 0px;
 }
 
 #gamesummary {
-    float: left;
+    /* float: left; */
     margin-right: 20px;
     width: 250px;
+    display: block;
+    flex-grow: 0;
+    flex-shrink: 0;
+    flex-basis: auto;
+    align-self: auto;
+    order: 0;
+    min-width: 0px;
+}
+
+#mainbody {
+    /* margin-left: 270px; */
+    display: block;
+    /* flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: auto;
+    align-self: auto; */
+    flex: 1;
+    order: 0;
+    min-height: 0;
+    min-width: 0;
 }
 
 #gamesummaryroms {
@@ -1105,6 +1185,7 @@ input[name='filter_panel_range_max'] {
     max-width: 250px;
     max-height: 350px;
     width: 100%;
+    border-radius: var(--standard-radius);
     box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
     -webkit-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
     -moz-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
@@ -1159,7 +1240,7 @@ input[name='filter_panel_range_max'] {
     box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
     -webkit-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
     -moz-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
-    border-radius: 5px;
+    border-radius: var(--standard-radius);
 }
 
 #gamescreenshots_main {
@@ -1183,7 +1264,7 @@ iframe {
     white-space: normal;
 }
 
-#gamescreenshots_gallery_panel {
+/* #gamescreenshots_gallery_panel {
     display: block;
     height: 50px;
     margin-bottom: 10px;
@@ -1199,11 +1280,59 @@ iframe {
     border-color: transparent;
     border-style: solid;
     border-width: 2px;
-    border-radius: 5px;
+    border-radius: var(--standard-radius);
     cursor: pointer;
+} */
+
+#gamescreenshots_gallery_panel {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 12px;
+    white-space: nowrap;
+    display: flex;
+    overflow-x: scroll;
+    padding: 5px;
+
+    .gamescreenshots_gallery_item {
+        flex: 0 0 70px;
+        display: inline-block;
+        height: 50px;
+        width: 70px;
+        margin-right: 10px;
+        white-space: nowrap;
+        border-color: transparent;
+        border-style: solid;
+        border-width: 2px;
+        border-radius: var(--standard-radius);
+        cursor: pointer;
+    }
+
+    .gamescreenshots_gallery_item:hover {
+        border-color: lightgray;
+        outline-offset: -4px;
+        outline-color: black;
+        outline-style: solid;
+        outline-width: 2px;
+    }
+
+    .gamescreenshosts_gallery_item_selected {
+        border-color: white;
+        outline-offset: -4px;
+        outline-color: black;
+        outline-style: solid;
+        outline-width: 2px;
+    }
+
+    .gamescreenshosts_gallery_item_youtube {
+        max-height: 20px;
+        max-width: 20px;
+        float: right;
+        margin-top: 30px;
+        margin-right: 5px;
+    }
 }
 
-.gamescreenshots_gallery_item:hover {
+/* .gamescreenshots_gallery_item:hover {
     border-color: lightgray;
     outline-offset: -4px;
     outline-color: black;
@@ -1225,7 +1354,7 @@ iframe {
     float: right;
     margin-top: 30px;
     margin-right: 5px;
-}
+} */
 
 .gamescreenshots_arrows {
     margin-top: 140px;
@@ -1245,6 +1374,7 @@ iframe {
     /* webkit (konqueror) browsers */
     -ms-user-select: none;
     /* IE10+ */
+    border-radius: var(--standard-radius);
 }
 
 .gamescreenshots_arrows:hover {
@@ -1268,8 +1398,8 @@ iframe {
 #gamestatistics {
     display: block;
     width: 100%;
-    margin-bottom: 10px;
-    background-color: var(--section-body-background);
+    /* margin-bottom: 10px; */
+    /* background-color: var(--section-body-background); */
 }
 
 .gamestatistics_box {
@@ -1305,7 +1435,7 @@ iframe {
     height: 30px;
     text-align: center;
     background-color: var(--fancybutton-background);
-    border-radius: 5px;
+    border-radius: var(--standard-radius);
     border-style: solid;
     border-color: var(--fancybutton-background);
     border-width: 1px;
@@ -1394,9 +1524,9 @@ th {
     color: white;
     text-shadow: 2px 2px 6px #003506;
     text-decoration: none;
-    border-radius: 5px 5px 5px 5px;
-    -webkit-border-radius: 5px 5px 5px 5px;
-    -moz-border-radius: 5px 5px 5px 5px;
+    border-radius: var(--standard-radius);
+    -webkit-border-radius: var(--standard-radius);
+    -moz-border-radius: var(--standard-radius);
     border: 1px solid #19d348;
     box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
     -webkit-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
@@ -1528,12 +1658,16 @@ div[name="properties_profile_toc_item"]:hover {
     color: var(--select2-dropdown-selected-font-colour);
 }
 
+.select2-search__field {
+    background-color: var(--select2-background);
+    color: var(--select2-font-colour);
+}
 
 /* tag item */
 .select2-container--default .select2-selection--multiple .select2-selection__choice {
     background-color: #575757 !important;
     border: 1px solid var(--select2-background);
-    border-radius: 5px;
+    border-radius: var(--standard-radius);
 }
 
 /* tag item delete button */
@@ -1547,6 +1681,16 @@ div[name="properties_profile_toc_item"]:hover {
 .select2-container--default .select2-selection--multiple .select2-selection__choice__display {
     /* background-color: #4e4e4e; */
     background-color: var(--select2-tag-background);
+}
+
+/* clear selection button */
+.select2-selection__clear {
+    margin-right: 10px;
+    color: var(--select2-tag-delete-button);
+}
+
+.select2-selection__clear:hover {
+    color: var(--select2-tag-delete-background);
 }
 
 .dropdown-div {
@@ -1579,38 +1723,42 @@ div[name="properties_profile_toc_item"]:hover {
     color: lightgray;
 }
 
-button:not(.select2-selection__choice__remove):not(.ejs_menu_button):not(.bigbutton) {
-    background-color: #555;
-    color: white;
+button:not(.select2-selection__choice__remove):not(.select2-selection__clear):not(.ejs_menu_button):not(.bigbutton) {
+    background-color: var(--button-background);
+    color: var(--button-font-colour);
     border-width: 1px;
-    border-color: #555;
+    border-color: var(--button-border);
     border-style: solid;
+    border-radius: var(--standard-radius);
     padding-top: 5px;
     padding-bottom: 5px;
     padding-left: 15px;
     padding-right: 15px;
-    margin-right: 3px;
+    margin-right: 5px;
     margin-bottom: 3px;
     font-size: 13px;
     height: 30px;
 }
 
-button:not(.select2-selection__choice__remove):not(.ejs_menu_button):hover {
-    background-color: #888;
+button:not(.select2-selection__choice__remove):not(.select2-selection__clear):not(.ejs_menu_button):hover {
+    background-color: var(--button-background-hover);
+    border-color: var(--button-border-hover);
+    color: var(--button-font-colour-hover);
     cursor: pointer;
 }
 
-button:not(.select2-selection__choice__remove):not(.ejs_menu_button):disabled {
-    background-color: #555;
-    color: #888;
+button:not(.select2-selection__choice__remove):not(.select2-selection__clear):not(.ejs_menu_button):disabled {
+    background-color: var(--button-background);
+    border-color: var(--button-border-disabled);
+    color: var(--button-font-colour-disabled);
     cursor: not-allowed;
 }
 
 .bigbutton {
-    background-color: #555;
-    color: white;
+    background-color: var(--button-background);
+    color: var(--button-font-colour);
     border-width: 1px;
-    border-color: #555;
+    border-color: var(--button-border);
     border-style: solid;
     margin-top: 10px;
     width: 100%;
@@ -1622,16 +1770,21 @@ button:not(.select2-selection__choice__remove):not(.ejs_menu_button):disabled {
 }
 
 .redbutton {
-    background-color: darkred !important;
-    border-color: darkred !important;
+    background-color: var(--button-red-background) !important;
+    border-color: var(--button-red-border) !important;
+    color: var(--button-red-font-colour) !important;
 }
 
 .redbutton:hover {
-    background-color: red !important;
+    background-color: var(--button-red-background-hover) !important;
+    border-color: var(--button-red-border-hover) !important;
+    color: var(--button-red-font-colour-hover) !important;
 }
 
 .redbutton:disabled {
-    background-color: #555 !important;
+    background-color: var(--button-red-background-disabled) !important;
+    border-color: var(--button-red-border-disabled) !important;
+    color: var(--button-red-font-colour-disabled) !important;
 }
 
 #emulator {}
@@ -1859,7 +2012,7 @@ button:not(.select2-selection__choice__remove):not(.ejs_menu_button):disabled {
 .logs_table_exception {
     margin-right: 10px;
     padding: 5px;
-    border-radius: 10px;
+    border-radius: var(--standard-radius);
     border-color: #383838;
     border-width: 1px;
     background-color: #383838;
@@ -1912,7 +2065,7 @@ button:not(.select2-selection__choice__remove):not(.ejs_menu_button):disabled {
     background-color: darkslategray;
     color: white;
     text-align: center;
-    border-radius: 5px;
+    border-radius: var(--standard-radius);
     border-color: darkslategray;
     border-style: solid;
 }
@@ -2017,7 +2170,7 @@ button:not(.select2-selection__choice__remove):not(.ejs_menu_button):disabled {
     border-color: red;
     border-style: solid;
     border-width: 1px;
-    border-radius: 5px;
+    border-radius: var(--standard-radius);
     padding: 3px 6px;
     display: inline-block;
     margin-top: 5px;
@@ -2078,6 +2231,8 @@ button:not(.select2-selection__choice__remove):not(.ejs_menu_button):disabled {
 .section {
     background-color: var(--section-body-background);
     margin-bottom: 20px;
+    border-radius: var(--standard-radius);
+    overflow: hidden;
 }
 
 .section-header {
@@ -2087,5 +2242,5 @@ button:not(.select2-selection__choice__remove):not(.ejs_menu_button):disabled {
 }
 
 .section-body {
-    padding: 10px;
+    padding: 10px 10px 12px 10px;
 }
