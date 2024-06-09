@@ -25,14 +25,20 @@ class rominfodialog {
             callingObject.dialog.modalElement.querySelector('#rominfo_signaturematch').innerHTML = data.signatureSource;
             callingObject.dialog.modalElement.querySelector('#rominfo_signaturetitle').innerHTML = data.signatureSourceGameTitle;
 
+            let fixPlatformSelect = callingObject.dialog.modalElement.querySelector('#properties_fixplatform');
+            let fixGameSelect = callingObject.dialog.modalElement.querySelector('#properties_fixgame');
             if (data.platformId == 0) {
                 callingObject.dialog.modalElement.querySelector('#rominfo_metadata_match_none').checked = true;
+                fixPlatformSelect.setAttribute('disabled', 'disabled');
+                fixGameSelect.setAttribute('disabled', 'disabled');
             } else {
                 callingObject.dialog.modalElement.querySelector('#rominfo_metadata_match_match').checked = true;
-                callingObject.dialog.modalElement.querySelector('#properties_fixplatform').innerHTML = "<option value='" + data.platformId + "' selected='selected'>" + data.platform + "</option>";
+                fixPlatformSelect.innerHTML = "<option value='" + data.platformId + "' selected='selected'>" + data.platform + "</option>";
                 if (data.gameId != 0) {
-                    callingObject.dialog.modalElement.querySelector('#properties_fixgame').innerHTML = "<option value='" + data.gameid + "' selected='selected'>" + data.game + "</option>";
+                    fixGameSelect.innerHTML = "<option value='" + data.gameid + "' selected='selected'>" + data.game + "</option>";
                 }
+                fixPlatformSelect.removeAttribute('disabled');
+                fixGameSelect.removeAttribute('disabled');
             }
 
             if (data.library.isDefaultLibrary == false) {
@@ -112,26 +118,64 @@ class rominfodialog {
         });
 
         // setup the fix match tab
+        this.dialog.modalElement.querySelector('#rominfo_metadata_match_none').addEventListener('click', function () {
+            let fixPlatformSelect = document.querySelector('#properties_fixplatform');
+            let fixGameSelect = document.querySelector('#properties_fixgame');
+            $(fixPlatformSelect).prop('disabled', true);
+            $(fixGameSelect).prop('disabled', true);
+        });
+        this.dialog.modalElement.querySelector('#rominfo_metadata_match_match').addEventListener('click', function () {
+            let fixPlatformSelect = document.querySelector('#properties_fixplatform');
+            let fixGameSelect = document.querySelector('#properties_fixgame');
+            $(fixPlatformSelect).prop('disabled', false);
+            $(fixGameSelect).prop('disabled', false);
+        });
         this.setFixPlatformDropDown(this);
         this.setFixGameDropDown(this);
 
         // create the delete button
         if (isDeleteable == true) {
-            let deleteButton = new ModalButton("Delete", true, this.dialog, function (callingObject) {
-                callingObject.close();
+            let deleteButton = new ModalButton("Delete", true, this, function (callingObject) {
+                callingObject.dialog.close();
             });
             this.dialog.addButton(deleteButton);
         }
 
         // create the ok button
-        let okButton = new ModalButton("OK", false, this.dialog, function (callingObject) {
-            callingObject.close();
+        let okButton = new ModalButton("OK", false, this, function (callingObject) {
+            // get save data
+            let fixIGDBPlatformValue = 0;
+            let fixIGDBGameValue = 0;
+
+            // IGDB metadata
+            let fixIGDBMetadataMatch = callingObject.dialog.modalElement.querySelector('#rominfo_metadata_match_match');
+            let fixIGDBPlatformSelect = callingObject.dialog.modalElement.querySelector('#properties_fixplatform');
+            let fixIGDBGameSelect = callingObject.dialog.modalElement.querySelector('#properties_fixgame');
+            if (fixIGDBMetadataMatch.checked) {
+                if (fixIGDBPlatformSelect.value == null || fixIGDBPlatformSelect.value == "") {
+                    fixIGDBPlatformValue = 0;
+                    fixIGDBGameValue = 0;
+                } else {
+                    fixIGDBPlatformValue = fixIGDBPlatformSelect.value;
+                    if (fixIGDBGameSelect.value == null || fixIGDBGameSelect.value == "") {
+                        fixIGDBGameValue = 0;
+                    } else {
+                        fixIGDBGameValue = fixIGDBGameSelect.value;
+                    }
+                }
+            }
+
+            console.log(callingObject.gameId + " " + callingObject.romId + " " + fixIGDBPlatformValue + " " + fixIGDBGameValue);
+
+            ajaxCall('/api/v1.1/Games/' + callingObject.gameId + '/roms/' + callingObject.romId + '?NewPlatformId=' + fixIGDBPlatformValue + '&NewGameId=' + fixIGDBGameValue, 'PATCH', function (result) {
+                window.location.reload();
+            });
         });
         this.dialog.addButton(okButton);
 
         // create the cancel button
-        let cancelButton = new ModalButton("Cancel", false, this.dialog, function (callingObject) {
-            callingObject.close();
+        let cancelButton = new ModalButton("Cancel", false, this, function (callingObject) {
+            callingObject.dialog.close();
         });
         this.dialog.addButton(cancelButton);
 

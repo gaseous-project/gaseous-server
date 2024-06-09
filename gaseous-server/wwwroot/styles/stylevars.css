@@ -36,6 +36,7 @@
 
     /* input */
     --input-background: rgb(43, 43, 43);
+    --input-background-disabled: rgb(89, 89, 89);
     --input-border: rgb(43, 43, 43);
     --input-border-hover: rgb(147, 147, 147);
     --input-font-colour: var(--page-font-colour);
@@ -62,6 +63,7 @@
 
     /* select2 */
     --select2-background: var(--input-background);
+    --select2-background-disabled: var(--input-background-disabled);
     --select2-border: var(--input-border);
     --select2-border-hover: var(--input-border-hover);
     --select2-font-colour: var(--input-font-colour);

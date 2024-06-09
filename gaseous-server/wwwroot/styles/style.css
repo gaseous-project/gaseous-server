@@ -560,9 +560,23 @@ input[type="password"]:hover,
 input[type="datetime-local"]:hover,
 input[type="url"]:hover,
 input[type="radio"]:hover,
-select,
+select:hover,
 textarea:hover {
     border-color: var(--input-border-hover);
+}
+
+input[type='text']:disabled,
+input[type='number']:disabled,
+input[type="email"]:disabled,
+input[type="password"]:disabled,
+input[type="datetime-local"]:disabled,
+input[type="url"]:disabled,
+input[type="radio"]:disabled,
+select:disabled,
+textarea:disabled {
+    cursor: not-allowed;
+    background-color: var(--input-background-disabled);
+    border-color: var(--input-background-disabled);
 }
 
 textarea {
@@ -1622,6 +1636,7 @@ div[name="properties_profile_toc_item"]:hover {
 .select2-container--default .select2-selection--single {
     background-color: var(--select2-background);
     border-color: var(--select2-border);
+    height: 31px;
 }
 
 .select2-container--default:hover .select2-selection--single:hover {
@@ -1630,6 +1645,18 @@ div[name="properties_profile_toc_item"]:hover {
 
 .select2-container--default .select2-selection--single .select2-selection__rendered {
     color: var(--select2-font-colour);
+}
+
+.select2-container--default.select2-container--disabled .select2-selection--single {
+    background-color: var(--select2-background-disabled);
+    border-color: var(--select2-background-disabled);
+    cursor: not-allowed;
+}
+
+.select2-container--default.select2-container--disabled:hover .select2-selection--single:hover {
+    background-color: var(--select2-background-disabled);
+    border-color: var(--select2-background-disabled);
+    cursor: not-allowed;
 }
 
 /* multiple select */
@@ -1668,6 +1695,8 @@ div[name="properties_profile_toc_item"]:hover {
     background-color: #575757 !important;
     border: 1px solid var(--select2-background);
     border-radius: var(--standard-radius);
+    padding-top: 1px;
+    height: 21px;
 }
 
 /* tag item delete button */
@@ -1675,6 +1704,9 @@ div[name="properties_profile_toc_item"]:hover {
     border-right: none;
     background-color: var(--select2-tag-delete-background);
     color: var(--select2-tag-delete-button);
+    height: 100%;
+    padding-bottom: 2px;
+    padding-left: 5px;
 }
 
 /* tag item label */
