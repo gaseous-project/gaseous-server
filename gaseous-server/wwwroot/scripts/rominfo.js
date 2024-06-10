@@ -7,11 +7,11 @@ class rominfodialog {
     async open() {
         // Create the modal
         this.dialog = await new Modal("rominfo");
+        await this.dialog.BuildModal();
 
         // Load the rom information
         let isDeleteable = true;
         await this.#fetchData(this, function (callingObject, data) {
-            console.log(data);
             // populate the dialog with the rom information
             callingObject.dialog.modalElement.querySelector('#modal-header-text').innerHTML = data.name;
             callingObject.dialog.modalElement.querySelector('#rominfo_library').innerHTML = data.library.name;
@@ -136,7 +136,23 @@ class rominfodialog {
         // create the delete button
         if (isDeleteable == true) {
             let deleteButton = new ModalButton("Delete", true, this, function (callingObject) {
-                callingObject.dialog.close();
+                const deleteWindow = new MessageBox("Delete ROM", "Are you sure you want to delete this ROM?");
+
+                let deleteButton = new ModalButton("Delete", true, callingObject, function (callingObject) {
+                    ajaxCall('/api/v1.1/Games/' + callingObject.gameId + '/roms/' + callingObject.romId, 'DELETE', function (result) {
+                        window.location.reload();
+                    });
+                });
+                deleteWindow.addButton(deleteButton);
+
+                let cancelButton = new ModalButton("Cancel", false, deleteWindow, function (callingObject) {
+                    callingObject.msgDialog.close();
+                });
+                deleteWindow.addButton(cancelButton);
+
+                deleteWindow.open();
+
+                // callingObject.dialog.close();
             });
             this.dialog.addButton(deleteButton);
         }
@@ -164,8 +180,6 @@ class rominfodialog {
                     }
                 }
             }
-
-            console.log(callingObject.gameId + " " + callingObject.romId + " " + fixIGDBPlatformValue + " " + fixIGDBGameValue);
 
             ajaxCall('/api/v1.1/Games/' + callingObject.gameId + '/roms/' + callingObject.romId + '?NewPlatformId=' + fixIGDBPlatformValue + '&NewGameId=' + fixIGDBGameValue, 'PATCH', function (result) {
                 window.location.reload();

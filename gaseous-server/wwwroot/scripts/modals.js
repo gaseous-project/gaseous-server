@@ -4,10 +4,11 @@ class Modal {
         this.buttons = buttons;
         this.modalBackground = null;
         this.buttons = [];
-        this.#buildModal();
+
+        return;
     }
 
-    async #buildModal() {
+    async BuildModal() {
         // Create the modal background
         this.modalBackground = document.createElement('div');
         this.modalBackground.classList.add('modal-background');
@@ -32,33 +33,37 @@ class Modal {
         // Generate tabs
         const tabcontainer = this.modalElement.querySelector('#modal-tabs');
         const tabs = this.modalElement.querySelectorAll('[name="modalTab"]');
-        let firstTab = true;
-        tabs.forEach((tab) => {
-            let newTab = document.createElement('div');
-            newTab.id = 'tab-' + tab.id;
-            newTab.classList.add('modal-tab-button');
-            newTab.setAttribute('data-tabid', tab.id);
-            newTab.innerHTML = tab.getAttribute('data-tabname');
-            newTab.addEventListener('click', () => {
-                tabs.forEach((tab) => {
-                    if (tab.getAttribute('id') !== newTab.getAttribute('data-tabid')) {
-                        tab.style.display = 'none';
-                        tabcontainer.querySelector('[data-tabid="' + tab.id + '"]').classList.remove('model-tab-button-selected');
-                    } else {
-                        tab.style.display = 'block';
-                        tabcontainer.querySelector('[data-tabid="' + tab.id + '"]').classList.add('model-tab-button-selected');
-                    }
+        if (tabs.length > 0) {
+            let firstTab = true;
+            tabs.forEach((tab) => {
+                let newTab = document.createElement('div');
+                newTab.id = 'tab-' + tab.id;
+                newTab.classList.add('modal-tab-button');
+                newTab.setAttribute('data-tabid', tab.id);
+                newTab.innerHTML = tab.getAttribute('data-tabname');
+                newTab.addEventListener('click', () => {
+                    tabs.forEach((tab) => {
+                        if (tab.getAttribute('id') !== newTab.getAttribute('data-tabid')) {
+                            tab.style.display = 'none';
+                            tabcontainer.querySelector('[data-tabid="' + tab.id + '"]').classList.remove('model-tab-button-selected');
+                        } else {
+                            tab.style.display = 'block';
+                            tabcontainer.querySelector('[data-tabid="' + tab.id + '"]').classList.add('model-tab-button-selected');
+                        }
+                    });
                 });
+                if (firstTab) {
+                    newTab.classList.add('model-tab-button-selected');
+                    tab.style.display = 'block';
+                    firstTab = false;
+                } else {
+                    tab.style.display = 'none';
+                }
+                tabcontainer.appendChild(newTab);
             });
-            if (firstTab) {
-                newTab.classList.add('model-tab-button-selected');
-                tab.style.display = 'block';
-                firstTab = false;
-            } else {
-                tab.style.display = 'none';
-            }
-            tabcontainer.appendChild(newTab);
-        });
+        } else {
+            tabcontainer.style.display = 'none';
+        }
 
         // add the window to the modal background
         this.modalBackground.appendChild(this.modalElement);
@@ -84,6 +89,8 @@ class Modal {
                 this.close();
             }
         });
+
+        return;
     }
 
     async open() {
@@ -108,6 +115,8 @@ class Modal {
 
         // show the modal
         this.modalBackground.style.display = 'block';
+
+        return;
     }
 
     close() {
@@ -141,6 +150,8 @@ class ModalButton {
         this.isRed = isRed;
         this.callingObject = callingObject;
         this.callback = callback;
+
+        return;
     }
 
     render() {
@@ -156,5 +167,43 @@ class ModalButton {
             callback(callingObject);
         });
         return button;
+    }
+}
+
+class MessageBox {
+    constructor(title, message) {
+        this.title = title;
+        this.message = message;
+        this.buttons = [];
+
+        return;
+    }
+
+    async open() {
+        // create the dialog
+        this.msgDialog = await new Modal('messagebox');
+        await this.msgDialog.BuildModal();
+
+        // override the dialog size
+        this.msgDialog.modalElement.style = 'width: 400px; height: unset; min-width: unset; min-height: 200px; max-width: unset; max-height: unset;';
+
+        // set the title
+        this.msgDialog.modalElement.querySelector('#modal-header-text').innerHTML = this.title;
+
+        // set the message
+        this.msgDialog.modalElement.querySelector('#messageText').innerHTML = this.message;
+
+        // add buttons
+        if (this.buttons) {
+            for (let i = 0; i < this.buttons.length; i++) {
+                this.msgDialog.addButton(this.buttons[i]);
+            }
+        }
+
+        await this.msgDialog.open();
+    }
+
+    addButton(button) {
+        this.buttons.push(button);
     }
 }
