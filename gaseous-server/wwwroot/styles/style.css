@@ -235,7 +235,7 @@ h3 {
     order: 0;
     padding: 10px;
     text-align: top;
-    overflow-y: scroll;
+    overflow-y: auto;
     overflow-x: hidden;
 }
 
@@ -611,11 +611,17 @@ input[name='filter_panel_range_max'] {
 /* Handle */
 ::-webkit-scrollbar-thumb {
     background: var(--scrollbar-thumb);
+    border-radius: 5px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
 }
 
 /* Handle on hover */
 ::-webkit-scrollbar-thumb:hover {
     background: var(--scrollbar-thumb-hover);
+    border-radius: 5px;
+    border: 1px solid transparent;
+    background-clip: padding-box;
 }
 
 .text_link {}

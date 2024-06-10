@@ -151,8 +151,6 @@ class rominfodialog {
                 deleteWindow.addButton(cancelButton);
 
                 deleteWindow.open();
-
-                // callingObject.dialog.close();
             });
             this.dialog.addButton(deleteButton);
         }
