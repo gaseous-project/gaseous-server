@@ -16,9 +16,9 @@ Version 1.7.0 and later contain user authentication, and can be exposed to the i
 While we do our best to stay on top of server security, if you expose the server to the internet **you do so at your own risk**.
 
 ## Screenshots
-![Library](./screenshots/Library.png)
-![Game](./screenshots/Game.png)
-![Emulator](./screenshots/Emulator.png)
+![Library](./gaseous-server/wwwroot/screenshots/Library.png)
+![Game](./gaseous-server/wwwroot/screenshots/Game.png)
+![Emulator](./gaseous-server/wwwroot/screenshots/Emulator.png)
 
 
 ## Requirements

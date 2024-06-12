@@ -18,8 +18,9 @@
     <script src="/scripts/simpleUpload.min.js"></script>
     <script src="/scripts/main.js" type="text/javascript"></script>
     <script src="/scripts/modals.js" type="text/javascript"></script>
-    <script src="/scripts/rominfo.js" type="text/javascript"></script>
+    <script src="/scripts/preferences.js" type="text/javascript"></script>
     <script src="/scripts/notifications.js" type="text/javascript"></script>
+    <script src="/scripts/rominfo.js" type="text/javascript"></script>
     <script src="/scripts/filterformating.js" type="text/javascript"></script>
     <script src="/scripts/gamesformating.js" type="text/javascript"></script>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
@@ -73,6 +74,7 @@
                     onclick="showMenu();" />
                 <div id="myDropdown" class="dropdown-content">
                     <div id="banner_user_roles"></div>
+                    <a href="#" id="dropdown-menu-preferences">Preferences</a>
                     <a href="#" onclick="showDialog('userprofile');">Profile</a>
                     <a href="#" onclick="userLogoff();">Sign Out</a>
                 </div>
@@ -196,6 +198,12 @@
                 }
             }
         }
+
+        // event for preferences drop down item
+        document.getElementById('dropdown-menu-preferences').addEventListener('click', function () {
+            const prefsDialog = new PreferencesWindow();
+            prefsDialog.open();
+        });
 
         function userLogoff() {
             ajaxCall(

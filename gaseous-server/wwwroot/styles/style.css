@@ -536,7 +536,8 @@ input[type="datetime-local"],
 input[type="url"],
 input[type="radio"],
 select,
-textarea {
+textarea,
+.listboxselector {
     background-color: var(--input-background);
     color: var(--input-font-colour);
     padding: 4px;
@@ -550,6 +551,17 @@ textarea {
     border-style: solid;
     /* border-color: lightgray; */
     border-color: var(--input-border);
+}
+
+input[type='text'],
+input[type='number'],
+input[type="email"],
+input[type="password"],
+input[type="datetime-local"],
+input[type="url"],
+input[type="radio"],
+select:not([size]),
+textarea {
     height: 21px;
 }
 
@@ -561,7 +573,8 @@ input[type="datetime-local"]:hover,
 input[type="url"]:hover,
 input[type="radio"]:hover,
 select:hover,
-textarea:hover {
+textarea:hover,
+.listboxselector:hover {
     border-color: var(--input-border-hover);
 }
 
@@ -573,7 +586,8 @@ input[type="datetime-local"]:disabled,
 input[type="url"]:disabled,
 input[type="radio"]:disabled,
 select:disabled,
-textarea:disabled {
+textarea:disabled,
+.listboxselector:disabled {
     cursor: not-allowed;
     background-color: var(--input-background-disabled);
     border-color: var(--input-background-disabled);
@@ -2281,4 +2295,13 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
 .section-body {
     padding: 10px 10px 12px 10px;
+}
+
+.listboxselector-item {
+    cursor: default;
+    padding: 4px;
+}
+
+.listboxselector-item-selected {
+    background-color: var(--selected-item);
 }
