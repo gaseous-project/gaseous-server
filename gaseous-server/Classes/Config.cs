@@ -197,11 +197,6 @@ namespace gaseous_server.Classes
             {
                 string SettingName = (string)dataRow["Setting"];
 
-                if (SettingName.StartsWith("LastRun_"))
-                {
-                    Console.WriteLine("Break");
-                }
-
                 if (AppSettings.ContainsKey(SettingName))
                 {
                     AppSettings.Remove(SettingName);

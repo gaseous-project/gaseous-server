@@ -212,7 +212,7 @@
             var gameImage = document.createElement('img');
             gameImage.className = 'game_cover_image';
             if (result.cover) {
-                ajaxCall('/api/v1.1/games/' + gameId + '/cover', 'GET', function (coverResult) {
+                ajaxCall('/api/v1.1/Games/' + gameId + '/cover', 'GET', function (coverResult) {
                     if (coverResult) {
                         gameImage.src = '/api/v1.1/Games/' + gameId + '/cover/image/cover_big/' + coverResult.imageId + '.jpg';
 
@@ -241,7 +241,7 @@
             var gameDeveloperLoaded = false;
             var gamePublisherLoaded = false;
             if (result.involvedCompanies) {
-                ajaxCall('/api/v1.1/games/' + gameId + '/companies', 'GET', function (result) {
+                ajaxCall('/api/v1.1/Games/' + gameId + '/companies', 'GET', function (result) {
                     var lstDevelopers = [];
                     var lstPublishers = [];
 
@@ -313,7 +313,7 @@
             });
 
             // load favourites
-            ajaxCall('/api/v1.1/games/' + gameId + '/favourite', 'GET', function (result) {
+            ajaxCall('/api/v1.1/Games/' + gameId + '/favourite', 'GET', function (result) {
                 var gameFavButton = document.getElementById('gamestatistics_favourite_button');
                 var gameFavIcon = document.createElement('img');
                 gameFavIcon.id = "gamestatistics_favourite";
@@ -348,7 +348,7 @@
             let gameSummaryRatings = document.getElementById('gamesummary_ratings');
             let gameSummaryRatingsContent = document.getElementById('gamesummary_ratings_content');
             if (result.ageRatings) {
-                ajaxCall('/api/v1.1/games/' + gameId + '/agerating', 'GET', function (result) {
+                ajaxCall('/api/v1.1/Games/' + gameId + '/agerating', 'GET', function (result) {
                     let classTable = document.createElement('table');
 
                     let SpotlightClassifications = GetRatingsBoards();
@@ -534,7 +534,7 @@
 
                     var gameSummarySimilarContent = document.getElementById('gamesummarysimilarcontent');
                     for (var i = 0; i < result.games.length; i++) {
-                        var similarObject = renderGameIcon(result.games[i], true, false, false, null, false, true);
+                        var similarObject = renderGameIcon(result.games[i], true, true, true, GetRatingsBoards(), false, true);
                         gameSummarySimilarContent.appendChild(similarObject);
                     }
 
@@ -866,7 +866,7 @@
             // load artwork
             if (!artworks) {
                 if (game.artworks) {
-                    ajaxCall('/api/v1.1/games/' + gameId + '/artwork', 'GET', function (result) {
+                    ajaxCall('/api/v1.1/Games/' + gameId + '/artwork', 'GET', function (result) {
                         artworks = result;
                         var startPos = randomIntFromInterval(0, result.length);
                         artworksPosition = startPos;
@@ -1236,7 +1236,7 @@
 
         function SetGameFavourite(status) {
             ajaxCall(
-                '/api/v1.1/games/' + gameId + '/favourite?favourite=' + status,
+                '/api/v1.1/Games/' + gameId + '/favourite?favourite=' + status,
                 'POST',
                 function (result) {
                     var gameFavButton = document.getElementById('gamestatistics_favourite_button');

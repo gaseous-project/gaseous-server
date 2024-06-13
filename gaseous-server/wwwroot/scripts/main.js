@@ -485,7 +485,6 @@ function SetPreference(Setting, Value, callbackSuccess, callbackError) {
 }
 
 function SetPreference_Batch(model, callbackSuccess, callbackError) {
-    console.log(model);
     ajaxCall(
         '/api/v1.1/Account/Preferences',
         'POST',

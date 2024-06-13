@@ -75,6 +75,10 @@
     --select2-tag-delete-background: rgb(147, 147, 147);
     --select2-tag-background: rgb(78, 78, 78);
 
+    /* arrows */
+    --arrow-background: var(--button-background);
+    --arrow-background-hover: var(--button-background-hover);
+
     /* section */
     /* ------------------------------------------- */
     /* secion header */

@@ -1395,8 +1395,7 @@ iframe {
     height: 40px;
     width: 30px;
     padding-top: 15px;
-    background-color: #383838;
-    color: black;
+    background-color: var(--arrow-background);
     text-align: center;
     user-select: none;
     /* standard syntax */
@@ -1413,7 +1412,7 @@ iframe {
 
 .gamescreenshots_arrows:hover {
     cursor: pointer;
-    background-color: #555;
+    background-color: var(--arrow-background-hover);
 }
 
 #gamescreenshots_left_arrow {
@@ -2297,11 +2296,58 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     padding: 10px 10px 12px 10px;
 }
 
+.listboxselector {
+    overflow-x: scroll;
+    height: 200px;
+    width: 100%;
+}
+
 .listboxselector-item {
     cursor: default;
     padding: 4px;
+    display: flex;
+    min-height: 35px;
 }
 
 .listboxselector-item-selected {
     background-color: var(--selected-item);
+}
+
+.listboxselector-arrow {
+    display: inline-block;
+    text-align: center;
+    color: var(--button-font-colour);
+    margin-top: 10px;
+    padding-top: 5px;
+    padding-bottom: 3px;
+    width: 60px;
+    background-color: var(--arrow-background);
+    text-align: center;
+    user-select: none;
+    /* standard syntax */
+    -webkit-user-select: none;
+    /* webkit (safari, chrome) browsers */
+    -moz-user-select: none;
+    /* mozilla browsers */
+    -khtml-user-select: none;
+    /* webkit (konqueror) browsers */
+    -ms-user-select: none;
+    /* IE10+ */
+    border-radius: var(--standard-radius);
+}
+
+.listboxselector-arrow:hover {
+    cursor: pointer;
+    background-color: var(--arrow-background-hover);
+}
+
+.listboxselector-item-name {
+    flex-grow: 1;
+    pointer-events: none;
+    vertical-align: middle;
+}
+
+.listboxselector-item-icons {
+    pointer-events: none;
+    width: 40%;
 }
