@@ -135,17 +135,17 @@ class rominfodialog {
 
         // create the delete button
         if (isDeleteable == true) {
-            let deleteButton = new ModalButton("Delete", true, this, function (callingObject) {
+            let deleteButton = new ModalButton("Delete", 2, this, function (callingObject) {
                 const deleteWindow = new MessageBox("Delete ROM", "Are you sure you want to delete this ROM?");
 
-                let deleteButton = new ModalButton("Delete", true, callingObject, function (callingObject) {
+                let deleteButton = new ModalButton("Delete", 2, callingObject, function (callingObject) {
                     ajaxCall('/api/v1.1/Games/' + callingObject.gameId + '/roms/' + callingObject.romId, 'DELETE', function (result) {
                         window.location.reload();
                     });
                 });
                 deleteWindow.addButton(deleteButton);
 
-                let cancelButton = new ModalButton("Cancel", false, deleteWindow, function (callingObject) {
+                let cancelButton = new ModalButton("Cancel", 0, deleteWindow, function (callingObject) {
                     callingObject.msgDialog.close();
                 });
                 deleteWindow.addButton(cancelButton);
@@ -156,7 +156,7 @@ class rominfodialog {
         }
 
         // create the ok button
-        let okButton = new ModalButton("OK", false, this, function (callingObject) {
+        let okButton = new ModalButton("OK", 1, this, function (callingObject) {
             // get save data
             let fixIGDBPlatformValue = 0;
             let fixIGDBGameValue = 0;
@@ -186,7 +186,7 @@ class rominfodialog {
         this.dialog.addButton(okButton);
 
         // create the cancel button
-        let cancelButton = new ModalButton("Cancel", false, this, function (callingObject) {
+        let cancelButton = new ModalButton("Cancel", 0, this, function (callingObject) {
             callingObject.dialog.close();
         });
         this.dialog.addButton(cancelButton);

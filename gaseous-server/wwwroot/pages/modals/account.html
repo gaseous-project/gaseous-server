@@ -1,0 +1,37 @@
+<div id="tab1" name="modalTab" data-tabname="Profile">
+    <div style=" display: flex; gap: 10px;">
+        <div style="flex-grow:1">
+            <div class="section">
+                <div class="section-header">Avatar</div>
+                <div class="section-body" style="text-align: center;">
+                    <div id="avatar-preview" class="avatar"
+                        style="width: 100px; height: 100px; border-radius: 50%; background-size: cover; background-position: center; margin: auto; font-size: 1vmax; display: flex; justify-content: center; align-items: center;">
+                    </div>
+                    <input type="file" id="avatar-upload" name="avatar" accept="image/*" />
+                </div>
+            </div>
+
+            <div class="section">
+                <div class="section-header">Background</div>
+                <div class="section-body" style="text-align: center;">
+                    <div id="background-preview" class="profile-card-background-image"
+                        style="width: 300px; margin: auto; border-radius: var(--standard-radius);">
+                    </div>
+                    <input type="file" id="background-upload" name="background" accept="image/*" />
+                </div>
+            </div>
+        </div>
+        <div style="flex-grow:1">
+            <div class="section">
+                <div class="section-header">Name</div>
+                <div class="section-body">
+                    <input type="text" id="name" name="name" placeholder="Name" />
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="tab2" name="modalTab" data-tabname="Password">
+
+</div>

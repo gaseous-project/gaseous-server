@@ -368,7 +368,7 @@ h3 {
     width: 35px;
     height: 35px;
     margin-bottom: -5px;
-    border-radius: 17px;
+    border-radius: 50%;
 }
 
 .user_list_icon_reversed {
@@ -388,7 +388,7 @@ h3 {
     margin-left: 1px;
     margin-right: 3px;
     cursor: pointer;
-    border-radius: 18px;
+    border-radius: 50%;
     overflow: hidden;
 }
 
@@ -1838,6 +1838,24 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     color: var(--button-red-font-colour-disabled) !important;
 }
 
+.bluebutton {
+    background-color: var(--button-blue-background) !important;
+    border-color: var(--button-blue-border) !important;
+    color: var(--button-blue-font-colour) !important;
+}
+
+.bluebutton:hover {
+    background-color: var(--button-blue-background-hover) !important;
+    border-color: var(--button-blue-border-hover) !important;
+    color: var(--button-blue-font-colour-hover) !important;
+}
+
+.bluebutton:disabled {
+    background-color: var(--button-blue-background-disabled) !important;
+    border-color: var(--button-blue-border-disabled) !important;
+    color: var(--button-blue-font-colour-disabled) !important;
+}
+
 #emulator {}
 
 .emulator_partscreen {
@@ -2179,7 +2197,12 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .dropdown-content {
     display: none;
     position: absolute;
-    background-color: #f1f1f1;
+    background-color: var(--modal-background-color);
+    border-radius: var(--standard-radius);
+    border-color: var(--modal-border-color);
+    border-width: 1px;
+    border-style: solid;
+    overflow: hidden;
     min-width: 160px;
     /* box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); */
     z-index: 1;
@@ -2187,15 +2210,22 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     top: 40px;
     filter: drop-shadow(5px 5px 10px #000);
     -webkit-filter: drop-shadow(5px 5px 10px #000);
+    padding: 3px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    cursor: default;
 }
 
 /* Links inside the dropdown */
 .dropdown-content a,
 .dropdown-content span {
-    color: black;
+    color: white;
     padding: 12px 16px;
     text-decoration: none;
     display: block;
+    border-radius: var(--standard-radius);
+    overflow: hidden;
+    margin-top: 3px;
 }
 
 .dropdown-content span {
@@ -2204,7 +2234,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
 /* Change color of dropdown links on hover */
 .dropdown-content a:hover {
-    background-color: #ddd;
+    background-color: var(--modal-border-color);
 }
 
 /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
@@ -2228,6 +2258,11 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     margin-bottom: 5px;
     margin-left: 5px;
     margin-right: 5px;
+}
+
+.dropdown-menu-separator {
+    border-top: 1px solid var(--modal-border-color);
+    margin-top: 3px;
 }
 
 #saved_states {
@@ -2350,4 +2385,68 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .listboxselector-item-icons {
     pointer-events: none;
     width: 40%;
+}
+
+.avatar {
+    border-radius: 50%;
+    filter: drop-shadow(1px 1px 3px #000);
+    -webkit-filter: drop-shadow(1px 1px 3px #000);
+}
+
+.profile-card {
+    width: 250px;
+    max-width: 250px;
+    border-radius: var(--standard-radius);
+    border-style: solid;
+    border-width: 1px;
+    border-color: rgba(173, 216, 230, 0.3);
+    overflow: hidden;
+    position: relative;
+}
+
+.profile-card-standalone {
+    filter: drop-shadow(5px 5px 10px #000);
+    -webkit-filter: drop-shadow(5px 5px 10px #000);
+}
+
+.profile-card-avatar {
+    position: absolute;
+    left: 10px;
+    top: 20px;
+    aspect-ratio: 1/1;
+}
+
+.profile-card-background-image {
+    width: 100%;
+    /* height: 60px; */
+    aspect-ratio: 4.17/1;
+    background-size: cover;
+    background-position: center;
+    background-color: rgb(0, 0, 130);
+}
+
+.profile-card-body {
+    /* min-height: 40px; */
+    padding-top: 25px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 20px;
+    background-color: rgba(173, 216, 230, 0.3);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.profile-card-display-name {
+    font-weight: bold;
+    font-size: 16px;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.profile-card-quip {
+    margin-top: 3px;
+    font-style: italic;
+    color: white;
 }

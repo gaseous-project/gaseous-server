@@ -44,14 +44,8 @@
                 );
 
                 for (var i = 0; i < result.length; i++) {
-                    var userAvatar = document.createElement('img');
-                    userAvatar.className = "user_list_icon";
-                    if (result[i].avatar != "00000000-0000-0000-0000-000000000000") {
-                        userAvatar.setAttribute("src", "/api/v1.1/Account/Avatar/" + result[i].avatar + ".jpg");
-                    } else {
-                        userAvatar.setAttribute("src", "/images/user.svg");
-                        userAvatar.classList.add("user_list_icon_reversed");
-                    }
+                    let userAvatar = new Avatar(result[i].profileId, 32, 32, true);
+                    userAvatar.classList.add("user_list_icon");
 
                     var roleDiv = document.createElement('div');
 

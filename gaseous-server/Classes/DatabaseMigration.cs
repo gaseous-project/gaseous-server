@@ -153,6 +153,35 @@ namespace gaseous_server.Classes
                             // this is a safe background task
                             BackgroundUpgradeTargetSchemaVersions.Add(1022);
                             break;
+
+                        case 1023:
+                            // create profiles for all existing users
+                            sql = "SELECT * FROM Users;";
+                            data = db.ExecuteCMD(sql);
+                            foreach (DataRow row in data.Rows)
+                            {
+                                // get legacy avatar from UserAvatars table
+                                sql = "SELECT Avatar FROM UserAvatars WHERE UserId = @userid;";
+                                dbDict = new Dictionary<string, object>
+                                {
+                                    { "userid", row["Id"] }
+                                };
+                                DataTable avatarData = db.ExecuteCMD(sql, dbDict);
+
+                                sql = "INSERT INTO UserProfiles (Id, UserId, DisplayName, Quip, Avatar, AvatarExtension, UnstructuredData) VALUES (@id, @userid, @displayname, @quip, @avatar, @avatarextension, @data);";
+                                dbDict = new Dictionary<string, object>
+                                {
+                                    { "id", Guid.NewGuid() },
+                                    { "userid", row["Id"] },
+                                    { "displayname", row["Email"] },
+                                    { "quip", "" },
+                                    { "avatar", avatarData.Rows.Count > 0 ? avatarData.Rows[0]["Avatar"] : null },
+                                    { "avatarextension", avatarData.Rows.Count > 0 ? ".jpg" : null },
+                                    { "data", "{}" }
+                                };
+                                db.ExecuteNonQuery(sql, dbDict);
+                            }
+                            break;
                     }
                     break;
             }

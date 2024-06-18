@@ -10,7 +10,7 @@ namespace Authentication
     /// Class that represents the Users table in the MySQL Database
     /// </summary>
     public class UserTable<TUser>
-        where TUser :ApplicationUser
+        where TUser : ApplicationUser
     {
         private Database _database;
 
@@ -34,7 +34,7 @@ namespace Authentication
             Dictionary<string, object> parameters = new Dictionary<string, object>() { { "@id", userId } };
 
             DataTable table = _database.ExecuteCMD(commandText, parameters);
-            
+
             if (table.Rows.Count == 0)
             {
                 return null;
@@ -75,7 +75,7 @@ namespace Authentication
         public TUser GetUserById(string userId)
         {
             TUser user = null;
-            string commandText = "Select * from Users LEFT JOIN (SELECT UserId, Id AS AvatarId FROM UserAvatars) UserAvatars ON Users.Id = UserAvatars.UserId where Id = @id";
+            string commandText = "Select * from Users LEFT JOIN (SELECT Id As ProfileId, UserId FROM UserProfiles) UserProfiles ON Users.Id = UserProfiles.UserId where Id = @id";
             Dictionary<string, object> parameters = new Dictionary<string, object>() { { "@id", userId } };
 
             var rows = _database.ExecuteCMDDict(commandText, parameters);
@@ -89,7 +89,7 @@ namespace Authentication
                 user.SecurityStamp = (string?)(string.IsNullOrEmpty((string?)row["SecurityStamp"]) ? null : row["SecurityStamp"]);
                 user.ConcurrencyStamp = (string?)(string.IsNullOrEmpty((string?)row["ConcurrencyStamp"]) ? null : row["ConcurrencyStamp"]);
                 user.Email = (string?)(string.IsNullOrEmpty((string?)row["Email"]) ? null : row["Email"]);
-                user.EmailConfirmed = row["EmailConfirmed"] == "1" ? true:false;
+                user.EmailConfirmed = row["EmailConfirmed"] == "1" ? true : false;
                 user.PhoneNumber = (string?)(string.IsNullOrEmpty((string?)row["PhoneNumber"]) ? null : row["PhoneNumber"]);
                 user.PhoneNumberConfirmed = row["PhoneNumberConfirmed"] == "1" ? true : false;
                 user.NormalizedEmail = (string?)(string.IsNullOrEmpty((string?)row["NormalizedEmail"]) ? null : row["NormalizedEmail"]);
@@ -97,10 +97,10 @@ namespace Authentication
                 user.LockoutEnabled = row["LockoutEnabled"] == "1" ? true : false;
                 user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEnd"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEnd"]);
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
-                user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true:false;
+                user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true : false;
                 user.SecurityProfile = GetSecurityProfile(user);
                 user.UserPreferences = GetPreferences(user);
-                user.Avatar = string.IsNullOrEmpty((string?)row["AvatarId"]) ? Guid.Empty : Guid.Parse((string?)row["AvatarId"]);
+                user.ProfileId = string.IsNullOrEmpty((string?)row["ProfileId"]) ? Guid.Empty : Guid.Parse((string?)row["ProfileId"]);
             }
 
             return user;
@@ -114,11 +114,11 @@ namespace Authentication
         public List<TUser> GetUserByName(string normalizedUserName)
         {
             List<TUser> users = new List<TUser>();
-            string commandText = "Select * from Users LEFT JOIN (SELECT UserId, Id AS AvatarId FROM UserAvatars) UserAvatars ON Users.Id = UserAvatars.UserId where NormalizedEmail = @name";
+            string commandText = "Select * from Users LEFT JOIN (SELECT Id As ProfileId, UserId FROM UserProfiles) UserProfiles ON Users.Id = UserProfiles.UserId where NormalizedEmail = @name";
             Dictionary<string, object> parameters = new Dictionary<string, object>() { { "@name", normalizedUserName } };
 
             var rows = _database.ExecuteCMDDict(commandText, parameters);
-            foreach(Dictionary<string, object> row in rows)
+            foreach (Dictionary<string, object> row in rows)
             {
                 TUser user = (TUser)Activator.CreateInstance(typeof(TUser));
                 user.Id = (string)row["Id"];
@@ -127,7 +127,7 @@ namespace Authentication
                 user.SecurityStamp = (string?)(string.IsNullOrEmpty((string?)row["SecurityStamp"]) ? null : row["SecurityStamp"]);
                 user.ConcurrencyStamp = (string?)(string.IsNullOrEmpty((string?)row["ConcurrencyStamp"]) ? null : row["ConcurrencyStamp"]);
                 user.Email = (string?)(string.IsNullOrEmpty((string?)row["Email"]) ? null : row["Email"]);
-                user.EmailConfirmed = row["EmailConfirmed"] == "1" ? true:false;
+                user.EmailConfirmed = row["EmailConfirmed"] == "1" ? true : false;
                 user.PhoneNumber = (string?)(string.IsNullOrEmpty((string?)row["PhoneNumber"]) ? null : row["PhoneNumber"]);
                 user.PhoneNumberConfirmed = row["PhoneNumberConfirmed"] == "1" ? true : false;
                 user.NormalizedEmail = (string?)(string.IsNullOrEmpty((string?)row["NormalizedEmail"]) ? null : row["NormalizedEmail"]);
@@ -135,10 +135,10 @@ namespace Authentication
                 user.LockoutEnabled = row["LockoutEnabled"] == "1" ? true : false;
                 user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEnd"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEnd"]);
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
-                user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true:false;
+                user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true : false;
                 user.SecurityProfile = GetSecurityProfile(user);
                 user.UserPreferences = GetPreferences(user);
-                user.Avatar = string.IsNullOrEmpty((string?)row["AvatarId"]) ? Guid.Empty : Guid.Parse((string?)row["AvatarId"]);
+                user.ProfileId = string.IsNullOrEmpty((string?)row["ProfileId"]) ? Guid.Empty : Guid.Parse((string?)row["ProfileId"]);
                 users.Add(user);
             }
 
@@ -148,10 +148,10 @@ namespace Authentication
         public List<TUser> GetUsers()
         {
             List<TUser> users = new List<TUser>();
-            string commandText = "Select * from Users LEFT JOIN (SELECT UserId, Id AS AvatarId FROM UserAvatars) UserAvatars ON Users.Id = UserAvatars.UserId order by NormalizedUserName";
-            
+            string commandText = "Select * from Users LEFT JOIN (SELECT Id As ProfileId, UserId FROM UserProfiles) UserProfiles ON Users.Id = UserProfiles.UserId order by NormalizedUserName";
+
             var rows = _database.ExecuteCMDDict(commandText);
-            foreach(Dictionary<string, object> row in rows)
+            foreach (Dictionary<string, object> row in rows)
             {
                 TUser user = (TUser)Activator.CreateInstance(typeof(TUser));
                 user.Id = (string)row["Id"];
@@ -160,7 +160,7 @@ namespace Authentication
                 user.SecurityStamp = (string?)(string.IsNullOrEmpty((string?)row["SecurityStamp"]) ? null : row["SecurityStamp"]);
                 user.ConcurrencyStamp = (string?)(string.IsNullOrEmpty((string?)row["ConcurrencyStamp"]) ? null : row["ConcurrencyStamp"]);
                 user.Email = (string?)(string.IsNullOrEmpty((string?)row["Email"]) ? null : row["Email"]);
-                user.EmailConfirmed = row["EmailConfirmed"] == "1" ? true:false;
+                user.EmailConfirmed = row["EmailConfirmed"] == "1" ? true : false;
                 user.PhoneNumber = (string?)(string.IsNullOrEmpty((string?)row["PhoneNumber"]) ? null : row["PhoneNumber"]);
                 user.PhoneNumberConfirmed = row["PhoneNumberConfirmed"] == "1" ? true : false;
                 user.NormalizedEmail = (string?)(string.IsNullOrEmpty((string?)row["NormalizedEmail"]) ? null : row["NormalizedEmail"]);
@@ -168,10 +168,10 @@ namespace Authentication
                 user.LockoutEnabled = row["LockoutEnabled"] == "1" ? true : false;
                 user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEnd"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEnd"]);
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
-                user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true:false;
+                user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true : false;
                 user.SecurityProfile = GetSecurityProfile(user);
                 user.UserPreferences = GetPreferences(user);
-                user.Avatar = string.IsNullOrEmpty((string?)row["AvatarId"]) ? Guid.Empty : Guid.Parse((string?)row["AvatarId"]);
+                user.ProfileId = string.IsNullOrEmpty((string?)row["ProfileId"]) ? Guid.Empty : Guid.Parse((string?)row["ProfileId"]);
                 users.Add(user);
             }
 
@@ -258,10 +258,11 @@ namespace Authentication
         /// <returns></returns>
         public int Insert(TUser user)
         {
-            string commandText = @"Insert into Users (UserName, Id, PasswordHash, SecurityStamp, ConcurrencyStamp, Email, EmailConfirmed, PhoneNumber, PhoneNumberConfirmed, NormalizedEmail, NormalizedUserName, AccessFailedCount, LockoutEnabled, LockoutEnd, TwoFactorEnabled) values (@name, @id, @pwdHash, @SecStamp, @concurrencystamp, @email ,@emailconfirmed ,@phonenumber, @phonenumberconfirmed, @normalizedemail, @normalizedusername, @accesscount, @lockoutenabled, @lockoutenddate, @twofactorenabled);";
+            string commandText = @"Insert into Users (UserName, Id, PasswordHash, SecurityStamp, ConcurrencyStamp, Email, EmailConfirmed, PhoneNumber, PhoneNumberConfirmed, NormalizedEmail, NormalizedUserName, AccessFailedCount, LockoutEnabled, LockoutEnd, TwoFactorEnabled) values (@name, @id, @pwdHash, @SecStamp, @concurrencystamp, @email ,@emailconfirmed ,@phonenumber, @phonenumberconfirmed, @normalizedemail, @normalizedusername, @accesscount, @lockoutenabled, @lockoutenddate, @twofactorenabled); Insert into UserProfiles (Id, UserId, DisplayName, Quip, UnstructuredData) values (@profileId, @id, @email, '', '{}');";
             Dictionary<string, object> parameters = new Dictionary<string, object>();
             parameters.Add("@name", user.UserName);
             parameters.Add("@id", user.Id);
+            parameters.Add("@profileId", Guid.NewGuid());
             parameters.Add("@pwdHash", user.PasswordHash);
             parameters.Add("@SecStamp", user.SecurityStamp);
             parameters.Add("@concurrencystamp", user.ConcurrencyStamp);
@@ -292,7 +293,7 @@ namespace Authentication
         /// <returns></returns>
         private int Delete(string userId)
         {
-            string commandText = "Delete from Users where Id = @userId; Delete from User_Settings where Id = @userId; Delete from GameState where UserId = @userId;";
+            string commandText = "Delete from Users where Id = @userId; Delete from User_Settings where Id = @userId; Delete from UserProfiles where UserId = @userId; Delete from GameState where UserId = @userId;";
             Dictionary<string, object> parameters = new Dictionary<string, object>();
             parameters.Add("@userId", userId);
 
@@ -376,7 +377,7 @@ namespace Authentication
             Dictionary<string, object> parameters = new Dictionary<string, object>();
             parameters.Add("Id", user.Id);
             parameters.Add("SecurityProfile", Newtonsoft.Json.JsonConvert.SerializeObject(securityProfile));
-            
+
             return _database.ExecuteCMD(commandText, parameters).Rows.Count;
         }
 
@@ -408,7 +409,7 @@ namespace Authentication
                 List<UserPreferenceViewModel> userPreferences = GetPreferences(user);
 
                 Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                
+
                 foreach (UserPreferenceViewModel modelItem in model)
                 {
                     bool prefItemFound = false;
@@ -449,7 +450,7 @@ namespace Authentication
             {
                 { "userid", user.Id }
             };
-            
+
             if (bytes.Length == 0)
             {
                 sql = "DELETE FROM UserAvatars WHERE UserId = @userid";

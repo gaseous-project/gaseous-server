@@ -85,7 +85,7 @@ class PreferencesWindow {
         });
 
         // create the ok button
-        let okButton = new ModalButton("OK", false, this, function (callingObject) {
+        let okButton = new ModalButton("OK", 1, this, function (callingObject) {
             // get the preferences
             let selectedPreferences = callingObject.dialog.modalElement.querySelectorAll('[data-pref]');
             let preferences = [];
@@ -119,7 +119,7 @@ class PreferencesWindow {
         this.dialog.addButton(okButton);
 
         // create the cancel button
-        let cancelButton = new ModalButton("Cancel", false, this, function (callingObject) {
+        let cancelButton = new ModalButton("Cancel", 0, this, function (callingObject) {
             callingObject.dialog.close();
         });
         this.dialog.addButton(cancelButton);

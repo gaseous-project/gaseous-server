@@ -144,10 +144,11 @@ class Modal {
     }
 }
 
+// type: 0 or null = normal, 1 = blue, 2 = red
 class ModalButton {
-    constructor(text, isRed, callingObject, callback) {
+    constructor(text, type, callingObject, callback) {
         this.text = text;
-        this.isRed = isRed;
+        this.type = type;
         this.callingObject = callingObject;
         this.callback = callback;
 
@@ -157,8 +158,15 @@ class ModalButton {
     render() {
         const button = document.createElement('button');
         button.classList.add('modal-button');
-        if (this.isRed) {
-            button.classList.add('redbutton');
+        if (this.type) {
+            switch (this.type) {
+                case 1:
+                    button.classList.add('bluebutton');
+                    break;
+                case 2:
+                    button.classList.add('redbutton');
+                    break;
+            }
         }
         button.innerHTML = this.text;
         let callback = this.callback;
