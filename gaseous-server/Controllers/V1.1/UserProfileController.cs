@@ -41,7 +41,7 @@ namespace gaseous_server.Controllers
 
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
-        [HttpPost]
+        [HttpPut]
         [Route("{UserId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         public async Task<ActionResult> UpdateUserProfileAsync(string UserId, Models.UserProfile profile)
@@ -60,7 +60,7 @@ namespace gaseous_server.Controllers
 
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
-        [HttpPost]
+        [HttpPut]
         [ProducesResponseType(typeof(List<IFormFile>), StatusCodes.Status200OK)]
         [RequestSizeLimit(long.MaxValue)]
         [Consumes("multipart/form-data")]

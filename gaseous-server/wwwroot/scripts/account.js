@@ -11,32 +11,78 @@ class AccountWindow {
         // setup the dialog
         this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Profile and Account";
 
+        this.AvatarPreview = this.dialog.modalElement.querySelector('#avatar-preview');
+        this.AvatarPreviewChanged = false;
+        let AvatarPreviewChanged = this.AvatarPreviewChanged;
+        this.BackgroundPreview = this.dialog.modalElement.querySelector('#background-preview');
+        this.BackgroundPreviewChanged = false;
+        let BackgroundPreviewChanged = this.BackgroundPreviewChanged;
+        this.DisplayNamePreview = this.dialog.modalElement.querySelector('#display-name');
+        let DisplayNamePreview = this.DisplayNamePreview;
+        this.QuipPreview = this.dialog.modalElement.querySelector('#quip');
+        let QuipPreview = this.QuipPreview;
+
         // configure the file upload buttons
         this.profile_avatarUpload = this.dialog.modalElement.querySelector('#avatar-upload');
+        let profile_avatarUpload = this.profile_avatarUpload;
         this.profile_avatarUpload.addEventListener('change', function (event) {
             const file = event.target.files[0];
             const reader = new FileReader();
             reader.onload = function (e) {
                 const imagePreview = document.querySelector('#avatar-preview');
                 imagePreview.style.backgroundImage = `url(${e.target.result})`;
+                imagePreview.innerHTML = "";
+                AvatarPreviewChanged = true;
             };
             reader.readAsDataURL(file);
         });
+        this.profile_avatarUploadClear = this.dialog.modalElement.querySelector('#avatar-upload-clear');
+        this.profile_avatarUploadClear.addEventListener('click', function (event) {
+            let avatarBackgroundColor = intToRGB(hashCode(DisplayNamePreview.value));
+            const imagePreview = document.querySelector('#avatar-preview');
+            imagePreview.style.backgroundImage = "";
+            imagePreview.innerHTML = DisplayNamePreview.value[0].toUpperCase();
+            imagePreview.style.backgroundColor = "#" + avatarBackgroundColor;
+            profile_avatarUpload.value = "";
+            AvatarPreviewChanged = true;
+        });
 
         this.profile_backgroundUpload = this.dialog.modalElement.querySelector('#background-upload');
+        let profile_backgroundUpload = this.profile_backgroundUpload;
         this.profile_backgroundUpload.addEventListener('change', function (event) {
             const file = event.target.files[0];
             const reader = new FileReader();
             reader.onload = function (e) {
                 const imagePreview = document.querySelector('#background-preview');
                 imagePreview.style.backgroundImage = `url(${e.target.result})`;
+                BackgroundPreviewChanged = true;
             };
             reader.readAsDataURL(file);
         });
+        this.profile_backgroundUploadClear = this.dialog.modalElement.querySelector('#background-upload-clear');
+        this.profile_backgroundUploadClear.addEventListener('click', function (event) {
+            const imagePreview = document.querySelector('#background-preview');
+            imagePreview.style.backgroundImage = "";
+            profile_backgroundUpload.value = "";
+            BackgroundPreviewChanged = true;
+        });
+
+        // add an event to the display name field to update the avatar preview
+        this.DisplayNamePreview.addEventListener('input', function (event) {
+            let avatarBackgroundColor = intToRGB(hashCode(DisplayNamePreview.value));
+            const imagePreview = document.querySelector('#avatar-preview');
+            imagePreview.style.backgroundColor = "#" + avatarBackgroundColor;
+            if (imagePreview.style.backgroundImage === "") {
+                imagePreview.innerHTML = DisplayNamePreview.value[0].toUpperCase();
+            }
+        });
+
+        // add an event to the quip field to note an update
+        this.QuipPreview.addEventListener('input', function (event) {
+            let quip = QuipPreview.value;
+        });
 
         // populate the previews with the existing profile images
-        this.AvatarPreview = this.dialog.modalElement.querySelector('#avatar-preview');
-        this.BackgroundPreview = this.dialog.modalElement.querySelector('#background-preview');
         const response = await fetch("/api/v1.1/UserProfile/" + userProfile.profileId).then(async response => {
             if (!response.ok) {
                 // handle the error
@@ -48,7 +94,7 @@ class AccountWindow {
                     let avatarBackgroundColor = intToRGB(hashCode(profile.displayName));
                     this.AvatarPreview.innerHTML = "";
                     this.AvatarPreview.style.backgroundImage = "";
-                    this.AvatarPreview.style.backgroundColor = avatarBackgroundColor;
+                    this.AvatarPreview.style.backgroundColor = "#" + avatarBackgroundColor;
                     if (profile.avatar) {
                         this.AvatarPreview.style.backgroundImage = "url('/api/v1.1/UserProfile/" + userProfile.profileId + "/Avatar')";
                     } else {
@@ -61,13 +107,161 @@ class AccountWindow {
                     if (profile.profileBackground) {
                         this.BackgroundPreview.style.backgroundImage = "url('/api/v1.1/UserProfile/" + userProfile.profileId + "/Background')";
                     }
+
+                    // display name preview
+                    this.DisplayNamePreview.value = profile.displayName;
+
+                    // quip preview
+                    this.QuipPreview.value = profile.quip;
                 }
             }
         });
 
+        // set up the password change form
+        this.password_current = this.dialog.modalElement.querySelector('#current-password');
+        this.password_new = this.dialog.modalElement.querySelector('#new-password');
+        this.password_confirm = this.dialog.modalElement.querySelector('#confirm-new-password');
+        this.password_error = this.dialog.modalElement.querySelector('#password-error');
+        this.PasswordCheck = new PasswordCheck(this.password_new, this.password_confirm, this.password_error);
 
         // create the ok button
-        let okButton = new ModalButton("OK", 1, this, function (callingObject) {
+        let okButton = new ModalButton("OK", 1, this, async function (callingObject) {
+            // check if a current password has been entered
+            if (callingObject.password_current.value.length > 0) {
+                // assume user wants to change their password
+                // check if the new password meets the rules
+                console.log("User wants to change password");
+                if (!PasswordCheck.CheckPasswords(callingObject.PasswordCheck, callingObject.password_new, callingObject.password_confirm)) {
+                    // display an error
+                    console.log("Password does not meet requirements");
+                    let warningDialog = new MessageBox("Password Reset Error", "The new password does not meet the requirements.");
+                    warningDialog.open();
+                    return;
+                }
+
+                // requirements met, reset the password
+                console.log("Password meets requirements");
+                let model = {
+                    oldPassword: callingObject.password_current.value,
+                    newPassword: callingObject.password_new.value,
+                    confirmPassword: callingObject.password_confirm.value
+                };
+                console.log(JSON.stringify(model));
+                let changeSuccessfull = false;
+                await fetch("/api/v1.1/Account/ChangePassword", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(model)
+                }).then(async response => {
+                    if (!response.ok) {
+                        // handle the error
+                        console.error("Error updating password:");
+                        console.error(response);
+                        let warningDialog = new MessageBox("Password Reset Error", "The password reset failed. Check the current password and try again.");
+                        warningDialog.open();
+                        changeSuccessfull = false;
+                        return;
+                    } else {
+                        // clear the password fields
+                        callingObject.password_current.value = "";
+                        callingObject.password_new.value = "";
+                        callingObject.password_confirm.value = "";
+                        callingObject.password_error.innerHTML = "";
+                        changeSuccessfull = true;
+                    }
+                });
+                if (changeSuccessfull == false) {
+                    return;
+                }
+            }
+
+            // create profile model
+            let model = {
+                userId: userProfile.profileId,
+                displayName: callingObject.DisplayNamePreview.value,
+                quip: callingObject.QuipPreview.value,
+                data: {}
+            };
+            console.log(JSON.stringify(model));
+
+            // POST the model to the API
+            await fetch("/api/v1.1/UserProfile/" + userProfile.profileId, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(model)
+            }).then(async response => {
+                if (!response.ok) {
+                    // handle the error
+                    console.error("Error updating profile:");
+                    console.error(response);
+                } else {
+                    // update the avatar
+                    if (AvatarPreviewChanged === true) {
+                        console.log("Updating avatar");
+                        if (callingObject.profile_avatarUpload.files.length === 0) {
+                            console.log("Delete avatar");
+                            await fetch("/api/v1.1/UserProfile/" + userProfile.profileId + "/Avatar", {
+                                method: 'DELETE'
+                            }).then(async response => {
+                                if (!response.ok) {
+                                    // handle the error
+                                    console.error("Error deleting avatar:");
+                                    console.error(response);
+                                }
+                            });
+                        } else {
+                            let avatarFormData = new FormData();
+                            avatarFormData.append('file', callingObject.profile_avatarUpload.files[0]);
+                            await fetch("/api/v1.1/UserProfile/" + userProfile.profileId + "/Avatar", {
+                                method: 'PUT',
+                                body: avatarFormData
+                            }).then(async response => {
+                                if (!response.ok) {
+                                    // handle the error
+                                    console.error("Error updating avatar:");
+                                    console.error(response);
+                                }
+                            });
+                        }
+                    }
+
+                    // update the background
+                    if (BackgroundPreviewChanged === true) {
+                        console.log("Updating background");
+                        if (callingObject.profile_backgroundUpload.files.length === 0) {
+                            console.log("Delete background");
+                            await fetch("/api/v1.1/UserProfile/" + userProfile.profileId + "/Background", {
+                                method: 'DELETE'
+                            }).then(async response => {
+                                if (!response.ok) {
+                                    // handle the error
+                                    console.error("Error deleting background:");
+                                    console.error(response);
+                                }
+                            });
+                        } else {
+                            let backgroundFormData = new FormData();
+                            backgroundFormData.append('file', callingObject.profile_backgroundUpload.files[0]);
+                            await fetch("/api/v1.1/UserProfile/" + userProfile.profileId + "/Background", {
+                                method: 'PUT',
+                                body: backgroundFormData
+                            }).then(async response => {
+                                if (!response.ok) {
+                                    // handle the error
+                                    console.error("Error updating background:");
+                                    console.error(response);
+                                }
+                            });
+                        }
+                    }
+                }
+            });
+
+            AccountWindow.#ReloadProfile();
             callingObject.dialog.close();
         });
         this.dialog.addButton(okButton);
@@ -80,6 +274,22 @@ class AccountWindow {
 
         // show the dialog
         await this.dialog.open();
+    }
+
+    static async #ReloadProfile() {
+        // set avatar
+        let avatarBox = document.getElementById('banner_user_image_box');
+        avatarBox.innerHTML = "";
+        let avatar = new Avatar(userProfile.profileId, 30, 30);
+        avatarBox.style = 'pointer-events: none;';
+        avatar.setAttribute('style', 'margin-top: 5px; pointer-events: none; width: 30px; height: 30px;');
+        avatarBox.appendChild(avatar);
+
+        // set profile card in drop down
+        let profileCard = document.getElementById('banner_user_profilecard');
+        profileCard.innerHTML = "";
+        let profileCardContent = new ProfileCard(userProfile.profileId, true);
+        profileCard.appendChild(profileCardContent);
     }
 }
 
@@ -200,5 +410,153 @@ class ProfileCard {
                 }
             }
         });
+    }
+}
+
+class PasswordCheck {
+    constructor(NewPasswordElement, ConfirmPasswordElement, ErrorElement) {
+        this.MinimumPasswordLength = 10;
+        this.RequireUppercase = true;
+        this.RequireLowercase = true;
+        this.RequireNumber = true;
+        this.RequireSpecial = false;
+
+        this.NewPasswordElement = NewPasswordElement;
+        this.ConfirmPasswordElement = ConfirmPasswordElement;
+        this.ErrorElement = ErrorElement;
+
+        let CallingObject = this;
+
+        this.NewPasswordElement.addEventListener('input', function (event) {
+            PasswordCheck.CheckPasswords(CallingObject, NewPasswordElement, ConfirmPasswordElement);
+        });
+
+        this.ConfirmPasswordElement.addEventListener('input', function (event) {
+            PasswordCheck.CheckPasswords(CallingObject, NewPasswordElement, ConfirmPasswordElement);
+        });
+
+        this.DisplayRules(ErrorElement);
+    }
+
+    DisplayRules(ErrorElement) {
+        this.errorList = document.createElement('ul');
+        this.errorList.className = 'password-rules';
+
+        this.listItemPasswordLength = document.createElement('li');
+        this.listItemPasswordLength.innerHTML = "Minimum " + this.MinimumPasswordLength + " characters";
+        this.listItemPasswordLength.classList.add('listitem');
+        this.errorList.appendChild(this.listItemPasswordLength);
+
+        if (this.RequireUppercase == true) {
+            this.listItemUpper = document.createElement('li');
+            this.listItemUpper.innerHTML = "At least one uppercase letter";
+            this.listItemUpper.classList.add('listitem');
+            this.errorList.appendChild(this.listItemUpper);
+        }
+
+        if (this.RequireLowercase == true) {
+            this.listItemLower = document.createElement('li');
+            this.listItemLower.innerHTML = "At least one lowercase letter";
+            this.listItemLower.classList.add('listitem');
+            this.errorList.appendChild(this.listItemLower);
+        }
+
+        if (this.RequireNumber == true) {
+            this.listItemNumber = document.createElement('li');
+            this.listItemNumber.innerHTML = "At least one number";
+            this.listItemNumber.classList.add('listitem');
+            this.errorList.appendChild(this.listItemNumber);
+        }
+
+        if (this.RequireSpecial == true) {
+            this.listItemSpecial = document.createElement('li');
+            this.listItemSpecial.innerHTML = "At least one special character.";
+            this.listItemSpecial.classList.add('listitem');
+            this.errorList.appendChild(this.listItemSpecial);
+        }
+
+        this.listItemMatch = document.createElement('li');
+        this.listItemMatch.innerHTML = "Passwords must match.";
+        this.listItemMatch.classList.add('listitem');
+        this.errorList.appendChild(this.listItemMatch);
+
+        ErrorElement.innerHTML = "";
+        ErrorElement.appendChild(this.errorList);
+
+        PasswordCheck.CheckPasswords(this, this.NewPasswordElement, this.ConfirmPasswordElement);
+    }
+
+    static CheckPasswords(CallingObject, NewPasswordElement, ConfirmPasswordElement) {
+        let passwordMeetsRules = true;
+
+        // check password length
+        if (NewPasswordElement.value.length >= CallingObject.MinimumPasswordLength) {
+            CallingObject.listItemPasswordLength.classList.add('listitem-green');
+            CallingObject.listItemPasswordLength.classList.remove('listitem-red');
+        } else {
+            CallingObject.listItemPasswordLength.classList.add('listitem-red');
+            CallingObject.listItemPasswordLength.classList.remove('listitem-green');
+            passwordMeetsRules = false;
+        }
+
+        if (CallingObject.RequireUppercase == true) {
+            // check for uppercase
+            if (NewPasswordElement.value.match(/[A-Z]/)) {
+                CallingObject.listItemUpper.classList.add('listitem-green');
+                CallingObject.listItemUpper.classList.remove('listitem-red');
+            } else {
+                CallingObject.listItemUpper.classList.add('listitem-red');
+                CallingObject.listItemUpper.classList.remove('listitem-green');
+                passwordMeetsRules = false;
+            }
+        }
+
+        if (CallingObject.RequireLowercase == true) {
+            // check for lowercase
+            if (NewPasswordElement.value.match(/[a-z]/)) {
+                CallingObject.listItemLower.classList.add('listitem-green');
+                CallingObject.listItemLower.classList.remove('listitem-red');
+            } else {
+                CallingObject.listItemLower.classList.add('listitem-red');
+                CallingObject.listItemLower.classList.remove('listitem-green');
+                passwordMeetsRules = false;
+            }
+        }
+
+        if (CallingObject.RequireNumber == true) {
+            // check for number
+            if (NewPasswordElement.value.match(/[0-9]/)) {
+                CallingObject.listItemNumber.classList.add('listitem-green');
+                CallingObject.listItemNumber.classList.remove('listitem-red');
+            } else {
+                CallingObject.listItemNumber.classList.add('listitem-red');
+                CallingObject.listItemNumber.classList.remove('listitem-green');
+                passwordMeetsRules = false;
+            }
+        }
+
+        if (CallingObject.RequireSpecial == true) {
+            // check for special character
+            if (NewPasswordElement.value.match(/[!@#$%^&*(),.?":{}|<>]/)) {
+                CallingObject.listItemSpecial.classList.add('listitem-green');
+                CallingObject.listItemSpecial.classList.remove('listitem-red');
+            } else {
+                CallingObject.listItemSpecial.classList.add('listitem-red');
+                CallingObject.listItemSpecial.classList.remove('listitem-green');
+                passwordMeetsRules = false;
+            }
+        }
+
+        // check if passwords match
+        if (NewPasswordElement.value === ConfirmPasswordElement.value) {
+            CallingObject.listItemMatch.classList.add('listitem-green');
+            CallingObject.listItemMatch.classList.remove('listitem-red');
+        } else {
+            CallingObject.listItemMatch.classList.add('listitem-red');
+            CallingObject.listItemMatch.classList.remove('listitem-green');
+            passwordMeetsRules = false;
+        }
+
+        return passwordMeetsRules;
     }
 }

@@ -535,6 +535,7 @@ input[type="password"],
 input[type="datetime-local"],
 input[type="url"],
 input[type="radio"],
+input[type="file"],
 select,
 textarea,
 .listboxselector {
@@ -560,6 +561,7 @@ input[type="password"],
 input[type="datetime-local"],
 input[type="url"],
 input[type="radio"],
+input[type="file"],
 select:not([size]),
 textarea {
     height: 21px;
@@ -572,6 +574,7 @@ input[type="password"]:hover,
 input[type="datetime-local"]:hover,
 input[type="url"]:hover,
 input[type="radio"]:hover,
+input[type="file"]:hover,
 select:hover,
 textarea:hover,
 .listboxselector:hover {
@@ -585,6 +588,7 @@ input[type="password"]:disabled,
 input[type="datetime-local"]:disabled,
 input[type="url"]:disabled,
 input[type="radio"]:disabled,
+input[type="file"]:disabled,
 select:disabled,
 textarea:disabled,
 .listboxselector:disabled {
@@ -2387,6 +2391,11 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     width: 40%;
 }
 
+.inputWithVerticalLabel {
+    margin-top: 6px;
+    margin-bottom: 15px;
+}
+
 .avatar {
     border-radius: 50%;
     filter: drop-shadow(1px 1px 3px #000);
@@ -2449,4 +2458,29 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     margin-top: 3px;
     font-style: italic;
     color: white;
+}
+
+.password-rules {
+    margin-left: 0;
+    padding-left: 0;
+    list-style: none;
+}
+
+.listitem {
+    height: 25px;
+    padding-left: 30px;
+}
+
+.listitem-green {
+    background-image: url('/images/tick.svg');
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    background-size: 18px 18px;
+}
+
+.listitem-red {
+    background-image: url('/images/cross.svg');
+    background-repeat: no-repeat;
+    background-position: 1px 1px;
+    background-size: 16px 16px;
 }
