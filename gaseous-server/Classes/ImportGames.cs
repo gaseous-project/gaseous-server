@@ -47,8 +47,11 @@ namespace gaseous_server.Classes
             }
         }
 
-        public void ImportGameFile(string GameFileImportPath, IGDB.Models.Platform? OverridePlatform)
+        public Dictionary<string, object> ImportGameFile(string GameFileImportPath, IGDB.Models.Platform? OverridePlatform)
         {
+            Dictionary<string, object> RetVal = new Dictionary<string, object>();
+            RetVal.Add("path", Path.GetFileName(GameFileImportPath));
+
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
@@ -67,6 +70,8 @@ namespace gaseous_server.Classes
                 if (IsBios == null)
                 {
                     // file is a rom
+                    RetVal.Add("type", "rom");
+
                     // check to make sure we don't already have this file imported
                     sql = "SELECT COUNT(Id) AS count FROM Games_Roms WHERE MD5=@md5 AND SHA1=@sha1";
                     dbDict.Add("md5", hash.md5hash);
@@ -94,6 +99,8 @@ namespace gaseous_server.Classes
                         {
                             Logging.Log(Logging.LogType.Warning, "Import Game", "  " + GameFileImportPath + " already in database - skipping import");
                         }
+
+                        RetVal.Add("status", "duplicate");
                     }
                     else
                     {
@@ -122,12 +129,20 @@ namespace gaseous_server.Classes
                         IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature, discoveredSignature.Flags.IGDBPlatformId, true);
 
                         // add to database
-                        StoreROM(GameLibrary.GetDefaultLibrary, hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath);
+                        long RomId = StoreROM(GameLibrary.GetDefaultLibrary, hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath);
+
+                        // build return value
+                        RetVal.Add("romid", RomId);
+                        RetVal.Add("platform", determinedPlatform);
+                        RetVal.Add("game", determinedGame);
+                        RetVal.Add("signature", discoveredSignature);
+                        RetVal.Add("status", "imported");
                     }
                 }
                 else
                 {
                     // file is a bios
+                    RetVal.Add("type", "bios");
                     if (IsBios.WebEmulator != null)
                     {
                         foreach (Classes.Bios.BiosItem biosItem in Classes.Bios.GetBios())
@@ -148,6 +163,8 @@ namespace gaseous_server.Classes
                     }
                 }
             }
+
+            return RetVal;
         }
 
         public static IGDB.Models.Game SearchForGame(gaseous_server.Models.Signatures_Games Signature, long PlatformId, bool FullDownload)

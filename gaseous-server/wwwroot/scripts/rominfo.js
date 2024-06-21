@@ -136,7 +136,7 @@ class rominfodialog {
         // create the delete button
         if (isDeleteable == true) {
             let deleteButton = new ModalButton("Delete", 2, this, function (callingObject) {
-                const deleteWindow = new MessageBox("Delete ROM", "Are you sure you want to delete this ROM?");
+                const deleteWindow = new MessageBox("Delete ROM", "Are you sure you want to delete this ROM and any associated save states?");
 
                 let deleteButton = new ModalButton("Delete", 2, callingObject, function (callingObject) {
                     ajaxCall('/api/v1.1/Games/' + callingObject.gameId + '/roms/' + callingObject.romId, 'DELETE', function (result) {

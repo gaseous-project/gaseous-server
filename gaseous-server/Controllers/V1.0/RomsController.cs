@@ -31,63 +31,56 @@ namespace gaseous_server.Controllers
         [Authorize(Roles = "Admin,Gamer")]
         [ProducesResponseType(typeof(List<IFormFile>), StatusCodes.Status200OK)]
         [RequestSizeLimit(long.MaxValue)]
+        [Consumes("multipart/form-data")]
         [DisableRequestSizeLimit, RequestFormLimits(MultipartBodyLengthLimit = long.MaxValue, ValueLengthLimit = int.MaxValue)]
-        public async Task<IActionResult> UploadRom(List<IFormFile> files, long? OverridePlatformId = null)
+        public async Task<IActionResult> UploadRom(IFormFile file, long? OverridePlatformId = null)
         {
             Guid sessionid = Guid.NewGuid();
 
             string workPath = Path.Combine(Config.LibraryConfiguration.LibraryUploadDirectory, sessionid.ToString());
 
-            long size = files.Sum(f => f.Length);
-
-            List<Dictionary<string, object>> UploadedFiles = new List<Dictionary<string, object>>();
-
-            foreach (IFormFile formFile in files)
+            if (file.Length > 0)
             {
-                if (formFile.Length > 0)
+                Guid FileId = Guid.NewGuid();
+
+                string filePath = Path.Combine(workPath, Path.GetFileName(file.FileName));
+
+                if (!Directory.Exists(workPath))
                 {
-                    Guid FileId = Guid.NewGuid();
-
-                    string filePath = Path.Combine(workPath, Path.GetFileName(formFile.FileName));
-
-                    if (!Directory.Exists(workPath))
-                    {
-                        Directory.CreateDirectory(workPath);
-                    }
-
-                    using (var stream = System.IO.File.Create(filePath))
-                    {
-                        await formFile.CopyToAsync(stream);
-
-                        Dictionary<string, object> UploadedFile = new Dictionary<string, object>();
-                        UploadedFile.Add("id", FileId.ToString());
-                        UploadedFile.Add("originalname", Path.GetFileName(formFile.FileName));
-                        UploadedFile.Add("fullpath", filePath);
-                        UploadedFiles.Add(UploadedFile);
-                    }
+                    Directory.CreateDirectory(workPath);
                 }
-            }
 
-            // get override platform if specified
-            IGDB.Models.Platform? OverridePlatform = null;
-            if (OverridePlatformId != null)
-            {
-                OverridePlatform = Platforms.GetPlatform((long)OverridePlatformId);
-            }
+                Dictionary<string, object> UploadedFile = new Dictionary<string, object>();
 
-            // Process uploaded files
-            foreach (Dictionary<string, object> UploadedFile in UploadedFiles)
-            {
+                using (var stream = System.IO.File.Create(filePath))
+                {
+                    await file.CopyToAsync(stream);
+
+                    UploadedFile.Add("id", FileId.ToString());
+                    UploadedFile.Add("originalname", Path.GetFileName(file.FileName));
+                    UploadedFile.Add("fullpath", filePath);
+                }
+
+                // get override platform if specified
+                IGDB.Models.Platform? OverridePlatform = null;
+                if (OverridePlatformId != null)
+                {
+                    OverridePlatform = Platforms.GetPlatform((long)OverridePlatformId);
+                }
+
+                // Process uploaded file
                 Classes.ImportGame uploadImport = new ImportGame();
-                uploadImport.ImportGameFile((string)UploadedFile["fullpath"], OverridePlatform);
+                Dictionary<string, object> RetVal = uploadImport.ImportGameFile((string)UploadedFile["fullpath"], OverridePlatform);
+
+                if (Directory.Exists(workPath))
+                {
+                    Directory.Delete(workPath, true);
+                }
+
+                return Ok(RetVal);
             }
 
-            if (Directory.Exists(workPath))
-            {
-                Directory.Delete(workPath, true);
-            }
-
-            return Ok(new { count = files.Count, size });
+            return Ok();
         }
     }
 }

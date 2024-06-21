@@ -106,6 +106,7 @@ class Modal {
         } else {
             const closeButton = document.createElement('button');
             closeButton.classList.add('modal-button');
+            closeButton.classList.add('bluebutton');
             closeButton.innerHTML = 'OK';
             closeButton.addEventListener('click', () => {
                 this.close();
