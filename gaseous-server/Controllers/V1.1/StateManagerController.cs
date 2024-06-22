@@ -255,9 +255,6 @@ namespace gaseous_server.Controllers.v1_1
             }
             else
             {
-                string contentType = "";
-                string filename = "";
-
                 // get rom data
                 Roms.GameRomItem romItem = Roms.GetRom(RomId);
 
@@ -271,15 +268,19 @@ namespace gaseous_server.Controllers.v1_1
                     bytes = Common.Decompress((byte[])data.Rows[0]["State"]);
                 }
 
+                string contentType = "";
+                string filename = ((DateTime)data.Rows[0]["StateDateTime"]).ToString("yyyy-MM-ddTHH-mm-ss") + "-" + Path.GetFileNameWithoutExtension(romItem.Name);
+
+
                 if (StateOnly == true)
                 {
                     contentType = "application/octet-stream";
-                    filename = "savestate.state";
+                    filename = filename + ".state";
                 }
                 else
                 {
                     contentType = "application/zip";
-                    filename = "savestate.zip";
+                    filename = filename + ".zip";
 
                     Dictionary<string, object> RomInfo = new Dictionary<string, object>
                     {
