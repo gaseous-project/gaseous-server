@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8" />
     <script src="/api/v1.1/System/VersionFile"></script>
@@ -40,8 +41,10 @@
         }
     </script>
 </head>
+
 <body>
-    <div id="bgImage" style="background-image: url('/images/LoginWallpaper.jpg'); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);">
+    <div id="bgImage"
+        style="background-image: url('/images/LoginWallpaper.jpg'); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);">
         <div id="bgImage_Opacity"></div>
     </div>
 
@@ -52,7 +55,9 @@
 
                 <div id="loginwindow_header_label" style="display: block; text-align: center;">Gaseous Games</div>
 
-                <button type="button" value="Get Started" onclick="document.getElementById('first_welcome').style.display = 'none'; document.getElementById('first_newadmin').style.display = '';" class="bigbutton">Get Started</button>
+                <button type="button" value="Get Started"
+                    onclick="document.getElementById('first_welcome').style.display = 'none'; document.getElementById('first_newadmin').style.display = '';"
+                    class="bigbutton">Get Started</button>
             </div>
         </div>
         <div class="loginwindow" id="first_newadmin" style="display: none;">
@@ -67,15 +72,18 @@
                     </tr>
                     <tr>
                         <th>Email</th>
-                        <td><input type="email" id="login_email" style="width: 95%;" onkeyup="checkPasswordsMatch();" /></td>
+                        <td><input type="email" id="login_email" style="width: 95%;" onkeyup="checkPasswordsMatch();" />
+                        </td>
                     </tr>
                     <tr>
                         <th>New Password</th>
-                        <td><input type="password" id="login_password" style="width: 95%;" onkeyup="checkPasswordsMatch();" /></td>
+                        <td><input type="password" id="login_password" style="width: 95%;"
+                                onkeyup="checkPasswordsMatch();" /></td>
                     </tr>
                     <tr>
                         <th>Confirm Password</th>
-                        <td><input type="password" id="login_confirmpassword" style="width: 95%;" onkeyup="checkPasswordsMatch();" /></td>
+                        <td><input type="password" id="login_confirmpassword" style="width: 95%;"
+                                onkeyup="checkPasswordsMatch();" /></td>
                     </tr>
                     <tr>
                         <td colspan="2" id="login_passwordnotice">&nbsp;</td>
@@ -85,7 +93,9 @@
                     </tr>
                     <tr>
                         <td colspan="2" style="padding-top: 20px;">
-                            <button id="login_createaccount" type="button" value="Create Account" onclick="registerAccount();" disabled="disabled" class="bigbutton">Create Account</button>
+                            <button id="login_createaccount" type="button" value="Create Account"
+                                onclick="registerAccount();" disabled="disabled" class="bigbutton">Create
+                                Account</button>
                         </td>
                     </tr>
                 </table>
@@ -94,12 +104,14 @@
     </div>
 
     <div id="settings_photocredit">
-        Wallpaper by <a href="https://unsplash.com/@spideyjoey" class="romlink">Joey Kwok</a> / <a href="https://unsplash.com/photos/a-room-filled-with-arcade-machines-and-neon-lights-jbIsTd7rdd8" class="romlink">Unsplash</a>
+        Wallpaper by <a href="https://unsplash.com/@spideyjoey" class="romlink">Joey Kwok</a> / <a
+            href="https://unsplash.com/photos/a-room-filled-with-arcade-machines-and-neon-lights-jbIsTd7rdd8"
+            class="romlink">Unsplash</a>
     </div>
 
     <script type="text/javascript">
         // redirect if first run status != 0 as 0 indicates that first run needs to be run
-        if (FirstRunStatus != 0) {
+        if (FirstRunStatus != 0 && FirstRunStatus != "0") {
             window.location.replace("/");
         }
 
@@ -146,10 +158,10 @@
             ajaxCall(
                 '/api/v1.1/FirstSetup/0',
                 'POST',
-                function(result){
+                function (result) {
                     loginCallback(result);
                 },
-                function(error){
+                function (error) {
                     loginCallback(error);
                 },
                 JSON.stringify(model)

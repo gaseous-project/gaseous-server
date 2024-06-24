@@ -70,7 +70,8 @@ namespace gaseous_server.Controllers
         [HttpGet]
         [Route("Version")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public Version GetSystemVersion() {
+        public Version GetSystemVersion()
+        {
             return Assembly.GetExecutingAssembly().GetName().Version;
         }
 
@@ -80,32 +81,36 @@ namespace gaseous_server.Controllers
         [Route("VersionFile")]
         [AllowAnonymous]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public FileContentResult GetSystemVersionAsFile() {
+        public FileContentResult GetSystemVersionAsFile()
+        {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
             // get age ratings dictionary
             Dictionary<int, string> ClassificationBoardsStrings = new Dictionary<int, string>();
-            foreach(IGDB.Models.AgeRatingCategory ageRatingCategory in Enum.GetValues(typeof(IGDB.Models.AgeRatingCategory)) )
+            foreach (IGDB.Models.AgeRatingCategory ageRatingCategory in Enum.GetValues(typeof(IGDB.Models.AgeRatingCategory)))
             {
                 ClassificationBoardsStrings.Add((int)ageRatingCategory, ageRatingCategory.ToString());
             }
 
             Dictionary<int, string> AgeRatingsStrings = new Dictionary<int, string>();
-            foreach(IGDB.Models.AgeRatingTitle ageRatingTitle in Enum.GetValues(typeof(IGDB.Models.AgeRatingTitle)) )
+            foreach (IGDB.Models.AgeRatingTitle ageRatingTitle in Enum.GetValues(typeof(IGDB.Models.AgeRatingTitle)))
             {
                 AgeRatingsStrings.Add((int)ageRatingTitle, ageRatingTitle.ToString());
             }
 
             string ver = "var AppVersion = \"" + Assembly.GetExecutingAssembly().GetName().Version.ToString() + "\";" + Environment.NewLine +
                 "var DBSchemaVersion = \"" + db.GetDatabaseSchemaVersion() + "\";" + Environment.NewLine +
-                "var FirstRunStatus = " + Config.ReadSetting<string>("FirstRunStatus", "0") + ";" + Environment.NewLine +
-                "var AgeRatingBoardsStrings = " + JsonSerializer.Serialize(ClassificationBoardsStrings, new JsonSerializerOptions{
+                "var FirstRunStatus = \"" + Config.ReadSetting<string>("FirstRunStatus", "0") + "\";" + Environment.NewLine +
+                "var AgeRatingBoardsStrings = " + JsonSerializer.Serialize(ClassificationBoardsStrings, new JsonSerializerOptions
+                {
                     WriteIndented = true
                 }) + ";" + Environment.NewLine +
-                "var AgeRatingStrings = " + JsonSerializer.Serialize(AgeRatingsStrings, new JsonSerializerOptions{
+                "var AgeRatingStrings = " + JsonSerializer.Serialize(AgeRatingsStrings, new JsonSerializerOptions
+                {
                     WriteIndented = true
                 }) + ";" + Environment.NewLine +
-                "var AgeRatingGroups = " + JsonSerializer.Serialize(AgeGroups.AgeGroupingsFlat, new JsonSerializerOptions{
+                "var AgeRatingGroups = " + JsonSerializer.Serialize(AgeGroups.AgeGroupingsFlat, new JsonSerializerOptions
+                {
                     WriteIndented = true
                 }) + ";" + Environment.NewLine +
                 "var emulatorDebugMode = " + Config.ReadSetting<string>("emulatorDebugMode", false.ToString()).ToLower() + ";";
@@ -159,7 +164,7 @@ namespace gaseous_server.Controllers
                         {
                             // update task enabled
                             Logging.Log(Logging.LogType.Information, "Update Background Task", "Updating task " + TaskConfiguration.Task + " with enabled value " + TaskConfiguration.Enabled.ToString());
-                            
+
                             Config.SetSetting<string>("Enabled_" + TaskConfiguration.Task, TaskConfiguration.Enabled.ToString());
 
                             // update existing process
@@ -170,12 +175,12 @@ namespace gaseous_server.Controllers
                                     item.Enabled(Boolean.Parse(TaskConfiguration.Enabled.ToString()));
                                 }
                             }
-                        
+
                             // update task interval
                             if (TaskConfiguration.Interval >= taskItem.MinimumAllowedInterval)
                             {
                                 Logging.Log(Logging.LogType.Information, "Update Background Task", "Updating task " + TaskConfiguration.Task + " with new interval " + TaskConfiguration.Interval);
-                                
+
                                 Config.SetSetting<string>("Interval_" + TaskConfiguration.Task, TaskConfiguration.Interval.ToString());
 
                                 // update existing process
@@ -194,7 +199,7 @@ namespace gaseous_server.Controllers
 
                             // update task weekdays
                             Logging.Log(Logging.LogType.Information, "Update Background Task", "Updating task " + TaskConfiguration.Task + " with new weekdays " + String.Join(", ", TaskConfiguration.AllowedDays));
-                            
+
                             Config.SetSetting<string>("AllowedDays_" + TaskConfiguration.Task, Newtonsoft.Json.JsonConvert.SerializeObject(TaskConfiguration.AllowedDays));
 
                             // update existing process
@@ -208,7 +213,7 @@ namespace gaseous_server.Controllers
 
                             // update task hours
                             Logging.Log(Logging.LogType.Information, "Update Background Task", "Updating task " + TaskConfiguration.Task + " with new hours " + TaskConfiguration.AllowedStartHours + ":" + TaskConfiguration.AllowedStartMinutes.ToString("00") + " to " + TaskConfiguration.AllowedEndHours + ":" + TaskConfiguration.AllowedEndMinutes.ToString("00"));
-                            
+
                             Config.SetSetting<string>("AllowedStartHours_" + TaskConfiguration.Task, TaskConfiguration.AllowedStartHours.ToString());
                             Config.SetSetting<string>("AllowedStartMinutes_" + TaskConfiguration.Task, TaskConfiguration.AllowedStartMinutes.ToString());
                             Config.SetSetting<string>("AllowedEndHours_" + TaskConfiguration.Task, TaskConfiguration.AllowedEndHours.ToString());
@@ -225,7 +230,7 @@ namespace gaseous_server.Controllers
                                     item.AllowedEndMinutes = TaskConfiguration.AllowedEndMinutes;
                                 }
                             }
-                        
+
                         }
                         else
                         {
@@ -251,7 +256,8 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         public ActionResult GetSystemSettings()
         {
-            SystemSettingsModel systemSettingsModel = new SystemSettingsModel{
+            SystemSettingsModel systemSettingsModel = new SystemSettingsModel
+            {
                 AlwaysLogToDisk = Config.LoggingConfiguration.AlwaysLogToDisk,
                 MinimumLogRetentionPeriod = Config.LoggingConfiguration.LogRetention,
                 EmulatorDebugMode = Boolean.Parse(Config.ReadSetting<string>("emulatorDebugMode", false.ToString()))
@@ -281,7 +287,8 @@ namespace gaseous_server.Controllers
 
         private SystemInfo.PathItem GetDisk(string Path)
         {
-            SystemInfo.PathItem pathItem = new SystemInfo.PathItem {
+            SystemInfo.PathItem pathItem = new SystemInfo.PathItem
+            {
                 LibraryPath = Path,
                 SpaceUsed = Common.DirSize(new DirectoryInfo(Path)),
                 SpaceAvailable = new DriveInfo(Path).AvailableFreeSpace,
@@ -293,11 +300,12 @@ namespace gaseous_server.Controllers
 
         public class SystemInfo
         {
-            public Version ApplicationVersion { 
+            public Version ApplicationVersion
+            {
                 get
-                    {
-                        return Assembly.GetExecutingAssembly().GetName().Version;
-                    }
+                {
+                    return Assembly.GetExecutingAssembly().GetName().Version;
+                }
             }
             public List<PathItem>? Paths { get; set; }
             public long DatabaseSize { get; set; }
@@ -352,7 +360,7 @@ namespace gaseous_server.Controllers
                     this.DefaultAllowedEndHours = 23;
                     this.DefaultAllowedEndMinutes = 59;
                     break;
-                
+
                 case ProcessQueue.QueueItemType.TitleIngestor:
                     this._UserManageable = true;
                     this.DefaultInterval = 1;
@@ -589,7 +597,8 @@ namespace gaseous_server.Controllers
         }
         private bool _UserManageable;
         public bool UserManageable => _UserManageable;
-        public int Interval {
+        public int Interval
+        {
             get
             {
                 return int.Parse(Config.ReadSetting<string>("Interval_" + Task, DefaultInterval.ToString()));
@@ -642,7 +651,7 @@ namespace gaseous_server.Controllers
         public List<ProcessQueue.QueueItemType> Blocks
         {
             get
-            {   
+            {
                 if (_Blocks.Contains(ProcessQueue.QueueItemType.All))
                 {
                     List<ProcessQueue.QueueItemType> blockList = new List<ProcessQueue.QueueItemType>();
