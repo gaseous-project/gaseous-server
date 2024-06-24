@@ -310,11 +310,15 @@ namespace gaseous_server.Controllers.v1_1
                             { "Name", "savestate.state" },
                             { "Body", bytes }
                         });
-                        Attachments.Add(new Dictionary<string, object>
+                        // check if value is dbnull
+                        if (data.Rows[0]["Screenshot"] != DBNull.Value)
                         {
-                            { "Name", "screenshot.jpg" },
-                            { "Body", (byte[])data.Rows[0]["Screenshot"] }
-                        });
+                            Attachments.Add(new Dictionary<string, object>
+                            {
+                                { "Name", "screenshot.jpg" },
+                                { "Body", (byte[])data.Rows[0]["Screenshot"] }
+                            });
+                        }
                         Attachments.Add(new Dictionary<string, object>
                         {
                             { "Name", "rominfo.json" },
@@ -354,6 +358,156 @@ namespace gaseous_server.Controllers.v1_1
                 Response.Headers.Add("Cache-Control", "public, max-age=604800");
 
                 return File(bytes, contentType);
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpPost]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [RequestSizeLimit(long.MaxValue)]
+        [Consumes("multipart/form-data")]
+        [DisableRequestSizeLimit, RequestFormLimits(MultipartBodyLengthLimit = long.MaxValue, ValueLengthLimit = int.MaxValue)]
+        [Route("Upload")]
+        public async Task<ActionResult> UploadStateDataAsync(IFormFile file, long RomId = 0, bool IsMediaGroup = false)
+        {
+            // get user
+            var user = await _userManager.GetUserAsync(User);
+
+            if (file.Length > 0)
+            {
+                MemoryStream fileContent = new MemoryStream();
+                file.CopyTo(fileContent);
+
+                // test if file is a zip file
+                try
+                {
+                    using (var zipArchive = new ZipArchive(fileContent, ZipArchiveMode.Read, false))
+                    {
+                        foreach (var entry in zipArchive.Entries)
+                        {
+                            if (entry.FullName == "rominfo.json")
+                            {
+                                using (var stream = entry.Open())
+                                using (var reader = new StreamReader(stream))
+                                {
+                                    string RomInfoString = reader.ReadToEnd();
+                                    Dictionary<string, object> RomInfo = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(RomInfoString);
+
+                                    // get rom data
+                                    Roms.GameRomItem romItem;
+
+                                    try
+                                    {
+                                        romItem = Roms.GetRom((string)RomInfo["MD5"]);
+                                    }
+                                    catch (Roms.InvalidRomHash)
+                                    {
+                                        return NotFound();
+                                    }
+
+                                    // get state data
+                                    byte[] StateData = null;
+                                    byte[] ScreenshotData = null;
+                                    string StateName = RomInfo["StateName"].ToString();
+                                    DateTime StateDateTime = DateTime.Parse(RomInfo["StateDateTime"].ToString());
+                                    IsMediaGroup = RomInfo["Type"].ToString() == "Media Group" ? true : false;
+
+                                    if (zipArchive.GetEntry("savestate.state") != null)
+                                    {
+                                        using (var stateStream = zipArchive.GetEntry("savestate.state").Open())
+                                        using (var stateReader = new MemoryStream())
+                                        {
+                                            stateStream.CopyTo(stateReader);
+                                            StateData = stateReader.ToArray();
+                                        }
+                                    }
+                                    if (zipArchive.GetEntry("screenshot.jpg") != null)
+                                    {
+                                        using (var screenshotStream = zipArchive.GetEntry("screenshot.jpg").Open())
+                                        using (var screenshotReader = new MemoryStream())
+                                        {
+                                            screenshotStream.CopyTo(screenshotReader);
+                                            ScreenshotData = screenshotReader.ToArray();
+                                        }
+                                    }
+
+                                    // save state
+                                    Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                                    string sql = "INSERT INTO GameState (UserId, RomId, IsMediaGroup, StateDateTime, Name, Screenshot, State, Zipped) VALUES (@userid, @romid, @ismediagroup, @statedatetime, @name, @screenshot, @state, @zipped); SELECT LAST_INSERT_ID();";
+                                    Dictionary<string, object> dbDict = new Dictionary<string, object>
+                                    {
+                                        { "userid", user.Id },
+                                        { "romid", romItem.Id },
+                                        { "ismediagroup", IsMediaGroup },
+                                        { "statedatetime", StateDateTime },
+                                        { "name", StateName },
+                                        { "screenshot", ScreenshotData },
+                                        { "state", Common.Compress(StateData) },
+                                        { "zipped", true }
+                                    };
+                                    DataTable data = db.ExecuteCMD(sql, dbDict);
+
+                                    RomInfo.Add("RomId", romItem.Id);
+                                    RomInfo.Add("Management", "Managed");
+                                    return Ok(RomInfo);
+                                }
+                            }
+                        }
+                    }
+
+                    return BadRequest("File is not a valid Gaseous state file.");
+                }
+                catch
+                {
+                    // not a zip file
+                    if (RomId != 0)
+                    {
+                        // get rom data
+                        Roms.GameRomItem romItem;
+
+                        try
+                        {
+                            romItem = Roms.GetRom(RomId);
+                        }
+                        catch (Roms.InvalidRomHash)
+                        {
+                            return NotFound();
+                        }
+
+                        // save state
+                        Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                        string sql = "INSERT INTO GameState (UserId, RomId, IsMediaGroup, StateDateTime, Name, Screenshot, State, Zipped) VALUES (@userid, @romid, @ismediagroup, @statedatetime, @name, @screenshot, @state, @zipped); SELECT LAST_INSERT_ID();";
+                        Dictionary<string, object> dbDict = new Dictionary<string, object>
+                        {
+                            { "userid", user.Id },
+                            { "romid", RomId },
+                            { "ismediagroup", IsMediaGroup },
+                            { "statedatetime", DateTime.UtcNow },
+                            { "name", "" },
+                            { "screenshot", null },
+                            { "state", Common.Compress(fileContent.ToArray()) },
+                            { "zipped", true }
+                        };
+                        DataTable data = db.ExecuteCMD(sql, dbDict);
+
+                        return Ok(new Dictionary<string, object>
+                        {
+                            { "RomId", RomId },
+                            { "Management", "Unmanaged" }
+                        });
+                    }
+                    else
+                    {
+                        return BadRequest("No rom id provided.");
+                    }
+                }
+            }
+            else
+            {
+                return BadRequest("File is empty.");
             }
         }
 

@@ -13,7 +13,7 @@
     if (IsMediaGroupInt == 1) { IsMediaGroup = true; }
     var StateUrl = undefined;
     if (getQueryString('stateid', 'int')) {
-        StateUrl = '/api/v1.1/StateManager/' + romId + '/' + getQueryString('stateid', 'int') + '/State/savestate.state?IsMediaGroup=' + IsMediaGroup;
+        StateUrl = '/api/v1.1/StateManager/' + romId + '/' + getQueryString('stateid', 'int') + '/State/savestate.state?StateOnly=true&IsMediaGroup=' + IsMediaGroup;
     }
     var gameData;
     var artworks = null;
@@ -60,7 +60,7 @@
             case 'EmulatorJS':
                 console.log("Emulator: " + getQueryString('engine', 'string'));
                 console.log("Core: " + getQueryString('core', 'string'));
-    
+
                 $('#emulator').load('/emulators/EmulatorJS.html?v=' + AppVersion);
                 break;
         }
@@ -95,11 +95,11 @@
                 '/api/v1.1/Statistics/Games/' + gameId + '/' + SessionId,
                 'PUT',
                 function (success) {
-                    
+
                 }
             );
         }
     }
-    
+
     setInterval(SaveStatistics, 60000);
 </script>

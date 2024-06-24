@@ -1,6 +1,9 @@
 <div id="saved_states">
 
 </div>
+<div>
+    <span>Upload state file: </span><input type="file" id="stateFile" />
+</div>
 
 <script text="text/javascript">
     document.getElementById('modal-heading').innerHTML = "Load saved state";
@@ -13,9 +16,10 @@
         ajaxCall(
             statesUrl,
             'GET',
-            function(result) {
+            function (result) {
                 var statesBox = document.getElementById('saved_states');
                 statesBox.innerHTML = '';
+                document.getElementById('stateFile').value = '';
 
                 for (var i = 0; i < result.length; i++) {
                     var stateBox = document.createElement('div');
@@ -62,7 +66,7 @@
                     stateControls.id = 'stateControls_' + result[i].id;
                     stateControls.className = 'saved_state_controls';
 
-                    var stateControlsLaunch= document.createElement('span');
+                    var stateControlsLaunch = document.createElement('span');
                     stateControlsLaunch.id = 'stateControlsLaunch_' + result[i].id;
                     stateControlsLaunch.className = 'romstart';
                     var emulatorTarget = '/index.html?page=emulator&engine=@engine&core=@core&platformid=@platformid&gameid=@gameid&romid=@romid&mediagroup=@mediagroup&rompath=@rompath&stateid=' + result[i].id;
@@ -128,7 +132,7 @@
         ajaxCall(
             '/api/v1.1/StateManager/' + modalVariables.romId + '/' + StateId + '?IsMediaGroup=' + IsMediaGroup,
             'DELETE',
-            function(success) {
+            function (success) {
                 LoadStates();
             },
             function (error) {
@@ -147,7 +151,7 @@
         ajaxCall(
             '/api/v1.1/StateManager/' + modalVariables.romId + '/' + StateId + '?IsMediaGroup=' + IsMediaGroup,
             'PUT',
-            function(success) {
+            function (success) {
                 LoadStates();
             },
             function (error) {
@@ -155,5 +159,37 @@
             },
             JSON.stringify(model)
         );
+    }
+
+    document.getElementById('stateFile').addEventListener('change', function () {
+        let file = document.getElementById('stateFile').files[0];
+        let formData = new FormData();
+        formData.append('file', file);
+
+        console.log("Uploading state file");
+
+        fetch('/api/v1.1/StateManager/Upload?RomId=' + modalVariables.romId + '&IsMediaGroup=' + modalVariables.IsMediaGroup, {
+            method: 'POST',
+            body: formData
+        })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                UploadAlert(data);
+                LoadStates();
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                UploadAlert(error);
+                LoadStates();
+            });
+    });
+
+    function UploadAlert(data) {
+        if (data.Management == "Managed") {
+            alert("State uploaded successfully.");
+        } else {
+            alert("State uploaded successfully, but it might not function correctly for this platform and ROM.");
+        }
     }
 </script>
