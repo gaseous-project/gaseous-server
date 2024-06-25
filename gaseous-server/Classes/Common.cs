@@ -19,7 +19,8 @@ namespace gaseous_server.Classes
 			if (ObjectToCheck == null || ObjectToCheck == System.DBNull.Value)
 			{
 				return IfNullValue;
-			} else
+			}
+			else
 			{
 				return ObjectToCheck;
 			}
@@ -27,10 +28,10 @@ namespace gaseous_server.Classes
 
 		static public DateTime ConvertUnixToDateTime(double UnixTimeStamp)
 		{
-            DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
-            dateTime = dateTime.AddSeconds(UnixTimeStamp).ToLocalTime();
-            return dateTime;
-        }
+			DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
+			dateTime = dateTime.AddSeconds(UnixTimeStamp).ToLocalTime();
+			return dateTime;
+		}
 
 		public class hashObject
 		{
@@ -41,21 +42,23 @@ namespace gaseous_server.Classes
 
 			public hashObject(string FileName)
 			{
-                var xmlStream = File.OpenRead(FileName);
+				var xmlStream = File.OpenRead(FileName);
 
-                var md5 = MD5.Create();
-                byte[] md5HashByte = md5.ComputeHash(xmlStream);
-                string md5Hash = BitConverter.ToString(md5HashByte).Replace("-", "").ToLowerInvariant();
+				Logging.Log(Logging.LogType.Information, "Hash File", "Generating MD5 hash for file: " + FileName);
+				var md5 = MD5.Create();
+				byte[] md5HashByte = md5.ComputeHash(xmlStream);
+				string md5Hash = BitConverter.ToString(md5HashByte).Replace("-", "").ToLowerInvariant();
 				_md5hash = md5Hash;
 
-                var sha1 = SHA1.Create();
+				Logging.Log(Logging.LogType.Information, "Hash File", "Generating SHA1 hash for file: " + FileName);
+				var sha1 = SHA1.Create();
 				xmlStream.Position = 0;
-                byte[] sha1HashByte = sha1.ComputeHash(xmlStream);
-                string sha1Hash = BitConverter.ToString(sha1HashByte).Replace("-", "").ToLowerInvariant();
+				byte[] sha1HashByte = sha1.ComputeHash(xmlStream);
+				string sha1Hash = BitConverter.ToString(sha1HashByte).Replace("-", "").ToLowerInvariant();
 				_sha1hash = sha1Hash;
 
 				xmlStream.Close();
-            }
+			}
 
 			string _md5hash = "";
 			string _sha1hash = "";
@@ -85,29 +88,29 @@ namespace gaseous_server.Classes
 			}
 		}
 
-        public static long DirSize(DirectoryInfo d)
-        {
-            long size = 0;
-            // Add file sizes.
-            FileInfo[] fis = d.GetFiles();
-            foreach (FileInfo fi in fis)
-            {
-                size += fi.Length;
-            }
-            // Add subdirectory sizes.
-            DirectoryInfo[] dis = d.GetDirectories();
-            foreach (DirectoryInfo di in dis)
-            {
-                size += DirSize(di);
-            }
-            return size;
-        }
+		public static long DirSize(DirectoryInfo d)
+		{
+			long size = 0;
+			// Add file sizes.
+			FileInfo[] fis = d.GetFiles();
+			foreach (FileInfo fi in fis)
+			{
+				size += fi.Length;
+			}
+			// Add subdirectory sizes.
+			DirectoryInfo[] dis = d.GetDirectories();
+			foreach (DirectoryInfo di in dis)
+			{
+				size += DirSize(di);
+			}
+			return size;
+		}
 
 		public static string[] SkippableFiles = {
 				".DS_STORE",
 				"desktop.ini"
 			};
-		
+
 		public static string NormalizePath(string path)
 		{
 			return Path.GetFullPath(new Uri(path).LocalPath)
@@ -155,30 +158,30 @@ namespace gaseous_server.Classes
 				return defaultValue;
 			}
 		}
-    }
+	}
 
 	/// <summary>
-    /// Provides a way to set contextual data that flows with the call and 
-    /// async context of a test or invocation.
-    /// </summary>
-    public static class CallContext
-    {
-        static ConcurrentDictionary<string, AsyncLocal<object>> state = new ConcurrentDictionary<string, AsyncLocal<object>>();
+	/// Provides a way to set contextual data that flows with the call and 
+	/// async context of a test or invocation.
+	/// </summary>
+	public static class CallContext
+	{
+		static ConcurrentDictionary<string, AsyncLocal<object>> state = new ConcurrentDictionary<string, AsyncLocal<object>>();
 
-        /// <summary>
-        /// Stores a given object and associates it with the specified name.
-        /// </summary>
-        /// <param name="name">The name with which to associate the new item in the call context.</param>
-        /// <param name="data">The object to store in the call context.</param>
-        public static void SetData(string name, object data) =>
-            state.GetOrAdd(name, _ => new AsyncLocal<object>()).Value = data;
+		/// <summary>
+		/// Stores a given object and associates it with the specified name.
+		/// </summary>
+		/// <param name="name">The name with which to associate the new item in the call context.</param>
+		/// <param name="data">The object to store in the call context.</param>
+		public static void SetData(string name, object data) =>
+			state.GetOrAdd(name, _ => new AsyncLocal<object>()).Value = data;
 
-        /// <summary>
-        /// Retrieves an object with the specified name from the <see cref="CallContext"/>.
-        /// </summary>
-        /// <param name="name">The name of the item in the call context.</param>
-        /// <returns>The object in the call context associated with the specified name, or <see langword="null"/> if not found.</returns>
-        public static object GetData(string name) =>
-            state.TryGetValue(name, out AsyncLocal<object> data) ? data.Value : null;
-    }
+		/// <summary>
+		/// Retrieves an object with the specified name from the <see cref="CallContext"/>.
+		/// </summary>
+		/// <param name="name">The name of the item in the call context.</param>
+		/// <returns>The object in the call context associated with the specified name, or <see langword="null"/> if not found.</returns>
+		public static object GetData(string name) =>
+			state.TryGetValue(name, out AsyncLocal<object> data) ? data.Value : null;
+	}
 }
