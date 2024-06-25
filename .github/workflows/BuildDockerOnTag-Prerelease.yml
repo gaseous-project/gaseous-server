@@ -41,23 +41,69 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
           logout: false
-      - name: Build and push standard image
+        
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: |
+            gaseousgames/gaseousserver
+            ghcr.io/${{ github.repository }}
+
+      - name: Build and push standard Docker image
+        id: push
         uses: docker/build-push-action@v6
         with:
           context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
           file: ./build/Dockerfile
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: |
-            gaseousgames/gaseousserver:${{ github.ref_name}}
-            ghcr.io/${{ github.repository }}:${{ github.ref_name}}
-      - name: Build and push image with embedded mariadb
+
+      - name: Build and push embedded mariadb Docker image
+        id: pushembedded
         uses: docker/build-push-action@v6
         with:
           context: .
-          file: ./build/Dockerfile-EmbeddedDB
-          platforms: linux/amd64,linux/arm64
           push: true
-          tags: |
-            gaseousgames/gaseousserver:${{ github.ref_name}}-embeddeddb
-            ghcr.io/${{ github.repository }}:${{ github.ref_name}}-embeddeddb
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          platforms: linux/amd64,linux/arm64
+          file: ./build/Dockerfile-EmbeddedDB
+
+      
+      * name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
+
+      * name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v1
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME}}
+          subject-digest: ${{ steps.pushembedded.outputs.digest }}
+          push-to-registry: true
+      
+      # - name: Build and push standard image
+      #   uses: docker/build-push-action@v6
+      #   with:
+      #     context: .
+      #     file: ./build/Dockerfile
+      #     platforms: linux/amd64,linux/arm64
+      #     push: true
+      #     tags: |
+      #       gaseousgames/gaseousserver:${{ github.ref_name}}
+      #       ghcr.io/${{ github.repository }}:${{ github.ref_name}}
+      # - name: Build and push image with embedded mariadb
+      #   uses: docker/build-push-action@v6
+      #   with:
+      #     context: .
+      #     file: ./build/Dockerfile-EmbeddedDB
+      #     platforms: linux/amd64,linux/arm64
+      #     push: true
+      #     tags: |
+      #       gaseousgames/gaseousserver:${{ github.ref_name}}-embeddeddb
+      #       ghcr.io/${{ github.repository }}:${{ github.ref_name}}-embeddeddb
