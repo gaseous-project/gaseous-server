@@ -6,13 +6,12 @@ on:
       - 'v[0-9]+.[0-9]+.[0-9]+-preview.[0-9]'
       - 'v[0-9]+.[0-9]+.[0-9]+-rc.[0-9]'
 
-permissions:
-  contents: read
-  packages: write
-
 jobs:
   docker:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -39,6 +38,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
+          logout: false
       - name: Build and push standard image
         uses: docker/build-push-action@v6
         with:
