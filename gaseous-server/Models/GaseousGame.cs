@@ -16,7 +16,7 @@ namespace gaseous_server.Models
         {
             var targetType = this.GetType();
             var sourceType = game.GetType();
-            foreach(var prop in targetType.GetProperties(BindingFlags.Instance | BindingFlags.Public| BindingFlags.SetProperty))
+            foreach (var prop in targetType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.SetProperty))
             {
                 // check whether source object has the the property
                 var sp = sourceType.GetProperty(prop.Name);
@@ -39,7 +39,11 @@ namespace gaseous_server.Models
                 {
                     if (this.Cover.Id != null)
                     {
-                        IGDB.Models.Cover cover = Covers.GetCover(Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(this), false);
+                        // IGDB.Models.Cover cover = Covers.GetCover(Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(this), false);
+                        IGDB.Models.Cover cover = new IGDB.Models.Cover()
+                        {
+                            Id = this.Cover.Id
+                        };
 
                         return cover;
                     }

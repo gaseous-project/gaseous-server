@@ -73,7 +73,8 @@ namespace gaseous_server.Controllers
         private static async Task<List<GaseousGame>> _SearchForGame(long PlatformId, string SearchString)
         {
             string searchBody = "";
-            string searchFields = "fields cover,first_release_date,name,platforms,slug; ";
+            // string searchFields = "fields cover,first_release_date,name,platforms,slug; ";
+            string searchFields = "fields *; ";
             searchBody += "search \"" + SearchString + "\";";
             searchBody += "where platforms = (" + PlatformId + ");";
             searchBody += "limit 100;";
@@ -86,12 +87,12 @@ namespace gaseous_server.Controllers
                 // get Game metadata from data source
                 Communications comms = new Communications();
                 var results = await comms.APIComm<Game>(IGDBClient.Endpoints.Games, searchFields, searchBody);
-                
+
                 List<GaseousGame> games = new List<GaseousGame>();
                 foreach (Game game in results.ToList())
                 {
                     Storage.CacheStatus cacheStatus = Storage.GetCacheStatus("Game", (long)game.Id);
-                    switch(cacheStatus)
+                    switch (cacheStatus)
                     {
                         case Storage.CacheStatus.NotPresent:
                             Storage.NewCacheValue(game, false);
