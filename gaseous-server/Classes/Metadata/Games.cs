@@ -5,8 +5,8 @@ using IGDB.Models;
 
 namespace gaseous_server.Classes.Metadata
 {
-	public class Games
-	{
+    public class Games
+    {
         const string fieldList = "fields age_ratings,aggregated_rating,aggregated_rating_count,alternative_names,artworks,bundles,category,checksum,collection,collections,cover,created_at,dlcs,expanded_games,expansions,external_games,first_release_date,follows,forks,franchise,franchises,game_engines,game_localizations,game_modes,genres,hypes,involved_companies,keywords,language_supports,multiplayer_modes,name,parent_game,platforms,player_perspectives,ports,rating,rating_count,release_dates,remakes,remasters,screenshots,similar_games,slug,standalone_expansions,status,storyline,summary,tags,themes,total_rating,total_rating_count,updated_at,url,version_parent,version_title,videos,websites;";
 
         public Games()
@@ -15,9 +15,9 @@ namespace gaseous_server.Classes.Metadata
         }
 
         public class InvalidGameId : Exception
-        { 
+        {
             public InvalidGameId(long Id) : base("Unable to find Game by id " + Id)
-            {}
+            { }
         }
 
         public static Game? GetGame(long Id, bool getAllMetadata, bool followSubGames, bool forceRefresh)
@@ -125,17 +125,17 @@ namespace gaseous_server.Classes.Metadata
         private static void UpdateSubClasses(Game Game, bool getAllMetadata, bool followSubGames, bool forceRefresh)
         {
             // required metadata
-            if (Game.Cover != null)
-            {
-                try
-                {
-                    Cover GameCover = Covers.GetCover(Game.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), forceRefresh);
-                }
-                catch (Exception ex)
-                {
-                    Logging.Log(Logging.LogType.Critical, "Game Metadata", "Unable to fetch cover artwork.", ex);
-                }
-            }
+            // if (Game.Cover != null)
+            // {
+            //     try
+            //     {
+            //         Cover GameCover = Covers.GetCover(Game.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), forceRefresh);
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         Logging.Log(Logging.LogType.Critical, "Game Metadata", "Unable to fetch cover artwork.", ex);
+            //     }
+            // }
 
             if (Game.Genres != null)
             {
@@ -285,7 +285,7 @@ namespace gaseous_server.Classes.Metadata
                     {
                         try
                         {
-                        Screenshot GameScreenshot = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), forceRefresh);
+                            Screenshot GameScreenshot = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), forceRefresh);
                         }
                         catch (Exception ex)
                         {
@@ -347,7 +347,7 @@ namespace gaseous_server.Classes.Metadata
 
             // get missing metadata from parent if this is a port
             if (result.Category == Category.Port)
-                {
+            {
                 if (result.Summary == null)
                 {
                     if (result.ParentGame != null)
@@ -364,7 +364,7 @@ namespace gaseous_server.Classes.Metadata
 
             return result;
         }
-        
+
         public static void AssignAllGamesToPlatformIdZero()
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -428,7 +428,7 @@ namespace gaseous_server.Classes.Metadata
             }
 
             string sql = "SELECT Game.Id, Game.`Name`, Game.Slug, Relation_Game_Platforms.PlatformsId AS PlatformsId, Game.Summary FROM gaseous.Game JOIN Relation_Game_Platforms ON Game.Id = Relation_Game_Platforms.GameId WHERE " + whereClause + ";";
-            
+
 
             // get Game metadata
             Game[]? results = new Game[0];
@@ -439,7 +439,8 @@ namespace gaseous_server.Classes.Metadata
                 DataTable data = db.ExecuteCMD(sql, dbDict);
                 foreach (DataRow row in data.Rows)
                 {
-                    Game game = new Game{
+                    Game game = new Game
+                    {
                         Id = (long)row["Id"],
                         Name = (string)Common.ReturnValueIfNull(row["Name"], ""),
                         Slug = (string)Common.ReturnValueIfNull(row["Slug"], ""),
@@ -476,12 +477,12 @@ namespace gaseous_server.Classes.Metadata
                     searchBody = "where platforms = (" + PlatformId + ") & name ~ \"" + SearchString + "\";";
                     break;
             }
-            
+
             // check search cache
             Game[]? games = Communications.GetSearchCache<Game[]?>(searchFields, searchBody);
 
             if (games == null)
-            {   
+            {
                 // cache miss
                 // get Game metadata
                 Communications comms = new Communications();
@@ -513,7 +514,7 @@ namespace gaseous_server.Classes.Metadata
             foreach (DataRow row in data.Rows)
             {
                 KeyValuePair<long, string> valuePair = new KeyValuePair<long, string>((long)row["PlatformId"], (string)row["Name"]);
-				platforms.Add(valuePair);
+                platforms.Add(valuePair);
             }
 
             return platforms;
@@ -533,7 +534,7 @@ namespace gaseous_server.Classes.Metadata
             {
 
             }
-            
+
             public MinimalGameItem(Game gameObject)
             {
                 this.Id = gameObject.Id;

@@ -7,7 +7,7 @@ using Microsoft.CodeAnalysis.Elfie.Model.Strings;
 
 namespace gaseous_server.Classes.Metadata
 {
-	public class Covers
+    public class Covers
     {
         const string fieldList = "fields alpha_channel,animated,checksum,game,game_localization,height,image_id,url,width;";
 
@@ -70,7 +70,7 @@ namespace gaseous_server.Classes.Metadata
                     returnValue = await GetObjectFromServer(WhereClause, ImagePath);
                     Storage.NewCacheValue(returnValue);
                     forceImageDownload = true;
-                    break;  
+                    break;
                 case Storage.CacheStatus.Expired:
                     try
                     {
@@ -135,6 +135,6 @@ namespace gaseous_server.Classes.Metadata
 
             return result;
         }
-	}
+    }
 }
 
