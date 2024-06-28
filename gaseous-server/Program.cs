@@ -45,6 +45,10 @@ AgeRatings.PopulateAgeMap();
 
 // load app settings
 Config.InitSettings();
+
+// disable hasheous
+Config.MetadataConfiguration.SignatureSource = HasheousClient.Models.MetadataModel.SignatureSources.LocalOnly;
+
 // write updated settings back to the config file
 Config.UpdateConfig();
 
