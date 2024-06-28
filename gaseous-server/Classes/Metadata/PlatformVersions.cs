@@ -5,15 +5,15 @@ using IGDB.Models;
 
 namespace gaseous_server.Classes.Metadata
 {
-	public class PlatformVersions
-	{
+    public class PlatformVersions
+    {
         const string fieldList = "fields checksum,companies,connectivity,cpu,graphics,main_manufacturer,media,memory,name,online,os,output,platform_logo,platform_version_release_dates,resolutions,slug,sound,storage,summary,url;";
 
         public PlatformVersions()
-		{
-		}
+        {
+        }
 
-        public static PlatformVersion? GetPlatformVersion(long Id, Platform ParentPlatform)
+        public static PlatformVersion? GetPlatformVersion(long Id, Platform ParentPlatform, bool GetImages = false)
         {
             if (Id == 0)
             {
@@ -21,18 +21,18 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<PlatformVersion> RetVal = _GetPlatformVersion(SearchUsing.id, Id, ParentPlatform);
+                Task<PlatformVersion> RetVal = _GetPlatformVersion(SearchUsing.id, Id, ParentPlatform, GetImages);
                 return RetVal.Result;
             }
         }
 
-        public static PlatformVersion GetPlatformVersion(string Slug, Platform ParentPlatform)
+        public static PlatformVersion GetPlatformVersion(string Slug, Platform ParentPlatform, bool GetImages)
         {
-            Task<PlatformVersion> RetVal = _GetPlatformVersion(SearchUsing.slug, Slug, ParentPlatform);
+            Task<PlatformVersion> RetVal = _GetPlatformVersion(SearchUsing.slug, Slug, ParentPlatform, GetImages);
             return RetVal.Result;
         }
 
-        private static async Task<PlatformVersion> _GetPlatformVersion(SearchUsing searchUsing, object searchValue, Platform ParentPlatform)
+        private static async Task<PlatformVersion> _GetPlatformVersion(SearchUsing searchUsing, object searchValue, Platform ParentPlatform, bool GetImages)
         {
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
@@ -67,7 +67,7 @@ namespace gaseous_server.Classes.Metadata
                     if (returnValue != null)
                     {
                         Storage.NewCacheValue(returnValue);
-                        UpdateSubClasses(ParentPlatform, returnValue);
+                        UpdateSubClasses(ParentPlatform, returnValue, GetImages);
                     }
                     return returnValue;
                 case Storage.CacheStatus.Expired:
@@ -75,7 +75,7 @@ namespace gaseous_server.Classes.Metadata
                     {
                         returnValue = await GetObjectFromServer(WhereClause);
                         Storage.NewCacheValue(returnValue, true);
-                        UpdateSubClasses(ParentPlatform, returnValue);
+                        UpdateSubClasses(ParentPlatform, returnValue, GetImages);
                     }
                     catch (Exception ex)
                     {
@@ -90,17 +90,20 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        private static void UpdateSubClasses(Platform ParentPlatform, PlatformVersion platformVersion)
+        private static void UpdateSubClasses(Platform ParentPlatform, PlatformVersion platformVersion, bool GetImages)
         {
-            if (platformVersion.PlatformLogo != null)
+            if (GetImages == true)
             {
-                try
+                if (platformVersion.PlatformLogo != null)
                 {
-                    PlatformLogo platformLogo = PlatformLogos.GetPlatformLogo(platformVersion.PlatformLogo.Id, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(ParentPlatform), "Versions", platformVersion.Slug));
-                }
-                catch (Exception ex)
-                {
-                    Logging.Log(Logging.LogType.Warning, "Platform Update", "Unable to fetch platform logo", ex);
+                    try
+                    {
+                        PlatformLogo platformLogo = PlatformLogos.GetPlatformLogo(platformVersion.PlatformLogo.Id, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(ParentPlatform), "Versions", platformVersion.Slug));
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Log(Logging.LogType.Warning, "Platform Update", "Unable to fetch platform logo", ex);
+                    }
                 }
             }
         }

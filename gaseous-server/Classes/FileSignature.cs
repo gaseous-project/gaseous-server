@@ -264,36 +264,46 @@ namespace gaseous_server.Classes
             if (Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous)
             {
                 HasheousClient.Hasheous hasheous = new HasheousClient.Hasheous();
-                SignatureLookupItem? HasheousResult = hasheous.RetrieveFromHasheousAsync(new HashLookupModel{
-                    MD5 = hash.md5hash,
-                    SHA1 = hash.sha1hash
-                });
+                SignatureLookupItem? HasheousResult = null;
 
-                if (HasheousResult != null)
+                try
                 {
-                    if (HasheousResult.Signature != null)
+                    HasheousResult = hasheous.RetrieveFromHasheousAsync(new HashLookupModel
                     {
-                        gaseous_server.Models.Signatures_Games signature = new Models.Signatures_Games();
-                        signature.Game = HasheousResult.Signature.Game;
-                        signature.Rom = HasheousResult.Signature.Rom;
-                        
-                        if (HasheousResult.MetadataResults != null)
+                        MD5 = hash.md5hash,
+                        SHA1 = hash.sha1hash
+                    });
+
+                    if (HasheousResult != null)
+                    {
+                        if (HasheousResult.Signature != null)
                         {
-                            if (HasheousResult.MetadataResults.Count > 0)
+                            gaseous_server.Models.Signatures_Games signature = new Models.Signatures_Games();
+                            signature.Game = HasheousResult.Signature.Game;
+                            signature.Rom = HasheousResult.Signature.Rom;
+
+                            if (HasheousResult.MetadataResults != null)
                             {
-                                foreach (SignatureLookupItem.MetadataResult metadataResult in HasheousResult.MetadataResults)
+                                if (HasheousResult.MetadataResults.Count > 0)
                                 {
-                                    if (metadataResult.Source == MetadataModel.MetadataSources.IGDB)
+                                    foreach (SignatureLookupItem.MetadataResult metadataResult in HasheousResult.MetadataResults)
                                     {
-                                        signature.Flags.IGDBPlatformId = (long)metadataResult.PlatformId;
-                                        signature.Flags.IGDBGameId = (long)metadataResult.GameId;
+                                        if (metadataResult.Source == MetadataModel.MetadataSources.IGDB)
+                                        {
+                                            signature.Flags.IGDBPlatformId = (long)metadataResult.PlatformId;
+                                            signature.Flags.IGDBGameId = (long)metadataResult.GameId;
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        return signature;
+                            return signature;
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous", ex);
                 }
             }
 

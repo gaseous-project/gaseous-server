@@ -7,16 +7,16 @@ using IGDB.Models;
 namespace gaseous_server.Classes.Metadata
 {
     public class Platforms
-	{
+    {
         const string fieldList = "fields abbreviation,alternative_name,category,checksum,created_at,generation,name,platform_family,platform_logo,slug,summary,updated_at,url,versions,websites;";
 
         public Platforms()
-		{
+        {
 
-		}
+        }
 
-        public static Platform? GetPlatform(long Id, bool forceRefresh = false)
-		{
+        public static Platform? GetPlatform(long Id, bool forceRefresh = false, bool GetImages = false)
+        {
             if (Id == 0)
             {
                 Platform returnValue = new Platform();
@@ -41,10 +41,10 @@ namespace gaseous_server.Classes.Metadata
             {
                 try
                 {
-                    Task<Platform> RetVal = _GetPlatform(SearchUsing.id, Id, forceRefresh);
+                    Task<Platform> RetVal = _GetPlatform(SearchUsing.id, Id, forceRefresh, GetImages);
                     return RetVal.Result;
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     Logging.Log(Logging.LogType.Warning, "Metadata", "An error occurred fetching Platform Id " + Id, ex);
                     return null;
@@ -52,14 +52,14 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-		public static Platform GetPlatform(string Slug, bool forceRefresh = false)
-		{
-			Task<Platform> RetVal = _GetPlatform(SearchUsing.slug, Slug, forceRefresh);
-			return RetVal.Result;
-		}
+        public static Platform GetPlatform(string Slug, bool forceRefresh = false, bool GetImages = false)
+        {
+            Task<Platform> RetVal = _GetPlatform(SearchUsing.slug, Slug, forceRefresh, GetImages);
+            return RetVal.Result;
+        }
 
-		private static async Task<Platform> _GetPlatform(SearchUsing searchUsing, object searchValue, bool forceRefresh)
-		{
+        private static async Task<Platform> _GetPlatform(SearchUsing searchUsing, object searchValue, bool forceRefresh, bool GetImages)
+        {
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
             if (searchUsing == SearchUsing.id)
@@ -96,7 +96,7 @@ namespace gaseous_server.Classes.Metadata
                 case Storage.CacheStatus.NotPresent:
                     returnValue = await GetObjectFromServer(WhereClause);
                     Storage.NewCacheValue(returnValue);
-                    UpdateSubClasses(returnValue);
+                    UpdateSubClasses(returnValue, GetImages);
                     AddPlatformMapping(returnValue);
                     return returnValue;
                 case Storage.CacheStatus.Expired:
@@ -104,7 +104,7 @@ namespace gaseous_server.Classes.Metadata
                     {
                         returnValue = await GetObjectFromServer(WhereClause);
                         Storage.NewCacheValue(returnValue, true);
-                        UpdateSubClasses(returnValue);
+                        UpdateSubClasses(returnValue, GetImages);
                         AddPlatformMapping(returnValue);
                         return returnValue;
                     }
@@ -120,7 +120,7 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        private static void UpdateSubClasses(Platform platform)
+        private static void UpdateSubClasses(Platform platform, bool GetImages)
         {
             if (platform.Versions != null)
             {
@@ -130,15 +130,18 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
 
-            if (platform.PlatformLogo != null)
+            if (GetImages == true)
             {
-                try
+                if (platform.PlatformLogo != null)
                 {
-                    PlatformLogo platformLogo = PlatformLogos.GetPlatformLogo(platform.PlatformLogo.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platform));
-                }
-                catch (Exception ex)
-                {
-                    Logging.Log(Logging.LogType.Warning, "Platform Update", "Unable to fetch platform logo", ex);
+                    try
+                    {
+                        PlatformLogo platformLogo = PlatformLogos.GetPlatformLogo(platform.PlatformLogo.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platform));
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Log(Logging.LogType.Warning, "Platform Update", "Unable to fetch platform logo", ex);
+                    }
                 }
             }
         }
@@ -158,11 +161,12 @@ namespace gaseous_server.Classes.Metadata
             {
                 Logging.Log(Logging.LogType.Information, "Platform Map", "Importing " + platform.Name + " from predefined data.");
                 // doesn't exist - add it
-                item = new Models.PlatformMapping.PlatformMapItem{
+                item = new Models.PlatformMapping.PlatformMapItem
+                {
                     IGDBId = (long)platform.Id,
                     IGDBName = platform.Name,
                     IGDBSlug = platform.Slug,
-                    AlternateNames = new List<string>{ platform.AlternativeName }
+                    AlternateNames = new List<string> { platform.AlternativeName }
                 };
                 Models.PlatformMapping.WritePlatformMap(item, false, true);
             }
