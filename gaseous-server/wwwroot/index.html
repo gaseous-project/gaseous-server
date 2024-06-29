@@ -156,7 +156,7 @@
         var modalVariables = null;
 
         // redirect if first run status = 0
-        if (FirstRunStatus == 0) {
+        if (FirstRunStatus == 0 || FirstRunStatus == "0") {
             window.location.replace("/pages/first.html");
         }
 
