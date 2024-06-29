@@ -16,48 +16,49 @@ using HasheousClient.Models;
 
 namespace gaseous_server.Classes
 {
-	public class ImportGame : QueueItemStatus
-	{
+    public class ImportGame : QueueItemStatus
+    {
         public void ProcessDirectory(string ImportPath)
         {
             if (Directory.Exists(ImportPath))
-			{
-				string[] importContents = Directory.GetFiles(ImportPath, "*.*", SearchOption.AllDirectories);
+            {
+                string[] importContents = Directory.GetFiles(ImportPath, "*.*", SearchOption.AllDirectories);
 
                 Logging.Log(Logging.LogType.Information, "Import Games", "Found " + importContents.Length + " files to process in import directory: " + ImportPath);
 
-				// import files first
+                // import files first
                 int importCount = 1;
-				foreach (string importContent in importContents) {
+                foreach (string importContent in importContents)
+                {
                     SetStatus(importCount, importContents.Length, "Importing file: " + importContent);
 
-					ImportGameFile(importContent, null);
+                    ImportGameFile(importContent, null);
 
                     importCount += 1;
-				}
+                }
                 ClearStatus();
 
                 DeleteOrphanedDirectories(ImportPath);
             }
-			else
-			{
-				Logging.Log(Logging.LogType.Critical, "Import Games", "The import directory " + ImportPath + " does not exist.");
-				throw new DirectoryNotFoundException("Invalid path: " + ImportPath);
-			}
+            else
+            {
+                Logging.Log(Logging.LogType.Critical, "Import Games", "The import directory " + ImportPath + " does not exist.");
+                throw new DirectoryNotFoundException("Invalid path: " + ImportPath);
+            }
         }
 
         public void ImportGameFile(string GameFileImportPath, IGDB.Models.Platform? OverridePlatform)
-		{
+        {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "";
-			Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            string sql = "";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
 
             if (Common.SkippableFiles.Contains<string>(Path.GetFileName(GameFileImportPath), StringComparer.OrdinalIgnoreCase))
-			{ 
+            {
                 Logging.Log(Logging.LogType.Debug, "Import Game", "Skipping item " + GameFileImportPath);
             }
-			else
-			{
+            else
+            {
                 FileInfo fi = new FileInfo(GameFileImportPath);
                 Common.hashObject hash = new Common.hashObject(GameFileImportPath);
 
@@ -87,7 +88,7 @@ namespace gaseous_server.Classes
                             }
                             File.Move(GameFileImportPath, targetPathWithFileName, true);
                         }
-                        
+
                         // import source was the upload directory
                         if (GameFileImportPath.StartsWith(Config.LibraryConfiguration.LibraryUploadDirectory))
                         {
@@ -146,8 +147,8 @@ namespace gaseous_server.Classes
                         }
                     }
                 }
-			}
-		}
+            }
+        }
 
         public static IGDB.Models.Game SearchForGame(gaseous_server.Models.Signatures_Games Signature, long PlatformId, bool FullDownload)
         {
@@ -173,7 +174,7 @@ namespace gaseous_server.Classes
             string GameName = Signature.Game.Name;
 
             List<string> SearchCandidates = GetSearchCandidates(GameName);
-            
+
             foreach (string SearchCandidate in SearchCandidates)
             {
                 bool GameFound = false;
@@ -197,8 +198,10 @@ namespace gaseous_server.Classes
                         Logging.Log(Logging.LogType.Information, "Import Game", "  " + games.Length + " search results found");
 
                         // quite likely we've found sequels and alternate types
-                        foreach (Game game in games) {
-                            if (game.Name == SearchCandidate) {
+                        foreach (Game game in games)
+                        {
+                            if (game.Name == SearchCandidate)
+                            {
                                 // found game title matches the search candidate
                                 determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false, false);
                                 Logging.Log(Logging.LogType.Information, "Import Game", "Found exact match!");
@@ -273,7 +276,8 @@ namespace gaseous_server.Classes
 
             // assumption: no games have () in their titles so we'll remove them
             int idx = GameName.IndexOf('(');
-            if (idx >= 0) {
+            if (idx >= 0)
+            {
                 GameName = GameName.Substring(0, idx);
             }
 
@@ -304,10 +308,11 @@ namespace gaseous_server.Classes
 
             if (UpdateId == 0)
             {
-                sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, Path, MetadataSource, MetadataGameName, MetadataVersion, LibraryId) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @Attributes, @romtype, @romtypemedia, @medialabel, @path, @metadatasource, @metadatagamename, @metadataversion, @libraryid); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
-            } else
+                sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, Path, MetadataSource, MetadataGameName, MetadataVersion, LibraryId, RomDataVersion) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @Attributes, @romtype, @romtypemedia, @medialabel, @path, @metadatasource, @metadatagamename, @metadataversion, @libraryid, @romdataversion); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+            }
+            else
             {
-                sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid, Name=@name, Size=@size, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion WHERE Id=@id;";
+                sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid, Name=@name, Size=@size, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion, RomDataVersion=@romdataversion WHERE Id=@id;";
                 dbDict.Add("id", UpdateId);
             }
             dbDict.Add("platformid", Common.ReturnValueIfNull(determinedPlatform.Id, 0));
@@ -322,6 +327,7 @@ namespace gaseous_server.Classes
             dbDict.Add("metadatagamename", discoveredSignature.Game.Name);
             dbDict.Add("metadataversion", 2);
             dbDict.Add("libraryid", library.Id);
+            dbDict.Add("romdataversion", 2);
 
             if (discoveredSignature.Rom.Attributes != null)
             {
@@ -348,7 +354,8 @@ namespace gaseous_server.Classes
             if (UpdateId == 0)
             {
                 romId = (long)romInsert.Rows[0][0];
-            } else
+            }
+            else
             {
                 romId = UpdateId;
             }
@@ -362,73 +369,73 @@ namespace gaseous_server.Classes
             return romId;
         }
 
-		public static string ComputeROMPath(long RomId)
-		{
-			Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
-
-			// get metadata
-			IGDB.Models.Platform platform = gaseous_server.Classes.Metadata.Platforms.GetPlatform(rom.PlatformId);
-			IGDB.Models.Game game = gaseous_server.Classes.Metadata.Games.GetGame(rom.GameId, false, false, false);
-
-			// build path
-			string platformSlug = "Unknown Platform";
-			if (platform != null)
-			{
-				platformSlug = platform.Slug;
-			}
-			string gameSlug = "Unknown Title";
-			if (game != null)
-			{
-				gameSlug = game.Slug;
-			}
-			string DestinationPath = Path.Combine(GameLibrary.GetDefaultLibrary.Path, gameSlug, platformSlug);
-			if (!Directory.Exists(DestinationPath))
-			{
-				Directory.CreateDirectory(DestinationPath);
-			}
-
-			string DestinationPathName = Path.Combine(DestinationPath, rom.Name);
-
-			return DestinationPathName;
-		}
-
-		public static bool MoveGameFile(long RomId)
-		{
+        public static string ComputeROMPath(long RomId)
+        {
             Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
-			string romPath = rom.Path;
+
+            // get metadata
+            IGDB.Models.Platform platform = gaseous_server.Classes.Metadata.Platforms.GetPlatform(rom.PlatformId);
+            IGDB.Models.Game game = gaseous_server.Classes.Metadata.Games.GetGame(rom.GameId, false, false, false);
+
+            // build path
+            string platformSlug = "Unknown Platform";
+            if (platform != null)
+            {
+                platformSlug = platform.Slug;
+            }
+            string gameSlug = "Unknown Title";
+            if (game != null)
+            {
+                gameSlug = game.Slug;
+            }
+            string DestinationPath = Path.Combine(GameLibrary.GetDefaultLibrary.Path, gameSlug, platformSlug);
+            if (!Directory.Exists(DestinationPath))
+            {
+                Directory.CreateDirectory(DestinationPath);
+            }
+
+            string DestinationPathName = Path.Combine(DestinationPath, rom.Name);
+
+            return DestinationPathName;
+        }
+
+        public static bool MoveGameFile(long RomId)
+        {
+            Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
+            string romPath = rom.Path;
 
             if (File.Exists(romPath))
             {
                 string DestinationPath = ComputeROMPath(RomId);
 
-				if (romPath == DestinationPath)
-				{
-					Logging.Log(Logging.LogType.Debug, "Move Game ROM", "Destination path is the same as the current path - aborting");
+                if (romPath == DestinationPath)
+                {
+                    Logging.Log(Logging.LogType.Debug, "Move Game ROM", "Destination path is the same as the current path - aborting");
                     return true;
-				}
-				else
-				{
-					Logging.Log(Logging.LogType.Information, "Move Game ROM", "Moving " + romPath + " to " + DestinationPath);
-					if (File.Exists(DestinationPath))
-					{
-						Logging.Log(Logging.LogType.Information, "Move Game ROM", "A file with the same name exists at the destination - aborting");
+                }
+                else
+                {
+                    Logging.Log(Logging.LogType.Information, "Move Game ROM", "Moving " + romPath + " to " + DestinationPath);
+                    if (File.Exists(DestinationPath))
+                    {
+                        Logging.Log(Logging.LogType.Information, "Move Game ROM", "A file with the same name exists at the destination - aborting");
                         return false;
-					}
-					else
-					{
-						File.Move(romPath, DestinationPath);
+                    }
+                    else
+                    {
+                        File.Move(romPath, DestinationPath);
 
-						// update the db
-						Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-						string sql = "UPDATE Games_Roms SET Path=@path WHERE Id=@id";
-						Dictionary<string, object> dbDict = new Dictionary<string, object>();
-						dbDict.Add("id", RomId);
-						dbDict.Add("path", DestinationPath);
-						db.ExecuteCMD(sql, dbDict);
+                        // update the db
+                        Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                        string sql = "UPDATE Games_Roms SET Path=@path WHERE Id=@id";
+                        Dictionary<string, object> dbDict = new Dictionary<string, object>();
+                        dbDict.Add("id", RomId);
+                        dbDict.Add("path", DestinationPath);
+                        db.ExecuteCMD(sql, dbDict);
 
                         return true;
-					}
-				}
+                    }
+                }
             }
             else
             {
@@ -437,8 +444,8 @@ namespace gaseous_server.Classes
             }
         }
 
-		public void OrganiseLibrary()
-		{
+        public void OrganiseLibrary()
+        {
             Logging.Log(Logging.LogType.Information, "Organise Library", "Starting default library organisation");
 
             GameLibrary.LibraryItem library = GameLibrary.GetDefaultLibrary;
@@ -451,19 +458,19 @@ namespace gaseous_server.Classes
             DataTable romDT = db.ExecuteCMD(sql, dbDict);
 
             if (romDT.Rows.Count > 0)
-			{
-				for (int i = 0; i < romDT.Rows.Count; i++)
-				{
+            {
+                for (int i = 0; i < romDT.Rows.Count; i++)
+                {
                     SetStatus(i, romDT.Rows.Count, "Processing file " + romDT.Rows[i]["name"]);
-					Logging.Log(Logging.LogType.Information, "Organise Library", "(" + i + "/" + romDT.Rows.Count + ") Processing ROM " + romDT.Rows[i]["name"]);
+                    Logging.Log(Logging.LogType.Information, "Organise Library", "(" + i + "/" + romDT.Rows.Count + ") Processing ROM " + romDT.Rows[i]["name"]);
                     long RomId = (long)romDT.Rows[i]["id"];
-					MoveGameFile(RomId);
-				}
-			}
+                    MoveGameFile(RomId);
+                }
+            }
             ClearStatus();
 
-			// clean up empty directories
-			DeleteOrphanedDirectories(GameLibrary.GetDefaultLibrary.Path);
+            // clean up empty directories
+            DeleteOrphanedDirectories(GameLibrary.GetDefaultLibrary.Path);
 
             Logging.Log(Logging.LogType.Information, "Organise Library", "Finsihed default library organisation");
         }
@@ -476,7 +483,7 @@ namespace gaseous_server.Classes
 
                 string[] files = Directory.GetFiles(directory);
                 string[] directories = Directory.GetDirectories(directory);
-                
+
                 if (files.Length == 0 &&
                     directories.Length == 0)
                 {
@@ -563,7 +570,7 @@ namespace gaseous_server.Classes
 
         public void LibrarySpecificScan(GameLibrary.LibraryItem library)
         {
-            
+
             Logging.Log(Logging.LogType.Information, "Library Scan", "Starting scan of library: " + library.Name);
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -632,7 +639,7 @@ namespace gaseous_server.Classes
                     {
                         // file is not in database - process it
                         Logging.Log(Logging.LogType.Information, "Library Scan", "Orphaned file found in library: " + LibraryFile);
-                        
+
                         Common.hashObject hash = new Common.hashObject(LibraryFile);
                         FileInfo fi = new FileInfo(LibraryFile);
 
@@ -644,8 +651,8 @@ namespace gaseous_server.Classes
                             // get discovered platform
                             long PlatformId;
                             IGDB.Models.Platform determinedPlatform;
-                            
-                            if (sig.Flags.IGDBPlatformId == null || sig.Flags.IGDBPlatformId == 0 )
+
+                            if (sig.Flags.IGDBPlatformId == null || sig.Flags.IGDBPlatformId == 0)
                             {
                                 // no platform discovered in the signature
                                 PlatformId = library.DefaultPlatformId;
@@ -770,8 +777,8 @@ namespace gaseous_server.Classes
                     // get discovered platform
                     long PlatformId;
                     IGDB.Models.Platform determinedPlatform;
-                    
-                    if (sig.Flags.IGDBPlatformId == null || sig.Flags.IGDBPlatformId == 0 )
+
+                    if (sig.Flags.IGDBPlatformId == null || sig.Flags.IGDBPlatformId == 0)
                     {
                         // no platform discovered in the signature
                         PlatformId = library.DefaultPlatformId;

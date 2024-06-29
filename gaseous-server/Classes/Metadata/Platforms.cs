@@ -78,13 +78,16 @@ namespace gaseous_server.Classes.Metadata
 
             // set up where clause
             string WhereClause = "";
+            string searchField = "";
             switch (searchUsing)
             {
                 case SearchUsing.id:
                     WhereClause = "where id = " + searchValue;
+                    searchField = "id";
                     break;
                 case SearchUsing.slug:
-                    WhereClause = "where slug = " + searchValue;
+                    WhereClause = "where slug = \"" + searchValue + "\"";
+                    searchField = "slug";
                     break;
                 default:
                     throw new Exception("Invalid search type");
@@ -111,10 +114,10 @@ namespace gaseous_server.Classes.Metadata
                     catch (Exception ex)
                     {
                         Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
-                        return Storage.GetCacheValue<Platform>(returnValue, "id", (long)searchValue);
+                        return Storage.GetCacheValue<Platform>(returnValue, searchField, searchValue);
                     }
                 case Storage.CacheStatus.Current:
-                    return Storage.GetCacheValue<Platform>(returnValue, "id", (long)searchValue);
+                    return Storage.GetCacheValue<Platform>(returnValue, searchField, searchValue);
                 default:
                     throw new Exception("How did you get here?");
             }

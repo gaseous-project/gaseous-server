@@ -22,7 +22,7 @@
 <p><strong>Database</strong></p>
 <div id="system_database"></div>
 
-<h3>Signatures</h3>
+<h3>Local Database Signatures</h3>
 <div id="system_signatures"></div>
 
 <script type="text/javascript">
@@ -37,10 +37,10 @@
                 for (var i = 0; i < result.length; i++) {
                     if (result[i].itemState != "Disabled") {
                         var itemTypeName = GetTaskFriendlyName(result[i].itemType, result[i].options);
-                        
+
                         var itemStateName;
                         var itemLastStart;
-                        
+
                         var hasError = "";
                         if (result[i].hasErrors) {
                             if (result[i].hasErrors.errorType != null) {
@@ -82,7 +82,7 @@
                         var nextRunTime = moment(result[i].nextRunTime).format("YYYY-MM-DD h:mm:ss a");
                         var startButton = '';
                         if (userProfile.roles.includes("Admin")) {
-                            if (result[i].allowManualStart == true && ![ "Running"].includes(result[i].itemState) && result[i].isBlocked == false) {
+                            if (result[i].allowManualStart == true && !["Running"].includes(result[i].itemState) && result[i].isBlocked == false) {
                                 startButton = "<span id='startProcess' class='romstart' onclick='StartProcess(\"" + result[i].itemType + "\");'>Start</span>";
                             }
                         }
