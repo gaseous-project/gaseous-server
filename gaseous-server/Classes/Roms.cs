@@ -18,6 +18,12 @@ namespace gaseous_server.Classes
 			{ }
 		}
 
+		public class InvalidRomHash : Exception
+		{
+			public InvalidRomHash(String Hash) : base("Unable to find ROM by hash " + Hash)
+			{ }
+		}
+
 		public static GameRomObject GetRoms(long GameId, long PlatformId = -1, string NameSearch = "", int pageNumber = 0, int pageSize = 0, string userid = "")
 		{
 			GameRomObject GameRoms = new GameRomObject();
@@ -103,6 +109,26 @@ namespace gaseous_server.Classes
 			else
 			{
 				throw new InvalidRomId(RomId);
+			}
+		}
+
+		public static GameRomItem GetRom(string MD5)
+		{
+			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+			string sql = "SELECT Games_Roms.*, Platform.`Name` AS platformname, Game.`Name` AS gamename FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id LEFT JOIN Game ON Games_Roms.GameId = Game.Id WHERE Games_Roms.MD5 = @id";
+			Dictionary<string, object> dbDict = new Dictionary<string, object>();
+			dbDict.Add("id", MD5);
+			DataTable romDT = db.ExecuteCMD(sql, dbDict);
+
+			if (romDT.Rows.Count > 0)
+			{
+				DataRow romDR = romDT.Rows[0];
+				GameRomItem romItem = BuildRom(romDR);
+				return romItem;
+			}
+			else
+			{
+				throw new InvalidRomHash(MD5);
 			}
 		}
 
