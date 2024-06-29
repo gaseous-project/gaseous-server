@@ -33,6 +33,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to GitHub Package Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build and push standard image
         uses: docker/build-push-action@v6
         with:
@@ -43,6 +49,8 @@ jobs:
           tags: |
             gaseousgames/gaseousserver:latest
             gaseousgames/gaseousserver:${{ github.ref_name}}
+            ghcr.io/gaseous-project/gaseousserver:latest
+            ghcr.io/gaseous-project/gaseousserver:${{ github.ref_name}}
       - name: Build and push image with embedded mariadb
         uses: docker/build-push-action@v6
         with:
@@ -52,3 +60,4 @@ jobs:
           push: true
           tags: |
             gaseousgames/gaseousserver:${{ github.ref_name}}-embeddeddb
+            ghcr.io/gaseous-project/gaseousserver:${{ github.ref_name}}-embeddeddb
