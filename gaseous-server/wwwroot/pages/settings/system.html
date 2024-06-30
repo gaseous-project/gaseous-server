@@ -228,27 +228,46 @@
         TargetObject.innerHTML = '';
         TargetObjectLegend.innerHTML = '';
 
-        var newTable = document.createElement('table');
+        let newTable = document.createElement('div');
         newTable.setAttribute('cellspacing', 0);
         newTable.setAttribute('style', 'width: 100%; height: 10px;');
 
-        var newRow = document.createElement('tr');
+        let newRow = document.createElement('div');
+        newRow.setAttribute('style', 'display: flex; width: 100%;');
 
-        for (var i = 0; i < LibraryStatistics.length; i++) {
-            var platformSizePercent = LibraryStatistics[i].totalSize / LibrarySize * 100;
-            var platformSizeColour = intToRGB(hashCode(LibraryStatistics[i].platform));
-            var newCell = document.createElement('td');
-            newCell.setAttribute('style', 'min-width: 2px; width: ' + platformSizePercent + '%; background-color: #' + platformSizeColour);
+        for (let i = 0; i < LibraryStatistics.length; i++) {
+            let platformSizePercent = LibraryStatistics[i].totalSize / LibrarySize * 100;
+            let platformSizeColour = intToRGB(hashCode(LibraryStatistics[i].platform));
+            let newCell = document.createElement('div');
+            let segmentId = 'platform_' + LibraryStatistics[i].platform;
+            newCell.id = segmentId;
+            newCell.setAttribute('style', 'display: inline; height: 10px; width: ' + platformSizePercent + '%; background-color: #' + platformSizeColour);
+            // newCell.innerHTML = '&nbsp;';
             newRow.appendChild(newCell);
 
-            var legend = document.createElement('div');
+            let legend = document.createElement('div');
+            legend.id = 'legend_' + LibraryStatistics[i].platform;
             legend.className = 'legend_box';
+            legend.addEventListener('mouseenter', function () {
+                let segment = document.getElementById(segmentId);
+                segment.style.outline = '2px solid #' + platformSizeColour;
+                segment.style.outlineOffset = '0px';
+                segment.style.zIndex = '1';
+                segment.style.boxShadow = '0px 0px 10px 0px #' + platformSizeColour;
+            });
+            legend.addEventListener('mouseleave', function () {
+                let segment = document.getElementById(segmentId);
+                segment.style.outline = 'none';
+                segment.style.outlineOffset = '0px';
+                segment.style.zIndex = '0';
+                segment.style.boxShadow = 'none';
+            });
 
-            var legendColour = document.createElement('div');
+            let legendColour = document.createElement('div');
             legendColour.className = 'legend_colour';
             legendColour.setAttribute('style', 'background-color: #' + platformSizeColour + ';');
 
-            var legendLabel = document.createElement('div');
+            let legendLabel = document.createElement('div');
             legendLabel.className = 'legend_label';
             legendLabel.innerHTML = '<strong>' + LibraryStatistics[i].platform + '</strong><br />' + formatBytes(LibraryStatistics[i].totalSize) + '<br />ROMs: ' + LibraryStatistics[i].romCount;
 
