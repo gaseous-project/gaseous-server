@@ -960,6 +960,12 @@ input[name='filter_panel_range_max'] {
     border: 1px solid var(--section-header-background); */
 }
 
+.game_tile_small_search {
+    min-height: 50px;
+    min-width: 50px;
+    width: 80px;
+}
+
 .game_tile_row {
     padding: 5px;
     display: block;

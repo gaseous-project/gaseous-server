@@ -36,6 +36,9 @@ db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.Conn
 
 // set up db
 db.InitDB();
+// create relation tables if they don't exist
+Storage.CreateRelationsTables<IGDB.Models.Game>();
+Storage.CreateRelationsTables<IGDB.Models.Platform>();
 
 // populate db with static data for lookups
 AgeRatings.PopulateAgeMap();

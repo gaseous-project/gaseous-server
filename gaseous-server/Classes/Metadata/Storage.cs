@@ -428,6 +428,30 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
+        public static void CreateRelationsTables<T>()
+        {
+            string PrimaryTable = typeof(T).Name;
+            foreach (PropertyInfo property in typeof(T).GetProperties())
+            {
+                string SecondaryTable = property.Name;
+
+                if (property.PropertyType.Name == "IdentitiesOrValues`1")
+                {
+
+                    string TableName = "Relation_" + PrimaryTable + "_" + SecondaryTable;
+                    Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                    string sql = "SELECT * FROM information_schema.tables WHERE table_schema = '" + Config.DatabaseConfiguration.DatabaseName + "' AND table_name = '" + TableName + "';";
+                    DataTable data = db.ExecuteCMD(sql);
+                    if (data.Rows.Count == 0)
+                    {
+                        // table doesn't exist, create it
+                        sql = "CREATE TABLE `" + Config.DatabaseConfiguration.DatabaseName + "`.`" + TableName + "` (`" + PrimaryTable + "Id` BIGINT NOT NULL, `" + SecondaryTable + "Id` BIGINT NOT NULL, PRIMARY KEY (`" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`), INDEX `idx_PrimaryColumn` (`" + PrimaryTable + "Id` ASC) VISIBLE);";
+                        db.ExecuteCMD(sql);
+                    }
+                }
+            }
+        }
+
         private class MemoryCacheObject
         {
             public object Object { get; set; }

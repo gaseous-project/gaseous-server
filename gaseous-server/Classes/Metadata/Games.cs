@@ -127,17 +127,17 @@ namespace gaseous_server.Classes.Metadata
         private static void UpdateSubClasses(Game Game, bool getAllMetadata, bool followSubGames, bool forceRefresh)
         {
             // required metadata
-            if (Game.Cover != null)
-            {
-                try
-                {
-                    Cover GameCover = Covers.GetCover(Game.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), forceRefresh);
-                }
-                catch (Exception ex)
-                {
-                    Logging.Log(Logging.LogType.Critical, "Game Metadata", "Unable to fetch cover artwork.", ex);
-                }
-            }
+            // if (Game.Cover != null)
+            // {
+            //     try
+            //     {
+            //         Cover GameCover = Covers.GetCover(Game.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), forceRefresh);
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         Logging.Log(Logging.LogType.Critical, "Game Metadata", "Unable to fetch cover artwork.", ex);
+            //     }
+            // }
 
             if (Game.Genres != null)
             {
