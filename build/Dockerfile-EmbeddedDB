@@ -24,6 +24,7 @@ RUN dotnet publish "gaseous-server/gaseous-server.csproj" --use-current-runtime 
 # RUN wget https://cdn.emulatorjs.org/releases/4.0.12.7z
 # RUN 7z x -y -oout/wwwroot/emulators/EmulatorJS 4.0.12.7z
 RUN wget --recursive --no-parent https://cdn.emulatorjs.org/latest/
+RUN mkdir -p out/wwwroot/emulators/EmulatorJS
 RUN cp -fr cdn.emulatorjs.org/latest/* out/wwwroot/emulators/EmulatorJS
 RUN rm -Rf cdn.emulatorjs.org
 
