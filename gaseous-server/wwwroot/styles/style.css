@@ -1582,6 +1582,22 @@ th {
     cursor: pointer;
 }
 
+.taskstart {
+    height: 24px;
+    width: 24px;
+    margin-top: 4px;
+    cursor: pointer;
+    filter: invert(11%) sepia(100%) saturate(6854%) hue-rotate(130deg) brightness(130%) contrast(122%) drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));
+}
+
+.taskstart:hover {
+    filter: invert(11%) sepia(100%) saturate(6854%) hue-rotate(160deg) brightness(150%) contrast(122%) drop-shadow(3px 5px 2px rgb(0 0 0 / 0.4));
+}
+
+.taskrow {
+    height: 50px;
+}
+
 .properties_button {
     width: 15px;
     height: 15px;
