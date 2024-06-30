@@ -13,8 +13,8 @@ using Newtonsoft.Json;
 
 namespace gaseous_server.Models
 {
-	public class PlatformMapping
-	{
+    public class PlatformMapping
+    {
         private static Dictionary<string, PlatformMapItem> PlatformMapCache = new Dictionary<string, PlatformMapItem>();
 
         /// <summary>
@@ -27,7 +27,8 @@ namespace gaseous_server.Models
             {
                 string rawJson = reader.ReadToEnd();
                 List<PlatformMapItem> platforms = new List<PlatformMapItem>();
-                Newtonsoft.Json.JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings{
+                Newtonsoft.Json.JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings
+                {
                     MaxDepth = 64
                 };
                 platforms = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PlatformMapItem>>(rawJson, jsonSerializerSettings);
@@ -74,7 +75,7 @@ namespace gaseous_server.Models
             foreach (PlatformMapItem mapItem in platforms)
             {
                 // get the IGDB platform data
-                Platform platform = Platforms.GetPlatform(mapItem.IGDBId);
+                Platform platform = Platforms.GetPlatform(mapItem.IGDBId, false);
 
                 try
                 {
@@ -92,7 +93,7 @@ namespace gaseous_server.Models
                 }
             }
         }
-        
+
         public static List<PlatformMapItem> PlatformMap
         {
             get
@@ -254,7 +255,7 @@ namespace gaseous_server.Models
             }
         }
 
-        public static void WriteAvailableEmulators (PlatformMapItem item)
+        public static void WriteAvailableEmulators(PlatformMapItem item)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
@@ -286,7 +287,7 @@ namespace gaseous_server.Models
             string sql = "";
 
             // get platform data
-            IGDB.Models.Platform? platform = Platforms.GetPlatform(IGDBId);
+            IGDB.Models.Platform? platform = Platforms.GetPlatform(IGDBId, false);
 
             if (platform != null)
             {
@@ -369,18 +370,20 @@ namespace gaseous_server.Models
                 mapItem.IGDBName = platform.Name;
                 mapItem.IGDBSlug = platform.Slug;
                 mapItem.AlternateNames = alternateNames;
-                mapItem.Extensions = new PlatformMapItem.FileExtensions{
+                mapItem.Extensions = new PlatformMapItem.FileExtensions
+                {
                     SupportedFileExtensions = knownExtensions,
                     UniqueFileExtensions = uniqueExtensions
                 };
                 mapItem.RetroPieDirectoryName = (string)Common.ReturnValueIfNull(row["RetroPieDirectoryName"], "");
-                mapItem.WebEmulator = new PlatformMapItem.WebEmulatorItem{
+                mapItem.WebEmulator = new PlatformMapItem.WebEmulatorItem
+                {
                     Type = (string)Common.ReturnValueIfNull(row["WebEmulator_Type"], ""),
                     Core = (string)Common.ReturnValueIfNull(row["WebEmulator_Core"], ""),
                     AvailableWebEmulators = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PlatformMapItem.WebEmulatorItem.AvailableWebEmulatorItem>>((string)Common.ReturnValueIfNull(row["AvailableWebEmulators"], "[]"))
                 };
                 mapItem.Bios = bioss;
-                
+
                 if (PlatformMapCache.ContainsKey(IGDBId.ToString()))
                 {
                     PlatformMapCache[IGDBId.ToString()] = mapItem;
@@ -461,7 +464,7 @@ namespace gaseous_server.Models
             public string IGDBName { get; set; }
             public string IGDBSlug { get; set; }
             public List<string> AlternateNames { get; set; } = new List<string>();
-            
+
             public FileExtensions Extensions { get; set; }
             public class FileExtensions
             {
@@ -503,6 +506,6 @@ namespace gaseous_server.Models
                 public string filename { get; set; }
             }
         }
-	}
+    }
 }
 

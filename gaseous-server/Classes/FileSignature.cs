@@ -1,5 +1,6 @@
 using System.Collections.Concurrent;
 using System.IO.Compression;
+using System.Net;
 using gaseous_server.Classes.Metadata;
 using HasheousClient.Models;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -290,65 +291,87 @@ namespace gaseous_server.Classes
                         MD5 = hash.md5hash,
                         SHA1 = hash.sha1hash
                     });
+
+                    if (HasheousResult != null)
+                    {
+                        if (HasheousResult.Signature != null)
+                        {
+                            gaseous_server.Models.Signatures_Games signature = new Models.Signatures_Games();
+                            string gameJson = Newtonsoft.Json.JsonConvert.SerializeObject(HasheousResult.Signature.Game);
+                            string romJson = Newtonsoft.Json.JsonConvert.SerializeObject(HasheousResult.Signature.Rom);
+                            signature.Game = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.Signatures_Games.GameItem>(gameJson);
+                            signature.Rom = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.Signatures_Games.RomItem>(romJson);
+
+                            // get platform metadata
+                            if (HasheousResult.Platform != null)
+                            {
+                                if (HasheousResult.Platform.metadata.Count > 0)
+                                {
+                                    foreach (HasheousClient.Models.MetadataItem metadataResult in HasheousResult.Platform.metadata)
+                                    {
+                                        if (metadataResult.Id.Length > 0)
+                                        {
+                                            switch (metadataResult.Source)
+                                            {
+                                                case HasheousClient.Models.MetadataSources.IGDB:
+                                                    signature.Flags.IGDBPlatformId = (long)Platforms.GetPlatform(metadataResult.Id, false).Id;
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // get game metadata
+                            if (HasheousResult.Metadata != null)
+                            {
+                                if (HasheousResult.Metadata.Count > 0)
+                                {
+                                    foreach (HasheousClient.Models.MetadataItem metadataResult in HasheousResult.Metadata)
+                                    {
+                                        if (metadataResult.Id.Length > 0)
+                                        {
+                                            switch (metadataResult.Source)
+                                            {
+                                                case HasheousClient.Models.MetadataSources.IGDB:
+                                                    signature.Flags.IGDBGameId = (long)Games.GetGame(metadataResult.Id, false, false, false).Id;
+                                                    break;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            return signature;
+                        }
+                    }
+                }
+                catch (AggregateException aggEx)
+                {
+                    foreach (Exception ex in aggEx.InnerExceptions)
+                    {
+                        // get exception type
+                        if (ex is HttpRequestException)
+                        {
+                            if (ex.Message.Contains("404 (Not Found)"))
+                            {
+                                Logging.Log(Logging.LogType.Information, "Get Signature", "No signature found in Hasheous");
+                            }
+                            else
+                            {
+                                Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous", ex);
+                            }
+                        }
+                        else
+                        {
+                            Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous", ex);
+
+                        }
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Logging.Log(Logging.LogType.Warning, "Import Game", "An error occurred while importing " + ImageName, ex);
-                    return null;
-                }
-
-                if (HasheousResult != null)
-                {
-                    if (HasheousResult.Signature != null)
-                    {
-                        gaseous_server.Models.Signatures_Games signature = new Models.Signatures_Games();
-                        string gameJson = Newtonsoft.Json.JsonConvert.SerializeObject(HasheousResult.Signature.Game);
-                        string romJson = Newtonsoft.Json.JsonConvert.SerializeObject(HasheousResult.Signature.Rom);
-                        signature.Game = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.Signatures_Games.GameItem>(gameJson);
-                        signature.Rom = Newtonsoft.Json.JsonConvert.DeserializeObject<Models.Signatures_Games.RomItem>(romJson);
-
-                        // get platform metadata
-                        if (HasheousResult.Platform != null)
-                        {
-                            if (HasheousResult.Platform.metadata.Count > 0)
-                            {
-                                foreach (HasheousClient.Models.MetadataItem metadataResult in HasheousResult.Platform.metadata)
-                                {
-                                    if (metadataResult.Id.Length > 0)
-                                    {
-                                        switch (metadataResult.Source)
-                                        {
-                                            case HasheousClient.Models.MetadataSources.IGDB:
-                                                signature.Flags.IGDBPlatformId = (long)Platforms.GetPlatform(metadataResult.Id, false).Id;
-                                                break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        // get game metadata
-                        if (HasheousResult.Metadata != null)
-                        {
-                            if (HasheousResult.Metadata.Count > 0)
-                            {
-                                foreach (HasheousClient.Models.MetadataItem metadataResult in HasheousResult.Metadata)
-                                {
-                                    if (metadataResult.Id.Length > 0)
-                                    {
-                                        switch (metadataResult.Source)
-                                        {
-                                            case HasheousClient.Models.MetadataSources.IGDB:
-                                                signature.Flags.IGDBGameId = (long)Games.GetGame(metadataResult.Id, false, false, false).Id;
-                                                break;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        return signature;
-                    }
+                    Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous", ex);
                 }
             }
 
