@@ -48,7 +48,7 @@
             var newTable = document.createElement('table');
             newTable.className = 'romtable';
             newTable.setAttribute('cellspacing', 0);
-            newTable.appendChild(createTableRow(true, ['Task', 'Status', '', 'Interval<br/>(minutes)', 'Last Run Duration<br />(hh:mm:ss)', 'Last Run Start', 'Next Run Start', '']));
+            newTable.appendChild(createTableRow(true, ['Task', 'Status', '', '', 'Interval<br/>(minutes)', 'Last Run Duration<br />(hh:mm:ss)', 'Last Run Start', 'Next Run Start', '']));
 
             if (result) {
                 for (var i = 0; i < result.length; i++) {
@@ -61,7 +61,8 @@
                         var hasError = "";
                         if (result[i].hasErrors) {
                             if (result[i].hasErrors.errorType != null) {
-                                hasError = " (" + result[i].hasErrors.errorType + ")";
+                                // hasError = " (" + result[i].hasErrors.errorType + ")";
+                                hasError = "<img src='/images/" + result[i].hasErrors.errorType + ".svg' class='banner_button_image' style='padding-top: 5px;' title='" + result[i].hasErrors.errorType + "'>";
                             }
                         }
 
@@ -72,32 +73,32 @@
                             } else {
                                 switch (result[i].itemState) {
                                     case 'NeverStarted':
-                                        itemStateName = "Never started" + hasError;
+                                        itemStateName = "Never started";
                                         itemLastStart = '-';
                                         break;
                                     case 'Stopped':
-                                        itemStateName = "Stopped" + hasError;
+                                        itemStateName = "Stopped";
                                         itemLastStart = moment(result[i].lastRunTime).format("YYYY-MM-DD h:mm:ss a");
                                         break;
                                     case 'Running':
                                         if (result[i].currentStateProgress) {
                                             if (result[i].currentStateProgress.includes(" of ")) {
                                                 let progressParts = result[i].currentStateProgress.split(" of ");
-                                                itemStateName = "<div>Running" + hasError + " " + result[i].currentStateProgress + "</div><div><progress value=\"" + progressParts[0] + "\" max=\"" + progressParts[1] + "\">" + result[i].currentStateProgress + "</progress></div>";
+                                                itemStateName = "<div>Running " + result[i].currentStateProgress + "</div><div><progress value=\"" + progressParts[0] + "\" max=\"" + progressParts[1] + "\">" + result[i].currentStateProgress + "</progress></div>";
                                             } else {
-                                                itemStateName = "Running " + hasError + " (" + result[i].currentStateProgress + ")";
+                                                itemStateName = "Running (" + result[i].currentStateProgress + ")";
                                             }
                                         }
                                         itemLastStart = moment(result[i].lastRunTime).format("YYYY-MM-DD h:mm:ss a");
                                         break;
                                     default:
-                                        itemStateName = "Unknown status" + hasError;
+                                        itemStateName = "Unknown status";
                                         itemLastStart = moment(result[i].lastRunTime).format("YYYY-MM-DD h:mm:ss a");
                                         break;
                                 }
                             }
                         } else {
-                            itemStateName = "Blocked" + hasError;
+                            itemStateName = "Blocked";
                             itemLastStart = moment(result[i].lastRunTime).format("YYYY-MM-DD h:mm:ss a");
                         }
 
@@ -125,6 +126,7 @@
                         var newRow = [
                             itemTypeName,
                             itemStateName,
+                            hasError,
                             logLink,
                             itemInterval,
                             new Date(result[i].lastRunDuration * 1000).toISOString().slice(11, 19),
@@ -241,19 +243,37 @@
             let newCell = document.createElement('div');
             let segmentId = 'platform_' + LibraryStatistics[i].platform;
             newCell.id = segmentId;
-            newCell.setAttribute('style', 'display: inline; height: 10px; width: ' + platformSizePercent + '%; background-color: #' + platformSizeColour);
+            newCell.setAttribute('style', 'display: inline; height: 10px; min-width: 1px; width: ' + platformSizePercent + '%; background-color: #' + platformSizeColour);
             // newCell.innerHTML = '&nbsp;';
             newRow.appendChild(newCell);
 
             let legend = document.createElement('div');
             legend.id = 'legend_' + LibraryStatistics[i].platform;
             legend.className = 'legend_box';
+
+            let legendColour = document.createElement('div');
+            let colourId = 'colour_' + LibraryStatistics[i].platform;
+            legendColour.id = colourId;
+            legendColour.className = 'legend_colour';
+            legendColour.setAttribute('style', 'background-color: #' + platformSizeColour + ';');
+
+            let legendLabel = document.createElement('div');
+            legendLabel.className = 'legend_label';
+            legendLabel.innerHTML = '<strong>' + LibraryStatistics[i].platform + '</strong><br />' + formatBytes(LibraryStatistics[i].totalSize) + '<br />ROMs: ' + LibraryStatistics[i].romCount;
+
+            // event listeners
             legend.addEventListener('mouseenter', function () {
                 let segment = document.getElementById(segmentId);
                 segment.style.outline = '2px solid #' + platformSizeColour;
                 segment.style.outlineOffset = '0px';
                 segment.style.zIndex = '1';
                 segment.style.boxShadow = '0px 0px 10px 0px #' + platformSizeColour;
+
+                let legendColour = document.getElementById(colourId);
+                legendColour.style.outline = '2px solid #' + platformSizeColour;
+                legendColour.style.outlineOffset = '0px';
+                legendColour.style.zIndex = '1';
+                legendColour.style.boxShadow = '0px 0px 10px 0px #' + platformSizeColour;
             });
             legend.addEventListener('mouseleave', function () {
                 let segment = document.getElementById(segmentId);
@@ -261,15 +281,13 @@
                 segment.style.outlineOffset = '0px';
                 segment.style.zIndex = '0';
                 segment.style.boxShadow = 'none';
+
+                let legendColour = document.getElementById(colourId);
+                legendColour.style.outline = 'none';
+                legendColour.style.outlineOffset = '0px';
+                legendColour.style.zIndex = '0';
+                legendColour.style.boxShadow = 'none';
             });
-
-            let legendColour = document.createElement('div');
-            legendColour.className = 'legend_colour';
-            legendColour.setAttribute('style', 'background-color: #' + platformSizeColour + ';');
-
-            let legendLabel = document.createElement('div');
-            legendLabel.className = 'legend_label';
-            legendLabel.innerHTML = '<strong>' + LibraryStatistics[i].platform + '</strong><br />' + formatBytes(LibraryStatistics[i].totalSize) + '<br />ROMs: ' + LibraryStatistics[i].romCount;
 
             legend.appendChild(legendColour);
             legend.appendChild(legendLabel);
