@@ -1197,16 +1197,43 @@
       "Famicom"
     ],
     "Extensions": {
-      "SupportedFileExtensions": [],
+      "SupportedFileExtensions": [
+        ".7Z",
+        ".FDS",
+        ".NES",
+        ".ZIP"
+      ],
       "UniqueFileExtensions": []
     },
-    "RetroPieDirectoryName": "",
+    "RetroPieDirectoryName": "nes",
     "WebEmulator": {
-      "Type": "",
-      "Core": "",
-      "AvailableWebEmulators": null
+      "Type": "EmulatorJS",
+      "Core": "nes",
+      "AvailableWebEmulators": [
+        {
+          "EmulatorType": "EmulatorJS",
+          "AvailableWebEmulatorCores": [
+            {
+              "Core": "nes",
+              "AlternateCoreName": "fceumm",
+              "Default": true
+            },
+            {
+              "Core": "nestopia",
+              "AlternateCoreName": "",
+              "Default": false
+            }
+          ]
+        }
+      ]
     },
-    "Bios": []
+    "Bios": [
+      {
+        "hash": "7f98d77d7a094ad7d069b74bd553ec98",
+        "description": "Game Genie add-on cartridge - Required for Game Genei Add-on emulation (Only supported on the fceumm core)",
+        "filename": "gamegenie.nes"
+      }
+    ]
   },
   {
     "IGDBId": 51,
