@@ -1005,6 +1005,21 @@ input[name='filter_panel_range_max'] {
     outline-color: black;
 }
 
+.game_tile_box>.favourite-filled,
+.game_tile_box_row>.favourite-filled {
+    visibility: visible;
+}
+
+.game_tile_box>.favourite-empty,
+.game_tile_box_row>.favourite-empty {
+    visibility: hidden;
+}
+
+.game_tile_box:hover>.favourite-empty,
+.game_tile_box_row:hover>.favourite-empty {
+    visibility: visible;
+}
+
 .game_tile_box_row {
     position: absolute;
     display: inline-block;
@@ -1087,8 +1102,23 @@ input[name='filter_panel_range_max'] {
 
 .game_tile_box_favouritegame {
     position: absolute;
-    top: 1px;
-    left: 5px;
+    top: 0px;
+    left: 0px;
+    width: 35px;
+    height: 35px;
+    border-radius: var(--standard-radius) 0px var(--standard-radius) 0px;
+}
+
+.game_tile_box:hover>.game_tile_box_favouritegame {
+    /* border-color: var(--input-border);
+    border-width: 1px;
+    border-style: solid; */
+    background-color: var(--fancybutton-background);
+}
+
+.game_tile_box:hover>.game_tile_box_favouritegame:hover {
+    /* border-color: var(--input-border-hover); */
+    background-color: var(--fancybutton-background-hover);
 }
 
 .game_tile_box_favouritegame_row {
