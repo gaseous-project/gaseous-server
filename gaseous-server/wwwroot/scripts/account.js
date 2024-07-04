@@ -130,23 +130,19 @@ class AccountWindow {
             if (callingObject.password_current.value.length > 0) {
                 // assume user wants to change their password
                 // check if the new password meets the rules
-                console.log("User wants to change password");
                 if (!PasswordCheck.CheckPasswords(callingObject.PasswordCheck, callingObject.password_new, callingObject.password_confirm)) {
                     // display an error
-                    console.log("Password does not meet requirements");
                     let warningDialog = new MessageBox("Password Reset Error", "The new password does not meet the requirements.");
                     warningDialog.open();
                     return;
                 }
 
                 // requirements met, reset the password
-                console.log("Password meets requirements");
                 let model = {
                     oldPassword: callingObject.password_current.value,
                     newPassword: callingObject.password_new.value,
                     confirmPassword: callingObject.password_confirm.value
                 };
-                console.log(JSON.stringify(model));
                 let changeSuccessfull = false;
                 await fetch("/api/v1.1/Account/ChangePassword", {
                     method: 'POST',
@@ -184,7 +180,6 @@ class AccountWindow {
                 quip: callingObject.QuipPreview.value,
                 data: {}
             };
-            console.log(JSON.stringify(model));
 
             // POST the model to the API
             await fetch("/api/v1.1/UserProfile/" + userProfile.profileId, {
@@ -201,9 +196,7 @@ class AccountWindow {
                 } else {
                     // update the avatar
                     if (AvatarPreviewChanged === true) {
-                        console.log("Updating avatar");
                         if (callingObject.profile_avatarUpload.files.length === 0) {
-                            console.log("Delete avatar");
                             await fetch("/api/v1.1/UserProfile/" + userProfile.profileId + "/Avatar", {
                                 method: 'DELETE'
                             }).then(async response => {
@@ -231,9 +224,7 @@ class AccountWindow {
 
                     // update the background
                     if (BackgroundPreviewChanged === true) {
-                        console.log("Updating background");
                         if (callingObject.profile_backgroundUpload.files.length === 0) {
-                            console.log("Delete background");
                             await fetch("/api/v1.1/UserProfile/" + userProfile.profileId + "/Background", {
                                 method: 'DELETE'
                             }).then(async response => {
