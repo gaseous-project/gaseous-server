@@ -34,21 +34,6 @@ function formatFilterPanel(containerElement, result) {
 
     panel.appendChild(containerPanelSearch);
 
-    // user rating
-    panel.appendChild(buildFilterPanelHeader('userrating', 'User Rating', true, false));
-    var containerPanelUserRating = buildFilterRange('userrating', 0, 100);
-    panel.appendChild(containerPanelUserRating);
-
-    // user vote count
-    panel.appendChild(buildFilterPanelHeader('uservotes', 'User Votes', true, false));
-    var containerPanelUserVotes = buildFilterRange('uservotes', 0, 1000000);
-    panel.appendChild(containerPanelUserVotes);
-
-    // release year
-    panel.appendChild(buildFilterPanelHeader('releaseyear', 'Release Year', true, false));
-    var containerPanelReleaseYear = buildFilterRange('releaseyear', 1960, (new Date()).getFullYear());
-    panel.appendChild(containerPanelReleaseYear);
-
     // settings
     buildFilterPanel(panel, 'settings', 'Settings', [
         {
@@ -61,34 +46,54 @@ function formatFilterPanel(containerElement, result) {
             "name": "Favourite",
             "gameCount": 0
         }
-    ], true, true);
+    ], true, false);
 
-    // server provided filters
+    // platforms
     if (result.platforms) {
         buildFilterPanel(panel, 'platform', 'Platforms', result.platforms, true, true);
     }
 
+    // genres
     if (result.genres) {
         buildFilterPanel(panel, 'genre', 'Genres', result.genres, true, false);
     }
 
-    if (result.gamemodes) {
-        buildFilterPanel(panel, 'gamemode', 'Players', result.gamemodes, true, false);
-    }
-
-    if (result.playerperspectives) {
-        buildFilterPanel(panel, 'playerperspective', 'Player Perspectives', result.playerperspectives, true, false);
-    }
-
+    // themes
     if (result.themes) {
         buildFilterPanel(panel, 'theme', 'Themes', result.themes, true, false);
     }
 
+    // release year
+    panel.appendChild(buildFilterPanelHeader('releaseyear', 'Release Year', true, false));
+    var containerPanelReleaseYear = buildFilterRange('releaseyear', 1960, (new Date()).getFullYear(), false);
+    panel.appendChild(containerPanelReleaseYear);
+
+    // players
+    if (result.gamemodes) {
+        buildFilterPanel(panel, 'gamemode', 'Players', result.gamemodes, true, false);
+    }
+
+    // player perspectives
+    if (result.playerperspectives) {
+        buildFilterPanel(panel, 'playerperspective', 'Player Perspectives', result.playerperspectives, true, false);
+    }
+
+    // age groups
     if (result.agegroupings) {
         if (result.agegroupings.length > 1) {
             buildFilterPanel(panel, 'agegroupings', 'Age Groups', result.agegroupings, true, false);
         }
     }
+
+    // user rating
+    panel.appendChild(buildFilterPanelHeader('userrating', 'User Rating', true, false));
+    var containerPanelUserRating = buildFilterRange('userrating', 0, 100, false);
+    panel.appendChild(containerPanelUserRating);
+
+    // user vote count
+    panel.appendChild(buildFilterPanelHeader('uservotes', 'User Votes', true, false));
+    var containerPanelUserVotes = buildFilterRange('uservotes', 0, 1000000, false);
+    panel.appendChild(containerPanelUserVotes);
 
     targetElement.appendChild(panel);
 
@@ -264,10 +269,21 @@ function buildFilterPanelItem(filterType, itemString, friendlyItemString, tags) 
     return filterPanelItem;
 }
 
-function buildFilterRange(name, min, max) {
+function buildFilterRange(name, min, max, initialDisplay) {
     var containerPanelUserRating = document.createElement('div');
     containerPanelUserRating.id = 'filter_panel_box_' + name + '';
     containerPanelUserRating.className = 'filter_panel_box';
+
+    var displayCookie = getCookie('filter_panel_box_' + name);
+    if (displayCookie) {
+        initialDisplay = (displayCookie === 'true');
+    }
+
+    if (initialDisplay == false) {
+        containerPanelUserRating.setAttribute('style', 'display: none;');
+    } else {
+        containerPanelUserRating.setAttribute('style', 'display: block;');
+    }
 
     var containerPanelUserRatingCheckBox = document.createElement('input');
     containerPanelUserRatingCheckBox.id = 'filter_panel_' + name + '_enabled';
