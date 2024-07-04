@@ -137,6 +137,12 @@ class Modal {
         this.buttons.push(button);
     }
 
+    disableButtons() {
+        this.buttons.forEach((button) => {
+            button.button.disabled = true;
+        });
+    }
+
     removeTab(tabId) {
         const tab = this.modalElement.querySelector('#tab-' + tabId);
         if (tab) {
@@ -156,26 +162,28 @@ class ModalButton {
         return;
     }
 
+    button = null;
+
     render() {
-        const button = document.createElement('button');
-        button.classList.add('modal-button');
+        this.button = document.createElement('button');
+        this.button.classList.add('modal-button');
         if (this.type) {
             switch (this.type) {
                 case 1:
-                    button.classList.add('bluebutton');
+                    this.button.classList.add('bluebutton');
                     break;
                 case 2:
-                    button.classList.add('redbutton');
+                    this.button.classList.add('redbutton');
                     break;
             }
         }
-        button.innerHTML = this.text;
+        this.button.innerHTML = this.text;
         let callback = this.callback;
         let callingObject = this.callingObject;
-        button.addEventListener('click', function () {
+        this.button.addEventListener('click', function () {
             callback(callingObject);
         });
-        return button;
+        return this.button;
     }
 }
 

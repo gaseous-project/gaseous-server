@@ -167,6 +167,9 @@ class rominfodialog {
 
         // create the ok button
         let okButton = new ModalButton("OK", 1, this, function (callingObject) {
+            // disable buttons
+            callingObject.dialog.disableButtons();
+
             // get save data
             let fixIGDBPlatformValue = 0;
             let fixIGDBGameValue = 0;
