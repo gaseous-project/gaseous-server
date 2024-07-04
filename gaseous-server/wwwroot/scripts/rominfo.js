@@ -2,6 +2,9 @@ class rominfodialog {
     constructor(gameId, romId) {
         this.gameId = gameId;
         this.romId = romId;
+        this.CallbackOk = null;
+        this.CallbackCancel = null;
+        this.CallbackDelete = null;
     }
 
     async open() {
@@ -12,6 +15,7 @@ class rominfodialog {
         // Load the rom information
         let isDeleteable = true;
         await this.#fetchData(this, function (callingObject, data) {
+            console.log(data);
             // populate the dialog with the rom information
             callingObject.dialog.modalElement.querySelector('#modal-header-text').innerHTML = data.name;
             callingObject.dialog.modalElement.querySelector('#rominfo_library').innerHTML = data.library.name;
@@ -35,7 +39,7 @@ class rominfodialog {
                 callingObject.dialog.modalElement.querySelector('#rominfo_metadata_match_match').checked = true;
                 fixPlatformSelect.innerHTML = "<option value='" + data.platformId + "' selected='selected'>" + data.platform + "</option>";
                 if (data.gameId != 0) {
-                    fixGameSelect.innerHTML = "<option value='" + data.gameid + "' selected='selected'>" + data.game + "</option>";
+                    fixGameSelect.innerHTML = "<option value='" + data.gameId + "' selected='selected'>" + data.game + "</option>";
                 }
                 fixPlatformSelect.removeAttribute('disabled');
                 fixGameSelect.removeAttribute('disabled');
@@ -140,7 +144,13 @@ class rominfodialog {
 
                 let deleteButton = new ModalButton("Delete", 2, callingObject, function (callingObject) {
                     ajaxCall('/api/v1.1/Games/' + callingObject.gameId + '/roms/' + callingObject.romId, 'DELETE', function (result) {
-                        window.location.reload();
+                        if (callingObject.CallbackDelete == null) {
+                            window.location.reload();
+                        } else {
+                            callingObject.CallbackDelete(result);
+                            deleteWindow.msgDialog.close();
+                            callingObject.dialog.close();
+                        }
                     });
                 });
                 deleteWindow.addButton(deleteButton);
@@ -166,27 +176,38 @@ class rominfodialog {
             let fixIGDBPlatformSelect = callingObject.dialog.modalElement.querySelector('#properties_fixplatform');
             let fixIGDBGameSelect = callingObject.dialog.modalElement.querySelector('#properties_fixgame');
             if (fixIGDBMetadataMatch.checked) {
-                if (fixIGDBPlatformSelect.value == null || fixIGDBPlatformSelect.value == "") {
+                let selectedPlatform = $(fixIGDBPlatformSelect).select2('data');
+                let selectedGame = $(fixIGDBGameSelect).select2('data');
+
+                if (selectedPlatform == null || selectedPlatform[0].id == undefined || selectedPlatform[0].id == "") {
                     fixIGDBPlatformValue = 0;
                     fixIGDBGameValue = 0;
                 } else {
-                    fixIGDBPlatformValue = fixIGDBPlatformSelect.value;
-                    if (fixIGDBGameSelect.value == null || fixIGDBGameSelect.value == "") {
+                    fixIGDBPlatformValue = selectedPlatform[0].id;
+                    if (selectedGame == null || selectedGame[0].id == undefined || selectedGame[0].id == "") {
                         fixIGDBGameValue = 0;
                     } else {
-                        fixIGDBGameValue = fixIGDBGameSelect.value;
+                        fixIGDBGameValue = selectedGame[0].id;
                     }
                 }
             }
 
             ajaxCall('/api/v1.1/Games/' + callingObject.gameId + '/roms/' + callingObject.romId + '?NewPlatformId=' + fixIGDBPlatformValue + '&NewGameId=' + fixIGDBGameValue, 'PATCH', function (result) {
-                window.location.reload();
+                if (callingObject.CallbackOk == null) {
+                    window.location.reload();
+                } else {
+                    callingObject.CallbackOk(result);
+                    callingObject.dialog.close();
+                }
             });
         });
         this.dialog.addButton(okButton);
 
         // create the cancel button
         let cancelButton = new ModalButton("Cancel", 0, this, function (callingObject) {
+            if (callingObject.CallbackCancel != null) {
+                callingObject.CallbackCancel();
+            }
             callingObject.dialog.close();
         });
         this.dialog.addButton(cancelButton);

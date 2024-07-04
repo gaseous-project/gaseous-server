@@ -106,7 +106,7 @@
     --modal-background-color: rgba(0, 0, 0, 0.4);
     --modal-border-color: rgba(255, 255, 255, 0.414);
     --modal-tabs-background-color: rgba(255, 255, 255, 0.2);
-    --modal-window-background-color: rgb(56, 56, 56);
+    --modal-window-background-color: rgb(70, 70, 70);
     --modal-window-header-text-color: rgb(255, 255, 255);
-    --modal-window-header-background-color: var(--modal-window-background-color);
+    --modal-window-header-background-color: rgb(56, 56, 56);
 }
