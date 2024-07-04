@@ -249,11 +249,13 @@ function DropDownRenderGameOption(state) {
         return state;
     }
 
-    var response;
+    let response;
 
-    var releaseDate;
+    let releaseDate;
     if (state.releaseDate) {
         releaseDate = moment(state.releaseDate).format('yyyy');
+    } else {
+        releaseDate = '';
     }
 
     if (state.cover) {

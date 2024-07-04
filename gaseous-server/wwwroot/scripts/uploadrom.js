@@ -22,13 +22,25 @@ class UploadRom {
             let files = e.dataTransfer.files;
 
             uploadedNoRomsLabel.style.display = 'none';
+
+            // load queue
+            let uploadedItems = [];
             for (let i = 0; i < files.length; i++) {
+                let file = files[i];
+
+                let uploadedItem = new UploadItem(file.name, i);
+                uploadedItems.push(uploadedItem);
+                uploadList.prepend(uploadedItem.Item);
+            }
+
+            // process the queue
+            for (let i = 0; i < files.length; i++) {
+                // handle the file
                 let file = files[i];
                 let formData = new FormData();
                 formData.append('file', file);
 
-                let uploadedItem = new UploadItem(file.name);
-                uploadList.prepend(uploadedItem.Item);
+                let uploadedItem = uploadedItems[i];
 
                 let xhr = new XMLHttpRequest();
                 xhr.open('POST', '/api/v1.1/Roms');
@@ -42,7 +54,29 @@ class UploadRom {
                         }
                     }
                 });
+
+                // handle max uploads
+                this.UploadCount++;
+
+                await new Promise(resolve => {
+                    if (this.UploadCount > this.MaxUploads) {
+                        console.log('Max uploads reached, waiting for uploads to complete');
+                        const interval = setInterval(() => {
+                            if (this.UploadCount <= this.MaxUploads) {
+                                clearInterval(interval);
+                                resolve();
+                            }
+                        }, 1000);
+                    } else {
+                        resolve();
+                    }
+                });
+
+                // begin the upload
                 xhr.addEventListener('load', () => {
+                    // upload completed
+                    this.UploadCount--;
+
                     if (xhr.status === 200) {
                         // process the results
                         let response = JSON.parse(xhr.responseText);
@@ -87,16 +121,20 @@ class UploadRom {
         // show the dialog
         await this.dialog.open();
     }
+
+    MaxUploads = 2;
+    UploadCount = 0;
 }
 
 class UploadItem {
-    constructor(Filename) {
+    constructor(Filename, Index) {
         this.Filename = Filename;
         this.Status = 0;
         this.Progress = null;
 
         // create the item
         this.Item = document.createElement('div');
+        this.Item.id = 'uploaditem_' + Index;
         this.Item.classList.add('uploaditem');
         this.Item.classList.add('romrow');
 
@@ -143,7 +181,8 @@ class UploadItem {
                 this.#RenderStatus();
             };
             romInfoDialog.CallbackDelete = () => {
-                this.Item.style.display = 'none';
+                this.Item.remove();
+                this.Item = null;
             };
             romInfoDialog.open();
         });
