@@ -104,7 +104,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
             }
             break;
         case 'infinite':
-            var gamePlaceholders = document.getElementsByName('GamePlaceholder');
+            let gamePlaceholders = document.getElementsByName('GamePlaceholder');
 
             let currentPage = 1;
             let totalPages = Math.ceil(result.count / Number(pageSize));
@@ -129,14 +129,14 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
                 }
 
                 for (let i = startIndex; i < endIndex; i++) {
-                    var placeHolderpresent = false;
-                    for (var x = 0; x < gamePlaceholders.length; x++) {
+                    let placeHolderpresent = false;
+                    for (let x = 0; x < gamePlaceholders.length; x++) {
                         if (gamePlaceholders[x].getAttribute('data-index') == i) {
                             placeHolderpresent = true;
                         }
                     }
                     if (placeHolderpresent == false) {
-                        var gamePlaceholder = document.createElement('div');
+                        let gamePlaceholder = document.createElement('div');
                         gamePlaceholder.setAttribute('name', 'GamePlaceholder');
                         gamePlaceholder.id = 'GamePlaceholder' + i;
                         gamePlaceholder.setAttribute('data-index', i);
@@ -158,16 +158,16 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
 
     document.getElementById('games_library_recordcount').innerHTML = result.count + ' games';
 
-    var existingLoadPageButton = document.getElementById('games_library_loadmore');
+    let existingLoadPageButton = document.getElementById('games_library_loadmore');
     if (existingLoadPageButton) {
         existingLoadPageButton.parentNode.removeChild(existingLoadPageButton);
     }
 
     // setup preferences
-    var showTitle = GetPreference("LibraryShowGameTitle", true);
-    var showRatings = GetPreference("LibraryShowGameRating", true);
-    var showClassification = GetPreference("LibraryShowGameClassification", true);
-    var classificationDisplayOrder = GetRatingsBoards();
+    let showTitle = GetPreference("LibraryShowGameTitle", true);
+    let showRatings = GetPreference("LibraryShowGameRating", true);
+    let showClassification = GetPreference("LibraryShowGameClassification", true);
+    let classificationDisplayOrder = GetRatingsBoards();
     if (showTitle == "true") { showTitle = true; } else { showTitle = false; }
     if (showRatings == "true") { showRatings = true; } else { showRatings = false; }
     if (showClassification == "true") { showClassification = true; } else { showClassification = false; }
@@ -179,15 +179,15 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
         tileWrapperClass = 'game_tile_wrapper_icon';
     }
 
-    for (var i = 0; i < result.games.length; i++) {
-        var game = renderGameIcon(result.games[i], showTitle, showRatings, showClassification, classificationDisplayOrder, false, listView);
+    for (let i = 0; i < result.games.length; i++) {
+        let game = renderGameIcon(result.games[i], showTitle, showRatings, showClassification, classificationDisplayOrder, false, listView);
         switch (pageMode) {
             case "paged":
                 targetElement.appendChild(game);
                 break;
 
             case "infinite":
-                var placeholderElement = document.getElementById('GamePlaceholder' + result.games[i].index);
+                let placeholderElement = document.getElementById('GamePlaceholder' + result.games[i].index);
                 if (placeholderElement.className != tileWrapperClass) {
                     placeholderElement.className = tileWrapperClass;
                     placeholderElement.innerHTML = '';
@@ -200,16 +200,16 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
         $(game).fadeIn(500);
     }
 
-    var pager = document.getElementById('games_pager');
+    let pager = document.getElementById('games_pager');
     pager.style.display = 'none';
 
-    var alphaPager = document.getElementById('games_library_alpha_pager');
+    let alphaPager = document.getElementById('games_library_alpha_pager');
     alphaPager.innerHTML = '';
 
     switch (pageMode) {
         case 'infinite':
             for (const [key, value] of Object.entries(result.alphaList)) {
-                var letterPager = document.createElement('span');
+                let letterPager = document.createElement('span');
                 letterPager.className = 'games_library_alpha_pager_letter';
                 letterPager.setAttribute('onclick', 'document.location.hash = "#pageAnchor' + (value) + '"; executeFilter1_1(' + (value) + ');');
                 letterPager.innerHTML = key;
@@ -229,7 +229,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
 
         case 'paged':
             for (const [key, value] of Object.entries(result.alphaList)) {
-                var letterPager = document.createElement('span');
+                let letterPager = document.createElement('span');
                 letterPager.className = 'games_library_alpha_pager_letter';
                 letterPager.setAttribute('onclick', 'executeFilter1_1(' + value + ');');
                 letterPager.innerHTML = key;
@@ -237,10 +237,10 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
             }
 
             if (result.count > pageSize) {
-                var pageCount = Math.ceil(result.count / pageSize);
+                let pageCount = Math.ceil(result.count / pageSize);
 
                 // add first page button
-                var firstPage = document.createElement('span');
+                let firstPage = document.createElement('span');
                 firstPage.innerHTML = '&#124;&lt;';
                 if (pageNumber == 1) {
                     firstPage.className = 'games_pager_number_disabled';
@@ -250,7 +250,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
                 }
 
                 // add previous page button
-                var prevPage = document.createElement('span');
+                let prevPage = document.createElement('span');
                 prevPage.innerHTML = '&lt;';
                 if (pageNumber == 1) {
                     prevPage.className = 'games_pager_number_disabled';
@@ -260,11 +260,11 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
                 }
 
                 // add page numbers
-                var pageEitherSide = 4;
-                // var currentPage = Number(pagerCheck.innerHTML);
-                var currentPage = pageNumber;
-                var pageNumbers = document.createElement('span');
-                for (var i = 1; i <= pageCount; i++) {
+                let pageEitherSide = 4;
+                // let currentPage = Number(pagerCheck.innerHTML);
+                let currentPage = pageNumber;
+                let pageNumbers = document.createElement('span');
+                for (let i = 1; i <= pageCount; i++) {
                     if (
                         (
                             (i >= currentPage - pageEitherSide) &&
@@ -281,7 +281,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
                             )
                         )
                     ) {
-                        var pageNum = document.createElement('span');
+                        let pageNum = document.createElement('span');
                         if (pageNumber == i) {
                             pageNum.className = 'games_pager_number_disabled';
                         } else {
@@ -294,7 +294,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
                 }
 
                 // add next page button
-                var nextPage = document.createElement('span');
+                let nextPage = document.createElement('span');
                 nextPage.innerHTML = '&gt;';
                 if (pageNumber == pageCount) {
                     nextPage.className = 'games_pager_number_disabled';
@@ -304,7 +304,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
                 }
 
                 // add last page button
-                var lastPage = document.createElement('span');
+                let lastPage = document.createElement('span');
                 lastPage.innerHTML = '&gt;&#124;';
                 if (pageNumber == pageCount) {
                     lastPage.className = 'games_pager_number_disabled';
@@ -339,11 +339,11 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
 
 function isScrolledIntoView(elem) {
     if (elem) {
-        var docViewTop = $(window).scrollTop();
-        var docViewBottom = docViewTop + $(window).height();
+        let docViewTop = $(window).scrollTop();
+        let docViewBottom = docViewTop + $(window).height();
 
-        var elemTop = $(elem).offset().top;
-        var elemBottom = elemTop + $(elem).height();
+        let elemTop = $(elem).offset().top;
+        let elemBottom = elemTop + $(elem).height();
 
         return ((elemBottom <= docViewBottom) && (elemTop >= docViewTop));
     }
@@ -360,15 +360,15 @@ const elementIsVisibleInViewport = (el, partiallyVisible = false) => {
 };
 
 function IsInView() {
-    var pageMode = GetPreference('LibraryPagination', 'paged');
+    let pageMode = GetPreference('LibraryPagination', 'paged');
     switch (pageMode) {
         case "paged":
-            var loadElement = document.getElementById('games_library_loadmore');
+            let loadElement = document.getElementById('games_library_loadmore');
             if (loadElement) {
                 //if (isScrolledIntoView(loadElement)) {
                 if (elementIsVisibleInViewport(loadElement, true)) {
-                    var pageNumber = Number(document.getElementById('games_library_loadmore').getAttribute('data-pagenumber'));
-                    var pageSize = document.getElementById('games_library_loadmore').getAttribute('data-pagesize');
+                    let pageNumber = Number(document.getElementById('games_library_loadmore').getAttribute('data-pagenumber'));
+                    let pageSize = document.getElementById('games_library_loadmore').getAttribute('data-pagesize');
                     executeFilter1_1(pageNumber);
                 }
             }
@@ -399,9 +399,9 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
         listView = false;
     }
 
-    var classes = getViewModeClasses(listView);
+    let classes = getViewModeClasses(listView);
 
-    var gameBox = document.createElement('div');
+    let gameBox = document.createElement('div');
     gameBox.id = "game_tile_" + gameObject.id;
     if (useSmallCover == true) {
         gameBox.classList.add(...classes['game_tile game_tile_small']);
@@ -410,7 +410,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
     }
     // gameBox.style.display = 'none';
 
-    var gameImageBox = document.createElement('div');
+    let gameImageBox = document.createElement('div');
     gameImageBox.classList.add(...classes['game_tile_box']);
     if (listView == true) {
         gameBox.setAttribute('onclick', 'window.location.href = "/index.html?page=game&id=' + gameObject.id + '";');
@@ -418,7 +418,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
         gameImageBox.setAttribute('onclick', 'window.location.href = "/index.html?page=game&id=' + gameObject.id + '";');
     }
 
-    var gameImage = document.createElement('img');
+    let gameImage = document.createElement('img');
     gameImage.id = 'game_tile_cover_' + gameObject.id;
     gameImage.setAttribute('data-id', gameObject.id);
     if (useSmallCover == true) {
@@ -435,13 +435,13 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
     }
     gameImageBox.appendChild(gameImage);
 
-    var classificationPath = '';
-    var displayClassification = false;
-    var shownClassificationBoard = '';
+    let classificationPath = '';
+    let displayClassification = false;
+    let shownClassificationBoard = '';
     if (showClassification == true) {
-        for (var b = 0; b < classificationDisplayOrder.length; b++) {
+        for (let b = 0; b < classificationDisplayOrder.length; b++) {
             if (shownClassificationBoard == '') {
-                for (var c = 0; c < gameObject.ageRatings.length; c++) {
+                for (let c = 0; c < gameObject.ageRatings.length; c++) {
                     if (gameObject.ageRatings[c].category == classificationDisplayOrder[b]) {
                         shownClassificationBoard = classificationDisplayOrder[b];
                         displayClassification = true;
@@ -456,7 +456,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
 
     // add save game icon
     if (gameObject.hasSavedGame == true) {
-        var gameSaveIcon = document.createElement('img');
+        let gameSaveIcon = document.createElement('img');
         gameSaveIcon.src = '/images/SaveStates.png';
         gameSaveIcon.classList.add(...classes['game_tile_box_savedgame savedstateicon']);
         gameImageBox.appendChild(gameSaveIcon);
@@ -464,25 +464,25 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
 
     // add favourite game icon
     if (gameObject.isFavourite == true) {
-        var gameFavIcon = document.createElement('img');
+        let gameFavIcon = document.createElement('img');
         gameFavIcon.src = '/images/favourite-filled.svg';
         gameFavIcon.classList.add(...classes['game_tile_box_favouritegame favouriteicon']);
         gameImageBox.appendChild(gameFavIcon);
     }
 
     if (gameObject.totalRating || displayClassification == true) {
-        var gameImageRatingBanner = document.createElement('div');
+        let gameImageRatingBanner = document.createElement('div');
         gameImageRatingBanner.classList.add(...classes['game_tile_box_ratingbanner']);
 
         if (showRatings == true || displayClassification == true) {
             if (showRatings == true) {
                 if (gameObject.totalRating) {
-                    var gameImageRatingBannerLogo = document.createElement('img');
+                    let gameImageRatingBannerLogo = document.createElement('img');
                     gameImageRatingBannerLogo.src = '/images/IGDB_logo.svg';
                     gameImageRatingBannerLogo.setAttribute('style', 'filter: invert(100%); height: 10px; margin-right: 5px; padding-top: 4px;');
                     gameImageRatingBanner.appendChild(gameImageRatingBannerLogo);
 
-                    var gameImageRatingBannerValue = document.createElement('span');
+                    let gameImageRatingBannerValue = document.createElement('span');
                     gameImageRatingBannerValue.innerHTML = Math.floor(gameObject.totalRating) + '% / ' + gameObject.totalRatingCount;
                     gameImageRatingBanner.appendChild(gameImageRatingBannerValue);
                 }
@@ -491,7 +491,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
             gameImageBox.appendChild(gameImageRatingBanner);
 
             if (displayClassification == true) {
-                var gameImageClassificationLogo = document.createElement('img');
+                let gameImageClassificationLogo = document.createElement('img');
                 gameImageClassificationLogo.src = classificationPath;
                 gameImageClassificationLogo.classList.add(...classes['rating_image_overlay']);
                 gameImageBox.appendChild(gameImageClassificationLogo);
@@ -501,7 +501,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
     gameBox.appendChild(gameImageBox);
 
     if (showTitle == true) {
-        var gameBoxTitle = document.createElement('div');
+        let gameBoxTitle = document.createElement('div');
         gameBoxTitle.classList.add(...classes['game_tile_label']);
         gameBoxTitle.innerHTML = gameObject.name;
         gameBox.appendChild(gameBoxTitle);
