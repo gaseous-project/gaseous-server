@@ -20,6 +20,7 @@
     <script src="/scripts/modals.js" type="text/javascript"></script>
     <script src="/scripts/preferences.js" type="text/javascript"></script>
     <script src="/scripts/account.js" type="text/javascript"></script>
+    <script src="/scripts/libraries.js" type="text/javascript"></script>
     <script src="/scripts/notifications.js" type="text/javascript"></script>
     <script src="/scripts/rominfo.js" type="text/javascript"></script>
     <script src="/scripts/uploadrom.js" type="text/javascript"></script>
@@ -32,13 +33,13 @@
     <title>Gaseous Games</title>
 
     <script type="text/javascript">
-        var head = document.getElementsByTagName('head')[0];
+        let head = document.getElementsByTagName('head')[0];
 
         // update links
-        var headLinks = document.getElementsByTagName('link');
-        for (var i = 0; i < headLinks.length; i++) {
+        let headLinks = document.getElementsByTagName('link');
+        for (let i = 0; i < headLinks.length; i++) {
             if (headLinks[i].getAttribute('dat-href') && headLinks[i].rel == "stylesheet") {
-                var newLink = document.createElement('link');
+                let newLink = document.createElement('link');
                 newLink.rel = "stylesheet";
                 newLink.href = headLinks[i].getAttribute('dat-href') + '?v=' + AppVersion;
                 newLink.type = "text/css";
@@ -47,7 +48,7 @@
             }
         }
         // remove used links
-        for (var i = 0; i < headLinks.length; i++) {
+        for (let i = 0; i < headLinks.length; i++) {
             if (headLinks[i].getAttribute('dat-href') && headLinks[i].rel == "stylesheet") {
                 headLinks[i].remove();
             }
@@ -175,7 +176,7 @@
                 profileCard.appendChild(profileCardContent);
 
                 // hide the upload button if it's not permitted
-                var uploadButton = document.getElementById('banner_upload');
+                let uploadButton = document.getElementById('banner_upload');
                 if (!userProfile.roles.includes("Admin") && !userProfile.roles.includes("Gamer")) {
                     uploadButton.style.display = 'none';
                 }
@@ -206,10 +207,9 @@
         // Close the dropdown menu if the user clicks outside of it
         window.onclick = function (event) {
             if (!event.target.matches('.dropbtn')) {
-                var dropdowns = document.getElementsByClassName("dropdown-content");
-                var i;
-                for (i = 0; i < dropdowns.length; i++) {
-                    var openDropdown = dropdowns[i];
+                let dropdowns = document.getElementsByClassName("dropdown-content");
+                for (let i = 0; i < dropdowns.length; i++) {
+                    let openDropdown = dropdowns[i];
                     if (openDropdown.classList.contains('show')) {
                         openDropdown.classList.remove('show');
                     }

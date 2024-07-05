@@ -7,7 +7,8 @@
         <table id="settings_libraries" class="romtable" style="width: 100%;" cellspacing="0">
 
         </table>
-        <div style="text-align: right;"><button id="settings_newlibrary" onclick="showDialog('librarynew');">New
+        <div style="text-align: right;"><button id="settings_newlibrary">New
+                Library</button><button id="settings_oldnewlibrary" onclick="showDialog('librarynew');">(Old) New
                 Library</button></div>
     </div>
 </div>
@@ -18,12 +19,12 @@
             '/api/v1.1/Library',
             'GET',
             function (result) {
-                var newTable = document.getElementById('settings_libraries');
+                let newTable = document.getElementById('settings_libraries');
                 newTable.innerHTML = '';
                 newTable.appendChild(createTableRow(true, ['Name', 'Path', 'Default Platform', 'Default Library', '']));
 
-                for (var i = 0; i < result.length; i++) {
-                    var platformName = '';
+                for (let i = 0; i < result.length; i++) {
+                    let platformName = '';
                     if (result[i].defaultPlatformId == 0) {
                         if (result[i].isDefaultLibrary == true) {
                             platformName = "n/a";
@@ -34,16 +35,16 @@
                         platformName = result[i].defaultPlatformName;
                     }
 
-                    var defaultLibrary = '';
+                    let defaultLibrary = '';
                     if (result[i].isDefaultLibrary == true) {
                         defaultLibrary = "Yes";
                     } else {
                         defaultLibrary = "";
                     }
 
-                    var deleteButton = '';
+                    let deleteButton = '';
                     if (result[i].isDefaultLibrary == false) {
-                        var deleteButton = '<a href="#" onclick="showSubDialog(\'librarydelete\', ' + result[i].id + ');" class="romlink"><img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" /></a>';
+                        let deleteButton = '<a href="#" onclick="showSubDialog(\'librarydelete\', ' + result[i].id + ');" class="romlink"><img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" /></a>';
                     }
 
                     newTable.appendChild(createTableRow(
@@ -64,4 +65,9 @@
     }
 
     drawLibrary();
+
+    document.getElementById('settings_newlibrary').addEventListener('click', function () {
+        let newLibrary = new NewLibrary();
+        newLibrary.open();
+    });
 </script>
