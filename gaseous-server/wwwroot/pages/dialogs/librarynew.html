@@ -39,7 +39,7 @@
             },
             processResults: function (data) {
                 var arr = [];
-                
+
                 arr.push({
                     id: 0,
                     text: 'Any'
@@ -74,11 +74,11 @@
             ajaxCall(
                 '/api/v1.1/Library?Name=' + encodeURIComponent(libName) + '&DefaultPlatformId=' + libPlatform[0].id + '&Path=' + encodeURIComponent(libPath),
                 'POST',
-                function(result) {
+                function (result) {
                     drawLibrary();
-                    closeSubDialog();
+                    closeDialog();
                 },
-                function(error) {
+                function (error) {
                     alert('An error occurred while creating the library:\n\n' + JSON.stringify(error.responseText));
                 }
             );

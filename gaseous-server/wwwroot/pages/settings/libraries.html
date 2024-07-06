@@ -1,0 +1,63 @@
+<div id="gametitle">
+    <h1 id="gametitle_label">Libraries</h1>
+</div>
+
+<table id="settings_libraries" class="romtable" style="width: 100%;" cellspacing="0">
+
+</table>
+<div style="text-align: right;"><button id="settings_newlibrary" onclick="showDialog('librarynew');">New
+        Library</button></div>
+
+<script type="text/javascript">
+    function drawLibrary() {
+        ajaxCall(
+            '/api/v1.1/Library',
+            'GET',
+            function (result) {
+                var newTable = document.getElementById('settings_libraries');
+                newTable.innerHTML = '';
+                newTable.appendChild(createTableRow(true, ['Name', 'Path', 'Default Platform', 'Default Library', '']));
+
+                for (var i = 0; i < result.length; i++) {
+                    var platformName = '';
+                    if (result[i].defaultPlatformId == 0) {
+                        if (result[i].isDefaultLibrary == true) {
+                            platformName = "n/a";
+                        } else {
+                            platformName = "";
+                        }
+                    } else {
+                        platformName = result[i].defaultPlatformName;
+                    }
+
+                    var defaultLibrary = '';
+                    if (result[i].isDefaultLibrary == true) {
+                        defaultLibrary = "Yes";
+                    } else {
+                        defaultLibrary = "";
+                    }
+
+                    var deleteButton = '';
+                    if (result[i].isDefaultLibrary == false) {
+                        var deleteButton = '<a href="#" onclick="showSubDialog(\'librarydelete\', ' + result[i].id + ');" class="romlink"><img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" /></a>';
+                    }
+
+                    newTable.appendChild(createTableRow(
+                        false,
+                        [
+                            result[i].name,
+                            result[i].path,
+                            platformName,
+                            defaultLibrary,
+                            '<div style="text-align: right;">' + deleteButton + '</div>'
+                        ],
+                        'romrow',
+                        'romcell'
+                    ));
+                }
+            }
+        );
+    }
+
+    drawLibrary();
+</script>

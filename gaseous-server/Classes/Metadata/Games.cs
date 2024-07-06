@@ -78,15 +78,17 @@ namespace gaseous_server.Classes.Metadata
                 if (cacheStatus == Storage.CacheStatus.Current) { cacheStatus = Storage.CacheStatus.Expired; }
             }
 
-            // set up where clause
             string WhereClause = "";
+            string searchField = "";
             switch (searchUsing)
             {
                 case SearchUsing.id:
                     WhereClause = "where id = " + searchValue;
+                    searchField = "id";
                     break;
                 case SearchUsing.slug:
-                    WhereClause = "where slug = " + searchValue;
+                    WhereClause = "where slug = \"" + searchValue + "\"";
+                    searchField = "slug";
                     break;
                 default:
                     throw new Exception("Invalid search type");
@@ -110,11 +112,11 @@ namespace gaseous_server.Classes.Metadata
                     catch (Exception ex)
                     {
                         Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
-                        returnValue = Storage.GetCacheValue<Game>(returnValue, "id", (long)searchValue);
+                        returnValue = Storage.GetCacheValue<Game>(returnValue, searchField, searchValue);
                     }
                     return returnValue;
                 case Storage.CacheStatus.Current:
-                    returnValue = Storage.GetCacheValue<Game>(returnValue, "id", (long)searchValue);
+                    returnValue = Storage.GetCacheValue<Game>(returnValue, searchField, searchValue);
                     UpdateSubClasses(returnValue, false, false, false);
                     return returnValue;
                 default:

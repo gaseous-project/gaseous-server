@@ -1,6 +1,8 @@
 using System.Collections.Concurrent;
 using System.IO.Compression;
+using gaseous_server.Classes.Metadata;
 using HasheousClient.Models;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NuGet.Common;
 using SevenZip;
 using SharpCompress.Archives;
@@ -31,7 +33,7 @@ namespace gaseous_server.Classes
                 if (!Directory.Exists(ExtractPath)) { Directory.CreateDirectory(ExtractPath); }
                 try
                 {
-                    switch(ImportedFileExtension)
+                    switch (ImportedFileExtension)
                     {
                         case ".zip":
                             Logging.Log(Logging.LogType.Information, "Get Signature", "Decompressing using zip");
@@ -105,31 +107,24 @@ namespace gaseous_server.Classes
                             }
                             break;
                     }
-                    
+
                     Logging.Log(Logging.LogType.Information, "Get Signature", "Processing decompressed files for signature matches");
                     // loop through contents until we find the first signature match
                     List<ArchiveData> archiveFiles = new List<ArchiveData>();
                     bool signatureFound = false;
+                    bool signatureSelectorAlreadyApplied = false;
                     foreach (string file in Directory.GetFiles(ExtractPath, "*.*", SearchOption.AllDirectories))
                     {
+                        bool signatureSelector = false;
                         if (File.Exists(file))
                         {
                             FileInfo zfi = new FileInfo(file);
                             Common.hashObject zhash = new Common.hashObject(file);
-                            
+
                             Logging.Log(Logging.LogType.Information, "Get Signature", "Checking signature of decompressed file " + file);
 
                             if (zfi != null)
                             {
-                                ArchiveData archiveData = new ArchiveData{
-                                    FileName = Path.GetFileName(file),
-                                    FilePath = zfi.Directory.FullName.Replace(ExtractPath, ""),
-                                    Size = zfi.Length,
-                                    MD5 = hash.md5hash,
-                                    SHA1 = hash.sha1hash
-                                };
-                                archiveFiles.Add(archiveData);
-
                                 if (signatureFound == false)
                                 {
                                     gaseous_server.Models.Signatures_Games zDiscoveredSignature = _GetFileSignature(zhash, zfi.Name, zfi.Extension, zfi.Length, file, true);
@@ -138,7 +133,7 @@ namespace gaseous_server.Classes
                                     if (zDiscoveredSignature.Score > discoveredSignature.Score)
                                     {
                                         if (
-                                            zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEArcade || 
+                                            zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEArcade ||
                                             zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEMess
                                         )
                                         {
@@ -151,15 +146,37 @@ namespace gaseous_server.Classes
                                         discoveredSignature = zDiscoveredSignature;
 
                                         signatureFound = true;
+
+                                        if (signatureSelectorAlreadyApplied == false)
+                                        {
+                                            signatureSelector = true;
+                                            signatureSelectorAlreadyApplied = true;
+                                        }
                                     }
                                 }
+
+                                ArchiveData archiveData = new ArchiveData
+                                {
+                                    FileName = Path.GetFileName(file),
+                                    FilePath = zfi.Directory.FullName.Replace(ExtractPath, ""),
+                                    Size = zfi.Length,
+                                    MD5 = zhash.md5hash,
+                                    SHA1 = zhash.sha1hash,
+                                    isSignatureSelector = signatureSelector
+                                };
+                                archiveFiles.Add(archiveData);
                             }
                         }
                     }
 
-                    discoveredSignature.Rom.Attributes.Add(new KeyValuePair<string, object>(
+                    if (discoveredSignature.Rom.Attributes == null)
+                    {
+                        discoveredSignature.Rom.Attributes = new Dictionary<string, object>();
+                    }
+
+                    discoveredSignature.Rom.Attributes.Add(
                          "ZipContents", Newtonsoft.Json.JsonConvert.SerializeObject(archiveFiles)
-                    ));
+                    );
                 }
                 catch (Exception ex)
                 {
@@ -195,7 +212,7 @@ namespace gaseous_server.Classes
                 {
                     // signature retrieved from Hasheous
                     Logging.Log(Logging.LogType.Information, "Import Game", "Signature retrieved from Hasheous for game: " + dbSignature.Game.Name);
-                
+
                     discoveredSignature = dbSignature;
                 }
                 else
@@ -203,7 +220,7 @@ namespace gaseous_server.Classes
                     // construct a signature from file data
                     dbSignature = _GetFileSignatureFromFileData(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
                     Logging.Log(Logging.LogType.Information, "Import Game", "Signature generated from provided file for game: " + dbSignature.Game.Name);
-                
+
                     discoveredSignature = dbSignature;
                 }
             }
@@ -216,8 +233,8 @@ namespace gaseous_server.Classes
             return discoveredSignature;
         }
 
-		private gaseous_server.Models.Signatures_Games? _GetFileSignatureFromDatabase(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
-		{
+        private gaseous_server.Models.Signatures_Games? _GetFileSignatureFromDatabase(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
+        {
             Logging.Log(Logging.LogType.Information, "Get Signature", "Checking local database for MD5: " + hash.md5hash);
 
             // check 1: do we have a signature for it?
@@ -378,6 +395,7 @@ namespace gaseous_server.Classes
             public long Size { get; set; }
             public string MD5 { get; set; }
             public string SHA1 { get; set; }
+            public bool isSignatureSelector { get; set; } = false;
         }
     }
 }
