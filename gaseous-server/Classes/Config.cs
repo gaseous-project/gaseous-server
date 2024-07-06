@@ -645,19 +645,11 @@ namespace gaseous_server.Classes
                     return MetadataPath;
                 }
 
-                public string LibrarySignaturesDirectory
+                public string LibrarySignatureImportDirectory
                 {
                     get
                     {
                         return Path.Combine(LibraryRootDirectory, "Signatures");
-                    }
-                }
-
-                public string LibrarySignaturesProcessedDirectory
-                {
-                    get
-                    {
-                        return Path.Combine(LibraryRootDirectory, "Signatures - Processed");
                     }
                 }
 
@@ -670,8 +662,7 @@ namespace gaseous_server.Classes
                     if (!Directory.Exists(LibraryMetadataDirectory)) { Directory.CreateDirectory(LibraryMetadataDirectory); }
                     if (!Directory.Exists(LibraryTempDirectory)) { Directory.CreateDirectory(LibraryTempDirectory); }
                     if (!Directory.Exists(LibraryCollectionsDirectory)) { Directory.CreateDirectory(LibraryCollectionsDirectory); }
-                    if (!Directory.Exists(LibrarySignaturesDirectory)) { Directory.CreateDirectory(LibrarySignaturesDirectory); }
-                    if (!Directory.Exists(LibrarySignaturesProcessedDirectory)) { Directory.CreateDirectory(LibrarySignaturesProcessedDirectory); }
+                    if (!Directory.Exists(LibrarySignatureImportDirectory)) { Directory.CreateDirectory(LibrarySignatureImportDirectory); }
                 }
             }
 
@@ -707,10 +698,6 @@ namespace gaseous_server.Classes
                     }
                 }
 
-                private static bool _HasheousSubmitFixes { get; set; } = false;
-
-                private static string _HasheousAPIKey { get; set; } = "";
-
                 private static int _MaxLibraryScanWorkers
                 {
                     get
@@ -744,10 +731,6 @@ namespace gaseous_server.Classes
                 public HasheousClient.Models.MetadataModel.MetadataSources MetadataSource = _MetadataSource;
 
                 public HasheousClient.Models.MetadataModel.SignatureSources SignatureSource = _SignatureSource;
-
-                public bool HasheousSubmitFixes = _HasheousSubmitFixes;
-
-                public string HasheousAPIKey = _HasheousAPIKey;
 
                 public int MaxLibraryScanWorkers = _MaxLibraryScanWorkers;
 

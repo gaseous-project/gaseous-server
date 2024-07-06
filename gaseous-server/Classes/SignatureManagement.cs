@@ -1,6 +1,5 @@
 using System.Data;
 using gaseous_signature_parser.models.RomSignatureObject;
-using static gaseous_server.Classes.Common;
 
 namespace gaseous_server.Classes
 {
@@ -47,7 +46,7 @@ namespace gaseous_server.Classes
                 {
                     Game = new gaseous_server.Models.Signatures_Games.GameItem
                     {
-                        Id = (long)(int)sigDbRow["Id"],
+                        Id = (Int32)sigDbRow["Id"],
                         Name = (string)sigDbRow["Name"],
                         Description = (string)sigDbRow["Description"],
                         Year = (string)sigDbRow["Year"],
@@ -56,20 +55,20 @@ namespace gaseous_server.Classes
                         System = (string)sigDbRow["Platform"],
                         SystemVariant = (string)sigDbRow["SystemVariant"],
                         Video = (string)sigDbRow["Video"],
-                        Countries = new Dictionary<string, string>(GetLookup(LookupTypes.Country, (long)(int)sigDbRow["Id"])),
-                        Languages = new Dictionary<string, string>(GetLookup(LookupTypes.Language, (long)(int)sigDbRow["Id"])),
+                        Country = (string)sigDbRow["Country"],
+                        Language = (string)sigDbRow["Language"],
                         Copyright = (string)sigDbRow["Copyright"]
                     },
                     Rom = new gaseous_server.Models.Signatures_Games.RomItem
                     {
-                        Id = (long)(int)sigDbRow["romid"],
+                        Id = (Int32)sigDbRow["romid"],
                         Name = (string)sigDbRow["romname"],
                         Size = (Int64)sigDbRow["Size"],
                         Crc = (string)sigDbRow["CRC"],
                         Md5 = ((string)sigDbRow["MD5"]).ToLower(),
                         Sha1 = ((string)sigDbRow["SHA1"]).ToLower(),
                         DevelopmentStatus = (string)sigDbRow["DevelopmentStatus"],
-                        Attributes = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>((string)Common.ReturnValueIfNull(sigDbRow["Attributes"], "[]")),
+                        Attributes = Newtonsoft.Json.JsonConvert.DeserializeObject<List<KeyValuePair<string, object>>>((string)Common.ReturnValueIfNull(sigDbRow["Attributes"], "[]")),
                         RomType = (gaseous_server.Models.Signatures_Games.RomItem.RomTypes)(int)sigDbRow["RomType"],
                         RomTypeMedia = (string)sigDbRow["RomTypeMedia"],
                         MediaLabel = (string)sigDbRow["MediaLabel"],
@@ -79,37 +78,6 @@ namespace gaseous_server.Classes
                 GamesList.Add(gameItem);
             }
             return GamesList;
-        }
-
-        public Dictionary<string, string> GetLookup(LookupTypes LookupType, long GameId)
-        {
-            string tableName = "";
-            switch (LookupType)
-            {
-                case LookupTypes.Country:
-                    tableName = "Countries";
-                    break;
-
-                case LookupTypes.Language:
-                    tableName = "Languages";
-                    break;
-
-            }
-
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT " + LookupType.ToString() + ".Code, " + LookupType.ToString() + ".Value FROM Signatures_Games_" + tableName + " JOIN " + LookupType.ToString() + " ON Signatures_Games_" + tableName + "." + LookupType.ToString() + "Id = " + LookupType.ToString() + ".Id WHERE Signatures_Games_" + tableName + ".GameId = @id;";
-            Dictionary<string, object> dbDict = new Dictionary<string, object>{
-                { "id", GameId }
-            };
-            DataTable data = db.ExecuteCMD(sql, dbDict);
-
-            Dictionary<string, string> returnDict = new Dictionary<string, string>();
-            foreach (DataRow row in data.Rows)
-            {
-                returnDict.Add((string)row["Code"], (string)row["Value"]);
-            }
-
-            return returnDict;
         }
     }
 }

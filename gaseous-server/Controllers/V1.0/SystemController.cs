@@ -260,14 +260,7 @@ namespace gaseous_server.Controllers
             {
                 AlwaysLogToDisk = Config.LoggingConfiguration.AlwaysLogToDisk,
                 MinimumLogRetentionPeriod = Config.LoggingConfiguration.LogRetention,
-                EmulatorDebugMode = Boolean.Parse(Config.ReadSetting<string>("emulatorDebugMode", false.ToString())),
-                SignatureSource = new SystemSettingsModel.SignatureSourceItem()
-                {
-                    Source = Config.MetadataConfiguration.SignatureSource,
-                    HasheousHost = Config.MetadataConfiguration.HasheousHost,
-                    HasheousSubmitFixes = (bool)Config.MetadataConfiguration.HasheousSubmitFixes,
-                    HasheousAPIKey = Config.MetadataConfiguration.HasheousAPIKey
-                }
+                EmulatorDebugMode = Boolean.Parse(Config.ReadSetting<string>("emulatorDebugMode", false.ToString()))
             };
 
             return Ok(systemSettingsModel);
@@ -286,10 +279,6 @@ namespace gaseous_server.Controllers
                 Config.LoggingConfiguration.AlwaysLogToDisk = model.AlwaysLogToDisk;
                 Config.LoggingConfiguration.LogRetention = model.MinimumLogRetentionPeriod;
                 Config.SetSetting<string>("emulatorDebugMode", model.EmulatorDebugMode.ToString());
-                Config.MetadataConfiguration.SignatureSource = model.SignatureSource.Source;
-                Config.MetadataConfiguration.HasheousHost = model.SignatureSource.HasheousHost;
-                Config.MetadataConfiguration.HasheousAPIKey = model.SignatureSource.HasheousAPIKey;
-                Config.MetadataConfiguration.HasheousSubmitFixes = model.SignatureSource.HasheousSubmitFixes;
                 Config.UpdateConfig();
             }
 
@@ -730,14 +719,5 @@ namespace gaseous_server.Controllers
         public bool AlwaysLogToDisk { get; set; }
         public int MinimumLogRetentionPeriod { get; set; }
         public bool EmulatorDebugMode { get; set; }
-        public SignatureSourceItem SignatureSource { get; set; }
-
-        public class SignatureSourceItem
-        {
-            public HasheousClient.Models.MetadataModel.SignatureSources Source { get; set; }
-            public string HasheousHost { get; set; }
-            public string HasheousAPIKey { get; set; }
-            public bool HasheousSubmitFixes { get; set; }
-        }
     }
 }

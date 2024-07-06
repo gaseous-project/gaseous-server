@@ -9,8 +9,8 @@ using NuGet.Packaging;
 
 namespace gaseous_server
 {
-	public static class ProcessQueue
-	{
+    public static class ProcessQueue
+    {
         public static List<QueueItem> QueueItems = new List<QueueItem>();
 
         public class QueueItem
@@ -115,8 +115,8 @@ namespace gaseous_server
             };
             private List<QueueItemType> _Blocks = new List<QueueItemType>();
 
-            public List<DayOfWeek> AllowedDays 
-            { 
+            public List<DayOfWeek> AllowedDays
+            {
                 get
                 {
                     return _AllowedDays;
@@ -124,7 +124,7 @@ namespace gaseous_server
                 set
                 {
                     _AllowedDays = value;
-                } 
+                }
             }
             public int AllowedStartHours { get; set; } = 0;
             public int AllowedStartMinutes { get; set; } = 0;
@@ -135,7 +135,7 @@ namespace gaseous_server
             public DateTime LastRunTime => _LastRunTime;
             public DateTime LastFinishTime => _LastFinishTime;
             public double LastRunDuration => _LastRunDuration;
-            public DateTime NextRunTime 
+            public DateTime NextRunTime
             {
                 get
                 {
@@ -245,32 +245,14 @@ namespace gaseous_server
                                         CallingQueueItem = this
                                     };
 
-                                    foreach (int i in Enum.GetValues(typeof(gaseous_signature_parser.parser.SignatureParser)))
-                                    {
-                                        gaseous_signature_parser.parser.SignatureParser parserType = (gaseous_signature_parser.parser.SignatureParser)i;
-                                        if (
-                                            parserType != gaseous_signature_parser.parser.SignatureParser.Auto &&
-                                            parserType != gaseous_signature_parser.parser.SignatureParser.Unknown
-                                        )
-                                        {
-                                            Logging.Log(Logging.LogType.Debug, "Signature Import", "Processing " + parserType + " files");
+                                    Logging.Log(Logging.LogType.Debug, "Signature Import", "Processing TOSEC files");
+                                    tIngest.Import(Path.Combine(Config.LibraryConfiguration.LibrarySignatureImportDirectory, "TOSEC"), gaseous_signature_parser.parser.SignatureParser.TOSEC);
 
-                                            string SignaturePath = Path.Combine(Config.LibraryConfiguration.LibrarySignaturesDirectory, parserType.ToString());
-                                            string SignatureProcessedPath = Path.Combine(Config.LibraryConfiguration.LibrarySignaturesProcessedDirectory, parserType.ToString());
+                                    Logging.Log(Logging.LogType.Debug, "Signature Import", "Processing MAME Arcade files");
+                                    tIngest.Import(Path.Combine(Config.LibraryConfiguration.LibrarySignatureImportDirectory, "MAME Arcade"), gaseous_signature_parser.parser.SignatureParser.MAMEArcade);
 
-                                            if (!Directory.Exists(SignaturePath))
-                                            {
-                                                Directory.CreateDirectory(SignaturePath);
-                                            }
-
-                                            if (!Directory.Exists(SignatureProcessedPath))
-                                            {
-                                                Directory.CreateDirectory(SignatureProcessedPath);
-                                            }
-
-                                            tIngest.Import(SignaturePath, SignatureProcessedPath, parserType);
-                                        }
-                                    }
+                                    Logging.Log(Logging.LogType.Debug, "Signature Import", "Processing MAME MESS files");
+                                    tIngest.Import(Path.Combine(Config.LibraryConfiguration.LibrarySignatureImportDirectory, "MAME MESS"), gaseous_signature_parser.parser.SignatureParser.MAMEMess);
 
                                     _SaveLastRunTime = true;
 
@@ -368,7 +350,8 @@ namespace gaseous_server
 
                                 case QueueItemType.DailyMaintainer:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Daily Maintenance");
-                                    Classes.Maintenance maintenance = new Maintenance{
+                                    Classes.Maintenance maintenance = new Maintenance
+                                    {
                                         CallingQueueItem = this
                                     };
                                     maintenance.RunDailyMaintenance();
@@ -379,7 +362,8 @@ namespace gaseous_server
 
                                 case QueueItemType.WeeklyMaintainer:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Weekly Maintenance");
-                                    Classes.Maintenance weeklyMaintenance = new Maintenance{
+                                    Classes.Maintenance weeklyMaintenance = new Maintenance
+                                    {
                                         CallingQueueItem = this
                                     };
                                     weeklyMaintenance.RunWeeklyMaintenance();

@@ -71,7 +71,6 @@ if (Directory.Exists(Config.LibraryConfiguration.LibraryUploadDirectory))
 // kick off any delayed upgrade tasks
 // run 1002 background updates in the background on every start
 DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1002);
-DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1022);
 // start the task
 ProcessQueue.QueueItem queueItem = new ProcessQueue.QueueItem(
         ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade,

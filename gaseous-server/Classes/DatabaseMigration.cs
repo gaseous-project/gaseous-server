@@ -1,9 +1,6 @@
 using System;
 using System.Data;
 using System.Reflection;
-using gaseous_server.Classes.Metadata;
-using gaseous_server.Models;
-using IGDB.Models;
 
 namespace gaseous_server.Classes
 {
@@ -67,8 +64,6 @@ namespace gaseous_server.Classes
 
         public static void PostUpgradeScript(int TargetSchemaVersion, Database.databaseType? DatabaseType)
         {
-            var assembly = Assembly.GetExecutingAssembly();
-
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
@@ -108,51 +103,6 @@ namespace gaseous_server.Classes
                             sql = "DELETE FROM Settings WHERE Setting LIKE 'LastRun_%';";
                             db.ExecuteNonQuery(sql);
                             break;
-
-                        case 1022:
-                            // load country list
-                            Logging.Log(Logging.LogType.Information, "Database Upgrade", "Adding country look up table contents");
-
-                            string countryResourceName = "gaseous_server.Support.Country.txt";
-                            using (Stream stream = assembly.GetManifestResourceStream(countryResourceName))
-                            using (StreamReader reader = new StreamReader(stream))
-                            {
-                                do
-                                {
-                                    string[] line = reader.ReadLine().Split("|");
-
-                                    sql = "INSERT INTO Country (Code, Value) VALUES (@code, @value);";
-                                    dbDict = new Dictionary<string, object>{
-                                { "code", line[0] },
-                                { "value", line[1] }
-                            };
-                                    db.ExecuteNonQuery(sql, dbDict);
-                                } while (reader.EndOfStream == false);
-                            }
-
-                            // load language list
-                            Logging.Log(Logging.LogType.Information, "Database Upgrade", "Adding language look up table contents");
-
-                            string languageResourceName = "gaseous_server.Support.Language.txt";
-                            using (Stream stream = assembly.GetManifestResourceStream(languageResourceName))
-                            using (StreamReader reader = new StreamReader(stream))
-                            {
-                                do
-                                {
-                                    string[] line = reader.ReadLine().Split("|");
-
-                                    sql = "INSERT INTO Language (Code, Value) VALUES (@code, @value);";
-                                    dbDict = new Dictionary<string, object>{
-                                { "code", line[0] },
-                                { "value", line[1] }
-                            };
-                                    db.ExecuteNonQuery(sql, dbDict);
-                                } while (reader.EndOfStream == false);
-                            }
-
-                            // this is a safe background task
-                            BackgroundUpgradeTargetSchemaVersions.Add(1022);
-                            break;
                     }
                     break;
             }
@@ -166,10 +116,6 @@ namespace gaseous_server.Classes
                 {
                     case 1002:
                         MySql_1002_MigrateMetadataVersion();
-                        break;
-
-                    case 1022:
-                        MySql_1022_MigrateMetadataVersion();
                         break;
                 }
             }
@@ -269,37 +215,6 @@ namespace gaseous_server.Classes
                     }
                     Counter += 1;
                 }
-            }
-        }
-
-        public static void MySql_1022_MigrateMetadataVersion()
-        {
-            FileSignature fileSignature = new FileSignature();
-
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM Games_Roms WHERE RomDataVersion = 1;";
-            DataTable data = db.ExecuteCMD(sql);
-            foreach (DataRow row in data.Rows)
-            {
-                Logging.Log(Logging.LogType.Information, "Database Migration", "Updating ROM table for ROM: " + (string)row["Name"]);
-
-                GameLibrary.LibraryItem library = GameLibrary.GetLibrary((int)row["LibraryId"]);
-                Common.hashObject hash = new Common.hashObject()
-                {
-                    md5hash = (string)row["MD5"],
-                    sha1hash = (string)row["SHA1"]
-                };
-                Signatures_Games signature = fileSignature.GetFileSignature(
-                    library,
-                    hash,
-                    new FileInfo((string)row["Path"]),
-                    (string)row["Path"]
-                );
-
-                Platform platform = Platforms.GetPlatform((long)row["PlatformId"], false);
-                Game game = Games.GetGame((long)row["GameId"], false, false, false);
-
-                ImportGame.StoreROM(library, hash, game, platform, signature, (string)row["Path"], (long)row["Id"]);
             }
         }
     }
