@@ -71,11 +71,11 @@ RUN mkdir -p /home/$USER/.gaseous-server /var/lib/mysql
 # set permissions
 RUN chown -R $USER:$GROUP /App /home/$USER/.gaseous-server /var/lib/mysql /run/mysqld
 
-# switch to user
-USER $USER
-
 # volumes
 VOLUME /home/$USER/.gaseous-server /var/lib/mysql
+
+# switch to user
+USER $PUID
 
 # start services
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
