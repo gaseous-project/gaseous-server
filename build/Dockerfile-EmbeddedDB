@@ -54,8 +54,28 @@ COPY ../build/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # clean up apt-get
 RUN apt-get clean && rm -rf /var/lib/apt/lists
 
+# set user name
+ENV USER=gaseous
+ENV GROUP=gaseous
+
+# configure user
+ENV PUID=1000
+ENV PGID=1000
+RUN groupadd -g $PGID $USER
+RUN useradd -u $PUID -g $GROUP -m $USER -G sudo 
+RUN usermod -p "*" $USER
+
+# create home directory
+RUN mkdir -p /home/$USER/.gaseous-server /var/lib/mysql
+
+# set permissions
+RUN chown -R $USER:$GROUP /App /home/$USER/.gaseous-server /var/lib/mysql /run/mysqld
+
+# switch to user
+USER $USER
+
 # volumes
-VOLUME /root/.gaseous-server /var/lib/mysql
+VOLUME /home/$USER/.gaseous-server /var/lib/mysql
 
 # start services
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

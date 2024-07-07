@@ -59,5 +59,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
+            gaseousgames/gaseousserver:latest-embeddeddb
             gaseousgames/gaseousserver:${{ github.ref_name}}-embeddeddb
+            ghcr.io/gaseous-project/gaseousserver:latest-embeddeddb
             ghcr.io/gaseous-project/gaseousserver:${{ github.ref_name}}-embeddeddb

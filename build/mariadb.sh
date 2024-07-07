@@ -1,9 +1,17 @@
 #!/bin/bash
 
-# Wait for the service to start
-while ! mysqladmin ping -h localhost --silent; do
-    sleep 1
-done
+# start the database server without network or grant tables
+/usr/sbin/mariadbd --datadir=/var/lib/mysql  --skip-grant-tables --skip-networking &
 
-# Set the root password
-mariadb -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '$MARIADB_ROOT_PASSWORD';"
+# wait for the server to start
+sleep 2
+
+# change the root password
+mariadb -u root -e "FLUSH PRIVILEGES; ALTER USER 'root'@'localhost' IDENTIFIED BY '$MARIADB_ROOT_PASSWORD'; FLUSH PRIVILEGES;"
+
+# stop the server
+sleep 1
+killall mariadbd
+
+# start the server normally
+/usr/sbin/mariadbd --datadir=/var/lib/mysql
