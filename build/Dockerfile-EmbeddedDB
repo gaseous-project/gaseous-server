@@ -23,6 +23,7 @@ RUN dotnet publish "gaseous-server/gaseous-server.csproj" --use-current-runtime 
 # RUN mkdir -p out/wwwroot/emulators/EmulatorJS
 # RUN wget https://cdn.emulatorjs.org/releases/4.0.12.7z
 # RUN 7z x -y -oout/wwwroot/emulators/EmulatorJS 4.0.12.7z
+
 RUN wget --recursive --no-parent https://cdn.emulatorjs.org/latest/
 RUN mkdir -p out/wwwroot/emulators/EmulatorJS
 RUN cp -fr cdn.emulatorjs.org/latest/* out/wwwroot/emulators/EmulatorJS
@@ -35,10 +36,19 @@ WORKDIR /App
 COPY --from=build-env /App/out .
 
 # variables
-ENV dbhost=localhost
-ENV dbuser=root
-ENV dbpass=gaseous
-ENV MARIADB_ROOT_PASSWORD=$dbpass
+ARG PUID=1000
+ARG PGID=1000
+ARG dbhost=localhost
+ARG dbuser=root
+ARG dbpass=gaseous
+ARG MARIADB_ROOT_PASSWORD=$dbpass
+
+ENV PUID=${PUID}
+ENV PGID=${PGID}
+ENV dbhost=${dbhost}
+ENV dbuser=${dbuser}
+ENV dbpass=${dbpass}
+ENV MARIADB_ROOT_PASSWORD=${dbpass}
 
 # install mariadb
 RUN DEBIAN_FRONTEND=noninteractive && \
@@ -50,32 +60,18 @@ RUN chmod +x /usr/sbin/start-mariadb.sh
 # install supervisord
 RUN apt-get install -y supervisor
 COPY ../build/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+RUN mkdir -p /var/run/supervisord
+RUN mkdir -p /var/log/supervisord
 
 # clean up apt-get
 RUN apt-get clean && rm -rf /var/lib/apt/lists
 
-# set user name
-ENV USER=gaseous
-ENV GROUP=gaseous
-
-# configure user
-ENV PUID=1000
-ENV PGID=1000
-RUN groupadd -g $PGID $USER
-RUN useradd -u $PUID -g $GROUP -m $USER -G sudo 
-RUN usermod -p "*" $USER
-
-# create home directory
-RUN mkdir -p /home/$USER/.gaseous-server /var/lib/mysql
-
-# set permissions
-RUN chown -R $USER:$GROUP /App /home/$USER/.gaseous-server /var/lib/mysql /run/mysqld
+# copy entrypoint
+COPY ../build/entrypoint.sh /usr/sbin/entrypoint.sh
+RUN chmod +x /usr/sbin/entrypoint.sh
 
 # volumes
-VOLUME /home/$USER/.gaseous-server /var/lib/mysql
-
-# switch to user
-USER $PUID
+VOLUME /home/gaseous/.gaseous-server /var/lib/mysql
 
 # start services
-CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
+ENTRYPOINT [ "/usr/sbin/entrypoint.sh" ]
