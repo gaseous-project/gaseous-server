@@ -38,10 +38,10 @@ namespace gaseous_server.Classes
             long deletedCount = 1;
             long deletedEventCount = 0;
             long maxLoops = 1000;
+            sql = "DELETE FROM ServerLogs WHERE EventTime < @EventRetentionDate LIMIT 1000; SELECT ROW_COUNT() AS Count;";
+            dbDict.Add("EventRetentionDate", DateTime.UtcNow.AddDays(Config.LoggingConfiguration.LogRetention * -1));
             while (deletedCount > 0)
             {
-                sql = "DELETE FROM ServerLogs WHERE EventTime < @EventRetentionDate LIMIT 1000; SELECT ROW_COUNT() AS Count;";
-                dbDict.Add("EventRetentionDate", DateTime.UtcNow.AddDays(Config.LoggingConfiguration.LogRetention * -1));
                 DataTable deletedCountTable = db.ExecuteCMD(sql, dbDict);
                 deletedCount = (long)deletedCountTable.Rows[0][0];
                 deletedEventCount += deletedCount;
