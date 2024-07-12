@@ -37,7 +37,7 @@ namespace gaseous_server.Classes
             Logging.Log(Logging.LogType.Information, "Maintenance", "Removing logs older than " + Config.LoggingConfiguration.LogRetention + " days");
             long deletedCount = 1;
             long deletedEventCount = 0;
-            long maxLoops = 1000;
+            long maxLoops = 10000;
             sql = "DELETE FROM ServerLogs WHERE EventTime < @EventRetentionDate LIMIT 1000; SELECT ROW_COUNT() AS Count;";
             dbDict.Add("EventRetentionDate", DateTime.UtcNow.AddDays(Config.LoggingConfiguration.LogRetention * -1));
             while (deletedCount > 0)
@@ -45,6 +45,8 @@ namespace gaseous_server.Classes
                 DataTable deletedCountTable = db.ExecuteCMD(sql, dbDict);
                 deletedCount = (long)deletedCountTable.Rows[0][0];
                 deletedEventCount += deletedCount;
+
+                Logging.Log(Logging.LogType.Information, "Maintenance", "Deleted " + deletedCount + " log entries");
 
                 // check if we've hit the limit
                 maxLoops -= 1;
