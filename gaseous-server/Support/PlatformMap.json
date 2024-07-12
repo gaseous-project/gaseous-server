@@ -1201,6 +1201,9 @@
         ".7Z",
         ".FDS",
         ".NES",
+        ".NEZ",
+        ".UNF",
+        ".UNIF",
         ".ZIP"
       ],
       "UniqueFileExtensions": []
@@ -1229,6 +1232,11 @@
     },
     "Bios": [
       {
+        "hash": "ca30b50f880eb660a320674ed365ef7a",
+        "description": "Family Computer Disk System BIOS - Required for Famicom Disk System emulation",
+        "filename": "disksys.rom"
+      },
+      {
         "hash": "7f98d77d7a094ad7d069b74bd553ec98",
         "description": "Game Genie add-on cartridge - Required for Game Genei Add-on emulation (Only supported on the fceumm core)",
         "filename": "gamegenie.nes"
@@ -1247,6 +1255,9 @@
         ".7Z",
         ".FDS",
         ".NES",
+        ".NEZ",
+        ".UNF",
+        ".UNIF",
         ".ZIP"
       ],
       "UniqueFileExtensions": []
@@ -1278,6 +1289,11 @@
         "hash": "ca30b50f880eb660a320674ed365ef7a",
         "description": "Family Computer Disk System BIOS - Required for Famicom Disk System emulation",
         "filename": "disksys.rom"
+      },
+      {
+        "hash": "7f98d77d7a094ad7d069b74bd553ec98",
+        "description": "Game Genie add-on cartridge - Required for Game Genei Add-on emulation (Only supported on the fceumm core)",
+        "filename": "gamegenie.nes"
       }
     ]
   },
