@@ -13,9 +13,21 @@ class UploadRom {
 
         // set up the drop zone
         let dropZone = this.dialog.modalElement.querySelector('#upload_target');
-        let uploadList = this.dialog.modalElement.querySelector('#uploaded_roms');
         let uploadedNoRomsLabel = this.dialog.modalElement.querySelector('#uploaded_roms_emptylabel');
         dropZone.classList.add('dragtarget');
+        dropZone.addEventListener('click', async (e) => {
+            e.preventDefault();
+            let fileInput = document.createElement('input');
+            fileInput.type = 'file';
+            fileInput.multiple = true;
+            fileInput.style.display = 'none';
+
+            fileInput.addEventListener('change', async (e) => {
+                this.#ProcessFiles(fileInput.files)
+            });
+
+            fileInput.click();
+        });
         dropZone.addEventListener('drop', async (e) => {
             e.preventDefault();
             dropZone.classList.remove('dragover');
@@ -23,92 +35,7 @@ class UploadRom {
 
             uploadedNoRomsLabel.style.display = 'none';
 
-            // load queue
-            let uploadedItems = [];
-            for (let i = 0; i < files.length; i++) {
-                let file = files[i];
-
-                let uploadedItem = new UploadItem(file.name, i);
-                uploadedItems.push(uploadedItem);
-                uploadList.prepend(uploadedItem.Item);
-            }
-
-            // process the queue
-            for (let i = 0; i < files.length; i++) {
-                // handle the file
-                let file = files[i];
-                let formData = new FormData();
-                formData.append('file', file);
-
-                let uploadedItem = uploadedItems[i];
-
-                let xhr = new XMLHttpRequest();
-                xhr.open('POST', '/api/v1.1/Roms');
-                xhr.upload.addEventListener('progress', (e) => {
-                    if (e.lengthComputable) {
-                        let percentCompleted = Math.round((e.loaded * 100) / e.total);
-                        if (percentCompleted < 100) {
-                            uploadedItem.SetStatus(1, percentCompleted, percentCompleted + '%');
-                        } else {
-                            uploadedItem.SetStatus(4, null);
-                        }
-                    }
-                });
-
-                // handle max uploads
-                this.UploadCount++;
-
-                await new Promise(resolve => {
-                    if (this.UploadCount > this.MaxUploads) {
-                        console.log('Max uploads reached, waiting for uploads to complete');
-                        const interval = setInterval(() => {
-                            if (this.UploadCount <= this.MaxUploads) {
-                                clearInterval(interval);
-                                resolve();
-                            }
-                        }, 1000);
-                    } else {
-                        resolve();
-                    }
-                });
-
-                // begin the upload
-                xhr.addEventListener('load', () => {
-                    // upload completed
-                    this.UploadCount--;
-
-                    if (xhr.status === 200) {
-                        // process the results
-                        let response = JSON.parse(xhr.responseText);
-                        switch (response.status) {
-                            case 'duplicate':
-                                uploadedItem.SetStatus(5, null, 'Duplicate ROM');
-                                break;
-
-                            default:
-                                uploadedItem.platformId = 0;
-                                uploadedItem.platformName = 'Unknown Platform';
-                                uploadedItem.gameId = 0;
-                                uploadedItem.gameName = 'Unknown Game';
-                                uploadedItem.romId = response.romid;
-
-                                if (response.game) {
-                                    uploadedItem.gameId = response.game.id;
-                                    uploadedItem.gameName = response.game.name;
-                                }
-
-                                if (response.platform) {
-                                    uploadedItem.platformId = response.platform.id;
-                                    uploadedItem.platformName = response.platform.name;
-                                }
-
-                                uploadedItem.SetStatus(2, null);
-                                break;
-                        }
-                    }
-                });
-                xhr.send(formData);
-            }
+            this.#ProcessFiles(files)
         });
         dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();
@@ -120,6 +47,97 @@ class UploadRom {
 
         // show the dialog
         await this.dialog.open();
+    }
+
+    async #ProcessFiles(files) {
+        let uploadList = this.dialog.modalElement.querySelector('#uploaded_roms');
+
+        // load queue
+        let uploadedItems = [];
+        for (let i = 0; i < files.length; i++) {
+            let file = files[i];
+
+            let uploadedItem = new UploadItem(file.name, i);
+            uploadedItems.push(uploadedItem);
+            uploadList.prepend(uploadedItem.Item);
+        }
+
+        // process the queue
+        for (let i = 0; i < files.length; i++) {
+            // handle the file
+            let file = files[i];
+            let formData = new FormData();
+            formData.append('file', file);
+
+            let uploadedItem = uploadedItems[i];
+
+            let xhr = new XMLHttpRequest();
+            xhr.open('POST', '/api/v1.1/Roms');
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    let percentCompleted = Math.round((e.loaded * 100) / e.total);
+                    if (percentCompleted < 100) {
+                        uploadedItem.SetStatus(1, percentCompleted, percentCompleted + '%');
+                    } else {
+                        uploadedItem.SetStatus(4, null);
+                    }
+                }
+            });
+
+            // handle max uploads
+            this.UploadCount++;
+
+            await new Promise(resolve => {
+                if (this.UploadCount > this.MaxUploads) {
+                    console.log('Max uploads reached, waiting for uploads to complete');
+                    const interval = setInterval(() => {
+                        if (this.UploadCount <= this.MaxUploads) {
+                            clearInterval(interval);
+                            resolve();
+                        }
+                    }, 1000);
+                } else {
+                    resolve();
+                }
+            });
+
+            // begin the upload
+            xhr.addEventListener('load', () => {
+                // upload completed
+                this.UploadCount--;
+
+                if (xhr.status === 200) {
+                    // process the results
+                    let response = JSON.parse(xhr.responseText);
+                    switch (response.status) {
+                        case 'duplicate':
+                            uploadedItem.SetStatus(5, null, 'Duplicate ROM');
+                            break;
+
+                        default:
+                            uploadedItem.platformId = 0;
+                            uploadedItem.platformName = 'Unknown Platform';
+                            uploadedItem.gameId = 0;
+                            uploadedItem.gameName = 'Unknown Game';
+                            uploadedItem.romId = response.romid;
+
+                            if (response.game) {
+                                uploadedItem.gameId = response.game.id;
+                                uploadedItem.gameName = response.game.name;
+                            }
+
+                            if (response.platform) {
+                                uploadedItem.platformId = response.platform.id;
+                                uploadedItem.platformName = response.platform.name;
+                            }
+
+                            uploadedItem.SetStatus(2, null);
+                            break;
+                    }
+                }
+            });
+            xhr.send(formData);
+        }
     }
 
     MaxUploads = 2;
