@@ -224,3 +224,60 @@ class MessageBox {
         this.buttons.push(button);
     }
 }
+
+class FileOpen {
+    constructor(ShowFiles = false) {
+        this.ShowFiles = ShowFiles;
+    }
+
+    async open() {
+        // Create the modal
+        this.dialog = await new Modal("filepicker");
+        await this.dialog.BuildModal();
+
+        // override the dialog size
+        this.dialog.modalElement.style = 'width: 600px; height: 350px; min-width: unset; min-height: unset; max-width: unset; max-height: unset;';
+
+        // setup the dialog
+        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Select Path";
+
+        // show the dialog
+        this.dialog.open();
+    }
+
+
+}
+
+class FileOpenFolderItem {
+    constructor(Path, ShowFiles = false) {
+        this.Path = Path;
+    }
+
+    async open() {
+        const response = await fetch('/api/v1.1/FileSystem?path=' + this.Path + '&showFiles=' + this.ShowFiles).then(response => response.json()).then(async data => {
+            if (!response.ok) {
+                // handle the error
+                console.error("Error fetching profile");
+            } else {
+                const pathList = await response.json();
+
+                // create the item
+                let item = document.createElement('div');
+                item.classList.add('filepicker-item');
+
+                // add the paths to the item
+                pathList.forEach((path) => {
+                    let pathItem = document.createElement('div');
+                    pathItem.classList.add('filepicker-path');
+                    pathItem.innerHTML = path;
+                    pathItem.addEventListener('click', async () => {
+                        let fileOpen = new FileOpenFolderItem(path, this.ShowFiles);
+                        await fileOpen.open();
+                    });
+                    item.appendChild(pathItem);
+                });
+            }
+        });
+
+    }
+}
