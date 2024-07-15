@@ -143,11 +143,13 @@ namespace gaseous_server.Classes
                 {
                     // file is a bios
                     RetVal.Add("type", "bios");
-                    if (IsBios.WebEmulator != null)
+                    RetVal.Add("status", "notimported");
+
+                    foreach (Classes.Bios.BiosItem biosItem in Classes.Bios.GetBios())
                     {
-                        foreach (Classes.Bios.BiosItem biosItem in Classes.Bios.GetBios())
+                        if (biosItem.Available == false)
                         {
-                            if (biosItem.Available == false && biosItem.hash == hash.md5hash)
+                            if (biosItem.hash == hash.md5hash)
                             {
                                 string biosPath = biosItem.biosPath.Replace(biosItem.filename, "");
                                 if (!Directory.Exists(biosPath))
@@ -157,7 +159,19 @@ namespace gaseous_server.Classes
 
                                 File.Move(GameFileImportPath, biosItem.biosPath, true);
 
-                                break;
+                                RetVal.Add("name", biosItem.filename);
+                                RetVal.Add("platform", Platforms.GetPlatform(biosItem.platformid, false, false));
+                                RetVal["status"] = "imported";
+
+                                return RetVal;
+                            }
+                        }
+                        else
+                        {
+                            if (biosItem.hash == hash.md5hash)
+                            {
+                                RetVal["status"] = "duplicate";
+                                return RetVal;
                             }
                         }
                     }

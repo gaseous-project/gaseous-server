@@ -8,7 +8,6 @@
 
         </table>
         <div style="text-align: right;"><button id="settings_newlibrary">New
-                Library</button><button id="settings_oldnewlibrary" onclick="showDialog('librarynew');">(Old) New
                 Library</button></div>
     </div>
 </div>
@@ -23,6 +22,7 @@
                 newTable.innerHTML = '';
                 newTable.appendChild(createTableRow(true, ['Name', 'Path', 'Default Platform', 'Default Library', '']));
 
+                console.log(result);
                 for (let i = 0; i < result.length; i++) {
                     let platformName = '';
                     if (result[i].defaultPlatformId == 0) {
@@ -44,7 +44,7 @@
 
                     let deleteButton = '';
                     if (result[i].isDefaultLibrary == false) {
-                        let deleteButton = '<a href="#" onclick="showSubDialog(\'librarydelete\', ' + result[i].id + ');" class="romlink"><img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" /></a>';
+                        deleteButton = '<a href="#" onclick="showSubDialog(\'librarydelete\', ' + result[i].id + ');" class="romlink"><img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" /></a>';
                     }
 
                     newTable.appendChild(createTableRow(

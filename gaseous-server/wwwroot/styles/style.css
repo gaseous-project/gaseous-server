@@ -375,6 +375,10 @@ h3 {
     filter: invert(100%);
 }
 
+.svginvert {
+    filter: invert(100%);
+}
+
 .banner_button_image_smaller {
     height: 16px;
     width: 16px;
@@ -2626,4 +2630,53 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     background-repeat: no-repeat;
     background-position: 1px 1px;
     background-size: 16px 16px;
+}
+
+#fileSelector {
+    display: flex;
+    list-style: none;
+    white-space: nowrap;
+    width: 100%;
+    height: 260px;
+    margin-top: 0px;
+    margin-left: 0xp;
+    margin-right: 10px;
+    padding-top: 0xp;
+    padding-left: 5px;
+    padding-right: 5px;
+    padding-bottom: 5px;
+}
+
+.filepicker-item {
+    width: 200px;
+    min-width: 200px;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+.filepicker-path {
+    padding: 5px;
+}
+
+.filepicker-path-selected {
+    background-color: var(--selected-item);
+}
+
+.filepicker-path:hover {
+    cursor: pointer;
+    background-color: var(--input-background);
+}
+
+#selectedPath {
+    position: absolute;
+    height: 20px;
+    padding: 5px;
+    left: 5px;
+    bottom: -38px;
+    width: 425px;
+    background-color: var(--section-header-background);
+    border-radius: var(--standard-radius);
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
 }

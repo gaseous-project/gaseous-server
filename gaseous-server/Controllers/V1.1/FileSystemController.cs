@@ -34,20 +34,30 @@ namespace gaseous_server.Controllers.v1_1
             {
                 if (Directory.Exists(path))
                 {
-                    string[] directories = Directory.GetDirectories(path);
-                    Array.Sort(directories);
-                    string[] files = Directory.GetFiles(path);
-                    Array.Sort(files);
-
-                    Dictionary<string, List<string>> allFiles = new Dictionary<string, List<string>>
+                    Dictionary<string, List<Dictionary<string, string>>> allFiles = new Dictionary<string, List<Dictionary<string, string>>>();
+                    List<Dictionary<string, string>> directories = new List<Dictionary<string, string>>();
+                    string[] dirs = Directory.GetDirectories(path);
+                    Array.Sort(dirs);
+                    foreach (string dir in dirs)
                     {
-                        { "directories", directories.ToList() }
-                    };
-
-                    if (showFiles)
-                    {
-                        allFiles.Add("files", files.ToList());
+                        DirectoryInfo directoryInfo = new DirectoryInfo(dir);
+                        directories.Add(new Dictionary<string, string> { { "name", directoryInfo.Name }, { "path", directoryInfo.FullName } });
                     }
+                    allFiles.Add("directories", directories);
+
+                    if (showFiles == true)
+                    {
+                        List<Dictionary<string, string>> files = new List<Dictionary<string, string>>();
+                        string[] filePaths = Directory.GetFiles(path);
+                        Array.Sort(filePaths);
+                        foreach (string file in filePaths)
+                        {
+                            FileInfo fileInfo = new FileInfo(file);
+                            files.Add(new Dictionary<string, string> { { "name", fileInfo.Name }, { "path", fileInfo.FullName } });
+                        }
+                        allFiles.Add("files", files);
+                    }
+
                     return Ok(allFiles);
                 }
                 else

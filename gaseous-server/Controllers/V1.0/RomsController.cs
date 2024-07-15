@@ -71,13 +71,19 @@ namespace gaseous_server.Controllers
                 // Process uploaded file
                 Classes.ImportGame uploadImport = new ImportGame();
                 Dictionary<string, object> RetVal = uploadImport.ImportGameFile((string)UploadedFile["fullpath"], OverridePlatform);
-                if (RetVal["status"] == "imported")
+                switch (RetVal["type"])
                 {
-                    IGDB.Models.Game? game = (IGDB.Models.Game)RetVal["game"];
-                    if (game.Id == null)
-                    {
-                        RetVal["game"] = Games.GetGame(0, false, false, false);
-                    }
+                    case "rom":
+                        if (RetVal["status"] == "imported")
+                        {
+                            IGDB.Models.Game? game = (IGDB.Models.Game)RetVal["game"];
+                            if (game.Id == null)
+                            {
+                                RetVal["game"] = Games.GetGame(0, false, false, false);
+                            }
+                        }
+                        break;
+
                 }
 
                 if (Directory.Exists(workPath))

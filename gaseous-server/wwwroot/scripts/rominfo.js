@@ -182,12 +182,12 @@ class rominfodialog {
                 let selectedPlatform = $(fixIGDBPlatformSelect).select2('data');
                 let selectedGame = $(fixIGDBGameSelect).select2('data');
 
-                if (selectedPlatform == null || selectedPlatform[0].id == undefined || selectedPlatform[0].id == "") {
+                if (selectedPlatform == undefined || selectedPlatform == null || selectedPlatform.length == 0) {
                     fixIGDBPlatformValue = 0;
                     fixIGDBGameValue = 0;
                 } else {
                     fixIGDBPlatformValue = selectedPlatform[0].id;
-                    if (selectedGame == null || selectedGame[0].id == undefined || selectedGame[0].id == "") {
+                    if (selectedGame == undefined || selectedGame == null || selectedGame.length == 0) {
                         fixIGDBGameValue = 0;
                     } else {
                         fixIGDBGameValue = selectedGame[0].id;

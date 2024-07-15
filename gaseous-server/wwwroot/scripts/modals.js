@@ -143,6 +143,28 @@ class Modal {
         });
     }
 
+    enableButtons() {
+        this.buttons.forEach((button) => {
+            button.button.disabled = false;
+        });
+    }
+
+    disableButton(buttonId) {
+        this.buttons.forEach((button) => {
+            if (button.text === buttonId) {
+                button.button.disabled = true;
+            }
+        });
+    }
+
+    enableButton(buttonId) {
+        this.buttons.forEach((button) => {
+            if (button.text === buttonId) {
+                button.button.disabled = false;
+            }
+        });
+    }
+
     removeTab(tabId) {
         const tab = this.modalElement.querySelector('#tab-' + tabId);
         if (tab) {
@@ -166,6 +188,7 @@ class ModalButton {
 
     render() {
         this.button = document.createElement('button');
+        this.button.id = this.text;
         this.button.classList.add('modal-button');
         if (this.type) {
             switch (this.type) {
@@ -226,8 +249,15 @@ class MessageBox {
 }
 
 class FileOpen {
-    constructor(ShowFiles = false) {
-        this.ShowFiles = ShowFiles;
+    constructor(okCallback, cancelCallback, ShowFiles = false) {
+        this.okCallback = okCallback;
+        this.cancelCallback = cancelCallback;
+        if (ShowFiles === null || ShowFiles === undefined) {
+            this.ShowFiles = false;
+        } else {
+            this.ShowFiles = ShowFiles;
+        }
+        this.SelectedPath = '/';
     }
 
     async open() {
@@ -240,21 +270,54 @@ class FileOpen {
 
         // setup the dialog
         this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Select Path";
+        this.dialog.modalElement.querySelector('#modal-body').setAttribute('style', 'overflow-x: auto; overflow-y: hidden; padding: 0px;');
+
+        // load the first path
+        this.filePickerBox = this.dialog.modalElement.querySelector('#fileSelector');
+        let fileOpenItem = new FileOpenFolderItem(this, "/", this.ShowFiles);
+        await fileOpenItem.open();
+        this.filePickerBox.append(fileOpenItem.Item);
+
+        // setup the path text display
+        this.pathBox = this.dialog.modalElement.querySelector('#selectedPath');
+
+        // add ok button
+        let okButton = new ModalButton("OK", 1, this, async function (callingObject) {
+            if (callingObject.okCallback) {
+                callingObject.okCallback();
+            }
+            callingObject.dialog.close();
+        });
+        this.dialog.addButton(okButton);
+
+        // add cancel button
+        let cancelButton = new ModalButton("Cancel", 2, this, async function (callingObject) {
+            if (callingObject.cancelButton) {
+                callingObject.cancelCallback();
+            }
+            callingObject.dialog.close();
+        });
+        this.dialog.addButton(cancelButton);
 
         // show the dialog
         this.dialog.open();
     }
 
-
+    async close() {
+        this.dialog.close();
+    }
 }
 
 class FileOpenFolderItem {
-    constructor(Path, ShowFiles = false) {
+    constructor(ParentObject, Path, ShowFiles) {
+        this.ParentObject = ParentObject;
         this.Path = Path;
+        this.ShowFiles = ShowFiles;
+        this.Item = null;
     }
 
     async open() {
-        const response = await fetch('/api/v1.1/FileSystem?path=' + this.Path + '&showFiles=' + this.ShowFiles).then(response => response.json()).then(async data => {
+        const response = await fetch('/api/v1.1/FileSystem?path=' + encodeURIComponent(this.Path) + '&showFiles=' + this.ShowFiles).then(async response => {
             if (!response.ok) {
                 // handle the error
                 console.error("Error fetching profile");
@@ -262,22 +325,39 @@ class FileOpenFolderItem {
                 const pathList = await response.json();
 
                 // create the item
-                let item = document.createElement('div');
+                let item = document.createElement('li');
                 item.classList.add('filepicker-item');
 
+                // set the item
+                this.Item = item;
+
                 // add the paths to the item
-                pathList.forEach((path) => {
+                pathList['directories'].forEach((path) => {
                     let pathItem = document.createElement('div');
                     pathItem.classList.add('filepicker-path');
-                    pathItem.innerHTML = path;
+                    pathItem.innerHTML = path.name;
                     pathItem.addEventListener('click', async () => {
-                        let fileOpen = new FileOpenFolderItem(path, this.ShowFiles);
-                        await fileOpen.open();
+                        this.Item.querySelectorAll('.filepicker-path').forEach((path) => {
+                            path.classList.remove('filepicker-path-selected');
+                        });
+                        pathItem.classList.add('filepicker-path-selected');
+                        let fileOpenItem = new FileOpenFolderItem(this.ParentObject, path.path, this.ShowFiles);
+                        await fileOpenItem.open();
+
+                        // remove all items after this one
+                        while (this.ParentObject.filePickerBox.lastChild !== this.Item) {
+                            this.ParentObject.filePickerBox.removeChild(this.ParentObject.filePickerBox.lastChild);
+                        }
+
+                        this.ParentObject.filePickerBox.append(fileOpenItem.Item);
+                        fileOpenItem.Item.scrollIntoView();
+
+                        this.ParentObject.pathBox.innerHTML = path.path;
+                        this.ParentObject.SelectedPath = path.path;
                     });
                     item.appendChild(pathItem);
                 });
             }
         });
-
     }
 }

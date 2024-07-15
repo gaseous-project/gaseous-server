@@ -77,9 +77,9 @@ class UploadRom {
                 if (e.lengthComputable) {
                     let percentCompleted = Math.round((e.loaded * 100) / e.total);
                     if (percentCompleted < 100) {
-                        uploadedItem.SetStatus(1, percentCompleted, percentCompleted + '%');
+                        uploadedItem.SetStatus('unknown', 1, percentCompleted, percentCompleted + '%');
                     } else {
-                        uploadedItem.SetStatus(4, null);
+                        uploadedItem.SetStatus('unknown', 4, null);
                     }
                 }
             });
@@ -109,29 +109,56 @@ class UploadRom {
                 if (xhr.status === 200) {
                     // process the results
                     let response = JSON.parse(xhr.responseText);
-                    switch (response.status) {
-                        case 'duplicate':
-                            uploadedItem.SetStatus(5, null, 'Duplicate ROM');
+                    switch (response.type) {
+                        case 'rom':
+                            switch (response.status) {
+                                case 'duplicate':
+                                    uploadedItem.SetStatus(response.type, 5, null, 'Duplicate ROM');
+                                    break;
+
+                                default:
+                                    uploadedItem.platformId = 0;
+                                    uploadedItem.platformName = 'Unknown Platform';
+                                    uploadedItem.gameId = 0;
+                                    uploadedItem.gameName = 'Unknown Game';
+                                    uploadedItem.romId = response.romid;
+
+                                    if (response.game) {
+                                        uploadedItem.gameId = response.game.id;
+                                        uploadedItem.gameName = response.game.name;
+                                    }
+
+                                    if (response.platform) {
+                                        uploadedItem.platformId = response.platform.id;
+                                        uploadedItem.platformName = response.platform.name;
+                                    }
+
+                                    uploadedItem.SetStatus(response.type, 2, null);
+                                    break;
+                            }
                             break;
 
-                        default:
-                            uploadedItem.platformId = 0;
-                            uploadedItem.platformName = 'Unknown Platform';
-                            uploadedItem.gameId = 0;
-                            uploadedItem.gameName = 'Unknown Game';
-                            uploadedItem.romId = response.romid;
+                        case 'bios':
+                            switch (response.status) {
+                                case 'duplicate':
+                                    uploadedItem.SetStatus(response.type, 5, null, 'Duplicate BIOS');
+                                    break;
 
-                            if (response.game) {
-                                uploadedItem.gameId = response.game.id;
-                                uploadedItem.gameName = response.game.name;
+                                default:
+                                    uploadedItem.platformId = 0;
+                                    uploadedItem.platformName = 'Unknown Platform';
+
+                                    if (response.platform) {
+                                        uploadedItem.platformId = response.platform.id;
+                                        uploadedItem.platformName = response.platform.name;
+                                    }
+
+                                    uploadedItem.gameName = response.name;
+
+                                    uploadedItem.SetStatus(response.type, 2, null);
+                                    break;
                             }
 
-                            if (response.platform) {
-                                uploadedItem.platformId = response.platform.id;
-                                uploadedItem.platformName = response.platform.name;
-                            }
-
-                            uploadedItem.SetStatus(2, null);
                             break;
                     }
                 }
@@ -148,6 +175,7 @@ class UploadItem {
     constructor(Filename, Index) {
         this.Filename = Filename;
         this.Status = 0;
+        this.Type = 'unknown';
         this.Progress = null;
 
         // create the item
@@ -159,7 +187,7 @@ class UploadItem {
         // rom cover art
         this.coverArt = document.createElement('img');
         this.coverArt.classList.add('uploadItem-CoverArt');
-        this.coverArt.src = '/images/unknowngame.png';
+        this.coverArt.src = '';
 
         // file name label
         this.filenameLabel = document.createElement('div');
@@ -242,7 +270,8 @@ class UploadItem {
     gameName = null;
     romId = null;
 
-    SetStatus(Status, Progress, Message = null) {
+    SetStatus(Type, Status, Progress, Message = null) {
+        this.Type = Type;
         this.Status = Status;
         this.Progress = Progress;
         this.Message = Message;
@@ -256,16 +285,21 @@ class UploadItem {
         this.progressBar.classList.remove('uploaditemprogressincomplete');
         this.progressBar.classList.remove('uploaditemprogresswarning');
         this.progressBar.classList.remove('uploaditemprogressfailed');
+        this.coverArt.classList.remove('svginvert');
         switch (this.Status) {
             case 0: // Pending
                 this.progressBar.removeAttribute('value');
                 this.progressBar.removeAttribute('max');
                 this.progressBar.classList.add('uploaditemprogressinprogress');
+                this.coverArt.classList.add('svginvert');
+                this.coverArt.src = '/images/pending.svg';
                 break;
             case 1: // Uploading
                 this.progressBar.value = this.Progress;
                 this.progressBar.max = 100;
                 this.progressBar.classList.add('uploaditemprogressinprogress');
+                this.coverArt.classList.add('svginvert');
+                this.coverArt.src = '/images/upload.svg';
                 break;
             case 2: // Complete
                 this.progressBar.value = 100;
@@ -274,31 +308,53 @@ class UploadItem {
                 this.statusLabel.style.display = 'none';
                 this.gameNameLabel.style.display = 'block';
                 this.gamePlatformLabel.style.display = 'block';
-                this.infoButton.style.display = 'block';
 
-                if (this.gameId === null || this.gameId === 0) {
-                    this.coverArt.src = '/images/unknowngame.png';
-                } else {
-                    this.coverArt.src = '/api/v1.1/Games/' + this.gameId + '/cover/image/cover_big/cover.jpg';
+                switch (this.Type) {
+                    case 'rom':
+                        this.infoButton.style.display = 'block';
+
+                        if (this.gameId === null || this.gameId === 0) {
+                            this.coverArt.src = '/images/unknowngame.png';
+                        } else {
+                            this.coverArt.src = '/api/v1.1/Games/' + this.gameId + '/cover/image/cover_big/cover.jpg';
+                        }
+
+                        this.gamePlatformLabel.innerHTML = this.platformName;
+                        break;
+
+                    case 'bios':
+                        this.coverArt.src = '/images/bios.svg';
+
+                        this.gamePlatformLabel.innerHTML = "BIOS for platform: " + this.platformName;
+                        break;
+
+                    case 'unknown':
+                        this.coverArt.src = '/images/unknowngame.png';
+                        break;
                 }
 
                 this.gameNameLabel.innerHTML = this.gameName;
-                this.gamePlatformLabel.innerHTML = this.platformName;
                 break;
             case 3: // Failed
                 this.progressBar.value = 100;
                 this.progressBar.max = 100;
                 this.progressBar.classList.add('uploaditemprogressfailed');
+                this.coverArt.classList.add('svginvert');
+                this.coverArt.src = '/images/Critical.svg';
                 break;
             case 4: // Processing
                 this.progressBar.removeAttribute('value');
                 this.progressBar.removeAttribute('max');
                 this.progressBar.classList.add('uploaditemprogressinprogress');
+                this.coverArt.classList.add('svginvert');
+                this.coverArt.src = '/images/processing.svg';
                 break;
             case 5: // Error
                 this.progressBar.value = 100;
                 this.progressBar.max = 100;
                 this.progressBar.classList.add('uploaditemprogresswarning');
+                this.coverArt.classList.add('svginvert');
+                this.coverArt.src = '/images/Warning.svg';
                 break;
         }
     }
