@@ -62,7 +62,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
     // set page mode buttons
     let pageViewButton = document.getElementById('games_library_button_pagedview');
     let infiniteViewButton = document.getElementById('games_library_button_infiniteview');
-    let pageMode = GetPreference('LibraryPagination', 'paged');
+    let pageMode = GetPreference('LibraryPagination', 'infinite');
     switch (pageMode) {
         case 'paged':
             pageViewButton.classList.add('games_library_button_selected');
@@ -360,7 +360,7 @@ const elementIsVisibleInViewport = (el, partiallyVisible = false) => {
 };
 
 function IsInView() {
-    let pageMode = GetPreference('LibraryPagination', 'paged');
+    let pageMode = GetPreference('LibraryPagination', 'infinite');
     switch (pageMode) {
         case "paged":
             let loadElement = document.getElementById('games_library_loadmore');

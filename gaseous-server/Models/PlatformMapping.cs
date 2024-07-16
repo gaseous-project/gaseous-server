@@ -15,8 +15,6 @@ namespace gaseous_server.Models
 {
     public class PlatformMapping
     {
-        private static Dictionary<string, PlatformMapItem> PlatformMapCache = new Dictionary<string, PlatformMapItem>();
-
         /// <summary>
         /// Updates the platform map from the embedded platform map resource
         /// </summary>
@@ -74,8 +72,8 @@ namespace gaseous_server.Models
 
             foreach (PlatformMapItem mapItem in platforms)
             {
-                // get the IGDB platform data
-                Platform platform = Platforms.GetPlatform(mapItem.IGDBId, false);
+                // insert dummy platform data - it'll be cleaned up on the first metadata refresh
+                Platform platform = CreateDummyPlatform(mapItem);
 
                 try
                 {
@@ -94,6 +92,24 @@ namespace gaseous_server.Models
             }
         }
 
+        private static IGDB.Models.Platform CreateDummyPlatform(PlatformMapItem mapItem)
+        {
+            IGDB.Models.Platform platform = new IGDB.Models.Platform
+            {
+                Id = mapItem.IGDBId,
+                Name = mapItem.IGDBName,
+                Slug = mapItem.IGDBSlug,
+                AlternativeName = mapItem.AlternateNames.FirstOrDefault()
+            };
+
+            if (Storage.GetCacheStatus("Platform", mapItem.IGDBId) == Storage.CacheStatus.NotPresent)
+            {
+                Storage.NewCacheValue(platform);
+            }
+
+            return platform;
+        }
+
         public static List<PlatformMapItem> PlatformMap
         {
             get
@@ -106,21 +122,11 @@ namespace gaseous_server.Models
                 foreach (DataRow row in data.Rows)
                 {
                     long mapId = (long)row["Id"];
-                    if (PlatformMapCache.ContainsKey(mapId.ToString()))
+
+                    PlatformMapItem mapItem = BuildPlatformMapItem(row);
+                    if (mapItem != null)
                     {
-                        PlatformMapItem mapItem = PlatformMapCache[mapId.ToString()];
-                        if (mapItem != null)
-                        {
-                            platformMaps.Add(mapItem);
-                        }
-                    }
-                    else
-                    {
-                        PlatformMapItem mapItem = BuildPlatformMapItem(row);
-                        if (mapItem != null)
-                        {
-                            platformMaps.Add(mapItem);
-                        }
+                        platformMaps.Add(mapItem);
                     }
                 }
 
@@ -132,35 +138,30 @@ namespace gaseous_server.Models
 
         public static PlatformMapItem GetPlatformMap(long Id)
         {
-            if (PlatformMapCache.ContainsKey(Id.ToString()))
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT * FROM PlatformMap WHERE Id = @Id";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            dbDict.Add("Id", Id);
+            DataTable data = db.ExecuteCMD(sql, dbDict);
+
+            if (data.Rows.Count > 0)
             {
-                return PlatformMapCache[Id.ToString()];
+                PlatformMapItem platformMap = BuildPlatformMapItem(data.Rows[0]);
+
+                return platformMap;
             }
             else
             {
-                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                string sql = "SELECT * FROM PlatformMap WHERE Id = @Id";
-                Dictionary<string, object> dbDict = new Dictionary<string, object>();
-                dbDict.Add("Id", Id);
-                DataTable data = db.ExecuteCMD(sql, dbDict);
-
-                if (data.Rows.Count > 0)
-                {
-                    PlatformMapItem platformMap = BuildPlatformMapItem(data.Rows[0]);
-
-                    return platformMap;
-                }
-                else
-                {
-                    Exception exception = new Exception("Platform Map Id " + Id + " does not exist.");
-                    Logging.Log(Logging.LogType.Critical, "Platform Map", "Platform Map Id " + Id + " does not exist.", exception);
-                    throw exception;
-                }
+                Exception exception = new Exception("Platform Map Id " + Id + " does not exist.");
+                Logging.Log(Logging.LogType.Critical, "Platform Map", "Platform Map Id " + Id + " does not exist.", exception);
+                throw exception;
             }
         }
 
         public static void WritePlatformMap(PlatformMapItem item, bool Update, bool AllowAvailableEmulatorOverwrite)
         {
+            CreateDummyPlatform(item);
+
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
@@ -248,11 +249,6 @@ namespace gaseous_server.Models
                     db.ExecuteCMD(sql, dbDict);
                 }
             }
-
-            if (PlatformMapCache.ContainsKey(item.IGDBId.ToString()))
-            {
-                PlatformMapCache.Remove(item.IGDBId.ToString());
-            }
         }
 
         public static void WriteAvailableEmulators(PlatformMapItem item)
@@ -287,7 +283,16 @@ namespace gaseous_server.Models
             string sql = "";
 
             // get platform data
-            IGDB.Models.Platform? platform = Platforms.GetPlatform(IGDBId, false);
+            // IGDB.Models.Platform? platform = Platforms.GetPlatform(IGDBId, false);
+            IGDB.Models.Platform? platform = null;
+            if (Storage.GetCacheStatus("Platform", IGDBId) == Storage.CacheStatus.NotPresent)
+            {
+                //platform = Platforms.GetPlatform(IGDBId, false);
+            }
+            else
+            {
+                platform = (IGDB.Models.Platform)Storage.GetCacheValue<IGDB.Models.Platform>(new Platform(), "id", IGDBId);
+            }
 
             if (platform != null)
             {
@@ -383,15 +388,6 @@ namespace gaseous_server.Models
                     AvailableWebEmulators = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PlatformMapItem.WebEmulatorItem.AvailableWebEmulatorItem>>((string)Common.ReturnValueIfNull(row["AvailableWebEmulators"], "[]"))
                 };
                 mapItem.Bios = bioss;
-
-                if (PlatformMapCache.ContainsKey(IGDBId.ToString()))
-                {
-                    PlatformMapCache[IGDBId.ToString()] = mapItem;
-                }
-                else
-                {
-                    PlatformMapCache.Add(IGDBId.ToString(), mapItem);
-                }
 
                 return mapItem;
             }

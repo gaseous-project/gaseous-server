@@ -401,9 +401,6 @@ gaseous_server.Classes.Metadata.Platforms.AssignAllPlatformsToGameIdZero();
 // extract platform map if not present
 PlatformMapping.ExtractPlatformMap();
 
-// force load platform map into cache
-var platformMap = PlatformMapping.PlatformMap;
-
 // add background tasks
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.SignatureIngestor)
