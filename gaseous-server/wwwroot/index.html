@@ -188,10 +188,19 @@
                     myParam = 'library';
                 }
 
+                let pageHeadScript = document.getElementsByTagName('head')[0];
+
                 $('#content').load('/pages/' + myParam + '.html?v=' + AppVersion);
                 let pageScriptObject = document.createElement('script');
                 pageScriptObject.src = '/pages/' + myParam + '.js?v=' + AppVersion;
-                document.getElementById('pagescript').appendChild(pageScriptObject);
+                pageHeadScript.appendChild(pageScriptObject);
+
+                if (getQueryString('sub', 'string')) {
+                    let subParam = getQueryString('sub', 'string');
+                    let subScriptObject = document.createElement('script');
+                    subScriptObject.src = '/pages/settings/' + subParam + '.js?v=' + AppVersion;
+                    pageHeadScript.appendChild(subScriptObject);
+                }
             },
             function (error) {
                 window.location.replace("/pages/login.html");
