@@ -22,7 +22,6 @@
                 newTable.innerHTML = '';
                 newTable.appendChild(createTableRow(true, ['Name', 'Path', 'Default Platform', 'Default Library', '']));
 
-                console.log(result);
                 for (let i = 0; i < result.length; i++) {
                     let platformName = '';
                     if (result[i].defaultPlatformId == 0) {
@@ -42,9 +41,44 @@
                         defaultLibrary = "";
                     }
 
+                    let controls = document.createElement('div');
+                    controls.style.textAlign = 'right';
+
                     let deleteButton = '';
                     if (result[i].isDefaultLibrary == false) {
-                        deleteButton = '<a href="#" onclick="showSubDialog(\'librarydelete\', ' + result[i].id + ');" class="romlink"><img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" /></a>';
+                        deleteButton = document.createElement('a');
+                        deleteButton.href = '#';
+                        deleteButton.addEventListener('click', () => {
+                            let deleteLibrary = new MessageBox('Delete Library', 'Are you sure you want to delete this library?<br /><br /><strong>Warning</strong>: This cannot be undone!');
+                            deleteLibrary.addButton(new ModalButton('OK', 2, deleteLibrary, function (callingObject) {
+                                ajaxCall(
+                                    '/api/v1.1/Library/' + result[i].id,
+                                    'DELETE',
+                                    function () {
+                                        callingObject.msgDialog.close();
+                                        drawLibrary();
+                                    },
+                                    function () {
+                                        callingObject.msgDialog.close();
+                                        drawLibrary();
+                                    }
+                                );
+                            }));
+
+                            deleteLibrary.addButton(new ModalButton('Cancel', 0, deleteLibrary, function (callingObject) {
+                                callingObject.msgDialog.close();
+                            }));
+
+                            deleteLibrary.open();
+                        });
+                        let deleteButtonImage = document.createElement('img');
+                        deleteButtonImage.src = '/images/delete.svg';
+                        deleteButtonImage.className = 'banner_button_image';
+                        deleteButtonImage.alt = 'Delete';
+                        deleteButtonImage.title = 'Delete';
+                        deleteButton.appendChild(deleteButtonImage);
+
+                        controls.appendChild(deleteButton);
                     }
 
                     newTable.appendChild(createTableRow(
@@ -54,7 +88,7 @@
                             result[i].path,
                             platformName,
                             defaultLibrary,
-                            '<div style="text-align: right;">' + deleteButton + '</div>'
+                            controls
                         ],
                         'romrow',
                         'romcell'
