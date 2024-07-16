@@ -32,6 +32,11 @@ namespace gaseous_server.Controllers.v1_1
         {
             try
             {
+                if (path.Contains(".."))
+                {
+                    return NotFound();
+                }
+
                 if (Directory.Exists(path))
                 {
                     Dictionary<string, List<Dictionary<string, string>>> allFiles = new Dictionary<string, List<Dictionary<string, string>>>();
