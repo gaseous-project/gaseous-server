@@ -11,7 +11,7 @@
                         rel="noopener noreferrer">https://github.com/gaseous-project/gaseous-server</a></td>
                 <td rowspan="5" style="text-align: center; width: 128px;">
                     <img src="/images/logo.png" style="display: block; margin: 20px auto; width: 100px;" />
-                    <span style="display: block;">The Gaseous logo was designed by Tom2.0</span>
+                    <span style="display: block;">The Gaseous logo was designed by Tom1243</span>
                 </td>
             </tr>
             <tr>
@@ -126,13 +126,6 @@
 </div>
 
 <script type="text/javascript">
-    var versionBox = document.getElementById('settings_appversion');
-    if (AppVersion == "1.5.0.0") {
-        versionBox.innerHTML = "Built from source";
-    } else {
-        versionBox.innerHTML = AppVersion;
-    }
-
-    var versionBox = document.getElementById('settings_dbversion');
-    versionBox.innerHTML = DBSchemaVersion;
+    // populate the page with the server version and database schema version
+    populatePage();
 </script>

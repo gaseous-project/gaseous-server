@@ -37,44 +37,6 @@
 </div> -->
 
 <script type="text/javascript">
-    if (userProfile.roles.includes("Admin")) {
-        document.getElementById('properties_toc_settings').style.display = '';
-        document.getElementById('properties_toc_libraries').style.display = '';
-        document.getElementById('properties_toc_users').style.display = '';
-        document.getElementById('properties_toc_services').style.display = '';
-        document.getElementById('properties_toc_mapping').style.display = '';
-        document.getElementById('properties_toc_logs').style.display = '';
-    }
-    if (userProfile.roles.includes("Gamer")) {
-        document.getElementById('properties_toc_mapping').style.display = '';
-    }
-
-    var myParam = getQueryString('sub', 'string');
-
-    var selectedTab = '';
-
-    if (myParam) {
-        selectedTab = myParam;
-    } else {
-        selectedTab = 'system';
-    }
-
-    SelectTab(selectedTab);
-
-    function SelectTab(TabName) {
-        if (selectedTab != TabName) {
-            window.location.href = '/index.html?page=settings&sub=' + TabName;
-        }
-
-        var tocs = document.getElementsByName('properties_toc_item');
-        for (var i = 0; i < tocs.length; i++) {
-            if ((tocs[i].id) == ("properties_toc_" + TabName)) {
-                tocs[i].className = "properties_toc_item_selected";
-            } else {
-                tocs[i].className = '';
-            }
-        }
-
-        $('#properties_bodypanel').load('/pages/settings/' + TabName + '.html?v=' + AppVersion);
-    }
+    // load the default settings page
+    SetupPage();
 </script>

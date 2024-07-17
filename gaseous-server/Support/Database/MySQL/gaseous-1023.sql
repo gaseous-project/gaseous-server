@@ -10,3 +10,5 @@ CREATE TABLE UserProfiles (
     `UnstructuredData` LONGTEXT NOT NULL,
     PRIMARY KEY (`Id`, `UserId`)
 );
+
+ALTER TABLE `Platform` CHANGE `Name` `Name` varchar(255);

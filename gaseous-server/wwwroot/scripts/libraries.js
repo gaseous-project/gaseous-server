@@ -104,7 +104,7 @@ class NewLibrary {
         this.dialog.addButton(okButton);
 
         // add cancel button
-        let cancelButton = new ModalButton("Cancel", 2, this, async function (callingObject) {
+        let cancelButton = new ModalButton("Cancel", 0, this, async function (callingObject) {
             callingObject.dialog.close();
         });
         this.dialog.addButton(cancelButton);
