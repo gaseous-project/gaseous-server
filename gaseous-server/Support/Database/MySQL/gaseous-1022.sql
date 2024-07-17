@@ -1,0 +1,1 @@
+ALTER TABLE `Platform` CHANGE `Name` `Name` varchar(255);
