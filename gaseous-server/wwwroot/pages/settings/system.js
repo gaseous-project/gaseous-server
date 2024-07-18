@@ -36,6 +36,7 @@ function SystemLoadStatus() {
                                     itemLastStart = moment(result[i].lastRunTime).format("YYYY-MM-DD h:mm:ss a");
                                     break;
                                 case 'Running':
+                                    itemStateName = "Running";
                                     if (result[i].currentStateProgress) {
                                         if (result[i].currentStateProgress.includes(" of ")) {
                                             let progressParts = result[i].currentStateProgress.split(" of ");
