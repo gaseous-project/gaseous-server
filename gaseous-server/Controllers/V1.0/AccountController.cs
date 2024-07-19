@@ -220,6 +220,10 @@ namespace gaseous_server.Controllers
                     Email = model.Email,
                     NormalizedEmail = model.Email.ToUpper()
                 };
+                if (await _userManager.FindByEmailAsync(model.Email) != null)
+                {
+                    return NotFound("User already exists");
+                }
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
@@ -238,6 +242,23 @@ namespace gaseous_server.Controllers
             else
             {
                 return NotFound();
+            }
+        }
+
+        [HttpGet]
+        [Route("Users/Test")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> TestUserExists(string Email)
+        {
+            ApplicationUser? rawUser = await _userManager.FindByEmailAsync(Email);
+
+            if (rawUser != null)
+            {
+                return Ok(true);
+            }
+            else
+            {
+                return Ok(false);
             }
         }
 

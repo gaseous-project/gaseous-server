@@ -7,14 +7,18 @@
         <div id="settings_users_table_container">
 
         </div>
-        <div style="text-align: right;"><button id="settings_users_new" value="New User"
-                onclick="showSubDialog('settingsusernew');">New
+        <div style="text-align: right;"><button id="settings_users_new" value="New User">New
                 User</button>
+        </div>
+        <div style="text-align: right;"><button id="settings_users_new_old" value="New User"
+                onclick="showSubDialog('settingsusernew');">New
+                User (Old)</button>
         </div>
     </div>
 </div>
 
 <script type="text/javascript">
     // Load the users table
+    SetupPage();
     GetUsers();
 </script>

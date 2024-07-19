@@ -404,6 +404,82 @@ class ProfileCard {
     }
 }
 
+class EmailCheck {
+    constructor(EmailElement, ErrorElement) {
+        this.EmailElement = EmailElement;
+        this.ErrorElement = ErrorElement;
+
+        let CallingObject = this;
+
+        this.EmailElement.addEventListener('input', function (event) {
+            EmailCheck.CheckEmail(CallingObject, EmailElement);
+        });
+
+        this.DisplayRules(ErrorElement);
+    }
+
+    DisplayRules(ErrorElement) {
+        this.errorList = document.createElement('ul');
+        this.errorList.className = 'password-rules';
+
+        this.listItemInvalidEmail = document.createElement('li');
+        this.listItemInvalidEmail.innerHTML = "Email is a valid address";
+        this.listItemInvalidEmail.classList.add('listitem');
+        this.errorList.appendChild(this.listItemInvalidEmail);
+
+        this.listItemUniqueEmail = document.createElement('li');
+        this.listItemUniqueEmail.innerHTML = "Email is unique";
+        this.listItemUniqueEmail.classList.add('listitem');
+        this.errorList.appendChild(this.listItemUniqueEmail);
+
+        ErrorElement.innerHTML = "";
+        ErrorElement.appendChild(this.errorList);
+
+        EmailCheck.CheckEmail(this, this.EmailElement);
+    }
+
+    static async CheckEmail(CallingObject, EmailElement) {
+        let emailMeetsRules = true;
+
+        // check if email is valid
+        if (EmailElement.value.match(/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/)) {
+            CallingObject.listItemInvalidEmail.classList.add('listitem-green');
+            CallingObject.listItemInvalidEmail.classList.remove('listitem-red');
+        } else {
+            CallingObject.listItemInvalidEmail.classList.add('listitem-red');
+            CallingObject.listItemInvalidEmail.classList.remove('listitem-green');
+            emailMeetsRules = false;
+        }
+
+        // check if email is unique
+        await fetch("/api/v1.1/Account/Users/Test?Email=" + EmailElement.value, {
+            method: 'GET'
+        }).then(async response => {
+            if (!await response.ok) {
+                // handle the error
+                console.error("Error checking email uniqueness:");
+                console.error(response);
+                CallingObject.listItemUniqueEmail.classList.add('listitem-red');
+                CallingObject.listItemUniqueEmail.classList.remove('listitem-green');
+                emailMeetsRules = false;
+            } else {
+                let responseJson = await response.json();
+                if (responseJson === false) {
+                    CallingObject.listItemUniqueEmail.classList.add('listitem-green');
+                    CallingObject.listItemUniqueEmail.classList.remove('listitem-red');
+                    emailMeetsRules = true;
+                } else {
+                    CallingObject.listItemUniqueEmail.classList.add('listitem-red');
+                    CallingObject.listItemUniqueEmail.classList.remove('listitem-green');
+                    emailMeetsRules = false;
+                }
+            }
+        });
+
+        return emailMeetsRules;
+    }
+}
+
 class PasswordCheck {
     constructor(NewPasswordElement, ConfirmPasswordElement, ErrorElement) {
         this.MinimumPasswordLength = 10;
