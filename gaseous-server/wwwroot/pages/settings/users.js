@@ -58,14 +58,64 @@ function GetUsers() {
                     }
                 }
 
-                let editButton = '';
+                let controls = document.createElement('div');
+                controls.style.textAlign = 'right';
 
+                let editButton = '';
                 let deleteButton = '';
 
                 if (userProfile.userId != result[i].id) {
-                    editButton = '<a href="#" onclick="showDialog(\'settingsuseredit\', \'' + result[i].id + '\');" class="romlink"><img src="/images/edit.svg" class="banner_button_image" alt="Edit" title="Edit" /></a>';
+                    editButton = document.createElement('a');
+                    editButton.href = '#';
+                    editButton.addEventListener('click', () => {
+                        // showDialog('settingsuseredit', result[i].id);
+                        let userEdit = new UserEdit(result[i].id);
+                        userEdit.open();
+                    });
+                    editButton.classList.add('romlink');
 
-                    deleteButton = '<a href="#" onclick="showSubDialog(\'settingsuserdelete\', \'' + result[i].id + '\');" class="romlink"><img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" /></a>';
+                    let editButtonImage = document.createElement('img');
+                    editButtonImage.src = '/images/edit.svg';
+                    editButtonImage.classList.add('banner_button_image');
+                    editButtonImage.alt = 'Edit';
+                    editButtonImage.title = 'Edit';
+                    editButton.appendChild(editButtonImage);
+
+                    controls.appendChild(editButton);
+
+                    deleteButton = document.createElement('a');
+                    deleteButton.href = '#';
+                    deleteButton.addEventListener('click', () => {
+                        let warningDialog = new MessageBox("Delete User", "Are you sure you want to delete this user?<br /><br /><strong>Warning</strong>: This cannot be undone!");
+                        warningDialog.addButton(new ModalButton("OK", 2, warningDialog, async (callingObject) => {
+                            fetch("/api/v1.1/Account/Users/" + result[i].id, {
+                                method: 'DELETE'
+                            }).then(async response => {
+                                if (response.ok) {
+                                    GetUsers();
+                                    callingObject.msgDialog.close();
+                                } else {
+                                    let result = await response.json();
+                                    let warningDialog = new MessageBox("Delete User Error", "An error occurred while deleting the user.");
+                                    warningDialog.open();
+                                }
+                            });
+                        }));
+                        warningDialog.addButton(new ModalButton("Cancel", 0, warningDialog, async (callingObject) => {
+                            callingObject.msgDialog.close();
+                        }));
+                        warningDialog.open();
+                    });
+                    deleteButton.classList.add('romlink');
+
+                    let deleteButtonImage = document.createElement('img');
+                    deleteButtonImage.src = '/images/delete.svg';
+                    deleteButtonImage.classList.add('banner_button_image');
+                    deleteButtonImage.alt = 'Delete';
+                    deleteButtonImage.title = 'Delete';
+                    deleteButton.appendChild(deleteButtonImage);
+
+                    controls.appendChild(deleteButton);
                 }
 
                 newTable.appendChild(
@@ -76,7 +126,7 @@ function GetUsers() {
                             result[i].emailAddress,
                             roleDiv,
                             ageRestrictionPolicyDescription,
-                            '<div style="text-align: right;">' + editButton + deleteButton + '</div>'
+                            controls
                         ],
                         'romrow',
                         'romcell'
@@ -101,7 +151,7 @@ class UserNew {
 
         // setup the dialog
         this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "New User";
-        this.dialog.modalElement.style = 'width: 550px; height: 360px; min-width: unset; min-height: unset; max-width: unset; max-height: unset;';
+        this.dialog.modalElement.style = 'width: 550px; height: 380px; min-width: unset; min-height: unset; max-width: unset; max-height: unset;';
 
         // setup email check
         this.email = this.dialog.modalElement.querySelector('#email-address');
@@ -166,5 +216,20 @@ class UserNew {
 
         // show the dialog
         await this.dialog.open();
+    }
+}
+
+class UserEdit {
+    constructor(UserId) {
+        this.userId = UserId;
+    }
+
+    async open() {
+        // Create the modal
+        this.dialog = await new Modal("useredit");
+        await this.dialog.BuildModal();
+
+        // show the dialog
+        this.dialog.open();
     }
 }

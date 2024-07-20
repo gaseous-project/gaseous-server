@@ -237,6 +237,8 @@ h3 {
     text-align: top;
     overflow-y: auto;
     overflow-x: hidden;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 }
 
 .modal-window-header {
