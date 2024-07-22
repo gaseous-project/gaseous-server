@@ -194,7 +194,7 @@ namespace gaseous_server.SignatureIngestors.XML
                                             if (romObject.Md5 != null || romObject.Sha1 != null)
                                             {
                                                 int romId = 0;
-                                                sql = "SELECT * FROM Signatures_Roms WHERE GameId=@gameid AND MD5=@md5";
+                                                sql = "SELECT * FROM Signatures_Roms WHERE `GameId`=@gameid AND (`MD5`=@md5 AND `SHA1`=@sha1)";
                                                 dbDict = new Dictionary<string, object>();
                                                 dbDict.Add("gameid", gameId);
                                                 dbDict.Add("name", Common.ReturnValueIfNull(romObject.Name, ""));
