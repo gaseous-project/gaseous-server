@@ -111,11 +111,22 @@ function SystemLoadSystemStatus() {
             newTable.className = 'romtable';
             newTable.setAttribute('cellspacing', 0);
             newTable.appendChild(createTableRow(true, ['Path', 'Library Size <div id="disk_LibSize" style="width: 10px; height: 10px; background-color: green;"></div>', 'Other <div id="disk_OtherSize" style="width: 10px; height: 10px; background-color: lightgreen;"></div>', 'Total Size <div id="disk_FreeSize" style="width: 10px; height: 10px; background-color: lightgray;"></div>']));
-
+            console.log(result.paths);
             for (let i = 0; i < result.paths.length; i++) {
                 let spaceUsedByLibrary = result.paths[i].spaceUsed;
                 totalLibrarySpace += spaceUsedByLibrary;
                 let spaceUsedByOthers = result.paths[i].totalSpace - result.paths[i].spaceAvailable;
+
+                let libraryRow = document.createElement('tbody');
+                libraryRow.className = 'romrow';
+
+                let titleRow = document.createElement('tr');
+                let titleCell = document.createElement('td');
+                titleCell.setAttribute('colspan', 4);
+                titleCell.innerHTML = '<strong>' + result.paths[i].name + '</strong>';
+                titleCell.className = 'romcell';
+                titleRow.appendChild(titleCell);
+                libraryRow.appendChild(titleRow);
 
                 let newRow = [
                     result.paths[i].libraryPath,
@@ -124,14 +135,16 @@ function SystemLoadSystemStatus() {
                     formatBytes(result.paths[i].totalSpace)
                 ];
 
-                newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
+                libraryRow.appendChild(createTableRow(false, newRow, '', 'romcell'));
 
                 let spaceRow = document.createElement('tr');
                 let spaceCell = document.createElement('td');
                 spaceCell.setAttribute('colspan', 4);
                 spaceCell.appendChild(BuildSpaceBar(spaceUsedByLibrary, spaceUsedByOthers, result.paths[i].totalSpace));
                 spaceRow.appendChild(spaceCell);
-                newTable.appendChild(spaceRow);
+                libraryRow.appendChild(spaceRow);
+
+                newTable.appendChild(libraryRow);
             }
 
             let targetDiv = document.getElementById('system_disks');

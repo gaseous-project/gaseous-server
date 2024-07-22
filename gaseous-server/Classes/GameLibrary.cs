@@ -7,37 +7,37 @@ using Microsoft.CodeAnalysis.FlowAnalysis.DataFlow;
 
 namespace gaseous_server
 {
-	public static class GameLibrary
-	{
+    public static class GameLibrary
+    {
         // exceptions
         public class PathExists : Exception
-        { 
+        {
             public PathExists(string path) : base("The library path " + path + " already exists.")
-            {}
+            { }
         }
 
         public class PathNotFound : Exception
         {
             public PathNotFound(string path) : base("The path " + path + " does not exist.")
-            {}
+            { }
         }
 
         public class LibraryNotFound : Exception
         {
             public LibraryNotFound(int LibraryId) : base("Library id " + LibraryId + " does not exist.")
-            {}
+            { }
         }
 
         public class CannotDeleteDefaultLibrary : Exception
         {
             public CannotDeleteDefaultLibrary() : base("Unable to delete the default library.")
-            {}
+            { }
         }
 
         public class CannotDeleteLibraryWhileScanIsActive : Exception
         {
             public CannotDeleteLibraryWhileScanIsActive() : base("Unable to delete library while a library scan is active. Wait for all scans to complete and try again")
-            {}
+            { }
         }
 
         // code
@@ -66,7 +66,7 @@ namespace gaseous_server
             {
                 List<LibraryItem> libraryItems = new List<LibraryItem>();
                 Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                string sql = "SELECT * FROM GameLibraries";
+                string sql = "SELECT * FROM GameLibraries ORDER BY `Name`;";
                 DataTable data = db.ExecuteCMD(sql);
                 foreach (DataRow row in data.Rows)
                 {
@@ -113,7 +113,7 @@ namespace gaseous_server
             dbDict.Add("path", PathName);
             dbDict.Add("defaultplatform", DefaultPlatformId);
             DataTable data = db.ExecuteCMD(sql, dbDict);
-            
+
             int newLibraryId = (int)(long)data.Rows[0][0];
 
             Logging.Log(Logging.LogType.Information, "Library Management", "Created library " + Name + " at directory " + PathName);
@@ -129,10 +129,10 @@ namespace gaseous_server
             if (library.IsDefaultLibrary == false)
             {
                 // check for active library scans
-                foreach(ProcessQueue.QueueItem item in ProcessQueue.QueueItems)
+                foreach (ProcessQueue.QueueItem item in ProcessQueue.QueueItems)
                 {
                     if (
-                        (item.ItemType == ProcessQueue.QueueItemType.LibraryScan && item.ItemState == ProcessQueue.QueueItemState.Running) || 
+                        (item.ItemType == ProcessQueue.QueueItemType.LibraryScan && item.ItemState == ProcessQueue.QueueItemState.Running) ||
                         (item.ItemType == ProcessQueue.QueueItemType.LibraryScanWorker && item.ItemState == ProcessQueue.QueueItemState.Running)
                     )
                     {
@@ -174,7 +174,7 @@ namespace gaseous_server
                 throw new LibraryNotFound(LibraryId);
             }
         }
-        
+
         public class LibraryItem
         {
             public LibraryItem(int Id, string Name, string Path, long DefaultPlatformId, bool IsDefaultLibrary)
