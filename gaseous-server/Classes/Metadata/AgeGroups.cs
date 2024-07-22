@@ -46,7 +46,7 @@ namespace gaseous_server.Classes.Metadata
                     default:
                         throw new Exception("How did you get here?");
                 }
-                
+
                 return RetVal;
             }
         }
@@ -73,7 +73,7 @@ namespace gaseous_server.Classes.Metadata
 
                         // compile the ratings values into the ratings groups
                         AgeRestrictionGroupings highestAgeGroup = GetAgeGroupFromAgeRatings(ageRatings);
-                        
+
                         // return the compiled ratings group
                         AgeGroup ageGroup = new AgeGroup();
                         ageGroup.Id = game.Id;
@@ -86,7 +86,7 @@ namespace gaseous_server.Classes.Metadata
                         {
                             ageGroup.AgeGroupId = highestAgeGroup;
                         }
-                        
+
                         return ageGroup;
                     }
                     else
@@ -95,7 +95,7 @@ namespace gaseous_server.Classes.Metadata
                         ageGroup.Id = game.Id;
                         ageGroup.GameId = game.Id;
                         ageGroup.AgeGroupId = null;
-                        
+
                         return ageGroup;
                     }
                 }
@@ -105,11 +105,11 @@ namespace gaseous_server.Classes.Metadata
                     ageGroup.Id = game.Id;
                     ageGroup.GameId = game.Id;
                     ageGroup.AgeGroupId = null;
-                    
+
                     return ageGroup;
                 }
             }
-            
+
             return null;
         }
 
@@ -121,7 +121,7 @@ namespace gaseous_server.Classes.Metadata
             {
                 foreach (KeyValuePair<AgeRestrictionGroupings, AgeGroupItem> ageGroupItem in AgeGroupingsFlat)
                 {
-                    
+
                     PropertyInfo[] groupProps = typeof(AgeGroupItem).GetProperties();
                     foreach (PropertyInfo property in groupProps)
                     {
@@ -142,7 +142,7 @@ namespace gaseous_server.Classes.Metadata
                     }
                 }
             }
-            
+
             return highestAgeGroup;
         }
 
@@ -158,8 +158,8 @@ namespace gaseous_server.Classes.Metadata
             get
             {
                 return new Dictionary<AgeRestrictionGroupings, List<AgeGroupItem>>{
-                    { 
-                        AgeRestrictionGroupings.Adult, new List<AgeGroupItem>{ Adult_Item, Mature_Item, Teen_Item, Child_Item } 
+                    {
+                        AgeRestrictionGroupings.Adult, new List<AgeGroupItem>{ Adult_Item, Mature_Item, Teen_Item, Child_Item }
                     },
                     {
                         AgeRestrictionGroupings.Mature, new List<AgeGroupItem>{ Mature_Item, Teen_Item, Child_Item }
@@ -167,7 +167,7 @@ namespace gaseous_server.Classes.Metadata
                     {
                         AgeRestrictionGroupings.Teen, new List<AgeGroupItem>{ Teen_Item, Child_Item }
                     },
-                    { 
+                    {
                         AgeRestrictionGroupings.Child, new List<AgeGroupItem>{ Child_Item }
                     }
                 };
@@ -216,44 +216,48 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        readonly static AgeGroupItem Adult_Item = new AgeGroupItem{
-            ACB         = new List<AgeRatingTitle>{ AgeRatingTitle.ACB_R18, AgeRatingTitle.ACB_RC },
-            CERO        = new List<AgeRatingTitle>{ AgeRatingTitle.CERO_Z },
-            CLASS_IND   = new List<AgeRatingTitle>{ AgeRatingTitle.CLASS_IND_Eighteen },
-            ESRB        = new List<AgeRatingTitle>{ AgeRatingTitle.RP, AgeRatingTitle.AO },
-            GRAC        = new List<AgeRatingTitle>{ AgeRatingTitle.GRAC_Eighteen },
-            PEGI        = new List<AgeRatingTitle>{ AgeRatingTitle.Eighteen},
-            USK         = new List<AgeRatingTitle>{ AgeRatingTitle.USK_18}
+        readonly static AgeGroupItem Adult_Item = new AgeGroupItem
+        {
+            ACB = new List<AgeRatingTitle> { AgeRatingTitle.ACB_R18, AgeRatingTitle.ACB_RC },
+            CERO = new List<AgeRatingTitle> { AgeRatingTitle.CERO_Z },
+            CLASS_IND = new List<AgeRatingTitle> { AgeRatingTitle.CLASS_IND_Eighteen },
+            ESRB = new List<AgeRatingTitle> { AgeRatingTitle.RP, AgeRatingTitle.AO },
+            GRAC = new List<AgeRatingTitle> { AgeRatingTitle.GRAC_Eighteen },
+            PEGI = new List<AgeRatingTitle> { AgeRatingTitle.Eighteen },
+            USK = new List<AgeRatingTitle> { AgeRatingTitle.USK_18 }
         };
 
-        readonly static AgeGroupItem Mature_Item = new AgeGroupItem{
-            ACB         = new List<AgeRatingTitle>{ AgeRatingTitle.ACB_M, AgeRatingTitle.ACB_MA15 },
-            CERO        = new List<AgeRatingTitle>{ AgeRatingTitle.CERO_C, AgeRatingTitle.CERO_D },
-            CLASS_IND   = new List<AgeRatingTitle>{ AgeRatingTitle.CLASS_IND_Sixteen },
-            ESRB        = new List<AgeRatingTitle>{ AgeRatingTitle.M },
-            GRAC        = new List<AgeRatingTitle>{ AgeRatingTitle.GRAC_Fifteen },
-            PEGI        = new List<AgeRatingTitle>{ AgeRatingTitle.Sixteen},
-            USK         = new List<AgeRatingTitle>{ AgeRatingTitle.USK_16}
+        readonly static AgeGroupItem Mature_Item = new AgeGroupItem
+        {
+            ACB = new List<AgeRatingTitle> { AgeRatingTitle.ACB_M, AgeRatingTitle.ACB_MA15 },
+            CERO = new List<AgeRatingTitle> { AgeRatingTitle.CERO_C, AgeRatingTitle.CERO_D },
+            CLASS_IND = new List<AgeRatingTitle> { AgeRatingTitle.CLASS_IND_Sixteen },
+            ESRB = new List<AgeRatingTitle> { AgeRatingTitle.M },
+            GRAC = new List<AgeRatingTitle> { AgeRatingTitle.GRAC_Fifteen },
+            PEGI = new List<AgeRatingTitle> { AgeRatingTitle.Sixteen },
+            USK = new List<AgeRatingTitle> { AgeRatingTitle.USK_16 }
         };
 
-        readonly static AgeGroupItem Teen_Item = new AgeGroupItem{
-            ACB         = new List<AgeRatingTitle>{ AgeRatingTitle.ACB_PG },
-            CERO        = new List<AgeRatingTitle>{ AgeRatingTitle.CERO_B },
-            CLASS_IND   = new List<AgeRatingTitle>{ AgeRatingTitle.CLASS_IND_Twelve, AgeRatingTitle.CLASS_IND_Fourteen },
-            ESRB        = new List<AgeRatingTitle>{ AgeRatingTitle.T },
-            GRAC        = new List<AgeRatingTitle>{ AgeRatingTitle.GRAC_Twelve },
-            PEGI        = new List<AgeRatingTitle>{ AgeRatingTitle.Twelve},
-            USK         = new List<AgeRatingTitle>{ AgeRatingTitle.USK_12}
+        readonly static AgeGroupItem Teen_Item = new AgeGroupItem
+        {
+            ACB = new List<AgeRatingTitle> { AgeRatingTitle.ACB_PG },
+            CERO = new List<AgeRatingTitle> { AgeRatingTitle.CERO_B },
+            CLASS_IND = new List<AgeRatingTitle> { AgeRatingTitle.CLASS_IND_Twelve, AgeRatingTitle.CLASS_IND_Fourteen },
+            ESRB = new List<AgeRatingTitle> { AgeRatingTitle.T },
+            GRAC = new List<AgeRatingTitle> { AgeRatingTitle.GRAC_Twelve },
+            PEGI = new List<AgeRatingTitle> { AgeRatingTitle.Twelve },
+            USK = new List<AgeRatingTitle> { AgeRatingTitle.USK_12 }
         };
 
-        readonly static AgeGroupItem Child_Item = new AgeGroupItem{
-            ACB         = new List<AgeRatingTitle>{ AgeRatingTitle.ACB_G },
-            CERO        = new List<AgeRatingTitle>{ AgeRatingTitle.CERO_A },
-            CLASS_IND   = new List<AgeRatingTitle>{ AgeRatingTitle.CLASS_IND_L, AgeRatingTitle.CLASS_IND_Ten },
-            ESRB        = new List<AgeRatingTitle>{ AgeRatingTitle.E, AgeRatingTitle.E10 },
-            GRAC        = new List<AgeRatingTitle>{ AgeRatingTitle.GRAC_All },
-            PEGI        = new List<AgeRatingTitle>{ AgeRatingTitle.Three, AgeRatingTitle.Seven},
-            USK         = new List<AgeRatingTitle>{ AgeRatingTitle.USK_0, AgeRatingTitle.USK_6}
+        readonly static AgeGroupItem Child_Item = new AgeGroupItem
+        {
+            ACB = new List<AgeRatingTitle> { AgeRatingTitle.ACB_G },
+            CERO = new List<AgeRatingTitle> { AgeRatingTitle.CERO_A },
+            CLASS_IND = new List<AgeRatingTitle> { AgeRatingTitle.CLASS_IND_L, AgeRatingTitle.CLASS_IND_Ten },
+            ESRB = new List<AgeRatingTitle> { AgeRatingTitle.EC, AgeRatingTitle.E, AgeRatingTitle.E10 },
+            GRAC = new List<AgeRatingTitle> { AgeRatingTitle.GRAC_All },
+            PEGI = new List<AgeRatingTitle> { AgeRatingTitle.Three, AgeRatingTitle.Seven },
+            USK = new List<AgeRatingTitle> { AgeRatingTitle.USK_0, AgeRatingTitle.USK_6 }
         };
 
         public class AgeGroupItem
