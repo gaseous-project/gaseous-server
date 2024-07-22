@@ -1,5 +1,22 @@
 [
   {
+    "IGDBId": 139,
+    "IGDBName": "1292 Advanced Programmable Video System",
+    "IGDBSlug": "1292-advanced-programmable-video-system",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
     "IGDBId": 50,
     "IGDBName": "3DO Interactive Multiplayer",
     "IGDBSlug": "3do",
@@ -454,6 +471,104 @@
         }
       ]
     },
+    "Bios": [
+      {
+        "hash": "7a11bfe0cc72886d032e386db68f890c",
+        "description": "",
+        "filename": "airlbios.zip"
+      },
+      {
+        "hash": "85254fbe320ca82a768ec2c26bb08def",
+        "description": "",
+        "filename": "awbios.zip"
+      },
+      {
+        "hash": "f81298afd68a1a24a49a1a2d9f087964",
+        "description": "",
+        "filename": "bubsys.zip"
+      },
+      {
+        "hash": "df6f8a3d83c028a5cb9f2f2be60773f3",
+        "description": "",
+        "filename": "cchip.zip"
+      },
+      {
+        "hash": "b7e1189b341bf6a8e270017c096d21b0",
+        "description": "",
+        "filename": "decocass.zip"
+      },
+      {
+        "hash": "547f3d12aed389058ca06148f1cca0ed",
+        "description": "",
+        "filename": "f355bios.zip"
+      },
+      {
+        "hash": "1028615bcac4c31634a3364ce5c04044",
+        "description": "",
+        "filename": "f355dlx.zip"
+      },
+      {
+        "hash": "f4011d3116500354edf7302a90402711",
+        "description": "",
+        "filename": "hod2bios.zip"
+      },
+      {
+        "hash": "4a56d56e2219c5e2b006b66a4263c01c",
+        "description": "",
+        "filename": "isgsm.zip"
+      },
+      {
+        "hash": "5904b0de768d1d506e766aa7e18994c1",
+        "description": "",
+        "filename": "midssio.zip"
+      },
+      {
+        "hash": "526eda1e2a7920c92c88178789d71d84",
+        "description": "",
+        "filename": "naomi.zip"
+      },
+      {
+        "hash": "00dad01abdbf8ea9e79ad2fe11bdb182",
+        "description": "",
+        "filename": "neogeo.zip"
+      },
+      {
+        "hash": "bfacf1a68792d5348f93cf724d2f1dda",
+        "description": "",
+        "filename": "nmk004.zip"
+      },
+      {
+        "hash": "87cc944eef4c671aa2629a8ba48a08e0",
+        "description": "",
+        "filename": "pgm.zip"
+      },
+      {
+        "hash": "3f956c4e7008804cb47cbde49bd5b908",
+        "description": "",
+        "filename": "skns.zip"
+      },
+      {
+        "hash": "79ae0d2bb1901b7e606b6dc339b79a97",
+        "description": "",
+        "filename": "ym2608.zip"
+      }
+    ]
+  },
+  {
+    "IGDBId": 473,
+    "IGDBName": "Arcadia 2001",
+    "IGDBSlug": "arcadia-2001",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
     "Bios": []
   },
   {
@@ -657,6 +772,25 @@
     "Bios": []
   },
   {
+    "IGDBId": 410,
+    "IGDBName": "Atari Jaguar CD",
+    "IGDBSlug": "atari-jaguar-cd",
+    "AlternateNames": [
+      "Jag CD"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
     "IGDBId": 61,
     "IGDBName": "Atari Lynx",
     "IGDBSlug": "lynx",
@@ -742,6 +876,59 @@
         "filename": "tos.img"
       }
     ]
+  },
+  {
+    "IGDBId": 140,
+    "IGDBName": "AY-3-8500",
+    "IGDBSlug": "ay-3-8500",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 141,
+    "IGDBName": "AY-3-8610",
+    "IGDBSlug": "ay-3-8610",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 91,
+    "IGDBName": "Bally Astrocade",
+    "IGDBSlug": "astrocade",
+    "AlternateNames": [
+      "Bally Arcade"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
   },
   {
     "IGDBId": 69,
@@ -1190,6 +1377,76 @@
     "Bios": []
   },
   {
+    "IGDBId": 203,
+    "IGDBName": "DUPLICATE Stadia",
+    "IGDBSlug": "duplicate-stadia",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 375,
+    "IGDBName": "Epoch Cassette Vision",
+    "IGDBSlug": "epoch-cassette-vision",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 376,
+    "IGDBName": "Epoch Super Cassette Vision",
+    "IGDBSlug": "epoch-super-cassette-vision",
+    "AlternateNames": [
+      "YENO Super Cassette Vision"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 309,
+    "IGDBName": "Evercade",
+    "IGDBSlug": "evercade",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
     "IGDBId": 99,
     "IGDBName": "Family Computer",
     "IGDBSlug": "famicom",
@@ -1320,6 +1577,44 @@
     "IGDBSlug": "fm-7",
     "AlternateNames": [
       "Fujitsu Micro 7"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 378,
+    "IGDBName": "Gamate",
+    "IGDBSlug": "gamate",
+    "AlternateNames": [
+      "Super Boy"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 307,
+    "IGDBName": "Game & Watch",
+    "IGDBSlug": "g-and-w",
+    "AlternateNames": [
+      "Tricotronic, GW, G&W"
     ],
     "Extensions": {
       "SupportedFileExtensions": [],
@@ -1498,6 +1793,63 @@
     ]
   },
   {
+    "IGDBId": 379,
+    "IGDBName": "Game.com",
+    "IGDBSlug": "game-dot-com",
+    "AlternateNames": [
+      "Tiger Game.com"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 170,
+    "IGDBName": "Google Stadia",
+    "IGDBSlug": "stadia",
+    "AlternateNames": [
+      "Stadia"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 411,
+    "IGDBName": "Handheld Electronic LCD",
+    "IGDBSlug": "handheld-electronic-lcd",
+    "AlternateNames": [
+      "Handheld LCD Game"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
     "IGDBId": 67,
     "IGDBName": "Intellivision",
     "IGDBSlug": "intellivision",
@@ -1515,9 +1867,60 @@
     "Bios": []
   },
   {
+    "IGDBId": 382,
+    "IGDBName": "Intellivision Amico",
+    "IGDBSlug": "intellivision-amico",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
     "IGDBId": 39,
     "IGDBName": "iOS",
     "IGDBSlug": "ios",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 413,
+    "IGDBName": "Leapster Explorer/LeadPad Explorer",
+    "IGDBSlug": "leapster-explorer-slash-leadpad-explorer",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 409,
+    "IGDBName": "Legacy Computer",
+    "IGDBSlug": "legacy-computer",
     "AlternateNames": [],
     "Extensions": {
       "SupportedFileExtensions": [],
@@ -1589,6 +1992,42 @@
     "Bios": []
   },
   {
+    "IGDBId": 386,
+    "IGDBName": "Meta Quest 2",
+    "IGDBSlug": "meta-quest-2",
+    "AlternateNames": [
+      "Quest 2"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 112,
+    "IGDBName": "Microcomputer",
+    "IGDBSlug": "microcomputer--1",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
     "IGDBId": 27,
     "IGDBName": "MSX",
     "IGDBSlug": "msx",
@@ -1636,6 +2075,93 @@
       "Type": "",
       "Core": "",
       "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 80,
+    "IGDBName": "Neo Geo AES",
+    "IGDBSlug": "neogeoaes",
+    "AlternateNames": [
+      "AES"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 136,
+    "IGDBName": "Neo Geo CD",
+    "IGDBSlug": "neo-geo-cd",
+    "AlternateNames": [
+      "NGCD"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 79,
+    "IGDBName": "Neo Geo MVS",
+    "IGDBSlug": "neogeomvs",
+    "AlternateNames": [
+      "Neo Geo Multi Video System"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 120,
+    "IGDBName": "Neo Geo Pocket Color",
+    "IGDBSlug": "neo-geo-pocket-color",
+    "AlternateNames": [
+      "NGPC"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "EmulatorJS",
+      "Core": "mednafen_ngp",
+      "AvailableWebEmulators": [
+        {
+          "EmulatorType": "EmulatorJS",
+          "AvailableWebEmulatorCores": [
+            {
+              "Core": "mednafen_ngp",
+              "AlternateCoreName": "",
+              "Default": true
+            }
+          ]
+        }
+      ]
     },
     "Bios": []
   },
@@ -1815,11 +2341,7 @@
         ".UNIF",
         ".ZIP"
       ],
-      "UniqueFileExtensions": [
-        ".NEZ",
-        ".UNF",
-        ".UNIF"
-      ]
+      "UniqueFileExtensions": []
     },
     "RetroPieDirectoryName": "nes",
     "WebEmulator": {
@@ -1912,10 +2434,103 @@
     "Bios": []
   },
   {
+    "IGDBId": 384,
+    "IGDBName": "Oculus Quest",
+    "IGDBSlug": "oculus-quest",
+    "AlternateNames": [
+      "Quest"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 162,
+    "IGDBName": "Oculus VR",
+    "IGDBSlug": "oculus-vr",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 88,
+    "IGDBName": "Odyssey",
+    "IGDBSlug": "odyssey--1",
+    "AlternateNames": [
+      "Magnavox Odyssey; Odysee; Odisea; Odissea"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 133,
+    "IGDBName": "Odyssey 2 / Videopac G7000",
+    "IGDBSlug": "odyssey-2-slash-videopac-g7000",
+    "AlternateNames": [
+      "Magnavox Odyssey²"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
     "IGDBId": 72,
     "IGDBName": "Ouya",
     "IGDBSlug": "ouya",
     "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 417,
+    "IGDBName": "Palm OS",
+    "IGDBSlug": "palm-os",
+    "AlternateNames": [
+      "Garnet OS"
+    ],
     "Extensions": {
       "SupportedFileExtensions": [],
       "UniqueFileExtensions": []
@@ -1935,6 +2550,23 @@
     "AlternateNames": [
       "mswin"
     ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 142,
+    "IGDBName": "PC-50X Family",
+    "IGDBSlug": "pc-50x-family",
+    "AlternateNames": [],
     "Extensions": {
       "SupportedFileExtensions": [],
       "UniqueFileExtensions": []
@@ -1984,6 +2616,37 @@
     "Bios": []
   },
   {
+    "IGDBId": 274,
+    "IGDBName": "PC-FX",
+    "IGDBSlug": "pc-fx",
+    "AlternateNames": [
+      "NEC PC-FX",
+      "PC-FX"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "EmulatorJS",
+      "Core": "mednafen_pcfx",
+      "AvailableWebEmulators": [
+        {
+          "EmulatorType": "EmulatorJS",
+          "AvailableWebEmulatorCores": [
+            {
+              "Core": "mednafen_pcfx",
+              "AlternateCoreName": "mednafen_pcfx",
+              "Default": true
+            }
+          ]
+        }
+      ]
+    },
+    "Bios": []
+  },
+  {
     "IGDBId": 96,
     "IGDBName": "PDP-10",
     "IGDBSlug": "pdp10",
@@ -2018,9 +2681,43 @@
     "Bios": []
   },
   {
+    "IGDBId": 97,
+    "IGDBName": "PDP-8",
+    "IGDBSlug": "pdp-8--1",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
     "IGDBId": 117,
     "IGDBName": "Philips CD-i",
     "IGDBSlug": "philips-cd-i",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 381,
+    "IGDBName": "Playdate",
+    "IGDBSlug": "playdate",
     "AlternateNames": [],
     "Extensions": {
       "SupportedFileExtensions": [],
@@ -2059,7 +2756,6 @@
         ".TOC"
       ],
       "UniqueFileExtensions": [
-        ".CCD",
         ".EXE",
         ".PBP",
         ".TOC"
@@ -2163,6 +2859,25 @@
     "Bios": []
   },
   {
+    "IGDBId": 167,
+    "IGDBName": "PlayStation 5",
+    "IGDBSlug": "ps5",
+    "AlternateNames": [
+      "PS5"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
     "IGDBId": 38,
     "IGDBName": "PlayStation Portable",
     "IGDBSlug": "psp",
@@ -2187,6 +2902,44 @@
     "IGDBSlug": "psvita",
     "AlternateNames": [
       "PS Vita"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 165,
+    "IGDBName": "PlayStation VR",
+    "IGDBSlug": "psvr",
+    "AlternateNames": [
+      "PSVR"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 377,
+    "IGDBName": "Plug & Play",
+    "IGDBSlug": "plug-and-play",
+    "AlternateNames": [
+      "TV Game"
     ],
     "Extensions": {
       "SupportedFileExtensions": [],
@@ -2561,6 +3314,23 @@
     "Bios": []
   },
   {
+    "IGDBId": 374,
+    "IGDBName": "Sharp MZ-2200",
+    "IGDBSlug": "sharp-mz-2200",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
     "IGDBId": 77,
     "IGDBName": "Sharp X1",
     "IGDBSlug": "x1",
@@ -2595,12 +3365,48 @@
     "Bios": []
   },
   {
+    "IGDBId": 406,
+    "IGDBName": "Sinclair QL",
+    "IGDBSlug": "sinclair-ql",
+    "AlternateNames": [
+      "Sinclair Quantum Leap"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
     "IGDBId": 373,
     "IGDBName": "Sinclair ZX81",
     "IGDBSlug": "sinclair-zx81",
     "AlternateNames": [
       "ZX81"
     ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 163,
+    "IGDBName": "SteamVR",
+    "IGDBSlug": "steam-vr",
+    "AlternateNames": [],
     "Extensions": {
       "SupportedFileExtensions": [],
       "UniqueFileExtensions": []
@@ -2704,6 +3510,23 @@
     "IGDBId": 155,
     "IGDBName": "Tatung Einstein",
     "IGDBSlug": "tatung-einstein",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 479,
+    "IGDBName": "Terebikko / See 'n Say Video Phone",
+    "IGDBSlug": "terebikko-slash-see-n-say-video-phone",
     "AlternateNames": [],
     "Extensions": {
       "SupportedFileExtensions": [],
@@ -2826,44 +3649,44 @@
     },
     "Bios": [
       {
-        "hash": "38179DF8F4AC870017DB21EBCBF53114",
-        "description": "[BIOS] Super CD-ROM System (Japan) (v3.0).pce",
-        "filename": "syscard3.pce"
-      },
-      {
-        "hash": "3CDD6614A918616BFC41C862E889DD79",
-        "description": "[BIOS] CD-ROM System (Japan) (v2.1).pce",
-        "filename": "syscard2.pce"
-      },
-      {
-        "hash": "3A456F0ECCFF039EB5FF045F56EC1C3B",
-        "description": "[BIOS] CD-ROM System (Japan) (v2.0).pce",
-        "filename": "syscard2.pce"
-      },
-      {
-        "hash": "2B7CCB3D86BAA18F6402C176F3065082",
-        "description": "[BIOS] CD-ROM System (Japan) (v1.0).pce",
-        "filename": "syscard1.pce"
-      },
-      {
-        "hash": "6D2CB14FC3E1F65CEB135633D1694122",
+        "hash": "6d2cb14fc3e1f65ceb135633d1694122",
         "description": "[BIOS] Games Express CD Card (Japan).pce",
         "filename": "gexpress.pce"
       },
       {
-        "hash": "CCF8590E2E7AC4A08BCC1D77EC168917",
+        "hash": "ccf8590e2e7ac4a08bcc1d77ec168917",
         "description": "BIOS] Games Express CD Card (Japan) (Alt).pce",
         "filename": "gexpress.pce"
       },
       {
-        "hash": "0754F903B52E3B3342202BDAFB13EFA5",
-        "description": "[BIOS] TurboGrafx CD Super System Card (USA) (v3.0).pce",
-        "filename": "syscard3u.pce"
+        "hash": "2b7ccb3d86baa18f6402c176f3065082",
+        "description": "[BIOS] CD-ROM System (Japan) (v1.0).pce",
+        "filename": "syscard1.pce"
       },
       {
-        "hash": "94279F315E8B52904F65AB3108542AFE",
+        "hash": "3a456f0eccff039eb5ff045f56ec1c3b",
+        "description": "[BIOS] CD-ROM System (Japan) (v2.0).pce",
+        "filename": "syscard2.pce"
+      },
+      {
+        "hash": "3cdd6614a918616bfc41c862e889dd79",
+        "description": "[BIOS] CD-ROM System (Japan) (v2.1).pce",
+        "filename": "syscard2.pce"
+      },
+      {
+        "hash": "94279f315e8b52904f65ab3108542afe",
         "description": "[BIOS] TurboGrafx CD System Card (USA) (v2.0).pce",
         "filename": "syscard2u.pce"
+      },
+      {
+        "hash": "38179df8f4ac870017db21ebcbf53114",
+        "description": "[BIOS] Super CD-ROM System (Japan) (v3.0).pce",
+        "filename": "syscard3.pce"
+      },
+      {
+        "hash": "0754f903b52e3b3342202bdafb13efa5",
+        "description": "[BIOS] TurboGrafx CD Super System Card (USA) (v3.0).pce",
+        "filename": "syscard3u.pce"
       }
     ]
   },
@@ -2904,46 +3727,99 @@
     },
     "Bios": [
       {
-        "hash": "38179DF8F4AC870017DB21EBCBF53114",
-        "description": "[BIOS] Super CD-ROM System (Japan) (v3.0).pce",
-        "filename": "syscard3.pce"
-      },
-      {
-        "hash": "3CDD6614A918616BFC41C862E889DD79",
-        "description": "[BIOS] CD-ROM System (Japan) (v2.1).pce",
-        "filename": "syscard2.pce"
-      },
-      {
-        "hash": "3A456F0ECCFF039EB5FF045F56EC1C3B",
-        "description": "[BIOS] CD-ROM System (Japan) (v2.0).pce",
-        "filename": "syscard2.pce"
-      },
-      {
-        "hash": "2B7CCB3D86BAA18F6402C176F3065082",
-        "description": "[BIOS] CD-ROM System (Japan) (v1.0).pce",
-        "filename": "syscard1.pce"
-      },
-      {
-        "hash": "6D2CB14FC3E1F65CEB135633D1694122",
+        "hash": "6d2cb14fc3e1f65ceb135633d1694122",
         "description": "[BIOS] Games Express CD Card (Japan).pce",
         "filename": "gexpress.pce"
       },
       {
-        "hash": "CCF8590E2E7AC4A08BCC1D77EC168917",
+        "hash": "ccf8590e2e7ac4a08bcc1d77ec168917",
         "description": "BIOS] Games Express CD Card (Japan) (Alt).pce",
         "filename": "gexpress.pce"
       },
       {
-        "hash": "0754F903B52E3B3342202BDAFB13EFA5",
-        "description": "[BIOS] TurboGrafx CD Super System Card (USA) (v3.0).pce",
-        "filename": "syscard3u.pce"
+        "hash": "2b7ccb3d86baa18f6402c176f3065082",
+        "description": "[BIOS] CD-ROM System (Japan) (v1.0).pce",
+        "filename": "syscard1.pce"
       },
       {
-        "hash": "94279F315E8B52904F65AB3108542AFE",
+        "hash": "3a456f0eccff039eb5ff045f56ec1c3b",
+        "description": "[BIOS] CD-ROM System (Japan) (v2.0).pce",
+        "filename": "syscard2.pce"
+      },
+      {
+        "hash": "3cdd6614a918616bfc41c862e889dd79",
+        "description": "[BIOS] CD-ROM System (Japan) (v2.1).pce",
+        "filename": "syscard2.pce"
+      },
+      {
+        "hash": "94279f315e8b52904f65ab3108542afe",
         "description": "[BIOS] TurboGrafx CD System Card (USA) (v2.0).pce",
         "filename": "syscard2u.pce"
+      },
+      {
+        "hash": "38179df8f4ac870017db21ebcbf53114",
+        "description": "[BIOS] Super CD-ROM System (Japan) (v3.0).pce",
+        "filename": "syscard3.pce"
+      },
+      {
+        "hash": "0754f903b52e3b3342202bdafb13efa5",
+        "description": "[BIOS] TurboGrafx CD Super System Card (USA) (v3.0).pce",
+        "filename": "syscard3u.pce"
       }
     ]
+  },
+  {
+    "IGDBId": 439,
+    "IGDBName": "V.Smile",
+    "IGDBSlug": "vsmile",
+    "AlternateNames": [
+      "V.SMILE TV LEARNING SYSTEM"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 138,
+    "IGDBName": "VC 4000",
+    "IGDBSlug": "vc-4000",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 70,
+    "IGDBName": "Vectrex",
+    "IGDBSlug": "vectrex",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
   },
   {
     "IGDBId": 87,
@@ -2978,6 +3854,23 @@
           ]
         }
       ]
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 415,
+    "IGDBName": "Watara/QuickShot Supervision",
+    "IGDBSlug": "watara-slash-quickshot-supervision",
+    "AlternateNames": [],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
     },
     "Bios": []
   },
@@ -3025,6 +3918,25 @@
     "IGDBSlug": "wiiu",
     "AlternateNames": [
       "Project Cafe"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 405,
+    "IGDBName": "Windows Mobile",
+    "IGDBSlug": "windows-mobile",
+    "AlternateNames": [
+      "Pocket PC"
     ],
     "Extensions": {
       "SupportedFileExtensions": [],
@@ -3118,6 +4030,44 @@
     "IGDBSlug": "xbox360",
     "AlternateNames": [
       "X360"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 49,
+    "IGDBName": "Xbox One",
+    "IGDBSlug": "xboxone",
+    "AlternateNames": [
+      "XONE"
+    ],
+    "Extensions": {
+      "SupportedFileExtensions": [],
+      "UniqueFileExtensions": []
+    },
+    "RetroPieDirectoryName": "",
+    "WebEmulator": {
+      "Type": "",
+      "Core": "",
+      "AvailableWebEmulators": null
+    },
+    "Bios": []
+  },
+  {
+    "IGDBId": 169,
+    "IGDBName": "Xbox Series X|S",
+    "IGDBSlug": "series-x-s",
+    "AlternateNames": [
+      "XSX"
     ],
     "Extensions": {
       "SupportedFileExtensions": [],

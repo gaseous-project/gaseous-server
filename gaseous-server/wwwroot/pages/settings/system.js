@@ -111,7 +111,7 @@ function SystemLoadSystemStatus() {
             newTable.className = 'romtable';
             newTable.setAttribute('cellspacing', 0);
             newTable.appendChild(createTableRow(true, ['Path', 'Library Size <div id="disk_LibSize" style="width: 10px; height: 10px; background-color: green;"></div>', 'Other <div id="disk_OtherSize" style="width: 10px; height: 10px; background-color: lightgreen;"></div>', 'Total Size <div id="disk_FreeSize" style="width: 10px; height: 10px; background-color: lightgray;"></div>']));
-            console.log(result.paths);
+
             for (let i = 0; i < result.paths.length; i++) {
                 let spaceUsedByLibrary = result.paths[i].spaceUsed;
                 totalLibrarySpace += spaceUsedByLibrary;
