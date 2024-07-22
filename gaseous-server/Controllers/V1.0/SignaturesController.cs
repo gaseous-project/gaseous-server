@@ -9,6 +9,7 @@ using gaseous_signature_parser.models.RomSignatureObject;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
+using gaseous_server.Models;
 
 // For more information on enabling MVC for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -54,10 +55,33 @@ namespace gaseous_server.Controllers
             {
                 SignatureManagement signatureManagement = new SignatureManagement();
                 return signatureManagement.GetByTosecName(TosecName);
-            } else
+            }
+            else
             {
                 return null;
             }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpGet]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public List<Signatures_Sources> GetSignatureSources()
+        {
+            SignatureManagement signatureManagement = new SignatureManagement();
+            return signatureManagement.GetSources();
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpDelete]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public IActionResult DeleteSignatureSource(int Id)
+        {
+            SignatureManagement signatureManagement = new SignatureManagement();
+            signatureManagement.DeleteSource(Id);
+
+            return Ok();
         }
     }
 }
