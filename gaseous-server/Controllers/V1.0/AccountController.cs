@@ -277,6 +277,7 @@ namespace gaseous_server.Controllers
                 user.LockoutEnabled = rawUser.LockoutEnabled;
                 user.LockoutEnd = rawUser.LockoutEnd;
                 user.SecurityProfile = rawUser.SecurityProfile;
+                user.ProfileId = rawUser.ProfileId;
 
                 // get roles
                 IList<string> aUserRoles = await _userManager.GetRolesAsync(rawUser);
