@@ -114,13 +114,13 @@ namespace gaseous_server.Models
         {
             get
             {
-                if (Database.DatabaseMemoryCache.GetCacheObject("PlatformMap") != null)
-                {
-                    return (List<PlatformMapItem>)Database.DatabaseMemoryCache.GetCacheObject("PlatformMap");
-                }
+                // if (Database.DatabaseMemoryCache.GetCacheObject("PlatformMap") != null)
+                // {
+                //     return (List<PlatformMapItem>)Database.DatabaseMemoryCache.GetCacheObject("PlatformMap");
+                // }
                 Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
                 string sql = "SELECT * FROM PlatformMap";
-                DataTable data = db.ExecuteCMD(sql, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromSeconds(5).Ticks));
+                DataTable data = db.ExecuteCMD(sql); //, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromSeconds(5).Ticks));
 
                 List<PlatformMapItem> platformMaps = new List<PlatformMapItem>();
                 foreach (DataRow row in data.Rows)
@@ -136,7 +136,7 @@ namespace gaseous_server.Models
 
                 platformMaps.Sort((x, y) => x.IGDBName.CompareTo(y.IGDBName));
 
-                Database.DatabaseMemoryCache.SetCacheObject("PlatformMap", platformMaps, 600);
+                //Database.DatabaseMemoryCache.SetCacheObject("PlatformMap", platformMaps, 600);
 
                 return platformMaps;
             }
