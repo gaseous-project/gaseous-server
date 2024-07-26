@@ -7,19 +7,19 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace gaseous_server.Classes.Metadata
 {
-	public class Storage
-	{
-		public enum CacheStatus
-		{
-			NotPresent,
-			Current,
-			Expired
-		}
+    public class Storage
+    {
+        public enum CacheStatus
+        {
+            NotPresent,
+            Current,
+            Expired
+        }
 
-		public static CacheStatus GetCacheStatus(string Endpoint, string Slug)
-		{
+        public static CacheStatus GetCacheStatus(string Endpoint, string Slug)
+        {
             return _GetCacheStatus(Endpoint, "slug", Slug);
-		}
+        }
 
         public static CacheStatus GetCacheStatus(string Endpoint, long Id)
         {
@@ -47,124 +47,124 @@ namespace gaseous_server.Classes.Metadata
         }
 
         private static CacheStatus _GetCacheStatus(string Endpoint, string SearchField, object SearchValue)
-		{
+        {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
-			string sql = "SELECT lastUpdated FROM " + Endpoint + " WHERE " + SearchField + " = @" + SearchField;
+            string sql = "SELECT lastUpdated FROM " + Endpoint + " WHERE " + SearchField + " = @" + SearchField;
 
-			Dictionary<string, object> dbDict = new Dictionary<string, object>();
-			dbDict.Add("Endpoint", Endpoint);
-			dbDict.Add(SearchField, SearchValue);
-			
-			DataTable dt = db.ExecuteCMD(sql, dbDict);
-			if (dt.Rows.Count == 0)
-			{
-				// no data stored for this item, or lastUpdated
-				return CacheStatus.NotPresent;
-			}
-			else
-			{
-				DateTime CacheExpiryTime = DateTime.UtcNow.AddHours(-168);
-				if ((DateTime)dt.Rows[0]["lastUpdated"] < CacheExpiryTime)
-				{
-					return CacheStatus.Expired;
-				}
-				else
-				{
-					return CacheStatus.Current;
-				}
-			}
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            dbDict.Add("Endpoint", Endpoint);
+            dbDict.Add(SearchField, SearchValue);
+
+            DataTable dt = db.ExecuteCMD(sql, dbDict);
+            if (dt.Rows.Count == 0)
+            {
+                // no data stored for this item, or lastUpdated
+                return CacheStatus.NotPresent;
+            }
+            else
+            {
+                DateTime CacheExpiryTime = DateTime.UtcNow.AddHours(-168);
+                if ((DateTime)dt.Rows[0]["lastUpdated"] < CacheExpiryTime)
+                {
+                    return CacheStatus.Expired;
+                }
+                else
+                {
+                    return CacheStatus.Current;
+                }
+            }
         }
 
-		public static void NewCacheValue(object ObjectToCache, bool UpdateRecord = false)
-		{
-			// get the object type name
-			string ObjectTypeName = ObjectToCache.GetType().Name;
+        public static void NewCacheValue(object ObjectToCache, bool UpdateRecord = false)
+        {
+            // get the object type name
+            string ObjectTypeName = ObjectToCache.GetType().Name;
 
-			// build dictionary
-			string objectJson = Newtonsoft.Json.JsonConvert.SerializeObject(ObjectToCache);
-			Dictionary<string, object?> objectDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object?>>(objectJson);
+            // build dictionary
+            string objectJson = Newtonsoft.Json.JsonConvert.SerializeObject(ObjectToCache);
+            Dictionary<string, object?> objectDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object?>>(objectJson);
             objectDict.Add("dateAdded", DateTime.UtcNow);
             objectDict.Add("lastUpdated", DateTime.UtcNow);
 
-			// generate sql
-			string fieldList = "";
-			string valueList = "";
-			string updateFieldValueList = "";
-			foreach (KeyValuePair<string, object?> key in objectDict)
-			{
-				if (fieldList.Length > 0)
-				{
-					fieldList = fieldList + ", ";
-					valueList = valueList + ", ";
-				}
-				fieldList = fieldList + key.Key;
-				valueList = valueList + "@" + key.Key;
-				if ((key.Key != "id") && (key.Key != "dateAdded"))
+            // generate sql
+            string fieldList = "";
+            string valueList = "";
+            string updateFieldValueList = "";
+            foreach (KeyValuePair<string, object?> key in objectDict)
+            {
+                if (fieldList.Length > 0)
+                {
+                    fieldList = fieldList + ", ";
+                    valueList = valueList + ", ";
+                }
+                fieldList = fieldList + key.Key;
+                valueList = valueList + "@" + key.Key;
+                if ((key.Key != "id") && (key.Key != "dateAdded"))
                 {
                     if (updateFieldValueList.Length > 0)
                     {
                         updateFieldValueList = updateFieldValueList + ", ";
                     }
                     updateFieldValueList += key.Key + " = @" + key.Key;
-				}
+                }
 
-				// check property type
-				Type objectType = ObjectToCache.GetType();
-				if (objectType != null)
-				{
-					PropertyInfo objectProperty = objectType.GetProperty(key.Key);
-					if (objectProperty != null)
-					{
-						string compareName = objectProperty.PropertyType.Name.ToLower().Split("`")[0];
-						var objectValue = objectProperty.GetValue(ObjectToCache);
-						if (objectValue != null)
-						{
-							string newObjectValue;
-							Dictionary<string, object> newDict;
+                // check property type
+                Type objectType = ObjectToCache.GetType();
+                if (objectType != null)
+                {
+                    PropertyInfo objectProperty = objectType.GetProperty(key.Key);
+                    if (objectProperty != null)
+                    {
+                        string compareName = objectProperty.PropertyType.Name.ToLower().Split("`")[0];
+                        var objectValue = objectProperty.GetValue(ObjectToCache);
+                        if (objectValue != null)
+                        {
+                            string newObjectValue;
+                            Dictionary<string, object> newDict;
                             switch (compareName)
-							{
-								case "identityorvalue":
+                            {
+                                case "identityorvalue":
                                     newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(objectValue);
-									newDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(newObjectValue);
+                                    newDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(newObjectValue);
                                     objectDict[key.Key] = newDict["Id"];
                                     break;
                                 case "identitiesorvalues":
                                     newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(objectValue);
                                     newDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(newObjectValue);
-									newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(newDict["Ids"]);
+                                    newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(newDict["Ids"]);
                                     objectDict[key.Key] = newObjectValue;
 
                                     StoreRelations(ObjectTypeName, key.Key, (long)objectDict["Id"], newObjectValue);
 
                                     break;
-								case "int32[]":
+                                case "int32[]":
                                     newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(objectValue);
                                     objectDict[key.Key] = newObjectValue;
                                     break;
                             }
-						}
-					}
-				}
-			}
-
-			string sql = "";
-			if (UpdateRecord == false)
-			{
-				sql = "INSERT INTO " + ObjectTypeName + " (" + fieldList + ") VALUES (" + valueList + ")";
+                        }
+                    }
+                }
             }
-			else
-			{
-				sql = "UPDATE " + ObjectTypeName + " SET " + updateFieldValueList + " WHERE Id = @Id";
-			}
+
+            string sql = "";
+            if (UpdateRecord == false)
+            {
+                sql = "INSERT INTO " + ObjectTypeName + " (" + fieldList + ") VALUES (" + valueList + ")";
+            }
+            else
+            {
+                sql = "UPDATE " + ObjectTypeName + " SET " + updateFieldValueList + " WHERE Id = @Id";
+            }
 
             // execute sql
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			db.ExecuteCMD(sql, objectDict);
+            db.ExecuteCMD(sql, objectDict);
         }
 
-		public static T GetCacheValue<T>(T EndpointType, string SearchField, object SearchValue)
-		{
+        public static T GetCacheValue<T>(T EndpointType, string SearchField, object SearchValue)
+        {
             string Endpoint = EndpointType.GetType().Name;
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -175,23 +175,23 @@ namespace gaseous_server.Classes.Metadata
             dbDict.Add("Endpoint", Endpoint);
             dbDict.Add(SearchField, SearchValue);
 
-            DataTable dt = db.ExecuteCMD(sql, dbDict);
+            DataTable dt = db.ExecuteCMD(sql, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromHours(8).Ticks));
             if (dt.Rows.Count == 0)
             {
-				// no data stored for this item
-				throw new Exception("No record found that matches endpoint " + Endpoint + " with search value " + SearchValue);
+                // no data stored for this item
+                throw new Exception("No record found that matches endpoint " + Endpoint + " with search value " + SearchValue);
             }
             else
             {
-				DataRow dataRow = dt.Rows[0];
+                DataRow dataRow = dt.Rows[0];
                 object returnObject = BuildCacheObject<T>(EndpointType, dataRow);
-                
+
                 return (T)returnObject;
             }
         }
 
-		public static T BuildCacheObject<T>(T EndpointType, DataRow dataRow)
-		{
+        public static T BuildCacheObject<T>(T EndpointType, DataRow dataRow)
+        {
             foreach (PropertyInfo property in EndpointType.GetType().GetProperties())
             {
                 if (dataRow.Table.Columns.Contains(property.Name))
@@ -456,7 +456,7 @@ namespace gaseous_server.Classes.Metadata
         {
             public object Object { get; set; }
             public DateTime CreationTime { get; } = DateTime.UtcNow;
-            public DateTime ExpiryTime 
+            public DateTime ExpiryTime
             {
                 get
                 {

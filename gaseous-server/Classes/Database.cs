@@ -23,7 +23,7 @@ namespace gaseous_server.Classes
 				_schema_version = value;
 			}
 		}
-		
+
 		public Database()
 		{
 
@@ -70,39 +70,41 @@ namespace gaseous_server.Classes
 
 		public void InitDB()
 		{
-            // load resources
-            var assembly = Assembly.GetExecutingAssembly();
+			// load resources
+			var assembly = Assembly.GetExecutingAssembly();
 
-            switch (_ConnectorType)
+			DatabaseMemoryCacheOptions? CacheOptions = new DatabaseMemoryCacheOptions(false);
+
+			switch (_ConnectorType)
 			{
 				case databaseType.MySql:
 					// check if the database exists first - first run must have permissions to create a database
 					string sql = "CREATE DATABASE IF NOT EXISTS `" + Config.DatabaseConfiguration.DatabaseName + "`;";
 					Dictionary<string, object> dbDict = new Dictionary<string, object>();
 					Logging.Log(Logging.LogType.Information, "Database", "Creating database if it doesn't exist");
-					ExecuteCMD(sql, dbDict, 30, "server=" + Config.DatabaseConfiguration.HostName + ";port=" + Config.DatabaseConfiguration.Port + ";userid=" + Config.DatabaseConfiguration.UserName + ";password=" + Config.DatabaseConfiguration.Password);
+					ExecuteCMD(sql, dbDict, CacheOptions, 30, "server=" + Config.DatabaseConfiguration.HostName + ";port=" + Config.DatabaseConfiguration.Port + ";userid=" + Config.DatabaseConfiguration.UserName + ";password=" + Config.DatabaseConfiguration.Password);
 
 					// check if schema version table is in place - if not, create the schema version table
 					sql = "SELECT TABLE_SCHEMA, TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA = '" + Config.DatabaseConfiguration.DatabaseName + "' AND TABLE_NAME = 'schema_version';";
-					DataTable SchemaVersionPresent = ExecuteCMD(sql, dbDict);
+					DataTable SchemaVersionPresent = ExecuteCMD(sql, dbDict, CacheOptions);
 					if (SchemaVersionPresent.Rows.Count == 0)
 					{
-                        // no schema table present - create it
-                        Logging.Log(Logging.LogType.Information, "Database", "Schema version table doesn't exist. Creating it.");
-                        sql = "CREATE TABLE `schema_version` (`schema_version` INT NOT NULL, PRIMARY KEY (`schema_version`)); INSERT INTO `schema_version` (`schema_version`) VALUES (0);";
-						ExecuteCMD(sql, dbDict);
+						// no schema table present - create it
+						Logging.Log(Logging.LogType.Information, "Database", "Schema version table doesn't exist. Creating it.");
+						sql = "CREATE TABLE `schema_version` (`schema_version` INT NOT NULL, PRIMARY KEY (`schema_version`)); INSERT INTO `schema_version` (`schema_version`) VALUES (0);";
+						ExecuteCMD(sql, dbDict, CacheOptions);
 					}
 
 					sql = "SELECT schema_version FROM schema_version;";
 					dbDict = new Dictionary<string, object>();
-					DataTable SchemaVersion = ExecuteCMD(sql, dbDict);
+					DataTable SchemaVersion = ExecuteCMD(sql, dbDict, CacheOptions);
 					int OuterSchemaVer = (int)SchemaVersion.Rows[0][0];
 					if (OuterSchemaVer == 0)
 					{
 						OuterSchemaVer = 1000;
 					}
 
-                    for (int i = OuterSchemaVer; i < 10000; i++)
+					for (int i = OuterSchemaVer; i < 10000; i++)
 					{
 						string resourceName = "gaseous_server.Support.Database.MySQL.gaseous-" + i + ".sql";
 						string dbScript = "";
@@ -113,39 +115,39 @@ namespace gaseous_server.Classes
 							using (Stream stream = assembly.GetManifestResourceStream(resourceName))
 							using (StreamReader reader = new StreamReader(stream))
 							{
-                                dbScript = reader.ReadToEnd();
+								dbScript = reader.ReadToEnd();
 
 								// apply script
 								sql = "SELECT schema_version FROM schema_version;";
 								dbDict = new Dictionary<string, object>();
-								SchemaVersion = ExecuteCMD(sql, dbDict);
+								SchemaVersion = ExecuteCMD(sql, dbDict, CacheOptions);
 								if (SchemaVersion.Rows.Count == 0)
 								{
-                                    // something is broken here... where's the table?
-                                    Logging.Log(Logging.LogType.Critical, "Database", "Schema table missing! This shouldn't happen!");
-                                    throw new Exception("schema_version table is missing!");
+									// something is broken here... where's the table?
+									Logging.Log(Logging.LogType.Critical, "Database", "Schema table missing! This shouldn't happen!");
+									throw new Exception("schema_version table is missing!");
 								}
 								else
 								{
 									int SchemaVer = (int)SchemaVersion.Rows[0][0];
-                                    Logging.Log(Logging.LogType.Information, "Database", "Schema version is " + SchemaVer);
+									Logging.Log(Logging.LogType.Information, "Database", "Schema version is " + SchemaVer);
 									// update schema version variable
 									Database.schema_version = SchemaVer;
-                                    if (SchemaVer < i)
+									if (SchemaVer < i)
 									{
 										try
 										{
 											// run pre-upgrade code
 											DatabaseMigration.PreUpgradeScript(i, _ConnectorType);
-											
+
 											// apply schema!
 											Logging.Log(Logging.LogType.Information, "Database", "Updating schema to version " + i);
-											ExecuteCMD(dbScript, dbDict, 180);
+											ExecuteCMD(dbScript, dbDict, CacheOptions, 180);
 
 											sql = "UPDATE schema_version SET schema_version=@schemaver";
 											dbDict = new Dictionary<string, object>();
 											dbDict.Add("schemaver", i);
-											ExecuteCMD(sql, dbDict);
+											ExecuteCMD(sql, dbDict, CacheOptions);
 
 											// run post-upgrade code
 											DatabaseMigration.PostUpgradeScript(i, _ConnectorType);
@@ -162,47 +164,91 @@ namespace gaseous_server.Classes
 								}
 							}
 						}
-                    }
-                    Logging.Log(Logging.LogType.Information, "Database", "Database setup complete");
-                    break;
+					}
+					Logging.Log(Logging.LogType.Information, "Database", "Database setup complete");
+					break;
 			}
 		}
 
-        public DataTable ExecuteCMD(string Command)
+		public DataTable ExecuteCMD(string Command)
 		{
+			DatabaseMemoryCacheOptions? CacheOptions = null;
+
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
-			return _ExecuteCMD(Command, dbDict, 30, "");
+			return _ExecuteCMD(Command, dbDict, CacheOptions, 30, "");
 		}
 
-        public DataTable ExecuteCMD(string Command, Dictionary<string, object> Parameters)
-        {
-            return _ExecuteCMD(Command, Parameters, 30, "");
-        }
+		public DataTable ExecuteCMD(string Command, DatabaseMemoryCacheOptions? CacheOptions)
+		{
+			Dictionary<string, object> dbDict = new Dictionary<string, object>();
+			return _ExecuteCMD(Command, dbDict, CacheOptions, 30, "");
+		}
 
-        public DataTable ExecuteCMD(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
-        {
-			return _ExecuteCMD(Command, Parameters, Timeout, ConnectionString);
-        }
+		public DataTable ExecuteCMD(string Command, Dictionary<string, object> Parameters)
+		{
+			DatabaseMemoryCacheOptions? CacheOptions = null;
+
+			return _ExecuteCMD(Command, Parameters, CacheOptions, 30, "");
+		}
+
+		public DataTable ExecuteCMD(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions)
+		{
+			return _ExecuteCMD(Command, Parameters, CacheOptions, 30, "");
+		}
+
+		public DataTable ExecuteCMD(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
+		{
+			DatabaseMemoryCacheOptions? CacheOptions = null;
+
+			return _ExecuteCMD(Command, Parameters, CacheOptions, Timeout, ConnectionString);
+		}
+
+		public DataTable ExecuteCMD(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions, int Timeout = 30, string ConnectionString = "")
+		{
+			return _ExecuteCMD(Command, Parameters, CacheOptions, Timeout, ConnectionString);
+		}
 
 		public List<Dictionary<string, object>> ExecuteCMDDict(string Command)
 		{
+			DatabaseMemoryCacheOptions? CacheOptions = null;
+
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
-			return _ExecuteCMDDict(Command, dbDict, 30, "");
+			return _ExecuteCMDDict(Command, dbDict, CacheOptions, 30, "");
 		}
 
-        public List<Dictionary<string, object>> ExecuteCMDDict(string Command, Dictionary<string, object> Parameters)
-        {
-            return _ExecuteCMDDict(Command, Parameters, 30, "");
-        }
-
-        public List<Dictionary<string, object>> ExecuteCMDDict(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
-        {
-			return _ExecuteCMDDict(Command, Parameters, Timeout, ConnectionString);
-        }
-
-		private List<Dictionary<string, object>> _ExecuteCMDDict(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
+		public List<Dictionary<string, object>> ExecuteCMDDict(string Command, DatabaseMemoryCacheOptions? CacheOptions)
 		{
-			DataTable dataTable = _ExecuteCMD(Command, Parameters, Timeout, ConnectionString);
+			Dictionary<string, object> dbDict = new Dictionary<string, object>();
+			return _ExecuteCMDDict(Command, dbDict, CacheOptions, 30, "");
+		}
+
+		public List<Dictionary<string, object>> ExecuteCMDDict(string Command, Dictionary<string, object> Parameters)
+		{
+			DatabaseMemoryCacheOptions? CacheOptions = null;
+
+			return _ExecuteCMDDict(Command, Parameters, CacheOptions, 30, "");
+		}
+
+		public List<Dictionary<string, object>> ExecuteCMDDict(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions)
+		{
+			return _ExecuteCMDDict(Command, Parameters, CacheOptions, 30, "");
+		}
+
+		public List<Dictionary<string, object>> ExecuteCMDDict(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
+		{
+			DatabaseMemoryCacheOptions? CacheOptions = null;
+
+			return _ExecuteCMDDict(Command, Parameters, CacheOptions, Timeout, ConnectionString);
+		}
+
+		public List<Dictionary<string, object>> ExecuteCMDDict(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions, int Timeout = 30, string ConnectionString = "")
+		{
+			return _ExecuteCMDDict(Command, Parameters, CacheOptions, Timeout, ConnectionString);
+		}
+
+		private List<Dictionary<string, object>> _ExecuteCMDDict(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions, int Timeout = 30, string ConnectionString = "")
+		{
+			DataTable dataTable = _ExecuteCMD(Command, Parameters, CacheOptions, Timeout, ConnectionString);
 
 			// convert datatable to dictionary
 			List<Dictionary<string, object?>> rows = new List<Dictionary<string, object?>>();
@@ -228,18 +274,34 @@ namespace gaseous_server.Classes
 			return rows;
 		}
 
-        private DataTable _ExecuteCMD(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
-        {
-            if (ConnectionString == "") { ConnectionString = _ConnectionString; }
-            switch (_ConnectorType)
-            {
-                case databaseType.MySql:
-                    MySQLServerConnector conn = new MySQLServerConnector(ConnectionString);
-                    return (DataTable)conn.ExecCMD(Command, Parameters, Timeout);
-                default:
-                    return new DataTable();
-            }
-        }
+		private DataTable _ExecuteCMD(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions, int Timeout = 30, string ConnectionString = "")
+		{
+			string CacheKey = Command + string.Join(";", Parameters.Select(x => string.Join("=", x.Key, x.Value)));
+
+			if (CacheOptions is object && CacheOptions.CacheEnabled)
+			{
+				object? CachedData = DatabaseMemoryCache.GetCacheObject(CacheKey);
+				if (CachedData is object)
+				{
+					return (DataTable)CachedData;
+				}
+			}
+
+			if (ConnectionString == "") { ConnectionString = _ConnectionString; }
+			switch (_ConnectorType)
+			{
+				case databaseType.MySql:
+					MySQLServerConnector conn = new MySQLServerConnector(ConnectionString);
+					DataTable RetTable = conn.ExecCMD(Command, Parameters, Timeout);
+					if (CacheOptions is object && CacheOptions.CacheEnabled)
+					{
+						DatabaseMemoryCache.SetCacheObject(CacheKey, RetTable, CacheOptions.ExpirationSeconds);
+					}
+					return RetTable;
+				default:
+					return new DataTable();
+			}
+		}
 
 		public int ExecuteNonQuery(string Command)
 		{
@@ -247,52 +309,186 @@ namespace gaseous_server.Classes
 			return _ExecuteNonQuery(Command, dbDict, 30, "");
 		}
 
-        public int ExecuteNonQuery(string Command, Dictionary<string, object> Parameters)
-        {
-            return _ExecuteNonQuery(Command, Parameters, 30, "");
-        }
+		public int ExecuteNonQuery(string Command, Dictionary<string, object> Parameters)
+		{
+			return _ExecuteNonQuery(Command, Parameters, 30, "");
+		}
 
-        public int ExecuteNonQuery(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
-        {
+		public int ExecuteNonQuery(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
+		{
 			return _ExecuteNonQuery(Command, Parameters, Timeout, ConnectionString);
-        }
+		}
 
-        private int _ExecuteNonQuery(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
-        {
-            if (ConnectionString == "") { ConnectionString = _ConnectionString; }
-            switch (_ConnectorType)
-            {
-                case databaseType.MySql:
-                    MySQLServerConnector conn = new MySQLServerConnector(ConnectionString);
-					int retVal = conn.ExecNonQuery(Command, Parameters, Timeout); 
-                    return retVal;
-                default:
-                    return 0;
-            }
-        }
+		private int _ExecuteNonQuery(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
+		{
+			if (ConnectionString == "") { ConnectionString = _ConnectionString; }
+			switch (_ConnectorType)
+			{
+				case databaseType.MySql:
+					MySQLServerConnector conn = new MySQLServerConnector(ConnectionString);
+					int retVal = conn.ExecNonQuery(Command, Parameters, Timeout);
+					return retVal;
+				default:
+					return 0;
+			}
+		}
 
-        public void ExecuteTransactionCMD(List<SQLTransactionItem> CommandList, int Timeout = 60)
-        {
-            object conn;
-            switch (_ConnectorType)
-            {
-                case databaseType.MySql:
-                    {
-                        var commands = new List<Dictionary<string, object>>();
-                        foreach (SQLTransactionItem CommandItem in CommandList)
-                        {
-                            var nCmd = new Dictionary<string, object>();
-                            nCmd.Add("sql", CommandItem.SQLCommand);
-                            nCmd.Add("values", CommandItem.Parameters);
-                            commands.Add(nCmd);
-                        }
+		public void ExecuteTransactionCMD(List<SQLTransactionItem> CommandList, int Timeout = 60)
+		{
+			object conn;
+			switch (_ConnectorType)
+			{
+				case databaseType.MySql:
+					{
+						var commands = new List<Dictionary<string, object>>();
+						foreach (SQLTransactionItem CommandItem in CommandList)
+						{
+							var nCmd = new Dictionary<string, object>();
+							nCmd.Add("sql", CommandItem.SQLCommand);
+							nCmd.Add("values", CommandItem.Parameters);
+							commands.Add(nCmd);
+						}
 
-                        conn = new MySQLServerConnector(_ConnectionString);
-                        ((MySQLServerConnector)conn).TransactionExecCMD(commands, Timeout);
-                        break;
-                    }
-            }
-        }
+						conn = new MySQLServerConnector(_ConnectionString);
+						((MySQLServerConnector)conn).TransactionExecCMD(commands, Timeout);
+						break;
+					}
+			}
+		}
+
+		public static class DatabaseMemoryCache
+		{
+			private class MemoryCacheItem
+			{
+				public MemoryCacheItem(object CacheObject)
+				{
+					cacheObject = CacheObject;
+				}
+
+				public MemoryCacheItem(object CacheObject, int ExpirationSeconds)
+				{
+					cacheObject = CacheObject;
+					expirationSeconds = ExpirationSeconds;
+				}
+
+				/// <summary>
+				/// The time the object was added to the cache in ticks
+				/// </summary>
+				public long addedTime { get; } = Environment.TickCount64;
+
+				/// <summary>
+				/// The time the object will expire in ticks
+				/// </summary>
+				public long expirationTime
+				{
+					get
+					{
+						return addedTime + _expirationTicks;
+					}
+				}
+
+				/// <summary>
+				/// The number of seconds the object will be cached
+				/// </summary>
+				public int expirationSeconds
+				{
+					get
+					{
+						return (int)TimeSpan.FromTicks(_expirationTicks).Seconds;
+					}
+					set
+					{
+						_expirationTicks = (long)TimeSpan.FromSeconds(value).Ticks;
+					}
+				}
+
+				private long _expirationTicks = (long)TimeSpan.FromSeconds(2).Ticks;
+
+				/// <summary>
+				/// The object to be cached
+				/// </summary>
+				public object cacheObject { get; set; }
+			}
+			private static Dictionary<string, MemoryCacheItem> MemoryCache = new Dictionary<string, MemoryCacheItem>();
+			private static Timer CacheTimer = new Timer(CacheTimerCallback, null, 0, 1000);
+
+			private static void CacheTimerCallback(object? state)
+			{
+				ClearExpiredCache();
+			}
+
+			public static object? GetCacheObject(string CacheKey)
+			{
+				if (MemoryCache.ContainsKey(CacheKey))
+				{
+					if (MemoryCache[CacheKey].expirationTime < Environment.TickCount)
+					{
+						MemoryCache.Remove(CacheKey);
+						return null;
+					}
+					else
+					{
+						return MemoryCache[CacheKey].cacheObject;
+					}
+				}
+				else
+				{
+					return null;
+				}
+			}
+			public static void SetCacheObject(string CacheKey, object CacheObject, int ExpirationSeconds = 2)
+			{
+				if (MemoryCache.ContainsKey(CacheKey))
+				{
+					MemoryCache.Remove(CacheKey);
+				}
+				MemoryCache.Add(CacheKey, new MemoryCacheItem(CacheObject, ExpirationSeconds));
+			}
+			public static void RemoveCacheObject(string CacheKey)
+			{
+				if (MemoryCache.ContainsKey(CacheKey))
+				{
+					MemoryCache.Remove(CacheKey);
+				}
+			}
+			public static void ClearCache()
+			{
+				MemoryCache.Clear();
+			}
+			private static void ClearExpiredCache()
+			{
+				try
+				{
+					long currTime = Environment.TickCount64;
+
+					Dictionary<string, MemoryCacheItem> ExpiredItems = MemoryCache;
+					foreach (string key in ExpiredItems.Keys)
+					{
+						if (MemoryCache[key].expirationTime < currTime)
+						{
+							Console.WriteLine("\x1b[95mPurging expired cache item " + key + ". Added: " + MemoryCache[key].addedTime + ". Expired: " + MemoryCache[key].expirationTime);
+							MemoryCache.Remove(key);
+						}
+					}
+				}
+				catch (Exception ex)
+				{
+					Logging.Log(Logging.LogType.Debug, "Database", "Error while clearing expired cache", ex);
+				}
+			}
+		}
+
+		public class DatabaseMemoryCacheOptions
+		{
+			public DatabaseMemoryCacheOptions(bool CacheEnabled = false, int ExpirationSeconds = 1)
+			{
+				this.CacheEnabled = CacheEnabled;
+				this.ExpirationSeconds = ExpirationSeconds;
+			}
+
+			public bool CacheEnabled { get; set; }
+			public int ExpirationSeconds { get; set; }
+		}
 
 		public int GetDatabaseSchemaVersion()
 		{
@@ -309,7 +505,7 @@ namespace gaseous_server.Classes
 					{
 						return (int)SchemaVersion.Rows[0][0];
 					}
-					
+
 				default:
 					return 0;
 
@@ -319,17 +515,17 @@ namespace gaseous_server.Classes
 		public bool TestConnection()
 		{
 			switch (_ConnectorType)
-            {
-                case databaseType.MySql:
-                    MySQLServerConnector conn = new MySQLServerConnector(_ConnectionString);
-                    return conn.TestConnection();
-                default:
-                    return false;
-            }
+			{
+				case databaseType.MySql:
+					MySQLServerConnector conn = new MySQLServerConnector(_ConnectionString);
+					return conn.TestConnection();
+				default:
+					return false;
+			}
 		}
 
-        public class SQLTransactionItem
-        {
+		public class SQLTransactionItem
+		{
 			public SQLTransactionItem()
 			{
 
@@ -341,11 +537,11 @@ namespace gaseous_server.Classes
 				this.Parameters = Parameters;
 			}
 
-            public string? SQLCommand;
-            public Dictionary<string, object>? Parameters = new Dictionary<string, object>();
-        }
+			public string? SQLCommand;
+			public Dictionary<string, object>? Parameters = new Dictionary<string, object>();
+		}
 
-        private partial class MySQLServerConnector
+		private partial class MySQLServerConnector
 		{
 			private string DBConn = "";
 
@@ -358,8 +554,8 @@ namespace gaseous_server.Classes
 			{
 				DataTable RetTable = new DataTable();
 
-                Logging.Log(Logging.LogType.Debug, "Database", "Connecting to database", null, true);
-                using (MySqlConnection conn = new MySqlConnection(DBConn))
+				Logging.Log(Logging.LogType.Debug, "Database", "Connecting to database", null, true);
+				using (MySqlConnection conn = new MySqlConnection(DBConn))
 				{
 					conn.Open();
 
@@ -384,7 +580,9 @@ namespace gaseous_server.Classes
 							Logging.Log(Logging.LogType.Debug, "Database", "Parameters: " + dictValues, null, true);
 						}
 						RetTable.Load(cmd.ExecuteReader());
-					} catch (Exception ex) {
+					}
+					catch (Exception ex)
+					{
 						Logging.Log(Logging.LogType.Critical, "Database", "Error while executing '" + SQL + "'", ex);
 						Trace.WriteLine("Error executing " + SQL);
 						Trace.WriteLine("Full exception: " + ex.ToString());
@@ -397,12 +595,12 @@ namespace gaseous_server.Classes
 				return RetTable;
 			}
 
-			public int ExecNonQuery(string SQL, Dictionary< string, object> Parameters, int Timeout)
+			public int ExecNonQuery(string SQL, Dictionary<string, object> Parameters, int Timeout)
 			{
 				int result = 0;
 
-                Logging.Log(Logging.LogType.Debug, "Database", "Connecting to database", null, true);
-                using (MySqlConnection conn = new MySqlConnection(DBConn))
+				Logging.Log(Logging.LogType.Debug, "Database", "Connecting to database", null, true);
+				using (MySqlConnection conn = new MySqlConnection(DBConn))
 				{
 					conn.Open();
 
@@ -427,7 +625,9 @@ namespace gaseous_server.Classes
 							Logging.Log(Logging.LogType.Debug, "Database", "Parameters: " + dictValues, null, true);
 						}
 						result = cmd.ExecuteNonQuery();
-					} catch (Exception ex) {
+					}
+					catch (Exception ex)
+					{
 						Logging.Log(Logging.LogType.Critical, "Database", "Error while executing '" + SQL + "'", ex);
 						Trace.WriteLine("Error executing " + SQL);
 						Trace.WriteLine("Full exception: " + ex.ToString());
@@ -440,10 +640,10 @@ namespace gaseous_server.Classes
 				return result;
 			}
 
-            public void TransactionExecCMD(List<Dictionary<string, object>> Parameters, int Timeout)
-            {
-                using (MySqlConnection conn = new MySqlConnection(DBConn))
-                {
+			public void TransactionExecCMD(List<Dictionary<string, object>> Parameters, int Timeout)
+			{
+				using (MySqlConnection conn = new MySqlConnection(DBConn))
+				{
 					conn.Open();
 					var command = conn.CreateCommand();
 					MySqlTransaction transaction;
@@ -460,28 +660,28 @@ namespace gaseous_server.Classes
 					transaction.Commit();
 					conn.Close();
 				}
-            }
+			}
 
-            private MySqlCommand buildcommand(MySqlConnection Conn, string SQL, Dictionary<string, object> Parameters, int Timeout)
-            {
-                var cmd = new MySqlCommand();
-                cmd.Connection = Conn;
-                cmd.CommandText = SQL;
-                cmd.CommandTimeout = Timeout;
-                {
-                    var withBlock = cmd.Parameters;
-                    if (Parameters is object)
-                    {
-                        if (Parameters.Count > 0)
-                        {
-                            foreach (string param in Parameters.Keys)
-                                withBlock.AddWithValue(param, Parameters[param]);
-                        }
-                    }
-                }
+			private MySqlCommand buildcommand(MySqlConnection Conn, string SQL, Dictionary<string, object> Parameters, int Timeout)
+			{
+				var cmd = new MySqlCommand();
+				cmd.Connection = Conn;
+				cmd.CommandText = SQL;
+				cmd.CommandTimeout = Timeout;
+				{
+					var withBlock = cmd.Parameters;
+					if (Parameters is object)
+					{
+						if (Parameters.Count > 0)
+						{
+							foreach (string param in Parameters.Keys)
+								withBlock.AddWithValue(param, Parameters[param]);
+						}
+					}
+				}
 
-                return cmd;
-            }
+				return cmd;
+			}
 
 			public bool TestConnection()
 			{
@@ -499,7 +699,7 @@ namespace gaseous_server.Classes
 					}
 				}
 			}
-        }
-    }
+		}
+	}
 }
 

@@ -1,254 +1,287 @@
+<div id="tab4" name="modalTab" data-tabname="General">
+    <div style="display: flex; gap: 10px; width: 100%;">
+        <div class="section" style="flex-grow:1;">
+            <div class="section-header">General</div>
+            <div class="section-body">
+                <table class="romtable">
+                    <tr class="romrow">
+                        <th class="romcell">User Id</th>
+                        <td id="user-id" class="romcell"></td>
+                    </tr>
+                    <tr class="romrow">
+                        <th class="romcell">Account lockout</th>
+                        <td id="user-lockedout" class="romcell"></td>
+                    </tr>
+                    <tr class="romrow">
+                        <th class="romcell">Account lockout ends</th>
+                        <td id="user-lockedout-end" class="romcell"></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div id="user-profile-card" style="flex-grow:0;"></div>
+    </div>
+</div>
+
 <div id="tab2" name="modalTab" data-tabname="Permissions">
-    <div class="section">
-        <div class="section-header">User Role</div>
-        <div class="section-body">
-            <div style="display: flex;">
-                <div style="flex-grow:1">
-                    <table cellspacing="0">
-                        <tr>
-                            <td>
-                                <input type="radio" name="settings_user_role" id="settings_user_role_player"
-                                    value="Player"> <label for="settings_user_role_player">Player</label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <input type="radio" name="settings_user_role" id="settings_user_role_gamer"
-                                    value="Gamer"> <label for="settings_user_role_gamer">Gamer</label>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>
-                                <input type="radio" name="settings_user_role" id="settings_user_role_admin"
-                                    value="Admin"> <label for="settings_user_role_admin">Administrator</label>
-                            </td>
-                        </tr>
-                    </table>
-                </div>
-                <div style="flex-grow:1">
-                    <p>Role permissions:</p>
+    <div style="display: flex; gap: 10px;">
+        <div class="section" style="flex-grow:1;">
+            <div class="section-header">User Role</div>
+            <div class="section-body">
+                <table cellspacing="0">
+                    <tr>
+                        <td>
+                            <input type="radio" name="settings_user_role" id="settings_user_role_player" value="Player">
+                            <label for="settings_user_role_player">Player</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="radio" name="settings_user_role" id="settings_user_role_gamer" value="Gamer">
+                            <label for="settings_user_role_gamer">Gamer</label>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <input type="radio" name="settings_user_role" id="settings_user_role_admin" value="Admin">
+                            <label for="settings_user_role_admin">Administrator</label>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+        <div style="flex-grow:1">
+            <div class="section">
+                <div class="section-header">Assigned Permissions</div>
+                <div class="section-body">
                     <div id="role-permissions">
-                        <table style="width: 100%;" class="romtable" cellspacing="0">
-                            <tr>
-                                <th colspan="2">
-                                    Games and ROMs
-                                </th>
-                            </tr>
-                            <tr class="romrow">
-                                <td class="romcell">Play games</td>
-                                <td class="romcell" name="role-player">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-gamer">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-admin">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                            </tr>
-                            <tr class="romrow">
-                                <td class="romcell">Download ROM images</td>
-                                <td class="romcell" name="role-player">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-gamer">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-admin">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                            </tr>
-                            <tr class="romrow">
-                                <td class="romcell">Upload ROM images</td>
-                                <td class="romcell" name="role-player">
-                                    <div class="listitem listitem-red"></div>
-                                </td>
-                                <td class="romcell" name="role-gamer">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-admin">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                            </tr>
-                            <tr class="romrow">
-                                <td class="romcell">Create and delete multidisk packages</td>
-                                <td class="romcell" name="role-player">
-                                    <div class="listitem listitem-red"></div>
-                                </td>
-                                <td class="romcell" name="role-gamer">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-admin">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                            </tr>
-                            <tr class="romrow">
-                                <td class="romcell">Delete ROM images</td>
-                                <td class="romcell" name="role-player">
-                                    <div class="listitem listitem-red"></div>
-                                </td>
-                                <td class="romcell" name="role-gamer">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-admin">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                            </tr>
-                            <tr class="romrow">
-                                <td class="romcell">Fix ROM image matches</td>
-                                <td class="romcell" name="role-player">
-                                    <div class="listitem listitem-red"></div>
-                                </td>
-                                <td class="romcell" name="role-gamer">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-admin">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th colspan="2">
-                                    Collections
-                                </th>
-                            </tr>
-                            <tr class="romrow">
-                                <td class="romcell">Download packages</td>
-                                <td class="romcell" name="role-player">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-gamer">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-admin">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                            </tr>
-                            <tr class="romrow">
-                                <td class="romcell">Create packages</td>
-                                <td class="romcell" name="role-player">
-                                    <div class="listitem listitem-red"></div>
-                                </td>
-                                <td class="romcell" name="role-gamer">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-admin">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                            </tr>
-                            <tr class="romrow">
-                                <td class="romcell">Edit packages</td>
-                                <td class="romcell" name="role-player">
-                                    <div class="listitem listitem-red"></div>
-                                </td>
-                                <td class="romcell" name="role-gamer">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-admin">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                            </tr>
-                            <tr class="romrow">
-                                <td class="romcell">Delete packages</td>
-                                <td class="romcell" name="role-player">
-                                    <div class="listitem listitem-red"></div>
-                                </td>
-                                <td class="romcell" name="role-gamer">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-admin">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                            </tr>
-                            <tr>
-                                <th colspan="2">
-                                    Settings
-                                </th>
-                            </tr>
-                            <tr class="romrow">
-                                <td class="romcell">Download firmware</td>
-                                <td class="romcell" name="role-player">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-gamer">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-admin">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                            </tr>
-                            <tr class="romrow">
-                                <td class="romcell">View background tasks</td>
-                                <td class="romcell" name="role-player">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-gamer">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-admin">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                            </tr>
-                            <tr class="romrow">
-                                <td class="romcell">View platform mapping</td>
-                                <td class="romcell" name="role-player">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-gamer">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                                <td class="romcell" name="role-admin">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                            </tr>
-                            <tr class="romrow">
-                                <td class="romcell">Modify platform mapping</td>
-                                <td class="romcell" name="role-player">
-                                    <div class="listitem listitem-red"></div>
-                                </td>
-                                <td class="romcell" name="role-gamer">
-                                    <div class="listitem listitem-red"></div>
-                                </td>
-                                <td class="romcell" name="role-admin">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                            </tr>
-                            <tr class="romrow">
-                                <td class="romcell">Manually start background tasks</td>
-                                <td class="romcell" name="role-player">
-                                    <div class="listitem listitem-red"></div>
-                                </td>
-                                <td class="romcell" name="role-gamer">
-                                    <div class="listitem listitem-red"></div>
-                                </td>
-                                <td class="romcell" name="role-admin">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                            </tr>
-                            <tr class="romrow">
-                                <td class="romcell">View logs</td>
-                                <td class="romcell" name="role-player">
-                                    <div class="listitem listitem-red"></div>
-                                </td>
-                                <td class="romcell" name="role-gamer">
-                                    <div class="listitem listitem-red"></div>
-                                </td>
-                                <td class="romcell" name="role-admin">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                            </tr>
-                            <tr class="romrow">
-                                <td class="romcell">Manage user accounts</td>
-                                <td class="romcell" name="role-player">
-                                    <div class="listitem listitem-red"></div>
-                                </td>
-                                <td class="romcell" name="role-gamer">
-                                    <div class="listitem listitem-red"></div>
-                                </td>
-                                <td class="romcell" name="role-admin">
-                                    <div class="listitem listitem-green"></div>
-                                </td>
-                            </tr>
-                        </table>
+                        <div id="role-permissions-table" class="collapsed">
+                            <table style="width: 100%;" class="romtable" cellspacing="0">
+                                <tr>
+                                    <th colspan="2">
+                                        Games and ROMs
+                                    </th>
+                                </tr>
+                                <tr class="romrow">
+                                    <td class="romcell">Play games</td>
+                                    <td class="romcell" name="role-player">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-gamer">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-admin">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                </tr>
+                                <tr class="romrow">
+                                    <td class="romcell">Download ROM images</td>
+                                    <td class="romcell" name="role-player">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-gamer">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-admin">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                </tr>
+                                <tr class="romrow">
+                                    <td class="romcell">Upload ROM images</td>
+                                    <td class="romcell" name="role-player">
+                                        <div class="listitem listitem-red"></div>
+                                    </td>
+                                    <td class="romcell" name="role-gamer">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-admin">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                </tr>
+                                <tr class="romrow">
+                                    <td class="romcell">Create and delete multidisk packages</td>
+                                    <td class="romcell" name="role-player">
+                                        <div class="listitem listitem-red"></div>
+                                    </td>
+                                    <td class="romcell" name="role-gamer">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-admin">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                </tr>
+                                <tr class="romrow">
+                                    <td class="romcell">Delete ROM images</td>
+                                    <td class="romcell" name="role-player">
+                                        <div class="listitem listitem-red"></div>
+                                    </td>
+                                    <td class="romcell" name="role-gamer">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-admin">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                </tr>
+                                <tr class="romrow">
+                                    <td class="romcell">Fix ROM image matches</td>
+                                    <td class="romcell" name="role-player">
+                                        <div class="listitem listitem-red"></div>
+                                    </td>
+                                    <td class="romcell" name="role-gamer">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-admin">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th colspan="2">
+                                        Collections
+                                    </th>
+                                </tr>
+                                <tr class="romrow">
+                                    <td class="romcell">Download packages</td>
+                                    <td class="romcell" name="role-player">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-gamer">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-admin">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                </tr>
+                                <tr class="romrow">
+                                    <td class="romcell">Create packages</td>
+                                    <td class="romcell" name="role-player">
+                                        <div class="listitem listitem-red"></div>
+                                    </td>
+                                    <td class="romcell" name="role-gamer">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-admin">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                </tr>
+                                <tr class="romrow">
+                                    <td class="romcell">Edit packages</td>
+                                    <td class="romcell" name="role-player">
+                                        <div class="listitem listitem-red"></div>
+                                    </td>
+                                    <td class="romcell" name="role-gamer">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-admin">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                </tr>
+                                <tr class="romrow">
+                                    <td class="romcell">Delete packages</td>
+                                    <td class="romcell" name="role-player">
+                                        <div class="listitem listitem-red"></div>
+                                    </td>
+                                    <td class="romcell" name="role-gamer">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-admin">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <th colspan="2">
+                                        Settings
+                                    </th>
+                                </tr>
+                                <tr class="romrow">
+                                    <td class="romcell">Download firmware</td>
+                                    <td class="romcell" name="role-player">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-gamer">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-admin">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                </tr>
+                                <tr class="romrow">
+                                    <td class="romcell">View background tasks</td>
+                                    <td class="romcell" name="role-player">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-gamer">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-admin">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                </tr>
+                                <tr class="romrow">
+                                    <td class="romcell">View platform mapping</td>
+                                    <td class="romcell" name="role-player">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-gamer">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                    <td class="romcell" name="role-admin">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                </tr>
+                                <tr class="romrow">
+                                    <td class="romcell">Modify platform mapping</td>
+                                    <td class="romcell" name="role-player">
+                                        <div class="listitem listitem-red"></div>
+                                    </td>
+                                    <td class="romcell" name="role-gamer">
+                                        <div class="listitem listitem-red"></div>
+                                    </td>
+                                    <td class="romcell" name="role-admin">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                </tr>
+                                <tr class="romrow">
+                                    <td class="romcell">Manually start background tasks</td>
+                                    <td class="romcell" name="role-player">
+                                        <div class="listitem listitem-red"></div>
+                                    </td>
+                                    <td class="romcell" name="role-gamer">
+                                        <div class="listitem listitem-red"></div>
+                                    </td>
+                                    <td class="romcell" name="role-admin">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                </tr>
+                                <tr class="romrow">
+                                    <td class="romcell">View logs</td>
+                                    <td class="romcell" name="role-player">
+                                        <div class="listitem listitem-red"></div>
+                                    </td>
+                                    <td class="romcell" name="role-gamer">
+                                        <div class="listitem listitem-red"></div>
+                                    </td>
+                                    <td class="romcell" name="role-admin">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                </tr>
+                                <tr class="romrow">
+                                    <td class="romcell">Manage user accounts</td>
+                                    <td class="romcell" name="role-player">
+                                        <div class="listitem listitem-red"></div>
+                                    </td>
+                                    <td class="romcell" name="role-gamer">
+                                        <div class="listitem listitem-red"></div>
+                                    </td>
+                                    <td class="romcell" name="role-admin">
+                                        <div class="listitem listitem-green"></div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div id="role-permissions-expand" class="collapsed">
+
+                        </div>
+                        <div id="role-permissions-expand-link">Show details...</div>
                     </div>
                 </div>
             </div>
@@ -257,7 +290,24 @@
 </div>
 
 <div id="tab3" name="modalTab" data-tabname="Age Restrictions">
+    <div style="display: flex; gap: 10px;">
+        <div style="flex-grow:1">
+            <div class="section">
+                <div class="section-header">Age Group</div>
+                <div class="section-body">
+                    
+                </div>
+            </div>
+        </div>
+        <div style="flex-grow:1">
+            <div class="section">
+                <div class="section-header">Allowed Age Ratings</div>
+                <div class="section-body">
 
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div id="tab1" name="modalTab" data-tabname="Login">

@@ -82,7 +82,7 @@ namespace Authentication
             parameters.Add("providerKey", userLogin.ProviderKey);
 
             DataTable table = _database.ExecuteCMD(commandText, parameters);
-            
+
             if (table.Rows.Count == 0)
             {
                 return null;

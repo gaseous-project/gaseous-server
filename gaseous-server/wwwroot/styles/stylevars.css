@@ -95,6 +95,7 @@
     --section-header-background-hover: rgba(0, 0, 0, 0.5);
     /* section body */
     --section-body-background: rgba(56, 56, 56, 0.3);
+    --section-body-background-solid: rgb(56, 56, 56);
     --section-heading-underline: rgba(56, 56, 56, 1);
 
     /* fancy button */

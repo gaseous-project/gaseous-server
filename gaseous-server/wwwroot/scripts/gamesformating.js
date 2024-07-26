@@ -331,6 +331,8 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
         visibleOnly: true,
         defaultImage: '/images/unknowngame.png',
         delay: 250,
+        enableThrottle: true,
+        throttle: 250,
         afterLoad: function (element) {
             //console.log(element[0].getAttribute('data-id'));
         }
@@ -428,7 +430,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
     }
     // gameImage.src = '/images/unknowngame.png';
     if (gameObject.cover) {
-        gameImage.setAttribute('data-src', '/api/v1.1/Games/' + gameObject.id + '/cover/image/cover_big/' + gameObject.cover.imageId + '.jpg');
+        gameImage.setAttribute('data-src', '/api/v1.1/Games/' + gameObject.id + '/cover/image/cover_big/' + gameObject.cover.id + '.jpg');
     } else {
         gameImage.classList.add(...classes['game_tile_image unknown']);
         gameImage.setAttribute('data-src', '/images/unknowngame.png');

@@ -26,6 +26,8 @@ namespace gaseous_server.Classes
 
 		public static GameRomObject GetRoms(long GameId, long PlatformId = -1, string NameSearch = "", int pageNumber = 0, int pageSize = 0, string userid = "")
 		{
+			TimeSpan timeStart = DateTime.Now.TimeOfDay;
+
 			GameRomObject GameRoms = new GameRomObject();
 
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -64,9 +66,8 @@ namespace gaseous_server.Classes
 
 				dbDict.Add("platformid", PlatformId);
 			}
-			DataTable romDT = db.ExecuteCMD(sql, dbDict);
-			Dictionary<string, object> rowCount = db.ExecuteCMDDict(sqlCount, dbDict)[0];
-			DataTable platformDT = db.ExecuteCMD(sqlPlatform, dbDict);
+			DataTable romDT = db.ExecuteCMD(sql, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromHours(1).Ticks));
+			Dictionary<string, object> rowCount = db.ExecuteCMDDict(sqlCount, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromHours(1).Ticks))[0];
 
 			if (romDT.Rows.Count > 0)
 			{
@@ -76,13 +77,16 @@ namespace gaseous_server.Classes
 				int pageOffset = pageSize * (pageNumber - 1);
 				for (int i = 0; i < romDT.Rows.Count; i++)
 				{
-					GameRomItem gameRomItem = BuildRom(romDT.Rows[i]);
-
 					if ((i >= pageOffset && i < pageOffset + pageSize) || pageSize == 0)
 					{
+						GameRomItem gameRomItem = BuildRom(romDT.Rows[i]);
 						GameRoms.GameRomItems.Add(gameRomItem);
 					}
 				}
+
+				TimeSpan timeEnd = DateTime.Now.TimeOfDay;
+				TimeSpan timeDiff = timeEnd - timeStart;
+				Console.WriteLine("GetRoms took " + timeDiff.TotalMilliseconds + "ms");
 
 				return GameRoms;
 			}
@@ -270,7 +274,8 @@ namespace gaseous_server.Classes
 			};
 
 			// check for a web emulator and update the romItem
-			foreach (Models.PlatformMapping.PlatformMapItem platformMapping in Models.PlatformMapping.PlatformMap)
+			List<Models.PlatformMapping.PlatformMapItem> pMap = Models.PlatformMapping.PlatformMap;
+			foreach (Models.PlatformMapping.PlatformMapItem platformMapping in pMap)
 			{
 				if (platformMapping.IGDBId == romItem.PlatformId)
 				{

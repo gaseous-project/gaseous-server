@@ -259,6 +259,20 @@ class UserEdit {
             });
         }
 
+        // setup general page
+        this.dialog.modalElement.querySelector('#user-id').innerHTML = this.user.id;
+        let userProfileCard = new ProfileCard(this.user.profileId, true);
+        if (this.user.lockoutEnabled === true) {
+            this.dialog.modalElement.querySelector('#user-lockedout').innerHTML = 'Locked';
+            this.dialog.modalElement.querySelector('#user-lockedout').style.backgroundColor = 'red';
+            this.dialog.modalElement.querySelector('#user-lockedout-end').innerHTML = 'until ' + new Date(this.user.lockoutEnd).toLocaleString();
+        } else {
+            this.dialog.modalElement.querySelector('#user-lockedout').innerHTML = 'Unlocked';
+            this.dialog.modalElement.querySelector('#user-lockedout').style.backgroundColor = '';
+            this.dialog.modalElement.querySelector('#user-lockedout-end').innerHTML = '';
+        }
+        this.dialog.modalElement.querySelector('#user-profile-card').appendChild(userProfileCard);
+
         // set user role
         this.role_Player = this.dialog.modalElement.querySelector('#settings_user_role_player');
         this.role_Player.addEventListener('change', () => {
@@ -274,6 +288,25 @@ class UserEdit {
         });
         this.dialog.modalElement.querySelector('#settings_user_role_' + this.user.highestRole.toLowerCase()).checked = true;
         this.UpdateRolePermissionsDisplay();
+
+        this.rolePermTable = this.dialog.modalElement.querySelector('#role-permissions-table');
+        this.rolePermCover = this.dialog.modalElement.querySelector('#role-permissions-expand');
+        this.rolePermLink = this.dialog.modalElement.querySelector('#role-permissions-expand-link');
+        this.rolePermLink.addEventListener('click', () => {
+            if (Array.from(this.rolePermTable.classList).includes('collapsed')) {
+                this.rolePermTable.classList.remove('collapsed');
+                this.rolePermTable.classList.add('expanded');
+                this.rolePermCover.classList.remove('collapsed');
+                this.rolePermCover.classList.add('expanded');
+                this.rolePermLink.innerHTML = 'Hide details...';
+            } else {
+                this.rolePermTable.classList.remove('expanded');
+                this.rolePermTable.classList.add('collapsed');
+                this.rolePermCover.classList.remove('expanded');
+                this.rolePermCover.classList.add('collapsed');
+                this.rolePermLink.innerHTML = 'Show details...';
+            }
+        });
 
         // set up the password change form
         this.password_new = this.dialog.modalElement.querySelector('#new-password');

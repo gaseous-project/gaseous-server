@@ -9,7 +9,7 @@ namespace Authentication
     /// <summary>
     /// Class that represents the Role table in the MySQL Database
     /// </summary>
-    public class RoleTable 
+    public class RoleTable
     {
         private Database _database;
 
@@ -63,7 +63,7 @@ namespace Authentication
             parameters.Add("@id", roleId);
 
             DataTable table = _database.ExecuteCMD(commandText, parameters);
-            
+
             if (table.Rows.Count == 0)
             {
                 return null;
@@ -104,7 +104,7 @@ namespace Authentication
             var roleName = GetRoleName(roleId);
             ApplicationRole? role = null;
 
-            if(roleName != null)
+            if (roleName != null)
             {
                 role = new ApplicationRole();
                 role.Id = roleId;
@@ -153,7 +153,7 @@ namespace Authentication
             string commandText = "Select Name from Roles";
 
             var rows = _database.ExecuteCMDDict(commandText);
-            foreach(Dictionary<string, object> row in rows)
+            foreach (Dictionary<string, object> row in rows)
             {
                 ApplicationRole role = (ApplicationRole)Activator.CreateInstance(typeof(ApplicationRole));
                 role.Id = (string)row["Id"];

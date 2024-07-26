@@ -3,10 +3,11 @@ using System.Data;
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 namespace gaseous_server.Classes
 {
-	public class Logging
-	{
+    public class Logging
+    {
         private static DateTime lastDiskRetentionSweep = DateTime.UtcNow;
         public static bool WriteToDiskOnly { get; set; } = false;
 
@@ -21,8 +22,13 @@ namespace gaseous_server.Classes
                 ExceptionValue = Common.ReturnValueIfNull(ExceptionValue, "").ToString()
             };
 
+            _ = Task.Run(() => WriteLogAsync(logItem, LogToDiskOnly));
+        }
+
+        static async Task WriteLogAsync(LogItem logItem, bool LogToDiskOnly)
+        {
             bool AllowWrite = false;
-            if (EventType == LogType.Debug)
+            if (logItem.EventType == LogType.Debug)
             {
                 if (Config.LoggingConfiguration.DebugLogging == true)
                 {
@@ -42,26 +48,32 @@ namespace gaseous_server.Classes
                 {
                     TraceOutput += Environment.NewLine + logItem.ExceptionValue.ToString();
                 }
-                switch(logItem.EventType) {
+                string consoleColour = "";
+                switch (logItem.EventType)
+                {
                     case LogType.Information:
-                        Console.ForegroundColor = ConsoleColor.Blue;
+                        // Console.ForegroundColor = ConsoleColor.Blue;
+                        consoleColour = "\u001b[1;34m]";
                         break;
 
                     case LogType.Warning:
-                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        // Console.ForegroundColor = ConsoleColor.Yellow;
+                        consoleColour = "\u001b[1;33m]";
                         break;
 
                     case LogType.Critical:
-                        Console.ForegroundColor = ConsoleColor.Red;
+                        // Console.ForegroundColor = ConsoleColor.Red;
+                        consoleColour = "\u001b[1;31m]";
                         break;
 
                     case LogType.Debug:
-                        Console.ForegroundColor = ConsoleColor.Magenta;
+                        // Console.ForegroundColor = ConsoleColor.Magenta;
+                        consoleColour = "\u001b[1;36m]";
                         break;
 
                 }
-                Console.WriteLine(TraceOutput);
-                Console.ResetColor();
+                Console.WriteLine(consoleColour + TraceOutput);
+                // Console.ResetColor();
 
                 if (WriteToDiskOnly == true)
                 {
@@ -143,7 +155,7 @@ namespace gaseous_server.Classes
                         db.ExecuteCMD(sql, dbDict);
                     }
                     catch (Exception ex)
-                    {   
+                    {
                         LogToDisk(logItem, TraceOutput, ex);
                     }
                 }
@@ -162,9 +174,9 @@ namespace gaseous_server.Classes
                 foreach (string file in files)
                 {
                     FileInfo fi = new FileInfo(file);
-                    if (fi.LastAccessTime < DateTime.Now.AddDays(Config.LoggingConfiguration.LogRetention * -1)) 
-                    { 
-                        fi.Delete(); 
+                    if (fi.LastAccessTime < DateTime.Now.AddDays(Config.LoggingConfiguration.LogRetention * -1))
+                    {
+                        fi.Delete();
                     }
                 }
             }
@@ -176,7 +188,7 @@ namespace gaseous_server.Classes
             {
                 // dump the error
                 File.AppendAllText(Config.LogFilePath, logItem.EventTime.ToString("yyyyMMdd HHmmss") + ": " + logItem.EventType.ToString() + ": " + logItem.Process + ": " + logItem.Message + Environment.NewLine + exception.ToString());
-            
+
 
                 // something went wrong writing to the db
                 File.AppendAllText(Config.LogFilePath, logItem.EventTime.ToString("yyyyMMdd HHmmss") + ": The following event was unable to be written to the log database:");
@@ -185,7 +197,7 @@ namespace gaseous_server.Classes
             File.AppendAllText(Config.LogFilePath, TraceOutput);
         }
 
-        static public List<LogItem> GetLogs(LogsViewModel model) 
+        static public List<LogItem> GetLogs(LogsViewModel model)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
@@ -278,7 +290,7 @@ namespace gaseous_server.Classes
                 {
                     whereClause = "WHERE " + whereClause;
                 }
-                
+
                 sql = "SELECT ServerLogs.Id, ServerLogs.EventTime, ServerLogs.EventType, ServerLogs.`Process`, ServerLogs.Message, ServerLogs.Exception, ServerLogs.CorrelationId, ServerLogs.CallingProcess, Users.Email FROM ServerLogs LEFT JOIN Users ON ServerLogs.CallingUser = Users.Id " + whereClause + " ORDER BY ServerLogs.Id DESC LIMIT @PageSize OFFSET @PageNumber;";
             }
             else
@@ -287,7 +299,7 @@ namespace gaseous_server.Classes
                 {
                     whereClause = "AND " + whereClause;
                 }
-                
+
                 sql = "SELECT ServerLogs.Id, ServerLogs.EventTime, ServerLogs.EventType, ServerLogs.`Process`, ServerLogs.Message, ServerLogs.Exception, ServerLogs.CorrelationId, ServerLogs.CallingProcess, Users.Email FROM ServerLogs LEFT JOIN Users ON ServerLogs.CallingUser = Users.Id  WHERE ServerLogs.Id < @StartIndex " + whereClause + " ORDER BY ServerLogs.Id DESC LIMIT @PageSize OFFSET @PageNumber;";
             }
             DataTable dataTable = db.ExecuteCMD(sql, dbDict);

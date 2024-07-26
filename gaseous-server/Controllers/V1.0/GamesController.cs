@@ -30,7 +30,7 @@ namespace gaseous_server.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        
+
         public GamesController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager
@@ -53,7 +53,7 @@ namespace gaseous_server.Controllers
             int minrating = -1,
             int maxrating = -1,
             bool sortdescending = false)
-            {
+        {
 
             return Ok(GetGames(name, platform, genre, gamemode, playerperspective, theme, minrating, maxrating, "Adult", true, true, sortdescending));
         }
@@ -473,14 +473,15 @@ namespace gaseous_server.Controllers
                 try
                 {
                     IGDB.Models.Artwork artworkObject = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), true);
-                    
-                    if (artworkObject != null) {
+
+                    if (artworkObject != null)
+                    {
                         //string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Artwork", size.ToString(), artworkObject.ImageId + ".jpg");
 
                         string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Artwork");
 
                         Communications comms = new Communications();
-                        Task<string> ImgFetch = comms.GetSpecificImageFromServer(basePath, artworkObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize>{ Communications.IGDBAPI_ImageSize.original });
+                        Task<string> ImgFetch = comms.GetSpecificImageFromServer(basePath, artworkObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.original });
 
                         string coverFilePath = ImgFetch.Result;
 
@@ -578,16 +579,17 @@ namespace gaseous_server.Controllers
                     {
                         IGDB.Models.Cover cover = Classes.Metadata.Covers.GetCover(gameObject.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), false);
                         string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Covers");
-                        
+
                         Communications comms = new Communications();
-                        Task<string> ImgFetch = comms.GetSpecificImageFromServer(basePath, cover.ImageId, size, new List<Communications.IGDBAPI_ImageSize>{ Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
+                        Task<string> ImgFetch = comms.GetSpecificImageFromServer(basePath, cover.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
 
                         string coverFilePath = ImgFetch.Result;
 
-                        if (System.IO.File.Exists(coverFilePath)) {
+                        if (System.IO.File.Exists(coverFilePath))
+                        {
                             string filename = cover.ImageId + ".jpg";
                             string filepath = coverFilePath;
-                            byte[] filedata = System.IO.File.ReadAllBytes(filepath);
+                            // byte[] filedata = System.IO.File.ReadAllBytes(filepath);
                             string contentType = "image/jpg";
 
                             var cd = new System.Net.Mime.ContentDisposition
@@ -598,6 +600,15 @@ namespace gaseous_server.Controllers
 
                             Response.Headers.Add("Content-Disposition", cd.ToString());
                             Response.Headers.Add("Cache-Control", "public, max-age=604800");
+
+                            byte[] filedata = null;
+                            using (FileStream fs = System.IO.File.OpenRead(filepath))
+                            {
+                                using (BinaryReader binaryReader = new BinaryReader(fs))
+                                {
+                                    filedata = binaryReader.ReadBytes((int)fs.Length);
+                                }
+                            }
 
                             return File(filedata, contentType);
                         }
@@ -627,7 +638,7 @@ namespace gaseous_server.Controllers
                 if (gameObject != null)
                 {
                     var user = await _userManager.GetUserAsync(User);
-                    
+
                     if (user != null)
                     {
                         Favourites favourites = new Favourites();
@@ -664,7 +675,7 @@ namespace gaseous_server.Controllers
                 if (gameObject != null)
                 {
                     var user = await _userManager.GetUserAsync(User);
-                    
+
                     if (user != null)
                     {
                         Favourites favourites = new Favourites();
@@ -796,7 +807,8 @@ namespace gaseous_server.Controllers
                         companyData.Add("company", company);
 
                         return Ok(companyData);
-                    } else
+                    }
+                    else
                     {
                         return NotFound();
                     }
@@ -895,7 +907,7 @@ namespace gaseous_server.Controllers
                         foreach (long icId in gameObject.ReleaseDates.Ids)
                         {
                             ReleaseDate releaseDate = Classes.Metadata.ReleaseDates.GetReleaseDates(icId);
-                            
+
                             rdObjects.Add(releaseDate);
                         }
                     }
@@ -923,7 +935,7 @@ namespace gaseous_server.Controllers
         public async Task<ActionResult> GameRomAsync(long GameId, int pageNumber = 0, int pageSize = 0, long PlatformId = -1, string NameSearch = "")
         {
             var user = await _userManager.GetUserAsync(User);
-            
+
             try
             {
                 Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
@@ -1113,7 +1125,7 @@ namespace gaseous_server.Controllers
         public async Task<ActionResult> GameRomGroupAsync(long GameId, long RomGroupId)
         {
             var user = await _userManager.GetUserAsync(User);
-            
+
             try
             {
                 Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
@@ -1144,7 +1156,7 @@ namespace gaseous_server.Controllers
         public async Task<ActionResult> GetGameRomGroupAsync(long GameId)
         {
             var user = await _userManager.GetUserAsync(User);
-            
+
             try
             {
                 Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
@@ -1204,7 +1216,7 @@ namespace gaseous_server.Controllers
         public async Task<ActionResult> GameRomGroupMembersAsync(long GameId, long RomGroupId, [FromBody] List<long> RomIds)
         {
             var user = await _userManager.GetUserAsync(User);
-            
+
             try
             {
                 Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
@@ -1386,9 +1398,10 @@ namespace gaseous_server.Controllers
         public async Task<ActionResult> GameScreenshot(long GameId, long ScreenshotId)
         {
             try
-            { 
+            {
                 IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
-                if (gameObject != null) { 
+                if (gameObject != null)
+                {
                     IGDB.Models.Screenshot screenshotObject = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), false);
                     if (screenshotObject != null)
                     {
@@ -1428,7 +1441,7 @@ namespace gaseous_server.Controllers
                 string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Screenshots");
 
                 Communications comms = new Communications();
-                Task<string> ImgFetch = comms.GetSpecificImageFromServer(basePath, screenshotObject.ImageId, Size, new List<Communications.IGDBAPI_ImageSize>{ Communications.IGDBAPI_ImageSize.original });
+                Task<string> ImgFetch = comms.GetSpecificImageFromServer(basePath, screenshotObject.ImageId, Size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.original });
 
                 string coverFilePath = ImgFetch.Result;
 

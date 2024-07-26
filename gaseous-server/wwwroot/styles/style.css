@@ -1538,6 +1538,11 @@ iframe {
     width: 100%;
 }
 
+table {
+    border-radius: var(--standard-radius);
+    overflow: hidden;
+}
+
 div .romrow:nth-child(even),
 table .romrow:nth-child(even) {
     background: rgba(94, 94, 94, 0.3);
@@ -2681,4 +2686,48 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     overflow-x: auto;
     overflow-y: hidden;
     white-space: nowrap;
+}
+
+#role-permissions {
+    position: relative;
+}
+
+#role-permissions-table.collapsed {
+    height: 200px;
+    overflow: hidden;
+}
+
+#role-permissions-table.expanded {
+    padding-bottom: 40px;
+}
+
+#role-permissions-expand.collapsed {
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    right: 10px;
+    height: 60px;
+    display: block;
+    background: var(--section-body-background);
+    background: linear-gradient(0deg, var(--section-body-background-solid) 25%, rgba(255, 255, 255, 0) 100%);
+    backdrop-filter: blur(8px);
+    --webkit-backdrop-filter: blur(8px);
+    padding: 5px;
+    vertical-align: bottom;
+    content: "";
+    width: 100%;
+    height: 150px;
+}
+
+#role-permissions-expand.expanded {
+    display: none;
+}
+
+#role-permissions-expand-link {
+    position: absolute;
+    bottom: -10px;
+    left: 5px;
+    right: 5px;
+    height: 40px;
+    cursor: pointer;
 }
