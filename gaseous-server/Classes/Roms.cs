@@ -26,8 +26,6 @@ namespace gaseous_server.Classes
 
 		public static GameRomObject GetRoms(long GameId, long PlatformId = -1, string NameSearch = "", int pageNumber = 0, int pageSize = 0, string userid = "")
 		{
-			TimeSpan timeStart = DateTime.Now.TimeOfDay;
-
 			GameRomObject GameRoms = new GameRomObject();
 
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -83,10 +81,6 @@ namespace gaseous_server.Classes
 						GameRoms.GameRomItems.Add(gameRomItem);
 					}
 				}
-
-				TimeSpan timeEnd = DateTime.Now.TimeOfDay;
-				TimeSpan timeDiff = timeEnd - timeStart;
-				Console.WriteLine("GetRoms took " + timeDiff.TotalMilliseconds + "ms");
 
 				return GameRoms;
 			}
