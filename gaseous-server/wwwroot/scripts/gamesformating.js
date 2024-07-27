@@ -9,6 +9,7 @@
 };
 
 var ClassificationRatings = {
+    "EC": "Early Childhood",
     "E": "Everyone",
     "E10": "Everyone 10+",
     "T": "Teen",
