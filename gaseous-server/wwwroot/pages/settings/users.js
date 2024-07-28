@@ -8,6 +8,7 @@ function SetupPage() {
 }
 
 function GetUsers() {
+    console.log("Loading users...");
     let targetDiv = document.getElementById('settings_users_table_container');
     targetDiv.innerHTML = '';
 
@@ -69,7 +70,7 @@ function GetUsers() {
                     editButton.href = '#';
                     editButton.addEventListener('click', () => {
                         // showDialog('settingsuseredit', result[i].id);
-                        let userEdit = new UserEdit(result[i].id);
+                        let userEdit = new UserEdit(result[i].id, GetUsers);
                         userEdit.open();
                     });
                     editButton.classList.add('romlink');
@@ -220,8 +221,10 @@ class UserNew {
 }
 
 class UserEdit {
-    constructor(UserId) {
+    constructor(UserId, OkCallback, CancelCallback) {
         this.userId = UserId;
+        this.okCallback = OkCallback;
+        this.cancelCallback = CancelCallback;
     }
 
     async open() {
@@ -308,6 +311,74 @@ class UserEdit {
             }
         });
 
+        // setup age restriction tab
+        let ageRestrictionPolicyBox = this.dialog.modalElement.querySelector('#settings_user_agerestrictions');
+        let ageRestrictionPolicyTable = document.createElement('table');
+        for (let ageGroup in AgeRatingGroups) {
+            let tRow = document.createElement('tr');
+            let tCell = document.createElement('td');
+
+            let ageGroupRadio = document.createElement('input');
+            ageGroupRadio.type = 'radio';
+            ageGroupRadio.name = 'ageGroup';
+            ageGroupRadio.value = ageGroup;
+            ageGroupRadio.id = 'ageGroup_' + ageGroup;
+            ageGroupRadio.addEventListener('change', () => {
+                this.UpdateAssignedAgeGroupDisplay();
+            });
+            tCell.appendChild(ageGroupRadio);
+
+            let ageGroupLabel = document.createElement('label');
+            ageGroupLabel.htmlFor = 'ageGroup_' + ageGroup;
+            ageGroupLabel.innerHTML = ageGroup;
+            tCell.appendChild(ageGroupLabel);
+
+            tRow.appendChild(tCell);
+            ageRestrictionPolicyTable.appendChild(tRow);
+        }
+        // add allow unclassified titles checkbox
+        let tRow = document.createElement('tr');
+        let tCell = document.createElement('td');
+        let includeUnratedCheckbox = document.createElement('input');
+        includeUnratedCheckbox.type = 'checkbox';
+        includeUnratedCheckbox.id = 'includeUnrated';
+        includeUnratedCheckbox.addEventListener('change', () => {
+            this.UpdateAssignedAgeGroupDisplay();
+        });
+        tCell.appendChild(includeUnratedCheckbox);
+        let includeUnratedLabel = document.createElement('label');
+        includeUnratedLabel.htmlFor = 'includeUnrated';
+        includeUnratedLabel.innerHTML = 'Include unrated titles';
+        tCell.appendChild(includeUnratedLabel);
+        tRow.appendChild(tCell);
+        ageRestrictionPolicyTable.appendChild(tRow);
+        ageRestrictionPolicyBox.appendChild(ageRestrictionPolicyTable);
+
+        this.dialog.modalElement.querySelector('#ageGroup_' + this.user.securityProfile.ageRestrictionPolicy.maximumAgeRestriction).checked = true;
+        if (this.user.securityProfile.ageRestrictionPolicy.includeUnrated === true) {
+            this.dialog.modalElement.querySelector('#includeUnrated').checked = true;
+        }
+        this.UpdateAssignedAgeGroupDisplay();
+
+        this.agePermTable = this.dialog.modalElement.querySelector('#settings_user_agerestrictions_preview');
+        this.agePermCover = this.dialog.modalElement.querySelector('#settings_user_agerestrictions_expand');
+        this.agePermLink = this.dialog.modalElement.querySelector('#settings_user_agerestrictions_expand-link');
+        this.agePermLink.addEventListener('click', () => {
+            if (Array.from(this.agePermTable.classList).includes('collapsed')) {
+                this.agePermTable.classList.remove('collapsed');
+                this.agePermTable.classList.add('expanded');
+                this.agePermCover.classList.remove('collapsed');
+                this.agePermCover.classList.add('expanded');
+                this.agePermLink.innerHTML = 'Hide details...';
+            } else {
+                this.agePermTable.classList.remove('expanded');
+                this.agePermTable.classList.add('collapsed');
+                this.agePermCover.classList.remove('expanded');
+                this.agePermCover.classList.add('collapsed');
+                this.agePermLink.innerHTML = 'Show details...';
+            }
+        });
+
         // set up the password change form
         this.password_new = this.dialog.modalElement.querySelector('#new-password');
         this.password_confirm = this.dialog.modalElement.querySelector('#confirm-new-password');
@@ -360,12 +431,58 @@ class UserEdit {
                 }
             }
 
+            // set the role
+            let selectedRole = callingObject.dialog.modalElement.querySelector('input[name="settings_user_role"]:checked').value.toLowerCase();
+            await fetch("/api/v1.1/Account/Users/" + callingObject.userId + "/Roles?RoleName=" + selectedRole, {
+                method: 'POST'
+            }).then(async response => {
+                if (!response.ok) {
+                    // handle the error
+                    console.error("Error updating role:");
+                    console.error(response);
+                    let warningDialog = new MessageBox("Role Update Error", "The role update failed. Check the role and try again.");
+                    warningDialog.open();
+                    return;
+                }
+            });
+
+            // set the security profile
+            let securityProfile = {
+                "ageRestrictionPolicy": {
+                    "maximumAgeRestriction": callingObject.dialog.modalElement.querySelector('input[name="ageGroup"]:checked').value,
+                    "includeUnrated": callingObject.dialog.modalElement.querySelector('#includeUnrated').checked
+                }
+            };
+            await fetch("/api/v1.1/Account/Users/" + callingObject.userId + "/SecurityProfile", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(securityProfile)
+            }).then(async response => {
+                if (!response.ok) {
+                    // handle the error
+                    console.error("Error updating security profile:");
+                    console.error(response);
+                    let warningDialog = new MessageBox("Security Profile Update Error", "The security profile update failed. Check the settings and try again.");
+                    warningDialog.open();
+                    return;
+                }
+            });
+
+            if (callingObject.okCallback) {
+                callingObject.okCallback();
+            }
             callingObject.dialog.close();
         });
         this.dialog.addButton(okButton);
 
         // create the cancel button
         let cancelButton = new ModalButton("Cancel", 0, this, function (callingObject) {
+            if (callingObject.cancelCallback) {
+                callingObject.cancelCallback();
+            }
+
             callingObject.dialog.close();
         });
         this.dialog.addButton(cancelButton);
@@ -407,5 +524,67 @@ class UserEdit {
                 element.style.display = 'none';
             }
         });
+    }
+
+    UpdateAssignedAgeGroupDisplay() {
+        // get the selected age group
+        let selectedAgeGroup = this.dialog.modalElement.querySelector('input[name="ageGroup"]:checked').value;
+
+        let ageGroupList = [];
+        switch (selectedAgeGroup) {
+            case "Adult":
+                ageGroupList = ["Child", "Teen", "Mature", "Adult"];
+                break;
+            case "Mature":
+                ageGroupList = ["Child", "Teen", "Mature"];
+                break;
+            case "Teen":
+                ageGroupList = ["Child", "Teen"];
+                break;
+            case "Child":
+                ageGroupList = ["Child"];
+                break;
+
+            default:
+                break;
+        }
+
+        // get target div
+        let assignedAgeGroup = this.dialog.modalElement.querySelector('#settings_user_agerestrictions_preview');
+        assignedAgeGroup.innerHTML = '';
+
+        // generate restrictions table
+        let ageRestrictionPolicyTable = document.createElement('table');
+        ageRestrictionPolicyTable.classList.add('romtable');
+        ageRestrictionPolicyTable.setAttribute('cellspacing', '0');
+        for (const [key, value] of Object.entries(ClassificationBoards)) {
+            let thRow = document.createElement('tr');
+            let thCell = document.createElement('th');
+            thCell.innerHTML = value;
+            thRow.appendChild(thCell);
+            ageRestrictionPolicyTable.appendChild(thRow);
+
+            // add age rating icons
+            let trRow = document.createElement('tr');
+            let tdCell = document.createElement('td');
+
+            for (let i = 0; i < ageGroupList.length; i++) {
+                let ageRatingBadgeIndexes = AgeRatingGroups[ageGroupList[i]][key];
+
+                for (let j = 0; j < ageRatingBadgeIndexes.length; j++) {
+                    let ageRatingBatch = document.createElement('img');
+                    ageRatingBatch.src = '/images/Ratings/' + key + '/' + AgeRatingStrings[ageRatingBadgeIndexes[j]] + '.svg';
+                    ageRatingBatch.classList.add('rating_image_mini');
+                    ageRatingBatch.setAttribute('title', ClassificationRatings[AgeRatingStrings[ageRatingBadgeIndexes[j]]]);
+                    tdCell.appendChild(ageRatingBatch);
+                }
+
+                ageRestrictionPolicyTable.appendChild(trRow);
+            }
+
+            trRow.appendChild(tdCell);
+            ageRestrictionPolicyTable.appendChild(trRow);
+        }
+        assignedAgeGroup.appendChild(ageRestrictionPolicyTable);
     }
 }

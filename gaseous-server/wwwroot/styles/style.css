@@ -312,7 +312,10 @@ h3 {
 /* end new modal style */
 
 #banner_icon {
-    background-color: white;
+    /* background-color: white; */
+    background-color: rgba(0, 22, 56, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
     position: fixed;
     top: 0px;
     left: 0px;
@@ -333,6 +336,7 @@ h3 {
 #banner_icon_image {
     width: 30px;
     height: 30px;
+    filter: drop-shadow(1px 1px 0 rgb(90, 90, 90)) drop-shadow(-1px 1px 0 rgb(90, 90, 90)) drop-shadow(1px -1px 0 rgb(90, 90, 90)) drop-shadow(-1px -1px 0 rgb(90, 90, 90));
 }
 
 .banner_button {
@@ -411,7 +415,8 @@ h3 {
 }
 
 #banner_header {
-    background-color: rgba(0, 22, 56, 0.8);
+    background: rgba(0, 22, 56, 0.8);
+    background: linear-gradient(90deg, rgba(0, 22, 56, 0.8) 0%, rgba(0, 0, 0, 0.8) 100%);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     position: fixed;
@@ -2688,20 +2693,20 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     white-space: nowrap;
 }
 
-#role-permissions {
+.role-permissions {
     position: relative;
 }
 
-#role-permissions-table.collapsed {
+.role-permissions-table.collapsed {
     height: 200px;
     overflow: hidden;
 }
 
-#role-permissions-table.expanded {
+.role-permissions-table.expanded {
     padding-bottom: 40px;
 }
 
-#role-permissions-expand.collapsed {
+.role-permissions-expand.collapsed {
     position: absolute;
     bottom: 0px;
     left: 0px;
@@ -2719,11 +2724,11 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     height: 150px;
 }
 
-#role-permissions-expand.expanded {
+.role-permissions-expand.expanded {
     display: none;
 }
 
-#role-permissions-expand-link {
+.role-permissions-expand-link {
     position: absolute;
     bottom: -10px;
     left: 5px;
