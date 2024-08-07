@@ -533,7 +533,45 @@ function loadMediaGroups() {
                     setTimeout(loadMediaGroups, 10000);
                 }
 
-                var deleteButton = '<a href="#" onclick="showSubDialog(\'mediagroupdelete\', ' + mediaGroup.id + ');" class="romlink"><img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" /></a>';
+                let controls = document.createElement('div');
+                controls.style.textAlign = 'right';
+                controls.innerHTML = downloadLink;
+
+                let deleteButton = document.createElement('a');
+                deleteButton.href = '#';
+                deleteButton.addEventListener('click', function () {
+                    // showSubDialog('mediagroupdelete', mediaGroup.id);
+                    const deleteWindow = new MessageBox("Delete Selected Media Group", "Are you sure you want to delete this media group and all associated saved states?");
+
+                    let deleteButton = new ModalButton("Delete", 2, deleteWindow, function (callingObject) {
+                        ajaxCall(
+                            '/api/v1.1/Games/' + gameData.id + '/romgroup/' + mediaGroup.id,
+                            'DELETE',
+                            function (result) {
+                                loadRoms();
+                                loadMediaGroups();
+                                closeSubDialog();
+                            },
+                            function (error) {
+                                loadRoms();
+                                loadMediaGroups();
+                                closeSubDialog();
+                            }
+                        );
+                        callingObject.msgDialog.close();
+                    });
+                    deleteWindow.addButton(deleteButton);
+
+                    let cancelButton = new ModalButton("Cancel", 0, deleteWindow, function (callingObject) {
+                        callingObject.msgDialog.close();
+                    });
+                    deleteWindow.addButton(cancelButton);
+
+                    deleteWindow.open();
+                });
+                deleteButton.className = 'romlink';
+                deleteButton.innerHTML = '<img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" />';
+                controls.appendChild(deleteButton);
 
                 var newRow = [
                     mediaGroup.platform,
@@ -542,7 +580,7 @@ function loadMediaGroups() {
                     statusText,
                     saveStatesButton,
                     launchButtonContent,
-                    '<div style="text-align: right;">' + downloadLink + deleteButton + '</div>'
+                    controls
                 ]
 
                 var mgRowBody = document.createElement('tbody');
@@ -554,7 +592,6 @@ function loadMediaGroups() {
                 var mgRomCell = document.createElement('td');
                 mgRomCell.setAttribute('colspan', 7);
                 mgRomCell.className = 'romGroupTitles';
-
 
                 // iterate the group members
                 var groupMembers = [];
@@ -1024,7 +1061,20 @@ function deleteGameRoms() {
         }
     }
     if (itemsChecked == true) {
-        showSubDialog('romsdelete');
+        const deleteWindow = new MessageBox("Delete Selected ROMs", "Are you sure you want to delete the selected ROMs and any associated save states?");
+
+        let deleteButton = new ModalButton("Delete", 2, deleteWindow, function (callingObject) {
+            deleteGameRomsCallback();
+            callingObject.msgDialog.close();
+        });
+        deleteWindow.addButton(deleteButton);
+
+        let cancelButton = new ModalButton("Cancel", 0, deleteWindow, function (callingObject) {
+            callingObject.msgDialog.close();
+        });
+        deleteWindow.addButton(cancelButton);
+
+        deleteWindow.open();
     }
 }
 
@@ -1034,7 +1084,9 @@ function deleteGameRomsCallback() {
         if (rom_checks[i].checked == true) {
             var romId = rom_checks[i].getAttribute('data-romid');
             remapCallCounter += 1;
-            ajaxCall('/api/v1.1/Games/' + gameId + '/roms/' + romId, 'DELETE', function (result) {
+            let deletePath = '/api/v1.1/Games/' + gameId + '/roms/' + romId;
+            console.log(deletePath);
+            ajaxCall(deletePath, 'DELETE', function (result) {
                 remapTitlesCallback();
             });
         }

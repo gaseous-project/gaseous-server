@@ -64,8 +64,8 @@ namespace gaseous_server.Classes
 
 				dbDict.Add("platformid", PlatformId);
 			}
-			DataTable romDT = db.ExecuteCMD(sql, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromHours(1).Ticks));
-			Dictionary<string, object> rowCount = db.ExecuteCMDDict(sqlCount, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromHours(1).Ticks))[0];
+			DataTable romDT = db.ExecuteCMD(sql, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks));
+			Dictionary<string, object> rowCount = db.ExecuteCMDDict(sqlCount, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks))[0];
 
 			if (romDT.Rows.Count > 0)
 			{

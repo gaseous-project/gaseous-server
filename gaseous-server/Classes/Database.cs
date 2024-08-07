@@ -287,6 +287,12 @@ namespace gaseous_server.Classes
 				}
 			}
 
+			// purge cache if command containst "INSERT", "UPDATE", "DELETE", or "ALTER"
+			if (Command.ToUpper().Contains("INSERT") || Command.ToUpper().Contains("UPDATE") || Command.ToUpper().Contains("DELETE") || Command.ToUpper().Contains("ALTER"))
+			{
+				DatabaseMemoryCache.ClearCache();
+			}
+
 			if (ConnectionString == "") { ConnectionString = _ConnectionString; }
 			switch (_ConnectorType)
 			{
