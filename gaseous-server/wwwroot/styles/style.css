@@ -1574,6 +1574,10 @@ table .romrow:nth-child(odd) {
     width: 25%;
 }
 
+.bioscell {
+    width: 25%;
+}
+
 .savedstateicon {
     height: 24px;
     width: 24px;
@@ -2735,4 +2739,19 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     right: 5px;
     height: 40px;
     cursor: pointer;
+}
+
+.biositem {
+    display: flex;
+}
+
+.biosinput {
+    flex-grow: 1;
+    margin: 5px;
+}
+
+.biositemcontrol {
+    flex-grow: 0;
+    width: 25px;
+    margin: 10px;
 }

@@ -32,14 +32,12 @@ function loadPlatformMapping(Overwrite) {
                     hasWebEmulator = 'Yes';
                 }
 
-                let platformLink = '';
                 let platformEditButton = null;
                 if (userProfile.roles.includes("Admin")) {
-                    platformLink = '<a href="#/" onclick="ShowPlatformMappingDialog(' + result[i].igdbId + ');" class="romlink">' + result[i].igdbName + '</a>';
                     platformEditButton = document.createElement('a');
                     platformEditButton.href = '#';
                     platformEditButton.onclick = function () {
-                        let mappingModal = new Mapping(result[i].igdbId);
+                        let mappingModal = new Mapping(result[i].igdbId, loadPlatformMapping);
                         mappingModal.open();
                     };
                     let editButtonImage = document.createElement('img');
@@ -48,12 +46,10 @@ function loadPlatformMapping(Overwrite) {
                     editButtonImage.title = 'Edit';
                     editButtonImage.classList.add('banner_button_image');
                     platformEditButton.appendChild(editButtonImage);
-                } else {
-                    platformLink = result[i].igdbName;
                 }
 
                 let newRow = [
-                    platformLink,
+                    result[i].igdbName,
                     result[i].extensions.supportedFileExtensions.join(', '),
                     result[i].extensions.uniqueFileExtensions.join(', '),
                     hasWebEmulator,
@@ -96,8 +92,10 @@ function openDialog() {
 }
 
 class Mapping {
-    constructor(PlatformId) {
+    constructor(PlatformId, OKCallback, CancelCallback) {
         this.PlatformId = PlatformId;
+        this.OKCallback = OKCallback;
+        this.CancelCallback = CancelCallback;
     }
 
     async open() {
@@ -116,7 +114,7 @@ class Mapping {
                 let result = await response.json();
                 this.PlatformData = result;
             } else {
-                let warningDialog = new Dialog("Error", "Failed to load platform data", "OK");
+                let warningDialog = new MessageBox("Error", "Failed to load platform data", "OK");
                 warningDialog.open();
             }
         });
@@ -156,35 +154,49 @@ class Mapping {
         this.dialog.modalElement.querySelector('#mapping_edit_retropie').value = this.PlatformData.retroPieDirectoryName;
 
         // setup the emulator page
-        this.webEmulatorConfiguration = new WebEmulatorConfiguration(this.PlatformData.webEmulator.availableWebEmulators, this.PlatformData.webEmulator.type, this.PlatformData.webEmulator.core);
+        this.webEmulatorConfiguration = new WebEmulatorConfiguration(this.PlatformData);
         await this.webEmulatorConfiguration.open();
         this.dialog.modalElement.querySelector('#mapping_edit_webemulator').appendChild(this.webEmulatorConfiguration.panel);
 
         // setup the buttons
         let okButton = new ModalButton("OK", 1, this, async function (callingObject) {
-            let model = {
-                IGDBId: callingObject.PlatformId,
-                IGDBName: callingObject.PlatformData.igdbName,
-                IGDBSlug: callingObject.dialog.modalElement.querySelector('#mapping_edit_igdbslug').value,
-                AlternateNames: $(callingObject.alternateNames).val(),
-                Extensions: {
-                    SupportedFileExtensions: $(callingObject.supportedFileExtensions).val(),
-                    UniqueFileExtensions: []
-                },
-                RetroPieDirectoryName: callingObject.dialog.modalElement.querySelector('#mapping_edit_retropie').value,
-                WebEmulator: {
-                    Type: callingObject.webEmulatorConfiguration.SelectedWebEmulator,
-                    Core: callingObject.webEmulatorConfiguration.SelectedWebEmulatorCore
-                }
-            };
-            console.log(model);
+            callingObject.PlatformData.alternateNames = $(callingObject.alternateNames).val();
+            callingObject.PlatformData.extensions.supportedFileExtensions = $(callingObject.supportedFileExtensions).val();
+            callingObject.PlatformData.retroPieDirectoryName = callingObject.dialog.modalElement.querySelector('#mapping_edit_retropie').value;
+            callingObject.PlatformData.webEmulator.type = callingObject.webEmulatorConfiguration.PlatformMap.webEmulator.type;
+            callingObject.PlatformData.webEmulator.core = callingObject.webEmulatorConfiguration.PlatformMap.webEmulator.core;
+            callingObject.PlatformData.enabledBIOSHashes = callingObject.webEmulatorConfiguration.PlatformMap.enabledBIOSHashes;
 
-            //callingObject.dialog.close();
+            await fetch('/api/v1.1/PlatformMaps/' + callingObject.PlatformId, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(callingObject.PlatformData)
+            }).then(async response => {
+                if (response.ok) {
+                    let result = await response.json();
+                    console.log(result);
+
+                    if (callingObject.OKCallback) {
+                        callingObject.OKCallback();
+                    }
+
+                    callingObject.dialog.close();
+                } else {
+                    let warningDialog = new Dialog("Error", "Failed to save platform data", "OK");
+                    warningDialog.open();
+                }
+            });
         });
         this.dialog.addButton(okButton);
 
         // create the cancel button
         let cancelButton = new ModalButton("Cancel", 0, this, function (callingObject) {
+            if (callingObject.CancelCallback) {
+                callingObject.CancelCallback();
+            }
+
             callingObject.dialog.close();
         });
         this.dialog.addButton(cancelButton);
@@ -206,10 +218,12 @@ class Mapping {
 }
 
 class WebEmulatorConfiguration {
-    constructor(AvailableWebEmulators, SelectedWebEmulator, SelectedWebEmulatorCore) {
-        this.AvailableWebEmulators = AvailableWebEmulators;
-        this.SelectedWebEmulator = SelectedWebEmulator;
-        this.SelectedWebEmulatorCore = SelectedWebEmulatorCore;
+    constructor(PlatformMap) {
+        this.PlatformMap = PlatformMap;
+
+        if (this.PlatformMap.bios.length > 0) {
+            this.PlatformMap.bios.sort((a, b) => (a.description > b.description) ? 1 : ((b.description > a.description) ? -1 : 0))
+        }
     }
 
     async open() {
@@ -223,18 +237,22 @@ class WebEmulatorConfiguration {
         this.#LoadEmulatorList();
 
         // select the emulator and core
-        if (this.SelectedWebEmulator.length === 0) {
-            this.SelectedWebEmulator = 'none';
+        if (this.PlatformMap.webEmulator.type.length === 0) {
+            this.PlatformMap.webEmulator.type = 'none';
         }
-        let emulatorSelect = this.panel.querySelector('#webemulator_select_' + this.SelectedWebEmulator);
+        let emulatorSelect = this.panel.querySelector('#webemulator_select_' + this.PlatformMap.webEmulator.type);
         if (emulatorSelect != null) {
             emulatorSelect.checked = true;
-            this.#LoadCoreList(this.SelectedWebEmulator);
-            let coreSelect = this.panel.querySelector('#webemulator_core_select_' + this.SelectedWebEmulatorCore);
+            this.#LoadCoreList(this.PlatformMap.webEmulator.type);
+            let coreSelect = this.panel.querySelector('#webemulator_core_select_' + this.PlatformMap.webEmulator.core);
             if (coreSelect != null) {
                 coreSelect.checked = true;
             }
         }
+        this.#EmulatorInfoPanels();
+
+        // load the bios list
+        this.#LoadBiosList();
     }
 
     #LoadEmulatorList() {
@@ -253,7 +271,9 @@ class WebEmulatorConfiguration {
         newOption.value = '';
         newOption.addEventListener('change', () => {
             this.#LoadCoreList('');
-            this.SelectedWebEmulator = '';
+            this.PlatformMap.webEmulator.type = '';
+
+            this.#EmulatorInfoPanels();
         });
         emulatorSelectTableCell.appendChild(newOption);
 
@@ -265,26 +285,28 @@ class WebEmulatorConfiguration {
         emulatorSelectTableRow.appendChild(emulatorSelectTableCell);
         emulatorSelectTable.appendChild(emulatorSelectTableRow);
 
-        if (this.AvailableWebEmulators) {
-            if (this.AvailableWebEmulators.length > 0) {
-                for (let i = 0; i < this.AvailableWebEmulators.length; i++) {
+        if (this.PlatformMap.webEmulator.availableWebEmulators) {
+            if (this.PlatformMap.webEmulator.availableWebEmulators.length > 0) {
+                for (let i = 0; i < this.PlatformMap.webEmulator.availableWebEmulators.length; i++) {
                     let emulatorSelectTableRow = document.createElement('tr');
                     let emulatorSelectTableCell = document.createElement('td');
 
                     let newOption = document.createElement('input');
-                    newOption.id = 'webemulator_select_' + this.AvailableWebEmulators[i].emulatorType;
+                    newOption.id = 'webemulator_select_' + this.PlatformMap.webEmulator.availableWebEmulators[i].emulatorType;
                     newOption.name = 'webemulator_select';
                     newOption.type = 'radio';
-                    newOption.value = this.AvailableWebEmulators[i].emulatorType;
+                    newOption.value = this.PlatformMap.webEmulator.availableWebEmulators[i].emulatorType;
                     newOption.addEventListener('change', () => {
-                        this.#LoadCoreList(this.AvailableWebEmulators[i].emulatorType);
-                        this.SelectedWebEmulator = this.AvailableWebEmulators[i].emulatorType;
+                        this.#LoadCoreList(this.PlatformMap.webEmulator.availableWebEmulators[i].emulatorType);
+                        this.PlatformMap.webEmulator.type = this.PlatformMap.webEmulator.availableWebEmulators[i].emulatorType;
+
+                        this.#EmulatorInfoPanels();
                     });
                     emulatorSelectTableCell.appendChild(newOption);
 
                     let newLabel = document.createElement('label');
-                    newLabel.htmlFor = 'webemulator_select_' + this.AvailableWebEmulators[i].emulatorType;
-                    newLabel.innerHTML = "&nbsp;" + this.AvailableWebEmulators[i].emulatorType;
+                    newLabel.htmlFor = 'webemulator_select_' + this.PlatformMap.webEmulator.availableWebEmulators[i].emulatorType;
+                    newLabel.innerHTML = "&nbsp;" + this.PlatformMap.webEmulator.availableWebEmulators[i].emulatorType;
                     emulatorSelectTableCell.appendChild(newLabel);
 
                     emulatorSelectTableRow.appendChild(emulatorSelectTableCell);
@@ -294,6 +316,19 @@ class WebEmulatorConfiguration {
         }
 
         emulatorSelect.appendChild(emulatorSelectTable);
+    }
+
+    #EmulatorInfoPanels() {
+        // show appropriate emulator info panel
+        switch (this.PlatformMap.webEmulator.type) {
+            case 'EmulatorJS':
+                this.panel.querySelector('#webemulator_info_emulatorjs').style.display = '';
+                break;
+
+            default:
+                this.panel.querySelector('#webemulator_info_emulatorjs').style.display = 'none';
+                break;
+        }
     }
 
     #LoadCoreList(EmulatorType) {
@@ -312,39 +347,39 @@ class WebEmulatorConfiguration {
 
         let coreSelectTable = document.createElement('table');
 
-        if (this.AvailableWebEmulators) {
-            if (this.AvailableWebEmulators.length > 0) {
-                for (let i = 0; i < this.AvailableWebEmulators.length; i++) {
-                    if (this.AvailableWebEmulators[i].emulatorType == EmulatorType) {
-                        for (let j = 0; j < this.AvailableWebEmulators[i].availableWebEmulatorCores.length; j++) {
+        if (this.PlatformMap.webEmulator.availableWebEmulators) {
+            if (this.PlatformMap.webEmulator.availableWebEmulators.length > 0) {
+                for (let i = 0; i < this.PlatformMap.webEmulator.availableWebEmulators.length; i++) {
+                    if (this.PlatformMap.webEmulator.availableWebEmulators[i].emulatorType == EmulatorType) {
+                        for (let j = 0; j < this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores.length; j++) {
                             coreSelectSection.style.display = '';
 
                             let coreSelectTableRow = document.createElement('tr');
                             let coreSelectTableCell = document.createElement('td');
 
                             let newOption = document.createElement('input');
-                            newOption.id = 'webemulator_core_select_' + this.AvailableWebEmulators[i].availableWebEmulatorCores[j].core;
+                            newOption.id = 'webemulator_core_select_' + this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].core;
                             newOption.name = 'webemulator_core_select';
                             newOption.type = 'radio';
-                            newOption.value = this.AvailableWebEmulators[i].availableWebEmulatorCores[j].core;
-                            newOption.text = this.AvailableWebEmulators[i].availableWebEmulatorCores[j].core;
-                            if (this.AvailableWebEmulators[i].availableWebEmulatorCores[j].default == true) {
+                            newOption.value = this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].core;
+                            newOption.text = this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].core;
+                            if (this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].default == true) {
                                 newOption.checked = true;
                             }
                             newOption.addEventListener('change', () => {
-                                this.SelectedWebEmulatorCore = this.AvailableWebEmulators[i].availableWebEmulatorCores[j].core;
+                                this.PlatformMap.webEmulator.core = this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].core;
                             });
                             coreSelectTableCell.appendChild(newOption);
 
                             let newLabel = document.createElement('label');
-                            newLabel.htmlFor = 'webemulator_core_select_' + this.AvailableWebEmulators[i].availableWebEmulatorCores[j].core;
+                            newLabel.htmlFor = 'webemulator_core_select_' + this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].core;
                             let labelText = "";
-                            if (this.AvailableWebEmulators[i].availableWebEmulatorCores[j].alternateCoreName.length > 0) {
-                                labelText = "&nbsp;" + this.AvailableWebEmulators[i].availableWebEmulatorCores[j].core + " (maps to core: " + this.AvailableWebEmulators[i].availableWebEmulatorCores[j].alternateCoreName + ")";
+                            if (this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].alternateCoreName.length > 0) {
+                                labelText = "&nbsp;" + this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].core + " (maps to core: " + this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].alternateCoreName + ")";
                             } else {
-                                labelText = "&nbsp;" + this.AvailableWebEmulators[i].availableWebEmulatorCores[j].core;
+                                labelText = "&nbsp;" + this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].core;
                             }
-                            if (this.AvailableWebEmulators[i].availableWebEmulatorCores[j].default == true) {
+                            if (this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].default == true) {
                                 labelText += " (Default)";
                             }
                             newLabel.innerHTML = labelText;
@@ -359,5 +394,58 @@ class WebEmulatorConfiguration {
         }
 
         coreSelect.appendChild(coreSelectTable);
+    }
+
+    #LoadBiosList() {
+        if (this.PlatformMap.bios.length > 0) {
+            let biosSelect = this.panel.querySelector('#webemulator_bios_select');
+            biosSelect.innerHTML = '';
+
+            let biosSelectTable = document.createElement('table');
+            biosSelectTable.style.width = '100%';
+            for (let i = 0; i < this.PlatformMap.bios.length; i++) {
+                let biosSelectTableRow = document.createElement('tr');
+                biosSelectTableRow.classList.add('romrow');
+                let biosSelectTableCell = document.createElement('td');
+                biosSelectTableCell.classList.add('romcell');
+
+                let newOption = document.createElement('input');
+                newOption.id = 'webemulator_bios_select_' + this.PlatformMap.bios[i].hash;
+                newOption.name = 'webemulator_bios_select';
+                newOption.type = 'checkbox';
+                newOption.value = this.PlatformMap.bios[i].hash;
+                if (this.PlatformMap.enabledBIOSHashes.includes(this.PlatformMap.bios[i].hash)) {
+                    newOption.checked = true;
+                }
+                newOption.addEventListener('change', () => {
+                    if (newOption.checked) {
+                        this.PlatformMap.enabledBIOSHashes.push(this.PlatformMap.bios[i].hash);
+                    } else {
+                        let index = this.PlatformMap.enabledBIOSHashes.indexOf(this.PlatformMap.bios[i].hash);
+                        if (index > -1) {
+                            this.PlatformMap.enabledBIOSHashes.splice(index, 1);
+                        }
+                    }
+                });
+                biosSelectTableCell.appendChild(newOption);
+
+                let newLabel = document.createElement('label');
+                newLabel.htmlFor = 'webemulator_bios_select_' + this.PlatformMap.bios[i].hash;
+                let labelText = "";
+                if (this.PlatformMap.bios[i].description.length > 0) {
+                    labelText = this.PlatformMap.bios[i].description + " (" + this.PlatformMap.bios[i].filename + ")";
+                } else {
+                    labelText = this.PlatformMap.bios[i].filename;
+                }
+                newLabel.innerHTML = "&nbsp;" + labelText;
+                biosSelectTableCell.appendChild(newLabel);
+
+                biosSelectTableRow.appendChild(biosSelectTableCell);
+                biosSelectTable.appendChild(biosSelectTableRow);
+            }
+            biosSelect.appendChild(biosSelectTable);
+        } else {
+            this.panel.querySelector('#webemulator_bios_select-section').style.display = 'none';
+        }
     }
 }

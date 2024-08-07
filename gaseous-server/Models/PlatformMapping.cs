@@ -246,12 +246,19 @@ namespace gaseous_server.Models
             {
                 foreach (PlatformMapItem.EmulatorBiosItem biosItem in item.Bios)
                 {
-                    sql = "INSERT INTO PlatformMap_Bios (Id, Filename, Description, Hash) VALUES (@Id, @Filename, @Description, @Hash);";
+                    bool isEnabled = false;
+                    if (item.EnabledBIOSHashes.Contains(biosItem.hash))
+                    {
+                        isEnabled = true;
+                    }
+
+                    sql = "INSERT INTO PlatformMap_Bios (Id, Filename, Description, Hash, Enabled) VALUES (@Id, @Filename, @Description, @Hash, @Enabled);";
                     dbDict.Clear();
                     dbDict.Add("Id", item.IGDBId);
                     dbDict.Add("Filename", biosItem.filename);
                     dbDict.Add("Description", biosItem.description);
                     dbDict.Add("Hash", biosItem.hash);
+                    dbDict.Add("Enabled", isEnabled);
                     db.ExecuteCMD(sql, dbDict);
                 }
             }
@@ -367,6 +374,7 @@ namespace gaseous_server.Models
                 DataTable biosTable = db.ExecuteCMD(sql, dbDict);
 
                 List<PlatformMapItem.EmulatorBiosItem> bioss = new List<PlatformMapItem.EmulatorBiosItem>();
+                List<string> enabledBios = new List<string>();
                 foreach (DataRow biosRow in biosTable.Rows)
                 {
                     PlatformMapItem.EmulatorBiosItem bios = new PlatformMapItem.EmulatorBiosItem
@@ -376,6 +384,11 @@ namespace gaseous_server.Models
                         hash = ((string)Common.ReturnValueIfNull(biosRow["Hash"], "")).ToLower()
                     };
                     bioss.Add(bios);
+
+                    if ((bool)Common.ReturnValueIfNull(biosRow["Enabled"], true) == true)
+                    {
+                        enabledBios.Add(bios.hash);
+                    }
                 }
 
                 // build item
@@ -397,6 +410,7 @@ namespace gaseous_server.Models
                     AvailableWebEmulators = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PlatformMapItem.WebEmulatorItem.AvailableWebEmulatorItem>>((string)Common.ReturnValueIfNull(row["AvailableWebEmulators"], "[]"))
                 };
                 mapItem.Bios = bioss;
+                mapItem.EnabledBIOSHashes = enabledBios;
 
                 return mapItem;
             }
@@ -510,6 +524,8 @@ namespace gaseous_server.Models
                 public string description { get; set; }
                 public string filename { get; set; }
             }
+
+            public List<string> EnabledBIOSHashes { get; set; }
         }
     }
 }

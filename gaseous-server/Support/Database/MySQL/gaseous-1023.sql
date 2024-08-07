@@ -50,3 +50,6 @@ CREATE TABLE UserProfiles (
     `UnstructuredData` LONGTEXT NOT NULL,
     PRIMARY KEY (`Id`, `UserId`)
 );
+
+ALTER TABLE `PlatformMap_Bios`
+ADD COLUMN `Enabled` BOOLEAN DEFAULT TRUE;
