@@ -481,6 +481,57 @@ namespace gaseous_server.Models
             }
         }
 
+        public UserEmulatorConfiguration GetUserEmulator(string UserId, long GameId, long PlatformId)
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT Mapping FROM User_PlatformMap WHERE id = @UserId AND GameId = @GameId AND PlatformId = @PlatformId;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "UserId", UserId },
+                { "GameId", GameId },
+                { "PlatformId", PlatformId }
+            };
+            DataTable data = db.ExecuteCMD(sql, dbDict);
+
+            if (data.Rows.Count > 0)
+            {
+                UserEmulatorConfiguration emulator = Newtonsoft.Json.JsonConvert.DeserializeObject<UserEmulatorConfiguration>((string)data.Rows[0]["Mapping"]);
+
+                return emulator;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        public void SetUserEmulator(string UserId, long GameId, long PlatformId, UserEmulatorConfiguration Mapping)
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "INSERT INTO User_PlatformMap (id, GameId, PlatformId, Mapping) VALUES (@UserId, @GameId, @PlatformId, @Mapping) ON DUPLICATE KEY UPDATE Mapping = @Mapping;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "UserId", UserId },
+                { "GameId", GameId },
+                { "PlatformId", PlatformId },
+                { "Mapping", Newtonsoft.Json.JsonConvert.SerializeObject(Mapping) }
+            };
+            db.ExecuteCMD(sql, dbDict);
+        }
+
+        public void DeleteUserEmulator(string UserId, long GameId, long PlatformId)
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "DELETE FROM User_PlatformMap WHERE id = @UserId AND GameId = @GameId AND PlatformId = @PlatformId;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "UserId", UserId },
+                { "GameId", GameId },
+                { "PlatformId", PlatformId }
+            };
+            db.ExecuteCMD(sql, dbDict);
+        }
+
         public class PlatformMapItem
         {
             public long IGDBId { get; set; }
@@ -530,6 +581,13 @@ namespace gaseous_server.Models
             }
 
             public List<string> EnabledBIOSHashes { get; set; }
+        }
+
+        public class UserEmulatorConfiguration
+        {
+            public string EmulatorType { get; set; }
+            public string Core { get; set; }
+            public List<string> EnableBIOSFiles { get; set; } = new List<string>();
         }
     }
 }

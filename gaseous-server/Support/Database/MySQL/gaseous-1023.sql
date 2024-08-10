@@ -53,3 +53,11 @@ CREATE TABLE UserProfiles (
 
 ALTER TABLE `PlatformMap_Bios`
 ADD COLUMN `Enabled` BOOLEAN DEFAULT TRUE;
+
+CREATE TABLE `User_PlatformMap` (
+    `id` VARCHAR(128) NOT NULL,
+    `GameId` BIGINT NOT NULL,
+    `PlatformId` BIGINT NOT NULL,
+    `Mapping` LONGTEXT,
+    PRIMARY KEY (`id`, `GameId`, `PlatformId`)
+);

@@ -718,6 +718,23 @@ function loadRoms(displayCheckboxes, pageNumber) {
                             }
                         }).then(response => response.json());
 
+                        // get the user emulation configuration
+                        let userEmuConfig = await fetch('/api/v1/Games/' + gameId + '/emulatorconfiguration/' + romItem.platformId, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        }).then(response => response.json());
+                        if (userEmuConfig) {
+                            if (userEmuConfig.emulatorType) {
+                                platformMap.webEmulator.type = userEmuConfig.emulatorType;
+                                platformMap.webEmulator.core = userEmuConfig.core;
+                            }
+                            if (userEmuConfig.enableBIOSFiles) {
+                                platformMap.enabledBIOSHashes = userEmuConfig.enableBIOSFiles;
+                            }
+                        }
+
                         // set the title
                         mappingModal.modalElement.querySelector('#modal-header-text').innerHTML = platformMap.igdbName + ' Emulation Settings';
 
@@ -727,6 +744,40 @@ function loadRoms(displayCheckboxes, pageNumber) {
                         let emuConfig = await new WebEmulatorConfiguration(platformMap)
                         emuConfig.open();
                         mappingContent.appendChild(emuConfig.panel);
+
+                        // setup the buttons
+                        let resetButton = new ModalButton('Reset to Default', 0, mappingModal, async function (callingObject) {
+                            await fetch('/api/v1/Games/' + gameId + '/emulatorconfiguration/' + romItem.platformId, {
+                                method: 'DELETE'
+                            });
+                            loadRoms();
+                            callingObject.close();
+                        });
+                        mappingModal.addButton(resetButton);
+
+                        let okButton = new ModalButton('OK', 1, mappingModal, async function (callingObject) {
+                            let model = {
+                                EmulatorType: emuConfig.PlatformMap.webEmulator.type,
+                                Core: emuConfig.PlatformMap.webEmulator.core,
+                                EnableBIOSFiles: emuConfig.PlatformMap.enabledBIOSHashes
+                            }
+
+                            await fetch('/api/v1/Games/' + gameId + '/emulatorconfiguration/' + romItem.platformId, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                },
+                                body: JSON.stringify(model)
+                            });
+                            loadRoms();
+                            callingObject.close();
+                        });
+                        mappingModal.addButton(okButton);
+
+                        let cancelButton = new ModalButton('Cancel', 0, mappingModal, async function (callingObject) {
+                            callingObject.close();
+                        });
+                        mappingModal.addButton(cancelButton);
 
                         // show the dialog
                         await mappingModal.open();

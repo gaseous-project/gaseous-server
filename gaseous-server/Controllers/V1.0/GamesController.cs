@@ -18,6 +18,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Scripting;
 using static gaseous_server.Classes.Metadata.AgeRatings;
 using Asp.Versioning;
+using static gaseous_server.Models.PlatformMapping;
 
 namespace gaseous_server.Controllers
 {
@@ -862,6 +863,126 @@ namespace gaseous_server.Controllers
                 {
                     return NotFound();
                 }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpGet]
+        [Route("{GameId}/emulatorconfiguration/{PlatformId}")]
+        [Authorize]
+        [ProducesResponseType(typeof(UserEmulatorConfiguration), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult> GetGameEmulator(long GameId, long PlatformId)
+        {
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+
+                if (gameObject != null)
+                {
+                    IGDB.Models.Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
+
+                    if (platformObject != null)
+                    {
+                        var user = await _userManager.GetUserAsync(User);
+
+                        if (user != null)
+                        {
+                            PlatformMapping platformMapping = new PlatformMapping();
+                            UserEmulatorConfiguration platformMappingObject = platformMapping.GetUserEmulator(user.Id, GameId, PlatformId);
+
+                            if (platformMappingObject != null)
+                            {
+                                return Ok(platformMappingObject);
+                            }
+                        }
+                    }
+                }
+
+                return NotFound();
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpPost]
+        [Route("{GameId}/emulatorconfiguration/{PlatformId}")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult> SetGameEmulator(long GameId, long PlatformId, UserEmulatorConfiguration configuration)
+        {
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+
+                if (gameObject != null)
+                {
+                    IGDB.Models.Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
+
+                    if (platformObject != null)
+                    {
+                        var user = await _userManager.GetUserAsync(User);
+
+                        if (user != null)
+                        {
+                            PlatformMapping platformMapping = new PlatformMapping();
+                            platformMapping.SetUserEmulator(user.Id, GameId, PlatformId, configuration);
+
+                            return Ok();
+                        }
+                    }
+                }
+
+                return NotFound();
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpDelete]
+        [Route("{GameId}/emulatorconfiguration/{PlatformId}")]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult> DeleteGameEmulator(long GameId, long PlatformId)
+        {
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+
+                if (gameObject != null)
+                {
+                    IGDB.Models.Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
+
+                    if (platformObject != null)
+                    {
+                        var user = await _userManager.GetUserAsync(User);
+
+                        if (user != null)
+                        {
+                            PlatformMapping platformMapping = new PlatformMapping();
+                            platformMapping.DeleteUserEmulator(user.Id, GameId, PlatformId);
+
+                            return Ok();
+                        }
+                    }
+                }
+
+                return NotFound();
             }
             catch
             {
