@@ -8,6 +8,10 @@ var remapCallCounter = 0;
 var remapCallCounterMax = 0;
 
 function SetupPage() {
+    let mappingScript = document.createElement('script');
+    mappingScript.src = '/pages/settings/mapping.js';
+    document.head.appendChild(mappingScript);
+
     ajaxCall('/api/v1.1/Games/' + gameId, 'GET', function (result) {
         // populate games page
         gameData = result;
@@ -672,10 +676,65 @@ function loadRoms(displayCheckboxes, pageNumber) {
             for (var i = 0; i < gameRomItems.length; i++) {
                 if (gameRomItems[i].platform != lastPlatform) {
                     lastPlatform = gameRomItems[i].platform;
+                    let romItem = gameRomItems[i];
                     var platformRow = document.createElement('tr');
                     var platformHeader = document.createElement('th');
                     platformHeader.setAttribute('colspan', 8);
-                    platformHeader.innerHTML = '<a href="#" onclick="ShowPlatformMappingDialog(' + gameRomItems[i].platformId + ');" style="float: right; text-decoration: none;" class="romlink"><img src="/images/map.svg" class="banner_button_image banner_button_image_smaller" alt="Edit platform mapping" title="Edit platform mapping" /></a><a href="#" onclick="ShowCollectionDialog(' + gameRomItems[i].platformId + ');" style="float: right; text-decoration: none;" class="romlink"><img src="/images/collections.svg" class="banner_button_image banner_button_image_smaller" alt="Add to collection" title="Add to collection" /></a>' + gameRomItems[i].platform;
+
+                    // platform header
+                    let platformHeaderTitle = document.createElement('span');
+                    platformHeaderTitle.innerHTML = romItem.platform;
+                    platformHeader.appendChild(platformHeaderTitle);
+
+                    let platformHeaderControls = document.createElement('div');
+                    platformHeaderControls.style.float = 'right';
+
+                    if (userProfile.roles.includes('Admin') || userProfile.roles.includes('Gamer')) {
+                        let collectionLink = document.createElement('div');
+                        collectionLink.className = 'romlink';
+                        collectionLink.innerHTML = '<img src="/images/collections.svg" class="banner_button_image banner_button_image_smaller" alt="Add to collection" title="Add to collection" />';
+                        collectionLink.addEventListener('click', () => {
+                            ShowCollectionDialog(romItem.platformId);
+                        });
+                        platformHeaderControls.appendChild(collectionLink);
+                    }
+
+                    // set up emulation editor
+                    let platformMappingLink = document.createElement('div');
+                    platformMappingLink.className = 'romlink';
+                    platformMappingLink.innerHTML = '<img src="/images/map.svg" class="banner_button_image banner_button_image_smaller" alt="Emulation Settings" title="Emulation Settings" />';
+                    platformMappingLink.addEventListener('click', async () => {
+                        let mappingModal = await new Modal('messagebox');
+                        await mappingModal.BuildModal();
+
+                        // override the dialog size
+                        mappingModal.modalElement.style = 'width: 600px; height: 80%; min-width: unset; min-height: 400px; max-width: unset; max-height: 80%;';
+
+                        // get the platform map
+                        let platformMap = await fetch('/api/v1.1/PlatformMaps/' + romItem.platformId, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        }).then(response => response.json());
+
+                        // set the title
+                        mappingModal.modalElement.querySelector('#modal-header-text').innerHTML = platformMap.igdbName + ' Emulation Settings';
+
+                        // set the content
+                        let mappingContent = mappingModal.modalElement.querySelector('#modal-body');
+                        mappingContent.innerHTML = '';
+                        let emuConfig = await new WebEmulatorConfiguration(platformMap)
+                        emuConfig.open();
+                        mappingContent.appendChild(emuConfig.panel);
+
+                        // show the dialog
+                        await mappingModal.open();
+                    });
+                    platformHeaderControls.appendChild(platformMappingLink);
+
+                    platformHeader.appendChild(platformHeaderControls);
+
                     platformRow.appendChild(platformHeader);
                     newTable.appendChild(platformRow);
                 }

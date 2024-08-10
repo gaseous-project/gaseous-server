@@ -34,8 +34,8 @@ function loadPlatformMapping(Overwrite) {
 
                 let platformEditButton = null;
                 if (userProfile.roles.includes("Admin")) {
-                    platformEditButton = document.createElement('a');
-                    platformEditButton.href = '#';
+                    platformEditButton = document.createElement('div');
+                    platformEditButton.classList.add('romlink');
                     platformEditButton.onclick = function () {
                         let mappingModal = new Mapping(result[i].igdbId, loadPlatformMapping);
                         mappingModal.open();
@@ -119,8 +119,6 @@ class Mapping {
             }
         });
 
-        console.log(this.PlatformData);
-
         // setup the dialog
         this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = this.PlatformData.igdbName;
 
@@ -176,7 +174,6 @@ class Mapping {
             }).then(async response => {
                 if (response.ok) {
                     let result = await response.json();
-                    console.log(result);
 
                     if (callingObject.OKCallback) {
                         callingObject.OKCallback();

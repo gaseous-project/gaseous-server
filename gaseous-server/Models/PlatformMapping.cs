@@ -247,6 +247,10 @@ namespace gaseous_server.Models
                 foreach (PlatformMapItem.EmulatorBiosItem biosItem in item.Bios)
                 {
                     bool isEnabled = false;
+                    if (item.EnabledBIOSHashes == null)
+                    {
+                        item.EnabledBIOSHashes = new List<string>();
+                    }
                     if (item.EnabledBIOSHashes.Contains(biosItem.hash))
                     {
                         isEnabled = true;
