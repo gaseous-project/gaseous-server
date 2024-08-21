@@ -212,7 +212,11 @@ function createTableRow(isHeader, row, rowClass, cellClass) {
             newCell.className = cellClass;
         } else {
             if (Array.isArray(row[i])) {
-                newCell.innerHTML = row[i][0];
+                if (typeof (row[i][0]) != "object") {
+                    newCell.innerHTML = row[i][0];
+                } else {
+                    newCell.appendChild(row[i][0]);
+                }
                 if (row[i][1]) { newCell.className = row[i][1]; }
                 if (row[i][2]) { newCell.setAttribute('name', row[i][2]); }
             } else {
@@ -260,7 +264,7 @@ function DropDownRenderGameOption(state) {
 
     if (state.cover) {
         response = $(
-            '<table class="dropdown-div"><tr><td class="dropdown-cover"><img src="/api/v1.1/Games/' + state.id + '/cover/image/cover_small/' + state.id + '.jpg" class="game_tile_small_search" /></td><td class="dropdown-label"><span class="dropdown-title">' + state.text + '</span><span class="dropdown-releasedate">' + releaseDate + '</span></td></tr></table>'
+            '<table class="dropdown-div"><tr><td class="dropdown-cover"><img src="/api/v1.1/Games/' + state.id + '/cover/' + state.cover.id + '/image/cover_small/' + state.id + '.jpg" class="game_tile_small_search" /></td><td class="dropdown-label"><span class="dropdown-title">' + state.text + '</span><span class="dropdown-releasedate">' + releaseDate + '</span></td></tr></table>'
         );
     } else {
         response = $(
@@ -573,4 +577,117 @@ function GetRatingsBoards() {
     if (!ratingsBoards.includes("GRAC")) { ratingsBoards.push("GRAC"); }
 
     return ratingsBoards;
+}
+
+class BackgroundImageRotator {
+    constructor(URLList) {
+        this.URLList = URLList;
+        this.CurrentIndex = 0;
+        this.RotationTimer = undefined;
+
+        this.bgImages = document.getElementById('bgImages');
+        this.bgImages.innerHTML = '';
+
+        // apply default background image
+        let defaultBgImage = this.#CreateBackgroundImage('DefaultBgImage', '/images/librarybg.jpg');
+
+        if (this.URLList) {
+            if (this.URLList.length > 1) {
+                // handle multiple supplied images
+
+                // create the first image
+                let bgImage = this.#CreateBackgroundImage('bgImage0', this.URLList[0]);
+                this.bgImages.appendChild(bgImage);
+
+                // start the rotation
+                this.StartRotation();
+            } else if (this.URLList.length == 1) {
+                // handle only a single supplied image
+
+                // create the image
+                let bgImage = this.#CreateBackgroundImage('bgImage0', this.URLList[0]);
+                this.bgImages.appendChild(bgImage);
+            } else {
+                // no supplied images, but URLList is defined
+
+                // apply default background image
+                this.bgImages.appendChild(defaultBgImage);
+            }
+        } else {
+            // no supplied images, and URLList is not defined
+
+            // apply default background image
+            this.bgImages.appendChild(defaultBgImage);
+        }
+    }
+
+    #CreateBackgroundImage(Id, URL) {
+        let BgImage = document.createElement('div');
+        BgImage.id = Id;
+        BgImage.classList.add('bgImage');
+        BgImage.style.backgroundImage = "url('" + URL + "')";
+        return BgImage;
+    }
+
+    // rotate each image in URLList using a JQuery fade in/out effect every 10 seconds
+    StartRotation() {
+        this.RotationTimer = setInterval(this.RotateImage.bind(this), 10000);
+    }
+
+    // stop the rotation
+    StopRotation() {
+        clearInterval(this.RotationTimer);
+    }
+
+    // rotate the image
+    RotateImage() {
+        // get the current background image
+        let currentImage = this.bgImages.querySelector('#bgImage' + this.CurrentIndex);
+
+        // increment the index
+        this.CurrentIndex += 1;
+        if (this.CurrentIndex >= this.URLList.length) {
+            this.CurrentIndex = 0;
+        }
+
+        // create a new background image
+        let bgImage = this.#CreateBackgroundImage('bgImage' + this.CurrentIndex, this.URLList[this.CurrentIndex]);
+        bgImage.style.display = 'none';
+        this.bgImages.appendChild(bgImage);
+
+        // fade out the current image
+        $(bgImage).fadeIn(1000, function () {
+            // remove the old image
+            currentImage.remove();
+        });
+
+        // clear the timer
+        clearInterval(this.RotationTimer);
+
+        // restart the timer
+        this.StartRotation();
+    }
+}
+
+function BuildLaunchLink(engine, core, platformId, gameId, romId, isMediaGroup, filename) {
+    let launchLink = '/index.html?page=emulator&engine=<ENGINE>&core=<CORE>&platformid=<PLATFORMID>&gameid=<GAMEID>&romid=<ROMID>&mediagroup=<ISMEDIAGROUP>&rompath=<FILENAME>';
+
+    // http://localhost:5198/index.html?page=emulator&engine=EmulatorJS&core=amiga&platformid=16&gameid=5519&romid=19&mediagroup=1&rompath=%2Fapi%2Fv1.1%2FGames%2F5519%2Fromgroup%2F19%2FCannon%20Fodder.zip
+
+    // http://localhost:5198/index.html?page=emulator&engine=EmulatorJS&core=amiga&platformid=16&gameid=5519&romid=102&mediagroup=0&rompath=%2Fapi%2Fv1.1%2FGames%2F5519%2Froms%2F102%2FCannon%20Fodder%20(1993)(Virgin)(Disk%201%20of%203)%5Bcr%20CSL%5D.adf
+
+    launchLink = launchLink.replace('<ENGINE>', engine);
+    launchLink = launchLink.replace('<CORE>', core);
+    launchLink = launchLink.replace('<PLATFORMID>', platformId);
+    launchLink = launchLink.replace('<GAMEID>', gameId);
+    launchLink = launchLink.replace('<ROMID>', romId);
+    if (isMediaGroup == true) {
+        launchLink = launchLink.replace('<ISMEDIAGROUP>', 1);
+        launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + gameId + '/romgroup/' + romId + '/' + encodeURIComponent(filename) + '.zip');
+    } else {
+        launchLink = launchLink.replace('<ISMEDIAGROUP>', 0);
+        launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + gameId + '/roms/' + romId + '/' + encodeURIComponent(filename));
+    }
+
+    return launchLink;
 }

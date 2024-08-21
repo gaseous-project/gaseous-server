@@ -1180,7 +1180,7 @@ input[name='filter_panel_range_max'] {
     max-height: 100px;
 }
 
-#bgImage {
+.bgImage {
     position: fixed;
     top: -30px;
     left: -30px;
@@ -1190,6 +1190,7 @@ input[name='filter_panel_range_max'] {
     background-position: center;
     background-repeat: no-repeat;
     background-size: cover;
+    background-color: white;
     filter: blur(32px);
     -webkit-filter: blur(32px);
 }
@@ -2433,10 +2434,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     margin-top: 3px;
 }
 
-#saved_states {
-    overflow-x: scroll;
-    height: 350px;
-}
+#saved_states {}
 
 .saved_state_box {
     display: flex;
@@ -2562,6 +2560,9 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
 .avatar {
     border-radius: 50%;
+    border-width: 1px;
+    border-color: white;
+    border-style: solid;
     filter: drop-shadow(1px 1px 3px #000);
     -webkit-filter: drop-shadow(1px 1px 3px #000);
 }
@@ -2755,4 +2756,94 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     flex-grow: 0;
     width: 25px;
     margin: 10px;
+}
+
+#gamesummaryplatformscontent {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    gap: 5px;
+}
+
+.platform_item {
+    padding: 10px;
+    flex-grow: 1;
+    flex-basis: 45%;
+    border-radius: var(--standard-radius);
+    /* background-color: var(--section-header-background); */
+    background: linear-gradient(90deg, rgba(200, 200, 200, 0.7469362745098039) 0%, rgba(133, 133, 133, 1) 50%);
+    color: white;
+    height: 50px;
+    cursor: pointer;
+    display: flex;
+    gap: 20px;
+    align-items: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.platform_item:hover {
+    background-color: var(--button-background-hover);
+}
+
+.platform_item_green {
+    background: linear-gradient(90deg, rgba(66, 200, 77, 0.747) 0%, rgb(66, 133, 77) 50%);
+}
+
+.platform_item_background:hover {}
+
+.platform_image_container {
+    margin-left: 10px;
+    margin-right: 10px;
+    max-width: 50px;
+    max-height: 50px;
+    flex-grow: 0;
+}
+
+.platform_image {
+    width: 40px;
+}
+
+.platform_name_container {
+    flex-grow: 1;
+}
+
+.platform_name {
+    display: block;
+}
+
+.platform_edit_button_container {
+    width: 90px;
+    flex-grow: 0;
+}
+
+.platform_edit_button {
+    position: absolute;
+    right: 14px;
+    top: 14px;
+    width: 20px;
+    height: 20px;
+    background-color: var(--fancybutton-background);
+    border-radius: var(--standard-radius);
+    border-width: 1px;
+    border-color: var(--fancybutton-background);
+    border-style: solid;
+    text-align: center;
+    cursor: pointer;
+    padding: 10px;
+}
+
+.platform_edit_button:hover {
+    /* background-color: var(--fancybutton-background-hover); */
+    border-color: var(--input-border-hover);
+}
+
+.platform_statemanager_button {
+    right: 60px;
+}
+
+.savedstatemanagericon {
+    height: 20px;
+    width: 20px;
+    margin-right: 5px;
 }

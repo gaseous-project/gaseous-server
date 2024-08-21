@@ -1,0 +1,1 @@
+{ "core": "desmume", "buildStart": "2024-08-19T07:09:32+00:00", "buildEnd": "2024-08-19T07:16:56+00:00", "options": { "defaultWebGL2": true, "supportsMouse": true } }

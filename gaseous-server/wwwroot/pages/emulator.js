@@ -28,21 +28,21 @@ function SetupPage() {
     ajaxCall('/api/v1.1/Games/' + gameId, 'GET', function (result) {
         gameData = result;
 
-        // load artwork
-        if (result.artworks) {
-            artworks = result.artworks.ids;
-            var startPos = randomIntFromInterval(0, result.artworks.ids.length);
-            artworksPosition = startPos;
-            rotateBackground();
-        } else {
-            if (result.cover) {
-                var bg = document.getElementById('bgImage');
-                bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/cover/image/original/' + result.cover.imageId + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
-            }
-        }
+        // // load artwork
+        // if (result.artworks) {
+        //     artworks = result.artworks.ids;
+        //     var startPos = randomIntFromInterval(0, result.artworks.ids.length);
+        //     artworksPosition = startPos;
+        //     rotateBackground();
+        // } else {
+        //     if (result.cover) {
+        //         var bg = document.getElementById('bgImage');
+        //         bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/cover/' + result.cover.id + '/image/original/' + result.cover.imageId + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+        //     }
+        // }
 
         if (result.cover) {
-            emuBackground = '/api/v1.1/Games/' + gameId + '/cover/image/original/' + result.cover.imageId + '.jpg';
+            emuBackground = '/api/v1.1/Games/' + gameId + '/cover/' + result.cover.id + '/image/original/' + result.cover.imageId + '.jpg';
         }
 
         emuGameTitle = gameData.name;
@@ -52,7 +52,7 @@ function SetupPage() {
         if (result.length == 0) {
             emuBios = '';
         } else {
-            emuBios = '/api/v1.1/Bios/zip/' + platformId;
+            emuBios = '/api/v1.1/Bios/zip/' + platformId + '/' + gameId + '?filtered=true';
             console.log("Using BIOS link: " + emuBios);
         }
 
@@ -84,7 +84,7 @@ function SaveStatistics() {
     var model;
     if (SessionId == undefined) {
         ajaxCall(
-            '/api/v1.1/Statistics/Games/' + gameId,
+            '/api/v1.1/Statistics/Games/' + gameId + '/' + platformId + '/' + romId + '?IsMediaGroup=' + IsMediaGroup,
             'POST',
             function (success) {
                 SessionId = success.sessionId;
@@ -92,7 +92,7 @@ function SaveStatistics() {
         );
     } else {
         ajaxCall(
-            '/api/v1.1/Statistics/Games/' + gameId + '/' + SessionId,
+            '/api/v1.1/Statistics/Games/' + gameId + '/' + platformId + '/' + romId + '/' + SessionId + '?IsMediaGroup=' + IsMediaGroup,
             'PUT',
             function (success) {
 

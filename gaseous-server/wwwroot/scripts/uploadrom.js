@@ -126,6 +126,11 @@ class UploadRom {
                                     if (response.game) {
                                         uploadedItem.gameId = response.game.id;
                                         uploadedItem.gameName = response.game.name;
+                                        if (response.game.cover != null) {
+                                            if (response.game.cover.id != null) {
+                                                uploadedItem.coverId = response.game.cover.id;
+                                            }
+                                        }
                                     }
 
                                     if (response.platform) {
@@ -192,7 +197,7 @@ class UploadItem {
         // file name label
         this.filenameLabel = document.createElement('div');
         this.filenameLabel.classList.add('uploadItem-Label');
-        this.filenameLabel.innerHTML = encodeURIComponent(this.Filename);
+        this.filenameLabel.innerHTML = this.Filename;
 
         // status label
         this.statusLabel = document.createElement('div');
@@ -268,6 +273,7 @@ class UploadItem {
     platformName = null;
     gameId = null;
     gameName = null;
+    coverId = null;
     romId = null;
 
     SetStatus(Type, Status, Progress, Message = null) {
@@ -316,7 +322,7 @@ class UploadItem {
                         if (this.gameId === null || this.gameId === 0) {
                             this.coverArt.src = '/images/unknowngame.png';
                         } else {
-                            this.coverArt.src = '/api/v1.1/Games/' + this.gameId + '/cover/image/cover_big/cover.jpg';
+                            this.coverArt.src = '/api/v1.1/Games/' + this.gameId + '/cover/' + this.coverId + '/image/cover_big/cover.jpg';
                         }
 
                         this.gamePlatformLabel.innerHTML = this.platformName;

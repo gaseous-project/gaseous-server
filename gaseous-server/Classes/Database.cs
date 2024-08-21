@@ -287,10 +287,19 @@ namespace gaseous_server.Classes
 				}
 			}
 
-			// purge cache if command containst "INSERT", "UPDATE", "DELETE", or "ALTER"
-			if (Command.ToUpper().Contains("INSERT") || Command.ToUpper().Contains("UPDATE") || Command.ToUpper().Contains("DELETE") || Command.ToUpper().Contains("ALTER"))
+			// purge cache if command contains "INSERT", "UPDATE", "DELETE", or "ALTER"
+			if (
+				Command.Contains("INSERT", StringComparison.InvariantCultureIgnoreCase) ||
+				Command.Contains("UPDATE", StringComparison.InvariantCultureIgnoreCase) ||
+				Command.Contains("DELETE", StringComparison.InvariantCultureIgnoreCase) ||
+				Command.Contains("ALTER", StringComparison.InvariantCultureIgnoreCase)
+				)
 			{
-				DatabaseMemoryCache.ClearCache();
+				// exclude logging events from purging the cache
+				if (!Command.StartsWith("INSERT INTO SERVERLOGS", StringComparison.InvariantCultureIgnoreCase))
+				{
+					DatabaseMemoryCache.ClearCache();
+				}
 			}
 
 			if (ConnectionString == "") { ConnectionString = _ConnectionString; }

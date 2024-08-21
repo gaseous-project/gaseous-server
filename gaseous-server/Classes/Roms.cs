@@ -209,7 +209,7 @@ namespace gaseous_server.Classes
 				}
 
 				Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-				string sql = "DELETE FROM Games_Roms WHERE Id = @id; DELETE FROM GameState WHERE RomId = @id;";
+				string sql = "DELETE FROM Games_Roms WHERE Id = @id; DELETE FROM GameState WHERE RomId = @id; UPDATE UserTimeTracking SET PlatformId = NULL, IsMediaGroup = NULL, RomId = NULL WHERE RomId = @id AND IsMediaGroup = 0;";
 				Dictionary<string, object> dbDict = new Dictionary<string, object>();
 				dbDict.Add("id", RomId);
 				db.ExecuteCMD(sql, dbDict);
@@ -267,19 +267,6 @@ namespace gaseous_server.Classes
 				Library = GameLibrary.GetLibrary((int)romDR["LibraryId"])
 			};
 
-			// check for a web emulator and update the romItem
-			List<Models.PlatformMapping.PlatformMapItem> pMap = Models.PlatformMapping.PlatformMap;
-			foreach (Models.PlatformMapping.PlatformMapItem platformMapping in pMap)
-			{
-				if (platformMapping.IGDBId == romItem.PlatformId)
-				{
-					if (platformMapping.WebEmulator != null)
-					{
-						romItem.Emulator = platformMapping.WebEmulator;
-					}
-				}
-			}
-
 			return romItem;
 		}
 
@@ -293,7 +280,6 @@ namespace gaseous_server.Classes
 		{
 			public long PlatformId { get; set; }
 			public string Platform { get; set; }
-			public Models.PlatformMapping.PlatformMapItem.WebEmulatorItem? Emulator { get; set; }
 			public long GameId { get; set; }
 			public string Game { get; set; }
 			public string? Path { get; set; }

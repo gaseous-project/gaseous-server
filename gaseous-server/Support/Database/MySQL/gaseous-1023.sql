@@ -59,5 +59,11 @@ CREATE TABLE `User_PlatformMap` (
     `GameId` BIGINT NOT NULL,
     `PlatformId` BIGINT NOT NULL,
     `Mapping` LONGTEXT,
-    PRIMARY KEY (`id`, `GameId`, `PlatformId`)
+    PRIMARY KEY (`id`, `GameId`, `PlatformId`),
+    CONSTRAINT `User_PlatformMap_UserId` FOREIGN KEY (`id`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
 );
+
+ALTER TABLE `UserTimeTracking`
+ADD COLUMN `PlatformId` BIGINT,
+ADD COLUMN `IsMediaGroup` BOOLEAN DEFAULT FALSE,
+ADD COLUMN `RomId` BIGINT;

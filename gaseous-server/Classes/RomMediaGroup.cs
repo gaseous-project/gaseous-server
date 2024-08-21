@@ -11,12 +11,12 @@ using gaseous_server.Models;
 
 namespace gaseous_server.Classes
 {
-	public class RomMediaGroup
+    public class RomMediaGroup
     {
         public class InvalidMediaGroupId : Exception
-        { 
+        {
             public InvalidMediaGroupId(long Id) : base("Unable to find media group by id " + Id)
-            {}
+            { }
         }
 
         public static GameRomMediaGroupItem CreateMediaGroup(long GameId, long PlatformId, List<long> RomIds)
@@ -81,14 +81,21 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static List<GameRomMediaGroupItem> GetMediaGroupsFromGameId(long GameId, string userid = "")
+        public static List<GameRomMediaGroupItem> GetMediaGroupsFromGameId(long GameId, string userid = "", long? PlatformId = null)
         {
+            string PlatformWhereClause = "";
+            if (PlatformId != null)
+            {
+                PlatformWhereClause = " AND RomMediaGroup.PlatformId=@platformid";
+            }
+
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT DISTINCT RomMediaGroup.*, GameState.RomId AS GameStateRomId FROM gaseous.RomMediaGroup LEFT JOIN GameState ON RomMediaGroup.Id = GameState.RomId AND GameState.IsMediaGroup = 1 AND GameState.UserId = @userid WHERE RomMediaGroup.GameId=@gameid;";
+            string sql = "SELECT DISTINCT RomMediaGroup.*, GameState.RomId AS GameStateRomId FROM gaseous.RomMediaGroup LEFT JOIN GameState ON RomMediaGroup.Id = GameState.RomId AND GameState.IsMediaGroup = 1 AND GameState.UserId = @userid WHERE RomMediaGroup.GameId=@gameid" + PlatformWhereClause + ";";
             Dictionary<string, object> dbDict = new Dictionary<string, object>
             {
                 { "gameid", GameId },
-                { "userid", userid }
+                { "userid", userid },
+                { "platformid", PlatformId }
             };
 
             DataTable dataTable = db.ExecuteCMD(sql, dbDict);
@@ -165,7 +172,7 @@ namespace gaseous_server.Classes
         public static void DeleteMediaGroup(long Id)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "DELETE FROM RomMediaGroup WHERE Id=@id; DELETE FROM GameState WHERE RomId=@id AND IsMediaGroup=1;";
+            string sql = "DELETE FROM RomMediaGroup WHERE Id=@id; DELETE FROM GameState WHERE RomId=@id AND IsMediaGroup=1; UPDATE UserTimeTracking SET PlatformId = NULL, IsMediaGroup = NULL, RomId = NULL WHERE RomId=@id AND IsMediaGroup = 1;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", Id);
             db.ExecuteCMD(sql, dbDict);
@@ -180,22 +187,24 @@ namespace gaseous_server.Classes
         internal static GameRomMediaGroupItem BuildMediaGroupFromRow(DataRow row)
         {
             bool hasSaveStates = false;
-			if (row.Table.Columns.Contains("GameStateRomId"))
-			{
-				if (row["GameStateRomId"] != DBNull.Value)
-				{
-					hasSaveStates = true;
-				}
-			}
+            if (row.Table.Columns.Contains("GameStateRomId"))
+            {
+                if (row["GameStateRomId"] != DBNull.Value)
+                {
+                    hasSaveStates = true;
+                }
+            }
 
-            GameRomMediaGroupItem mediaGroupItem = new GameRomMediaGroupItem();
-            mediaGroupItem.Id = (long)row["Id"];
-            mediaGroupItem.Status = (GameRomMediaGroupItem.GroupBuildStatus)row["Status"];
-            mediaGroupItem.PlatformId = (long)row["PlatformId"];
-            mediaGroupItem.GameId = (long)row["GameId"];
-            mediaGroupItem.RomIds = new List<long>();
-            mediaGroupItem.Roms = new List<Roms.GameRomItem>();
-            mediaGroupItem.HasSaveStates = hasSaveStates;
+            GameRomMediaGroupItem mediaGroupItem = new GameRomMediaGroupItem
+            {
+                Id = (long)row["Id"],
+                Status = (GameRomMediaGroupItem.GroupBuildStatus)row["Status"],
+                PlatformId = (long)row["PlatformId"],
+                GameId = (long)row["GameId"],
+                RomIds = new List<long>(),
+                Roms = new List<Roms.GameRomItem>(),
+                HasSaveStates = hasSaveStates
+            };
 
             // get members
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -215,18 +224,6 @@ namespace gaseous_server.Classes
                     Logging.Log(Logging.LogType.Warning, "Rom Group", "Unable to load ROM data", ex);
                 }
             }
-
-            // check for a web emulator and update the romItem
-			foreach (Models.PlatformMapping.PlatformMapItem platformMapping in Models.PlatformMapping.PlatformMap)
-			{
-				if (platformMapping.IGDBId == mediaGroupItem.PlatformId)
-				{
-					if (platformMapping.WebEmulator != null)
-					{
-						mediaGroupItem.Emulator = platformMapping.WebEmulator;
-					}
-				}
-			}
 
             return mediaGroupItem;
         }
@@ -301,7 +298,7 @@ namespace gaseous_server.Classes
                         if (File.Exists(rom.Path))
                         {
                             string romExt = Path.GetExtension(rom.Path);
-                            if (new string[]{ ".zip", ".rar", ".7z" }.Contains(romExt))
+                            if (new string[] { ".zip", ".rar", ".7z" }.Contains(romExt))
                             {
                                 Logging.Log(Logging.LogType.Information, "Media Group", "Decompressing ROM: " + rom.Name);
 
@@ -511,11 +508,12 @@ namespace gaseous_server.Classes
         }
 
         public class GameRomMediaGroupItem
-		{
-			public long Id { get; set; }
-			public long GameId { get; set; }
-			public long PlatformId { get; set; }
-            public string Platform {
+        {
+            public long Id { get; set; }
+            public long GameId { get; set; }
+            public long PlatformId { get; set; }
+            public string Platform
+            {
                 get
                 {
                     try
@@ -528,37 +526,38 @@ namespace gaseous_server.Classes
                     }
                 }
             }
-            public Models.PlatformMapping.PlatformMapItem.WebEmulatorItem? Emulator { get; set; }
-			public List<long> RomIds { get; set; }
+            public List<long> RomIds { get; set; }
             public List<Roms.GameRomItem> Roms { get; set; }
             public bool HasSaveStates { get; set; } = false;
-			private GroupBuildStatus _Status { get; set; }
-			public GroupBuildStatus Status {
-				get
-				{
-					if (_Status == GroupBuildStatus.Completed)
-					{
-						if (File.Exists(MediaGroupZipPath))
-						{
-							return GroupBuildStatus.Completed;
-						}
-						else
-						{
-							return GroupBuildStatus.NoStatus;
-						}
-					}
-					else
-					{
-						return _Status;
-					}
-				}
+            private GroupBuildStatus _Status { get; set; }
+            public GroupBuildStatus Status
+            {
+                get
+                {
+                    if (_Status == GroupBuildStatus.Completed)
+                    {
+                        if (File.Exists(MediaGroupZipPath))
+                        {
+                            return GroupBuildStatus.Completed;
+                        }
+                        else
+                        {
+                            return GroupBuildStatus.NoStatus;
+                        }
+                    }
+                    else
+                    {
+                        return _Status;
+                    }
+                }
                 set
                 {
                     _Status = value;
                 }
-			}
-			public long? Size {
-				get
+            }
+            public long? Size
+            {
+                get
                 {
                     if (Status == GroupBuildStatus.Completed)
                     {
@@ -577,15 +576,15 @@ namespace gaseous_server.Classes
                         return 0;
                     }
                 }
-			}
-			internal string MediaGroupZipPath
-			{
-				get
-				{
-					return Path.Combine(Config.LibraryConfiguration.LibraryMediaGroupDirectory, Id + ".zip");
-				}
-			}
-			public enum GroupBuildStatus
+            }
+            internal string MediaGroupZipPath
+            {
+                get
+                {
+                    return Path.Combine(Config.LibraryConfiguration.LibraryMediaGroupDirectory, Id + ".zip");
+                }
+            }
+            public enum GroupBuildStatus
             {
                 NoStatus = 0,
                 WaitingForBuild = 1,
@@ -593,6 +592,6 @@ namespace gaseous_server.Classes
                 Completed = 3,
                 Failed = 4
             }
-		}
+        }
     }
 }

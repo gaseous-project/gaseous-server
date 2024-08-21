@@ -1,0 +1,19 @@
+<style>
+body, html {
+    background-color: #000;
+}
+h2, p {
+    color: #fff;
+}
+a {
+    color: #0000EE;
+    text-decoration: underline;
+    cursor: pointer;
+}
+a:visited {
+    color: #800080;
+}
+</style>
+<h2>404</h2>
+<p>Idk where you're trying to go, but its not here....</p>
+<a herf="#" onclick="history.back()">Go Back?</a>

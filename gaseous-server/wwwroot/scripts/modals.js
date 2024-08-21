@@ -115,22 +115,27 @@ class Modal {
         }
 
         // show the modal
-        this.modalBackground.style.display = 'block';
+        $(this.modalBackground).fadeIn(200);
+        // this.modalBackground.style.display = 'block';
 
         return;
     }
 
     close() {
-        // Remove the modal element from the document body
-        if (this.modalBackground) {
-            this.modalBackground.remove();
-            this.modalBackground = null;
-        }
+        // Hide the modal
+        $(this.modalBackground).fadeOut(200, () => {
 
-        // Show the scroll bar for the page
-        if (document.getElementsByClassName('modal-window-body').length === 0) {
-            document.body.style.overflow = 'auto';
-        }
+            // Remove the modal element from the document body
+            if (this.modalBackground) {
+                this.modalBackground.remove();
+                this.modalBackground = null;
+            }
+
+            // Show the scroll bar for the page
+            if (document.getElementsByClassName('modal-window-body').length === 0) {
+                document.body.style.overflow = 'auto';
+            }
+        });
     }
 
     addButton(button) {
@@ -359,5 +364,235 @@ class FileOpenFolderItem {
                 });
             }
         });
+    }
+}
+
+class EmulatorStateManager {
+    constructor(RomId, IsMediaGroup, engine, core, platformid, gameid, rompath) {
+        this.RomId = RomId;
+        this.IsMediaGroup = IsMediaGroup;
+        this.engine = engine;
+        this.core = core;
+        this.platformid = platformid;
+        this.gameid = gameid;
+        this.rompath = rompath;
+    }
+
+    async open() {
+        // Create the modal
+        this.dialog = await new Modal("emulatorstate");
+        await this.dialog.BuildModal();
+
+        // setup the dialog
+        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Save State Manager";
+
+        this.statesBox = this.dialog.modalElement.querySelector('#saved_states');
+
+        this.FileUpload = this.dialog.modalElement.querySelector('#stateFile');
+        this.FileUpload.addEventListener('change', () => {
+            let file = this.FileUpload.files[0];
+            let formData = new FormData();
+            formData.append('file', file);
+
+            console.log("Uploading state file");
+
+            let thisObject = this;
+            fetch('/api/v1.1/StateManager/Upload?RomId=' + this.RomId + '&IsMediaGroup=' + this.IsMediaGroup, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(async data => {
+                    console.log('Success:', data);
+                    thisObject.#UploadAlert(data);
+                    await thisObject.#LoadStates();
+                })
+                .catch(async error => {
+                    console.error("Error:", error);
+                    thisObject.#UploadAlert(error);
+                    await thisObject.#LoadStates();
+                });
+        });
+
+        // add the buttons
+        let closeButton = new ModalButton("Close", 0, this, async function (callingObject) {
+            callingObject.dialog.close();
+        });
+        this.dialog.addButton(closeButton);
+
+        await this.#LoadStates();
+
+        // show the dialog
+        this.dialog.open();
+    }
+
+    async #LoadStates() {
+        // load the states
+        let thisObject = this;
+        thisObject.statesBox.innerHTML = '';
+        let statesUrl = '/api/v1.1/StateManager/' + thisObject.RomId + '?IsMediaGroup=' + thisObject.IsMediaGroup;
+        await fetch(statesUrl).then(async response => {
+            if (!response.ok) {
+                thisObject.statesBox.innerHTML = 'No saved states found.';
+            } else {
+                let result = await response.json();
+
+                thisObject.dialog.modalElement.querySelector('#stateFile').value = '';
+
+                if (result.length === 0) {
+                    thisObject.statesBox.innerHTML = 'No saved states found.';
+                } else {
+                    console.log(thisObject);
+                    for (let i = 0; i < result.length; i++) {
+                        let stateBox = document.createElement('div');
+                        stateBox.id = 'stateBox_' + result[i].id;
+                        stateBox.className = 'saved_state_box romrow';
+
+                        // screenshot panel
+                        let stateImageBox = document.createElement('div');
+                        stateImageBox.id = 'stateImageBox_' + result[i].id;
+                        stateImageBox.className = 'saved_state_image_box';
+
+                        // screenshot image
+                        let stateImage = null;
+                        if (result[i].hasScreenshot == true) {
+                            stateImage = document.createElement('img');
+                            stateImage.className = 'saved_state_image_image';
+                            stateImage.src = '/api/v1.1/StateManager/' + thisObject.RomId + '/' + result[i].id + '/Screenshot/image.png?IsMediaGroup=' + thisObject.IsMediaGroup;
+                        } else {
+                            stateImage = document.createElement('div');
+                            stateImage.className = 'saved_state_image_image';
+                            stateImage.style.height = '100px';
+                            stateImage.style.backgroundImage = 'url(/images/unknowngame.png)';
+                            stateImage.style.backgroundSize = 'cover';
+                            stateImage.style.backgroundRepeat = 'no-repeat';
+                            stateImage.style.backgroundPosition = 'center center';
+                        }
+                        stateImageBox.appendChild(stateImage);
+                        stateBox.appendChild(stateImageBox);
+
+                        // main panel
+                        let stateMainPanel = document.createElement('div');
+                        stateMainPanel.id = 'stateMainPanel_' + result[i].id;
+                        stateMainPanel.className = 'saved_state_main_box';
+
+                        let stateName = document.createElement('input');
+                        stateName.id = 'stateName_' + result[i].id;
+                        stateName.type = 'text';
+                        stateName.className = 'saved_state_name';
+                        stateName.addEventListener('change', async () => {
+                            thisObject.#UpdateStateSave(result[i].id, thisObject.IsMediaGroup);
+                        });
+                        if (result[i].name) {
+                            stateName.value = result[i].name;
+                        } else {
+                            stateName.setAttribute('placeholder', "Untitled");
+                        }
+                        stateMainPanel.appendChild(stateName);
+
+                        let stateTime = document.createElement('div');
+                        stateTime.id = 'stateTime_' + result[i].id;
+                        stateTime.className = 'saved_state_date';
+                        stateTime.innerHTML = moment(result[i].saveTime).format("YYYY-MM-DD h:mm:ss a");
+                        stateMainPanel.appendChild(stateTime);
+
+                        let stateControls = document.createElement('div');
+                        stateControls.id = 'stateControls_' + result[i].id;
+                        stateControls.className = 'saved_state_controls';
+
+                        let stateControlsLaunch = document.createElement('span');
+                        stateControlsLaunch.id = 'stateControlsLaunch_' + result[i].id;
+                        stateControlsLaunch.className = 'romstart';
+                        let emulatorTarget;// = '/index.html?page=emulator&engine=@engine&core=@core&platformid=@platformid&gameid=@gameid&romid=@romid&mediagroup=@mediagroup&rompath=@rompath&stateid=' + result[i].id;
+                        let mediagroupint = 0;
+                        if (thisObject.IsMediaGroup == true) {
+                            mediagroupint = 1;
+                        }
+                        switch (getQueryString('page', 'string')) {
+                            case 'emulator':
+                                emulatorTarget = BuildLaunchLink(getQueryString('engine', 'string'), getQueryString('core', 'string'), getQueryString('platformid', 'string'), getQueryString('gameid', 'string'), getQueryString('romid', 'string'), mediagroupint, getQueryString('rompath', 'string'), result[i].id) + '&stateid=' + result[i].id;
+                                stateControlsLaunch.addEventListener('click', () => {
+                                    window.location.replace(emulatorTarget);
+                                });
+                                break;
+                            case 'game':
+                                emulatorTarget = BuildLaunchLink(thisObject.engine, thisObject.core, thisObject.platformid, thisObject.gameid, thisObject.RomId, mediagroupint, thisObject.rompath, result[i].id) + '&stateid=' + result[i].id;
+                                stateControlsLaunch.addEventListener('click', () => {
+                                    window.location.href = emulatorTarget;
+                                });
+                                break;
+                        }
+
+                        stateControlsLaunch.innerHTML = 'Launch';
+                        stateControlsLaunch.style.float = 'right';
+                        stateControls.appendChild(stateControlsLaunch);
+
+                        let stateControlsDownload = document.createElement('a');
+                        stateControlsDownload.id = 'stateControlsDownload_' + result[i].id;
+                        stateControlsDownload.className = 'saved_state_buttonlink';
+                        stateControlsDownload.href = '/api/v1.1/StateManager/' + thisObject.RomId + '/' + result[i].id + '/State/savestate.state?IsMediaGroup=' + thisObject.IsMediaGroup;
+                        stateControlsDownload.innerHTML = '<img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" />';
+                        stateControls.appendChild(stateControlsDownload);
+
+                        let stateControlsDelete = document.createElement('span');
+                        stateControlsDelete.id = 'stateControlsDelete_' + result[i].id;
+                        stateControlsDelete.className = 'saved_state_buttonlink';
+                        stateControlsDelete.addEventListener('click', async () => {
+                            await thisObject.#DeleteStateSave(result[i].id, thisObject.IsMediaGroup);
+                        });
+                        stateControlsDelete.innerHTML = '<img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" />';
+                        stateControls.appendChild(stateControlsDelete);
+
+                        stateMainPanel.appendChild(stateControls);
+
+                        stateBox.appendChild(stateMainPanel);
+
+                        thisObject.statesBox.appendChild(stateBox);
+                    }
+                }
+            }
+        });
+    }
+
+    async #DeleteStateSave(StateId, IsMediaGroup) {
+        await fetch('/api/v1.1/StateManager/' + this.RomId + '/' + StateId + '?IsMediaGroup=' + IsMediaGroup, {
+            method: 'DELETE'
+        }).then(async response => {
+            if (!response.ok) {
+                console.error("Error deleting state");
+            } else {
+                await this.#LoadStates();
+            }
+        });
+    }
+
+    async #UpdateStateSave(StateId, IsMediaGroup) {
+        let stateName = this.dialog.modalElement.querySelector('#stateName_' + StateId);
+
+        let model = {
+            "name": stateName.value
+        };
+
+        await fetch('/api/v1.1/StateManager/' + this.RomId + '/' + StateId + '?IsMediaGroup=' + IsMediaGroup, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(model)
+        }).then(async response => {
+            if (!response.ok) {
+                console.error("Error updating state");
+            } else {
+                await this.#LoadStates();
+            }
+        });
+    }
+
+    #UploadAlert(data) {
+        if (data.Management == "Managed") {
+            alert("State uploaded successfully.");
+        } else {
+            alert("State uploaded successfully, but it might not function correctly for this platform and ROM.");
+        }
     }
 }

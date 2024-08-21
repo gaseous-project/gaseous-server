@@ -1,0 +1,1 @@
+{ "core": "mame2003", "buildStart": "2024-08-19T05:00:46+00:00", "buildEnd": "2024-08-19T05:17:53+00:00", "options": { "file": "MAME 2003 (0.78)/MAME 2003 (0.78).opt", "settings": { "mame2003_skip_disclaimer": "enabled", "mame2003_skip_warnings": "enabled" } } }

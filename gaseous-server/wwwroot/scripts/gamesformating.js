@@ -431,7 +431,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
     }
     // gameImage.src = '/images/unknowngame.png';
     if (gameObject.cover) {
-        gameImage.setAttribute('data-src', '/api/v1.1/Games/' + gameObject.id + '/cover/image/cover_big/' + gameObject.cover.id + '.jpg');
+        gameImage.setAttribute('data-src', '/api/v1.1/Games/' + gameObject.id + '/cover/' + gameObject.cover.id + '/image/cover_big/' + gameObject.cover.id + '.jpg');
     } else {
         gameImage.classList.add(...classes['game_tile_image unknown']);
         gameImage.setAttribute('data-src', '/images/unknowngame.png');

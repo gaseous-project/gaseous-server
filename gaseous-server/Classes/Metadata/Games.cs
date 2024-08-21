@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using gaseous_server.Models;
 using IGDB;
 using IGDB.Models;
 
@@ -504,22 +505,118 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        public static List<KeyValuePair<long, string>> GetAvailablePlatforms(long GameId)
+        public static List<AvailablePlatformItem> GetAvailablePlatforms(string UserId, long GameId)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT DISTINCT Games_Roms.PlatformId, Platform.`Name` FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE Games_Roms.GameId = @gameid ORDER BY Platform.`Name`;";
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
-            dbDict.Add("gameid", GameId);
+            string sql = @"
+SELECT DISTINCT
+    Games_Roms.GameId,
+    Games_Roms.PlatformId,
+    Platform.`Name`,
+    T.UserId,
+    T.RomId AS MostRecentRomId,
+    CASE T.IsMediaGroup
+        WHEN 0 THEN G.`Name`
+        WHEN 1 THEN 'Media Group'
+        ELSE NULL
+    END AS `RomName`,
+    T.IsMediaGroup AS MostRecentRomIsMediaGroup,
+    T.SessionLength AS SessionLength,
+    T.SessionTime AS LastRomRun
+FROM
+    Games_Roms
+        LEFT JOIN
+    Platform ON Games_Roms.PlatformId = Platform.Id
+        LEFT JOIN
+    (SELECT 
+        *
+    FROM
+        UserTimeTracking
+	WHERE UserId = @userid
+    ORDER BY SessionTime DESC LIMIT 1) AS T ON T.GameId = (SELECT DISTINCT
+            T1.GameId
+        FROM
+            UserTimeTracking AS T1
+        WHERE
+            Platform.Id = T1.PlatformId
+                AND Games_Roms.GameId = T1.GameId
+                AND T1.UserId = @userid
+        ORDER BY T1.SessionTime DESC
+        LIMIT 1)
+        LEFT JOIN
+    Games_Roms AS G ON G.Id = T.RomId
+WHERE
+    Games_Roms.GameId = @gameid
+ORDER BY Platform.`Name`;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "gameid", GameId },
+                { "userid", UserId }
+            };
             DataTable data = db.ExecuteCMD(sql, dbDict);
 
-            List<KeyValuePair<long, string>> platforms = new List<KeyValuePair<long, string>>();
+            PlatformMapping platformMapping = new PlatformMapping();
+            List<AvailablePlatformItem> platforms = new List<AvailablePlatformItem>();
             foreach (DataRow row in data.Rows)
             {
-                KeyValuePair<long, string> valuePair = new KeyValuePair<long, string>((long)row["PlatformId"], (string)row["Name"]);
+                IGDB.Models.Platform platform = Platforms.GetPlatform((long)row["PlatformId"]);
+                PlatformMapping.UserEmulatorConfiguration? emulatorConfiguration = platformMapping.GetUserEmulator(UserId, GameId, (long)platform.Id);
+
+                if (emulatorConfiguration == null)
+                {
+                    Models.PlatformMapping.PlatformMapItem platformMap = PlatformMapping.GetPlatformMap((long)platform.Id);
+                    emulatorConfiguration = new PlatformMapping.UserEmulatorConfiguration
+                    {
+                        EmulatorType = platformMap.WebEmulator.Type,
+                        Core = platformMap.WebEmulator.Core,
+                        EnableBIOSFiles = platformMap.EnabledBIOSHashes
+                    };
+                }
+
+                long? LastPlayedRomId = null;
+                bool? LastPlayedIsMediagroup = false;
+                string? LastPlayedRomName = null;
+                if (row["MostRecentRomId"] != DBNull.Value)
+                {
+                    LastPlayedRomId = (long?)row["MostRecentRomId"];
+                    LastPlayedIsMediagroup = (bool)row["MostRecentRomIsMediaGroup"];
+                    LastPlayedRomName = (string)row["RomName"];
+                }
+
+                long? FavouriteRomId = null;
+                bool? FavouriteRomIsMediagroup = false;
+                // if (row["FavouriteRomId"] != DBNull.Value)
+                // {
+                //     FavouriteRomId = (long?)row["FavouriteRomId"];
+                // }
+
+                AvailablePlatformItem valuePair = new AvailablePlatformItem
+                {
+                    Id = platform.Id,
+                    Name = platform.Name,
+                    Category = platform.Category,
+                    emulatorConfiguration = emulatorConfiguration,
+                    LastPlayedRomId = LastPlayedRomId,
+                    LastPlayedRomIsMediagroup = LastPlayedIsMediagroup,
+                    LastPlayedRomName = LastPlayedRomName,
+                    FavouriteRomId = FavouriteRomId,
+                    FavouriteRomIsMediagroup = FavouriteRomIsMediagroup
+                };
                 platforms.Add(valuePair);
             }
 
             return platforms;
+        }
+
+        public class AvailablePlatformItem : IGDB.Models.Platform
+        {
+            public PlatformMapping.UserEmulatorConfiguration emulatorConfiguration { get; set; }
+            public long? LastPlayedRomId { get; set; }
+            public bool? LastPlayedRomIsMediagroup { get; set; }
+            public string? LastPlayedRomName { get; set; }
+            public long? FavouriteRomId { get; set; }
+            public bool? FavouriteRomIsMediagroup { get; set; }
+            public string? FavouriteRomName { get; set; }
         }
 
         public enum SearchType

@@ -76,7 +76,13 @@ namespace gaseous_server.Classes.Metadata
                     {
                         returnValue = await GetObjectFromServer(WhereClause, ImagePath);
                         Storage.NewCacheValue(returnValue, true);
-                        forceImageDownload = true;
+
+                        // check if old value is different from the new value - only download if it's different
+                        Cover oldCover = Storage.GetCacheValue<Cover>(returnValue, "id", (long)searchValue);
+                        if (oldCover.ImageId != returnValue.ImageId)
+                        {
+                            forceImageDownload = true;
+                        }
                     }
                     catch (Exception ex)
                     {

@@ -461,74 +461,6 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/artwork/{ArtworkId}/image/{size}")]
-        [Route("{GameId}/artwork/{ArtworkId}/image/{size}/{ImageName}")]
-        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameCoverImage(long GameId, long ArtworkId, Communications.IGDBAPI_ImageSize size, string ImageName)
-        {
-            try
-            {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
-
-                try
-                {
-                    IGDB.Models.Artwork artworkObject = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), true);
-
-                    if (artworkObject != null)
-                    {
-                        //string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Artwork", size.ToString(), artworkObject.ImageId + ".jpg");
-
-                        string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Artwork");
-
-                        Communications comms = new Communications();
-                        Task<string> ImgFetch = comms.GetSpecificImageFromServer(basePath, artworkObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.original });
-
-                        string coverFilePath = ImgFetch.Result;
-
-
-                        if (System.IO.File.Exists(coverFilePath))
-                        {
-                            string filename = artworkObject.ImageId + ".jpg";
-                            string filepath = coverFilePath;
-                            byte[] filedata = System.IO.File.ReadAllBytes(filepath);
-                            string contentType = "image/jpg";
-
-                            var cd = new System.Net.Mime.ContentDisposition
-                            {
-                                FileName = filename,
-                                Inline = true,
-                            };
-
-                            Response.Headers.Add("Content-Disposition", cd.ToString());
-                            Response.Headers.Add("Cache-Control", "public, max-age=604800");
-
-                            return File(filedata, contentType);
-                        }
-                        else
-                        {
-                            return NotFound();
-                        }
-                    }
-                    else
-                    {
-                        return NotFound();
-                    }
-                }
-                catch
-                {
-                    return NotFound();
-                }
-            }
-            catch
-            {
-                return NotFound();
-            }
-        }
-
-        [MapToApiVersion("1.0")]
-        [MapToApiVersion("1.1")]
-        [HttpGet]
         [Route("{GameId}/cover")]
         [ProducesResponseType(typeof(Cover), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -564,63 +496,139 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/cover/image/{size}")]
-        [Route("{GameId}/cover/image/{size}/{imagename}")]
+        [Route("{GameId}/{ImageType}/{ImageId}/image/{size}")]
+        [Route("{GameId}/{ImageType}/{ImageId}/image/{size}/{imagename}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameCoverImage(long GameId, Communications.IGDBAPI_ImageSize size, string imagename = "")
+        public async Task<ActionResult> GameImage(long GameId, MetadataImageType imageType, long ImageId, Communications.IGDBAPI_ImageSize size, string imagename = "")
         {
             try
             {
                 IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
 
-                if (gameObject.Cover != null)
+                string? imageId = null;
+                string? imageTypePath = null;
+
+                switch (imageType)
                 {
-                    if (gameObject.Cover.Id != null)
-                    {
-                        IGDB.Models.Cover cover = Classes.Metadata.Covers.GetCover(gameObject.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), false);
-                        string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Covers");
-
-                        Communications comms = new Communications();
-                        Task<string> ImgFetch = comms.GetSpecificImageFromServer(basePath, cover.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
-
-                        string coverFilePath = ImgFetch.Result;
-
-                        if (System.IO.File.Exists(coverFilePath))
+                    case MetadataImageType.cover:
+                        if (gameObject.Cover != null)
                         {
-                            string filename = cover.ImageId + ".jpg";
-                            string filepath = coverFilePath;
-                            // byte[] filedata = System.IO.File.ReadAllBytes(filepath);
-                            string contentType = "image/jpg";
-
-                            var cd = new System.Net.Mime.ContentDisposition
+                            if (gameObject.Cover.Id != null)
                             {
-                                FileName = filename,
-                                Inline = true,
-                            };
-
-                            Response.Headers.Add("Content-Disposition", cd.ToString());
-                            Response.Headers.Add("Cache-Control", "public, max-age=604800");
-
-                            byte[] filedata = null;
-                            using (FileStream fs = System.IO.File.OpenRead(filepath))
-                            {
-                                using (BinaryReader binaryReader = new BinaryReader(fs))
-                                {
-                                    filedata = binaryReader.ReadBytes((int)fs.Length);
-                                }
+                                IGDB.Models.Cover cover = Classes.Metadata.Covers.GetCover(gameObject.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), false);
+                                imageId = cover.ImageId;
+                                imageTypePath = "Covers";
                             }
+                        }
+                        else
+                        {
+                            return NotFound();
+                        }
+                        break;
 
-                            return File(filedata, contentType);
+                    case MetadataImageType.screenshots:
+                        if (gameObject.Screenshots != null)
+                        {
+                            if (gameObject.Screenshots.Ids.Contains(ImageId))
+                            {
+                                IGDB.Models.Screenshot imageObject = Screenshots.GetScreenshot(ImageId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), true);
+
+                                imageId = imageObject.ImageId;
+                                imageTypePath = "Screenshots";
+                            }
+                        }
+                        else
+                        {
+                            return NotFound();
+                        }
+                        break;
+
+                    case MetadataImageType.artwork:
+                        if (gameObject.Artworks != null)
+                        {
+                            if (gameObject.Artworks.Ids.Contains(ImageId))
+                            {
+                                IGDB.Models.Artwork imageObject = Artworks.GetArtwork(ImageId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), true);
+
+                                imageId = imageObject.ImageId;
+                                imageTypePath = "Artwork";
+                            }
+                        }
+                        else
+                        {
+                            return NotFound();
+                        }
+                        break;
+
+                    default:
+                        return NotFound();
+                }
+
+                if (imageId == null)
+                {
+                    return NotFound();
+                }
+
+                string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), imageTypePath);
+                string imagePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), imageTypePath, size.ToString(), imageId + ".jpg");
+
+                if (!System.IO.File.Exists(imagePath))
+                {
+                    Communications comms = new Communications();
+                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), imageTypePath), imageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
+
+                    imagePath = ImgFetch.Result;
+                }
+
+                if (!System.IO.File.Exists(imagePath))
+                {
+                    Communications comms = new Communications();
+                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(basePath, imageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
+
+                    imagePath = ImgFetch.Result;
+                }
+
+                if (System.IO.File.Exists(imagePath))
+                {
+                    string filename = imageId + ".jpg";
+                    string filepath = imagePath;
+                    string contentType = "image/jpg";
+
+                    var cd = new System.Net.Mime.ContentDisposition
+                    {
+                        FileName = filename,
+                        Inline = true,
+                    };
+
+                    Response.Headers.Add("Content-Disposition", cd.ToString());
+                    Response.Headers.Add("Cache-Control", "public, max-age=604800");
+
+                    byte[] filedata = null;
+                    using (FileStream fs = System.IO.File.OpenRead(filepath))
+                    {
+                        using (BinaryReader binaryReader = new BinaryReader(fs))
+                        {
+                            filedata = binaryReader.ReadBytes((int)fs.Length);
                         }
                     }
+
+                    return File(filedata, contentType);
                 }
+
                 return NotFound();
             }
             catch
             {
                 return NotFound();
             }
+        }
+
+        public enum MetadataImageType
+        {
+            cover,
+            screenshots,
+            artwork
         }
 
 
@@ -994,13 +1002,22 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("{GameId}/platforms")]
-        [ProducesResponseType(typeof(List<KeyValuePair<long, string>>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<Games.AvailablePlatformItem>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult> GamePlatforms(long GameId)
         {
             try
             {
-                return Ok(Games.GetAvailablePlatforms(GameId));
+                var user = await _userManager.GetUserAsync(User);
+
+                if (user != null)
+                {
+                    return Ok(Games.GetAvailablePlatforms(user.Id, GameId));
+                }
+                else
+                {
+                    return NotFound();
+                }
             }
             catch
             {
@@ -1270,11 +1287,10 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Authorize(Roles = "Admin,Gamer")]
         [Route("{GameId}/romgroup")]
         [ProducesResponseType(typeof(List<RomMediaGroup.GameRomMediaGroupItem>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GetGameRomGroupAsync(long GameId)
+        public async Task<ActionResult> GetGameRomGroupAsync(long GameId, long? PlatformId = null)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -1284,7 +1300,7 @@ namespace gaseous_server.Controllers
 
                 try
                 {
-                    return Ok(RomMediaGroup.GetMediaGroupsFromGameId(GameId, user.Id));
+                    return Ok(RomMediaGroup.GetMediaGroupsFromGameId(GameId, user.Id, PlatformId));
                 }
                 catch (Exception ex)
                 {
@@ -1544,56 +1560,56 @@ namespace gaseous_server.Controllers
             }
         }
 
-        [MapToApiVersion("1.0")]
-        [MapToApiVersion("1.1")]
-        [HttpGet]
-        [Route("{GameId}/screenshots/{ScreenshotId}/image/{size}")]
-        [Route("{GameId}/screenshots/{ScreenshotId}/image/{size}/{ImageName}")]
-        [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameScreenshotImage(long GameId, long ScreenshotId, Communications.IGDBAPI_ImageSize Size, string ImageName)
-        {
-            try
-            {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+        // [MapToApiVersion("1.0")]
+        // [MapToApiVersion("1.1")]
+        // [HttpGet]
+        // [Route("{GameId}/screenshots/{ScreenshotId}/image/{size}")]
+        // [Route("{GameId}/screenshots/{ScreenshotId}/image/{size}/{ImageName}")]
+        // [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
+        // [ProducesResponseType(StatusCodes.Status404NotFound)]
+        // public async Task<ActionResult> GameScreenshotImage(long GameId, long ScreenshotId, Communications.IGDBAPI_ImageSize Size, string ImageName)
+        // {
+        //     try
+        //     {
+        //         IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
 
-                IGDB.Models.Screenshot screenshotObject = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), true);
+        //         IGDB.Models.Screenshot screenshotObject = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), true);
 
-                string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Screenshots");
+        //         string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Screenshots");
 
-                Communications comms = new Communications();
-                Task<string> ImgFetch = comms.GetSpecificImageFromServer(basePath, screenshotObject.ImageId, Size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.original });
+        //         Communications comms = new Communications();
+        //         Task<string> ImgFetch = comms.GetSpecificImageFromServer(basePath, screenshotObject.ImageId, Size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.original });
 
-                string coverFilePath = ImgFetch.Result;
+        //         string coverFilePath = ImgFetch.Result;
 
-                if (System.IO.File.Exists(coverFilePath))
-                {
-                    string filename = screenshotObject.ImageId + ".jpg";
-                    string filepath = coverFilePath;
-                    byte[] filedata = System.IO.File.ReadAllBytes(filepath);
-                    string contentType = "image/jpg";
+        //         if (System.IO.File.Exists(coverFilePath))
+        //         {
+        //             string filename = screenshotObject.ImageId + ".jpg";
+        //             string filepath = coverFilePath;
+        //             byte[] filedata = System.IO.File.ReadAllBytes(filepath);
+        //             string contentType = "image/jpg";
 
-                    var cd = new System.Net.Mime.ContentDisposition
-                    {
-                        FileName = filename,
-                        Inline = true,
-                    };
+        //             var cd = new System.Net.Mime.ContentDisposition
+        //             {
+        //                 FileName = filename,
+        //                 Inline = true,
+        //             };
 
-                    Response.Headers.Add("Content-Disposition", cd.ToString());
-                    Response.Headers.Add("Cache-Control", "public, max-age=604800");
+        //             Response.Headers.Add("Content-Disposition", cd.ToString());
+        //             Response.Headers.Add("Cache-Control", "public, max-age=604800");
 
-                    return File(filedata, contentType);
-                }
-                else
-                {
-                    return NotFound();
-                }
-            }
-            catch
-            {
-                return NotFound();
-            }
-        }
+        //             return File(filedata, contentType);
+        //         }
+        //         else
+        //         {
+        //             return NotFound();
+        //         }
+        //     }
+        //     catch
+        //     {
+        //         return NotFound();
+        //     }
+        // }
 
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]

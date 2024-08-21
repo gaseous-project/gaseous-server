@@ -22,8 +22,10 @@
     if (StateUrl) {
         console.log('Loading saved state from: ' + StateUrl);
         EJS_loadStateURL = StateUrl;
-        EJS_startOnLoaded = true;
     }
+
+    // start the emulator automatically when loaded
+    EJS_startOnLoaded = true;
 
     // Path to the data directory
     EJS_pathtodata = '/emulators/EmulatorJS/data/';
@@ -45,7 +47,7 @@
         loadSavFiles: false
     }
 
-    EJS_onSaveState = function(e) {
+    EJS_onSaveState = function (e) {
         var returnValue = {
             "ScreenshotByteArrayBase64": btoa(Uint8ToString(e.screenshot)),
             "StateByteArrayBase64": btoa(Uint8ToString(e.state))
@@ -72,8 +74,11 @@
         returnValue = undefined;
     }
 
-    EJS_onLoadState = function(e) {
-        showDialog('emulatorloadstate', { "romId": romId, "IsMediaGroup": IsMediaGroup });
+    EJS_onLoadState = function (e) {
+        // showDialog('emulatorloadstate', { "romId": romId, "IsMediaGroup": IsMediaGroup });
+
+        let stateManager = new EmulatorStateManager(romId, IsMediaGroup, getQueryString('engine', 'string'), getQueryString('core', 'string'), platformId, gameId, decodeURIComponent(getQueryString('rompath', 'string')));
+        stateManager.open();
     }
 </script>
 <script src='/emulators/EmulatorJS/data/loader.js'></script>

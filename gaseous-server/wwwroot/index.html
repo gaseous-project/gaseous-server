@@ -59,9 +59,8 @@
 </head>
 
 <body>
-    <div id="bgImage" style="background-image: url('/images/librarybg.jpg');">
-        <div id="bgImage_Opacity"></div>
-    </div>
+    <div id="bgImages"></div>
+    <div id="bgImage_Opacity"></div>
 
     <!-- Notifications -->
     <div id="notifications_target"></div>
@@ -248,6 +247,9 @@
             const uploadDialog = new UploadRom();
             uploadDialog.open();
         });
+
+        // set up the background image
+        var backgroundImageHandler = new BackgroundImageRotator();
     </script>
 </body>
 

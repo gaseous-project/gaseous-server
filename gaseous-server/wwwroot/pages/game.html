@@ -96,42 +96,9 @@
                     onclick="document.querySelector('#gamesummarytext_label').classList.add('line-clamp-4'); document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', ''); document.querySelector('#gamesummarytext_label_button_contract').setAttribute('style', 'display: none;');">
                     Read less...</p>
             </div>
-            <div id="gamesummarymediagroups" class="section" style="display: none;">
-                <div class="section-header">Media Groups</div>
-                <div id="gamesummarymediagroupscontent" class="section-body"></div>
-            </div>
-            <div id="gamesummaryroms" class="section">
-                <span id="rom_edit" class="romlink" onclick="DisplayROMCheckboxes(true);">Edit</span>
-                <div class="section-header">ROMs/Images</div>
-                <div class="section-body">
-                    <div id="rom_edit_panel" style="display: none;">
-                        <div id="rom_edit_panel_center">
-                            <button id="rom_edit_delete" class="redbutton" onclick="deleteGameRoms();">Delete</button>
-
-                            <select id="rom_edit_fixplatform" style="width: 150px;"></select>
-                            <select id="rom_edit_fixgame" style="width: 300px;"></select>
-                            <button id="rom_edit_update" onclick="remapTitles();">Update</button>
-                            <button id="rom_edit_creategroup" onclick="createMgGroup();" disabled="disabled">Create
-                                Media
-                                Group</button>
-                        </div>
-                    </div>
-                    <div id="rom_library_controls">
-                        <div class="games_library_controlblock">
-                            <input id="name_filter" type="text" placeholder="Name Search">
-                        </div>
-                        <div class="games_library_controlblock">
-                            <select id="platform_filter"></select>
-                        </div>
-                        <div class="games_library_controlblock">
-                            <button value="Search" onclick="loadRoms();">Search</button>
-                        </div>
-                        <div class="games_library_controlblock">
-                            <span id="games_roms_count" class="games_library_label">0 ROMs</span>
-                        </div>
-                    </div>
-                    <div id="gamesummaryromscontent"></div>
-                </div>
+            <div id="gamesummaryplatforms" class="section">
+                <div class="section-header">Available Platforms</div>
+                <div id="gamesummaryplatformscontent" class="section-body"></div>
             </div>
             <div id="gamesummarysimilar" class="section" style="display: none;">
                 <div class="section-header">Similar Games</div>

@@ -481,6 +481,23 @@ namespace gaseous_server.Models
             }
         }
 
+        public PlatformMapItem GetUserPlatformMap(string UserId, long PlatformId, long GameId)
+        {
+            // get the system enabled bios hashes
+            Models.PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(PlatformId);
+
+            // get the user enabled bios hashes
+            PlatformMapping.UserEmulatorConfiguration userEmulatorConfiguration = GetUserEmulator(UserId, GameId, PlatformId);
+            if (userEmulatorConfiguration != null)
+            {
+                platformMapItem.WebEmulator.Type = userEmulatorConfiguration.EmulatorType;
+                platformMapItem.WebEmulator.Core = userEmulatorConfiguration.Core;
+                platformMapItem.EnabledBIOSHashes = userEmulatorConfiguration.EnableBIOSFiles;
+            }
+
+            return platformMapItem;
+        }
+
         public UserEmulatorConfiguration GetUserEmulator(string UserId, long GameId, long PlatformId)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
