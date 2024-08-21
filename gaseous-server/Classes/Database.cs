@@ -453,11 +453,19 @@ namespace gaseous_server.Classes
 			}
 			public static void SetCacheObject(string CacheKey, object CacheObject, int ExpirationSeconds = 2)
 			{
-				if (MemoryCache.ContainsKey(CacheKey))
+				try
 				{
-					MemoryCache.Remove(CacheKey);
+					if (MemoryCache.ContainsKey(CacheKey))
+					{
+						MemoryCache.Remove(CacheKey);
+					}
+					MemoryCache.Add(CacheKey, new MemoryCacheItem(CacheObject, ExpirationSeconds));
 				}
-				MemoryCache.Add(CacheKey, new MemoryCacheItem(CacheObject, ExpirationSeconds));
+				catch (Exception ex)
+				{
+					Logging.Log(Logging.LogType.Debug, "Database", "Error while setting cache object", ex);
+					ClearCache();
+				}
 			}
 			public static void RemoveCacheObject(string CacheKey)
 			{

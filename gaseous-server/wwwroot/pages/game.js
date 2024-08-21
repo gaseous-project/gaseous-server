@@ -394,6 +394,22 @@ function SetupPage() {
         if (result.screenshots || result.videos) {
             var gameScreenshots_Main = document.getElementById('gamescreenshots_main');
 
+            let gameScreenshots_Portal = document.getElementById('gamescreenshots');
+            gameScreenshots_Portal.addEventListener('mouseenter', function () {
+                $(".gamescreenshots_arrows")
+                    .stop(true, true)
+                    .animate({
+                        opacity: 1
+                    }, 500);
+            });
+            gameScreenshots_Portal.addEventListener('mouseleave', function () {
+                $(".gamescreenshots_arrows")
+                    .stop(true, true)
+                    .animate({
+                        opacity: 0
+                    }, 500);
+            });
+
             // load static screenshots
             var gameScreenshots_Gallery = document.getElementById('gamescreenshots_gallery_panel');
             var imageIndex = 0;
@@ -407,6 +423,7 @@ function SetupPage() {
                         screenshotItem.id = 'gamescreenshots_gallery_' + imageIndex;
                         screenshotItem.setAttribute('name', 'gamescreenshots_gallery_item');
                         screenshotItem.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/screenshots/' + screenshotsItem[i].id + '/image/screenshot_thumb/' + screenshotsItem[i].imageId + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
+                        screenshotItem.setAttribute('data-url', '/api/v1.1/Games/' + gameId + '/screenshots/' + screenshotsItem[i].id + '/image/screenshot_thumb/' + screenshotsItem[i].imageId + '.jpg');
                         screenshotItem.setAttribute('imageid', imageIndex);
                         screenshotItem.setAttribute('imagetype', 0);
                         screenshotItem.className = 'gamescreenshots_gallery_item';
@@ -1413,12 +1430,21 @@ function selectScreenshot(index) {
     }
 
     // set the screenshot
+    gameScreenshots_Main.setAttribute('style', '');
     gameScreenshots_Main.innerHTML = '';
     switch (gameScreenshots_Selected.getAttribute('imagetype')) {
         case "0":
         default:
             // screenshot
-            gameScreenshots_Main.setAttribute('style', gameScreenshots_Selected.getAttribute('style').replace("/image/screenshot_thumb", "/image/original"));
+            // gameScreenshots_Main.setAttribute('style', gameScreenshots_Selected.getAttribute('style').replace("/image/screenshot_thumb", "/image/original"));
+
+            var imageTag = document.createElement('img');
+            imageTag.setAttribute('height', '290');
+            imageTag.setAttribute('width', '515');
+            imageTag.setAttribute('src', gameScreenshots_Selected.getAttribute('data-url').replace("/image/screenshot_thumb", "/image/original"));
+
+            gameScreenshots_Main.appendChild(imageTag);
+
             break;
         case "1":
             // video

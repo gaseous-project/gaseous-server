@@ -28,6 +28,7 @@ function ajaxCall(endpoint, method, successFunction, errorFunction, body) {
 
         // Error handling
         error: function (error) {
+            console.log('Error reaching URL: ' + endpoint);
             console.log(`Error ${JSON.stringify(error)}`);
 
             if (errorFunction) {

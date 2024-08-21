@@ -1319,7 +1319,7 @@ input[name='filter_panel_range_max'] {
 }
 
 #gamescreenshots {
-    background-color: black;
+    background-color: rgba(0, 0, 0, 0.5);
     padding: 10px;
     /*height: 350px;*/
     margin-bottom: 20px;
@@ -1329,11 +1329,22 @@ input[name='filter_panel_range_max'] {
     border-radius: var(--standard-radius);
 }
 
+#gamescreenshots_portal {
+    text-align: center;
+}
+
 #gamescreenshots_main {
-    display: block;
-    width: 100%;
+    display: inline-block;
+    max-width: 100%;
+    min-width: 290px;
+    /* width: 290px; */
     height: 290px;
-    margin-bottom: 10px;
+    /* margin-bottom: 10px; */
+    border-radius: var(--standard-radius);
+    border-width: 1px;
+    border-style: solid;
+    border-color: transparent;
+    overflow: hidden;
 }
 
 iframe {
@@ -1341,14 +1352,14 @@ iframe {
     margin: 0 auto;
 }
 
-#gamescreenshots_gallery {
+/* #gamescreenshots_gallery {
     left: 0px;
     right: 0px;
     height: 65px;
     overflow-x: scroll;
     overflow-y: hidden;
     white-space: normal;
-}
+} */
 
 /* #gamescreenshots_gallery_panel {
     display: block;
@@ -1444,9 +1455,9 @@ iframe {
 
 .gamescreenshots_arrows {
     margin-top: 140px;
-    height: 40px;
+    height: 30px;
     width: 30px;
-    padding-top: 15px;
+    /* padding-top: 5px; */
     background-color: var(--arrow-background);
     text-align: center;
     user-select: none;
@@ -1459,7 +1470,8 @@ iframe {
     /* webkit (konqueror) browsers */
     -ms-user-select: none;
     /* IE10+ */
-    border-radius: var(--standard-radius);
+    border-radius: 50%;
+    display: block;
 }
 
 .gamescreenshots_arrows:hover {
@@ -1476,8 +1488,9 @@ iframe {
 }
 
 .gamescreenshots_arrow_image {
-    max-height: 40px;
-    max-width: 25px;
+    padding-top: 7px;
+    width: 18px;
+    height: 15px;
 }
 
 #gamestatistics {
