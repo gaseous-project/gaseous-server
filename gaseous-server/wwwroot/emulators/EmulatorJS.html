@@ -75,8 +75,6 @@
     }
 
     EJS_onLoadState = function (e) {
-        // showDialog('emulatorloadstate', { "romId": romId, "IsMediaGroup": IsMediaGroup });
-
         let stateManager = new EmulatorStateManager(romId, IsMediaGroup, getQueryString('engine', 'string'), getQueryString('core', 'string'), platformId, gameId, decodeURIComponent(getQueryString('rompath', 'string')));
         stateManager.open();
     }

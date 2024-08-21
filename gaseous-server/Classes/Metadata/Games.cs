@@ -564,13 +564,16 @@ ORDER BY Platform.`Name`;";
 
                 if (emulatorConfiguration == null)
                 {
-                    Models.PlatformMapping.PlatformMapItem platformMap = PlatformMapping.GetPlatformMap((long)platform.Id);
-                    emulatorConfiguration = new PlatformMapping.UserEmulatorConfiguration
+                    if (platform.Id != 0)
                     {
-                        EmulatorType = platformMap.WebEmulator.Type,
-                        Core = platformMap.WebEmulator.Core,
-                        EnableBIOSFiles = platformMap.EnabledBIOSHashes
-                    };
+                        Models.PlatformMapping.PlatformMapItem platformMap = PlatformMapping.GetPlatformMap((long)platform.Id);
+                        emulatorConfiguration = new PlatformMapping.UserEmulatorConfiguration
+                        {
+                            EmulatorType = platformMap.WebEmulator.Type,
+                            Core = platformMap.WebEmulator.Core,
+                            EnableBIOSFiles = platformMap.EnabledBIOSHashes
+                        };
+                    }
                 }
 
                 long? LastPlayedRomId = null;
