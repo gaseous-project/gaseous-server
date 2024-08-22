@@ -684,10 +684,10 @@ function BuildLaunchLink(engine, core, platformId, gameId, romId, isMediaGroup, 
     launchLink = launchLink.replace('<ROMID>', romId);
     if (isMediaGroup == true) {
         launchLink = launchLink.replace('<ISMEDIAGROUP>', 1);
-        launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + gameId + '/romgroup/' + romId + '/' + encodeURIComponent(filename) + '.zip');
+        launchLink = launchLink.replace('<FILENAME>', encodeURI('/api/v1.1/Games/' + gameId + '/romgroup/' + romId + '/' + filename + '.zip'));
     } else {
         launchLink = launchLink.replace('<ISMEDIAGROUP>', 0);
-        launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + gameId + '/roms/' + romId + '/' + encodeURIComponent(filename));
+        launchLink = launchLink.replace('<FILENAME>', encodeURI('/api/v1.1/Games/' + gameId + '/roms/' + romId + '/' + filename));
     }
 
     return launchLink;
