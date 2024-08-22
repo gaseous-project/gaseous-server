@@ -277,117 +277,7 @@ function SetupPage() {
             gameSummaryGenres.setAttribute('style', 'display: none;');
         }
 
-        // // get platforms
-        // ajaxCall('/api/v1.1/Games/' + gameId + '/platforms', 'GET', function (result) {
-        //     let platformContainer = document.getElementById('gamesummaryplatformscontent');
-        //     platformContainer.innerHTML = '';
-        //     for (let i = 0; i < result.length; i++) {
-        //         let logoUrl = '/api/v1/Platforms/' + result[i].id + '/platformlogo/original/logo.png';
-
-        //         // create platform container
-        //         let platformItem = document.createElement('div');
-        //         platformItem.className = 'platform_item';
-        //         platformItem.setAttribute('isFavourite', false);
-        //         platformItem.setAttribute('isLastUsed', false);
-        //         platformItem.setAttribute('isEditButton', false);
-
-        //         let platformData = result[i];
-
-        //         let showSaveState = false;
-        //         let romId = null;
-        //         let isMediaGroup = null;
-
-        //         // the platform button should:
-        //         // 1. if FavouriteRomId is not null, load the rom, otherwise
-        //         // 2. if LastPlayedRomId is null, load the rom, otherwise
-        //         // 3. load the rom management dialog
-        //         if (result[i].emulatorConfiguration.emulatorType.length > 0 && result[i].emulatorConfiguration.core.length > 0 && result[i].favouriteRomId) {
-        //             showSaveState = true;
-        //             romId = result[i].favouriteRomId;
-        //             isMediaGroup = result[i].favouriteIsMediaGroup;
-
-        //             platformItem.setAttribute('isFavourite', true);
-        //             platformItem.classList.add('platform_item_green');
-
-        //             platformItem.addEventListener('click', () => {
-
-        //             });
-        //         } else if (result[i].emulatorConfiguration.emulatorType.length > 0 && result[i].emulatorConfiguration.core.length > 0 && result[i].lastPlayedRomId) {
-        //             showSaveState = true;
-        //             romId = result[i].lastPlayedRomId;
-        //             isMediaGroup = result[i].lastPlayedRomIsMediagroup;
-
-        //             platformItem.setAttribute('isLastUsed', true);
-        //             platformItem.classList.add('platform_item_green');
-        //             let launchLink = BuildLaunchLink(platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, gameId, platformData.lastPlayedRomId, platformData.lastPlayedRomIsMediagroup, platformData.lastPlayedRomName);
-        //             platformItem.addEventListener('click', () => {
-        //                 window.location.href = launchLink;
-        //             });
-        //         } else {
-        //             platformItem.setAttribute('isEditButton', true);
-        //             platformItem.addEventListener('click', () => {
-        //                 let romMgt = new RomManagement(result[i]);
-        //                 romMgt.open();
-        //             });
-        //         }
-
-        //         // create platform image container
-        //         let platformImageContainer = document.createElement('div');
-        //         platformImageContainer.className = 'platform_image_container';
-
-        //         // create platform image
-        //         let platformImage = document.createElement('img');
-        //         platformImage.src = logoUrl;
-        //         platformImage.className = 'platform_image';
-
-        //         // create platform name container
-        //         let platformNameContainer = document.createElement('div');
-        //         platformNameContainer.className = 'platform_name_container';
-
-        //         // create platform name
-        //         let platformName = document.createElement('div');
-        //         platformName.className = 'platform_name';
-        //         platformName.innerHTML = result[i].name;
-
-        //         // create platform edit button container
-        //         let platformEditButtonContainer = document.createElement('div');
-        //         platformEditButtonContainer.className = 'platform_edit_button_container';
-
-        //         // create platform state manager button
-        //         let platformStateManagerButton = document.createElement('div');
-        //         if (showSaveState === true) {
-        //             platformStateManagerButton.className = 'platform_edit_button platform_statemanager_button';
-        //             platformStateManagerButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstatemanagericon" />';
-        //             platformStateManagerButton.addEventListener('click', (e) => {
-        //                 e.stopPropagation();
-        //                 let stateManager = new EmulatorStateManager(romId, isMediaGroup, platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, gameId, platformData.lastPlayedRomName);
-        //                 stateManager.open();
-        //             });
-        //         }
-
-        //         // create platform edit button
-        //         let platformEditButton = document.createElement('div');
-        //         platformEditButton.className = 'platform_edit_button';
-        //         platformEditButton.innerHTML = '<img src="/images/edit.svg" class="banner_button_image" />';
-        //         platformEditButton.addEventListener('click', (e) => {
-        //             e.stopPropagation();
-        //             let romMgt = new RomManagement(result[i]);
-        //             romMgt.open();
-        //         });
-
-        //         // append elements
-        //         platformImageContainer.appendChild(platformImage);
-        //         platformItem.appendChild(platformImageContainer);
-        //         platformNameContainer.appendChild(platformName);
-        //         platformItem.appendChild(platformNameContainer);
-        //         platformItem.appendChild(platformEditButtonContainer);
-        //         platformItem.appendChild(platformEditButton);
-        //         if (showSaveState === true) {
-        //             platformItem.appendChild(platformStateManagerButton);
-        //         }
-        //         platformContainer.appendChild(platformItem);
-        //     }
-        // });
+        // get platforms
         LoadGamePlatforms();
 
         // load screenshots
@@ -1532,7 +1422,7 @@ function selectScreenshot(index) {
             var imageTag = document.createElement('img');
             imageTag.setAttribute('height', '290');
             imageTag.setAttribute('width', '515');
-            imageTag.setAttribute('src', gameScreenshots_Selected.getAttribute('data-url').replace("/image/screenshot_thumb", "/image/original"));
+            imageTag.setAttribute('src', encodeURI(gameScreenshots_Selected.getAttribute('data-url').replace("/image/screenshot_thumb", "/image/original")));
 
             gameScreenshots_Main.appendChild(imageTag);
 
@@ -1545,7 +1435,7 @@ function selectScreenshot(index) {
             videoIFrame.setAttribute('height', '290');
             videoIFrame.setAttribute('width', '515');
             videoIFrame.setAttribute('frameBorder', '0');
-            videoIFrame.setAttribute('src', 'https://www.youtube.com/embed/' + gameScreenshots_Selected.getAttribute('imageref') + '?autoplay=1&mute=1');
+            videoIFrame.setAttribute('src', encodeURI('https://www.youtube.com/embed/' + gameScreenshots_Selected.getAttribute('imageref') + '?autoplay=1&mute=1'));
 
             gameScreenshots_Main.appendChild(videoIFrame);
 
