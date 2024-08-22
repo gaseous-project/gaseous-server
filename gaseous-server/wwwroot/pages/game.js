@@ -277,117 +277,118 @@ function SetupPage() {
             gameSummaryGenres.setAttribute('style', 'display: none;');
         }
 
-        // get platforms
-        ajaxCall('/api/v1.1/Games/' + gameId + '/platforms', 'GET', function (result) {
-            let platformContainer = document.getElementById('gamesummaryplatformscontent');
-            platformContainer.innerHTML = '';
-            for (let i = 0; i < result.length; i++) {
-                let logoUrl = '/api/v1/Platforms/' + result[i].id + '/platformlogo/original/logo.png';
+        // // get platforms
+        // ajaxCall('/api/v1.1/Games/' + gameId + '/platforms', 'GET', function (result) {
+        //     let platformContainer = document.getElementById('gamesummaryplatformscontent');
+        //     platformContainer.innerHTML = '';
+        //     for (let i = 0; i < result.length; i++) {
+        //         let logoUrl = '/api/v1/Platforms/' + result[i].id + '/platformlogo/original/logo.png';
 
-                // create platform container
-                let platformItem = document.createElement('div');
-                platformItem.className = 'platform_item';
-                platformItem.setAttribute('isFavourite', false);
-                platformItem.setAttribute('isLastUsed', false);
-                platformItem.setAttribute('isEditButton', false);
+        //         // create platform container
+        //         let platformItem = document.createElement('div');
+        //         platformItem.className = 'platform_item';
+        //         platformItem.setAttribute('isFavourite', false);
+        //         platformItem.setAttribute('isLastUsed', false);
+        //         platformItem.setAttribute('isEditButton', false);
 
-                let platformData = result[i];
+        //         let platformData = result[i];
 
-                let showSaveState = false;
-                let romId = null;
-                let isMediaGroup = null;
+        //         let showSaveState = false;
+        //         let romId = null;
+        //         let isMediaGroup = null;
 
-                // the platform button should:
-                // 1. if FavouriteRomId is not null, load the rom, otherwise
-                // 2. if LastPlayedRomId is null, load the rom, otherwise
-                // 3. load the rom management dialog
-                if (result[i].emulatorConfiguration.emulatorType.length > 0 && result[i].emulatorConfiguration.core.length > 0 && result[i].favouriteRomId) {
-                    showSaveState = true;
-                    romId = result[i].favouriteRomId;
-                    isMediaGroup = result[i].favouriteIsMediaGroup;
+        //         // the platform button should:
+        //         // 1. if FavouriteRomId is not null, load the rom, otherwise
+        //         // 2. if LastPlayedRomId is null, load the rom, otherwise
+        //         // 3. load the rom management dialog
+        //         if (result[i].emulatorConfiguration.emulatorType.length > 0 && result[i].emulatorConfiguration.core.length > 0 && result[i].favouriteRomId) {
+        //             showSaveState = true;
+        //             romId = result[i].favouriteRomId;
+        //             isMediaGroup = result[i].favouriteIsMediaGroup;
 
-                    platformItem.setAttribute('isFavourite', true);
-                    platformItem.classList.add('platform_item_green');
+        //             platformItem.setAttribute('isFavourite', true);
+        //             platformItem.classList.add('platform_item_green');
 
-                    platformItem.addEventListener('click', () => {
+        //             platformItem.addEventListener('click', () => {
 
-                    });
-                } else if (result[i].emulatorConfiguration.emulatorType.length > 0 && result[i].emulatorConfiguration.core.length > 0 && result[i].lastPlayedRomId) {
-                    showSaveState = true;
-                    romId = result[i].lastPlayedRomId;
-                    isMediaGroup = result[i].lastPlayedRomIsMediagroup;
+        //             });
+        //         } else if (result[i].emulatorConfiguration.emulatorType.length > 0 && result[i].emulatorConfiguration.core.length > 0 && result[i].lastPlayedRomId) {
+        //             showSaveState = true;
+        //             romId = result[i].lastPlayedRomId;
+        //             isMediaGroup = result[i].lastPlayedRomIsMediagroup;
 
-                    platformItem.setAttribute('isLastUsed', true);
-                    platformItem.classList.add('platform_item_green');
-                    let launchLink = BuildLaunchLink(platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, gameId, platformData.lastPlayedRomId, platformData.lastPlayedRomIsMediagroup, platformData.lastPlayedRomName);
-                    platformItem.addEventListener('click', () => {
-                        window.location.href = launchLink;
-                    });
-                } else {
-                    platformItem.setAttribute('isEditButton', true);
-                    platformItem.addEventListener('click', () => {
-                        let romMgt = new RomManagement(result[i]);
-                        romMgt.open();
-                    });
-                }
+        //             platformItem.setAttribute('isLastUsed', true);
+        //             platformItem.classList.add('platform_item_green');
+        //             let launchLink = BuildLaunchLink(platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, gameId, platformData.lastPlayedRomId, platformData.lastPlayedRomIsMediagroup, platformData.lastPlayedRomName);
+        //             platformItem.addEventListener('click', () => {
+        //                 window.location.href = launchLink;
+        //             });
+        //         } else {
+        //             platformItem.setAttribute('isEditButton', true);
+        //             platformItem.addEventListener('click', () => {
+        //                 let romMgt = new RomManagement(result[i]);
+        //                 romMgt.open();
+        //             });
+        //         }
 
-                // create platform image container
-                let platformImageContainer = document.createElement('div');
-                platformImageContainer.className = 'platform_image_container';
+        //         // create platform image container
+        //         let platformImageContainer = document.createElement('div');
+        //         platformImageContainer.className = 'platform_image_container';
 
-                // create platform image
-                let platformImage = document.createElement('img');
-                platformImage.src = logoUrl;
-                platformImage.className = 'platform_image';
+        //         // create platform image
+        //         let platformImage = document.createElement('img');
+        //         platformImage.src = logoUrl;
+        //         platformImage.className = 'platform_image';
 
-                // create platform name container
-                let platformNameContainer = document.createElement('div');
-                platformNameContainer.className = 'platform_name_container';
+        //         // create platform name container
+        //         let platformNameContainer = document.createElement('div');
+        //         platformNameContainer.className = 'platform_name_container';
 
-                // create platform name
-                let platformName = document.createElement('div');
-                platformName.className = 'platform_name';
-                platformName.innerHTML = result[i].name;
+        //         // create platform name
+        //         let platformName = document.createElement('div');
+        //         platformName.className = 'platform_name';
+        //         platformName.innerHTML = result[i].name;
 
-                // create platform edit button container
-                let platformEditButtonContainer = document.createElement('div');
-                platformEditButtonContainer.className = 'platform_edit_button_container';
+        //         // create platform edit button container
+        //         let platformEditButtonContainer = document.createElement('div');
+        //         platformEditButtonContainer.className = 'platform_edit_button_container';
 
-                // create platform state manager button
-                let platformStateManagerButton = document.createElement('div');
-                if (showSaveState === true) {
-                    platformStateManagerButton.className = 'platform_edit_button platform_statemanager_button';
-                    platformStateManagerButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstatemanagericon" />';
-                    platformStateManagerButton.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        let stateManager = new EmulatorStateManager(romId, isMediaGroup, platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, gameId, platformData.lastPlayedRomName);
-                        stateManager.open();
-                    });
-                }
+        //         // create platform state manager button
+        //         let platformStateManagerButton = document.createElement('div');
+        //         if (showSaveState === true) {
+        //             platformStateManagerButton.className = 'platform_edit_button platform_statemanager_button';
+        //             platformStateManagerButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstatemanagericon" />';
+        //             platformStateManagerButton.addEventListener('click', (e) => {
+        //                 e.stopPropagation();
+        //                 let stateManager = new EmulatorStateManager(romId, isMediaGroup, platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, gameId, platformData.lastPlayedRomName);
+        //                 stateManager.open();
+        //             });
+        //         }
 
-                // create platform edit button
-                let platformEditButton = document.createElement('div');
-                platformEditButton.className = 'platform_edit_button';
-                platformEditButton.innerHTML = '<img src="/images/edit.svg" class="banner_button_image" />';
-                platformEditButton.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    let romMgt = new RomManagement(result[i]);
-                    romMgt.open();
-                });
+        //         // create platform edit button
+        //         let platformEditButton = document.createElement('div');
+        //         platformEditButton.className = 'platform_edit_button';
+        //         platformEditButton.innerHTML = '<img src="/images/edit.svg" class="banner_button_image" />';
+        //         platformEditButton.addEventListener('click', (e) => {
+        //             e.stopPropagation();
+        //             let romMgt = new RomManagement(result[i]);
+        //             romMgt.open();
+        //         });
 
-                // append elements
-                platformImageContainer.appendChild(platformImage);
-                platformItem.appendChild(platformImageContainer);
-                platformNameContainer.appendChild(platformName);
-                platformItem.appendChild(platformNameContainer);
-                platformItem.appendChild(platformEditButtonContainer);
-                platformItem.appendChild(platformEditButton);
-                if (showSaveState === true) {
-                    platformItem.appendChild(platformStateManagerButton);
-                }
-                platformContainer.appendChild(platformItem);
-            }
-        });
+        //         // append elements
+        //         platformImageContainer.appendChild(platformImage);
+        //         platformItem.appendChild(platformImageContainer);
+        //         platformNameContainer.appendChild(platformName);
+        //         platformItem.appendChild(platformNameContainer);
+        //         platformItem.appendChild(platformEditButtonContainer);
+        //         platformItem.appendChild(platformEditButton);
+        //         if (showSaveState === true) {
+        //             platformItem.appendChild(platformStateManagerButton);
+        //         }
+        //         platformContainer.appendChild(platformItem);
+        //     }
+        // });
+        LoadGamePlatforms();
 
         // load screenshots
         var gameScreenshots = document.getElementById('gamescreenshots');
@@ -513,11 +514,127 @@ function SetupPage() {
     });
 };
 
+function LoadGamePlatforms() {
+    // get platforms
+    ajaxCall('/api/v1.1/Games/' + gameId + '/platforms', 'GET', function (result) {
+        let platformContainer = document.getElementById('gamesummaryplatformscontent');
+        platformContainer.innerHTML = '';
+        for (let i = 0; i < result.length; i++) {
+            let logoUrl = '/api/v1/Platforms/' + result[i].id + '/platformlogo/original/logo.png';
+
+            // create platform container
+            let platformItem = document.createElement('div');
+            platformItem.className = 'platform_item';
+            platformItem.setAttribute('isFavourite', false);
+            platformItem.setAttribute('isLastUsed', false);
+            platformItem.setAttribute('isEditButton', false);
+
+            let platformData = result[i];
+
+            let showSaveState = false;
+            let romId = null;
+            let isMediaGroup = null;
+
+            // the platform button should:
+            // 1. if FavouriteRomId is not null, load the rom, otherwise
+            // 2. if LastPlayedRomId is null, load the rom, otherwise
+            // 3. load the rom management dialog
+            if (result[i].emulatorConfiguration.emulatorType.length > 0 && result[i].emulatorConfiguration.core.length > 0 && result[i].favouriteRomId) {
+                showSaveState = true;
+                romId = result[i].favouriteRomId;
+                isMediaGroup = result[i].favouriteIsMediaGroup;
+
+                platformItem.setAttribute('isFavourite', true);
+                platformItem.classList.add('platform_item_green');
+
+                platformItem.addEventListener('click', () => {
+
+                });
+            } else if (result[i].emulatorConfiguration.emulatorType.length > 0 && result[i].emulatorConfiguration.core.length > 0 && result[i].lastPlayedRomId) {
+                showSaveState = true;
+                romId = result[i].lastPlayedRomId;
+                isMediaGroup = result[i].lastPlayedRomIsMediagroup;
+
+                platformItem.setAttribute('isLastUsed', true);
+                platformItem.classList.add('platform_item_green');
+                let launchLink = BuildLaunchLink(platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, gameId, platformData.lastPlayedRomId, platformData.lastPlayedRomIsMediagroup, platformData.lastPlayedRomName);
+                platformItem.addEventListener('click', () => {
+                    window.location.href = launchLink;
+                });
+            } else {
+                platformItem.setAttribute('isEditButton', true);
+                platformItem.addEventListener('click', () => {
+                    let romMgt = new RomManagement(result[i], LoadGamePlatforms);
+                    romMgt.open();
+                });
+            }
+
+            // create platform image container
+            let platformImageContainer = document.createElement('div');
+            platformImageContainer.className = 'platform_image_container';
+
+            // create platform image
+            let platformImage = document.createElement('img');
+            platformImage.src = logoUrl;
+            platformImage.className = 'platform_image';
+
+            // create platform name container
+            let platformNameContainer = document.createElement('div');
+            platformNameContainer.className = 'platform_name_container';
+
+            // create platform name
+            let platformName = document.createElement('div');
+            platformName.className = 'platform_name';
+            platformName.innerHTML = result[i].name;
+
+            // create platform edit button container
+            let platformEditButtonContainer = document.createElement('div');
+            platformEditButtonContainer.className = 'platform_edit_button_container';
+
+            // create platform state manager button
+            let platformStateManagerButton = document.createElement('div');
+            if (showSaveState === true) {
+                platformStateManagerButton.className = 'platform_edit_button platform_statemanager_button';
+                platformStateManagerButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstatemanagericon" />';
+                platformStateManagerButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    let stateManager = new EmulatorStateManager(romId, isMediaGroup, platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, gameId, platformData.lastPlayedRomName);
+                    stateManager.open();
+                });
+            }
+
+            // create platform edit button
+            let platformEditButton = document.createElement('div');
+            platformEditButton.className = 'platform_edit_button';
+            platformEditButton.innerHTML = '<img src="/images/edit.svg" class="banner_button_image" />';
+            platformEditButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                let romMgt = new RomManagement(result[i], LoadGamePlatforms);
+                romMgt.open();
+            });
+
+            // append elements
+            platformImageContainer.appendChild(platformImage);
+            platformItem.appendChild(platformImageContainer);
+            platformNameContainer.appendChild(platformName);
+            platformItem.appendChild(platformNameContainer);
+            platformItem.appendChild(platformEditButtonContainer);
+            platformItem.appendChild(platformEditButton);
+            if (showSaveState === true) {
+                platformItem.appendChild(platformStateManagerButton);
+            }
+            platformContainer.appendChild(platformItem);
+        }
+    });
+}
+
 class RomManagement {
-    constructor(Platform) {
+    constructor(Platform, okCallback) {
         this.Platform = Platform;
         this.MediaGroupCount = 0;
         this.RomCount = 0;
+
+        this.OkCallback = okCallback;
     }
 
     async open() {
@@ -561,6 +678,103 @@ class RomManagement {
         this.RomsFixPlatformDropdown = this.romsModal.modalElement.querySelector('#rom_edit_fixplatform');
         this.RomsFixGameDropdown = this.romsModal.modalElement.querySelector('#rom_edit_fixgame');
         this.#SetupFixPlatformDropDown();
+
+        // add buttons
+        let platformEditButton = new ModalButton('Edit Platform', 0, this, async function (callingObject) {
+            let mappingModal = await new Modal('messagebox');
+            await mappingModal.BuildModal();
+
+            // override the dialog size
+            mappingModal.modalElement.style = 'width: 600px; height: 80%; min-width: unset; min-height: 400px; max-width: unset; max-height: 80%;';
+
+            // get the platform map
+            let platformMap = await fetch('/api/v1.1/PlatformMaps/' + callingObject.Platform.id, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json());
+            let defaultPlatformMap = platformMap;
+
+            // get the user emulation configuration
+            let userEmuConfig = await fetch('/api/v1.1/Games/' + gameId + '/emulatorconfiguration/' + callingObject.Platform.id, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json());
+            if (userEmuConfig) {
+                if (userEmuConfig.emulatorType || userEmuConfig.core) {
+                    platformMap.webEmulator.type = userEmuConfig.emulatorType;
+                    platformMap.webEmulator.core = userEmuConfig.core;
+                }
+                if (userEmuConfig.enableBIOSFiles) {
+                    platformMap.enabledBIOSHashes = userEmuConfig.enableBIOSFiles;
+                }
+            }
+
+            // set the title
+            mappingModal.modalElement.querySelector('#modal-header-text').innerHTML = callingObject.Platform.name + ' Emulation Settings';
+
+            // set the content
+            let mappingContent = mappingModal.modalElement.querySelector('#modal-body');
+            mappingContent.innerHTML = '';
+            let emuConfig = await new WebEmulatorConfiguration(platformMap)
+            emuConfig.open();
+            mappingContent.appendChild(emuConfig.panel);
+
+            // setup the buttons
+            let resetButton = new ModalButton('Reset to Default', 0, callingObject, async function (callingObject) {
+                await fetch('/api/v1.1/Games/' + gameId + '/emulatorconfiguration/' + callingObject.Platform.id, {
+                    method: 'DELETE'
+                });
+                callingObject.Platform.emulatorConfiguration.emulatorType = defaultPlatformMap.webEmulator.type;
+                callingObject.Platform.emulatorConfiguration.core = defaultPlatformMap.webEmulator.core;
+                callingObject.Platform.emulatorConfiguration.enabledBIOSHashes = defaultPlatformMap.enabledBIOSHashes;
+                callingObject.#loadRoms();
+                callingObject.OkCallback();
+                mappingModal.close();
+            });
+            mappingModal.addButton(resetButton);
+
+            let okButton = new ModalButton('OK', 1, callingObject, async function (callingObject) {
+                let model = {
+                    EmulatorType: emuConfig.PlatformMap.webEmulator.type,
+                    Core: emuConfig.PlatformMap.webEmulator.core,
+                    EnableBIOSFiles: emuConfig.PlatformMap.enabledBIOSHashes
+                }
+
+                await fetch('/api/v1.1/Games/' + gameId + '/emulatorconfiguration/' + callingObject.Platform.id, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(model)
+                });
+                callingObject.Platform.emulatorConfiguration.emulatorType = emuConfig.PlatformMap.webEmulator.type;
+                callingObject.Platform.emulatorConfiguration.core = emuConfig.PlatformMap.webEmulator.core;
+                callingObject.Platform.emulatorConfiguration.enabledBIOSHashes = emuConfig.PlatformMap.enabledBIOSHashes;
+
+                callingObject.#loadRoms();
+                callingObject.OkCallback();
+                mappingModal.close();
+            });
+            mappingModal.addButton(okButton);
+
+            let cancelButton = new ModalButton('Cancel', 0, mappingModal, async function (callingObject) {
+                mappingModal.close();
+            });
+            mappingModal.addButton(cancelButton);
+
+            // show the dialog
+            await mappingModal.open();
+        });
+        this.romsModal.addButton(platformEditButton);
+
+        let closeButton = new ModalButton('Close', 0, this, function (callingObject) {
+            callingObject.romsModal.close();
+        });
+        this.romsModal.addButton(closeButton);
 
         await this.#loadRoms(false);
         this.#DisplayROMCheckboxes(false);
@@ -774,7 +988,7 @@ class RomManagement {
 
         let gameRomsSection = this.Roms;
         let gameRoms = this.RomsContent;
-        let pageSize = 20;
+        let pageSize = 200;
         await fetch('/api/v1.1/Games/' + gameId + '/roms?pageNumber=' + pageNumber + '&pageSize=' + pageSize + '&platformId=' + selectedPlatform + nameSearchQuery, {
             method: 'GET',
             headers: {
@@ -829,131 +1043,8 @@ class RomManagement {
 
                     let thisDialog = this;
 
-                    let lastPlatform = '';
                     for (let i = 0; i < gameRomItems.length; i++) {
-                        if (gameRomItems[i].platform != lastPlatform) {
-                            lastPlatform = gameRomItems[i].platform;
-                            let romItem = gameRomItems[i];
-                            let platformRow = document.createElement('tr');
-                            let platformHeader = document.createElement('th');
-                            platformHeader.setAttribute('colspan', 8);
-
-                            // platform header
-                            let platformHeaderTitle = document.createElement('span');
-                            platformHeaderTitle.innerHTML = romItem.platform;
-                            platformHeader.appendChild(platformHeaderTitle);
-
-                            let platformHeaderControls = document.createElement('div');
-                            platformHeaderControls.style.float = 'right';
-
-                            if (userProfile.roles.includes('Admin') || userProfile.roles.includes('Gamer')) {
-                                let collectionLink = document.createElement('div');
-                                collectionLink.className = 'romlink';
-                                collectionLink.innerHTML = '<img src="/images/collections.svg" class="banner_button_image banner_button_image_smaller" alt="Add to collection" title="Add to collection" />';
-                                collectionLink.addEventListener('click', () => {
-                                    ShowCollectionDialog(romItem.platformId);
-                                });
-                                platformHeaderControls.appendChild(collectionLink);
-                            }
-
-                            // set up emulation editor
-                            let platformMappingLink = document.createElement('div');
-                            platformMappingLink.className = 'romlink';
-                            platformMappingLink.innerHTML = '<img src="/images/map.svg" class="banner_button_image banner_button_image_smaller" alt="Emulation Settings" title="Emulation Settings" />';
-                            platformMappingLink.addEventListener('click', async () => {
-                                let mappingModal = await new Modal('messagebox');
-                                await mappingModal.BuildModal();
-
-                                // override the dialog size
-                                mappingModal.modalElement.style = 'width: 600px; height: 80%; min-width: unset; min-height: 400px; max-width: unset; max-height: 80%;';
-
-                                // get the platform map
-                                let platformMap = await fetch('/api/v1.1/PlatformMaps/' + romItem.platformId, {
-                                    method: 'GET',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    }
-                                }).then(response => response.json());
-                                let defaultPlatformMap = platformMap;
-
-                                // get the user emulation configuration
-                                let userEmuConfig = await fetch('/api/v1/Games/' + gameId + '/emulatorconfiguration/' + romItem.platformId, {
-                                    method: 'GET',
-                                    headers: {
-                                        'Content-Type': 'application/json'
-                                    }
-                                }).then(response => response.json());
-                                if (userEmuConfig) {
-                                    if (userEmuConfig.emulatorType || userEmuConfig.core) {
-                                        platformMap.webEmulator.type = userEmuConfig.emulatorType;
-                                        platformMap.webEmulator.core = userEmuConfig.core;
-                                    }
-                                    if (userEmuConfig.enableBIOSFiles) {
-                                        platformMap.enabledBIOSHashes = userEmuConfig.enableBIOSFiles;
-                                    }
-                                }
-
-                                // set the title
-                                mappingModal.modalElement.querySelector('#modal-header-text').innerHTML = platformMap.igdbName + ' Emulation Settings';
-
-                                // set the content
-                                let mappingContent = mappingModal.modalElement.querySelector('#modal-body');
-                                mappingContent.innerHTML = '';
-                                let emuConfig = await new WebEmulatorConfiguration(platformMap)
-                                emuConfig.open();
-                                mappingContent.appendChild(emuConfig.panel);
-
-                                // setup the buttons
-                                let resetButton = new ModalButton('Reset to Default', 0, mappingModal, async function (callingObject) {
-                                    await fetch('/api/v1/Games/' + gameId + '/emulatorconfiguration/' + romItem.platformId, {
-                                        method: 'DELETE'
-                                    });
-                                    thisDialog.Platform.emulatorConfiguration.emulatorType = defaultPlatformMap.webEmulator.type;
-                                    thisDialog.Platform.emulatorConfiguration.core = defaultPlatformMap.webEmulator.core;
-                                    thisDialog.Platform.emulatorConfiguration.enabledBIOSHashes = defaultPlatformMap.enabledBIOSHashes;
-                                    thisDialog.#loadRoms();
-                                    callingObject.close();
-                                });
-                                mappingModal.addButton(resetButton);
-
-                                let okButton = new ModalButton('OK', 1, mappingModal, async function (callingObject) {
-                                    let model = {
-                                        EmulatorType: emuConfig.PlatformMap.webEmulator.type,
-                                        Core: emuConfig.PlatformMap.webEmulator.core,
-                                        EnableBIOSFiles: emuConfig.PlatformMap.enabledBIOSHashes
-                                    }
-
-                                    await fetch('/api/v1/Games/' + gameId + '/emulatorconfiguration/' + romItem.platformId, {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json'
-                                        },
-                                        body: JSON.stringify(model)
-                                    });
-                                    thisDialog.Platform.emulatorConfiguration.emulatorType = emuConfig.PlatformMap.webEmulator.type;
-                                    thisDialog.Platform.emulatorConfiguration.core = emuConfig.PlatformMap.webEmulator.core;
-                                    thisDialog.Platform.emulatorConfiguration.enabledBIOSHashes = emuConfig.PlatformMap.enabledBIOSHashes;
-
-                                    thisDialog.#loadRoms();
-                                    callingObject.close();
-                                });
-                                mappingModal.addButton(okButton);
-
-                                let cancelButton = new ModalButton('Cancel', 0, mappingModal, async function (callingObject) {
-                                    callingObject.close();
-                                });
-                                mappingModal.addButton(cancelButton);
-
-                                // show the dialog
-                                await mappingModal.open();
-                            });
-                            platformHeaderControls.appendChild(platformMappingLink);
-
-                            platformHeader.appendChild(platformHeaderControls);
-
-                            platformRow.appendChild(platformHeader);
-                            newTable.appendChild(platformRow);
-                        }
+                        let romItem = gameRomItems[i];
 
                         let saveStatesButton = '';
                         let launchButton = '';
