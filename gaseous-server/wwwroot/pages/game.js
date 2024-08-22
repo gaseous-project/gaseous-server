@@ -447,7 +447,7 @@ function LoadGamePlatforms() {
 
                 platformItem.setAttribute('isLastUsed', true);
                 platformItem.classList.add('platform_item_green');
-                let launchLink = BuildLaunchLink(platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, gameId, platformData.lastPlayedRomId, platformData.lastPlayedRomIsMediagroup, platformData.lastPlayedRomName);
+                let launchLink = BuildLaunchLink(platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, Number(gameId), platformData.lastPlayedRomId, platformData.lastPlayedRomIsMediagroup, platformData.lastPlayedRomName);
                 platformItem.addEventListener('click', () => {
                     window.location.href = launchLink;
                 });
