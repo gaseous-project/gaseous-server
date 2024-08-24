@@ -67,3 +67,31 @@ ALTER TABLE `UserTimeTracking`
 ADD COLUMN `PlatformId` BIGINT,
 ADD COLUMN `IsMediaGroup` BOOLEAN DEFAULT FALSE,
 ADD COLUMN `RomId` BIGINT;
+
+CREATE TABLE `User_RecentPlayedRoms` (
+    `UserId` varchar(128) NOT NULL,
+    `GameId` bigint(20) NOT NULL,
+    `PlatformId` bigint(20) NOT NULL,
+    `RomId` bigint(20) NOT NULL,
+    `IsMediaGroup` tinyint(1) DEFAULT NULL,
+    PRIMARY KEY (
+        `UserId`,
+        `GameId`,
+        `PlatformId`
+    ),
+    CONSTRAINT `RecentPlayedRoms_Users` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
+);
+
+CREATE TABLE `User_GameFavouriteRoms` (
+    `UserId` varchar(128) NOT NULL,
+    `GameId` bigint(20) NOT NULL,
+    `PlatformId` bigint(20) NOT NULL,
+    `RomId` bigint(20) NOT NULL,
+    `IsMediaGroup` tinyint(1) DEFAULT NULL,
+    PRIMARY KEY (
+        `UserId`,
+        `GameId`,
+        `PlatformId`
+    ),
+    CONSTRAINT `GameFavouriteRoms_Users` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
+);

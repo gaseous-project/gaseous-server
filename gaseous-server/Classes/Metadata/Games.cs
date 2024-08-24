@@ -513,38 +513,38 @@ SELECT DISTINCT
     Games_Roms.GameId,
     Games_Roms.PlatformId,
     Platform.`Name`,
-    T.UserId,
-    T.RomId AS MostRecentRomId,
-    CASE T.IsMediaGroup
-        WHEN 0 THEN G.`Name`
+    User_RecentPlayedRoms.UserId AS MostRecentUserId,
+    User_RecentPlayedRoms.RomId AS MostRecentRomId,
+    CASE User_RecentPlayedRoms.IsMediaGroup
+        WHEN 0 THEN GMR.`Name`
         WHEN 1 THEN 'Media Group'
         ELSE NULL
-    END AS `RomName`,
-    T.IsMediaGroup AS MostRecentRomIsMediaGroup,
-    T.SessionLength AS SessionLength,
-    T.SessionTime AS LastRomRun
+    END AS `MostRecentRomName`,
+    User_RecentPlayedRoms.IsMediaGroup AS MostRecentRomIsMediaGroup,
+    User_GameFavouriteRoms.UserId AS FavouriteUserId,
+    User_GameFavouriteRoms.RomId AS FavouriteRomId,
+    CASE User_GameFavouriteRoms.IsMediaGroup
+        WHEN 0 THEN GFV.`Name`
+        WHEN 1 THEN 'Media Group'
+        ELSE NULL
+    END AS `FavouriteRomName`,
+    User_GameFavouriteRoms.IsMediaGroup AS FavouriteRomIsMediaGroup
 FROM
     Games_Roms
         LEFT JOIN
     Platform ON Games_Roms.PlatformId = Platform.Id
         LEFT JOIN
-    (SELECT 
-        *
-    FROM
-        UserTimeTracking
-	WHERE UserId = @userid
-    ORDER BY SessionTime DESC LIMIT 1) AS T ON T.GameId = (SELECT DISTINCT
-            T1.GameId
-        FROM
-            UserTimeTracking AS T1
-        WHERE
-            Platform.Id = T1.PlatformId
-                AND Games_Roms.GameId = T1.GameId
-                AND T1.UserId = @userid
-        ORDER BY T1.SessionTime DESC
-        LIMIT 1)
+    User_RecentPlayedRoms ON User_RecentPlayedRoms.UserId = @userid
+        AND User_RecentPlayedRoms.GameId = Games_Roms.GameId
+        AND User_RecentPlayedRoms.PlatformId = Games_Roms.PlatformId
         LEFT JOIN
-    Games_Roms AS G ON G.Id = T.RomId
+    User_GameFavouriteRoms ON User_GameFavouriteRoms.UserId = @userid
+        AND User_GameFavouriteRoms.GameId = Games_Roms.GameId
+        AND User_GameFavouriteRoms.PlatformId = Games_Roms.PlatformId
+        LEFT JOIN
+    Games_Roms AS GMR ON GMR.Id = User_RecentPlayedRoms.RomId
+        LEFT JOIN
+    Games_Roms AS GFV ON GFV.Id = User_GameFavouriteRoms.RomId
 WHERE
     Games_Roms.GameId = @gameid
 ORDER BY Platform.`Name`;";
@@ -583,15 +583,18 @@ ORDER BY Platform.`Name`;";
                 {
                     LastPlayedRomId = (long?)row["MostRecentRomId"];
                     LastPlayedIsMediagroup = (bool)row["MostRecentRomIsMediaGroup"];
-                    LastPlayedRomName = (string)row["RomName"];
+                    LastPlayedRomName = (string)row["MostRecentRomName"];
                 }
 
                 long? FavouriteRomId = null;
                 bool? FavouriteRomIsMediagroup = false;
-                // if (row["FavouriteRomId"] != DBNull.Value)
-                // {
-                //     FavouriteRomId = (long?)row["FavouriteRomId"];
-                // }
+                string? FavouriteRomName = null;
+                if (row["FavouriteRomId"] != DBNull.Value)
+                {
+                    FavouriteRomId = (long?)row["FavouriteRomId"];
+                    FavouriteRomIsMediagroup = (bool)row["FavouriteRomIsMediaGroup"];
+                    FavouriteRomName = (string)row["FavouriteRomName"];
+                }
 
                 AvailablePlatformItem valuePair = new AvailablePlatformItem
                 {
@@ -603,7 +606,8 @@ ORDER BY Platform.`Name`;";
                     LastPlayedRomIsMediagroup = LastPlayedIsMediagroup,
                     LastPlayedRomName = LastPlayedRomName,
                     FavouriteRomId = FavouriteRomId,
-                    FavouriteRomIsMediagroup = FavouriteRomIsMediagroup
+                    FavouriteRomIsMediagroup = FavouriteRomIsMediagroup,
+                    FavouriteRomName = FavouriteRomName
                 };
                 platforms.Add(valuePair);
             }

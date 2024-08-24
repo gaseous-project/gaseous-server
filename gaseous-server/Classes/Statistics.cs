@@ -9,7 +9,19 @@ namespace gaseous_server.Classes
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql;
-            Dictionary<string, object> dbDict;
+            Dictionary<string, object> dbDict = new Dictionary<string, object>{
+                { "userid", UserId },
+                { "gameid", GameId },
+                { "platformid", PlatformId },
+                { "romid", RomId },
+                { "ismediagroup", IsMediaGroup }
+            };
+
+            // update last played rom id
+            sql = "INSERT INTO User_RecentPlayedRoms (UserId, GameId, PlatformId, RomId, IsMediaGroup) VALUES (@userid, @gameid, @platformid, @romid, @ismediagroup) ON DUPLICATE KEY UPDATE RomId = @romid, IsMediaGroup = @ismediagroup;";
+            db.ExecuteNonQuery(sql, dbDict);
+
+            // update sessions
 
             if (SessionId == Guid.Empty)
             {
