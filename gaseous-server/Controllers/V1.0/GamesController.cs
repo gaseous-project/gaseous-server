@@ -1177,6 +1177,44 @@ namespace gaseous_server.Controllers
 
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
+        [HttpPost]
+        [Route("{GameId}/roms/{RomId}/{PlatformId}/favourite")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult> GameRomFavourite(long GameId, long RomId, long PlatformId, bool IsMediaGroup, bool favourite)
+        {
+            try
+            {
+                ApplicationUser? user = await _userManager.GetUserAsync(User);
+
+                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+
+                Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
+                if (rom.GameId == GameId)
+                {
+                    if (favourite == true)
+                    {
+                        Classes.Metadata.Games.GameSetFavouriteRom(user.Id, GameId, PlatformId, RomId, IsMediaGroup);
+                    }
+                    else
+                    {
+                        Classes.Metadata.Games.GameClearFavouriteRom(user.Id, GameId, PlatformId);
+                    }
+                    return Ok();
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpGet]
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]

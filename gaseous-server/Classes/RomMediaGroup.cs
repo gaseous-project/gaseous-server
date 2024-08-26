@@ -89,8 +89,29 @@ namespace gaseous_server.Classes
                 PlatformWhereClause = " AND RomMediaGroup.PlatformId=@platformid";
             }
 
+            string UserFields = "";
+            string UserJoin = "";
+            if (userid.Length > 0)
+            {
+                UserFields = ", User_RecentPlayedRoms.RomId AS MostRecentRomId, User_RecentPlayedRoms.IsMediaGroup AS MostRecentRomIsMediaGroup, User_GameFavouriteRoms.RomId AS FavouriteRomId, User_GameFavouriteRoms.IsMediaGroup AS FavouriteRomIsMediaGroup";
+                UserJoin = @"
+					LEFT JOIN
+				User_RecentPlayedRoms ON User_RecentPlayedRoms.UserId = @userid
+					AND User_RecentPlayedRoms.GameId = RomMediaGroup.GameId
+					AND User_RecentPlayedRoms.PlatformId = RomMediaGroup.PlatformId
+                    AND User_RecentPlayedRoms.RomId = RomMediaGroup.Id
+					AND User_RecentPlayedRoms.IsMediaGroup = 1
+					LEFT JOIN
+				User_GameFavouriteRoms ON User_GameFavouriteRoms.UserId = @userid
+					AND User_GameFavouriteRoms.GameId = RomMediaGroup.GameId
+					AND User_GameFavouriteRoms.PlatformId = RomMediaGroup.PlatformId
+                    AND User_GameFavouriteRoms.RomId = RomMediaGroup.Id
+					AND User_GameFavouriteRoms.IsMediaGroup = 1
+				";
+            }
+
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT DISTINCT RomMediaGroup.*, GameState.RomId AS GameStateRomId FROM gaseous.RomMediaGroup LEFT JOIN GameState ON RomMediaGroup.Id = GameState.RomId AND GameState.IsMediaGroup = 1 AND GameState.UserId = @userid WHERE RomMediaGroup.GameId=@gameid" + PlatformWhereClause + ";";
+            string sql = "SELECT DISTINCT RomMediaGroup.*, GameState.RomId AS GameStateRomId" + UserFields + " FROM gaseous.RomMediaGroup LEFT JOIN GameState ON RomMediaGroup.Id = GameState.RomId AND GameState.IsMediaGroup = 1 AND GameState.UserId = @userid " + UserJoin + " WHERE RomMediaGroup.GameId=@gameid" + PlatformWhereClause + ";";
             Dictionary<string, object> dbDict = new Dictionary<string, object>
             {
                 { "gameid", GameId },
@@ -205,6 +226,24 @@ namespace gaseous_server.Classes
                 Roms = new List<Roms.GameRomItem>(),
                 HasSaveStates = hasSaveStates
             };
+
+            mediaGroupItem.RomUserLastUsed = false;
+            if (row.Table.Columns.Contains("MostRecentRomId"))
+            {
+                if (row["MostRecentRomId"] != DBNull.Value)
+                {
+                    mediaGroupItem.RomUserLastUsed = true;
+                }
+            }
+
+            mediaGroupItem.RomUserFavourite = false;
+            if (row.Table.Columns.Contains("FavouriteRomId"))
+            {
+                if (row["FavouriteRomId"] != DBNull.Value)
+                {
+                    mediaGroupItem.RomUserFavourite = true;
+                }
+            }
 
             // get members
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -529,6 +568,8 @@ namespace gaseous_server.Classes
             public List<long> RomIds { get; set; }
             public List<Roms.GameRomItem> Roms { get; set; }
             public bool HasSaveStates { get; set; } = false;
+            public bool RomUserLastUsed { get; set; }
+            public bool RomUserFavourite { get; set; }
             private GroupBuildStatus _Status { get; set; }
             public GroupBuildStatus Status
             {

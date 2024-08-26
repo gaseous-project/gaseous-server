@@ -615,6 +615,34 @@ ORDER BY Platform.`Name`;";
             return platforms;
         }
 
+        public static void GameSetFavouriteRom(string UserId, long GameId, long PlatformId, long RomId, bool IsMediaGroup)
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "DELETE FROM User_GameFavouriteRoms WHERE UserId = @userid AND GameId = @gameid AND PlatformId = @platformid; INSERT INTO User_GameFavouriteRoms (UserId, GameId, PlatformId, RomId, IsMediaGroup) VALUES (@userid, @gameid, @platformid, @romid, @ismediagroup);";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "userid", UserId },
+                { "gameid", GameId },
+                { "platformid", PlatformId },
+                { "romid", RomId },
+                { "ismediagroup", IsMediaGroup }
+            };
+            db.ExecuteCMD(sql, dbDict);
+        }
+
+        public static void GameClearFavouriteRom(string UserId, long GameId, long PlatformId)
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "DELETE FROM User_GameFavouriteRoms WHERE UserId = @userid AND GameId = @gameid AND PlatformId = @platformid;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "userid", UserId },
+                { "gameid", GameId },
+                { "platformid", PlatformId }
+            };
+            db.ExecuteCMD(sql, dbDict);
+        }
+
         public class AvailablePlatformItem : IGDB.Models.Platform
         {
             public PlatformMapping.UserEmulatorConfiguration emulatorConfiguration { get; set; }

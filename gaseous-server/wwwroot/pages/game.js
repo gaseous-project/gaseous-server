@@ -693,7 +693,7 @@ class RomManagement {
                 mgTable.id = 'mediagrouptable';
                 mgTable.className = 'romtable';
                 mgTable.setAttribute('cellspacing', 0);
-                mgTable.appendChild(createTableRow(true, ['Status', 'Images', 'Size', '', '', '']));
+                mgTable.appendChild(createTableRow(true, ['', 'Status', 'Images', 'Size', '', '', '']));
 
                 for (let i = 0; i < result.length; i++) {
                     let mediaGroup = result[i];
@@ -726,6 +726,17 @@ class RomManagement {
 
                             launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + mediaGroup.platformId + '&gameid=' + gameId + '&romid=' + mediaGroup.id + '&mediagroup=1&rompath=' + romPath + '" class="romstart">Launch</a>';
                         }
+                    }
+
+                    let recentlyRun = document.createElement('img');
+                    recentlyRun.src = '/images/recent.svg';
+                    recentlyRun.className = 'banner_button_image';
+                    recentlyRun.title = 'Recently Played';
+                    recentlyRun.alt = 'Recently Played';
+                    if (mediaGroup.romUserLastUsed == true) {
+                        recentlyRun.style.display = '';
+                    } else {
+                        recentlyRun.style.display = 'none';
                     }
 
                     let statusText = mediaGroup.status;
@@ -804,6 +815,7 @@ class RomManagement {
                     controls.appendChild(deleteButton);
 
                     let newRow = [
+                        recentlyRun,
                         statusText,
                         mediaGroup.romIds.length,
                         packageSize,
@@ -920,6 +932,7 @@ class RomManagement {
                                     'rom_checkbox_box_hidden',
                                     'rom_edit_checkbox'
                                 ],
+                                '',
                                 'Name',
                                 'Size',
                                 'Media',
@@ -985,6 +998,17 @@ class RomManagement {
                             this.#handleChecks();
                         });
 
+                        let recentlyRun = document.createElement('img');
+                        recentlyRun.src = '/images/recent.svg';
+                        recentlyRun.className = 'banner_button_image';
+                        recentlyRun.title = 'Recently Played';
+                        recentlyRun.alt = 'Recently Played';
+                        if (romItem.romUserLastUsed == true) {
+                            recentlyRun.style.display = '';
+                        } else {
+                            recentlyRun.style.display = 'none';
+                        }
+
                         let romLink = document.createElement('a');
                         romLink.href = '/api/v1.1/Games/' + gameId + '/roms/' + gameRomItems[i].id + '/' + encodeURIComponent(gameRomItems[i].name);
                         romLink.className = 'romlink';
@@ -996,6 +1020,7 @@ class RomManagement {
                                 'rom_checkbox_box_hidden',
                                 'rom_edit_checkbox'
                             ],
+                            recentlyRun,
                             romLink,
                             formatBytes(gameRomItems[i].size, 2),
                             gameRomItems[i].romTypeMedia,
