@@ -437,8 +437,10 @@ function LoadGamePlatforms() {
                 platformItem.setAttribute('isFavourite', true);
                 platformItem.classList.add('platform_item_green');
 
-                platformItem.addEventListener('click', () => {
+                let launchLink = BuildLaunchLink(platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, Number(gameId), platformData.favouriteRomId, platformData.favouriteRomIsMediagroup, platformData.favouriteRomName);
 
+                platformItem.addEventListener('click', () => {
+                    window.location.href = launchLink;
                 });
             } else if (result[i].emulatorConfiguration.emulatorType.length > 0 && result[i].emulatorConfiguration.core.length > 0 && result[i].lastPlayedRomId) {
                 showSaveState = true;
@@ -447,7 +449,9 @@ function LoadGamePlatforms() {
 
                 platformItem.setAttribute('isLastUsed', true);
                 platformItem.classList.add('platform_item_green');
+
                 let launchLink = BuildLaunchLink(platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, Number(gameId), platformData.lastPlayedRomId, platformData.lastPlayedRomIsMediagroup, platformData.lastPlayedRomName);
+
                 platformItem.addEventListener('click', () => {
                     window.location.href = launchLink;
                 });
@@ -859,7 +863,7 @@ class RomManagement {
 
                     let mgRomRow = document.createElement('tr');
                     let mgRomCell = document.createElement('td');
-                    mgRomCell.setAttribute('colspan', 7);
+                    mgRomCell.setAttribute('colspan', 8);
                     mgRomCell.className = 'romGroupTitles';
 
                     // iterate the group members
