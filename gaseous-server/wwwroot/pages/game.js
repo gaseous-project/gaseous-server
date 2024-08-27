@@ -165,7 +165,7 @@ function SetupPage() {
                 };
                 gameStat_lastPlayed.innerHTML = new Date(result.sessionEnd).toLocaleDateString(undefined, dateOptions);
                 if (result.sessionLength >= 60) {
-                    gameStat_timePlayed.innerHTML = Number(result.sessionLength / 60) + " hours";
+                    gameStat_timePlayed.innerHTML = Number(result.sessionLength / 60).toFixed(2) + " hours";
                 } else {
                     gameStat_timePlayed.innerHTML = Number(result.sessionLength) + " minutes";
                 }
