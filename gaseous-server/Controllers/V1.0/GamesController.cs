@@ -1189,22 +1189,45 @@ namespace gaseous_server.Controllers
 
                 Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
 
-                Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
-                if (rom.GameId == GameId)
+                if (IsMediaGroup == false)
                 {
-                    if (favourite == true)
+                    Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
+                    if (rom.GameId == GameId)
                     {
-                        Classes.Metadata.Games.GameSetFavouriteRom(user.Id, GameId, PlatformId, RomId, IsMediaGroup);
+                        if (favourite == true)
+                        {
+                            Classes.Metadata.Games.GameSetFavouriteRom(user.Id, GameId, PlatformId, RomId, IsMediaGroup);
+                        }
+                        else
+                        {
+                            Classes.Metadata.Games.GameClearFavouriteRom(user.Id, GameId, PlatformId);
+                        }
+                        return Ok();
                     }
                     else
                     {
-                        Classes.Metadata.Games.GameClearFavouriteRom(user.Id, GameId, PlatformId);
+                        return NotFound();
                     }
-                    return Ok();
                 }
                 else
                 {
-                    return NotFound();
+                    Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomId, user.Id);
+                    if (rom.GameId == GameId)
+                    {
+                        if (favourite == true)
+                        {
+                            Classes.Metadata.Games.GameSetFavouriteRom(user.Id, GameId, PlatformId, RomId, IsMediaGroup);
+                        }
+                        else
+                        {
+                            Classes.Metadata.Games.GameClearFavouriteRom(user.Id, GameId, PlatformId);
+                        }
+                        return Ok();
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
                 }
             }
             catch

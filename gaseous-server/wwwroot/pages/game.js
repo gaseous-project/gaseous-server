@@ -693,7 +693,7 @@ class RomManagement {
                 mgTable.id = 'mediagrouptable';
                 mgTable.className = 'romtable';
                 mgTable.setAttribute('cellspacing', 0);
-                mgTable.appendChild(createTableRow(true, ['', 'Status', 'Images', 'Size', '', '', '']));
+                mgTable.appendChild(createTableRow(true, ['', '', 'Status', 'Images', 'Size', '', '', '']));
 
                 for (let i = 0; i < result.length; i++) {
                     let mediaGroup = result[i];
@@ -727,6 +727,33 @@ class RomManagement {
                             launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + mediaGroup.platformId + '&gameid=' + gameId + '&romid=' + mediaGroup.id + '&mediagroup=1&rompath=' + romPath + '" class="romstart">Launch</a>';
                         }
                     }
+
+                    let favouriteRom = document.createElement('img');
+                    favouriteRom.className = 'banner_button_image';
+                    favouriteRom.title = 'Favourite';
+                    favouriteRom.alt = 'Favourite';
+                    favouriteRom.setAttribute('name', 'favourite_rom_button');
+                    favouriteRom.style.cursor = 'pointer';
+                    if (mediaGroup.romUserFavourite == true) {
+                        favouriteRom.src = '/images/favourite-filled.svg';
+                    } else {
+                        favouriteRom.src = '/images/favourite-empty.svg';
+                    }
+                    favouriteRom.addEventListener('click', async () => {
+                        await fetch('/api/v1.1/Games/' + gameId + '/roms/' + mediaGroup.id + '/' + mediaGroup.platformId + '/favourite?IsMediaGroup=true&favourite=true', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        }).then(async response => {
+                            if (response.ok) {
+                                this.romsModal.modalElement.querySelectorAll('[name="favourite_rom_button"]').forEach((element) => {
+                                    element.src = '/images/favourite-empty.svg';
+                                });
+                                favouriteRom.src = '/images/favourite-filled.svg';
+                            }
+                        });
+                    });
 
                     let recentlyRun = document.createElement('img');
                     recentlyRun.src = '/images/recent.svg';
@@ -815,6 +842,7 @@ class RomManagement {
                     controls.appendChild(deleteButton);
 
                     let newRow = [
+                        favouriteRom,
                         recentlyRun,
                         statusText,
                         mediaGroup.romIds.length,
@@ -933,6 +961,7 @@ class RomManagement {
                                     'rom_edit_checkbox'
                                 ],
                                 '',
+                                '',
                                 'Name',
                                 'Size',
                                 'Media',
@@ -998,6 +1027,33 @@ class RomManagement {
                             this.#handleChecks();
                         });
 
+                        let favouriteRom = document.createElement('img');
+                        favouriteRom.className = 'banner_button_image';
+                        favouriteRom.title = 'Favourite';
+                        favouriteRom.alt = 'Favourite';
+                        favouriteRom.setAttribute('name', 'favourite_rom_button');
+                        favouriteRom.style.cursor = 'pointer';
+                        if (romItem.romUserFavourite == true) {
+                            favouriteRom.src = '/images/favourite-filled.svg';
+                        } else {
+                            favouriteRom.src = '/images/favourite-empty.svg';
+                        }
+                        favouriteRom.addEventListener('click', async () => {
+                            await fetch('/api/v1.1/Games/' + gameId + '/roms/' + gameRomItems[i].id + '/' + gameRomItems[i].platformId + '/favourite?IsMediaGroup=false&favourite=true', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            }).then(async response => {
+                                if (response.ok) {
+                                    this.romsModal.modalElement.querySelectorAll('[name="favourite_rom_button"]').forEach((element) => {
+                                        element.src = '/images/favourite-empty.svg';
+                                    });
+                                    favouriteRom.src = '/images/favourite-filled.svg';
+                                }
+                            });
+                        });
+
                         let recentlyRun = document.createElement('img');
                         recentlyRun.src = '/images/recent.svg';
                         recentlyRun.className = 'banner_button_image';
@@ -1020,6 +1076,7 @@ class RomManagement {
                                 'rom_checkbox_box_hidden',
                                 'rom_edit_checkbox'
                             ],
+                            favouriteRom,
                             recentlyRun,
                             romLink,
                             formatBytes(gameRomItems[i].size, 2),
