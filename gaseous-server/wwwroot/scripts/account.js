@@ -405,9 +405,10 @@ class ProfileCard {
 }
 
 class EmailCheck {
-    constructor(EmailElement, ErrorElement) {
+    constructor(EmailElement, ErrorElement, SkipUniqueCheck = false) {
         this.EmailElement = EmailElement;
         this.ErrorElement = ErrorElement;
+        this.SkipUniqueCheck = SkipUniqueCheck;
 
         let CallingObject = this;
 
@@ -427,10 +428,12 @@ class EmailCheck {
         this.listItemInvalidEmail.classList.add('listitem');
         this.errorList.appendChild(this.listItemInvalidEmail);
 
-        this.listItemUniqueEmail = document.createElement('li');
-        this.listItemUniqueEmail.innerHTML = "Email is unique";
-        this.listItemUniqueEmail.classList.add('listitem');
-        this.errorList.appendChild(this.listItemUniqueEmail);
+        if (this.SkipUniqueCheck === false) {
+            this.listItemUniqueEmail = document.createElement('li');
+            this.listItemUniqueEmail.innerHTML = "Email is unique";
+            this.listItemUniqueEmail.classList.add('listitem');
+            this.errorList.appendChild(this.listItemUniqueEmail);
+        }
 
         ErrorElement.innerHTML = "";
         ErrorElement.appendChild(this.errorList);
@@ -452,29 +455,31 @@ class EmailCheck {
         }
 
         // check if email is unique
-        await fetch("/api/v1.1/Account/Users/Test?Email=" + EmailElement.value, {
-            method: 'GET'
-        }).then(async response => {
-            if (!await response.ok) {
-                // handle the error
-                console.error("Error checking email uniqueness:");
-                console.error(response);
-                CallingObject.listItemUniqueEmail.classList.add('listitem-red');
-                CallingObject.listItemUniqueEmail.classList.remove('listitem-green');
-                emailMeetsRules = false;
-            } else {
-                let responseJson = await response.json();
-                if (responseJson === false) {
-                    CallingObject.listItemUniqueEmail.classList.add('listitem-green');
-                    CallingObject.listItemUniqueEmail.classList.remove('listitem-red');
-                    emailMeetsRules = true;
-                } else {
+        if (CallingObject.SkipUniqueCheck === false) {
+            await fetch("/api/v1.1/Account/Users/Test?Email=" + EmailElement.value, {
+                method: 'GET'
+            }).then(async response => {
+                if (!await response.ok) {
+                    // handle the error
+                    console.error("Error checking email uniqueness:");
+                    console.error(response);
                     CallingObject.listItemUniqueEmail.classList.add('listitem-red');
                     CallingObject.listItemUniqueEmail.classList.remove('listitem-green');
                     emailMeetsRules = false;
+                } else {
+                    let responseJson = await response.json();
+                    if (responseJson === false) {
+                        CallingObject.listItemUniqueEmail.classList.add('listitem-green');
+                        CallingObject.listItemUniqueEmail.classList.remove('listitem-red');
+                        emailMeetsRules = true;
+                    } else {
+                        CallingObject.listItemUniqueEmail.classList.add('listitem-red');
+                        CallingObject.listItemUniqueEmail.classList.remove('listitem-green');
+                        emailMeetsRules = false;
+                    }
                 }
-            }
-        });
+            });
+        }
 
         return emailMeetsRules;
     }
