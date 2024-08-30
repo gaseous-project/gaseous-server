@@ -510,7 +510,7 @@ class EmulatorStateManager {
                         }
                         switch (getQueryString('page', 'string')) {
                             case 'emulator':
-                                emulatorTarget = BuildLaunchLink(getQueryString('engine', 'string'), getQueryString('core', 'string'), getQueryString('platformid', 'string'), getQueryString('gameid', 'string'), getQueryString('romid', 'string'), mediagroupint, getQueryString('rompath', 'string'), result[i].id) + '&stateid=' + result[i].id;
+                                emulatorTarget = BuildLaunchLink(getQueryString('engine', 'string'), getQueryString('core', 'string'), getQueryString('platformid', 'string'), getQueryString('gameid', 'string'), getQueryString('romid', 'string'), mediagroupint, thisObject.rompath, result[i].id) + '&stateid=' + result[i].id;
                                 stateControlsLaunch.addEventListener('click', () => {
                                     window.location.replace(emulatorTarget);
                                 });

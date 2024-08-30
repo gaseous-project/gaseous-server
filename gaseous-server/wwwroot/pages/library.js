@@ -15,3 +15,5 @@ function SetupPage() {
         //executeFilter1_1();
     });
 }
+
+SetupPage();

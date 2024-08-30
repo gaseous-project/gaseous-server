@@ -387,7 +387,6 @@ function IsInView() {
                 //if (isScrolledIntoView(anchors[i])) {
                 if (elementIsVisibleInViewport(anchors[i], true)) {
                     if (anchors[i].getAttribute('data-loaded') == "0") {
-                        console.log("Loading page: " + anchors[i].getAttribute('data-page'));
                         document.getElementById(anchors[i].id).setAttribute('data-loaded', "1");
                         executeFilter1_1(Number(anchors[i].getAttribute('data-page')));
                     }

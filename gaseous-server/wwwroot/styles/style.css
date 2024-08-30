@@ -1195,6 +1195,11 @@ input[name='filter_panel_range_max'] {
     -webkit-filter: blur(32px);
 }
 
+.bgImage_LessBlur {
+    filter: blur(4px);
+    -webkit-filter: blur(4px);
+}
+
 #bgImage_Opacity {
     background: rgba(56, 56, 56, 0.7);
     position: fixed;
@@ -1616,7 +1621,10 @@ th {
 .romlink {
     color: white;
     display: inline;
-    /*text-decoration: none;*/
+}
+
+.romlink-nounderline {
+    text-decoration: none;
 }
 
 .romlink:hover {
@@ -2346,26 +2354,90 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
 /* Modal Content/Box */
 .loginwindow-content {
-    position: relative;
-    background-color: #383838;
-    margin: 15% auto;
-    /* 15% from the top and centered */
-    padding: 10px;
-    border: 1px solid #888;
-    border-radius: 10px;
-    width: 350px;
-    /* Could be more or less, depending on screen size */
-    min-height: 250px;
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 1px;
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
 }
 
-#loginwindow_header_label {
+.loginwindow-logospace {
+    background-color: var(--modal-tabs-background-color);
+    width: 315px;
+    position: relative;
+}
+
+.loginwindow_loginspace {
+    background-color: var(--modal-window-background-color);
+    padding: 20px;
+    flex-grow: 1;
+}
+
+.loginwindow_loginspace_controls {
+    width: 100%;
+    min-height: 75%;
+}
+
+.loginwindow-logospace-banner {
+    margin: 20px;
+}
+
+.loginwindow-logospace-banner-top {
+    max-width: fit-content;
+    margin-top: 50px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.loginwindow-logospace-banner-bottom {
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+}
+
+.loginwindow-logospace-logo {
+    display: block;
+    width: 80px;
+    height: 80px;
+    margin-left: auto;
+    margin-right: auto;
+    background-image: url("/images/logo.png");
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.loginwindow-logospace-label {
     font-family: var(--pixel-font);
-    display: inline-block;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
     padding: 10px;
-    font-size: 24pt;
+    font-size: 18pt;
     vertical-align: top;
     /*color: #edeffa;*/
-    color: #7c70da;
+    color: white;
+    margin-top: 8px;
+}
+
+.loginwindow-logospace-linktable {
+    margin-top: 20px;
+    width: 100%;
+    display: flex;
+}
+
+.loginwindow-logospace-linktable-link {
+    flex-grow: 1;
+    text-align: center;
 }
 
 /* The container <div> - needed to position the dropdown content */

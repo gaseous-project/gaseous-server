@@ -47,3 +47,5 @@ function SelectTab(TabName) {
     });
     document.head.appendChild(subScriptObject);
 }
+
+SetupPage();

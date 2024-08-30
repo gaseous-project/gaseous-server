@@ -143,7 +143,6 @@ function formatFilterPanel(containerElement, result) {
 
     containerElement.appendChild(buttonsDiv);
 
-    console.log('Filter generated - execute filter');
     var pageNumber = undefined;
     if (getCookie('games_library_last_page') == "") {
         pageNumber = undefined;
@@ -588,7 +587,6 @@ function executeFilter1_1(pageNumber) {
                 "SortAscending": orderByDirection
             }
         };
-        console.log(model);
 
         existingSearchModel = model;
     } else {
@@ -598,12 +596,10 @@ function executeFilter1_1(pageNumber) {
     }
 
     let gamesCallURL = '/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize;
-    console.log(gamesCallURL);
     ajaxCall(
         gamesCallURL,
         'POST',
         function (result) {
-            console.log(result);
             var gameElement = document.getElementById('games_library');
             setCookie('games_library_last_page', pageNumber);
             formatGamesPanel(gameElement, result, pageNumber, pageSize, true);

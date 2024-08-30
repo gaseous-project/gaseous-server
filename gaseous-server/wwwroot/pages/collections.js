@@ -1,4 +1,6 @@
 function SetupPage() {
+    backgroundImageHandler = new BackgroundImageRotator(['/images/CollectionsWallpaper.jpg']);
+
     var newCollectionButton = document.getElementById('collection_new');
     if (userProfile.roles.includes("Admin") || userProfile.roles.includes("Gamer")) {
         newCollectionButton.style.display = '';
@@ -79,3 +81,5 @@ function GetCollections() {
         }
     });
 }
+
+SetupPage();

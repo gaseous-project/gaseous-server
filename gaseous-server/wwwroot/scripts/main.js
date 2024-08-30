@@ -581,10 +581,21 @@ function GetRatingsBoards() {
 }
 
 class BackgroundImageRotator {
-    constructor(URLList) {
+    constructor(URLList, CustomClass, Randomise) {
         this.URLList = URLList;
-        this.CurrentIndex = 0;
+        if (Randomise == true) {
+            this.CurrentIndex = randomIntFromInterval(0, this.URLList.length - 1);
+        } else {
+            this.CurrentIndex = 0;
+        }
         this.RotationTimer = undefined;
+        if (CustomClass) {
+            this.CustomClass = CustomClass;
+            this.CustomClassSet = true;
+        } else {
+            this.CustomClass = '';
+            this.CustomClassSet = false;
+        }
 
         this.bgImages = document.getElementById('bgImages');
         this.bgImages.innerHTML = '';
@@ -597,25 +608,28 @@ class BackgroundImageRotator {
                 // handle multiple supplied images
 
                 // create the first image
-                let bgImage = this.#CreateBackgroundImage('bgImage0', this.URLList[0]);
+                let bgImage = this.#CreateBackgroundImage('bgImage0', this.URLList[this.CurrentIndex]);
                 this.bgImages.appendChild(bgImage);
 
                 // start the rotation
                 this.StartRotation();
             } else if (this.URLList.length == 1) {
                 // handle only a single supplied image
+                this.CurrentIndex = 0;
 
                 // create the image
                 let bgImage = this.#CreateBackgroundImage('bgImage0', this.URLList[0]);
                 this.bgImages.appendChild(bgImage);
             } else {
                 // no supplied images, but URLList is defined
+                this.CurrentIndex = 0;
 
                 // apply default background image
                 this.bgImages.appendChild(defaultBgImage);
             }
         } else {
             // no supplied images, and URLList is not defined
+            this.CurrentIndex = 0;
 
             // apply default background image
             this.bgImages.appendChild(defaultBgImage);
@@ -626,6 +640,9 @@ class BackgroundImageRotator {
         let BgImage = document.createElement('div');
         BgImage.id = Id;
         BgImage.classList.add('bgImage');
+        if (this.CustomClassSet == true) {
+            BgImage.classList.add(this.CustomClass);
+        }
         BgImage.style.backgroundImage = "url('" + URL + "')";
         return BgImage;
     }
@@ -684,10 +701,10 @@ function BuildLaunchLink(engine, core, platformId, gameId, romId, isMediaGroup, 
     launchLink = launchLink.replace('<ROMID>', romId);
     if (isMediaGroup == true) {
         launchLink = launchLink.replace('<ISMEDIAGROUP>', 1);
-        launchLink = launchLink.replace('<FILENAME>', encodeURI('/api/v1.1/Games/' + gameId + '/romgroup/' + romId + '/' + filename + '.zip'));
+        launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + encodeURI(gameId) + '/romgroup/' + encodeURI(romId) + '/' + encodeURI(filename) + '.zip');
     } else {
         launchLink = launchLink.replace('<ISMEDIAGROUP>', 0);
-        launchLink = launchLink.replace('<FILENAME>', encodeURI('/api/v1.1/Games/' + gameId + '/roms/' + romId + '/' + filename));
+        launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + encodeURI(gameId) + '/roms/' + encodeURI(romId) + '/' + encodeURI(filename));
     }
 
     return launchLink;

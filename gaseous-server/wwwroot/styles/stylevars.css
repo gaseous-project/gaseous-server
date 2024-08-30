@@ -35,7 +35,7 @@
     --scrollbar-thumb-hover: rgb(0, 0, 0);
 
     /* input */
-    --input-background: rgb(43, 43, 43);
+    --input-background: rgba(43, 43, 43, 0.5);
     --input-background-disabled: rgb(89, 89, 89);
     --input-border: rgb(43, 43, 43);
     --input-border-hover: rgb(147, 147, 147);

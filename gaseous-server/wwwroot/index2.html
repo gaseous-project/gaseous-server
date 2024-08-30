@@ -1,0 +1,256 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <script src="/api/v1.1/System/VersionFile"></script>
+    <script src="/scripts/jquery-3.6.0.min.js"></script>
+    <script src="/scripts/moment-with-locales.min.js"></script>
+    <link href="/styles/select2.min.css" rel="stylesheet" />
+    <link href="/styles/dropzone.min.css" rel="stylesheet" type="text/css" />
+    <link type="text/css" rel="stylesheet" dat-href="/styles/stylevars.css" />
+    <link type="text/css" rel="stylesheet" dat-href="/styles/style.css" />
+    <link type="text/css" rel="stylesheet" dat-href="/styles/notifications.css" />
+    <script src="/scripts/jquery.lazy.min.js"></script>
+    <script src="/scripts/jquery.lazy.plugins.min.js"></script>
+    <script src="/scripts/select2.min.js"></script>
+    <script src="/scripts/dropzone.min.js"></script>
+    <script src="/scripts/simpleUpload.min.js"></script>
+    <script src="/scripts/main.js" type="text/javascript"></script>
+    <script src="/scripts/modals.js" type="text/javascript"></script>
+    <script src="/scripts/preferences.js" type="text/javascript"></script>
+    <script src="/scripts/account.js" type="text/javascript"></script>
+    <script src="/scripts/libraries.js" type="text/javascript"></script>
+    <script src="/scripts/notifications.js" type="text/javascript"></script>
+    <script src="/scripts/rominfo.js" type="text/javascript"></script>
+    <script src="/scripts/uploadrom.js" type="text/javascript"></script>
+    <script src="/scripts/filterformating.js" type="text/javascript"></script>
+    <script src="/scripts/gamesformating.js" type="text/javascript"></script>
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <title>Gaseous Games</title>
+
+    <script type="text/javascript">
+        let head = document.getElementsByTagName('head')[0];
+
+        // update links
+        let headLinks = document.getElementsByTagName('link');
+        for (let i = 0; i < headLinks.length; i++) {
+            if (headLinks[i].getAttribute('dat-href') && headLinks[i].rel == "stylesheet") {
+                let newLink = document.createElement('link');
+                newLink.rel = "stylesheet";
+                newLink.href = headLinks[i].getAttribute('dat-href') + '?v=' + AppVersion;
+                newLink.type = "text/css";
+
+                head.appendChild(newLink);
+            }
+        }
+        // remove used links
+        for (let i = 0; i < headLinks.length; i++) {
+            if (headLinks[i].getAttribute('dat-href') && headLinks[i].rel == "stylesheet") {
+                headLinks[i].remove();
+            }
+        }
+
+        var userProfile;
+    </script>
+</head>
+
+<body>
+    <div id="bgImages"></div>
+    <div id="bgImage_Opacity"></div>
+
+    <!-- Notifications -->
+    <div id="notifications_target"></div>
+
+    <div id="banner_icon" onclick="window.location.href = '/index.html';">
+        <img src="/images/logo.png" alt="Gaseous" id="banner_icon_image" />
+    </div>
+    <div id="banner_header">
+        <div id="bannerButtons">
+            <div id="banner_user" onclick="showMenu();" class="banner_button dropdown dropbtn">
+                <!-- <img src="/images/user.svg" alt="Account" title="Account" id="banner_user_image"
+                    class="banner_button_image" style="position: relative; top: 10px; right: 0px; pointer-events: none;"
+                    onclick="showMenu();" /> -->
+                <div id="banner_user_image_box"></div>
+                <div id="myDropdown" class="dropdown-content">
+                    <div id="banner_user_profilecard"></div>
+                    <a href="#" id="dropdown-menu-account">Profile and Account</a>
+                    <a href="#" id="dropdown-menu-preferences">Preferences</a>
+                    <div class="dropdown-menu-separator"></div>
+                    <a href="#" onclick="userLogoff();">Sign Out</a>
+                </div>
+            </div>
+
+            <div id="banner_cog" onclick="window.location.href = '/index.html?page=settings';" class="banner_button">
+                <img src="/images/settings.svg" alt="Settings" title="Settings" id="banner_system_image"
+                    class="banner_button_image" />
+                <span id="banner_system_label">Settings</span>
+            </div>
+
+            <div id="banner_upload" class="banner_button">
+                <img src="/images/upload.svg" alt="Upload" title="Upload" id="banner_upload_image"
+                    class="banner_button_image" />
+                <span id="banner_upload_label">Upload</span>
+            </div>
+
+            <div id="banner_collections" onclick="window.location.href = '/index.html?page=collections';"
+                class="banner_button">
+                <img src="/images/collections.svg" alt="Collections" title="Collections" id="banner_collections_image"
+                    class="banner_button_image" />
+                <span id="banner_collections_label">Collections</span>
+            </div>
+
+            <div id="banner_library" onclick="window.location.href = '/index.html?page=library';" class="banner_button">
+                <img src="/images/library.svg" alt="Library" title="Library" id="banner_library_image"
+                    class="banner_button_image" />
+                <span id="banner_library_label">Library</span>
+            </div>
+        </div>
+
+        <div id="banner_header_label" onclick="window.location.href = '/index.html';">Gaseous Games</div>
+    </div>
+
+
+    <div id="content">
+
+    </div>
+    <div id="pagescript"></div>
+
+    <!-- Old Modals -->
+    <!-- The Modal -->
+    <div id="myModal" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <div>
+                <h1 id="modal-heading">Modal heading</h1>
+            </div>
+            <div id="modal-content">Some text in the Modal..</div>
+        </div>
+
+    </div>
+
+    <!-- The Modal -->
+    <div id="myModalSub" class="modal">
+
+        <!-- Modal content -->
+        <div class="modal-content-sub">
+            <span id="modal-close-sub" class="close">&times;</span>
+            <div id="modal-content-sub">Some text in the Modal..</div>
+        </div>
+
+    </div>
+    <!-- End Old Modals -->
+
+    <script type="text/javascript">
+        var modalVariables = null;
+
+        // redirect if first run status = 0
+        if (FirstRunStatus == 0 || FirstRunStatus == "0") {
+            window.location.replace("/pages/first.html");
+        }
+
+        // redirect if not logged in
+        ajaxCall(
+            '/api/v1.1/Account/Profile/Basic',
+            'GET',
+            function (result) {
+                console.log("User is logged in");
+                userProfile = result;
+
+                // set avatar
+                let avatarBox = document.getElementById('banner_user_image_box');
+                let avatar = new Avatar(result.profileId, 30, 30);
+                avatarBox.style = 'pointer-events: none;';
+                avatar.setAttribute('style', 'margin-top: 5px; pointer-events: none; width: 30px; height: 30px;');
+                avatarBox.appendChild(avatar);
+
+                // set profile card in drop down
+                let profileCard = document.getElementById('banner_user_profilecard');
+                let profileCardContent = new ProfileCard(result.profileId, true);
+                profileCard.appendChild(profileCardContent);
+
+                // hide the upload button if it's not permitted
+                let uploadButton = document.getElementById('banner_upload');
+                if (!userProfile.roles.includes("Admin") && !userProfile.roles.includes("Gamer")) {
+                    uploadButton.style.display = 'none';
+                }
+
+                // populate page
+                var myParam = getQueryString('page', 'string');
+
+                if (!myParam) {
+                    myParam = 'library';
+                }
+
+                let pageScriptObject = document.createElement('script');
+                pageScriptObject.src = '/pages/' + myParam + '.js?v=' + AppVersion;
+                pageScriptObject.setAttribute('type', 'text/javascript');
+                pageScriptObject.setAttribute('async', 'false');
+                pageScriptObject.addEventListener('load', function () {
+                    $('#content').load('/pages/' + myParam + '.html?v=' + AppVersion);
+                });
+                document.head.appendChild(pageScriptObject);
+            },
+            function (error) {
+                window.location.replace("/pages/login.html");
+            }
+        );
+
+        /* When the user clicks on the button,
+        toggle between hiding and showing the dropdown content */
+        function showMenu() {
+            document.getElementById("myDropdown").classList.toggle("show");
+        }
+
+        // Close the dropdown menu if the user clicks outside of it
+        window.onclick = function (event) {
+            if (!event.target.matches('.dropbtn')) {
+                let dropdowns = document.getElementsByClassName("dropdown-content");
+                for (let i = 0; i < dropdowns.length; i++) {
+                    let openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+        // event for preferences drop down item
+        document.getElementById('dropdown-menu-preferences').addEventListener('click', function () {
+            const prefsDialog = new PreferencesWindow();
+            prefsDialog.open();
+        });
+        // event for account drop down item
+        document.getElementById('dropdown-menu-account').addEventListener('click', function () {
+            const accountDialog = new AccountWindow(); accountDialog.open();
+        });
+
+        function userLogoff() {
+            ajaxCall(
+                '/api/v1.1/Account/LogOff',
+                'POST',
+                function (result) {
+                    location.replace("/index.html");
+                },
+                function (error) {
+                    location.replace("/index.html");
+                }
+            );
+        }
+
+        // event for upload button
+        document.getElementById('banner_upload').addEventListener('click', function () {
+            const uploadDialog = new UploadRom();
+            uploadDialog.open();
+        });
+
+        // set up the background image
+        var backgroundImageHandler = new BackgroundImageRotator();
+    </script>
+</body>
+
+</html>

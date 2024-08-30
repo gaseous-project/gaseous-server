@@ -44,7 +44,8 @@
 
     EJS_Buttons = {
         saveSavFiles: false,
-        loadSavFiles: false
+        loadSavFiles: false,
+        exitEmulation: false
     }
 
     EJS_onSaveState = function (e) {
@@ -75,7 +76,10 @@
     }
 
     EJS_onLoadState = function (e) {
-        let stateManager = new EmulatorStateManager(romId, IsMediaGroup, getQueryString('engine', 'string'), getQueryString('core', 'string'), platformId, gameId, decodeURIComponent(getQueryString('rompath', 'string')));
+        let rompath = decodeURIComponent(getQueryString('rompath', 'string'));
+        rompath = rompath.substring(rompath.lastIndexOf('/') + 1);
+        console.log(rompath);
+        let stateManager = new EmulatorStateManager(romId, IsMediaGroup, getQueryString('engine', 'string'), getQueryString('core', 'string'), platformId, gameId, rompath);
         stateManager.open();
     }
 </script>

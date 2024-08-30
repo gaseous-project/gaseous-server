@@ -1585,3 +1585,5 @@ function SetGameFavourite(status) {
         }
     );
 }
+
+SetupPage();
