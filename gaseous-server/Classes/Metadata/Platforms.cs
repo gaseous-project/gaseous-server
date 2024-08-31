@@ -15,7 +15,7 @@ namespace gaseous_server.Classes.Metadata
 
         }
 
-        public static Platform? GetPlatform(long Id, bool forceRefresh = false)
+        public static Platform? GetPlatform(long Id, bool forceRefresh = false, bool GetImages = false)
         {
             if (Id == 0)
             {
@@ -41,7 +41,7 @@ namespace gaseous_server.Classes.Metadata
             {
                 try
                 {
-                    Task<Platform> RetVal = _GetPlatform(SearchUsing.id, Id, forceRefresh);
+                    Task<Platform> RetVal = _GetPlatform(SearchUsing.id, Id, forceRefresh, GetImages);
                     return RetVal.Result;
                 }
                 catch (Exception ex)
@@ -52,13 +52,13 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        public static Platform GetPlatform(string Slug, bool forceRefresh = false)
+        public static Platform GetPlatform(string Slug, bool forceRefresh = false, bool GetImages = false)
         {
-            Task<Platform> RetVal = _GetPlatform(SearchUsing.slug, Slug, forceRefresh);
+            Task<Platform> RetVal = _GetPlatform(SearchUsing.slug, Slug, forceRefresh, GetImages);
             return RetVal.Result;
         }
 
-        private static async Task<Platform> _GetPlatform(SearchUsing searchUsing, object searchValue, bool forceRefresh)
+        private static async Task<Platform> _GetPlatform(SearchUsing searchUsing, object searchValue, bool forceRefresh, bool GetImages)
         {
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
@@ -99,7 +99,7 @@ namespace gaseous_server.Classes.Metadata
                 case Storage.CacheStatus.NotPresent:
                     returnValue = await GetObjectFromServer(WhereClause);
                     Storage.NewCacheValue(returnValue);
-                    UpdateSubClasses(returnValue);
+                    UpdateSubClasses(returnValue, GetImages);
                     AddPlatformMapping(returnValue);
                     return returnValue;
                 case Storage.CacheStatus.Expired:
@@ -107,7 +107,7 @@ namespace gaseous_server.Classes.Metadata
                     {
                         returnValue = await GetObjectFromServer(WhereClause);
                         Storage.NewCacheValue(returnValue, true);
-                        UpdateSubClasses(returnValue);
+                        UpdateSubClasses(returnValue, GetImages);
                         AddPlatformMapping(returnValue);
                         return returnValue;
                     }
@@ -123,7 +123,7 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        private static void UpdateSubClasses(Platform platform)
+        private static void UpdateSubClasses(Platform platform, bool GetImages)
         {
             if (platform.Versions != null)
             {
@@ -133,15 +133,18 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
 
-            if (platform.PlatformLogo != null)
+            if (GetImages == true)
             {
-                try
+                if (platform.PlatformLogo != null)
                 {
-                    PlatformLogo platformLogo = PlatformLogos.GetPlatformLogo(platform.PlatformLogo.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platform));
-                }
-                catch (Exception ex)
-                {
-                    Logging.Log(Logging.LogType.Warning, "Platform Update", "Unable to fetch platform logo", ex);
+                    try
+                    {
+                        PlatformLogo platformLogo = PlatformLogos.GetPlatformLogo(platform.PlatformLogo.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platform));
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.Log(Logging.LogType.Warning, "Platform Update", "Unable to fetch platform logo", ex);
+                    }
                 }
             }
         }

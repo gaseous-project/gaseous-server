@@ -35,7 +35,7 @@ namespace Authentication
             parameters.Add("@userId", userId);
 
             var rows = _database.ExecuteCMD(commandText, parameters).Rows;
-            foreach(DataRow row in rows)
+            foreach (DataRow row in rows)
             {
                 roles.Add((string)row["Name"]);
             }

@@ -2,100 +2,19 @@
     <h1 id="gametitle_label">Users</h1>
 </div>
 
-<button id="settings_users_new" value="New User" style="float: right;" onclick="showSubDialog('settingsusernew');">New User</button>
+<div class="section">
+    <div class="section-body">
+        <div id="settings_users_table_container">
 
-<div id="settings_users_table_container">
-
+        </div>
+        <div style="text-align: right;"><button id="settings_users_new" value="New User">New
+                User</button>
+        </div>
+    </div>
 </div>
 
 <script type="text/javascript">
-    function GetUsers() {
-        var targetDiv = document.getElementById('settings_users_table_container');
-        targetDiv.innerHTML = '';
-
-        ajaxCall(
-            '/api/v1.1/Account/Users',
-            'GET',
-            function(result) {
-                var newTable = document.createElement('table');
-                newTable.className = 'romtable';
-                newTable.style.width = '100%';
-                newTable.cellSpacing = 0;
-
-                newTable.appendChild(
-                    createTableRow(
-                        true, 
-                        [ 
-                            '',
-                            'Email',
-                            'Role',
-                            'Age Restriction',
-                            ''
-                        ],
-                        '',
-                        ''
-                        )
-                    );
-
-                for (var i = 0; i < result.length; i++) {
-                    var userAvatar = document.createElement('img');
-                    userAvatar.className = "user_list_icon";
-                    if (result[i].avatar != "00000000-0000-0000-0000-000000000000") {
-                        userAvatar.setAttribute("src", "/api/v1.1/Account/Avatar/" + result[i].avatar + ".jpg");
-                    } else {
-                        userAvatar.setAttribute("src", "/images/user.svg");
-                        userAvatar.classList.add("user_list_icon_reversed");
-                    }
-
-                    var roleDiv = document.createElement('div');
-                    
-                    var roleItem = CreateBadge(result[i].highestRole);
-                    roleDiv.appendChild(roleItem);
-
-                    var ageRestrictionPolicyDescription = document.createElement('div');
-                    if (result[i].securityProfile != null) {
-                        if (result[i].securityProfile.ageRestrictionPolicy != null) {
-                            var IncludeUnratedText = '';
-                            if (result[i].securityProfile.ageRestrictionPolicy.includeUnrated == true) {
-                                IncludeUnratedText = " &#43; Unclassified titles";
-                            }
-
-                            var restrictionText = result[i].securityProfile.ageRestrictionPolicy.maximumAgeRestriction + IncludeUnratedText;
-
-                            ageRestrictionPolicyDescription = CreateBadge(restrictionText);
-                        }
-                    }
-
-                    var editButton = '';
-
-                    var deleteButton = '';
-
-                    if (userProfile.userId != result[i].id) {
-                        editButton = '<a href="#" onclick="showDialog(\'settingsuseredit\', \'' + result[i].id + '\');" class="romlink"><img src="/images/edit.svg" class="banner_button_image" alt="Edit" title="Edit" /></a>';
-
-                        deleteButton = '<a href="#" onclick="showSubDialog(\'settingsuserdelete\', \'' + result[i].id + '\');" class="romlink"><img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" /></a>';
-                    }
-
-                    newTable.appendChild(
-                        createTableRow(
-                            false,
-                            [
-                                userAvatar,
-                                result[i].emailAddress,
-                                roleDiv,
-                                ageRestrictionPolicyDescription,
-                                '<div style="text-align: right;">' + editButton + deleteButton + '</div>'
-                            ],
-                            'romrow',
-                            'romcell'
-                        )
-                    );
-                }
-                
-                targetDiv.appendChild(newTable);
-            }
-        );        
-    }
-
+    // Load the users table
+    SetupPage();
     GetUsers();
 </script>

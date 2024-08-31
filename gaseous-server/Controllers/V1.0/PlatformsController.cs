@@ -114,22 +114,64 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{PlatformId}/platformlogo/image")]
+        [Route("{PlatformId}/platformlogo/{size}/logo.png")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult PlatformLogoImage(long PlatformId)
+        public async Task<ActionResult> GameImage(long PlatformId, Communications.IGDBAPI_ImageSize size)
         {
             try
             {
                 IGDB.Models.Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
-
-                string logoFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject), "Logo_Medium.png");
-                if (System.IO.File.Exists(logoFilePath))
+                IGDB.Models.PlatformLogo? logoObject = null;
+                try
                 {
-                    string filename = "Logo.png";
-                    string filepath = logoFilePath;
-                    byte[] filedata = System.IO.File.ReadAllBytes(filepath);
-                    string contentType = "image/png";
+                    logoObject = PlatformLogos.GetPlatformLogo(platformObject.PlatformLogo.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject));
+                }
+                catch
+                {
+                    // getting the logo failed, so we'll try a platform variant if available
+                    if (platformObject.Versions != null)
+                    {
+                        if (platformObject.Versions.Ids.Length > 0)
+                        {
+                            IGDB.Models.PlatformVersion platformVersion = Classes.Metadata.PlatformVersions.GetPlatformVersion(platformObject.Versions.Ids[0], platformObject);
+                            logoObject = PlatformLogos.GetPlatformLogo(platformVersion.PlatformLogo.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject));
+                        }
+                        else
+                        {
+                            return NotFound();
+                        }
+                    }
+                    else
+                    {
+                        return NotFound();
+                    }
+                }
+
+                string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject));
+                string imagePath = Path.Combine(basePath, size.ToString(), logoObject.ImageId + ".jpg");
+
+                if (!System.IO.File.Exists(imagePath))
+                {
+                    Communications comms = new Communications();
+                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject)), logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
+
+                    imagePath = ImgFetch.Result;
+                }
+
+                if (!System.IO.File.Exists(imagePath))
+                {
+                    Communications comms = new Communications();
+                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(basePath, logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
+
+                    imagePath = ImgFetch.Result;
+                }
+
+                if (System.IO.File.Exists(imagePath))
+                {
+                    string filename = logoObject.ImageId + ".jpg";
+                    string filepath = imagePath;
+                    string contentType = "image/jpg";
 
                     var cd = new System.Net.Mime.ContentDisposition
                     {
@@ -138,13 +180,21 @@ namespace gaseous_server.Controllers
                     };
 
                     Response.Headers.Add("Content-Disposition", cd.ToString());
+                    Response.Headers.Add("Cache-Control", "public, max-age=604800");
+
+                    byte[] filedata = null;
+                    using (FileStream fs = System.IO.File.OpenRead(filepath))
+                    {
+                        using (BinaryReader binaryReader = new BinaryReader(fs))
+                        {
+                            filedata = binaryReader.ReadBytes((int)fs.Length);
+                        }
+                    }
 
                     return File(filedata, contentType);
                 }
-                else
-                {
-                    return NotFound();
-                }
+
+                return NotFound();
             }
             catch
             {

@@ -1,0 +1,39 @@
+<div id="gamesummarymediagroups" class="section" style="display: none;">
+    <div class="section-header">Media Groups</div>
+    <div id="gamesummarymediagroupscontent" class="section-body"></div>
+</div>
+<div id="gamesummaryroms" class="section">
+    <span id="rom_edit" class="romlink">Edit</span>
+    <div class="section-header">ROMs/Images</div>
+    <div class="section-body">
+        <div id="rom_edit_panel" style="display: none;">
+            <div id="rom_edit_panel_center">
+                <button id="rom_edit_delete" class="redbutton">Delete</button>
+
+                <select id="rom_edit_fixplatform" style="width: 150px;"></select>
+                <select id="rom_edit_fixgame" style="width: 300px;"></select>
+                <button id="rom_edit_update">Update</button>
+                <button id="rom_edit_creategroup" disabled="disabled">Create
+                    Media
+                    Group</button>
+            </div>
+        </div>
+        <div id="rom_library_controls">
+            <div class="games_library_controlblock">
+                <input id="name_filter" type="text" placeholder="Name Search">
+            </div>
+            <div class="games_library_controlblock">
+                <button id="games_library_search" value="Search">Search</button>
+            </div>
+            <div class="games_library_controlblock">
+                <span id="games_roms_count" class="games_library_label">0 ROMs</span>
+            </div>
+        </div>
+        <div id="gamesummaryromscontent"></div>
+    </div>
+</div>
+<div class="section" id="rom_no_roms" style="display: none;">
+    <div class="section-body">
+        There are no ROMs associated with this game and platform.
+    </div>
+</div>

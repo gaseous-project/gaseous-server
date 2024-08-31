@@ -1,51 +1,10 @@
-﻿<div id="bgImage" style="background-image: url('/images/librarybg.jpg'); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);">
-    <div id="bgImage_Opacity"></div>
-</div>
+<div id="gamepage">
+    <div style="padding-top: 20px;">
+        <div id="gamehome" style="display: inline-block; max-width: 820px; margin-right: 20px; vertical-align: top;">
 
-<div id="games_filter_scroller">
-</div>
-<div id="games_home">
-    <div id="games_home_box">
-        <div id="games_library_controls">
-            <div class="games_library_controlblock">
-                <span class="games_library_label">Order by: </span>
-            </div>
-            <div id="games_library_orderby" class="games_library_controlblock" style="text-align: left;">
-                <select id="games_library_orderby_select" data-minimum-results-for-search="Infinity" onchange="executeFilter1_1(1);">
-                    <option selected="selected" value="NameThe">Name, The</option>
-                    <option value="Name">Name</option>
-                    <option value="Rating">User Rating</option>
-                    <option value="RatingCount">User Rating Count</option>
-                </select>
-                <select id="games_library_orderby_direction_select" data-minimum-results-for-search="Infinity" onchange="executeFilter1_1(1);">
-                    <option selected="selected" value="Ascending">Ascending</option>
-                    <option value="Descending">Descending</option>
-                </select>
-            </div>
-            <div class="games_library_controlblock">
-                <span id="games_library_recordcount" class="games_library_label"></span>
-            </div>
         </div>
-        <div id="games_library"></div>
-        <div id="games_library_alpha_box">
-            <div id="games_library_alpha_pager"></div>
+        <div id="gameprofile" style="display: inline-block; width: 250px;">
+
         </div>
-        <div id="games_library_pagerstore" style="display: none;">0</div>
     </div>
 </div>
-
-<div id="games_pager" style="display: none;">
-    &lt; 1 2 3 4 5 &gt;
-</div>
-
-<script type="text/javascript">
-    ajaxCall('/api/v1.1/Filter', 'GET', function (result) {
-        var scrollerElement = document.getElementById('games_filter_scroller');
-        formatFilterPanel(scrollerElement, result);
-
-        //executeFilter1_1();
-    });
-
-    $('#games_library_orderby_select').select2();
-    $('#games_library_orderby_direction_select').select2();
-</script>

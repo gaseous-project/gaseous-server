@@ -28,6 +28,7 @@ function ajaxCall(endpoint, method, successFunction, errorFunction, body) {
 
         // Error handling
         error: function (error) {
+            console.log('Error reaching URL: ' + endpoint);
             console.log(`Error ${JSON.stringify(error)}`);
 
             if (errorFunction) {
@@ -39,7 +40,7 @@ function ajaxCall(endpoint, method, successFunction, errorFunction, body) {
 
 function getQueryString(stringName, type) {
     const urlParams = new URLSearchParams(window.location.search);
-    var myParam =  urlParams.get(stringName);
+    var myParam = urlParams.get(stringName);
 
     switch (type) {
         case "int":
@@ -63,9 +64,9 @@ function getQueryString(stringName, type) {
 
 function setCookie(cname, cvalue, exdays) {
     const d = new Date();
-    d.setTime(d.getTime() + (exdays*24*60*60*1000));
+    d.setTime(d.getTime() + (exdays * 24 * 60 * 60 * 1000));
     if (exdays) {
-        let expires = "expires="+ d.toUTCString();
+        let expires = "expires=" + d.toUTCString();
         document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
     } else {
         document.cookie = cname + "=" + cvalue + ";path=/";
@@ -76,14 +77,14 @@ function getCookie(cname) {
     let name = cname + "=";
     let decodedCookie = decodeURIComponent(document.cookie);
     let ca = decodedCookie.split(';');
-    for(let i = 0; i <ca.length; i++) {
-      let c = ca[i];
-      while (c.charAt(0) == ' ') {
-        c = c.substring(1);
-      }
-      if (c.indexOf(name) == 0) {
-        return c.substring(name.length, c.length);
-      }
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
     }
     return "";
 }
@@ -207,12 +208,16 @@ function createTableRow(isHeader, row, rowClass, cellClass) {
         }
 
         var newCell = document.createElement(cellType);
-        if (typeof(row[i]) != "object") {
+        if (typeof (row[i]) != "object") {
             newCell.innerHTML = row[i];
             newCell.className = cellClass;
         } else {
             if (Array.isArray(row[i])) {
-                newCell.innerHTML = row[i][0];
+                if (typeof (row[i][0]) != "object") {
+                    newCell.innerHTML = row[i][0];
+                } else {
+                    newCell.appendChild(row[i][0]);
+                }
                 if (row[i][1]) { newCell.className = row[i][1]; }
                 if (row[i][2]) { newCell.setAttribute('name', row[i][2]); }
             } else {
@@ -249,16 +254,18 @@ function DropDownRenderGameOption(state) {
         return state;
     }
 
-    var response;
+    let response;
 
-    var releaseDate;
+    let releaseDate;
     if (state.releaseDate) {
         releaseDate = moment(state.releaseDate).format('yyyy');
+    } else {
+        releaseDate = '';
     }
 
     if (state.cover) {
         response = $(
-            '<table class="dropdown-div"><tr><td class="dropdown-cover"><img src="/api/v1.1/Games/' + state.id + '/cover/image/cover_small/' + state.cover.imageId + '.jpg" /></td><td class="dropdown-label"><span class="dropdown-title">' + state.text + '</span><span class="dropdown-releasedate">' + releaseDate + '</span></td></tr></table>'
+            '<table class="dropdown-div"><tr><td class="dropdown-cover"><img src="/api/v1.1/Games/' + state.id + '/cover/' + state.cover.id + '/image/cover_small/' + state.id + '.jpg" class="game_tile_small_search" /></td><td class="dropdown-label"><span class="dropdown-title">' + state.text + '</span><span class="dropdown-releasedate">' + releaseDate + '</span></td></tr></table>'
         );
     } else {
         response = $(
@@ -317,8 +324,8 @@ function CreateEditableTable(TableName, Headers) {
     var addButton = document.createElement('button');
     addButton.value = 'Add Row';
     addButton.innerHTML = 'Add Row';
-    
-    $(addButton).click(function() {
+
+    $(addButton).click(function () {
         eTable.appendChild(AddEditableTableRow(Headers));
     });
 
@@ -442,6 +449,7 @@ function GetPreference(Setting, DefaultValue) {
     if (userProfile.userPreferences) {
         for (var i = 0; i < userProfile.userPreferences.length; i++) {
             if (userProfile.userPreferences[i].setting == Setting) {
+                // console.log("Get Preference: " + Setting + " : " + userProfile.userPreferences[i].value.toString());
                 return userProfile.userPreferences[i].value.toString();
             }
         }
@@ -449,10 +457,12 @@ function GetPreference(Setting, DefaultValue) {
 
     SetPreference(Setting, DefaultValue);
 
+    console.log("Get Preference: " + Setting + " : " + DefaultValue);
     return DefaultValue;
 }
 
-function SetPreference(Setting, Value) {
+function SetPreference(Setting, Value, callbackSuccess, callbackError) {
+    console.log("Set Preference: " + Setting + " : " + Value.toString());
     var model = [
         {
             "setting": Setting,
@@ -463,33 +473,60 @@ function SetPreference(Setting, Value) {
     ajaxCall(
         '/api/v1.1/Account/Preferences',
         'POST',
-        function(result) {
+        function (result) {
             SetPreference_Local(Setting, Value);
+
+            if (callbackSuccess) {
+                callbackSuccess();
+            }
         },
-        function(error) {
+        function (error) {
             SetPreference_Local(Setting, Value);
+
+            if (callbackError) {
+                callbackError();
+            }
         },
         JSON.stringify(model)
     );
 }
 
-function SetPreference_Batch(model) {
-    console.log(model);
-    ajaxCall(
-        '/api/v1.1/Account/Preferences',
-        'POST',
-        function(result) {
-            for (var i = 0; i < model.length; i++) {
+async function SetPreference_Batch(model, callbackSuccess, callbackError) {
+    await fetch('/api/v1.1/Account/Preferences', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(model)
+    })
+        .then(response => {
+            for (let i = 0; i < model.length; i++) {
                 SetPreference_Local(model[i].setting, model[i].value.toString());
             }
-        },
-        function(error) {
-            for (var i = 0; i < model.length; i++) {
+        })
+        .then(response => {
+            if (response.ok) {
+                console.log("SetPreference_Batch: Success");
+                if (callbackSuccess) {
+                    callbackSuccess();
+                }
+            } else {
+                console.log("SetPreference_Batch: Error: " + response.statusText);
+                if (callbackError) {
+                    callbackError();
+                }
+            }
+        })
+        .catch(error => {
+            for (let i = 0; i < model.length; i++) {
                 SetPreference_Local(model[i].setting, model[i].value.toString());
             }
-        },
-        JSON.stringify(model)
-    );
+
+            console.log("SetPreference_Batch: Error: " + error);
+            if (callbackError) {
+                callbackError();
+            }
+        });
 }
 
 function SetPreference_Local(Setting, Value) {
@@ -509,11 +546,11 @@ function SetPreference_Local(Setting, Value) {
     }
 }
 
-function Uint8ToString(u8a){
+function Uint8ToString(u8a) {
     var CHUNK_SZ = 0x8000;
     var c = [];
-    for (var i=0; i < u8a.length; i+=CHUNK_SZ) {
-      c.push(String.fromCharCode.apply(null, u8a.subarray(i, i+CHUNK_SZ)));
+    for (var i = 0; i < u8a.length; i += CHUNK_SZ) {
+        c.push(String.fromCharCode.apply(null, u8a.subarray(i, i + CHUNK_SZ)));
     }
     return c.join("");
 }
@@ -538,4 +575,149 @@ function loadAvatar(AvatarId) {
             bannerAvatarButton.classList.add('banner_button');
         }
     }
+}
+
+function GetRatingsBoards() {
+    let ratingsBoards = JSON.parse(GetPreference("LibraryGameClassificationDisplayOrder", JSON.stringify(["ESRB"])));
+
+    // add fallback ratings boards
+    if (!ratingsBoards.includes("ESRB")) { ratingsBoards.push("ESRB"); }
+    if (!ratingsBoards.includes("ACB")) { ratingsBoards.push("ACB"); }
+    if (!ratingsBoards.includes("PEGI")) { ratingsBoards.push("PEGI"); }
+    if (!ratingsBoards.includes("USK")) { ratingsBoards.push("USK"); }
+    if (!ratingsBoards.includes("CERO")) { ratingsBoards.push("CERO"); }
+    if (!ratingsBoards.includes("CLASS_IND")) { ratingsBoards.push("CLASS_IND"); }
+    if (!ratingsBoards.includes("GRAC")) { ratingsBoards.push("GRAC"); }
+
+    return ratingsBoards;
+}
+
+class BackgroundImageRotator {
+    constructor(URLList, CustomClass, Randomise) {
+        this.URLList = URLList;
+        if (Randomise == true) {
+            this.CurrentIndex = randomIntFromInterval(0, this.URLList.length - 1);
+        } else {
+            this.CurrentIndex = 0;
+        }
+        this.RotationTimer = undefined;
+        if (CustomClass) {
+            this.CustomClass = CustomClass;
+            this.CustomClassSet = true;
+        } else {
+            this.CustomClass = '';
+            this.CustomClassSet = false;
+        }
+
+        this.bgImages = document.getElementById('bgImages');
+        this.bgImages.innerHTML = '';
+
+        // apply default background image
+        let defaultBgImage = this.#CreateBackgroundImage('DefaultBgImage', '/images/librarybg.jpg');
+
+        if (this.URLList) {
+            if (this.URLList.length > 1) {
+                // handle multiple supplied images
+
+                // create the first image
+                let bgImage = this.#CreateBackgroundImage('bgImage0', this.URLList[this.CurrentIndex]);
+                this.bgImages.appendChild(bgImage);
+
+                // start the rotation
+                this.StartRotation();
+            } else if (this.URLList.length == 1) {
+                // handle only a single supplied image
+                this.CurrentIndex = 0;
+
+                // create the image
+                let bgImage = this.#CreateBackgroundImage('bgImage0', this.URLList[0]);
+                this.bgImages.appendChild(bgImage);
+            } else {
+                // no supplied images, but URLList is defined
+                this.CurrentIndex = 0;
+
+                // apply default background image
+                this.bgImages.appendChild(defaultBgImage);
+            }
+        } else {
+            // no supplied images, and URLList is not defined
+            this.CurrentIndex = 0;
+
+            // apply default background image
+            this.bgImages.appendChild(defaultBgImage);
+        }
+    }
+
+    #CreateBackgroundImage(Id, URL) {
+        let BgImage = document.createElement('div');
+        BgImage.id = Id;
+        BgImage.classList.add('bgImage');
+        if (this.CustomClassSet == true) {
+            BgImage.classList.add(this.CustomClass);
+        }
+        BgImage.style.backgroundImage = "url('" + URL + "')";
+        return BgImage;
+    }
+
+    // rotate each image in URLList using a JQuery fade in/out effect every 10 seconds
+    StartRotation() {
+        this.RotationTimer = setInterval(this.RotateImage.bind(this), 10000);
+    }
+
+    // stop the rotation
+    StopRotation() {
+        clearInterval(this.RotationTimer);
+    }
+
+    // rotate the image
+    RotateImage() {
+        // get the current background image
+        let currentImage = this.bgImages.querySelector('#bgImage' + this.CurrentIndex);
+
+        // increment the index
+        this.CurrentIndex += 1;
+        if (this.CurrentIndex >= this.URLList.length) {
+            this.CurrentIndex = 0;
+        }
+
+        // create a new background image
+        let bgImage = this.#CreateBackgroundImage('bgImage' + this.CurrentIndex, this.URLList[this.CurrentIndex]);
+        bgImage.style.display = 'none';
+        this.bgImages.appendChild(bgImage);
+
+        // fade out the current image
+        $(bgImage).fadeIn(1000, function () {
+            // remove the old image
+            currentImage.remove();
+        });
+
+        // clear the timer
+        clearInterval(this.RotationTimer);
+
+        // restart the timer
+        this.StartRotation();
+    }
+}
+
+function BuildLaunchLink(engine, core, platformId, gameId, romId, isMediaGroup, filename) {
+    let launchLink = '/index.html?page=emulator&engine=<ENGINE>&core=<CORE>&platformid=<PLATFORMID>&gameid=<GAMEID>&romid=<ROMID>&mediagroup=<ISMEDIAGROUP>&rompath=<FILENAME>';
+
+    // http://localhost:5198/index.html?page=emulator&engine=EmulatorJS&core=amiga&platformid=16&gameid=5519&romid=19&mediagroup=1&rompath=%2Fapi%2Fv1.1%2FGames%2F5519%2Fromgroup%2F19%2FCannon%20Fodder.zip
+
+    // http://localhost:5198/index.html?page=emulator&engine=EmulatorJS&core=amiga&platformid=16&gameid=5519&romid=102&mediagroup=0&rompath=%2Fapi%2Fv1.1%2FGames%2F5519%2Froms%2F102%2FCannon%20Fodder%20(1993)(Virgin)(Disk%201%20of%203)%5Bcr%20CSL%5D.adf
+
+    launchLink = launchLink.replace('<ENGINE>', engine);
+    launchLink = launchLink.replace('<CORE>', core);
+    launchLink = launchLink.replace('<PLATFORMID>', platformId);
+    launchLink = launchLink.replace('<GAMEID>', gameId);
+    launchLink = launchLink.replace('<ROMID>', romId);
+    if (isMediaGroup == true) {
+        launchLink = launchLink.replace('<ISMEDIAGROUP>', 1);
+        launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + encodeURI(gameId) + '/romgroup/' + encodeURI(romId) + '/' + encodeURI(filename) + '.zip');
+    } else {
+        launchLink = launchLink.replace('<ISMEDIAGROUP>', 0);
+        launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + encodeURI(gameId) + '/roms/' + encodeURI(romId) + '/' + encodeURI(filename));
+    }
+
+    return launchLink;
 }

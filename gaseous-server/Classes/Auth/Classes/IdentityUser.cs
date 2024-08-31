@@ -12,6 +12,6 @@ namespace Authentication
     {
         public SecurityProfileViewModel SecurityProfile { get; set; }
         public List<UserPreferenceViewModel> UserPreferences { get; set; }
-        public Guid Avatar { get; set; }
+        public Guid ProfileId { get; set; }
     }
 }

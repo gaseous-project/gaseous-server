@@ -149,35 +149,6 @@ namespace gaseous_server.Controllers
             return Ok(new { count = files.Count, size });
         }
 
-        // [MapToApiVersion("1.0")]
-        [MapToApiVersion("1.1")]
-        [HttpPost]
-        // [Route("{PlatformId}")]
-        // [ProducesResponseType(typeof(PlatformMapping.PlatformMapItem), StatusCodes.Status200OK)]
-        // [ProducesResponseType(StatusCodes.Status404NotFound)]
-        // [ProducesResponseType(StatusCodes.Status409Conflict)]
-        // public ActionResult NewPlatformMap(long PlatformId, PlatformMapping.PlatformMapItem Map)
-        // {
-        //     try
-        //     {
-        //         PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(PlatformId);
-
-        //         if (platformMapItem != null)
-        //         {
-        //             return Conflict();
-        //         }
-        //         else
-        //         {
-        //             PlatformMapping.WritePlatformMap(Map, false, false);
-        //             return Ok(PlatformMapping.GetPlatformMap(PlatformId));
-        //         }
-        //     }
-        //     catch
-        //     {
-        //         return NotFound();
-        //     }
-        // }
-
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpPatch]

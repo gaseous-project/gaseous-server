@@ -36,6 +36,9 @@ db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.Conn
 
 // set up db
 db.InitDB();
+// create relation tables if they don't exist
+Storage.CreateRelationsTables<IGDB.Models.Game>();
+Storage.CreateRelationsTables<IGDB.Models.Platform>();
 
 // populate db with static data for lookups
 AgeRatings.PopulateAgeMap();
@@ -71,7 +74,7 @@ ProcessQueue.QueueItem queueItem = new ProcessQueue.QueueItem(
         1,
         new List<ProcessQueue.QueueItemType>
         {
-            ProcessQueue.QueueItemType.All
+            ProcessQueue.QueueItemType.SignatureIngestor
         },
         false,
         true
@@ -397,9 +400,6 @@ gaseous_server.Classes.Metadata.Platforms.AssignAllPlatformsToGameIdZero();
 
 // extract platform map if not present
 PlatformMapping.ExtractPlatformMap();
-
-// force load platform map into cache
-var platformMap = PlatformMapping.PlatformMap;
 
 // add background tasks
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(

@@ -1,0 +1,112 @@
+<div id="tab1" name="modalTab" data-tabname="General">
+    <div class="section">
+        <div class="section-header">General</div>
+        <div class="section-body">
+            <table style="width: 100%;">
+                <tr>
+                    <td style="width: 25%;">
+                        Default home page:
+                    </td>
+                    <td>
+                        <select id="profile_pref_DefaultHomePage" data-pref="DefaultHomePage"
+                            data-minimum-results-for-search="Infinity">
+                            <option value="home">Home</option>
+                            <option value="library">Library</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="section">
+        <div class="section-header">Library</div>
+        <div class="section-body">
+            <table style="width: 100%;">
+                <tr>
+                    <td style="width: 25%;">
+                        Pagination mode:
+                    </td>
+                    <td>
+                        <select id="profile_pref-LibraryPagination" data-pref="LibraryPagination"
+                            data-minimum-results-for-search="Infinity">
+                            <option value="paged">Paged</option>
+                            <option value="infinite">Infinite scrolling</option>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        View mode:
+                    </td>
+                    <td>
+                        <select id="profile_pref-LibraryListView" data-pref="LibraryListView"
+                            data-minimum-results-for-search="Infinity">
+                            <option value="false">Icon</option>
+                            <option value="true">List</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-header">Game Icons</div>
+        <div class="section-body">
+            <table style="width: 100%;">
+                <tr>
+                    <td>
+                        <input type="checkbox" id="profile_pref_LibraryShowGameTitle"
+                            data-pref="LibraryShowGameTitle"><label for="profile_pref_LibraryShowGameTitle"> Show
+                            title</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="checkbox" id="profile_pref_LibraryShowGameRating"
+                            data-pref="LibraryShowGameRating"><label for="profile_pref_LibraryShowGameRating"> Show
+                            rating</label>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <input type="checkbox" id="profile_pref_LibraryShowGameClassification"
+                            data-pref="LibraryShowGameClassification"><label
+                            for="profile_pref_LibraryShowGameClassification">
+                            Show
+                            age classification badges</label>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div id="tab2" name="modalTab" data-tabname="Localisation">
+    <div class="section">
+        <div class="section-header">Age Classification</div>
+        <div class="section-body">
+            <table id="profile_pref_LibraryClassificationBadgeSelect" style="width: 100%;">
+                <tr>
+                    <td>Classification badge fallback order:</td>
+                </tr>
+                <tr>
+                    <td>
+                        <div id="classificationBoardSelector" class="listboxselector">
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: right;">
+                        <div id="classificationBoardSelector-Up" class="listboxselector-arrow">
+                            <img src="/images/arrow-up.svg" class="gamescreenshots_arrow_image">
+                        </div>
+                        <div id="classificationBoardSelector-Down" class="listboxselector-arrow">
+                            <img src="/images/arrow-down.svg" class="gamescreenshots_arrow_image">
+                        </div>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>

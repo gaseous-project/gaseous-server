@@ -1,4 +1,5 @@
 using System.Data;
+using gaseous_server.Models;
 using gaseous_signature_parser.models.RomSignatureObject;
 using static gaseous_server.Classes.Common;
 
@@ -79,6 +80,47 @@ namespace gaseous_server.Classes
                 GamesList.Add(gameItem);
             }
             return GamesList;
+        }
+
+        public List<Signatures_Sources> GetSources()
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT * FROM Signatures_Sources ORDER BY `SourceType`, `Name`;";
+            DataTable sigDb = db.ExecuteCMD(sql);
+
+            List<Signatures_Sources> SourcesList = new List<Signatures_Sources>();
+
+            foreach (DataRow sigDbRow in sigDb.Rows)
+            {
+                Signatures_Sources sourceItem = new Signatures_Sources
+                {
+                    Id = (int)sigDbRow["Id"],
+                    Name = (string)sigDbRow["Name"],
+                    Description = (string)sigDbRow["Description"],
+                    URL = (string)sigDbRow["URL"],
+                    Category = (string)sigDbRow["Category"],
+                    Version = (string)sigDbRow["Version"],
+                    Author = (string)sigDbRow["Author"],
+                    Email = (string)sigDbRow["Email"],
+                    Homepage = (string)sigDbRow["Homepage"],
+                    SourceType = (gaseous_signature_parser.parser.SignatureParser)Enum.Parse(typeof(gaseous_signature_parser.parser.SignatureParser), sigDbRow["SourceType"].ToString()),
+                    MD5 = (string)sigDbRow["SourceMD5"],
+                    SHA1 = (string)sigDbRow["SourceSHA1"]
+                };
+                SourcesList.Add(sourceItem);
+            }
+            return SourcesList;
+        }
+
+        public void DeleteSource(int sourceId)
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "DELETE FROM Signatures_Sources WHERE Id = @sourceId;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "sourceId", sourceId }
+            };
+            db.ExecuteCMD(sql, dbDict);
         }
 
         public Dictionary<string, string> GetLookup(LookupTypes LookupType, long GameId)

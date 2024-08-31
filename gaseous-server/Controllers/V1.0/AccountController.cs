@@ -99,7 +99,7 @@ namespace gaseous_server.Controllers
             profile.Roles = new List<string>(await _userManager.GetRolesAsync(user));
             profile.SecurityProfile = user.SecurityProfile;
             profile.UserPreferences = user.UserPreferences;
-            profile.Avatar = user.Avatar;
+            profile.ProfileId = user.ProfileId;
             profile.Roles.Sort();
 
             return Ok(profile);
@@ -122,7 +122,7 @@ namespace gaseous_server.Controllers
                 profile.SecurityProfile = user.SecurityProfile;
                 profile.UserPreferences = user.UserPreferences;
                 profile.Roles.Sort();
-                
+
                 string profileString = "var userProfile = " + Newtonsoft.Json.JsonConvert.SerializeObject(profile, Newtonsoft.Json.Formatting.Indented) + ";";
 
                 byte[] bytes = Encoding.UTF8.GetBytes(profileString);
@@ -188,8 +188,8 @@ namespace gaseous_server.Controllers
                 user.LockoutEnabled = rawUser.LockoutEnabled;
                 user.LockoutEnd = rawUser.LockoutEnd;
                 user.SecurityProfile = rawUser.SecurityProfile;
-                user.Avatar = rawUser.Avatar;
-                
+                user.ProfileId = rawUser.ProfileId;
+
                 // get roles
                 ApplicationUser? aUser = await _userManager.FindByIdAsync(rawUser.Id);
                 if (aUser != null)
@@ -214,12 +214,16 @@ namespace gaseous_server.Controllers
             if (ModelState.IsValid)
             {
                 ApplicationUser user = new ApplicationUser
-                { 
-                    UserName = model.UserName, 
+                {
+                    UserName = model.UserName,
                     NormalizedUserName = model.UserName.ToUpper(),
                     Email = model.Email,
                     NormalizedEmail = model.Email.ToUpper()
                 };
+                if (await _userManager.FindByEmailAsync(model.Email) != null)
+                {
+                    return NotFound("User already exists");
+                }
                 var result = await _userManager.CreateAsync(user, model.Password);
                 if (result.Succeeded)
                 {
@@ -234,10 +238,27 @@ namespace gaseous_server.Controllers
                 {
                     return Ok(result);
                 }
-            }   
+            }
             else
             {
                 return NotFound();
+            }
+        }
+
+        [HttpGet]
+        [Route("Users/Test")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> TestUserExists(string Email)
+        {
+            ApplicationUser? rawUser = await _userManager.FindByEmailAsync(Email);
+
+            if (rawUser != null)
+            {
+                return Ok(true);
+            }
+            else
+            {
+                return Ok(false);
             }
         }
 
@@ -247,7 +268,7 @@ namespace gaseous_server.Controllers
         public async Task<IActionResult> GetUser(string UserId)
         {
             ApplicationUser? rawUser = await _userManager.FindByIdAsync(UserId);
-            
+
             if (rawUser != null)
             {
                 UserViewModel user = new UserViewModel();
@@ -256,7 +277,8 @@ namespace gaseous_server.Controllers
                 user.LockoutEnabled = rawUser.LockoutEnabled;
                 user.LockoutEnd = rawUser.LockoutEnd;
                 user.SecurityProfile = rawUser.SecurityProfile;
-                
+                user.ProfileId = rawUser.ProfileId;
+
                 // get roles
                 IList<string> aUserRoles = await _userManager.GetRolesAsync(rawUser);
                 user.Roles = aUserRoles.ToList();
@@ -297,16 +319,16 @@ namespace gaseous_server.Controllers
         public async Task<IActionResult> SetUserRoles(string UserId, string RoleName)
         {
             ApplicationUser? user = await _userManager.FindByIdAsync(UserId);
-            
+
             if (user != null)
             {
                 // get roles
                 List<string> userRoles = (await _userManager.GetRolesAsync(user)).ToList();
-                
+
                 // delete all roles
                 foreach (string role in userRoles)
                 {
-                    if ((new string[] { "Admin", "Gamer", "Player" }).Contains(role) )
+                    if ((new string[] { "Admin", "Gamer", "Player" }).Contains(role))
                     {
                         await _userManager.RemoveFromRoleAsync(user, role);
                     }
@@ -331,7 +353,7 @@ namespace gaseous_server.Controllers
                         await _userManager.AddToRoleAsync(user, RoleName);
                         break;
                 }
-                
+
                 return Ok();
             }
             else
@@ -348,12 +370,12 @@ namespace gaseous_server.Controllers
             if (ModelState.IsValid)
             {
                 ApplicationUser? user = await _userManager.FindByIdAsync(UserId);
-                
+
                 if (user != null)
                 {
                     user.SecurityProfile = securityProfile;
                     await _userManager.UpdateAsync(user);
-                    
+
                     return Ok();
                 }
                 else
@@ -413,7 +435,7 @@ namespace gaseous_server.Controllers
             {
                 user.UserPreferences = model;
                 await _userManager.UpdateAsync(user);
-                
+
                 return Ok();
             }
         }

@@ -1,176 +1,107 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8" />
-    <script src="/api/v1.1/System/VersionFile"></script>
-    <link type="text/css" rel="stylesheet" dat-href="/styles/style.css" />
-    <script src="/scripts/jquery-3.6.0.min.js"></script>
-    <script src="/scripts/moment.js"></script>
-    <link href="/styles/select2.min.css" rel="stylesheet" />
-    <link href="/styles/dropzone.min.css" rel="stylesheet" type="text/css" />
-    <script src="/scripts/jquery.lazy.min.js"></script>
-    <script src="/scripts/jquery.lazy.plugins.min.js"></script>
-    <script src="/scripts/select2.min.js"></script>
-    <script src="/scripts/dropzone.min.js"></script>
-    <script src="/scripts/simpleUpload.min.js"></script>
-    <script src="/scripts/main.js" type="text/javascript"></script>
-    <script src="/scripts/filterformating.js" type="text/javascript"></script>
-    <script src="/scripts/gamesformating.js" type="text/javascript"></script>
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
-    <title>Gaseous Games</title>
+<!-- welcome screen -->
+<div class="modal-background">
+    <div id="first_welcome" class="modal-window"
+        style="width: 315px; height: 315px; min-height: unset; min-width: unset; max-height: unset; max-width: unset;">
+        <div id="welcomeform" class="loginwindow-content">
+            <div class="loginwindow-logospace">
+                <div class="loginwindow-logospace-banner loginwindow-logospace-banner-top">
+                    <!-- <img src="/images/logo.png" style="display: block; margin: 20px auto; width: 100px;" /> -->
+                    <div class="loginwindow-logospace-logo">&nbsp;</div>
 
-    <script type="text/javascript">
-        var head = document.getElementsByTagName('head')[0];
+                    <div id="loginwindow_header_label" class="loginwindow-logospace-label">Gaseous Games</div>
 
-        // update links
-        var headLinks = document.getElementsByTagName('link');
-        for (var i = 0; i < headLinks.length; i++) {
-            if (headLinks[i].getAttribute('dat-href') && headLinks[i].rel == "stylesheet") {
-                var newLink = document.createElement('link');
-                newLink.rel = "stylesheet";
-                newLink.href = headLinks[i].getAttribute('dat-href') + '?v=' + AppVersion;
-                newLink.type = "text/css";
+                    <div style="height: 20px;">&nbsp;</div>
 
-                headLinks[i].parentElement.removeChild(headLinks[i]);
-                head.appendChild(newLink);
-            }
-        }
-    </script>
-</head>
-<body>
-    <div id="bgImage" style="background-image: url('/images/LoginWallpaper.jpg'); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);">
-        <div id="bgImage_Opacity"></div>
-    </div>
-
-    <div id="content">
-        <div class="loginwindow" id="first_welcome">
-            <div id="welcomeform" class="loginwindow-content">
-                <img src="/images/logo.png" style="display: block; margin: 20px auto; width: 100px;" />
-
-                <div id="loginwindow_header_label" style="display: block; text-align: center;">Gaseous Games</div>
-
-                <button type="button" value="Get Started" onclick="document.getElementById('first_welcome').style.display = 'none'; document.getElementById('first_newadmin').style.display = '';" class="bigbutton">Get Started</button>
+                    <button type="button" value="Get Started"
+                        onclick="document.getElementById('first_welcome').style.display = 'none'; document.getElementById('first_newadmin').style.display = '';"
+                        class="bigbutton">Get Started</button>
+                </div>
             </div>
         </div>
-        <div class="loginwindow" id="first_newadmin" style="display: none;">
-            <div id="loginform" class="loginwindow-content">
-                <img src="/images/logo.png" style="display: block; margin: 20px auto; width: 100px;" />
+    </div>
 
-                <div id="loginwindow_header_label" style="display: block; text-align: center;">Gaseous Games</div>
+    <!-- first login -->
+    <div class="modal-window" id="first_newadmin"
+        style="width: 600px; height: 550px; min-height: unset; min-width: unset; max-height: unset; max-width: unset; display: none;">
+        <div id="loginform" class="loginwindow-content">
+            <div class="loginwindow-logospace">
+                <div class="loginwindow-logospace-banner loginwindow-logospace-banner-top">
+                    <div class="loginwindow-logospace-logo">&nbsp;</div>
+                    <div class="loginwindow-logospace-label">
+                        <div>
+                            Gaseous Games
+                        </div>
+                    </div>
+                </div>
+                <div class="loginwindow-logospace-banner loginwindow-logospace-banner-bottom">
+                    <div class="loginwindow-logospace-linktable">
+                        <div class="loginwindow-logospace-linktable-link">
+                            <a href="https://github.com/gaseous-project/gaseous-server"
+                                class="romlink romlink-nounderline">
+                                <img src="/images/github-mark.svg" class="banner_button_image" />
+                                GitHub
+                            </a>
+                        </div>
+                        <div class="loginwindow-logospace-linktable-link">
+                            <a href="https://discord.gg/Nhu7wpT3k4" class="romlink romlink-nounderline">
+                                <img src="/images/discord.svg" class="banner_button_image" />
+                                Discord
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-                <table style="width: 100%; margin-top: 20px;" cellpadding="5px">
+            <div class="loginwindow_loginspace">
+                <table class="loginwindow_loginspace_controls">
                     <tr>
-                        <td colspan="2" style="font-size: 18px;">Create your administrator account.</td>
+                        <td colspan="2">
+                            <h2>Create your administrator account</h2>
+                        </td>
                     </tr>
                     <tr>
-                        <th>Email</th>
-                        <td><input type="email" id="login_email" style="width: 95%;" onkeyup="checkPasswordsMatch();" /></td>
+                        <!-- <td>Email</td> -->
+                        <td colspan="2"><input type="email" id="login_email" style="width: 95%;" placeholder="Email" />
+                        </td>
                     </tr>
                     <tr>
-                        <th>New Password</th>
-                        <td><input type="password" id="login_password" style="width: 95%;" onkeyup="checkPasswordsMatch();" /></td>
+                        <!-- <td>New Password</td> -->
+                        <td colspan="2"><input type="password" id="login_password" style="width: 95%;"
+                                placeholder="New Password" />
+                        </td>
                     </tr>
                     <tr>
-                        <th>Confirm Password</th>
-                        <td><input type="password" id="login_confirmpassword" style="width: 95%;" onkeyup="checkPasswordsMatch();" /></td>
+                        <!-- <td>Confirm Password</td> -->
+                        <td colspan="2"><input type="password" id="login_confirmpassword" style="width: 95%;"
+                                placeholder="Confirm Password" /></td>
                     </tr>
                     <tr>
-                        <td colspan="2" id="login_passwordnotice">&nbsp;</td>
-                    </tr>
-                    <tr>
-                        <td colspan="2" id="login_passworderrors" style="color: red;"></td>
+                        <td colspan="2">
+                            <p>Email requirements:</p>
+                            <div id="email-error"></div>
+                            <p>Password requirements:</p>
+                            <div id="password-error"></div>
+                        </td>
                     </tr>
                     <tr>
                         <td colspan="2" style="padding-top: 20px;">
-                            <button id="login_createaccount" type="button" value="Create Account" onclick="registerAccount();" disabled="disabled" class="bigbutton">Create Account</button>
+                            <button id="login_createaccount" type="submit" value="Create Account"
+                                onclick="registerAccount();" disabled="disabled" class="bigbutton">Create
+                                Account</button>
                         </td>
                     </tr>
                 </table>
             </div>
         </div>
     </div>
+</div>
 
-    <div id="settings_photocredit">
-        Wallpaper by <a href="https://unsplash.com/@spideyjoey" class="romlink">Joey Kwok</a> / <a href="https://unsplash.com/photos/a-room-filled-with-arcade-machines-and-neon-lights-jbIsTd7rdd8" class="romlink">Unsplash</a>
-    </div>
+<!-- <div id="settings_photocredit">
+        Wallpaper by <a href="https://unsplash.com/@spideyjoey" class="romlink">Joey Kwok</a> / <a
+            href="https://unsplash.com/photos/a-room-filled-with-arcade-machines-and-neon-lights-jbIsTd7rdd8"
+            class="romlink">Unsplash</a>
+    </div> -->
 
-    <script type="text/javascript">
-        // redirect if first run status != 0 as 0 indicates that first run needs to be run
-        if (FirstRunStatus != 0) {
-            window.location.replace("/");
-        }
+<script type="text/javascript">
 
-        function checkPasswordsMatch() {
-            var emailAddress = document.getElementById('login_email').value;
-            var newPassword = document.getElementById('login_password').value;
-            var conPassword = document.getElementById('login_confirmpassword').value;
-            var errorLabel = document.getElementById('login_passwordnotice');
-            var submitButton = document.getElementById('login_createaccount');
-
-            // make sure email address is valid
-            if (!emailAddress.includes("@")) {
-                errorLabel.innerHTML = "Please enter a valid email address";
-                submitButton.setAttribute('disabled', 'disabled');
-            } else {
-                if (newPassword == conPassword) {
-                    // check if password meets requirements
-                    if (newPassword.length >= 10) {
-                        errorLabel.innerHTML = "&nbsp;";
-                        submitButton.removeAttribute('disabled');
-                    } else {
-                        errorLabel.innerHTML = "Password should be at least 10 characters long";
-                        submitButton.setAttribute('disabled', 'disabled');
-                    }
-                } else {
-                    errorLabel.innerHTML = "New and confirmed passwords do not match";
-                    submitButton.setAttribute('disabled', 'disabled');
-                }
-            }
-        }
-
-        function registerAccount() {
-            var emailAddress = document.getElementById('login_email').value;
-            var newPassword = document.getElementById('login_password').value;
-            var conPassword = document.getElementById('login_confirmpassword').value;
-
-            var model = {
-                "userName": emailAddress,
-                "email": emailAddress,
-                "password": newPassword,
-                "confirmPassword": conPassword
-            };
-
-            ajaxCall(
-                '/api/v1.1/FirstSetup/0',
-                'POST',
-                function(result){
-                    loginCallback(result);
-                },
-                function(error){
-                    loginCallback(error);
-                },
-                JSON.stringify(model)
-            );
-        }
-
-        function loginCallback(result) {
-            var errorLabel = document.getElementById('login_passwordnotice');
-            var errorBox = document.getElementById('login_passworderrors');
-            errorBox.innerHTML = '';
-
-            console.log(result);
-            if (result.succeeded == false) {
-                for (var i = 0; i < result.errors.length; i++) {
-                    var errorMessage = document.createElement('p');
-                    errorMessage.innerHTML = result.errors[i].description;
-                    errorBox.appendChild(errorMessage);
-                }
-            } else {
-                window.location.replace('/index.html');
-            }
-        }
-    </script>
-</body>
+</script>

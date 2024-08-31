@@ -1,6 +1,6 @@
 services:
   development:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
     volumes:
@@ -11,11 +11,13 @@ services:
       - dbhost=${DATABASE_HOST}
       - dbuser=${DATABASE_USER}
       - dbpass=${DATABASE_PASSWORD}
-      - igdbclientid=<clientid>
-      - igdbclientsecret=<clientsecret>
+      - igdbclientid=${IGDB_CLIENT_ID}
+      - igdbclientsecret=${IGDB_CLIENT_SECRET}
   mariadb:
     hostname: mariadb
     image: mariadb:latest
+    ports:
+      - 3306:3306
     environment:
       - MARIADB_ROOT_PASSWORD=${DATABASE_PASSWORD}
       - MARIADB_DATABASE=${DATABASE_DB}

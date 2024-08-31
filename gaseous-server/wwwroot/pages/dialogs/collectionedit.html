@@ -10,7 +10,8 @@
                 </td>
             </tr>
         </table>
-        <div id="collection_filter_box" style="position: absolute; top: 40px; left: 0px; bottom: 5px; width: 40%; max-width: 40%; overflow-x: scroll;">
+        <div id="collection_filter_box"
+            style="position: absolute; top: 40px; left: 0px; bottom: 5px; width: 40%; max-width: 40%; overflow-x: scroll;">
             <table style="width: 100%;">
                 <tr>
                     <th style="width: 25%;">Platforms</th>
@@ -26,7 +27,8 @@
                 </tr>
                 <tr>
                     <th>Player Perspectives</th>
-                    <td><select id="collection_playerperspectives" style="width: 100%;" multiple="multiple"></select></td>
+                    <td><select id="collection_playerperspectives" style="width: 100%;" multiple="multiple"></select>
+                    </td>
                 </tr>
                 <tr>
                     <th>Themes</th>
@@ -50,17 +52,24 @@
                 </tr>
                 <tr>
                     <th>Maximum size per platform (bytes)</th>
-                    <td><input id="collection_maxplatformsize" type="number" placeholder="0" step="1048576" oninput="DisplayFormattedBytes('collection_maxplatformsize', 'maxplatformsize_label');"><span id="maxplatformsize_label" style="margin-left: 10px;"></span></td>
+                    <td><input id="collection_maxplatformsize" type="number" placeholder="0" step="1048576"
+                            oninput="DisplayFormattedBytes('collection_maxplatformsize', 'maxplatformsize_label');"><span
+                            id="maxplatformsize_label" style="margin-left: 10px;"></span></td>
                 </tr>
                 <tr>
                     <th>Maximum collection size (bytes)</th>
-                    <td><input id="collection_maxcollectionsize" type="number" placeholder="0" step="1048576" oninput="DisplayFormattedBytes('collection_maxcollectionsize', 'maxcollectionsize_label');"><span id="maxcollectionsize_label" style="margin-left: 10px;"></span></td></td>
+                    <td><input id="collection_maxcollectionsize" type="number" placeholder="0" step="1048576"
+                            oninput="DisplayFormattedBytes('collection_maxcollectionsize', 'maxcollectionsize_label');"><span
+                            id="maxcollectionsize_label" style="margin-left: 10px;"></span></td>
+                    </td>
                 </tr>
                 <tr>
                     <th>Directory Layout</th>
                     <td>
-                        <select id="collection_directorylayout" style="width: 100%;" data-minimum-results-for-search="Infinity" onchange="DisplayDirectoryLabel();">
-                            <option id="collection_directorylayout_gaseous" selected="selected" value="Gaseous">Standard</option>
+                        <select id="collection_directorylayout" style="width: 100%;"
+                            data-minimum-results-for-search="Infinity" onchange="DisplayDirectoryLabel();">
+                            <option id="collection_directorylayout_gaseous" selected="selected" value="Gaseous">Standard
+                            </option>
                             <option id="collection_directorylayout_retropie" value="RetroPie">RetroPie</option>
                         </select>
                     </td>
@@ -74,7 +83,8 @@
                             <p>Standard layout: /&lt;IGDB Platform Slug&gt;/&lt;IGDB Game Slug&gt;/Game ROMs</p>
                             <p>Example: /genesis-slash-megadrive/sonic-the-hedgehog/Sonic the Hedgehog.smd</p>
                         </span>
-                        <span id="collection_directorylayout_retropie_label" style="display: none;" name="collection_directorylayout_label">
+                        <span id="collection_directorylayout_retropie_label" style="display: none;"
+                            name="collection_directorylayout_label">
                             <p>RetroPie layout: /roms/&lt;RetroPie Platform Label&gt;/Game ROMs</p>
                             <p>Example: /roms/megadrive/Sonic the Hedgehog.smd</p>
                         </span>
@@ -85,7 +95,8 @@
                         Include BIOS files (if available)
                     </th>
                     <td>
-                        <select id="collection_includebios" style="width: 100%;" data-minimum-results-for-search="Infinity">
+                        <select id="collection_includebios" style="width: 100%;"
+                            data-minimum-results-for-search="Infinity">
                             <option id="collection_includebios_yes" selected="selected" value="true">Yes</option>
                             <option id="collection_includebios_no" value="false">No</option>
                         </select>
@@ -118,15 +129,18 @@
                 </td>
             </tr>
         </table>
-        <div id="collectionedit_previewbox" style="position: absolute; top: 40px; right: 0px; bottom: 60px; width: 60%; overflow-x: scroll;">
+        <div id="collectionedit_previewbox"
+            style="position: absolute; top: 40px; right: 0px; bottom: 60px; width: 60%; overflow-x: scroll;">
             <div id="collectionedit_previewbox_content" style="margin: 5px;">
-                
+
             </div>
         </div>
-        <div id="collectionedit_previewbox_size" style="position: absolute; right: 10px; bottom: 30px; width: 60%; height: 20px; text-align: right;">
-        
+        <div id="collectionedit_previewbox_size"
+            style="position: absolute; right: 10px; bottom: 30px; width: 60%; height: 20px; text-align: right;">
+
         </div>
-        <div id="collectionedit_previewbox_controls" style="position: absolute; right: 10px; bottom: 0px; width: 60%; height: 25px; text-align: right;">
+        <div id="collectionedit_previewbox_controls"
+            style="position: absolute; right: 10px; bottom: 0px; width: 60%; height: 25px; text-align: right;">
             <button id="collectionedit_preview" onclick="GetPreview();">Preview</button>
             <button id="collectionedit_cancel" onclick="closeDialog();">Cancel</button>
             <button id="collectionedit_ok" onclick="SaveCollection();">Ok</button>
@@ -151,9 +165,9 @@
             url: '/api/v1.1/Filter',
             processResults: function (data) {
                 var filter = data['platforms'];
-                
+
                 var arr = [];
-                
+
                 for (var i = 0; i < filter.length; i++) {
                     arr.push({
                         id: filter[i].id,
@@ -272,7 +286,7 @@
         ajaxCall(
             '/api/v1.1/Collections/' + modalVariables,
             'GET',
-            function(result) {
+            function (result) {
                 if (result.name) { document.getElementById('collection_name').value = result.name; }
                 if (result.description) { document.getElementById('collection_description').value = result.description; }
                 if (result.minimumRating != -1) { document.getElementById('collection_userrating_min').value = result.minimumRating; }
@@ -358,10 +372,10 @@
             ajaxCall(
                 '/api/v1.1/Collections/' + modalVariables,
                 'PATCH',
-                function(result) {
+                function (result) {
                     location.reload();
                 },
-                function(error) {
+                function (error) {
                     alert(error);
                 },
                 JSON.stringify(item)
@@ -371,10 +385,10 @@
             ajaxCall(
                 '/api/v1.1/Collections',
                 'POST',
-                function(result) {
+                function (result) {
                     location.reload();
                 },
-                function(error) {
+                function (error) {
                     alert(error);
                 },
                 JSON.stringify(item)
@@ -440,10 +454,10 @@
         ajaxCall(
             '/api/v1.1/Collections/Preview',
             'POST',
-            function(result) {
+            function (result) {
                 DisplayPreview(result, 'collectionedit_previewbox_content');
             },
-            function(error) {
+            function (error) {
                 console.log(JSON.stringify(error));
             },
             JSON.stringify(item)
@@ -531,12 +545,12 @@
 
                     var gameItemRow = document.createElement('tr');
                     gameItemRow.className = bgalt;
-                    
+
                     // game title
                     var gameTitleCell = document.createElement('th');
                     gameTitleCell.setAttribute('colspan', 2);
                     gameTitleCell.className = 'collections_preview_gametitlecell';
-                    
+
                     // game always include popup
                     var gameTitleInclusion = document.createElement('select');
                     gameTitleInclusion.id = 'collections_preview_always_' + platformItem.id + '_' + gameItem.id;
@@ -584,15 +598,15 @@
                     // game cover
                     var gameDetailRow = document.createElement('tr');
                     gameDetailRow.className = bgalt;
-                    
+
                     var gameCoverCell = document.createElement('td');
                     gameCoverCell.className = 'collections_preview_gamecovercell';
-                    
+
                     var gameImage = document.createElement('img');
                     gameImage.className = 'game_tile_image game_tile_image_small lazy';
                     gameImage.src = '/images/unknowngame.png';
                     if (gameItem.cover) {
-                        gameImage.setAttribute('data-src', '/api/v1.1/Games/' + gameItem.id + '/cover/image/cover_small/' + gameItem.coverItem.imageId + '.jpg');
+                        gameImage.setAttribute('data-src', '/api/v1.1/Games/' + gameItem.id + '/cover/' + gameItem.cover.id + '/image/cover_small/' + gameItem.coverItem.imageId + '.jpg');
                     } else {
                         gameImage.className = 'game_tile_image game_tile_image_small unknown';
                     }
@@ -603,7 +617,7 @@
                     // game detail
                     var gameDetailCell = document.createElement('td');
                     gameDetailCell.className = 'collections_preview_gamedetailcell';
-                    
+
                     // loop roms
                     for (var r = 0; r < gameItem.roms.length; r++) {
                         var romItem = gameItem.roms[r];
@@ -658,7 +672,7 @@
 
         var labelToDisplay = '';
         if (directoryLayoutMode) {
-            switch(directoryLayoutMode) {
+            switch (directoryLayoutMode) {
                 case "Gaseous":
                     // standard mode
                     labelToDisplay = 'collection_directorylayout_gaseous_label';
@@ -669,7 +683,7 @@
                     break;
 
             }
-            
+
             document.getElementById(labelToDisplay).style.display = '';
         }
     }

@@ -5,7 +5,8 @@
 <table style="width: 960px; max-width: 960px;" cellspacing="0">
     <tr>
         <td>
-            <input type="datetime-local" id="logs_startdate" style="width: 30%;" /> <input type="datetime-local" id="logs_enddate" style="width: 30%;" />
+            <input type="datetime-local" id="logs_startdate" style="width: 30%;" /> <input type="datetime-local"
+                id="logs_enddate" style="width: 30%;" />
         </td>
         <td>
             <input type="checkbox" id="logs_type_info"><label for="logs_type_info">Information</label>
@@ -35,7 +36,7 @@
 
 <!-- <a href="#" class="romlink" onclick="loadLogs();" style="float: right;"><img src="/images/refresh.svg" alt="Refresh" title="Refresh" class="banner_button_image" /></a> -->
 <table id="settings_events_table" style="width: 960px; max-width: 960px;" cellspacing="0">
-    
+
 </table>
 
 <div style="width: 960px; text-align: center;">
@@ -43,189 +44,7 @@
 </div>
 
 <script type="text/javascript">
-    var lastStartIndex = 0;
-    var currentPage = 1;
-    var searchModel = {};
-
-    var correlationIdParam = getQueryString('correlationid', 'string');
-    if (correlationIdParam) {
-        if (correlationIdParam.length > 0) {
-            document.getElementById('logs_correlationid').value = correlationIdParam;
-        }
-    }
-
-    function resetFilters() {
-        document.getElementById('logs_startdate').value = '';
-        document.getElementById('logs_enddate').value = '';
-        document.getElementById('logs_type_info').checked = false;
-        document.getElementById('logs_type_warning').checked = false;
-        document.getElementById('logs_type_critical').checked = false;
-        document.getElementById('logs_textsearch').value = '';
-        document.getElementById('logs_correlationid').value = '';
-
-        loadLogs();
-    }
-
-    function loadLogs(StartIndex, PageNumber) {
-        var model = {}
-
-        if (StartIndex && PageNumber) {
-            currentPage += 1;
-
-            // get saved search model
-            model = searchModel;
-            model.StartIndex = StartIndex;
-            model.PageNumber = PageNumber;
-        } else {
-            currentPage = 1;
-
-            // create search model
-            var statusList = [];
-            if (document.getElementById('logs_type_info').checked == true) { statusList.push(0); }
-            if (document.getElementById('logs_type_warning').checked == true) { statusList.push(2); }
-            if (document.getElementById('logs_type_critical').checked == true) { statusList.push(3); }
-            var startDate = null;
-            var startDateObj = document.getElementById('logs_startdate');
-            if (startDateObj.value != null) { startDate = new Date(startDateObj.value); }
-            var endDate = null;
-            var endDateObj = document.getElementById('logs_enddate');
-            if (endDateObj.value != null) { endDate = new Date(endDateObj.value); }
-            var searchText = null;
-            var searchTextObj = document.getElementById('logs_textsearch');
-            if (searchTextObj.value != null) { searchText = searchTextObj.value; }
-            var correlationId = null;
-            var correlationIdTextObj = document.getElementById('logs_correlationid');
-            if (correlationIdTextObj.value != null) { correlationId = correlationIdTextObj.value; }
-
-            model = {
-                "StartIndex": StartIndex,
-                "PageNumber": PageNumber,
-                "PageSize": 100,
-                "Status": statusList,
-                "StartDateTime": startDate,
-                "EndDateTime": endDate,
-                "SearchText": searchText,
-                "CorrelationId": correlationId
-            }
-            searchModel = model;
-        }
-
-        console.log(model);
-
-        ajaxCall(
-            '/api/v1.1/Logs',
-            'POST',
-            function (result) {
-                var newTable = document.getElementById('settings_events_table');
-                if (currentPage == 1) {
-                    newTable.innerHTML = '';
-                
-                    newTable.appendChild(
-                        createTableRow(
-                            true, 
-                            [
-                                //'Id',
-                                ['Event Time', 'logs_table_cell_150px'],
-                                ['Severity', 'logs_table_cell_150px'],
-                                'Process',
-                                'Message'
-                            ],
-                            '',
-                            ''
-                            )
-                        );
-                }
-
-                for (var i = 0; i < result.length; i++) {
-                    lastStartIndex = result[i].id;
-
-                    console.log(result[i]);
-
-                    var surroundingRow = document.createElement('tbody');
-                    surroundingRow.setAttribute('colspan', 4);
-                    surroundingRow.className = 'logs_table_row_' + result[i].eventType;
-
-                    var newRow = [
-                        moment(result[i].eventTime).format("YYYY-MM-DD h:mm:ss a"),
-                        result[i].eventType,
-                        result[i].process,
-                        result[i].message.replaceAll("\n", "<br />")
-                    ];
-
-                    surroundingRow.appendChild(createTableRow(false, newRow, '', 'romcell logs_table_cell'));
-
-                    // exception
-                    var exceptionString = '';
-                    if (result[i].exceptionValue) {
-                        exceptionString = "<strong>Exception</strong><pre class='logs_table_exception' style='width: 795px; word-wrap: break-word; overflow-wrap: break-word; overflow-y: scroll;'>" + syntaxHighlight(JSON.stringify(result[i].exceptionValue, null, 2)).replace(/\\n/g, "<br />    ") + "</pre>";
-                        var exRow = document.createElement('tr');
-                        var leadCell = document.createElement('td');
-                        exRow.appendChild(leadCell);
-                        var exCell = document.createElement('td');
-                        exCell.colSpan = '3';
-                        exCell.innerHTML = exceptionString;
-                        exRow.appendChild(exCell);
-                        surroundingRow.appendChild(exRow);
-                    }
-                    
-                    // calling process
-                    var infoRow = document.createElement('tr');
-                    
-                    var infoRowEmptyCell = document.createElement('td');
-                    infoRowEmptyCell.className = 'romcell';
-
-                    var infoRowDataCell = document.createElement('td');
-                    infoRowDataCell.className = 'romcell';
-                    infoRowDataCell.setAttribute('colspan', 3);
-                    infoRowDataCell.innerHTML = '<strong>Calling process:</strong> ' + result[i].callingProcess;
-
-                    infoRow.appendChild(infoRowEmptyCell);
-                    infoRow.appendChild(infoRowDataCell);
-                    surroundingRow.appendChild(infoRow);
-                    
-                    // initiated by user
-                    if (result[i].callingUser) {
-                        if (result[i].callingUser.length > 0) {
-                            var infoRow3 = document.createElement('tr');
-                            
-                            var infoRowEmptyCell3 = document.createElement('td');
-                            infoRowEmptyCell3.className = 'romcell';
-
-                            var infoRowDataCell3 = document.createElement('td');
-                            infoRowDataCell3.className = 'romcell';
-                            infoRowDataCell3.setAttribute('colspan', 3);
-                            infoRowDataCell3.innerHTML = '<strong>User:</strong> ' + result[i].callingUser + "</a>";
-
-                            infoRow3.appendChild(infoRowEmptyCell3);
-                            infoRow3.appendChild(infoRowDataCell3);
-                            surroundingRow.appendChild(infoRow3);
-                        }
-                    }
-
-                    // correlation id
-                    var infoRow2 = document.createElement('tr');
-                    
-                    var infoRowEmptyCell2 = document.createElement('td');
-                    infoRowEmptyCell2.className = 'romcell';
-
-                    var infoRowDataCell2 = document.createElement('td');
-                    infoRowDataCell2.className = 'romcell';
-                    infoRowDataCell2.setAttribute('colspan', 3);
-                    infoRowDataCell2.innerHTML = '<strong>Correlation Id:</strong> <a class="romlink" href="/index.html?page=settings&sub=logs&correlationid=' + result[i].correlationId + '">' + result[i].correlationId + "</a>";
-
-                    infoRow2.appendChild(infoRowEmptyCell2);
-                    infoRow2.appendChild(infoRowDataCell2);
-                    surroundingRow.appendChild(infoRow2);
-
-                    newTable.appendChild(surroundingRow);
-                }
-            },
-            function (error) {
-
-            },
-            JSON.stringify(model)
-        );
-    }
-
+    // load the logs
+    initLogs();
     loadLogs();
 </script>

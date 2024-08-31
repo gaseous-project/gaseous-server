@@ -1,23 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="utf-8" />
     <script src="/api/v1.1/System/VersionFile"></script>
-    <link type="text/css" rel="stylesheet" href="/styles/style.css" dat-href="/styles/style.css" />
-    <link type="text/css" rel="stylesheet" href="/styles/notifications.css" dat-href="/styles/notifications.css" />
-    <script src="/scripts/jquery-3.6.0.min.js"></script>
-    <script src="/scripts/moment-with-locales.min.js"></script>
-    <link href="/styles/select2.min.css" rel="stylesheet" />
-    <link href="/styles/dropzone.min.css" rel="stylesheet" type="text/css" />
-    <script src="/scripts/jquery.lazy.min.js"></script>
-    <script src="/scripts/jquery.lazy.plugins.min.js"></script>
-    <script src="/scripts/select2.min.js"></script>
-    <script src="/scripts/dropzone.min.js"></script>
-    <script src="/scripts/simpleUpload.min.js"></script>
-    <script src="/scripts/main.js" type="text/javascript"></script>
-    <script src="/scripts/notifications.js" type="text/javascript"></script>
-    <script src="/scripts/filterformating.js" type="text/javascript"></script>
-    <script src="/scripts/gamesformating.js" type="text/javascript"></script>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -25,165 +11,138 @@
     <title>Gaseous Games</title>
 
     <script type="text/javascript">
-        var head = document.getElementsByTagName('head')[0];
+        // update src links to ensure the latest versions are always loaded.
 
-        // update links
-        var headLinks = document.getElementsByTagName('link');
-        for (var i = 0; i < headLinks.length; i++) {
-            if (headLinks[i].getAttribute('dat-href') && headLinks[i].rel == "stylesheet") {
-                var newLink = document.createElement('link');
-                newLink.rel = "stylesheet";
-                newLink.href = headLinks[i].getAttribute('dat-href') + '?v=' + AppVersion;
-                newLink.type = "text/css";
+        let styleSheets = [
+            "/styles/select2.min.css",
+            "/styles/stylevars.css",
+            "/styles/style.css",
+            "/styles/notifications.css"
+        ];
 
-                headLinks[i].parentElement.removeChild(headLinks[i]);
-                head.appendChild(newLink);
-            }
+        let scriptLinks = [
+            "/scripts/jquery-3.6.0.min.js",
+            "/scripts/jquery.lazy.min.js",
+            "/scripts/jquery.lazy.plugins.min.js",
+            "/scripts/moment-with-locales.min.js",
+            "/scripts/select2.min.js",
+            "/scripts/modals.js",
+            "/scripts/preferences.js",
+            "/scripts/account.js",
+            "/scripts/libraries.js",
+            "/scripts/notifications.js",
+            "/scripts/rominfo.js",
+            "/scripts/uploadrom.js",
+            "/scripts/filterformating.js",
+            "/scripts/gamesformating.js",
+            "/scripts/main.js"
+        ];
+
+        let head = document.getElementsByTagName('head')[0];
+
+        // placeholder for global userProfile variable
+        var userProfile;
+
+        // update script links
+        for (let i = 0; i < scriptLinks.length; i++) {
+            let newScript = document.createElement('script');
+            newScript.src = scriptLinks[i] + '?v=' + AppVersion;
+            newScript.type = "text/javascript";
+            newScript.async = false;
+
+            head.appendChild(newScript);
         }
 
-        var userProfile;
+        // update stylesheet links
+        for (let i = 0; i < styleSheets.length; i++) {
+            let newLink = document.createElement('link');
+            newLink.rel = "stylesheet";
+            newLink.href = styleSheets[i] + '?v=' + AppVersion;
+            newLink.type = "text/css";
+
+            head.appendChild(newLink);
+        }
+
+        async function LoadPageContent(page, targetDiv) {
+            if (targetDiv == undefined || targetDiv == null || targetDiv == '') {
+                targetDiv = 'content';
+            }
+
+            // load page content
+            let pageContentResponse = await fetch('/pages/' + page + '.html' + '?v=' + AppVersion);
+            let pageContentContent = await pageContentResponse.text();
+            document.getElementById(targetDiv).innerHTML = pageContentContent;
+
+            // load page script
+            let pageScriptLink = '/pages/' + page + '.js';
+            let script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = pageScriptLink + '?v=' + AppVersion;
+            script.async = false;
+            document.head.appendChild(script);
+
+            backgroundImageHandler = new BackgroundImageRotator();
+        }
     </script>
 </head>
+
 <body>
+    <!-- Background Images -->
+    <div id="bgImages"></div>
+    <div id="bgImage_Opacity"></div>
+
     <!-- Notifications -->
     <div id="notifications_target"></div>
-    
-    <div id="banner_icon" onclick="window.location.href = '/index.html';">
-        <img src="/images/logo.png" alt="Gaseous" id="banner_icon_image" />
-    </div>
-    <div id="banner_header">
-        <div id="bannerButtons">
-            <div id="banner_user" onclick="showMenu();" class="banner_button dropdown dropbtn">
-                <img src="/images/user.svg" alt="Account" title="Account" id="banner_user_image" class="banner_button_image" style="position: relative; top: 10px; right: 0px; pointer-events: none;" onclick="showMenu();" />
-                <div id="myDropdown" class="dropdown-content">
-                    <div id="banner_user_roles"></div>
-                    <a href="#" onclick="showDialog('userprofile');">Profile</a>
-                    <a href="#" onclick="userLogoff();">Sign Out</a>
-                </div>
-            </div>
-            
-            <div id="banner_cog" onclick="window.location.href = '/index.html?page=settings';" class="banner_button">
-                <img src="/images/settings.svg" alt="Settings" title="Settings" id="banner_system_image" class="banner_button_image" />
-                <span id="banner_system_label">Settings</span>
-            </div>
 
-            <div id="banner_upload" onclick="showDialog('upload');" class="banner_button">
-                <img src="/images/upload.svg" alt="Upload" title="Upload" id="banner_upload_image" class="banner_button_image" />
-                <span id="banner_upload_label">Upload</span>
-            </div>
+    <!-- Page Banner -->
+    <div id="banner_target"></div>
 
-            <div id="banner_collections" onclick="window.location.href = '/index.html?page=collections';" class="banner_button">
-                <img src="/images/collections.svg" alt="Collections" title="Collections" id="banner_collections_image" class="banner_button_image" />
-                <span id="banner_collections_label">Collections</span>
-            </div>
-
-            <div id="banner_library" onclick="window.location.href = '/index.html';" class="banner_button">
-                <img src="/images/library.svg" alt="Library" title="Library" id="banner_library_image" class="banner_button_image" />
-                <span id="banner_library_label">Library</span>
-            </div>
-        </div>
-
-        <div id="banner_header_label" onclick="window.location.href = '/index.html';">Gaseous Games</div>
-    </div>
-    
-
-    <div id="content">
-
-    </div>
-
-    <!-- The Modal -->
-    <div id="myModal" class="modal">
-
-        <!-- Modal content -->
-        <div class="modal-content">
-            <span class="close">&times;</span>
-            <div><h1 id="modal-heading">Modal heading</h1></div>
-            <div id="modal-content">Some text in the Modal..</div>
-        </div>
-
-    </div>
-
-    <!-- The Modal -->
-    <div id="myModalSub" class="modal">
-
-        <!-- Modal content -->
-        <div class="modal-content-sub">
-            <span id="modal-close-sub" class="close">&times;</span>
-            <div id="modal-content-sub">Some text in the Modal..</div>
-        </div>
-
-    </div>
+    <!-- Page Content -->
+    <div id="content"></div>
 
     <script type="text/javascript">
-        var modalVariables = null;
+        // start the application
+        let backgroundImageHandler = undefined;
+        console.log("Starting Gaseous Games");
+        console.log("App Version: " + AppVersion);
+        console.log("First Run Status: " + FirstRunStatus);
+        switch (FirstRunStatus) {
+            case 0:
+            case "0":
+                // first run - load first run wizard
+                LoadPageContent('first', 'content');
+                break;
 
-        // redirect if first run status = 0
-        if (FirstRunStatus == 0) {
-            window.location.replace("/pages/first.html");
-        }
+            default:
+                // first run - load login page or redirect if user already logged in
 
-        // redirect if not logged in
-        ajaxCall(
-            '/api/v1.1/Account/Profile/Basic',
-            'GET',
-            function(result) {
-                console.log("User is logged in");
-                userProfile = result;
+                fetch('/api/v1.1/Account/Profile/Basic')
+                    .then(async response => {
+                        if (response.ok) {
+                            // user is signed in - start setting up the application
+                            console.log("User is logged in");
+                            userProfile = await response.json();
 
-                loadAvatar(userProfile.avatar);
+                            // load page banner
+                            LoadPageContent('banner', 'banner_target');
 
-                // hide the upload button if it's not permitted
-                var uploadButton = document.getElementById('banner_upload');
-                if (!userProfile.roles.includes("Admin") && !userProfile.roles.includes("Gamer")) {
-                    uploadButton.style.display = 'none';
-                }
-                
-                // populate page
-                var myParam = getQueryString('page', 'string');
+                            // load page content
+                            let pageSelection = getQueryString('page', 'string');
 
-                if (!myParam) {
-                    myParam = 'home';
-                }
-
-                $('#content').load('/pages/' + myParam + '.html?v=' + AppVersion);
-            },
-            function(error) {
-                window.location.replace("/pages/login.html");
-            }
-        );
-
-        /* When the user clicks on the button,
-        toggle between hiding and showing the dropdown content */
-        function showMenu() {
-            document.getElementById("myDropdown").classList.toggle("show");
-        }
-
-        // Close the dropdown menu if the user clicks outside of it
-        window.onclick = function(event) {
-            if (!event.target.matches('.dropbtn')) {
-                var dropdowns = document.getElementsByClassName("dropdown-content");
-                var i;
-                for (i = 0; i < dropdowns.length; i++) {
-                var openDropdown = dropdowns[i];
-                if (openDropdown.classList.contains('show')) {
-                    openDropdown.classList.remove('show');
-                }
-                }
-            }
-        }
-
-        function userLogoff() {
-            ajaxCall(
-                '/api/v1.1/Account/LogOff',
-                'POST',
-                function (result) {
-                    location.replace("/index.html");
-                },
-                function (error) {
-                    location.replace("/index.html");
-                }
-            );
+                            if (!pageSelection) {
+                                pageSelection = GetPreference("DefaultHomePage", 'home');
+                            }
+                            LoadPageContent(pageSelection, 'content');
+                        } else {
+                            // user is not signed in - load login page
+                            LoadPageContent('login');
+                        }
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                        LoadPageContent('login');
+                    });
+                break;
         }
     </script>
 </body>
-</html>

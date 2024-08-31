@@ -5,7 +5,7 @@ using Microsoft.VisualStudio.Web.CodeGeneration;
 
 namespace gaseous_server.Classes
 {
-	public class Maintenance : QueueItemStatus
+    public class Maintenance : QueueItemStatus
     {
         const int MaxFileAge = 30;
 
@@ -16,6 +16,7 @@ namespace gaseous_server.Classes
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
 
             // remove any entries from the library that have an invalid id
+            Logging.Log(Logging.LogType.Information, "Maintenance", "Removing any entries from the library that have an invalid id");
             string LibraryWhereClause = "";
             foreach (GameLibrary.LibraryItem library in GameLibrary.GetLibraries)
             {
@@ -33,9 +34,29 @@ namespace gaseous_server.Classes
             }
 
             // delete old logs
-            sql = "DELETE FROM ServerLogs WHERE EventTime < @EventRetentionDate;";
+            Logging.Log(Logging.LogType.Information, "Maintenance", "Removing logs older than " + Config.LoggingConfiguration.LogRetention + " days");
+            long deletedCount = 1;
+            long deletedEventCount = 0;
+            long maxLoops = 10000;
+            sql = "DELETE FROM ServerLogs WHERE EventTime < @EventRetentionDate LIMIT 1000; SELECT ROW_COUNT() AS Count;";
             dbDict.Add("EventRetentionDate", DateTime.UtcNow.AddDays(Config.LoggingConfiguration.LogRetention * -1));
-            db.ExecuteCMD(sql, dbDict);
+            while (deletedCount > 0)
+            {
+                DataTable deletedCountTable = db.ExecuteCMD(sql, dbDict);
+                deletedCount = (long)deletedCountTable.Rows[0][0];
+                deletedEventCount += deletedCount;
+
+                Logging.Log(Logging.LogType.Information, "Maintenance", "Deleted " + deletedCount + " log entries");
+
+                // check if we've hit the limit
+                maxLoops -= 1;
+                if (maxLoops <= 0)
+                {
+                    Logging.Log(Logging.LogType.Warning, "Maintenance", "Hit the maximum number of loops for deleting logs. Stopping.");
+                    break;
+                }
+            }
+            Logging.Log(Logging.LogType.Information, "Maintenance", "Deleted " + deletedEventCount + " log entries");
 
             // delete files and directories older than 7 days in PathsToClean
             List<string> PathsToClean = new List<string>();
@@ -87,7 +108,7 @@ namespace gaseous_server.Classes
                 SetStatus(StatusCounter, tables.Rows.Count, "Optimising table " + row[0].ToString());
 
                 sql = "OPTIMIZE TABLE " + row[0].ToString();
-                DataTable response = db.ExecuteCMD(sql);
+                DataTable response = db.ExecuteCMD(sql, new Dictionary<string, object>(), 240);
                 foreach (DataRow responseRow in response.Rows)
                 {
                     string retVal = "";

@@ -36,7 +36,9 @@
 				"AndersEAndersen.html-class-suggestions",
 				"george-alisson.html-preview-vscode",
 				"ms-dotnettools.vscodeintellicode-csharp",
-				"Zignd.html-css-class-completion"
+				"Zignd.html-css-class-completion",
+				"PWABuilder.pwa-studio",
+				"ms-azuretools.vscode-docker"
 			]
 		}
 	}

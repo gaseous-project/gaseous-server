@@ -2,190 +2,105 @@
     <h1 id="gametitle_label">Settings</h1>
 </div>
 
-<table cellspacing="0" style="width: 100%; vertical-align: top;">
-    <tr>
-        <th colspan="2">
-            <h3>Metadata Sources</h3>
-        </th>
-    </tr>
-    <tr>
-        <th style="width: 25%;">
-            Signature Source
-        </th>
-        <td>
-            <input type="radio" name="settings_signaturesource" id="settings_signaturesource_local" value="LocalOnly"
-                onclick="document.getElementById('settings_hasheoushost_row').style.display = 'none';">
-            <label for="settings_signaturesource_local">Local Only</label>
-        </td>
-    </tr>
-    <tr>
-        <td></td>
-        <td>
-            <input type="radio" name="settings_signaturesource" id="settings_signaturesource_hasheous" value="Hasheous"
-                onclick="document.getElementById('settings_hasheoushost_row').style.display = '';">
-            <label for="settings_signaturesource_hasheous">Hasheous</label>
-        </td>
-    </tr>
-    <tr id="settings_hasheoushost_row" style="display: none;">
-        <th>
-            Hasheous Host
-        </th>
-        <td>
-            <input type="url" id="settings_signaturesource_hasheoushost" style="width: 90%;">
-        </td>
-    </tr>
-    <tr>
-        <th>
-            <label for="settings_hasheoussubmit">Submit updates to Hasheous when fixing ROM matches</label>
-        </th>
-        <td>
-            <input type="checkbox" id="settings_hasheoussubmit" onchange="toggleHasheousAPIKey(this);">
-        </td>
-    </tr>
-    <tr id="settings_hasheousapikey_row" style="display: none;">
-        <th>
-            Hasheous API key
-        </th>
-        <td>
-            <textarea id="settings_hasheousapikey" rows="2" style="width: 90%;"></textarea>
-        </td>
-    </tr>
-    <tr>
-        <th colspan="2">
-            <h3>Logging</h3>
-        </th>
-    </tr>
-    <tr>
-        <th>
-            Write logs
-        </th>
-        <td>
-            <input type="radio" name="settings_logs_write" id="settings_logs_write_db" value="false"
-                checked="checked"><label for="settings_logs_write_db"> To database only
-                (default)</label>
-        </td>
-    </tr>
-    <tr>
-        <td></td>
-        <td>
-            <input type="radio" name="settings_logs_write" id="settings_logs_write_fs" value="true"><label
-                for="settings_logs_write_fs"> To database and disk</label>
-        </td>
-    </tr>
-    <tr>
-        <td colspan="2">&nbsp;</td>
-    </tr>
-    <tr>
-        <th>
-            Minimum log retention (days):
-        </th>
-        <td>
-            <input type="number" min="1" id="settings_logs_retention" />
-        </td>
-    </tr>
-    <tr>
-        <th colspan="2">
-            <h3>Emulator</h3>
-        </th>
-    </tr>
-    <tr>
-        <th><label for="settings_emulator_debug">Enable debug mode</label></th>
-        <td><input type="checkbox" name="settings_emulator" id="settings_emulator_debug" checked="checked" /></td>
-    </tr>
-    <tr>
-        <td colspan="2" style="text-align: right;">
-            <button id="settings_tasktimers_new" onclick="setSystemSettings();">Save</button>
-        </td>
-    </tr>
-</table>
+<div class="section">
+    <div class="section-header">Metadata Sources</div>
+    <div class="section-body">
+        <table>
+            <tr>
+                <td style="width: 25%;">
+                    Signature Source
+                </td>
+                <td>
+                    <input type="radio" name="settings_signaturesource" id="settings_signaturesource_local"
+                        value="LocalOnly"
+                        onclick="document.getElementById('settings_hasheoushost_row').style.display = 'none';">
+                    <label for="settings_signaturesource_local">Local Only</label>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <input type="radio" name="settings_signaturesource" id="settings_signaturesource_hasheous"
+                        value="Hasheous"
+                        onclick="document.getElementById('settings_hasheoushost_row').style.display = '';">
+                    <label for="settings_signaturesource_hasheous">Hasheous</label>
+                </td>
+            </tr>
+            <tr id="settings_hasheoushost_row" style="display: none;">
+                <td>
+                    Hasheous Host
+                </td>
+                <td>
+                    <input type="url" id="settings_signaturesource_hasheoushost" style="width: 90%;">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="settings_hasheoussubmit">Submit updates to Hasheous when fixing ROM matches</label>
+                </td>
+                <td>
+                    <input type="checkbox" id="settings_hasheoussubmit" onchange="toggleHasheousAPIKey(this);">
+                </td>
+            </tr>
+            <tr id="settings_hasheousapikey_row" style="display: none;">
+                <td>
+                    Hasheous API key
+                </td>
+                <td>
+                    <input type="text" id="settings_hasheousapikey" style="width: 90%;">
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="section-header">Logging</div>
+    <div class="section-body">
+        <table>
+            <tr>
+                <td style="width: 25%;">
+                    Write logs
+                </td>
+                <td>
+                    <input type="radio" name="settings_logs_write" id="settings_logs_write_db" value="false"
+                        checked="checked"><label for="settings_logs_write_db"> To database only
+                        (default)</label>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <input type="radio" name="settings_logs_write" id="settings_logs_write_fs" value="true"><label
+                        for="settings_logs_write_fs"> To database and disk</label>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+                <td style="width: 25%;">
+                    Minimum log retention (days):
+                </td>
+                <td>
+                    <input type="number" min="1" id="settings_logs_retention" />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="section-header">Emulator</div>
+    <div class="section-body">
+        <table>
+            <tr>
+                <td style="width: 25%;"><label for="settings_emulator_debug">Enable debug mode</label></td>
+                <td><input type="checkbox" name="settings_emulator" id="settings_emulator_debug" checked="checked" />
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div style="text-align: right;">
+        <button id="settings_tasktimers_new" onclick="setSystemSettings();">Save</button>
+    </div>
+</div>
 
-<script type="text/javascript">
-    function getSystemSettings() {
-        ajaxCall(
-            '/api/v1/System/Settings/System',
-            'GET',
-            function (result) {
-                var optionToSelect = 'settings_logs_write_db';
-                if (result.alwaysLogToDisk == true) {
-                    optionToSelect = 'settings_logs_write_fs';
-                }
-                document.getElementById(optionToSelect).checked = true;
-
-                document.getElementById('settings_logs_retention').value = result.minimumLogRetentionPeriod;
-
-                document.getElementById('settings_emulator_debug').checked = result.emulatorDebugMode;
-
-                switch (result.signatureSource.source) {
-                    case "LocalOnly":
-                        document.getElementById('settings_signaturesource_local').checked = true;
-                        break;
-
-                    case "Hasheous":
-                        document.getElementById('settings_signaturesource_hasheous').checked = true;
-                        document.getElementById('settings_hasheoushost_row').style.display = '';
-                        break;
-
-                }
-
-                document.getElementById('settings_signaturesource_hasheoushost').value = result.signatureSource.hasheousHost;
-
-                let hasheousSubmitCheck = document.getElementById('settings_hasheoussubmit');
-                if (result.signatureSource.hasheousSubmitFixes == true) {
-                    hasheousSubmitCheck.checked = true;
-                }
-                document.getElementById('settings_hasheousapikey').innerHTML = result.signatureSource.hasheousAPIKey;
-                toggleHasheousAPIKey(hasheousSubmitCheck);
-            }
-        );
-    }
-
-    function setSystemSettings() {
-        var alwaysLogToDisk = false;
-        if ($("input[type='radio'][name='settings_logs_write']:checked").val() == "true") {
-            alwaysLogToDisk = true;
-        }
-
-        var retention = document.getElementById('settings_logs_retention');
-        var retentionValue = 0;
-        if (retention.value) {
-            retentionValue = retention.value;
-        } else {
-            retentionValue = 7;
-        }
-
-        var model = {
-            "alwaysLogToDisk": alwaysLogToDisk,
-            "minimumLogRetentionPeriod": Number(retentionValue),
-            "emulatorDebugMode": document.getElementById('settings_emulator_debug').checked,
-            "signatureSource": {
-                "Source": $("input[type='radio'][name='settings_signaturesource']:checked").val(),
-                "HasheousHost": document.getElementById('settings_signaturesource_hasheoushost').value,
-                "HasheousAPIKey": document.getElementById('settings_hasheousapikey').innerHTML,
-                "HasheousSubmitFixes": document.getElementById('settings_hasheoussubmit').checked
-            }
-        };
-
-        ajaxCall(
-            '/api/v1/System/Settings/System',
-            'POST',
-            function (result) {
-                getSystemSettings();
-            },
-            function (error) {
-                getSystemSettings();
-            },
-            JSON.stringify(model)
-        );
-    }
-
-    function toggleHasheousAPIKey(checkbox) {
-        let settings_hasheousapikey_row = document.getElementById('settings_hasheousapikey_row');
-        if (checkbox.checked == true) {
-            settings_hasheousapikey_row.style.display = '';
-        } else {
-            settings_hasheousapikey_row.style.display = 'none';
-        }
-    }
-
+<script>
+    // kick of page data load
     getSystemSettings();
 </script>

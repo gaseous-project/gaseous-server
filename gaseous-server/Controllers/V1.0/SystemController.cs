@@ -38,7 +38,10 @@ namespace gaseous_server.Controllers
             List<SystemInfo.PathItem> Disks = new List<SystemInfo.PathItem>();
             foreach (GameLibrary.LibraryItem libraryItem in GameLibrary.GetLibraries)
             {
-                Disks.Add(GetDisk(libraryItem.Path));
+                SystemInfo.PathItem pathItem = GetDisk(libraryItem.Path);
+                pathItem.Name = libraryItem.Name;
+
+                Disks.Add(pathItem);
             }
             ReturnValue.Paths = Disks;
 
@@ -100,7 +103,7 @@ namespace gaseous_server.Controllers
 
             string ver = "var AppVersion = \"" + Assembly.GetExecutingAssembly().GetName().Version.ToString() + "\";" + Environment.NewLine +
                 "var DBSchemaVersion = \"" + db.GetDatabaseSchemaVersion() + "\";" + Environment.NewLine +
-                "var FirstRunStatus = " + Config.ReadSetting<string>("FirstRunStatus", "0") + ";" + Environment.NewLine +
+                "var FirstRunStatus = \"" + Config.ReadSetting<string>("FirstRunStatus", "0") + "\";" + Environment.NewLine +
                 "var AgeRatingBoardsStrings = " + JsonSerializer.Serialize(ClassificationBoardsStrings, new JsonSerializerOptions
                 {
                     WriteIndented = true
@@ -324,6 +327,7 @@ namespace gaseous_server.Controllers
 
             public class PathItem
             {
+                public string Name { get; set; }
                 public string LibraryPath { get; set; }
                 public long SpaceUsed { get; set; }
                 public long SpaceAvailable { get; set; }

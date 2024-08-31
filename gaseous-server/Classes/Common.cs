@@ -45,11 +45,13 @@ namespace gaseous_server.Classes
 			{
 				var xmlStream = File.OpenRead(FileName);
 
+				Logging.Log(Logging.LogType.Information, "Hash File", "Generating MD5 hash for file: " + FileName);
 				var md5 = MD5.Create();
 				byte[] md5HashByte = md5.ComputeHash(xmlStream);
 				string md5Hash = BitConverter.ToString(md5HashByte).Replace("-", "").ToLowerInvariant();
 				_md5hash = md5Hash;
 
+				Logging.Log(Logging.LogType.Information, "Hash File", "Generating SHA1 hash for file: " + FileName);
 				var sha1 = SHA1.Create();
 				xmlStream.Position = 0;
 				byte[] sha1HashByte = sha1.ComputeHash(xmlStream);

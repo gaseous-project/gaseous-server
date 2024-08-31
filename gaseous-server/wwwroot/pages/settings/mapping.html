@@ -1,98 +1,37 @@
 <div id="gametitle">
-    <h1 id="gametitle_label">Platform Mapping</h1>
+    <h1 id="gametitle_label">Platforms</h1>
 </div>
 
-<p>When determining the platform of a ROM or image (which is later used when determining the game title), only the "Unique File Extensions" are used. All other extensions are ignored as they will limit the ability of Gaseous to determine the game title (see <a href="https://github.com/gaseous-project/gaseous-server#game-image-title-matching" class="romlink">https://github.com/gaseous-project/gaseous-server#game-image-title-matching</a> for more information on how matching works).</p>
+<div class="section">
+    <div class="section-body">
+        <p>When determining the platform of a ROM or image (which is later used when determining the game title), only
+            the "Unique File Extensions" are used. All other extensions are ignored as they will limit the ability of
+            Gaseous to determine the game title (see <a
+                href="https://github.com/gaseous-project/gaseous-server/wiki/ROM-Metadata-Matching" class="romlink"
+                target="_blank"
+                rel="noopener noreferrer">https://github.com/gaseous-project/gaseous-server/wiki/ROM-Metadata-Matching</a>
+            for
+            more
+            information on how matching works).</p>
 
-<p>This list is pre-populated with some of the more common platforms. New platforms will appear in this list as titles are added.</p>
+        <p>This list is pre-populated with some of the more common platforms. New platforms will appear in this list as
+            titles are added.</p>
 
-<p id="settings_mapping_import" style="display: none;"><button value="Export to JSON" onclick="DownloadJSON();">Export to JSON</button><button id="importjson" value="Import JSON">Import JSON</button><button value="Reset to Default" onclick="loadPlatformMapping(true);">Reset to Default</button></p>
+        <p id="settings_mapping_import" style="display: none;"><button value="Export to JSON"
+                onclick="DownloadJSON();">Export to JSON</button><button id="importjson" value="Import JSON">Import
+                JSON</button><button value="Reset to Default" onclick="loadPlatformMapping(true);">Reset to
+                Default</button></p>
 
-<input id='uploadjson' type='file' name='files' hidden/>
+        <input id='uploadjson' type='file' name='files' hidden />
 
-<table id="settings_mapping_table" style="width: 100%;" cellspacing="0">
-    
-</table>
+        <table id="settings_mapping_table" style="width: 100%;" cellspacing="0">
+
+        </table>
+    </div>
+</div>
 
 <script type="text/javascript">
-    if (userProfile.roles.includes("Admin")) {
-        document.getElementById('settings_mapping_import').style.display = '';
-    }
-
-    function loadPlatformMapping(Overwrite) {
-        var queryString = '';
-        if (Overwrite == true) {
-            queryString = '?ResetToDefault=true';
-        }
-
-        ajaxCall(
-            '/api/v1.1/PlatformMaps' + queryString,
-            'GET',
-            function (result) {
-                var newTable = document.getElementById('settings_mapping_table');
-                newTable.innerHTML = '';
-                newTable.appendChild(
-                    createTableRow(
-                        true, 
-                        [ 
-                            'Platform',
-                            'Supported File Extensions',
-                            'Unique File Extensions',
-                            'Has Web Emulator'
-                        ],
-                        '',
-                        ''
-                        )
-                    );
-
-                for (var i = 0; i < result.length; i++) {
-                    var hasWebEmulator = '';
-                    if (result[i].webEmulator.type.length > 0) {
-                        hasWebEmulator = 'Yes';
-                    }
-
-                    var platformLink = '';
-                    if (userProfile.roles.includes("Admin")) {
-                        platformLink = '<a href="#/" onclick="ShowPlatformMappingDialog(' + result[i].igdbId + ');" class="romlink">' + result[i].igdbName + '</a>';
-                    } else {
-                        platformLink = result[i].igdbName;
-                    }
-
-                    var newRow = [
-                        platformLink,
-                        result[i].extensions.supportedFileExtensions.join(', '),
-                        result[i].extensions.uniqueFileExtensions.join(', '),
-                        hasWebEmulator
-                    ];
-
-                    newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell logs_table_cell'));
-                }
-            }
-        );
-    }
-
-    function DownloadJSON() {
-        window.location = '/api/v1.1/PlatformMaps/PlatformMap.json';
-    }
-
-    document.getElementById('importjson').addEventListener('click', openDialog);
-
-    function openDialog() {
-        document.getElementById('uploadjson').click();
-    }
-
-    $('#uploadjson').change(function () {
-        $(this).simpleUpload("/api/v1.1/PlatformMaps", {
-            start: function (file) {
-                //upload started
-                console.log("JSON upload started");
-            },
-            success: function(data){
-                //upload successful
-                window.location.reload();
-            }
-        });
-    });
-
+    // Load the platform mapping
+    SetupButtons();
     loadPlatformMapping();
 </script>

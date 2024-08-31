@@ -22,7 +22,7 @@ function formatFilterPanel(containerElement, result) {
     containerPanelSearchField.id = 'filter_panel_search';
     containerPanelSearchField.type = 'text';
     containerPanelSearchField.placeholder = 'Search';
-    containerPanelSearchField.addEventListener("keypress", function(event) {
+    containerPanelSearchField.addEventListener("keypress", function (event) {
         if (event.key === "Enter") {
             // Cancel the default action, if needed
             event.preventDefault();
@@ -34,24 +34,9 @@ function formatFilterPanel(containerElement, result) {
 
     panel.appendChild(containerPanelSearch);
 
-    // user rating
-    panel.appendChild(buildFilterPanelHeader('userrating', 'User Rating', true, false));
-    var containerPanelUserRating = buildFilterRange('userrating', 0, 100);
-    panel.appendChild(containerPanelUserRating);
-
-    // user vote count
-    panel.appendChild(buildFilterPanelHeader('uservotes', 'User Votes', true, false));
-    var containerPanelUserVotes = buildFilterRange('uservotes', 0, 1000000);
-    panel.appendChild(containerPanelUserVotes);
-
-    // release year
-    panel.appendChild(buildFilterPanelHeader('releaseyear', 'Release Year', true, false));
-    var containerPanelReleaseYear = buildFilterRange('releaseyear', 1960, (new Date()).getFullYear());
-    panel.appendChild(containerPanelReleaseYear);
-
     // settings
     buildFilterPanel(panel, 'settings', 'Settings', [
-        { 
+        {
             "id": "savestatesavailable",
             "name": "Game has save states avaialble",
             "gameCount": 0
@@ -61,34 +46,54 @@ function formatFilterPanel(containerElement, result) {
             "name": "Favourite",
             "gameCount": 0
         }
-    ], true, true);
+    ], true, false);
 
-    // server provided filters
+    // platforms
     if (result.platforms) {
         buildFilterPanel(panel, 'platform', 'Platforms', result.platforms, true, true);
     }
 
+    // genres
     if (result.genres) {
         buildFilterPanel(panel, 'genre', 'Genres', result.genres, true, false);
     }
 
-    if (result.gamemodes) {
-        buildFilterPanel(panel, 'gamemode', 'Players', result.gamemodes, true, false);
-    }
-
-    if (result.playerperspectives) {
-        buildFilterPanel(panel, 'playerperspective', 'Player Perspectives', result.playerperspectives, true, false);
-    }
-
+    // themes
     if (result.themes) {
         buildFilterPanel(panel, 'theme', 'Themes', result.themes, true, false);
     }
 
+    // release year
+    panel.appendChild(buildFilterPanelHeader('releaseyear', 'Release Year', true, false));
+    var containerPanelReleaseYear = buildFilterRange('releaseyear', 1960, (new Date()).getFullYear(), false);
+    panel.appendChild(containerPanelReleaseYear);
+
+    // players
+    if (result.gamemodes) {
+        buildFilterPanel(panel, 'gamemode', 'Players', result.gamemodes, true, false);
+    }
+
+    // player perspectives
+    if (result.playerperspectives) {
+        buildFilterPanel(panel, 'playerperspective', 'Player Perspectives', result.playerperspectives, true, false);
+    }
+
+    // age groups
     if (result.agegroupings) {
         if (result.agegroupings.length > 1) {
             buildFilterPanel(panel, 'agegroupings', 'Age Groups', result.agegroupings, true, false);
         }
     }
+
+    // user rating
+    panel.appendChild(buildFilterPanelHeader('userrating', 'User Rating', true, false));
+    var containerPanelUserRating = buildFilterRange('userrating', 0, 100, false);
+    panel.appendChild(containerPanelUserRating);
+
+    // user vote count
+    panel.appendChild(buildFilterPanelHeader('uservotes', 'User Votes', true, false));
+    var containerPanelUserVotes = buildFilterRange('uservotes', 0, 1000000, false);
+    panel.appendChild(containerPanelUserVotes);
 
     targetElement.appendChild(panel);
 
@@ -112,14 +117,22 @@ function formatFilterPanel(containerElement, result) {
 
     buttonsDiv.appendChild(resetButton);
 
+    // set page size value
+    var pageSizeCookie = GetPreference('LibraryPageSize', '20');
+    if (pageSizeCookie) {
+        var pageSizeSelector = document.getElementById('games_library_pagesize_select');
+        $(pageSizeSelector).select2('destroy');
+        $(pageSizeSelector).val(pageSizeCookie).select2();
+    }
+
     // set order by values
-    var orderByCookie = getCookie('games_library_orderby_select');
+    var orderByCookie = GetPreference('LibraryOrderBy', 'NameThe');
     if (orderByCookie) {
         var orderBySelector = document.getElementById('games_library_orderby_select');
         $(orderBySelector).select2('destroy');
         $(orderBySelector).val(orderByCookie).select2();
     }
-    var orderByDirectionCookie = getCookie('games_library_orderby_direction_select');
+    var orderByDirectionCookie = GetPreference('LibraryOrderByDirection', 'Ascending');
     if (orderByDirectionCookie) {
         var orderByDirectionSelector = document.getElementById('games_library_orderby_direction_select');
         $(orderByDirectionSelector).select2('destroy');
@@ -130,7 +143,6 @@ function formatFilterPanel(containerElement, result) {
 
     containerElement.appendChild(buttonsDiv);
 
-    console.log('Filter generated - execute filter');
     var pageNumber = undefined;
     if (getCookie('games_library_last_page') == "") {
         pageNumber = undefined;
@@ -157,7 +169,7 @@ function buildFilterPanel(targetElement, headerString, friendlyHeaderString, val
     }
     for (var i = 0; i < valueList.length; i++) {
         var tags;
-        
+
         if (valueList[i].gameCount) {
             tags = [
                 {
@@ -179,7 +191,7 @@ function buildFilterPanelHeader(headerString, friendlyHeaderString, showVisibleT
     } else {
         headerToggle.innerHTML = '+';
     }
-    
+
     var headerLabel = document.createElement('span');
     headerLabel.innerHTML = friendlyHeaderString;
 
@@ -252,14 +264,25 @@ function buildFilterPanelItem(filterType, itemString, friendlyItemString, tags) 
     }
     filterPanelItem.appendChild(filterPanelItemCheckBox);
     filterPanelItem.appendChild(filterPanelItemLabel);
-    
+
     return filterPanelItem;
 }
 
-function buildFilterRange(name, min, max) {
+function buildFilterRange(name, min, max, initialDisplay) {
     var containerPanelUserRating = document.createElement('div');
     containerPanelUserRating.id = 'filter_panel_box_' + name + '';
     containerPanelUserRating.className = 'filter_panel_box';
+
+    var displayCookie = getCookie('filter_panel_box_' + name);
+    if (displayCookie) {
+        initialDisplay = (displayCookie === 'true');
+    }
+
+    if (initialDisplay == false) {
+        containerPanelUserRating.setAttribute('style', 'display: none;');
+    } else {
+        containerPanelUserRating.setAttribute('style', 'display: block;');
+    }
 
     var containerPanelUserRatingCheckBox = document.createElement('input');
     containerPanelUserRatingCheckBox.id = 'filter_panel_' + name + '_enabled';
@@ -321,7 +344,7 @@ function executeFilterDelayed() {
 function buildFilterTag(tags) {
     // accepts an array of numbers + classes for styling (optional)
     // example [ { label: "G: 13", class: "tag_Green" }, { label: "R: 17", class: "tag_Orange" } ]
-    
+
     var boundingDiv = document.createElement('div');
     boundingDiv.className = 'tagBox';
 
@@ -391,7 +414,7 @@ function resetFilters() {
     executeFilter1_1();
 }
 
-function executeFilter1_1(pageNumber, pageSize) {
+function executeFilter1_1(pageNumber) {
     var freshSearch = false;
 
     if (!pageNumber) {
@@ -400,33 +423,20 @@ function executeFilter1_1(pageNumber, pageSize) {
         existingSearchModel = undefined;
     }
 
-    let pageMode = GetPreference('LibraryPagination', 'paged');
-
-    if (!pageSize) {
-        switch (pageMode) {
-            case "infinite":
-                pageSize = 30;
-                break;
-            case "paged":
-            default:
-                pageSize = 30;
-                break;
-        }
-    }
+    // get settings
+    let pageSize = Number($('#games_library_pagesize_select').val());
+    let orderBy = $('#games_library_orderby_select').val();
+    let orderByDirectionSelect = $('#games_library_orderby_direction_select').val();
 
     var model;
 
     // get order by
-    var orderBy = $('#games_library_orderby_select').val();
-    setCookie('games_library_orderby_select', orderBy);
     var orderByDirection = true;
-    var orderByDirectionSelect = $('#games_library_orderby_direction_select').val();
     if (orderByDirectionSelect == "Ascending") {
         orderByDirection = true;
     } else {
         orderByDirection = false;
     }
-    setCookie('games_library_orderby_direction_select', orderByDirectionSelect);
 
     if (existingSearchModel == undefined || freshSearch == true) {
         // search name
@@ -577,7 +587,6 @@ function executeFilter1_1(pageNumber, pageSize) {
                 "SortAscending": orderByDirection
             }
         };
-        console.log(model);
 
         existingSearchModel = model;
     } else {
@@ -586,8 +595,9 @@ function executeFilter1_1(pageNumber, pageSize) {
         model = existingSearchModel;
     }
 
+    let gamesCallURL = '/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize;
     ajaxCall(
-        '/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize,
+        gamesCallURL,
         'POST',
         function (result) {
             var gameElement = document.getElementById('games_library');

@@ -1,1 +1,52 @@
-{"name":"","short_name":"","icons":[{"src":"/android-chrome-192x192.png","sizes":"192x192","type":"image/png"},{"src":"/android-chrome-512x512.png","sizes":"512x512","type":"image/png"}],"theme_color":"#ffffff","background_color":"#ffffff","display":"standalone"}
+{
+    "icons": [
+        {
+            "src": "/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ],
+    "theme_color": "#2b2b2b",
+    "background_color": "#2b2b2b",
+    "display": "standalone",
+    "name": "Gaseous",
+    "short_name": "Gaseous",
+    "id": "gaseousgames",
+    "description": "Gaseous is a game ROM manager, with a built in web based emulator using multiple sources to identify and provide metadata",
+    "start_url": "/index.html",
+    "dir": "ltr",
+    "scope": "./",
+    "lang": "en",
+    "display_override": [
+        "standalone",
+        "window-controls-overlay"
+    ],
+    "categories": [
+        "games"
+    ],
+    "screenshots": [
+        {
+            "src": "/screenshots/Library.png",
+            "sizes": "3456x2000",
+            "type": "image/png",
+            "description": "Gaseous game library"
+        },
+        {
+            "src": "/screenshots/Game.png",
+            "sizes": "3456x2000",
+            "type": "image/png",
+            "description": "Game metadata and screenshots"
+        },
+        {
+            "src": "/screenshots/Emulator.png",
+            "sizes": "3456x2000",
+            "type": "image/png",
+            "description": "Web based emulator"
+        }
+    ]
+}

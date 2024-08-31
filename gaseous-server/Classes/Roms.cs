@@ -18,6 +18,12 @@ namespace gaseous_server.Classes
 			{ }
 		}
 
+		public class InvalidRomHash : Exception
+		{
+			public InvalidRomHash(String Hash) : base("Unable to find ROM by hash " + Hash)
+			{ }
+		}
+
 		public static GameRomObject GetRoms(long GameId, long PlatformId = -1, string NameSearch = "", int pageNumber = 0, int pageSize = 0, string userid = "")
 		{
 			GameRomObject GameRoms = new GameRomObject();
@@ -37,13 +43,34 @@ namespace gaseous_server.Classes
 				dbDict.Add("namesearch", '%' + NameSearch + '%');
 			}
 
+			string UserFields = "";
+			string UserJoin = "";
+			if (userid.Length > 0)
+			{
+				UserFields = ", User_RecentPlayedRoms.RomId AS MostRecentRomId, User_RecentPlayedRoms.IsMediaGroup AS MostRecentRomIsMediaGroup, User_GameFavouriteRoms.RomId AS FavouriteRomId, User_GameFavouriteRoms.IsMediaGroup AS FavouriteRomIsMediaGroup";
+				UserJoin = @"
+					LEFT JOIN
+				User_RecentPlayedRoms ON User_RecentPlayedRoms.UserId = @userid
+					AND User_RecentPlayedRoms.GameId = Games_Roms.GameId
+					AND User_RecentPlayedRoms.PlatformId = Games_Roms.PlatformId
+					AND User_RecentPlayedRoms.RomId = Games_Roms.Id
+					AND User_RecentPlayedRoms.IsMediaGroup = 0
+					LEFT JOIN
+				User_GameFavouriteRoms ON User_GameFavouriteRoms.UserId = @userid
+					AND User_GameFavouriteRoms.GameId = Games_Roms.GameId
+					AND User_GameFavouriteRoms.PlatformId = Games_Roms.PlatformId
+					AND User_GameFavouriteRoms.RomId = Games_Roms.Id
+					AND User_GameFavouriteRoms.IsMediaGroup = 0
+				";
+			}
+
 			// platform query
 			sqlPlatform = "SELECT DISTINCT Games_Roms.PlatformId, Platform.`Name` FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE GameId = @id ORDER BY Platform.`Name`;";
 
 			if (PlatformId == -1)
 			{
 				// data query
-				sql = "SELECT DISTINCT Games_Roms.*, Platform.`Name` AS platformname, GameState.RomId AS SavedStateRomId FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id LEFT JOIN GameState ON (Games_Roms.Id = GameState.RomId AND GameState.UserId = @userid AND GameState.IsMediaGroup = 0) WHERE Games_Roms.GameId = @id" + NameSearchWhere + " ORDER BY Platform.`Name`, Games_Roms.`Name` LIMIT 1000;";
+				sql = "SELECT DISTINCT Games_Roms.*, Platform.`Name` AS platformname, Game.`Name` AS gamename, GameState.RomId AS SavedStateRomId" + UserFields + " FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id LEFT JOIN Game ON Games_Roms.GameId = Game.Id LEFT JOIN GameState ON (Games_Roms.Id = GameState.RomId AND GameState.UserId = @userid AND GameState.IsMediaGroup = 0) " + UserJoin + " WHERE Games_Roms.GameId = @id" + NameSearchWhere + " ORDER BY Platform.`Name`, Games_Roms.`Name` LIMIT 1000;";
 
 				// count query
 				sqlCount = "SELECT COUNT(Games_Roms.Id) AS RomCount FROM Games_Roms WHERE Games_Roms.GameId = @id" + NameSearchWhere + ";";
@@ -51,16 +78,15 @@ namespace gaseous_server.Classes
 			else
 			{
 				// data query
-				sql = "SELECT DISTINCT Games_Roms.*, Platform.`Name` AS platformname, GameState.RomId AS SavedStateRomId FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id LEFT JOIN GameState ON (Games_Roms.Id = GameState.RomId AND GameState.UserId = @userid AND GameState.IsMediaGroup = 0) WHERE Games_Roms.GameId = @id AND Games_Roms.PlatformId = @platformid" + NameSearchWhere + " ORDER BY Platform.`Name`, Games_Roms.`Name` LIMIT 1000;";
+				sql = "SELECT DISTINCT Games_Roms.*, Platform.`Name` AS platformname, Game.`Name` AS gamename, GameState.RomId AS SavedStateRomId" + UserFields + " FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id LEFT JOIN Game ON Games_Roms.GameId = Game.Id LEFT JOIN GameState ON (Games_Roms.Id = GameState.RomId AND GameState.UserId = @userid AND GameState.IsMediaGroup = 0) " + UserJoin + " WHERE Games_Roms.GameId = @id AND Games_Roms.PlatformId = @platformid" + NameSearchWhere + " ORDER BY Platform.`Name`, Games_Roms.`Name` LIMIT 1000;";
 
 				// count query
 				sqlCount = "SELECT COUNT(Games_Roms.Id) AS RomCount FROM Games_Roms WHERE Games_Roms.GameId = @id AND Games_Roms.PlatformId = @platformid" + NameSearchWhere + ";";
 
 				dbDict.Add("platformid", PlatformId);
 			}
-			DataTable romDT = db.ExecuteCMD(sql, dbDict);
-			Dictionary<string, object> rowCount = db.ExecuteCMDDict(sqlCount, dbDict)[0];
-			DataTable platformDT = db.ExecuteCMD(sqlPlatform, dbDict);
+			DataTable romDT = db.ExecuteCMD(sql, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks));
+			Dictionary<string, object> rowCount = db.ExecuteCMDDict(sqlCount, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks))[0];
 
 			if (romDT.Rows.Count > 0)
 			{
@@ -70,10 +96,9 @@ namespace gaseous_server.Classes
 				int pageOffset = pageSize * (pageNumber - 1);
 				for (int i = 0; i < romDT.Rows.Count; i++)
 				{
-					GameRomItem gameRomItem = BuildRom(romDT.Rows[i]);
-
 					if ((i >= pageOffset && i < pageOffset + pageSize) || pageSize == 0)
 					{
+						GameRomItem gameRomItem = BuildRom(romDT.Rows[i]);
 						GameRoms.GameRomItems.Add(gameRomItem);
 					}
 				}
@@ -89,7 +114,7 @@ namespace gaseous_server.Classes
 		public static GameRomItem GetRom(long RomId)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "SELECT Games_Roms.*, Platform.`Name` AS platformname FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE Games_Roms.Id = @id";
+			string sql = "SELECT Games_Roms.*, Platform.`Name` AS platformname, Game.`Name` AS gamename FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id LEFT JOIN Game ON Games_Roms.GameId = Game.Id WHERE Games_Roms.Id = @id";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 			dbDict.Add("id", RomId);
 			DataTable romDT = db.ExecuteCMD(sql, dbDict);
@@ -103,6 +128,26 @@ namespace gaseous_server.Classes
 			else
 			{
 				throw new InvalidRomId(RomId);
+			}
+		}
+
+		public static GameRomItem GetRom(string MD5)
+		{
+			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+			string sql = "SELECT Games_Roms.*, Platform.`Name` AS platformname, Game.`Name` AS gamename FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id LEFT JOIN Game ON Games_Roms.GameId = Game.Id WHERE Games_Roms.MD5 = @id";
+			Dictionary<string, object> dbDict = new Dictionary<string, object>();
+			dbDict.Add("id", MD5);
+			DataTable romDT = db.ExecuteCMD(sql, dbDict);
+
+			if (romDT.Rows.Count > 0)
+			{
+				DataRow romDR = romDT.Rows[0];
+				GameRomItem romItem = BuildRom(romDR);
+				return romItem;
+			}
+			else
+			{
+				throw new InvalidRomHash(MD5);
 			}
 		}
 
@@ -185,7 +230,7 @@ namespace gaseous_server.Classes
 				}
 
 				Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-				string sql = "DELETE FROM Games_Roms WHERE Id = @id; DELETE FROM GameState WHERE RomId = @id;";
+				string sql = "DELETE FROM Games_Roms WHERE Id = @id; DELETE FROM GameState WHERE RomId = @id; UPDATE UserTimeTracking SET PlatformId = NULL, IsMediaGroup = NULL, RomId = NULL WHERE RomId = @id AND IsMediaGroup = 0;";
 				Dictionary<string, object> dbDict = new Dictionary<string, object>();
 				dbDict.Add("id", RomId);
 				db.ExecuteCMD(sql, dbDict);
@@ -225,6 +270,7 @@ namespace gaseous_server.Classes
 				PlatformId = (long)romDR["platformid"],
 				Platform = (string)romDR["platformname"],
 				GameId = (long)romDR["gameid"],
+				Game = (string)romDR["gamename"],
 				Name = (string)romDR["name"],
 				Size = (long)romDR["size"],
 				Crc = ((string)romDR["crc"]).ToLower(),
@@ -242,15 +288,21 @@ namespace gaseous_server.Classes
 				Library = GameLibrary.GetLibrary((int)romDR["LibraryId"])
 			};
 
-			// check for a web emulator and update the romItem
-			foreach (Models.PlatformMapping.PlatformMapItem platformMapping in Models.PlatformMapping.PlatformMap)
+			romItem.RomUserLastUsed = false;
+			if (romDR.Table.Columns.Contains("MostRecentRomId"))
 			{
-				if (platformMapping.IGDBId == romItem.PlatformId)
+				if (romDR["MostRecentRomId"] != DBNull.Value)
 				{
-					if (platformMapping.WebEmulator != null)
-					{
-						romItem.Emulator = platformMapping.WebEmulator;
-					}
+					romItem.RomUserLastUsed = true;
+				}
+			}
+
+			romItem.RomUserFavourite = false;
+			if (romDR.Table.Columns.Contains("FavouriteRomId"))
+			{
+				if (romDR["FavouriteRomId"] != DBNull.Value)
+				{
+					romItem.RomUserFavourite = true;
 				}
 			}
 
@@ -267,12 +319,14 @@ namespace gaseous_server.Classes
 		{
 			public long PlatformId { get; set; }
 			public string Platform { get; set; }
-			public Models.PlatformMapping.PlatformMapItem.WebEmulatorItem? Emulator { get; set; }
 			public long GameId { get; set; }
+			public string Game { get; set; }
 			public string? Path { get; set; }
 			public string? SignatureSourceGameTitle { get; set; }
 			public bool HasSaveStates { get; set; } = false;
 			public GameLibrary.LibraryItem Library { get; set; }
+			public bool RomUserLastUsed { get; set; }
+			public bool RomUserFavourite { get; set; }
 		}
 	}
 }
