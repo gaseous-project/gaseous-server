@@ -40,16 +40,6 @@
 
         let head = document.getElementsByTagName('head')[0];
 
-        // update stylesheet links
-        for (let i = 0; i < styleSheets.length; i++) {
-            let newLink = document.createElement('link');
-            newLink.rel = "stylesheet";
-            newLink.href = styleSheets[i] + '?v=' + AppVersion;
-            newLink.type = "text/css";
-
-            head.appendChild(newLink);
-        }
-
         // placeholder for global userProfile variable
         var userProfile;
 
@@ -63,6 +53,54 @@
             head.appendChild(newScript);
         }
 
+        // update stylesheet links
+        for (let i = 0; i < styleSheets.length; i++) {
+            let newLink = document.createElement('link');
+            newLink.rel = "stylesheet";
+            newLink.href = styleSheets[i] + '?v=' + AppVersion;
+            newLink.type = "text/css";
+
+            head.appendChild(newLink);
+        }
+
+        async function LoadPageContent(page, targetDiv) {
+            if (targetDiv == undefined || targetDiv == null || targetDiv == '') {
+                targetDiv = 'content';
+            }
+
+            // load page content
+            let pageContentResponse = await fetch('/pages/' + page + '.html' + '?v=' + AppVersion);
+            let pageContentContent = await pageContentResponse.text();
+            document.getElementById(targetDiv).innerHTML = pageContentContent;
+
+            // load page script
+            let pageScriptLink = '/pages/' + page + '.js';
+            let script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = pageScriptLink + '?v=' + AppVersion;
+            script.async = false;
+            document.head.appendChild(script);
+
+            backgroundImageHandler = new BackgroundImageRotator();
+        }
+    </script>
+</head>
+
+<body>
+    <!-- Background Images -->
+    <div id="bgImages"></div>
+    <div id="bgImage_Opacity"></div>
+
+    <!-- Notifications -->
+    <div id="notifications_target"></div>
+
+    <!-- Page Banner -->
+    <div id="banner_target"></div>
+
+    <!-- Page Content -->
+    <div id="content"></div>
+
+    <script type="text/javascript">
         // start the application
         let backgroundImageHandler = undefined;
         console.log("Starting Gaseous Games");
@@ -102,41 +140,5 @@
 
                 break;
         }
-
-        async function LoadPageContent(page, targetDiv) {
-            if (targetDiv == undefined || targetDiv == null || targetDiv == '') {
-                targetDiv = 'content';
-            }
-
-            // load page content
-            let pageContentResponse = await fetch('/pages/' + page + '.html' + '?v=' + AppVersion);
-            let pageContentContent = await pageContentResponse.text();
-            document.getElementById(targetDiv).innerHTML = pageContentContent;
-
-            // load page script
-            let pageScriptLink = '/pages/' + page + '.js';
-            let script = document.createElement('script');
-            script.type = 'text/javascript';
-            script.src = pageScriptLink + '?v=' + AppVersion;
-            script.async = false;
-            document.head.appendChild(script);
-
-            backgroundImageHandler = new BackgroundImageRotator();
-        }
     </script>
-</head>
-
-<body>
-    <!-- Background Images -->
-    <div id="bgImages"></div>
-    <div id="bgImage_Opacity"></div>
-
-    <!-- Notifications -->
-    <div id="notifications_target"></div>
-
-    <!-- Page Banner -->
-    <div id="banner_target"></div>
-
-    <!-- Page Content -->
-    <div id="content"></div>
 </body>
