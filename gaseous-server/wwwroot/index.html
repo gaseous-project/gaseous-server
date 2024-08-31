@@ -115,35 +115,33 @@
 
             default:
                 // first run - load login page or redirect if user already logged in
-                try {
-                    fetch('/api/v1.1/Account/Profile/Basic')
-                        .then(async response => {
-                            if (response.ok) {
-                                // user is signed in - start setting up the application
-                                console.log("User is logged in");
-                                userProfile = await response.json();
 
-                                // load page banner
-                                LoadPageContent('banner', 'banner_target');
+                fetch('/api/v1.1/Account/Profile/Basic')
+                    .then(async response => {
+                        if (response.ok) {
+                            // user is signed in - start setting up the application
+                            console.log("User is logged in");
+                            userProfile = await response.json();
 
-                                // load page content
-                                let pageSelection = getQueryString('page', 'string');
+                            // load page banner
+                            LoadPageContent('banner', 'banner_target');
 
-                                if (!pageSelection) {
-                                    pageSelection = GetPreference("DefaultHomePage", 'home');
-                                }
-                                LoadPageContent(pageSelection, 'content');
-                            } else {
-                                // user is not signed in - load login page
-                                LoadPageContent('login');
+                            // load page content
+                            let pageSelection = getQueryString('page', 'string');
+
+                            if (!pageSelection) {
+                                pageSelection = GetPreference("DefaultHomePage", 'home');
                             }
-                        });
-                }
-                catch (error) {
-                    console.error('Error:', error);
-                    LoadPageContent('login');
-                }
-
+                            LoadPageContent(pageSelection, 'content');
+                        } else {
+                            // user is not signed in - load login page
+                            LoadPageContent('login');
+                        }
+                    })
+                    .catch((error) => {
+                        console.log(error);
+                        LoadPageContent('login');
+                    });
                 break;
         }
     </script>
