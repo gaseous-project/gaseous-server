@@ -506,10 +506,12 @@ async function SetPreference_Batch(model, callbackSuccess, callbackError) {
         })
         .then(response => {
             if (response.ok) {
+                console.log("SetPreference_Batch: Success");
                 if (callbackSuccess) {
                     callbackSuccess();
                 }
             } else {
+                console.log("SetPreference_Batch: Error: " + response.statusText);
                 if (callbackError) {
                     callbackError();
                 }
@@ -520,6 +522,7 @@ async function SetPreference_Batch(model, callbackSuccess, callbackError) {
                 SetPreference_Local(model[i].setting, model[i].value.toString());
             }
 
+            console.log("SetPreference_Batch: Error: " + error);
             if (callbackError) {
                 callbackError();
             }

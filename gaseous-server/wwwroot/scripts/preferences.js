@@ -114,7 +114,7 @@ class PreferencesWindow {
             }
             preferences.push({ setting: "LibraryGameClassificationDisplayOrder", value: JSON.stringify(classificationOrder) });
 
-            SetPreference_Batch(preferences, window.location.reload());
+            SetPreference_Batch(preferences, function () { window.location.reload(); }, function () { window.location.reload(); });
         });
         this.dialog.addButton(okButton);
 
