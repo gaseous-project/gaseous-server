@@ -91,7 +91,7 @@
                             let pageSelection = getQueryString('page', 'string');
 
                             if (!pageSelection) {
-                                pageSelection = 'library';
+                                pageSelection = GetPreference("DefaultHomePage", 'home');
                             }
                             LoadPageContent(pageSelection, 'content');
                         } else {

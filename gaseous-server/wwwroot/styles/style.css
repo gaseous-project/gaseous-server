@@ -2932,3 +2932,22 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     width: 20px;
     margin-right: 5px;
 }
+
+.homegame-scroller {
+    list-style: none;
+    white-space: nowrap;
+    display: flex;
+    overflow-x: auto;
+    overflow-y: hidden;
+}
+
+.homegame-item {
+    /* display: inline-block; */
+    /* width: 220px; */
+}
+
+.homegame-item>.game_tile_small {
+    max-width: 160px;
+    width: 160px;
+    white-space: normal;
+}

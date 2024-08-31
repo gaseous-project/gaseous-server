@@ -1060,7 +1060,7 @@
     "RetroPieDirectoryName": "c64",
     "WebEmulator": {
       "Type": "EmulatorJS",
-      "Core": "vice_x64",
+      "Core": "vice_x64sc",
       "AvailableWebEmulators": [
         {
           "EmulatorType": "EmulatorJS",
