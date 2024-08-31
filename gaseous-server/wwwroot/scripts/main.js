@@ -491,30 +491,39 @@ function SetPreference(Setting, Value, callbackSuccess, callbackError) {
     );
 }
 
-function SetPreference_Batch(model, callbackSuccess, callbackError) {
-    ajaxCall(
-        '/api/v1.1/Account/Preferences',
-        'POST',
-        function (result) {
-            for (var i = 0; i < model.length; i++) {
+async function SetPreference_Batch(model, callbackSuccess, callbackError) {
+    await fetch('/api/v1.1/Account/Preferences', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(model)
+    })
+        .then(response => {
+            for (let i = 0; i < model.length; i++) {
                 SetPreference_Local(model[i].setting, model[i].value.toString());
             }
-
-            if (callbackSuccess) {
-                callbackSuccess();
+        })
+        .then(response => {
+            if (response.ok) {
+                if (callbackSuccess) {
+                    callbackSuccess();
+                }
+            } else {
+                if (callbackError) {
+                    callbackError();
+                }
             }
-        },
-        function (error) {
-            for (var i = 0; i < model.length; i++) {
+        })
+        .catch(error => {
+            for (let i = 0; i < model.length; i++) {
                 SetPreference_Local(model[i].setting, model[i].value.toString());
             }
 
             if (callbackError) {
                 callbackError();
             }
-        },
-        JSON.stringify(model)
-    );
+        });
 }
 
 function SetPreference_Local(Setting, Value) {
