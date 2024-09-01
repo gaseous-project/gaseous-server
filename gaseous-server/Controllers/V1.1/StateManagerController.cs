@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Identity;
 using System.Data;
 using Asp.Versioning;
 using System.IO.Compression;
+using gaseous_server.Classes.Metadata;
 
 namespace gaseous_server.Controllers.v1_1
 {
@@ -256,7 +257,25 @@ namespace gaseous_server.Controllers.v1_1
             else
             {
                 // get rom data
-                Roms.GameRomItem romItem = Roms.GetRom(RomId);
+                string romName = "";
+                string romMd5 = "";
+                string romSha1 = "";
+                if (IsMediaGroup == false)
+                {
+                    Roms.GameRomItem romItem = Roms.GetRom(RomId);
+                    romName = romItem.Name;
+                    romMd5 = romItem.Md5;
+                    romSha1 = romItem.Sha1;
+                }
+                else
+                {
+                    RomMediaGroup.GameRomMediaGroupItem mediaGroupItem = RomMediaGroup.GetMediaGroup(RomId);
+                    IGDB.Models.Game game = Games.GetGame(mediaGroupItem.GameId, false, false, false);
+                    Classes.Common.hashObject hashObject = new Classes.Common.hashObject(Path.Combine(Config.LibraryConfiguration.LibraryMediaGroupDirectory, mediaGroupItem.Id.ToString() + ".zip"));
+                    romName = game.Name;
+                    romMd5 = hashObject.md5hash;
+                    romSha1 = hashObject.sha1hash;
+                }
 
                 byte[] bytes;
                 if ((bool)data.Rows[0]["Zipped"] == false)
@@ -268,7 +287,7 @@ namespace gaseous_server.Controllers.v1_1
                     bytes = Common.Decompress((byte[])data.Rows[0]["State"]);
                 }
                 string contentType = "";
-                string filename = ((DateTime)data.Rows[0]["StateDateTime"]).ToString("yyyy-MM-ddTHH-mm-ss") + "-" + Path.GetFileNameWithoutExtension(romItem.Name);
+                string filename = ((DateTime)data.Rows[0]["StateDateTime"]).ToString("yyyy-MM-ddTHH-mm-ss") + "-" + Path.GetFileNameWithoutExtension(romName);
 
 
                 if (StateOnly == true)
@@ -283,14 +302,14 @@ namespace gaseous_server.Controllers.v1_1
 
                     Dictionary<string, object> RomInfo = new Dictionary<string, object>
                      {
-                         { "Name", romItem.Name },
+                         { "Name", romName },
                          { "StateDateTime", data.Rows[0]["StateDateTime"] },
                          { "StateName", data.Rows[0]["Name"] }
                      };
                     if ((int)data.Rows[0]["IsMediaGroup"] == 0)
                     {
-                        RomInfo.Add("MD5", romItem.Md5);
-                        RomInfo.Add("SHA1", romItem.Sha1);
+                        RomInfo.Add("MD5", romMd5);
+                        RomInfo.Add("SHA1", romSha1);
                         RomInfo.Add("Type", "ROM");
                     }
                     else
