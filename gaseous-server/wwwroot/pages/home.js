@@ -156,7 +156,7 @@ gameRows.push(new HomePageGameRow("Top Rated Games",
         "MaximumReleaseYear": -1,
         "GameRating": {
             "MinimumRating": -1,
-            "MinimumRatingCount": -1,
+            "MinimumRatingCount": 15,
             "MaximumRating": -1,
             "MaximumRatingCount": -1,
             "IncludeUnrated": false
