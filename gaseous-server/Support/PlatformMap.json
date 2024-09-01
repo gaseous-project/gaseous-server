@@ -3391,14 +3391,29 @@
       "ZX81"
     ],
     "Extensions": {
-      "SupportedFileExtensions": [],
+      "SupportedFileExtensions": [
+        ".P",
+        ".TZX",
+        ".T81"
+      ],
       "UniqueFileExtensions": []
     },
     "RetroPieDirectoryName": "",
     "WebEmulator": {
-      "Type": "",
-      "Core": "",
-      "AvailableWebEmulators": null
+      "Type": "EmulatorJS",
+      "Core": "81",
+      "AvailableWebEmulators": [
+        {
+          "EmulatorType": "EmulatorJS",
+          "AvailableWebEmulatorCores": [
+            {
+              "Core": "81",
+              "AlternateCoreName": "81",
+              "Default": true
+            }
+          ]
+        }
+      ]
     },
     "Bios": []
   },

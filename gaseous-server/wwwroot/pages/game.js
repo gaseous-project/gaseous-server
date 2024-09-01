@@ -432,7 +432,7 @@ function LoadGamePlatforms() {
             if (result[i].emulatorConfiguration.emulatorType.length > 0 && result[i].emulatorConfiguration.core.length > 0 && result[i].favouriteRomId) {
                 showSaveState = true;
                 romId = result[i].favouriteRomId;
-                isMediaGroup = result[i].favouriteIsMediaGroup;
+                isMediaGroup = result[i].favouriteRomIsMediagroup;
 
                 platformItem.setAttribute('isFavourite', true);
                 platformItem.classList.add('platform_item_green');
@@ -492,6 +492,7 @@ function LoadGamePlatforms() {
                 platformStateManagerButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstatemanagericon" />';
                 platformStateManagerButton.addEventListener('click', (e) => {
                     e.stopPropagation();
+                    console.log('RomID: ' + romId + ' isMediaGroup: ' + isMediaGroup);
                     let stateManager = new EmulatorStateManager(romId, isMediaGroup, platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, gameId, platformData.lastPlayedRomName);
                     stateManager.open();
                 });
