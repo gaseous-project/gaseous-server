@@ -12,7 +12,7 @@ function drawLibrary() {
         function (result) {
             let newTable = document.getElementById('settings_libraries');
             newTable.innerHTML = '';
-            newTable.appendChild(createTableRow(true, ['Name', 'Path', 'Default Platform', 'Default Library', '']));
+            newTable.appendChild(createTableRow(true, ['Name', 'Path', 'Default Platform', 'Default Library', '', '']));
 
             for (let i = 0; i < result.length; i++) {
                 let platformName = '';
@@ -35,6 +35,35 @@ function drawLibrary() {
 
                 let controls = document.createElement('div');
                 controls.style.textAlign = 'right';
+
+                let scanButton = document.createElement('img');
+                scanButton.id = 'startProcess';
+                scanButton.className = 'taskstart';
+                scanButton.src = '/images/start-task.svg';
+                scanButton.title = 'Start Scan';
+                scanButton.addEventListener('click', function () {
+                    let scanLibrary = new MessageBox('Scan Library', 'Are you sure you want to scan this library?');
+                    scanLibrary.addButton(new ModalButton('OK', 2, scanLibrary, function (callingObject) {
+                        ajaxCall(
+                            '/api/v1.1/Library/' + result[i].id + '/Scan',
+                            'POST',
+                            function () {
+                                callingObject.msgDialog.close();
+                                drawLibrary();
+                            },
+                            function () {
+                                callingObject.msgDialog.close();
+                                drawLibrary();
+                            }
+                        );
+                    }));
+
+                    scanLibrary.addButton(new ModalButton('Cancel', 0, scanLibrary, function (callingObject) {
+                        callingObject.msgDialog.close();
+                    }));
+
+                    scanLibrary.open();
+                });
 
                 let deleteButton = '';
                 if (result[i].isDefaultLibrary == false) {
@@ -80,6 +109,7 @@ function drawLibrary() {
                         result[i].path,
                         platformName,
                         defaultLibrary,
+                        scanButton,
                         controls
                     ],
                     'romrow',
