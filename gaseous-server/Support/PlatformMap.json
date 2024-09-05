@@ -335,7 +335,14 @@
     "Extensions": {
       "SupportedFileExtensions": [
         ".CPC",
-        ".DSK"
+        ".DSK",
+        ".SNA",
+        ".TAP",
+        ".CDT",
+        ".VOC",
+        ".M3U",
+        ".CPR",
+        ".ZIP"
       ],
       "UniqueFileExtensions": [
         ".CPC"
@@ -343,9 +350,25 @@
     },
     "RetroPieDirectoryName": "amstradcpc",
     "WebEmulator": {
-      "Type": "",
-      "Core": "",
-      "AvailableWebEmulators": []
+      "Type": "EmulatorJS",
+      "Core": "crocods",
+      "AvailableWebEmulators": [
+        {
+          "EmulatorType": "EmulatorJS",
+          "AvailableWebEmulatorCores": [
+            {
+              "Core": "crocods",
+              "AlternateCoreName": "",
+              "Default": true
+            },
+            {
+              "Core": "cap32",
+              "AlternateCoreName": "",
+              "Default": false
+            }
+          ]
+        }
+      ]
     },
     "Bios": []
   },
@@ -3442,14 +3465,35 @@
       "SFC"
     ],
     "Extensions": {
-      "SupportedFileExtensions": [],
+      "SupportedFileExtensions": [
+        ".7Z",
+        ".BIN",
+        ".BS",
+        ".FIG",
+        ".MGD",
+        ".SFC",
+        ".SMC",
+        ".SWC",
+        ".ZIP"
+      ],
       "UniqueFileExtensions": []
     },
-    "RetroPieDirectoryName": "",
+    "RetroPieDirectoryName": "snes",
     "WebEmulator": {
-      "Type": "",
-      "Core": "",
-      "AvailableWebEmulators": null
+      "Type": "EmulatorJS",
+      "Core": "snes",
+      "AvailableWebEmulators": [
+        {
+          "EmulatorType": "EmulatorJS",
+          "AvailableWebEmulatorCores": [
+            {
+              "Core": "snes",
+              "AlternateCoreName": "snes9x",
+              "Default": true
+            }
+          ]
+        }
+      ]
     },
     "Bios": []
   },

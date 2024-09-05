@@ -86,5 +86,24 @@ namespace gaseous_server.Controllers
                 return NotFound(exLNF.ToString());
             }
         }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpPost("{LibraryId}/Scan")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult ScanLibrary(int LibraryId)
+        {
+            try
+            {
+                GameLibrary.ScanLibrary(LibraryId);
+                return Ok();
+            }
+            catch (GameLibrary.LibraryNotFound exLNF)
+            {
+                return NotFound(exLNF.ToString());
+            }
+        }
     }
 }
