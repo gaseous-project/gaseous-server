@@ -4,6 +4,7 @@ services:
     container_name: gaseous-server
     build:
       context: ./
+      dockerfile: ./build/Dockerfile
     restart: unless-stopped
     networks:
       - gaseous
@@ -12,7 +13,7 @@ services:
     ports:
       - 5198:80
     volumes:
-      - gs:/root/.gaseous-server
+      - gs:/home/gaseous/.gaseous-server
     environment:
       - TZ=Australia/Sydney
       - dbhost=gsdb
