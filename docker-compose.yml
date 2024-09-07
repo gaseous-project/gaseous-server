@@ -11,7 +11,7 @@ services:
     ports:
       - 5198:80
     volumes:
-      - gs:/root/.gaseous-server
+      - gs:/home/gaseous/.gaseous-server
     environment:
       - TZ=Australia/Sydney
       - dbhost=gsdb

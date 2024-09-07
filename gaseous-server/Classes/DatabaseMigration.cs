@@ -109,7 +109,7 @@ namespace gaseous_server.Classes
                             db.ExecuteNonQuery(sql);
                             break;
 
-                        case 1022:
+                        case 1023:
                             // load country list
                             Logging.Log(Logging.LogType.Information, "Database Upgrade", "Adding country look up table contents");
 
@@ -151,10 +151,10 @@ namespace gaseous_server.Classes
                             }
 
                             // this is a safe background task
-                            BackgroundUpgradeTargetSchemaVersions.Add(1022);
+                            BackgroundUpgradeTargetSchemaVersions.Add(1023);
                             break;
 
-                        case 1023:
+                        case 1024:
                             // create profiles for all existing users
                             sql = "SELECT * FROM Users;";
                             data = db.ExecuteCMD(sql);
@@ -197,8 +197,8 @@ namespace gaseous_server.Classes
                         MySql_1002_MigrateMetadataVersion();
                         break;
 
-                    case 1022:
-                        MySql_1022_MigrateMetadataVersion();
+                    case 1023:
+                        MySql_1023_MigrateMetadataVersion();
                         break;
                 }
             }
@@ -301,7 +301,7 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static void MySql_1022_MigrateMetadataVersion()
+        public static void MySql_1023_MigrateMetadataVersion()
         {
             FileSignature fileSignature = new FileSignature();
 
