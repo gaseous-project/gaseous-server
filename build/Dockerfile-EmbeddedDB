@@ -9,10 +9,18 @@ RUN echo "Build: $BUILDPLATFORM"
 
 # Copy everything
 COPY .. ./
+
+# Build Gaseous Web Server
 # Restore as distinct layers
 RUN dotnet restore "gaseous-server/gaseous-server.csproj" -a $TARGETARCH
 # Build and publish a release
 RUN dotnet publish "gaseous-server/gaseous-server.csproj" --use-current-runtime --self-contained true -c Release -o out -a $TARGETARCH
+
+# Build Gaseous CLI
+# Restore as distinct layers
+RUN dotnet restore "gaseous-cli/gaseous-cli.csproj" -a $TARGETARCH
+# Build and publish a release
+RUN dotnet publish "gaseous-cli/gaseous-cli.csproj" --use-current-runtime --self-contained true -c Release -o out -a $TARGETARCH
 
 # update apt-get
 RUN apt-get update

@@ -154,8 +154,8 @@ namespace gaseous_server.Classes
                 }
             }
 
-            Console.WriteLine("Using configuration:");
-            Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(_config, Formatting.Indented));
+            // Console.WriteLine("Using configuration:");
+            // Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(_config, Formatting.Indented));
         }
 
         public static void UpdateConfig()
@@ -202,7 +202,7 @@ namespace gaseous_server.Classes
                     AppSettings.Remove(SettingName);
                 }
 
-                Logging.Log(Logging.LogType.Information, "Load Settings", "Loading setting " + SettingName + " from database");
+                // Logging.Log(Logging.LogType.Information, "Load Settings", "Loading setting " + SettingName + " from database");
 
                 try
                 {
