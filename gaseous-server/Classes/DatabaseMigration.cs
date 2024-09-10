@@ -149,9 +149,6 @@ namespace gaseous_server.Classes
                                     db.ExecuteNonQuery(sql, dbDict);
                                 } while (reader.EndOfStream == false);
                             }
-
-                            // this is a safe background task
-                            BackgroundUpgradeTargetSchemaVersions.Add(1023);
                             break;
 
                         case 1024:
@@ -181,6 +178,44 @@ namespace gaseous_server.Classes
                                 };
                                 db.ExecuteNonQuery(sql, dbDict);
                             }
+
+                            // update all rom paths to use the new format
+                            sql = "SELECT * FROM GameLibraries;";
+                            data = db.ExecuteCMD(sql);
+                            foreach (DataRow row in data.Rows)
+                            {
+                                sql = "SELECT * FROM Games_Roms WHERE LibraryId = @libraryid;";
+                                dbDict = new Dictionary<string, object>
+                                {
+                                    { "libraryid", row["Id"] }
+                                };
+                                DataTable romData = db.ExecuteCMD(sql, dbDict);
+
+                                string libraryRootPath = (string)row["Path"];
+                                if (libraryRootPath.EndsWith(Path.DirectorySeparatorChar.ToString()) == false)
+                                {
+                                    libraryRootPath += Path.DirectorySeparatorChar;
+                                }
+
+                                foreach (DataRow romRow in romData.Rows)
+                                {
+                                    string existingPath = (string)romRow["RelativePath"];
+                                    string newPath = existingPath.Replace(libraryRootPath, "");
+
+                                    Logging.Log(Logging.LogType.Information, "Database Upgrade", "Updating ROM path from " + existingPath + " to " + newPath);
+
+                                    sql = "UPDATE Games_Roms SET RelativePath = @newpath WHERE Id = @id;";
+                                    dbDict = new Dictionary<string, object>
+                                    {
+                                        { "newpath", newPath },
+                                        { "id", romRow["Id"] }
+                                    };
+                                    db.ExecuteNonQuery(sql, dbDict);
+                                }
+                            }
+
+                            // migrating metadata is a safe background task
+                            BackgroundUpgradeTargetSchemaVersions.Add(1024);
                             break;
                     }
                     break;
@@ -197,8 +232,8 @@ namespace gaseous_server.Classes
                         MySql_1002_MigrateMetadataVersion();
                         break;
 
-                    case 1023:
-                        MySql_1023_MigrateMetadataVersion();
+                    case 1024:
+                        MySql_1024_MigrateMetadataVersion();
                         break;
                 }
             }
@@ -301,12 +336,12 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static void MySql_1023_MigrateMetadataVersion()
+        public static void MySql_1024_MigrateMetadataVersion()
         {
             FileSignature fileSignature = new FileSignature();
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM Games_Roms WHERE RomDataVersion = 1;";
+            string sql = "SELECT * FROM view_Games_Roms WHERE RomDataVersion = 1;";
             DataTable data = db.ExecuteCMD(sql);
             long count = 1;
             foreach (DataRow row in data.Rows)

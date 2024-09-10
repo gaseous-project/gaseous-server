@@ -48,6 +48,16 @@ Config.InitSettings();
 // write updated settings back to the config file
 Config.UpdateConfig();
 
+// fix base path in database due to possible changes in home path
+string ConfiguredLibraryBasePath = Path.Combine(Config.LibraryConfiguration.LibraryRootDirectory, "Library");
+if (ConfiguredLibraryBasePath != GameLibrary.GetDefaultLibrary.Path)
+{
+    string sql = "UPDATE `GameLibaries` SET `Path` = '" + ConfiguredLibraryBasePath + "' WHERE `path` = '" + GameLibrary.GetDefaultLibrary.Path + "';";
+    db.ExecuteNonQuery(sql);
+
+    Config.SetSetting<string>("LibraryRootDirectory", ConfiguredLibraryBasePath);
+}
+
 // set api metadata source from config
 Communications.MetadataSource = Config.MetadataConfiguration.MetadataSource;
 

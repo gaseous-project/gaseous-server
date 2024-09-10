@@ -510,8 +510,8 @@ namespace gaseous_server.Classes.Metadata
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = @"
 SELECT DISTINCT
-    Games_Roms.GameId,
-    Games_Roms.PlatformId,
+    view_Games_Roms.GameId,
+    view_Games_Roms.PlatformId,
     Platform.`Name`,
     User_RecentPlayedRoms.UserId AS MostRecentUserId,
     User_RecentPlayedRoms.RomId AS MostRecentRomId,
@@ -530,23 +530,23 @@ SELECT DISTINCT
     END AS `FavouriteRomName`,
     User_GameFavouriteRoms.IsMediaGroup AS FavouriteRomIsMediaGroup
 FROM
-    Games_Roms
+    view_Games_Roms
         LEFT JOIN
-    Platform ON Games_Roms.PlatformId = Platform.Id
+    Platform ON view_Games_Roms.PlatformId = Platform.Id
         LEFT JOIN
     User_RecentPlayedRoms ON User_RecentPlayedRoms.UserId = @userid
-        AND User_RecentPlayedRoms.GameId = Games_Roms.GameId
-        AND User_RecentPlayedRoms.PlatformId = Games_Roms.PlatformId
+        AND User_RecentPlayedRoms.GameId = view_Games_Roms.GameId
+        AND User_RecentPlayedRoms.PlatformId = view_Games_Roms.PlatformId
         LEFT JOIN
     User_GameFavouriteRoms ON User_GameFavouriteRoms.UserId = @userid
-        AND User_GameFavouriteRoms.GameId = Games_Roms.GameId
-        AND User_GameFavouriteRoms.PlatformId = Games_Roms.PlatformId
+        AND User_GameFavouriteRoms.GameId = view_Games_Roms.GameId
+        AND User_GameFavouriteRoms.PlatformId = view_Games_Roms.PlatformId
         LEFT JOIN
-    Games_Roms AS GMR ON GMR.Id = User_RecentPlayedRoms.RomId
+    view_Games_Roms AS GMR ON GMR.Id = User_RecentPlayedRoms.RomId
         LEFT JOIN
-    Games_Roms AS GFV ON GFV.Id = User_GameFavouriteRoms.RomId
+    view_Games_Roms AS GFV ON GFV.Id = User_GameFavouriteRoms.RomId
 WHERE
-    Games_Roms.GameId = @gameid
+    view_Games_Roms.GameId = @gameid
 ORDER BY Platform.`Name`;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>
             {
