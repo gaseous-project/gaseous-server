@@ -60,6 +60,18 @@ namespace gaseous_server
             }
         }
 
+        // update default library path
+        public static void UpdateDefaultLibraryPath()
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "UPDATE GameLibraries SET Path=@path WHERE DefaultLibrary=1;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "path", Path.Combine(Config.LibraryConfiguration.LibraryRootDirectory, "Library") }
+            };
+            db.ExecuteCMD(sql, dbDict);
+        }
+
         public static List<LibraryItem> GetLibraries
         {
             get

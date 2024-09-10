@@ -48,6 +48,9 @@ Config.InitSettings();
 // write updated settings back to the config file
 Config.UpdateConfig();
 
+// update default library path
+GameLibrary.UpdateDefaultLibraryPath();
+
 // set api metadata source from config
 Communications.MetadataSource = Config.MetadataConfiguration.MetadataSource;
 
