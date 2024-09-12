@@ -129,7 +129,7 @@ namespace gaseous_server.Classes
                         IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature, discoveredSignature.Flags.IGDBPlatformId, true);
 
                         // add to database
-                        long RomId = StoreROM(GameLibrary.GetDefaultLibrary, hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath);
+                        long RomId = StoreROM(GameLibrary.GetDefaultLibrary, hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath, 0, true);
 
                         // build return value
                         RetVal.Add("romid", RomId);
@@ -329,7 +329,7 @@ namespace gaseous_server.Classes
             return SearchCandidates;
         }
 
-        public static long StoreROM(GameLibrary.LibraryItem library, Common.hashObject hash, IGDB.Models.Game determinedGame, IGDB.Models.Platform determinedPlatform, gaseous_server.Models.Signatures_Games discoveredSignature, string GameFileImportPath, long UpdateId = 0)
+        public static long StoreROM(GameLibrary.LibraryItem library, Common.hashObject hash, IGDB.Models.Game determinedGame, IGDB.Models.Platform determinedPlatform, gaseous_server.Models.Signatures_Games discoveredSignature, string GameFileImportPath, long UpdateId = 0, bool SourceIsExternal = false)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
@@ -400,7 +400,7 @@ namespace gaseous_server.Classes
             // move to destination
             if (library.IsDefaultLibrary == true)
             {
-                MoveGameFile(romId);
+                MoveGameFile(romId, SourceIsExternal);
             }
 
             return romId;
@@ -436,10 +436,14 @@ namespace gaseous_server.Classes
             return DestinationPathName;
         }
 
-        public static bool MoveGameFile(long RomId)
+        public static bool MoveGameFile(long RomId, bool SourceIsExternal)
         {
             Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
             string romPath = rom.Path;
+            if (SourceIsExternal == true)
+            {
+                romPath = rom.RelativePath;
+            }
 
             if (File.Exists(romPath))
             {
@@ -507,7 +511,7 @@ namespace gaseous_server.Classes
                     SetStatus(i, romDT.Rows.Count, "Processing file " + romDT.Rows[i]["name"]);
                     Logging.Log(Logging.LogType.Information, "Organise Library", "(" + i + "/" + romDT.Rows.Count + ") Processing ROM " + romDT.Rows[i]["name"]);
                     long RomId = (long)romDT.Rows[i]["id"];
-                    MoveGameFile(RomId);
+                    MoveGameFile(RomId, false);
                 }
             }
             ClearStatus();
@@ -772,7 +776,7 @@ namespace gaseous_server.Classes
                             if (romPath != ComputeROMPath(romId))
                             {
                                 Logging.Log(Logging.LogType.Information, "Library Scan", "ROM at path " + romPath + " found, but needs to be moved");
-                                MoveGameFile(romId);
+                                MoveGameFile(romId, false);
                             }
                             else
                             {

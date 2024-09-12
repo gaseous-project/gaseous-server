@@ -282,6 +282,7 @@ namespace gaseous_server.Classes
 				RomTypeMedia = (string)romDR["romtypemedia"],
 				MediaLabel = (string)romDR["medialabel"],
 				Path = (string)romDR["path"],
+				RelativePath = (string)romDR["relativepath"],
 				SignatureSource = (gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType)(Int32)romDR["metadatasource"],
 				SignatureSourceGameTitle = (string)Common.ReturnValueIfNull(romDR["MetadataGameName"], ""),
 				HasSaveStates = hasSaveStates,
@@ -322,6 +323,7 @@ namespace gaseous_server.Classes
 			public long GameId { get; set; }
 			public string Game { get; set; }
 			public string? Path { get; set; }
+			public string? RelativePath { get; set; }
 			public string? SignatureSourceGameTitle { get; set; }
 			public bool HasSaveStates { get; set; } = false;
 			public GameLibrary.LibraryItem Library { get; set; }

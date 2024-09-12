@@ -197,10 +197,39 @@ namespace gaseous_server.Classes
                                     libraryRootPath += Path.DirectorySeparatorChar;
                                 }
 
+                                bool GetLastThreeElements = (bool)row["DefaultLibrary"];
+
                                 foreach (DataRow romRow in romData.Rows)
                                 {
                                     string existingPath = (string)romRow["RelativePath"];
-                                    string newPath = existingPath.Replace(libraryRootPath, "");
+                                    string newPath = "";
+
+                                    if (GetLastThreeElements == true)
+                                    {
+                                        // strip all but the last 3 elements from existingPath separated by directory separator
+                                        // this mode only works for the default library
+                                        string[] pathParts = existingPath.Split(Path.DirectorySeparatorChar);
+                                        if (pathParts.Length > 3)
+                                        {
+                                            newPath = Path.Combine(pathParts[pathParts.Length - 3], pathParts[pathParts.Length - 2], pathParts[pathParts.Length - 1]);
+                                        }
+                                        else
+                                        {
+                                            newPath = existingPath;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // strip the library root path from the existing path
+                                        if (existingPath.StartsWith(libraryRootPath))
+                                        {
+                                            newPath = existingPath.Substring(libraryRootPath.Length);
+                                        }
+                                        else
+                                        {
+                                            newPath = existingPath;
+                                        }
+                                    }
 
                                     Logging.Log(Logging.LogType.Information, "Database Upgrade", "Updating ROM path from " + existingPath + " to " + newPath);
 

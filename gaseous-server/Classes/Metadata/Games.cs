@@ -583,7 +583,10 @@ ORDER BY Platform.`Name`;";
                 {
                     LastPlayedRomId = (long?)row["MostRecentRomId"];
                     LastPlayedIsMediagroup = (bool)row["MostRecentRomIsMediaGroup"];
-                    LastPlayedRomName = (string)row["MostRecentRomName"];
+                    if (row["MostRecentRomName"] != System.DBNull.Value)
+                    {
+                        LastPlayedRomName = string.IsNullOrEmpty((string?)row["MostRecentRomName"]) ? "" : (string)row["MostRecentRomName"];
+                    }
                 }
 
                 long? FavouriteRomId = null;
@@ -593,7 +596,10 @@ ORDER BY Platform.`Name`;";
                 {
                     FavouriteRomId = (long?)row["FavouriteRomId"];
                     FavouriteRomIsMediagroup = (bool)row["FavouriteRomIsMediaGroup"];
-                    FavouriteRomName = (string)row["FavouriteRomName"];
+                    if (row["MostRecentRomName"] != System.DBNull.Value)
+                    {
+                        FavouriteRomName = string.IsNullOrEmpty((string?)row["MostRecentRomName"]) ? "" : (string)row["MostRecentRomName"];
+                    }
                 }
 
                 AvailablePlatformItem valuePair = new AvailablePlatformItem
