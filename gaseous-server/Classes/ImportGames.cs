@@ -73,7 +73,7 @@ namespace gaseous_server.Classes
                     RetVal.Add("type", "rom");
 
                     // check to make sure we don't already have this file imported
-                    sql = "SELECT COUNT(Id) AS count FROM Games_Roms WHERE MD5=@md5 AND SHA1=@sha1";
+                    sql = "SELECT COUNT(Id) AS count FROM view_Games_Roms WHERE MD5=@md5 AND SHA1=@sha1";
                     dbDict.Add("md5", hash.md5hash);
                     dbDict.Add("sha1", hash.sha1hash);
                     DataTable importDB = db.ExecuteCMD(sql, dbDict);
@@ -129,7 +129,7 @@ namespace gaseous_server.Classes
                         IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature, discoveredSignature.Flags.IGDBPlatformId, true);
 
                         // add to database
-                        long RomId = StoreROM(GameLibrary.GetDefaultLibrary, hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath);
+                        long RomId = StoreROM(GameLibrary.GetDefaultLibrary, hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath, 0, true);
 
                         // build return value
                         RetVal.Add("romid", RomId);
@@ -329,7 +329,7 @@ namespace gaseous_server.Classes
             return SearchCandidates;
         }
 
-        public static long StoreROM(GameLibrary.LibraryItem library, Common.hashObject hash, IGDB.Models.Game determinedGame, IGDB.Models.Platform determinedPlatform, gaseous_server.Models.Signatures_Games discoveredSignature, string GameFileImportPath, long UpdateId = 0)
+        public static long StoreROM(GameLibrary.LibraryItem library, Common.hashObject hash, IGDB.Models.Game determinedGame, IGDB.Models.Platform determinedPlatform, gaseous_server.Models.Signatures_Games discoveredSignature, string GameFileImportPath, long UpdateId = 0, bool SourceIsExternal = false)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
@@ -339,7 +339,7 @@ namespace gaseous_server.Classes
 
             if (UpdateId == 0)
             {
-                sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, Path, MetadataSource, MetadataGameName, MetadataVersion, LibraryId, RomDataVersion) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @Attributes, @romtype, @romtypemedia, @medialabel, @path, @metadatasource, @metadatagamename, @metadataversion, @libraryid, @romdataversion); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+                sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, RelativePath, MetadataSource, MetadataGameName, MetadataVersion, LibraryId, RomDataVersion) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @Attributes, @romtype, @romtypemedia, @medialabel, @path, @metadatasource, @metadatagamename, @metadataversion, @libraryid, @romdataversion); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
             }
             else
             {
@@ -378,7 +378,13 @@ namespace gaseous_server.Classes
             dbDict.Add("romtype", (int)discoveredSignature.Rom.RomType);
             dbDict.Add("romtypemedia", Common.ReturnValueIfNull(discoveredSignature.Rom.RomTypeMedia, ""));
             dbDict.Add("medialabel", Common.ReturnValueIfNull(discoveredSignature.Rom.MediaLabel, ""));
-            dbDict.Add("path", GameFileImportPath);
+
+            string libraryRootPath = library.Path;
+            if (libraryRootPath.EndsWith(Path.DirectorySeparatorChar.ToString()) == false)
+            {
+                libraryRootPath += Path.DirectorySeparatorChar;
+            }
+            dbDict.Add("path", GameFileImportPath.Replace(libraryRootPath, ""));
 
             DataTable romInsert = db.ExecuteCMD(sql, dbDict);
             long romId = 0;
@@ -394,7 +400,7 @@ namespace gaseous_server.Classes
             // move to destination
             if (library.IsDefaultLibrary == true)
             {
-                MoveGameFile(romId);
+                MoveGameFile(romId, SourceIsExternal);
             }
 
             return romId;
@@ -430,10 +436,14 @@ namespace gaseous_server.Classes
             return DestinationPathName;
         }
 
-        public static bool MoveGameFile(long RomId)
+        public static bool MoveGameFile(long RomId, bool SourceIsExternal)
         {
             Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
             string romPath = rom.Path;
+            if (SourceIsExternal == true)
+            {
+                romPath = rom.RelativePath;
+            }
 
             if (File.Exists(romPath))
             {
@@ -458,10 +468,16 @@ namespace gaseous_server.Classes
 
                         // update the db
                         Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                        string sql = "UPDATE Games_Roms SET Path=@path WHERE Id=@id";
+                        string sql = "UPDATE Games_Roms SET RelativePath=@path WHERE Id=@id";
                         Dictionary<string, object> dbDict = new Dictionary<string, object>();
                         dbDict.Add("id", RomId);
-                        dbDict.Add("path", DestinationPath);
+
+                        string libraryRootPath = rom.Library.Path;
+                        if (libraryRootPath.EndsWith(Path.DirectorySeparatorChar.ToString()) == false)
+                        {
+                            libraryRootPath += Path.DirectorySeparatorChar;
+                        }
+                        dbDict.Add("path", DestinationPath.Replace(libraryRootPath, ""));
                         db.ExecuteCMD(sql, dbDict);
 
                         return true;
@@ -483,7 +499,7 @@ namespace gaseous_server.Classes
 
             // move rom files to their new location
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM Games_Roms WHERE LibraryId = @libraryid";
+            string sql = "SELECT * FROM view_Games_Roms WHERE LibraryId = @libraryid";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("libraryid", library.Id);
             DataTable romDT = db.ExecuteCMD(sql, dbDict);
@@ -495,7 +511,7 @@ namespace gaseous_server.Classes
                     SetStatus(i, romDT.Rows.Count, "Processing file " + romDT.Rows[i]["name"]);
                     Logging.Log(Logging.LogType.Information, "Organise Library", "(" + i + "/" + romDT.Rows.Count + ") Processing ROM " + romDT.Rows[i]["name"]);
                     long RomId = (long)romDT.Rows[i]["id"];
-                    MoveGameFile(RomId);
+                    MoveGameFile(RomId, false);
                 }
             }
             ClearStatus();
@@ -639,7 +655,7 @@ namespace gaseous_server.Classes
             dupDict.Add("libraryid", library.Id);
             db.ExecuteCMD(duplicateSql, dupDict);
 
-            string sql = "SELECT * FROM Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
+            string sql = "SELECT * FROM view_Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("libraryid", library.Id);
             DataTable dtRoms = db.ExecuteCMD(sql, dbDict);
@@ -664,7 +680,7 @@ namespace gaseous_server.Classes
                 }
             }
 
-            sql = "SELECT * FROM Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
+            sql = "SELECT * FROM view_Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
             dtRoms = db.ExecuteCMD(sql, dbDict);
 
             // search for files in the library that aren't in the database
@@ -736,7 +752,7 @@ namespace gaseous_server.Classes
             }
             ClearStatus();
 
-            sql = "SELECT * FROM Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
+            sql = "SELECT * FROM view_Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
             dtRoms = db.ExecuteCMD(sql, dbDict);
 
             // check all roms to see if their local file still exists
@@ -760,7 +776,7 @@ namespace gaseous_server.Classes
                             if (romPath != ComputeROMPath(romId))
                             {
                                 Logging.Log(Logging.LogType.Information, "Library Scan", "ROM at path " + romPath + " found, but needs to be moved");
-                                MoveGameFile(romId);
+                                MoveGameFile(romId, false);
                             }
                             else
                             {
@@ -801,11 +817,11 @@ namespace gaseous_server.Classes
                 string sql = "";
                 if (ForceExecute == false)
                 {
-                    sql = "SELECT * FROM Games_Roms WHERE (PlatformId = 0 AND GameId <> 0) OR (((PlatformId = 0 OR GameId = 0) AND MetadataSource = 0) OR (PlatformId = 0 AND GameId = 0)) AND (LastMatchAttemptDate IS NULL OR LastMatchAttemptDate < @lastmatchattemptdate) AND LibraryId = @libraryid LIMIT 100;";
+                    sql = "SELECT * FROM view_Games_Roms WHERE (PlatformId = 0 AND GameId <> 0) OR (((PlatformId = 0 OR GameId = 0) AND MetadataSource = 0) OR (PlatformId = 0 AND GameId = 0)) AND (LastMatchAttemptDate IS NULL OR LastMatchAttemptDate < @lastmatchattemptdate) AND LibraryId = @libraryid LIMIT 100;";
                 }
                 else
                 {
-                    sql = "SELECT * FROM Games_Roms WHERE (PlatformId = 0 AND GameId <> 0) OR (((PlatformId = 0 OR GameId = 0) AND MetadataSource = 0) OR (PlatformId = 0 AND GameId = 0)) AND LibraryId = @libraryid;";
+                    sql = "SELECT * FROM view_Games_Roms WHERE (PlatformId = 0 AND GameId <> 0) OR (((PlatformId = 0 OR GameId = 0) AND MetadataSource = 0) OR (PlatformId = 0 AND GameId = 0)) AND LibraryId = @libraryid;";
                 }
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
                 dbDict.Add("lastmatchattemptdate", DateTime.UtcNow.AddDays(-7));

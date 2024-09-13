@@ -303,7 +303,7 @@ namespace gaseous_server.Controllers.v1_1
             string platformWhereClause = "";
             if (model.Platform.Count > 0)
             {
-                tempVal = " AND Games_Roms.PlatformId IN (";
+                tempVal = " AND view_Games_Roms.PlatformId IN (";
                 for (int i = 0; i < model.Platform.Count; i++)
                 {
                     if (i > 0)
@@ -511,26 +511,26 @@ FROM
                 WHEN Game.`Name` LIKE 'The %' THEN CONCAT(TRIM(SUBSTR(Game.`Name` FROM 4)), ', The')
                 ELSE Game.`Name`
             END AS NameThe,
-            Games_Roms.PlatformId,
+            view_Games_Roms.PlatformId,
             AgeGroup.AgeGroupId,
-            COUNT(Games_Roms.Id) AS RomCount
+            COUNT(view_Games_Roms.Id) AS RomCount
     FROM
         Game
     LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId
-    LEFT JOIN Games_Roms ON Game.Id = Games_Roms.GameId" + platformWhereClause + @"
+    LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId" + platformWhereClause + @"
     LEFT JOIN AlternativeName ON Game.Id = AlternativeName.Game " + nameWhereClause + @"
     GROUP BY Game.Id
     HAVING RomCount > 0) Game
         LEFT JOIN
     (SELECT 
-        Games_Roms.GameId, COUNT(GameState.Id) AS RomSaveCount
+        view_Games_Roms.GameId, COUNT(GameState.Id) AS RomSaveCount
     FROM
         GameState
-    JOIN Games_Roms ON GameState.RomId = Games_Roms.Id
+    JOIN view_Games_Roms ON GameState.RomId = view_Games_Roms.Id
     WHERE
         GameState.IsMediaGroup = 0
             AND GameState.UserId = @userid
-    GROUP BY Games_Roms.GameId) RomSavedStates ON Game.Id = RomSavedStates.GameId
+    GROUP BY view_Games_Roms.GameId) RomSavedStates ON Game.Id = RomSavedStates.GameId
         LEFT JOIN
     (SELECT 
         RomMediaGroup.GameId,

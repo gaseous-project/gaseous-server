@@ -77,3 +77,17 @@ CREATE TABLE `User_GameFavouriteRoms` (
     ),
     CONSTRAINT `GameFavouriteRoms_Users` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE
 );
+
+ALTER TABLE `Games_Roms`
+CHANGE `Path` `RelativePath` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL;
+
+ALTER TABLE `Games_Roms`
+ADD CONSTRAINT Games_Roms_LibraryId FOREIGN KEY (`LibraryId`) REFERENCES `GameLibraries` (`Id`) ON DELETE CASCADE;
+
+CREATE VIEW view_Games_Roms AS
+SELECT `Games_Roms`.*, CONCAT(
+        `GameLibraries`.`Path`, '/', `Games_Roms`.`RelativePath`
+    ) AS `Path`, `GameLibraries`.`Name` AS `LibraryName`
+FROM
+    `Games_Roms`
+    JOIN `GameLibraries` ON `Games_Roms`.`LibraryId` = `GameLibraries`.`Id`;

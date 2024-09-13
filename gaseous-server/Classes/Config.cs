@@ -531,11 +531,7 @@ namespace gaseous_server.Classes
                 {
                     get
                     {
-                        return ReadSetting<string>("LibraryRootDirectory", Path.Combine(Config.ConfigurationPath, "Data"));
-                    }
-                    set
-                    {
-                        SetSetting<string>("LibraryRootDirectory", value);
+                        return Path.Combine(Config.ConfigurationPath, "Data");
                     }
                 }
 
