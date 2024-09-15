@@ -197,7 +197,7 @@ class UploadItem {
         // file name label
         this.filenameLabel = document.createElement('div');
         this.filenameLabel.classList.add('uploadItem-Label');
-        this.filenameLabel.innerHTML = this.Filename;
+        this.filenameLabel.innerHTML = encodeURIComponent(this.Filename);
 
         // status label
         this.statusLabel = document.createElement('div');
