@@ -338,6 +338,9 @@ gaseous_server.Classes.Metadata.Platforms.AssignAllPlatformsToGameIdZero();
 // extract platform map if not present
 PlatformMapping.ExtractPlatformMap();
 
+// migrate old firmware directory structure to new style
+Bios.MigrateToNewFolderStructure();
+
 // add background tasks
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.SignatureIngestor)

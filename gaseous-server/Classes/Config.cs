@@ -575,6 +575,14 @@ namespace gaseous_server.Classes
                     }
                 }
 
+                public string LibraryFirmwareDirectory
+                {
+                    get
+                    {
+                        return Path.Combine(LibraryRootDirectory, "Firmware");
+                    }
+                }
+
                 public string LibraryUploadDirectory
                 {
                     get
@@ -656,7 +664,8 @@ namespace gaseous_server.Classes
                 {
                     if (!Directory.Exists(LibraryRootDirectory)) { Directory.CreateDirectory(LibraryRootDirectory); }
                     if (!Directory.Exists(LibraryImportDirectory)) { Directory.CreateDirectory(LibraryImportDirectory); }
-                    if (!Directory.Exists(LibraryBIOSDirectory)) { Directory.CreateDirectory(LibraryBIOSDirectory); }
+                    // if (!Directory.Exists(LibraryBIOSDirectory)) { Directory.CreateDirectory(LibraryBIOSDirectory); }
+                    if (!Directory.Exists(LibraryFirmwareDirectory)) { Directory.CreateDirectory(LibraryFirmwareDirectory); }
                     if (!Directory.Exists(LibraryUploadDirectory)) { Directory.CreateDirectory(LibraryUploadDirectory); }
                     if (!Directory.Exists(LibraryMetadataDirectory)) { Directory.CreateDirectory(LibraryMetadataDirectory); }
                     if (!Directory.Exists(LibraryTempDirectory)) { Directory.CreateDirectory(LibraryTempDirectory); }
