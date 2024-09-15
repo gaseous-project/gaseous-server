@@ -151,11 +151,8 @@ namespace gaseous_server.Classes
                         {
                             if (biosItem.hash == hash.md5hash)
                             {
-                                string biosPath = biosItem.biosPath.Replace(biosItem.filename, "");
-                                if (!Directory.Exists(biosPath))
-                                {
-                                    Directory.CreateDirectory(biosPath);
-                                }
+                                string biosPath = Path.Combine(Config.LibraryConfiguration.LibraryFirmwareDirectory, biosItem.hash + ".bios");
+                                Logging.Log(Logging.LogType.Information, "Import Game", "  " + GameFileImportPath + " is a BIOS file - moving to " + biosPath);
 
                                 File.Move(GameFileImportPath, biosItem.biosPath, true);
 

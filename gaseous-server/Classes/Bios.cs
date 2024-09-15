@@ -4,12 +4,39 @@ using System.Security.Cryptography;
 
 namespace gaseous_server.Classes
 {
-	public class Bios
-	{
-		public Bios()
-		{
-            
-		}
+    public class Bios
+    {
+        public Bios()
+        {
+
+        }
+
+        public static void MigrateToNewFolderStructure()
+        {
+            // migrate from old BIOS file structure which had each bios file inside a folder named for the platform to the new structure which has each file in a subdirectory named after the MD5 hash
+            if (Directory.Exists(Config.LibraryConfiguration.LibraryBIOSDirectory))
+            {
+                foreach (Models.PlatformMapping.PlatformMapItem platformMapping in Models.PlatformMapping.PlatformMap)
+                {
+                    if (platformMapping.Bios != null)
+                    {
+                        foreach (Models.PlatformMapping.PlatformMapItem.EmulatorBiosItem emulatorBiosItem in platformMapping.Bios)
+                        {
+                            string oldBiosPath = Path.Combine(Config.LibraryConfiguration.LibraryBIOSDirectory, platformMapping.IGDBSlug.ToString(), emulatorBiosItem.filename);
+                            string newBiosPath = Path.Combine(Config.LibraryConfiguration.LibraryFirmwareDirectory, emulatorBiosItem.hash + ".bios");
+
+                            if (File.Exists(oldBiosPath))
+                            {
+                                File.Copy(oldBiosPath, newBiosPath, true);
+                            }
+                        }
+                    }
+                }
+
+                // remove old BIOS folder structure
+                Directory.Delete(Config.LibraryConfiguration.LibraryBIOSDirectory, true);
+            }
+        }
 
         public static Models.PlatformMapping.PlatformMapItem? BiosHashSignatureLookup(string MD5)
         {
@@ -96,10 +123,11 @@ namespace gaseous_server.Classes
             {
                 get
                 {
-                    return Path.Combine(Config.LibraryConfiguration.LibraryBIOSDirectory, platformslug, base.filename);
+                    return Path.Combine(Config.LibraryConfiguration.LibraryFirmwareDirectory, hash + ".bios");
                 }
             }
-            public bool Available {
+            public bool Available
+            {
                 get
                 {
                     bool fileExists = File.Exists(biosPath);
