@@ -10,6 +10,8 @@ using Asp.Versioning;
 using Authentication;
 using Microsoft.AspNetCore.Identity;
 using gaseous_server.Models;
+using IGDB.Models;
+using gaseous_server.Classes.Metadata;
 
 namespace gaseous_server.Controllers
 {
@@ -62,25 +64,15 @@ namespace gaseous_server.Controllers
         {
             try
             {
+                Platform platform = Platforms.GetPlatform(PlatformId);
+                PlatformMapping.PlatformMapItem platformMap = PlatformMapping.GetPlatformMap(PlatformId);
+
+                List<string> biosHashes = new List<string>();
+
                 if (GameId == -1 || filtered == false)
                 {
-                    IGDB.Models.Platform platform = Classes.Metadata.Platforms.GetPlatform(PlatformId);
-
-                    string biosPath = Path.Combine(Config.LibraryConfiguration.LibraryBIOSDirectory, platform.Slug);
-
-                    string tempFile = Path.GetTempFileName();
-
-                    using (FileStream zipFile = System.IO.File.Create(tempFile))
-                    using (var zipArchive = new ZipArchive(zipFile, ZipArchiveMode.Create))
-                    {
-                        foreach (string file in Directory.GetFiles(biosPath))
-                        {
-                            zipArchive.CreateEntryFromFile(file, Path.GetFileName(file));
-                        }
-                    }
-
-                    var stream = new FileStream(tempFile, FileMode.Open);
-                    return File(stream, "application/zip", platform.Slug + ".zip");
+                    // get all bios files for selected platform
+                    biosHashes.AddRange(platformMap.EnabledBIOSHashes);
                 }
                 else
                 {
@@ -90,24 +82,31 @@ namespace gaseous_server.Controllers
                     PlatformMapping platformMapping = new PlatformMapping();
                     PlatformMapping.PlatformMapItem userPlatformMap = platformMapping.GetUserPlatformMap(user.Id, PlatformId, GameId);
 
-                    // build zip file
-                    string tempFile = Path.GetTempFileName();
+                    biosHashes.AddRange(userPlatformMap.EnabledBIOSHashes);
+                }
 
-                    using (FileStream zipFile = System.IO.File.Create(tempFile))
-                    using (var zipArchive = new ZipArchive(zipFile, ZipArchiveMode.Create))
+                // build zip file
+                string tempFile = Path.GetTempFileName();
+
+                using (FileStream zipFile = System.IO.File.Create(tempFile))
+                using (var zipArchive = new ZipArchive(zipFile, ZipArchiveMode.Create))
+                {
+                    foreach (string hash in biosHashes)
                     {
-                        foreach (Bios.BiosItem bios in GetBios(PlatformId, true))
+                        // get the bios data for the hash
+                        foreach (PlatformMapping.PlatformMapItem.EmulatorBiosItem bios in platformMap.Bios)
                         {
-                            if (userPlatformMap.EnabledBIOSHashes.Contains(bios.hash))
+                            if (bios.hash == hash)
                             {
-                                zipArchive.CreateEntryFromFile(bios.biosPath, bios.filename);
+                                // add the bios file to the zip
+                                zipArchive.CreateEntryFromFile(Path.Combine(Config.LibraryConfiguration.LibraryFirmwareDirectory, hash + ".bios"), bios.filename);
                             }
                         }
                     }
-
-                    var stream = new FileStream(tempFile, FileMode.Open);
-                    return File(stream, "application/zip", userPlatformMap.IGDBSlug + ".zip");
                 }
+
+                var stream = new FileStream(tempFile, FileMode.Open);
+                return File(stream, "application/zip", platform.Slug + ".zip");
             }
             catch
             {
