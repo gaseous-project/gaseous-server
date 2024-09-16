@@ -134,7 +134,8 @@ h3 {
     top: 50%;
     left: 50%;
     margin-right: -50%;
-    transform: translate(-50%, -50%);
+    /* transform: translate(-50%, -50%); */
+    transform: translateX(-50%) translateY(calc(-50% - .5px));
     min-width: 700px;
     max-width: 1000px;
     width: 60%;
