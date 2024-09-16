@@ -26,41 +26,63 @@
             "/scripts/jquery.lazy.plugins.min.js",
             "/scripts/moment-with-locales.min.js",
             "/scripts/select2.min.js",
+            "/scripts/filterformating.js",
+            "/scripts/gamesformating.js",
+            "/scripts/main.js",
             "/scripts/modals.js",
             "/scripts/preferences.js",
             "/scripts/account.js",
             "/scripts/libraries.js",
             "/scripts/notifications.js",
             "/scripts/rominfo.js",
-            "/scripts/uploadrom.js",
-            "/scripts/filterformating.js",
-            "/scripts/gamesformating.js",
-            "/scripts/main.js"
+            "/scripts/uploadrom.js"
         ];
 
         let head = document.getElementsByTagName('head')[0];
 
         // placeholder for global userProfile variable
         var userProfile;
+    </script>
+</head>
 
-        // update script links
-        for (let i = 0; i < scriptLinks.length; i++) {
-            let newScript = document.createElement('script');
-            newScript.src = scriptLinks[i] + '?v=' + AppVersion;
-            newScript.type = "text/javascript";
-            newScript.async = false;
+<body>
+    <!-- Background Images -->
+    <div id="bgImages"></div>
+    <div id="bgImage_Opacity"></div>
 
-            head.appendChild(newScript);
-        }
+    <!-- Notifications -->
+    <div id="notifications_target"></div>
 
-        // update stylesheet links
-        for (let i = 0; i < styleSheets.length; i++) {
-            let newLink = document.createElement('link');
-            newLink.rel = "stylesheet";
-            newLink.href = styleSheets[i] + '?v=' + AppVersion;
-            newLink.type = "text/css";
+    <!-- Page Banner -->
+    <div id="banner_target"></div>
 
-            head.appendChild(newLink);
+    <!-- Page Content -->
+    <div id="content"></div>
+
+    <script type="text/javascript">
+        // start the application
+        let backgroundImageHandler = undefined;
+
+        async function loadScriptsAndStyles() {
+            // update script links
+            for (let i = 0; i < scriptLinks.length; i++) {
+                let newScript = document.createElement('script');
+                newScript.src = scriptLinks[i] + '?v=' + AppVersion;
+                newScript.type = "text/javascript";
+                newScript.async = false;
+
+                head.appendChild(newScript);
+            }
+
+            // update stylesheet links
+            for (let i = 0; i < styleSheets.length; i++) {
+                let newLink = document.createElement('link');
+                newLink.rel = "stylesheet";
+                newLink.href = styleSheets[i] + '?v=' + AppVersion;
+                newLink.type = "text/css";
+
+                head.appendChild(newLink);
+            }
         }
 
         async function LoadPageContent(page, targetDiv) {
@@ -83,66 +105,53 @@
 
             backgroundImageHandler = new BackgroundImageRotator();
         }
-    </script>
-</head>
 
-<body>
-    <!-- Background Images -->
-    <div id="bgImages"></div>
-    <div id="bgImage_Opacity"></div>
+        async function startApp() {
+            await loadScriptsAndStyles();
 
-    <!-- Notifications -->
-    <div id="notifications_target"></div>
+            console.log("Starting Gaseous Games");
+            console.log("App Version: " + AppVersion);
+            console.log("First Run Status: " + FirstRunStatus);
+            switch (FirstRunStatus) {
+                case 0:
+                case "0":
+                    // first run - load first run wizard
+                    await LoadPageContent('first', 'content');
+                    break;
 
-    <!-- Page Banner -->
-    <div id="banner_target"></div>
+                default:
+                    // first run - load login page or redirect if user already logged in
 
-    <!-- Page Content -->
-    <div id="content"></div>
+                    await fetch('/api/v1.1/Account/Profile/Basic')
+                        .then(async response => {
+                            if (response.ok) {
+                                // user is signed in - start setting up the application
+                                console.log("User is logged in");
+                                userProfile = await response.json();
 
-    <script type="text/javascript">
-        // start the application
-        let backgroundImageHandler = undefined;
-        console.log("Starting Gaseous Games");
-        console.log("App Version: " + AppVersion);
-        console.log("First Run Status: " + FirstRunStatus);
-        switch (FirstRunStatus) {
-            case 0:
-            case "0":
-                // first run - load first run wizard
-                LoadPageContent('first', 'content');
-                break;
+                                // load page banner
+                                await LoadPageContent('banner', 'banner_target');
 
-            default:
-                // first run - load login page or redirect if user already logged in
+                                // load page content
+                                let pageSelection = getQueryString('page', 'string');
 
-                fetch('/api/v1.1/Account/Profile/Basic')
-                    .then(async response => {
-                        if (response.ok) {
-                            // user is signed in - start setting up the application
-                            console.log("User is logged in");
-                            userProfile = await response.json();
-
-                            // load page banner
-                            LoadPageContent('banner', 'banner_target');
-
-                            // load page content
-                            let pageSelection = getQueryString('page', 'string');
-
-                            if (!pageSelection) {
-                                pageSelection = GetPreference("DefaultHomePage", 'home');
+                                if (!pageSelection) {
+                                    pageSelection = GetPreference("DefaultHomePage", 'home');
+                                }
+                                await LoadPageContent(pageSelection, 'content');
+                            } else {
+                                // user is not signed in - load login page
+                                await LoadPageContent('login');
                             }
-                            LoadPageContent(pageSelection, 'content');
-                        } else {
-                            // user is not signed in - load login page
-                            LoadPageContent('login');
-                        }
-                    })
-                    .catch((error) => {
-                        console.log(error);
-                        LoadPageContent('login');
-                    });
-                break;
+                        })
+                        .catch(async (error) => {
+                            console.log(error);
+                            await LoadPageContent('login');
+                        });
+                    break;
+            }
         }
+
+        window.document.addEventListener('DOMContentLoaded', startApp);
     </script>
 </body>
