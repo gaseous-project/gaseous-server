@@ -185,8 +185,8 @@ h3 {
 
 .modal-window-tabs {
     background-color: var(--modal-tabs-background-color);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    /* backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px); */
     display: block;
     flex-grow: 0;
     flex-shrink: 1;
@@ -237,8 +237,8 @@ h3 {
     text-align: top;
     overflow-y: auto;
     overflow-x: hidden;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    /* backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px); */
 }
 
 .modal-window-header {
@@ -2365,18 +2365,17 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     flex-direction: row;
     flex-wrap: nowrap;
     gap: 1px;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+
 }
 
 .loginwindow-logospace {
-    background-color: var(--modal-tabs-background-color);
+    background-color: var(--login-logospace-background);
     width: 315px;
     position: relative;
 }
 
 .loginwindow_loginspace {
-    background-color: var(--modal-window-background-color);
+    background-color: var(--login-loginspace-background);
     padding: 20px;
     flex-grow: 1;
 }
@@ -2425,7 +2424,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     font-size: 18pt;
     vertical-align: top;
     /*color: #edeffa;*/
-    color: white;
+    color: var(--login-logospace-label);
     margin-top: 8px;
 }
 
@@ -2451,9 +2450,9 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .dropdown-content {
     display: none;
     position: absolute;
-    background-color: var(--modal-background-color);
+    background-color: var(--dropdown-background);
     border-radius: var(--standard-radius);
-    border-color: var(--modal-border-color);
+    border-color: var(--dropdown-border);
     border-width: 1px;
     border-style: solid;
     overflow: hidden;
@@ -2465,15 +2464,13 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     filter: drop-shadow(5px 5px 10px #000);
     -webkit-filter: drop-shadow(5px 5px 10px #000);
     padding: 3px;
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
     cursor: default;
 }
 
 /* Links inside the dropdown */
 .dropdown-content a,
 .dropdown-content span {
-    color: white;
+    color: var(--dropdown-menu-text-color);
     padding: 12px 16px;
     text-decoration: none;
     display: block;
@@ -2488,7 +2485,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
 /* Change color of dropdown links on hover */
 .dropdown-content a:hover {
-    background-color: var(--modal-border-color);
+    background-color: var(--dropdown-border);
 }
 
 /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
@@ -2658,7 +2655,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     border-radius: var(--standard-radius);
     border-style: solid;
     border-width: 1px;
-    border-color: rgba(173, 216, 230, 0.3);
+    border-color: var(--profile-card-border);
     overflow: hidden;
     position: relative;
 }
@@ -2681,7 +2678,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     aspect-ratio: 4.17/1;
     background-size: cover;
     background-position: center;
-    background-color: rgb(0, 0, 130);
+    background-color: var(--profile-card-background-image);
 }
 
 .profile-card-body {
@@ -2690,15 +2687,13 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     padding-left: 10px;
     padding-right: 10px;
     padding-bottom: 20px;
-    background-color: rgba(173, 216, 230, 0.3);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background-color: var(--profile-card-body-background);
 }
 
 .profile-card-display-name {
     font-weight: bold;
     font-size: 16px;
-    color: white;
+    color: var(--profile-card-display-name-text-color);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -2707,7 +2702,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .profile-card-quip {
     margin-top: 3px;
     font-style: italic;
-    color: white;
+    color: var(--profile-card-quip-text-color);
 }
 
 .password-rules {
@@ -2806,8 +2801,6 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     display: block;
     background: var(--section-body-background);
     background: linear-gradient(0deg, var(--section-body-background-solid) 25%, rgba(255, 255, 255, 0) 100%);
-    backdrop-filter: blur(8px);
-    --webkit-backdrop-filter: blur(8px);
     padding: 5px;
     vertical-align: bottom;
     content: "";
