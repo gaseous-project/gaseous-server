@@ -1,3 +1,5 @@
+using IGDB.Models;
+
 namespace gaseous_server.Models
 {
     public class UserProfile
@@ -5,6 +7,13 @@ namespace gaseous_server.Models
         public Guid UserId { get; set; }
         public string DisplayName { get; set; }
         public string Quip { get; set; }
+        public NowPlayingItem? NowPlaying { get; set; }
+        public class NowPlayingItem
+        {
+            public Game Game { get; set; }
+            public Platform Platform { get; set; }
+            public long Duration { get; set; }
+        }
         public ProfileImageItem? Avatar { get; set; }
         public ProfileImageItem? ProfileBackground { get; set; }
         public Dictionary<string, object> Data { get; set; }
