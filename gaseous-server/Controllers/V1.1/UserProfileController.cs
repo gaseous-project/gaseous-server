@@ -31,7 +31,7 @@ namespace gaseous_server.Controllers
         [Route("{UserId}")]
         [ProducesResponseType(typeof(Models.UserProfile), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        [ResponseCache(CacheProfileName = "5Minute")]
+        [ResponseCache(CacheProfileName = "Default30")]
         public ActionResult GetUserProfile(string UserId)
         {
             Classes.UserProfile profile = new Classes.UserProfile();

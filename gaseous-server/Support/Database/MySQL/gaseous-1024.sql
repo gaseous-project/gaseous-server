@@ -91,3 +91,9 @@ SELECT `Games_Roms`.*, CONCAT(
 FROM
     `Games_Roms`
     JOIN `GameLibraries` ON `Games_Roms`.`LibraryId` = `GameLibraries`.`Id`;
+
+CREATE VIEW view_UserTimeTracking AS
+SELECT *, DATE_ADD(
+        SessionTime, INTERVAL SessionLength MINUTE
+    ) AS SessionEnd
+FROM UserTimeTracking;

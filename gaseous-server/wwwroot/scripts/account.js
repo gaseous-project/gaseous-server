@@ -366,6 +366,18 @@ class ProfileCard {
         this.Quip.classList.add('profile-card-quip');
         this.ProfileBody = document.createElement('div');
         this.ProfileBody.classList.add('profile-card-body');
+        this.ProfileNowPlaying = document.createElement('div');
+        this.ProfileNowPlaying.classList.add('profile-card-now-playing-body');
+        this.ProfileNowPlayingLabel = document.createElement('div');
+        this.ProfileNowPlayingLabel.classList.add('profile-card-now-playing-label');
+        this.ProfileNowPlayingCover = document.createElement('div');
+        this.ProfileNowPlayingCover.classList.add('profile-card-now-playing-cover');
+        this.ProfileNowPlayingTitle = document.createElement('div');
+        this.ProfileNowPlayingTitle.classList.add('profile-card-now-playing-title');
+        this.ProfileNowPlayingPlatform = document.createElement('div');
+        this.ProfileNowPlayingPlatform.classList.add('profile-card-now-playing-platform');
+        this.ProfileNowPlayingDuration = document.createElement('div');
+        this.ProfileNowPlayingDuration.classList.add('profile-card-now-playing-duration');
         this.Avatar = document.createElement('div');
         this.Avatar.classList.add('profile-card-avatar');
 
@@ -375,12 +387,28 @@ class ProfileCard {
         this.ProfileBody.appendChild(this.DisplayName);
         this.ProfileBody.appendChild(this.Quip);
 
+        // now playing
+        this.ProfileNowPlaying.appendChild(this.ProfileNowPlayingLabel);
+        this.ProfileNowPlaying.appendChild(this.ProfileNowPlayingCover);
+        this.ProfileNowPlaying.appendChild(this.ProfileNowPlayingTitle);
+        this.ProfileNowPlaying.appendChild(this.ProfileNowPlayingPlatform);
+        this.ProfileNowPlaying.appendChild(this.ProfileNowPlayingDuration);
+
         // assemble card
         this.Card.appendChild(this.BackgroundImage);
         this.Card.appendChild(this.ProfileBody);
+        this.Card.appendChild(this.ProfileNowPlaying);
         this.Card.appendChild(this.Avatar);
 
+        this.ProfileData = null;
         const response = this.#FetchProfile(this);
+
+        // set timeout to refresh the profile card every 30 seconds
+        let callingObject = this;
+        setInterval(function () {
+            callingObject.#FetchProfile(callingObject);
+        }, 30000);
+
         return this.Card;
     }
 
@@ -392,12 +420,57 @@ class ProfileCard {
             } else {
                 const profile = await response.json();
                 if (profile) {
-                    this.Avatar.appendChild(new Avatar(callingObject.ProfileId, 50, 50));
-                    if (profile.profileBackground) {
-                        this.BackgroundImage.style = "background-image: url('/api/v1.1/UserProfile/" + callingObject.ProfileId + "/Background');";
+                    let stillUpdateAnyway = false;
+                    if (callingObject.ProfileData === null) {
+                        callingObject.ProfileData = profile;
+                        stillUpdateAnyway = true;
                     }
-                    this.DisplayName.innerHTML = profile.displayName;
-                    this.Quip.innerHTML = profile.quip;
+
+                    // update avatar if different
+                    if (callingObject.ProfileData.avatar !== profile.avatar || stillUpdateAnyway === true) {
+                        callingObject.Avatar.innerHTML = "";
+                        callingObject.Avatar.appendChild(new Avatar(callingObject.ProfileId, 50, 50));
+                    }
+
+                    // update profile background if different
+                    if (callingObject.ProfileData.profileBackground !== profile.profileBackground || stillUpdateAnyway === true) {
+                        if (profile.profileBackground) {
+                            callingObject.BackgroundImage.style = "background-image: url('/api/v1.1/UserProfile/" + callingObject.ProfileId + "/Background');";
+                        } else {
+                            callingObject.BackgroundImage.style = "";
+                        }
+                    }
+
+                    // update display name if different
+                    if (callingObject.ProfileData.displayName !== profile.displayName || stillUpdateAnyway === true) {
+                        callingObject.DisplayName.innerHTML = profile.displayName;
+                    }
+
+                    // update quip if different
+                    if (callingObject.ProfileData.quip !== profile.quip || stillUpdateAnyway === true) {
+                        callingObject.Quip.innerHTML = profile.quip;
+                    }
+
+                    if (profile.nowPlaying) {
+                        callingObject.ProfileNowPlayingLabel.innerHTML = "Now Playing";
+                        if (profile.nowPlaying.game.cover) {
+                            callingObject.ProfileNowPlayingCover.style = "background-image: url('/api/v1.1/Games/" + profile.nowPlaying.game.id + "/cover/" + profile.nowPlaying.game.cover.id + "/image/cover_big/" + profile.nowPlaying.game.cover.id + ".jpg');";
+                        } else {
+                            callingObject.ProfileNowPlayingCover.style = "background-image: url('/images/unknowngame.png');";
+                        }
+                        callingObject.ProfileNowPlayingTitle.innerHTML = profile.nowPlaying.game.name;
+                        callingObject.ProfileNowPlayingPlatform.innerHTML = profile.nowPlaying.platform.name;
+                        if (profile.nowPlaying.duration === 1) {
+                            callingObject.ProfileNowPlayingDuration.innerHTML = profile.nowPlaying.duration + " minute";
+                        } else {
+                            callingObject.ProfileNowPlayingDuration.innerHTML = profile.nowPlaying.duration + " minutes";
+                        }
+                        callingObject.ProfileNowPlaying.style.display = "";
+                    } else {
+                        callingObject.ProfileNowPlaying.style.display = "none";
+                    }
+
+                    callingObject.ProfileData = profile;
                 }
             }
         });

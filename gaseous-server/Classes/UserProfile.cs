@@ -1,4 +1,6 @@
 using System.Data;
+using gaseous_server.Classes.Metadata;
+using IGDB.Models;
 
 namespace gaseous_server.Classes
 {
@@ -15,8 +17,9 @@ namespace gaseous_server.Classes
 
         public Models.UserProfile? GetUserProfile(string UserId)
         {
+            // build the user profile object
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT Id, DisplayName, Quip, AvatarExtension, ProfileBackgroundExtension, UnstructuredData FROM UserProfiles WHERE Id = @userid;";
+            string sql = "SELECT Id, UserId, DisplayName, Quip, AvatarExtension, ProfileBackgroundExtension, UnstructuredData FROM UserProfiles WHERE Id = @userid;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>{
                 { "userid", UserId }
             };
@@ -48,6 +51,24 @@ namespace gaseous_server.Classes
                 };
             }
 
+            // get now playing game - if available
+            Models.UserProfile.NowPlayingItem? NowPlaying = null;
+            sql = "SELECT * FROM `view_UserTimeTracking` WHERE UserId = @userid AND UTC_TIMESTAMP() BETWEEN SessionTime AND DATE_ADD(SessionEnd, INTERVAL 2 MINUTE) ORDER BY SessionEnd DESC LIMIT 1;";
+            dbDict = new Dictionary<string, object>{
+                { "userid", data.Rows[0]["UserId"].ToString() }
+            };
+            DataTable nowPlayingData = db.ExecuteCMD(sql, dbDict);
+            if (nowPlayingData.Rows.Count > 0)
+            {
+                NowPlaying = new Models.UserProfile.NowPlayingItem
+                {
+                    Game = Games.GetGame((long)nowPlayingData.Rows[0]["GameId"], false, false, false),
+                    Platform = Platforms.GetPlatform((long)nowPlayingData.Rows[0]["PlatformId"], false, false),
+                    Duration = Convert.ToInt64(nowPlayingData.Rows[0]["SessionLength"])
+                };
+            }
+
+            // return the user profile object
             return new Models.UserProfile
             {
                 UserId = Guid.Parse(data.Rows[0]["Id"].ToString()),
@@ -55,6 +76,7 @@ namespace gaseous_server.Classes
                 Quip = data.Rows[0]["Quip"].ToString(),
                 Avatar = Avatar,
                 ProfileBackground = ProfileBackground,
+                NowPlaying = NowPlaying,
                 Data = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(data.Rows[0]["UnstructuredData"].ToString())
             };
         }

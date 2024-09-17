@@ -2706,6 +2706,46 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     color: var(--profile-card-quip-text-color);
 }
 
+.profile-card-now-playing-body {
+    position: relative;
+    min-height: 70px;
+    background-color: var(--profile-card-body-background);
+    padding-top: 0px;
+    padding-left: 10px;
+    padding-right: 10px;
+    padding-bottom: 10px;
+}
+
+.profile-card-now-playing-label {
+    font-style: italic;
+    margin-bottom: 5px;
+}
+
+.profile-card-now-playing-cover {
+    position: absolute;
+    left: 10px;
+    top: 25px;
+    width: 40px;
+    height: 40px;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+.profile-card-now-playing-title {
+    margin-left: 50px;
+    font-weight: bold;
+}
+
+.profile-card-now-playing-platform {
+    margin-left: 50px;
+}
+
+.profile-card-now-playing-duration {
+    margin-top: 10px;
+    margin-left: 50px;
+}
+
 .password-rules {
     margin-left: 0;
     padding-left: 0;
