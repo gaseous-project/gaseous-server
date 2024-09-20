@@ -314,7 +314,7 @@ h3 {
 
 #banner_icon {
     /* background-color: white; */
-    background-color: rgba(0, 22, 56, 0.8);
+    background-color: rgba(0, 22, 56, 0.2);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     position: fixed;
@@ -337,7 +337,7 @@ h3 {
 #banner_icon_image {
     width: 30px;
     height: 30px;
-    filter: drop-shadow(1px 1px 0 rgb(90, 90, 90)) drop-shadow(-1px 1px 0 rgb(90, 90, 90)) drop-shadow(1px -1px 0 rgb(90, 90, 90)) drop-shadow(-1px -1px 0 rgb(90, 90, 90));
+    filter: drop-shadow(1px 1px 0 rgb(180, 180, 180)) drop-shadow(-1px 1px 0 rgb(180, 180, 180)) drop-shadow(1px -1px 0 rgb(180, 180, 180)) drop-shadow(-1px -1px 0 rgb(180, 180, 180));
 }
 
 .banner_button {
@@ -417,7 +417,7 @@ h3 {
 
 #banner_header {
     background: rgba(0, 22, 56, 0.8);
-    background: linear-gradient(90deg, rgba(0, 22, 56, 0.8) 0%, rgba(0, 0, 0, 0.8) 100%);
+    background: linear-gradient(90deg, rgba(0, 22, 56, 0.2) 0%, rgba(0, 0, 0, 0.5) 100%);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
     position: fixed;
@@ -436,7 +436,7 @@ h3 {
     font-size: 16pt;
     vertical-align: top;
     /*color: #edeffa;*/
-    color: #7c70da;
+    color: #FFFFFF;
 }
 
 #banner_header_label {
@@ -1192,8 +1192,8 @@ input[name='filter_panel_range_max'] {
     background-repeat: no-repeat;
     background-size: cover;
     background-color: white;
-    filter: blur(32px);
-    -webkit-filter: blur(32px);
+    filter: blur(64px);
+    -webkit-filter: blur(64px);
 }
 
 .bgImage_LessBlur {
