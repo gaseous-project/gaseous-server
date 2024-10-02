@@ -72,10 +72,50 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("Version")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public Version GetSystemVersion()
+        [ProducesResponseType(typeof(Dictionary<string, object>), StatusCodes.Status200OK)]
+        public ActionResult GetSystemVersion()
         {
-            return Assembly.GetExecutingAssembly().GetName().Version;
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
+            // get age ratings dictionary
+            Dictionary<int, string> ClassificationBoardsStrings = new Dictionary<int, string>();
+            foreach (IGDB.Models.AgeRatingCategory ageRatingCategory in Enum.GetValues(typeof(IGDB.Models.AgeRatingCategory)))
+            {
+                ClassificationBoardsStrings.Add((int)ageRatingCategory, ageRatingCategory.ToString());
+            }
+
+            Dictionary<int, string> AgeRatingsStrings = new Dictionary<int, string>();
+            foreach (IGDB.Models.AgeRatingTitle ageRatingTitle in Enum.GetValues(typeof(IGDB.Models.AgeRatingTitle)))
+            {
+                AgeRatingsStrings.Add((int)ageRatingTitle, ageRatingTitle.ToString());
+            }
+
+            Dictionary<string, object> retVal = new Dictionary<string, object>
+            {
+                {
+                    "AppVersion", Assembly.GetExecutingAssembly().GetName().Version.ToString()
+                },
+                {
+                    "DBSchemaVersion", db.GetDatabaseSchemaVersion().ToString()
+                },
+                {
+                    "FirstRunStatus", Config.ReadSetting<string>("FirstRunStatus", "0")
+                },
+                {
+                    "AgeRatingBoardsStrings", ClassificationBoardsStrings
+                },
+                {
+                    "AgeRatingStrings", AgeRatingsStrings
+                },
+                {
+                    "AgeRatingGroups", AgeGroups.AgeGroupingsFlat
+                },
+                {
+                    "emulatorDebugMode", Config.ReadSetting<string>("emulatorDebugMode", false.ToString()).ToLower()
+                }
+            };
+
+            return Ok(retVal);
         }
 
         [MapToApiVersion("1.0")]

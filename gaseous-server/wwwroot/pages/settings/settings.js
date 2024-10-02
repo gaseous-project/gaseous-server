@@ -1,6 +1,6 @@
 function getSystemSettings() {
     ajaxCall(
-        '/api/v1/System/Settings/System',
+        '/api/v1.1/System/Settings/System',
         'GET',
         function (result) {
             console.log(result);
@@ -66,7 +66,7 @@ function setSystemSettings() {
     console.log(model);
 
     ajaxCall(
-        '/api/v1/System/Settings/System',
+        '/api/v1.1/System/Settings/System',
         'POST',
         function (result) {
             getSystemSettings();
