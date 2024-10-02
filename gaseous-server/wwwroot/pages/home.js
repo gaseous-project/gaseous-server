@@ -55,7 +55,7 @@ class HomePageGameRow {
                         let gameItem = document.createElement("li");
                         gameItem.classList.add("homegame-item");
 
-                        let gameIcon = renderGameIcon(game, true, showRatings, showClassification, classificationDisplayOrder, true, false);
+                        let gameIcon = renderGameIcon(game, true, showRatings, showClassification, classificationDisplayOrder, true, false, true);
                         gameItem.appendChild(gameIcon);
                         scroller.appendChild(gameItem);
                     }

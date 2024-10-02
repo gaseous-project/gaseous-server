@@ -388,7 +388,7 @@ function SetupPage() {
 
                 var gameSummarySimilarContent = document.getElementById('gamesummarysimilarcontent');
                 for (var i = 0; i < result.games.length; i++) {
-                    var similarObject = renderGameIcon(result.games[i], true, true, true, GetRatingsBoards(), false, true);
+                    var similarObject = renderGameIcon(result.games[i], true, true, true, GetRatingsBoards(), false, true, false);
                     gameSummarySimilarContent.appendChild(similarObject);
                 }
 

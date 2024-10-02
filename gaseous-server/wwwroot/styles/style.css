@@ -1109,6 +1109,7 @@ input[name='filter_panel_range_max'] {
     position: absolute;
     display: inline-block;
     top: 30%;
+    padding-top: 7px;
     right: 10px;
 }
 
@@ -1138,6 +1139,28 @@ input[name='filter_panel_range_max'] {
     display: inline-block;
     top: 30%;
     right: 50px;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    padding-top: 5px;
+    padding-left: 4px;
+    padding-right: 3px;
+    padding-bottom: 5px;
+    border-color: transparent;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: var(--standard-radius);
+    z-index: +1;
+}
+
+.game_tile_box_row:hover>.game_tile_box_favouritegame_row {
+    border-color: var(--input-border);
+    background-color: var(--fancybutton-background);
+}
+
+.game_tile_box_row:hover>.game_tile_box_favouritegame_row:hover {
+    border-color: var(--input-border-hover);
+    background-color: var(--fancybutton-background-hover);
 }
 
 .game_tile_image {

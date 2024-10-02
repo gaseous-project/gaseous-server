@@ -181,7 +181,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
     }
 
     for (let i = 0; i < result.games.length; i++) {
-        let game = renderGameIcon(result.games[i], showTitle, showRatings, showClassification, classificationDisplayOrder, false, listView);
+        let game = renderGameIcon(result.games[i], showTitle, showRatings, showClassification, classificationDisplayOrder, false, listView, true);
         switch (pageMode) {
             case "paged":
                 targetElement.appendChild(game);
@@ -396,9 +396,13 @@ function IsInView() {
     }
 }
 
-function renderGameIcon(gameObject, showTitle, showRatings, showClassification, classificationDisplayOrder, useSmallCover, listView) {
+function renderGameIcon(gameObject, showTitle, showRatings, showClassification, classificationDisplayOrder, useSmallCover, listView, showFavourite) {
     if (listView == undefined) {
         listView = false;
+    }
+
+    if (showFavourite == undefined) {
+        showFavourite = true;
     }
 
     let classes = getViewModeClasses(listView);
@@ -464,49 +468,6 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
         gameImageBox.appendChild(gameSaveIcon);
     }
 
-    // add favourite game icon
-    let gameFavIconBox = document.createElement('div');
-    gameFavIconBox.classList.add(...classes['game_tile_box_favouritegame']);
-
-    let gameFavIcon = document.createElement('img');
-    gameFavIcon.classList.add(...classes['favouriteicon']);
-    if (gameObject.isFavourite == true) {
-        gameFavIcon.src = '/images/favourite-filled.svg';
-        gameFavIconBox.classList.add('favourite-filled');
-    } else {
-        gameFavIcon.src = '/images/favourite-empty.svg';
-        gameFavIconBox.classList.add('favourite-empty');
-    }
-    gameFavIconBox.appendChild(gameFavIcon);
-
-    gameFavIconBox.addEventListener('click', (e) => {
-        e.stopPropagation();
-
-        if (gameFavIconBox.classList.contains('favourite-filled')) {
-            gameFavIcon.src = '/images/favourite-empty.svg';
-            gameFavIconBox.classList.remove('favourite-filled');
-            gameFavIconBox.classList.add('favourite-empty');
-            gameObject.isFavourite = false;
-        } else {
-            gameFavIcon.src = '/images/favourite-filled.svg';
-            gameFavIconBox.classList.remove('favourite-empty');
-            gameFavIconBox.classList.add('favourite-filled');
-            gameObject.isFavourite = true;
-        }
-
-        fetch('/api/v1.1/Games/' + gameObject.id + '/favourite?favourite=' + gameObject.isFavourite, {
-            method: 'POST'
-        }).then(response => {
-            if (response.ok) {
-                // console.log('Favourite status updated');
-            } else {
-                // console.log('Failed to update favourite status');
-            }
-        });
-    });
-
-    gameImageBox.appendChild(gameFavIconBox);
-
     // add ratings banner
     if (gameObject.totalRating || displayClassification == true) {
         let gameImageRatingBanner = document.createElement('div');
@@ -537,6 +498,51 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
         }
     }
     gameBox.appendChild(gameImageBox);
+
+    // add favourite game icon
+    if (showFavourite == true) {
+        let gameFavIconBox = document.createElement('div');
+        gameFavIconBox.classList.add(...classes['game_tile_box_favouritegame']);
+
+        let gameFavIcon = document.createElement('img');
+        gameFavIcon.classList.add(...classes['favouriteicon']);
+        if (gameObject.isFavourite == true) {
+            gameFavIcon.src = '/images/favourite-filled.svg';
+            gameFavIconBox.classList.add('favourite-filled');
+        } else {
+            gameFavIcon.src = '/images/favourite-empty.svg';
+            gameFavIconBox.classList.add('favourite-empty');
+        }
+        gameFavIconBox.appendChild(gameFavIcon);
+
+        gameFavIconBox.addEventListener('click', (e) => {
+            e.stopPropagation();
+
+            if (gameFavIconBox.classList.contains('favourite-filled')) {
+                gameFavIcon.src = '/images/favourite-empty.svg';
+                gameFavIconBox.classList.remove('favourite-filled');
+                gameFavIconBox.classList.add('favourite-empty');
+                gameObject.isFavourite = false;
+            } else {
+                gameFavIcon.src = '/images/favourite-filled.svg';
+                gameFavIconBox.classList.remove('favourite-empty');
+                gameFavIconBox.classList.add('favourite-filled');
+                gameObject.isFavourite = true;
+            }
+
+            fetch('/api/v1.1/Games/' + gameObject.id + '/favourite?favourite=' + gameObject.isFavourite, {
+                method: 'POST'
+            }).then(response => {
+                if (response.ok) {
+                    // console.log('Favourite status updated');
+                } else {
+                    // console.log('Failed to update favourite status');
+                }
+            });
+        });
+
+        gameImageBox.appendChild(gameFavIconBox);
+    }
 
     if (showTitle == true) {
         let gameBoxTitle = document.createElement('div');
