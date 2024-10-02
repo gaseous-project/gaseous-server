@@ -46,7 +46,7 @@ namespace gaseous_server.Models
                         }
                         else
                         {
-                            WritePlatformMap(mapItem, true, true);
+                            WritePlatformMap(mapItem, true, true, true);
                             Logging.Log(Logging.LogType.Information, "Platform Map", "Overwriting " + mapItem.IGDBName + " with default values.");
                         }
                     }
@@ -164,7 +164,7 @@ namespace gaseous_server.Models
             }
         }
 
-        public static void WritePlatformMap(PlatformMapItem item, bool Update, bool AllowAvailableEmulatorOverwrite)
+        public static void WritePlatformMap(PlatformMapItem item, bool Update, bool AllowAvailableEmulatorOverwrite, bool overwriteBios = false)
         {
             CreateDummyPlatform(item);
 
@@ -247,13 +247,20 @@ namespace gaseous_server.Models
                 foreach (PlatformMapItem.EmulatorBiosItem biosItem in item.Bios)
                 {
                     bool isEnabled = false;
-                    if (item.EnabledBIOSHashes == null)
-                    {
-                        item.EnabledBIOSHashes = new List<string>();
-                    }
-                    if (item.EnabledBIOSHashes.Contains(biosItem.hash))
+                    if (overwriteBios == true)
                     {
                         isEnabled = true;
+                    }
+                    else
+                    {
+                        if (item.EnabledBIOSHashes == null)
+                        {
+                            item.EnabledBIOSHashes = new List<string>();
+                        }
+                        if (item.EnabledBIOSHashes.Contains(biosItem.hash))
+                        {
+                            isEnabled = true;
+                        }
                     }
 
                     sql = "INSERT INTO PlatformMap_Bios (Id, Filename, Description, Hash, Enabled) VALUES (@Id, @Filename, @Description, @Hash, @Enabled);";

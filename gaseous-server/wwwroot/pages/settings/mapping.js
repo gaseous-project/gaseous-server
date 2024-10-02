@@ -70,6 +70,7 @@ function SetupButtons() {
     if (userProfile.roles.includes("Admin")) {
         document.getElementById('settings_mapping_import').style.display = '';
 
+        // Setup the JSON import button
         document.getElementById('uploadjson').addEventListener('change', function () {
             $(this).simpleUpload("/api/v1.1/PlatformMaps", {
                 start: function (file) {
@@ -84,6 +85,24 @@ function SetupButtons() {
         });
 
         document.getElementById('importjson').addEventListener('click', openDialog);
+
+        // Setup the JSON export button
+        document.getElementById('exportjson').addEventListener('click', DownloadJSON);
+
+        // Setup the reset to defaults button
+        document.getElementById('resetmapping').addEventListener('click', function () {
+            let warningDialog = new MessageBox("Platform Mapping Reset", "This will reset the platform mappings to the default values. Are you sure you want to continue?");
+            warningDialog.addButton(new ModalButton("OK", 2, warningDialog, async (callingObject) => {
+                loadPlatformMapping(true);
+                callingObject.msgDialog.close();
+                let completedDialog = new MessageBox("Platform Mapping Reset", "All platform mappings have been reset to default values.");
+                completedDialog.open();
+            }));
+            warningDialog.addButton(new ModalButton("Cancel", 0, warningDialog, async (callingObject) => {
+                callingObject.msgDialog.close();
+            }));
+            warningDialog.open();
+        });
     }
 }
 
