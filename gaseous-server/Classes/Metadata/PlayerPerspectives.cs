@@ -7,7 +7,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class PlayerPerspectives
     {
-        const string fieldList = "fields checksum,created_at,name,slug,updated_at,url;";
+        public const string fieldList = "fields checksum,created_at,name,slug,updated_at,url;";
 
         public PlayerPerspectives()
         {
@@ -21,62 +21,34 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<PlayerPerspective> RetVal = _GetGame_PlayerPerspectives(SearchUsing.id, Id);
+                Task<PlayerPerspective> RetVal = _GetGame_PlayerPerspectives((long)Id);
                 return RetVal.Result;
             }
         }
 
-        public static PlayerPerspective GetGame_PlayerPerspectives(string Slug)
-        {
-            Task<PlayerPerspective> RetVal = _GetGame_PlayerPerspectives(SearchUsing.slug, Slug);
-            return RetVal.Result;
-        }
-
-        private static async Task<PlayerPerspective> _GetGame_PlayerPerspectives(SearchUsing searchUsing, object searchValue)
+        private static async Task<PlayerPerspective> _GetGame_PlayerPerspectives(long searchValue)
         {
             // check database first
-            Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
-            if (searchUsing == SearchUsing.id)
-            {
-                cacheStatus = Storage.GetCacheStatus("PlayerPerspective", (long)searchValue);
-            }
-            else
-            {
-                cacheStatus = Storage.GetCacheStatus("PlayerPerspective", (string)searchValue);
-            }
-
-            // set up where clause
-            string WhereClause = "";
-            switch (searchUsing)
-            {
-                case SearchUsing.id:
-                    WhereClause = "where id = " + searchValue;
-                    break;
-                case SearchUsing.slug:
-                    WhereClause = "where slug = " + searchValue;
-                    break;
-                default:
-                    throw new Exception("Invalid search type");
-            }
+            Storage.CacheStatus? cacheStatus = Storage.GetCacheStatus("PlayerPerspective", searchValue);
 
             PlayerPerspective returnValue = new PlayerPerspective();
             bool forceImageDownload = false;
             switch (cacheStatus)
             {
                 case Storage.CacheStatus.NotPresent:
-                    returnValue = await GetObjectFromServer(WhereClause);
+                    returnValue = await GetObjectFromServer(searchValue);
                     Storage.NewCacheValue(returnValue);
                     forceImageDownload = true;
                     break;
                 case Storage.CacheStatus.Expired:
                     try
                     {
-                        returnValue = await GetObjectFromServer(WhereClause);
+                        returnValue = await GetObjectFromServer(searchValue);
                         Storage.NewCacheValue(returnValue, true);
                     }
                     catch (Exception ex)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
+                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. Id: " + searchValue, ex);
                         returnValue = Storage.GetCacheValue<PlayerPerspective>(returnValue, "id", (long)searchValue);
                     }
                     break;
@@ -90,17 +62,11 @@ namespace gaseous_server.Classes.Metadata
             return returnValue;
         }
 
-        private enum SearchUsing
-        {
-            id,
-            slug
-        }
-
-        private static async Task<PlayerPerspective> GetObjectFromServer(string WhereClause)
+        private static async Task<PlayerPerspective> GetObjectFromServer(long searchValue)
         {
             // get Game_PlayerPerspectives metadata
             Communications comms = new Communications();
-            var results = await comms.APIComm<PlayerPerspective>(IGDBClient.Endpoints.PlayerPerspectives, fieldList, WhereClause);
+            var results = await comms.APIComm<PlayerPerspective>(Communications.MetadataEndpoint.PlayerPerspective, searchValue);
             var result = results.First();
 
             return result;

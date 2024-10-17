@@ -8,7 +8,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class Games
     {
-        const string fieldList = "fields age_ratings,aggregated_rating,aggregated_rating_count,alternative_names,artworks,bundles,category,checksum,collections,cover,created_at,dlcs,expanded_games,expansions,external_games,first_release_date,follows,forks,franchise,franchises,game_engines,game_localizations,game_modes,genres,hypes,involved_companies,keywords,language_supports,multiplayer_modes,name,parent_game,platforms,player_perspectives,ports,rating,rating_count,release_dates,remakes,remasters,screenshots,similar_games,slug,standalone_expansions,status,storyline,summary,tags,themes,total_rating,total_rating_count,updated_at,url,version_parent,version_title,videos,websites;";
+        public const string fieldList = "fields age_ratings,aggregated_rating,aggregated_rating_count,alternative_names,artworks,bundles,category,checksum,collections,cover,created_at,dlcs,expanded_games,expansions,external_games,first_release_date,follows,forks,franchise,franchises,game_engines,game_localizations,game_modes,genres,hypes,involved_companies,keywords,language_supports,multiplayer_modes,name,parent_game,platforms,player_perspectives,ports,rating,rating_count,release_dates,remakes,remasters,screenshots,similar_games,slug,standalone_expansions,status,storyline,summary,tags,themes,total_rating,total_rating_count,updated_at,url,version_parent,version_title,videos,websites;";
 
         public Games()
         {
@@ -45,14 +45,14 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<Game> RetVal = _GetGame(SearchUsing.id, Id, getAllMetadata, followSubGames, forceRefresh);
+                Task<Game> RetVal = _GetGame(SearchUsing.Id, Id, getAllMetadata, followSubGames, forceRefresh);
                 return RetVal.Result;
             }
         }
 
         public static Game GetGame(string Slug, bool getAllMetadata, bool followSubGames, bool forceRefresh)
         {
-            Task<Game> RetVal = _GetGame(SearchUsing.slug, Slug, getAllMetadata, followSubGames, forceRefresh);
+            Task<Game> RetVal = _GetGame(SearchUsing.Slug, Slug, getAllMetadata, followSubGames, forceRefresh);
             return RetVal.Result;
         }
 
@@ -65,7 +65,7 @@ namespace gaseous_server.Classes.Metadata
         {
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
-            if (searchUsing == SearchUsing.id)
+            if (searchUsing == SearchUsing.Id)
             {
                 cacheStatus = Storage.GetCacheStatus("Game", (long)searchValue);
             }
@@ -79,45 +79,43 @@ namespace gaseous_server.Classes.Metadata
                 if (cacheStatus == Storage.CacheStatus.Current) { cacheStatus = Storage.CacheStatus.Expired; }
             }
 
-            string WhereClause = "";
-            string searchField = "";
-            switch (searchUsing)
-            {
-                case SearchUsing.id:
-                    WhereClause = "where id = " + searchValue;
-                    searchField = "id";
-                    break;
-                case SearchUsing.slug:
-                    WhereClause = "where slug = \"" + searchValue + "\"";
-                    searchField = "slug";
-                    break;
-                default:
-                    throw new Exception("Invalid search type");
-            }
-
             Game returnValue = new Game();
             switch (cacheStatus)
             {
                 case Storage.CacheStatus.NotPresent:
-                    returnValue = await GetObjectFromServer(WhereClause);
+                    if (searchUsing == SearchUsing.Id)
+                    {
+                        returnValue = await GetObjectFromServer((long)searchValue);
+                    }
+                    else
+                    {
+                        returnValue = await GetObjectFromServer((string)searchValue);
+                    }
                     Storage.NewCacheValue(returnValue);
                     UpdateSubClasses(returnValue, getAllMetadata, followSubGames, forceRefresh);
                     return returnValue;
                 case Storage.CacheStatus.Expired:
                     try
                     {
-                        returnValue = await GetObjectFromServer(WhereClause);
+                        if (searchUsing == SearchUsing.Id)
+                        {
+                            returnValue = await GetObjectFromServer((long)searchValue);
+                        }
+                        else
+                        {
+                            returnValue = await GetObjectFromServer((string)searchValue);
+                        }
                         Storage.NewCacheValue(returnValue, true);
                         UpdateSubClasses(returnValue, getAllMetadata, followSubGames, forceRefresh);
                     }
                     catch (Exception ex)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
-                        returnValue = Storage.GetCacheValue<Game>(returnValue, searchField, searchValue);
+                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. Id/Slug: " + searchValue, ex);
+                        returnValue = Storage.GetCacheValue<Game>(returnValue, searchUsing.ToString(), searchValue);
                     }
                     return returnValue;
                 case Storage.CacheStatus.Current:
-                    returnValue = Storage.GetCacheValue<Game>(returnValue, searchField, searchValue);
+                    returnValue = Storage.GetCacheValue<Game>(returnValue, searchUsing.ToString(), searchValue);
                     UpdateSubClasses(returnValue, false, false, false);
                     return returnValue;
                 default:
@@ -309,17 +307,36 @@ namespace gaseous_server.Classes.Metadata
 
         private enum SearchUsing
         {
-            id,
-            slug
+            Id,
+            Slug
         }
 
-        private static async Task<Game> GetObjectFromServer(string WhereClause)
+        private static async Task<Game> GetObjectFromServer(string Slug)
         {
             // get Game metadata
             Communications comms = new Communications();
-            var results = await comms.APIComm<Game>(IGDBClient.Endpoints.Games, fieldList, WhereClause);
+            var results = await comms.APIComm<Game>(Communications.MetadataEndpoint.Game, Slug);
             var result = results.First();
 
+            result = MassageResult(result);
+
+            return result;
+        }
+
+        private static async Task<Game> GetObjectFromServer(long Id)
+        {
+            // get Game metadata
+            Communications comms = new Communications();
+            var results = await comms.APIComm<Game>(Communications.MetadataEndpoint.Game, Id);
+            var result = results.First();
+
+            result = MassageResult(result);
+
+            return result;
+        }
+
+        private static Game MassageResult(Game result)
+        {
             // add artificial unknown platform mapping
             List<long> platformIds = new List<long>();
             platformIds.Add(0);

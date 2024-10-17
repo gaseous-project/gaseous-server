@@ -8,7 +8,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class Platforms
     {
-        const string fieldList = "fields abbreviation,alternative_name,category,checksum,created_at,generation,name,platform_family,platform_logo,slug,summary,updated_at,url,versions,websites;";
+        public const string fieldList = "fields abbreviation,alternative_name,category,checksum,created_at,generation,name,platform_family,platform_logo,slug,summary,updated_at,url,versions,websites;";
 
         public Platforms()
         {
@@ -41,7 +41,7 @@ namespace gaseous_server.Classes.Metadata
             {
                 try
                 {
-                    Task<Platform> RetVal = _GetPlatform(SearchUsing.id, Id, forceRefresh, GetImages);
+                    Task<Platform> RetVal = _GetPlatform(SearchUsing.Id, Id, forceRefresh, GetImages);
                     return RetVal.Result;
                 }
                 catch (Exception ex)
@@ -54,7 +54,7 @@ namespace gaseous_server.Classes.Metadata
 
         public static Platform GetPlatform(string Slug, bool forceRefresh = false, bool GetImages = false)
         {
-            Task<Platform> RetVal = _GetPlatform(SearchUsing.slug, Slug, forceRefresh, GetImages);
+            Task<Platform> RetVal = _GetPlatform(SearchUsing.Slug, Slug, forceRefresh, GetImages);
             return RetVal.Result;
         }
 
@@ -62,7 +62,7 @@ namespace gaseous_server.Classes.Metadata
         {
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
-            if (searchUsing == SearchUsing.id)
+            if (searchUsing == SearchUsing.Id)
             {
                 cacheStatus = Storage.GetCacheStatus("Platform", (long)searchValue);
             }
@@ -76,28 +76,18 @@ namespace gaseous_server.Classes.Metadata
                 if (cacheStatus == Storage.CacheStatus.Current) { cacheStatus = Storage.CacheStatus.Expired; }
             }
 
-            // set up where clause
-            string WhereClause = "";
-            string searchField = "";
-            switch (searchUsing)
-            {
-                case SearchUsing.id:
-                    WhereClause = "where id = " + searchValue;
-                    searchField = "id";
-                    break;
-                case SearchUsing.slug:
-                    WhereClause = "where slug = \"" + searchValue + "\"";
-                    searchField = "slug";
-                    break;
-                default:
-                    throw new Exception("Invalid search type");
-            }
-
             Platform returnValue = new Platform();
             switch (cacheStatus)
             {
                 case Storage.CacheStatus.NotPresent:
-                    returnValue = await GetObjectFromServer(WhereClause);
+                    if (searchUsing == SearchUsing.Id)
+                    {
+                        returnValue = await GetObjectFromServer((long)searchValue);
+                    }
+                    else
+                    {
+                        returnValue = await GetObjectFromServer((string)searchValue);
+                    }
                     Storage.NewCacheValue(returnValue);
                     UpdateSubClasses(returnValue, GetImages);
                     AddPlatformMapping(returnValue);
@@ -105,7 +95,14 @@ namespace gaseous_server.Classes.Metadata
                 case Storage.CacheStatus.Expired:
                     try
                     {
-                        returnValue = await GetObjectFromServer(WhereClause);
+                        if (searchUsing == SearchUsing.Id)
+                        {
+                            returnValue = await GetObjectFromServer((long)searchValue);
+                        }
+                        else
+                        {
+                            returnValue = await GetObjectFromServer((string)searchValue);
+                        }
                         Storage.NewCacheValue(returnValue, true);
                         UpdateSubClasses(returnValue, GetImages);
                         AddPlatformMapping(returnValue);
@@ -113,11 +110,11 @@ namespace gaseous_server.Classes.Metadata
                     }
                     catch (Exception ex)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
-                        return Storage.GetCacheValue<Platform>(returnValue, searchField, searchValue);
+                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. Id/Slug: " + searchValue, ex);
+                        return Storage.GetCacheValue<Platform>(returnValue, searchUsing.ToString(), searchValue);
                     }
                 case Storage.CacheStatus.Current:
-                    return Storage.GetCacheValue<Platform>(returnValue, searchField, searchValue);
+                    return Storage.GetCacheValue<Platform>(returnValue, searchUsing.ToString(), searchValue);
                 default:
                     throw new Exception("How did you get here?");
             }
@@ -177,15 +174,25 @@ namespace gaseous_server.Classes.Metadata
 
         private enum SearchUsing
         {
-            id,
-            slug
+            Id,
+            Slug
         }
 
-        private static async Task<Platform> GetObjectFromServer(string WhereClause)
+        private static async Task<Platform> GetObjectFromServer(string Slug)
         {
             // get platform metadata
             Communications comms = new Communications();
-            var results = await comms.APIComm<Platform>(IGDBClient.Endpoints.Platforms, fieldList, WhereClause);
+            var results = await comms.APIComm<Platform>(Communications.MetadataEndpoint.Platform, Slug);
+            var result = results.First();
+
+            return result;
+        }
+
+        private static async Task<Platform> GetObjectFromServer(long Id)
+        {
+            // get platform metadata
+            Communications comms = new Communications();
+            var results = await comms.APIComm<Platform>(Communications.MetadataEndpoint.Platform, Id);
             var result = results.First();
 
             return result;

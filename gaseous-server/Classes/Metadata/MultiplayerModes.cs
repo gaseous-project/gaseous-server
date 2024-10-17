@@ -7,7 +7,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class MultiplayerModes
     {
-        const string fieldList = "fields campaigncoop,checksum,dropin,game,lancoop,offlinecoop,offlinecoopmax,offlinemax,onlinecoop,onlinecoopmax,onlinemax,platform,splitscreen,splitscreenonline;";
+        public const string fieldList = "fields campaigncoop,checksum,dropin,game,lancoop,offlinecoop,offlinecoopmax,offlinemax,onlinecoop,onlinecoopmax,onlinemax,platform,splitscreen,splitscreenonline;";
 
         public MultiplayerModes()
         {
@@ -21,60 +21,32 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<MultiplayerMode> RetVal = _GetGame_MultiplayerModes(SearchUsing.id, Id);
+                Task<MultiplayerMode> RetVal = _GetGame_MultiplayerModes((long)Id);
                 return RetVal.Result;
             }
         }
 
-        public static MultiplayerMode GetGame_MultiplayerModes(string Slug)
-        {
-            Task<MultiplayerMode> RetVal = _GetGame_MultiplayerModes(SearchUsing.slug, Slug);
-            return RetVal.Result;
-        }
-
-        private static async Task<MultiplayerMode> _GetGame_MultiplayerModes(SearchUsing searchUsing, object searchValue)
+        private static async Task<MultiplayerMode> _GetGame_MultiplayerModes(long searchValue)
         {
             // check database first
-            Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
-            if (searchUsing == SearchUsing.id)
-            {
-                cacheStatus = Storage.GetCacheStatus("MultiplayerMode", (long)searchValue);
-            }
-            else
-            {
-                cacheStatus = Storage.GetCacheStatus("MultiplayerMode", (string)searchValue);
-            }
-
-            // set up where clause
-            string WhereClause = "";
-            switch (searchUsing)
-            {
-                case SearchUsing.id:
-                    WhereClause = "where id = " + searchValue;
-                    break;
-                case SearchUsing.slug:
-                    WhereClause = "where slug = " + searchValue;
-                    break;
-                default:
-                    throw new Exception("Invalid search type");
-            }
+            Storage.CacheStatus? cacheStatus = Storage.GetCacheStatus("MultiplayerMode", searchValue);
 
             MultiplayerMode returnValue = new MultiplayerMode();
             switch (cacheStatus)
             {
                 case Storage.CacheStatus.NotPresent:
-                    returnValue = await GetObjectFromServer(WhereClause);
+                    returnValue = await GetObjectFromServer(searchValue);
                     Storage.NewCacheValue(returnValue);
                     break;
                 case Storage.CacheStatus.Expired:
                     try
                     {
-                        returnValue = await GetObjectFromServer(WhereClause);
+                        returnValue = await GetObjectFromServer(searchValue);
                         Storage.NewCacheValue(returnValue, true);
                     }
                     catch (Exception ex)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
+                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. Id: " + searchValue, ex);
                         returnValue = Storage.GetCacheValue<MultiplayerMode>(returnValue, "id", (long)searchValue);
                     }
                     break;
@@ -88,17 +60,11 @@ namespace gaseous_server.Classes.Metadata
             return returnValue;
         }
 
-        private enum SearchUsing
-        {
-            id,
-            slug
-        }
-
-        private static async Task<MultiplayerMode> GetObjectFromServer(string WhereClause)
+        private static async Task<MultiplayerMode> GetObjectFromServer(long searchValue)
         {
             // get Game_MultiplayerModes metadata
             Communications comms = new Communications();
-            var results = await comms.APIComm<MultiplayerMode>(IGDBClient.Endpoints.MultiplayerModes, fieldList, WhereClause);
+            var results = await comms.APIComm<MultiplayerMode>(Communications.MetadataEndpoint.MultiplayerMode, searchValue);
             var result = results.First();
 
             return result;

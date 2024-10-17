@@ -2,6 +2,8 @@ using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Net;
+using System.Security.Policy;
+using HasheousClient.Models.Metadata.IGDB;
 using Humanizer;
 using IGDB;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -24,11 +26,16 @@ namespace gaseous_server.Classes.Metadata
             client.DefaultRequestHeaders.Add("Accept-Encoding", "deflate");
         }
 
+        // configure the IGDB client
         private static IGDBClient igdb = new IGDBClient(
                     // Found in Twitch Developer portal for your app
                     Config.IGDB.ClientId,
                     Config.IGDB.Secret
                 );
+
+        // provide the hasheous client
+        private static HasheousClient.Hasheous hasheous = new HasheousClient.Hasheous();
+
 
         private static HttpClient client = new HttpClient();
 
@@ -57,6 +64,18 @@ namespace gaseous_server.Classes.Metadata
                         RateLimitRecoveryWaitTime = 10000;
 
                         break;
+
+                    case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
+                        // set rate limiter avoidance values
+                        RateLimitAvoidanceWait = 1500;
+                        RateLimitAvoidanceThreshold = 3;
+                        RateLimitAvoidancePeriod = 1;
+
+                        // set rate limiter recovery values
+                        RateLimitRecoveryWaitTime = 10000;
+
+                        break;
+
                     default:
                         // leave all values at default
                         break;
@@ -159,8 +178,248 @@ namespace gaseous_server.Classes.Metadata
         private int RetryAttempts = 0;
         private int RetryAttemptsMax = 3;
 
+        public enum MetadataEndpoint
+        {
+            AgeGroup,
+            AgeRating,
+            AgeRatingContentDescription,
+            AlternativeName,
+            Artwork,
+            Collection,
+            Company,
+            CompanyLogo,
+            Cover,
+            ExternalGame,
+            Franchise,
+            GameMode,
+            Game,
+            GameVideo,
+            Genre,
+            InvolvedCompany,
+            MultiplayerMode,
+            PlatformLogo,
+            Platform,
+            PlatformVersion,
+            PlayerPerspective,
+            ReleaseDate,
+            Search,
+            Screenshot,
+            Theme
+        }
+
         /// <summary>
-        /// Request data from the metadata API
+        /// Request data from the metadata API using a slug
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of object to return
+        /// </typeparam>
+        /// <param name="Endpoint">
+        /// The endpoint to access - can only be either Platform or Game
+        /// </param>
+        /// <param name="Slug">
+        /// The slug to query for
+        /// </param>
+        /// <returns>
+        /// The object requested
+        /// </returns>
+        public async Task<T[]?> APIComm<T>(MetadataEndpoint Endpoint, string Slug)
+        {
+            switch (_MetadataSource)
+            {
+                case HasheousClient.Models.MetadataModel.MetadataSources.None:
+                    return null;
+                case HasheousClient.Models.MetadataModel.MetadataSources.IGDB:
+                    string fieldList = "";
+                    string query = "where slug = \"" + Slug + "\"";
+                    string EndpointString = "";
+
+                    switch (Endpoint)
+                    {
+                        case MetadataEndpoint.Platform:
+                            fieldList = Platforms.fieldList;
+                            EndpointString = IGDBClient.Endpoints.Platforms;
+                            break;
+
+                        case MetadataEndpoint.Game:
+                            fieldList = Games.fieldList;
+                            EndpointString = IGDBClient.Endpoints.Games;
+                            break;
+
+                        default:
+                            throw new Exception("Endpoint must be either Platform or Game");
+
+                    }
+
+                    return await IGDBAPI<T>(EndpointString, fieldList, query);
+
+                case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
+                    return null;
+
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Request data from the metadata API using an id
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of object to return
+        /// </typeparam>
+        /// <param name="Endpoint">
+        /// The endpoint to access
+        /// </param>
+        /// <param name="Id">
+        /// The Id to query for
+        /// </param>
+        /// <returns>
+        /// The object requested
+        /// </returns>
+        public async Task<T[]> APIComm<T>(MetadataEndpoint Endpoint, long Id)
+        {
+            switch (_MetadataSource)
+            {
+                case HasheousClient.Models.MetadataModel.MetadataSources.None:
+                    return null;
+                case HasheousClient.Models.MetadataModel.MetadataSources.IGDB:
+                    string fieldList = "";
+                    string query = "where id = " + Id;
+                    string EndpointString = "";
+
+                    switch (Endpoint)
+                    {
+                        case MetadataEndpoint.AgeRating:
+                            fieldList = AgeRatings.fieldList;
+                            EndpointString = IGDBClient.Endpoints.AgeRating;
+                            break;
+
+                        case MetadataEndpoint.AgeRatingContentDescription:
+                            fieldList = AgeRatingContentDescriptions.fieldList;
+                            EndpointString = IGDBClient.Endpoints.AgeRatingContentDescriptions;
+                            break;
+
+                        case MetadataEndpoint.AlternativeName:
+                            fieldList = AlternativeNames.fieldList;
+                            EndpointString = IGDBClient.Endpoints.AlternativeNames;
+                            break;
+
+                        case MetadataEndpoint.Artwork:
+                            fieldList = Artworks.fieldList;
+                            EndpointString = IGDBClient.Endpoints.Artworks;
+                            break;
+
+                        case MetadataEndpoint.Collection:
+                            fieldList = Collections.fieldList;
+                            EndpointString = IGDBClient.Endpoints.Collections;
+                            break;
+
+                        case MetadataEndpoint.Company:
+                            fieldList = Companies.fieldList;
+                            EndpointString = IGDBClient.Endpoints.Companies;
+                            break;
+
+                        case MetadataEndpoint.CompanyLogo:
+                            fieldList = CompanyLogos.fieldList;
+                            EndpointString = IGDBClient.Endpoints.CompanyLogos;
+                            break;
+
+                        case MetadataEndpoint.Cover:
+                            fieldList = Covers.fieldList;
+                            EndpointString = IGDBClient.Endpoints.Covers;
+                            break;
+
+                        case MetadataEndpoint.ExternalGame:
+                            fieldList = ExternalGames.fieldList;
+                            EndpointString = IGDBClient.Endpoints.ExternalGames;
+                            break;
+
+                        case MetadataEndpoint.Franchise:
+                            fieldList = Franchises.fieldList;
+                            EndpointString = IGDBClient.Endpoints.Franchies;
+                            break;
+
+                        case MetadataEndpoint.GameMode:
+                            fieldList = GameModes.fieldList;
+                            EndpointString = IGDBClient.Endpoints.GameModes;
+                            break;
+
+                        case MetadataEndpoint.Game:
+                            fieldList = Games.fieldList;
+                            EndpointString = IGDBClient.Endpoints.Games;
+                            break;
+
+                        case MetadataEndpoint.GameVideo:
+                            fieldList = GamesVideos.fieldList;
+                            EndpointString = IGDBClient.Endpoints.GameVideos;
+                            break;
+
+                        case MetadataEndpoint.Genre:
+                            fieldList = Genres.fieldList;
+                            EndpointString = IGDBClient.Endpoints.Genres;
+                            break;
+
+                        case MetadataEndpoint.InvolvedCompany:
+                            fieldList = InvolvedCompanies.fieldList;
+                            EndpointString = IGDBClient.Endpoints.InvolvedCompanies;
+                            break;
+
+                        case MetadataEndpoint.MultiplayerMode:
+                            fieldList = MultiplayerModes.fieldList;
+                            EndpointString = IGDBClient.Endpoints.MultiplayerModes;
+                            break;
+
+                        case MetadataEndpoint.PlatformLogo:
+                            fieldList = PlatformLogos.fieldList;
+                            EndpointString = IGDBClient.Endpoints.PlatformLogos;
+                            break;
+
+                        case MetadataEndpoint.Platform:
+                            fieldList = Platforms.fieldList;
+                            EndpointString = IGDBClient.Endpoints.Platforms;
+                            break;
+
+                        case MetadataEndpoint.PlatformVersion:
+                            fieldList = PlatformVersions.fieldList;
+                            EndpointString = IGDBClient.Endpoints.PlatformVersions;
+                            break;
+
+                        case MetadataEndpoint.PlayerPerspective:
+                            fieldList = PlayerPerspectives.fieldList;
+                            EndpointString = IGDBClient.Endpoints.PlayerPerspectives;
+                            break;
+
+                        case MetadataEndpoint.ReleaseDate:
+                            fieldList = ReleaseDates.fieldList;
+                            EndpointString = IGDBClient.Endpoints.ReleaseDates;
+                            break;
+
+                        case MetadataEndpoint.Screenshot:
+                            fieldList = Screenshots.fieldList;
+                            EndpointString = IGDBClient.Endpoints.Screenshots;
+                            break;
+
+                        case MetadataEndpoint.Theme:
+                            fieldList = Themes.fieldList;
+                            EndpointString = IGDBClient.Endpoints.Themes;
+                            break;
+
+                        default:
+                            throw new Exception("Endpoint must be either Platform or Game");
+
+                    }
+
+                    return await IGDBAPI<T>(EndpointString, fieldList, query);
+
+                case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
+                    return null;
+
+                default:
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Request data from the metadata API - this is only valid for IGDB
         /// </summary>
         /// <typeparam name="T">Type of object to return</typeparam>
         /// <param name="Endpoint">API endpoint segment to use</param>
@@ -175,6 +434,33 @@ namespace gaseous_server.Classes.Metadata
                     return null;
                 case HasheousClient.Models.MetadataModel.MetadataSources.IGDB:
                     return await IGDBAPI<T>(Endpoint, Fields, Query);
+                case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
+                    // configure the Hasheous client
+                    hasheous = new HasheousClient.Hasheous();
+
+                    // set the base URI
+                    string HasheousHost = "";
+                    if (Config.MetadataConfiguration.HasheousHost == null)
+                    {
+                        HasheousHost = "https://hasheous.org/";
+                    }
+                    else
+                    {
+                        HasheousHost = Config.MetadataConfiguration.HasheousHost;
+                    }
+
+                    // set the client API key
+                    HasheousClient.WebApp.HttpHelper.ClientKey = Config.MetadataConfiguration.HasheousClientAPIKey;
+
+                    // set the client secret
+                    if (Config.MetadataConfiguration.HasheousAPIKey != null)
+                    {
+                        HasheousClient.WebApp.HttpHelper.APIKey = Config.MetadataConfiguration.HasheousAPIKey;
+                    }
+
+                    // return from Hasheous
+                    return await HasheousAPI<T>(Endpoint, Fields, Query);
+
                 default:
                     return null;
             }
@@ -200,7 +486,8 @@ namespace gaseous_server.Classes.Metadata
                 }
 
                 // perform the actual API call
-                var results = await igdb.QueryAsync<T>(Endpoint, query: Fields + " " + Query + ";");
+                string queryString = Fields + " " + Query + ";";
+                var results = await igdb.QueryAsync<T>(Endpoint, query: queryString);
 
                 // increment rate limiter avoidance call count
                 RateLimitAvoidanceCallCount += 1;
@@ -240,6 +527,145 @@ namespace gaseous_server.Classes.Metadata
                         RetryAttempts += 1;
 
                         return await IGDBAPI<T>(Endpoint, Fields, Query);
+
+                    default:
+                        Logging.Log(Logging.LogType.Warning, "API Connection", "Exception when accessing endpoint " + Endpoint, apiEx);
+                        throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Log(Logging.LogType.Warning, "API Connection", "Exception when accessing endpoint " + Endpoint, ex);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Access the HasheousAPI
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of object to return
+        /// </typeparam>
+        /// <param name="Endpoint">
+        /// The endpoint to access
+        /// </param>
+        /// <param name="Fields">
+        /// Can be either "slug" or "id" - note not all endpoints support slug
+        /// </param>
+        /// <param name="Query">
+        /// The "slug" or "id" to query for
+        /// </param>
+        /// <returns>
+        /// The object requested
+        /// </returns>
+        private async Task<T[]> HasheousAPI<T>(string Endpoint, string Fields, string Query)
+        {
+            Logging.Log(Logging.LogType.Debug, "API Connection", "Accessing API for endpoint: " + Endpoint);
+
+            if (RateLimitResumeTime > DateTime.UtcNow)
+            {
+                Logging.Log(Logging.LogType.Information, "API Connection", "IGDB rate limit hit. Pausing API communications until " + RateLimitResumeTime.ToString() + ". Attempt " + RetryAttempts + " of " + RetryAttemptsMax + " retries.");
+                Thread.Sleep(RateLimitRecoveryWaitTime);
+            }
+
+            try
+            {
+                if (InRateLimitAvoidanceMode == true)
+                {
+                    // sleep for a moment to help avoid hitting the rate limiter
+                    Logging.Log(Logging.LogType.Information, "API Connection: Endpoint:" + Endpoint, "IGDB rate limit hit. Pausing API communications for " + RateLimitAvoidanceWait + " milliseconds to avoid rate limiter.");
+                    Thread.Sleep(RateLimitAvoidanceWait);
+                }
+
+                // perform the actual API call
+                //var results = await igdb.QueryAsync<T>(Endpoint, query: Fields + " " + Query + ";");
+
+                T result1;
+                if (Fields == "slug")
+                {
+                    result1 = hasheous.GetMetadataProxy<T>(HasheousClient.Hasheous.MetadataProvider.IGDB, Query);
+                }
+                else if (Fields == "id")
+                {
+                    result1 = hasheous.GetMetadataProxy<T>(HasheousClient.Hasheous.MetadataProvider.IGDB, Query);
+                }
+                else
+                {
+                    throw new Exception("Fields must be either 'slug' or 'id'");
+                }
+
+                var results1 = new T[] { result1 };
+
+                // increment rate limiter avoidance call count
+                RateLimitAvoidanceCallCount += 1;
+
+                return results1;
+            }
+            catch (ApiException apiEx)
+            {
+                switch (apiEx.StatusCode)
+                {
+                    case HttpStatusCode.TooManyRequests:
+                        if (RetryAttempts >= RetryAttemptsMax)
+                        {
+                            Logging.Log(Logging.LogType.Warning, "API Connection", "IGDB rate limiter attempts expired. Aborting.", apiEx);
+                            throw;
+                        }
+                        else
+                        {
+                            Logging.Log(Logging.LogType.Information, "API Connection", "IGDB API rate limit hit while accessing endpoint " + Endpoint, apiEx);
+
+                            RetryAttempts += 1;
+
+                            T result2;
+                            if (Fields == "slug")
+                            {
+                                result2 = hasheous.GetMetadataProxy<T>(HasheousClient.Hasheous.MetadataProvider.IGDB, Query);
+                            }
+                            else if (Fields == "id")
+                            {
+                                result2 = hasheous.GetMetadataProxy<T>(HasheousClient.Hasheous.MetadataProvider.IGDB, Query);
+                            }
+                            else
+                            {
+                                throw new Exception("Fields must be either 'slug' or 'id'");
+                            }
+
+                            var results2 = new T[] { result2 };
+
+                            return results2;
+                        }
+
+                    case HttpStatusCode.Unauthorized:
+                        Logging.Log(Logging.LogType.Information, "API Connection", "IGDB API unauthorised error while accessing endpoint " + Endpoint + ". Waiting " + RateLimitAvoidanceWait + " milliseconds and resetting IGDB client.", apiEx);
+
+                        Thread.Sleep(RateLimitAvoidanceWait);
+
+                        igdb = new IGDBClient(
+                            // Found in Twitch Developer portal for your app
+                            Config.IGDB.ClientId,
+                            Config.IGDB.Secret
+                        );
+
+                        RetryAttempts += 1;
+
+                        T result3;
+                        if (Fields == "slug")
+                        {
+                            result3 = hasheous.GetMetadataProxy<T>(HasheousClient.Hasheous.MetadataProvider.IGDB, Query);
+                        }
+                        else if (Fields == "id")
+                        {
+                            result3 = hasheous.GetMetadataProxy<T>(HasheousClient.Hasheous.MetadataProvider.IGDB, Query);
+                        }
+                        else
+                        {
+                            throw new Exception("Fields must be either 'slug' or 'id'");
+                        }
+
+                        var results3 = new T[] { result3 };
+
+                        return results3;
 
                     default:
                         Logging.Log(Logging.LogType.Warning, "API Connection", "Exception when accessing endpoint " + Endpoint, apiEx);

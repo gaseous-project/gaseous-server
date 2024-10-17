@@ -5,9 +5,9 @@ using IGDB.Models;
 
 namespace gaseous_server.Classes.Metadata
 {
-	public class Franchises
+    public class Franchises
     {
-        const string fieldList = "fields checksum,created_at,games,name,slug,updated_at,url;";
+        public const string fieldList = "fields checksum,created_at,games,name,slug,updated_at,url;";
 
         public Franchises()
         {
@@ -21,60 +21,32 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<Franchise> RetVal = _GetFranchises(SearchUsing.id, Id);
+                Task<Franchise> RetVal = _GetFranchises((long)Id);
                 return RetVal.Result;
             }
         }
 
-        public static Franchise GetFranchises(string Slug)
-        {
-            Task<Franchise> RetVal = _GetFranchises(SearchUsing.slug, Slug);
-            return RetVal.Result;
-        }
-
-        private static async Task<Franchise> _GetFranchises(SearchUsing searchUsing, object searchValue)
+        private static async Task<Franchise> _GetFranchises(long searchValue)
         {
             // check database first
-            Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
-            if (searchUsing == SearchUsing.id)
-            {
-                cacheStatus = Storage.GetCacheStatus("Franchise", (long)searchValue);
-            }
-            else
-            {
-                cacheStatus = Storage.GetCacheStatus("Franchise", (string)searchValue);
-            }
-
-            // set up where clause
-            string WhereClause = "";
-            switch (searchUsing)
-            {
-                case SearchUsing.id:
-                    WhereClause = "where id = " + searchValue;
-                    break;
-                case SearchUsing.slug:
-                    WhereClause = "where slug = " + searchValue;
-                    break;
-                default:
-                    throw new Exception("Invalid search type");
-            }
+            Storage.CacheStatus? cacheStatus = Storage.GetCacheStatus("Franchise", searchValue);
 
             Franchise returnValue = new Franchise();
             switch (cacheStatus)
             {
                 case Storage.CacheStatus.NotPresent:
-                    returnValue = await GetObjectFromServer(WhereClause);
+                    returnValue = await GetObjectFromServer(searchValue);
                     Storage.NewCacheValue(returnValue);
-                    break;  
+                    break;
                 case Storage.CacheStatus.Expired:
                     try
                     {
-                        returnValue = await GetObjectFromServer(WhereClause);
+                        returnValue = await GetObjectFromServer(searchValue);
                         Storage.NewCacheValue(returnValue, true);
                     }
                     catch (Exception ex)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
+                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. Id: " + searchValue, ex);
                         returnValue = Storage.GetCacheValue<Franchise>(returnValue, "id", (long)searchValue);
                     }
                     break;
@@ -88,21 +60,15 @@ namespace gaseous_server.Classes.Metadata
             return returnValue;
         }
 
-        private enum SearchUsing
-        {
-            id,
-            slug
-        }
-
-        private static async Task<Franchise> GetObjectFromServer(string WhereClause)
+        private static async Task<Franchise> GetObjectFromServer(long searchValue)
         {
             // get FranchiseContentDescriptions metadata
             Communications comms = new Communications();
-            var results = await comms.APIComm<Franchise>(IGDBClient.Endpoints.Franchies, fieldList, WhereClause);
+            var results = await comms.APIComm<Franchise>(Communications.MetadataEndpoint.Franchise, searchValue);
             var result = results.First();
 
             return result;
         }
-	}
+    }
 }
 

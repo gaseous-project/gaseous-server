@@ -7,7 +7,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class Artworks
     {
-        const string fieldList = "fields alpha_channel,animated,checksum,game,height,image_id,url,width;";
+        public const string fieldList = "fields alpha_channel,animated,checksum,game,height,image_id,url,width;";
 
         public Artworks()
         {
@@ -21,43 +21,15 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<Artwork> RetVal = _GetArtwork(SearchUsing.id, Id, ImagePath, GetImages);
+                Task<Artwork> RetVal = _GetArtwork((long)Id, ImagePath, GetImages);
                 return RetVal.Result;
             }
         }
 
-        public static Artwork GetArtwork(string Slug, string ImagePath, bool GetImages)
-        {
-            Task<Artwork> RetVal = _GetArtwork(SearchUsing.slug, Slug, ImagePath, GetImages);
-            return RetVal.Result;
-        }
-
-        private static async Task<Artwork> _GetArtwork(SearchUsing searchUsing, object searchValue, string ImagePath, bool GetImages = true)
+        private static async Task<Artwork> _GetArtwork(long searchValue, string ImagePath, bool GetImages = true)
         {
             // check database first
-            Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
-            if (searchUsing == SearchUsing.id)
-            {
-                cacheStatus = Storage.GetCacheStatus("Artwork", (long)searchValue);
-            }
-            else
-            {
-                cacheStatus = Storage.GetCacheStatus("Artwork", (string)searchValue);
-            }
-
-            // set up where clause
-            string WhereClause = "";
-            switch (searchUsing)
-            {
-                case SearchUsing.id:
-                    WhereClause = "where id = " + searchValue;
-                    break;
-                case SearchUsing.slug:
-                    WhereClause = "where slug = " + searchValue;
-                    break;
-                default:
-                    throw new Exception("Invalid search type");
-            }
+            Storage.CacheStatus? cacheStatus = Storage.GetCacheStatus("Artwork", searchValue);
 
             Artwork returnValue = new Artwork();
             bool forceImageDownload = false;
@@ -65,14 +37,14 @@ namespace gaseous_server.Classes.Metadata
             switch (cacheStatus)
             {
                 case Storage.CacheStatus.NotPresent:
-                    returnValue = await GetObjectFromServer(WhereClause, ImagePath);
+                    returnValue = await GetObjectFromServer(searchValue, ImagePath);
                     Storage.NewCacheValue(returnValue);
                     forceImageDownload = true;
                     break;
                 case Storage.CacheStatus.Expired:
                     try
                     {
-                        returnValue = await GetObjectFromServer(WhereClause, ImagePath);
+                        returnValue = await GetObjectFromServer(searchValue, ImagePath);
                         Storage.NewCacheValue(returnValue, true);
 
                         // check if old value is different from the new value - only download if it's different
@@ -84,7 +56,7 @@ namespace gaseous_server.Classes.Metadata
                     }
                     catch (Exception ex)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
+                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. Id: " + searchValue, ex);
                         returnValue = Storage.GetCacheValue<Artwork>(returnValue, "id", (long)searchValue);
                     }
                     break;
@@ -111,17 +83,11 @@ namespace gaseous_server.Classes.Metadata
             return returnValue;
         }
 
-        private enum SearchUsing
-        {
-            id,
-            slug
-        }
-
-        private static async Task<Artwork> GetObjectFromServer(string WhereClause, string ImagePath)
+        private static async Task<Artwork> GetObjectFromServer(long searchValue, string ImagePath)
         {
             // get Artwork metadata
             Communications comms = new Communications();
-            var results = await comms.APIComm<Artwork>(IGDBClient.Endpoints.Artworks, fieldList, WhereClause);
+            var results = await comms.APIComm<Artwork>(Communications.MetadataEndpoint.Artwork, searchValue);
             var result = results.First();
 
             return result;

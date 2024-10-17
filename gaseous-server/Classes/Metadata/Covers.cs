@@ -9,7 +9,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class Covers
     {
-        const string fieldList = "fields alpha_channel,animated,checksum,game,game_localization,height,image_id,url,width;";
+        public const string fieldList = "fields alpha_channel,animated,checksum,game,game_localization,height,image_id,url,width;";
 
         public Covers()
         {
@@ -23,43 +23,15 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<Cover> RetVal = _GetCover(SearchUsing.id, Id, ImagePath, GetImages);
+                Task<Cover> RetVal = _GetCover((long)Id, ImagePath, GetImages);
                 return RetVal.Result;
             }
         }
 
-        public static Cover GetCover(string Slug, string ImagePath, bool GetImages)
-        {
-            Task<Cover> RetVal = _GetCover(SearchUsing.slug, Slug, ImagePath, GetImages);
-            return RetVal.Result;
-        }
-
-        private static async Task<Cover> _GetCover(SearchUsing searchUsing, object searchValue, string ImagePath, bool GetImages = true)
+        private static async Task<Cover> _GetCover(long searchValue, string ImagePath, bool GetImages = true)
         {
             // check database first
-            Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
-            if (searchUsing == SearchUsing.id)
-            {
-                cacheStatus = Storage.GetCacheStatus("Cover", (long)searchValue);
-            }
-            else
-            {
-                cacheStatus = Storage.GetCacheStatus("Cover", (string)searchValue);
-            }
-
-            // set up where clause
-            string WhereClause = "";
-            switch (searchUsing)
-            {
-                case SearchUsing.id:
-                    WhereClause = "where id = " + searchValue;
-                    break;
-                case SearchUsing.slug:
-                    WhereClause = "where slug = " + searchValue;
-                    break;
-                default:
-                    throw new Exception("Invalid search type");
-            }
+            Storage.CacheStatus? cacheStatus = Storage.GetCacheStatus("Cover", searchValue);
 
             Cover returnValue = new Cover();
             bool forceImageDownload = false;
@@ -67,14 +39,14 @@ namespace gaseous_server.Classes.Metadata
             switch (cacheStatus)
             {
                 case Storage.CacheStatus.NotPresent:
-                    returnValue = await GetObjectFromServer(WhereClause, ImagePath);
+                    returnValue = await GetObjectFromServer(searchValue, ImagePath);
                     Storage.NewCacheValue(returnValue);
                     forceImageDownload = true;
                     break;
                 case Storage.CacheStatus.Expired:
                     try
                     {
-                        returnValue = await GetObjectFromServer(WhereClause, ImagePath);
+                        returnValue = await GetObjectFromServer(searchValue, ImagePath);
                         Storage.NewCacheValue(returnValue, true);
 
                         // check if old value is different from the new value - only download if it's different
@@ -86,7 +58,7 @@ namespace gaseous_server.Classes.Metadata
                     }
                     catch (Exception ex)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
+                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. Id: " + searchValue, ex);
                         returnValue = Storage.GetCacheValue<Cover>(returnValue, "id", (long)searchValue);
                     }
                     break;
@@ -126,17 +98,11 @@ namespace gaseous_server.Classes.Metadata
             return returnValue;
         }
 
-        private enum SearchUsing
-        {
-            id,
-            slug
-        }
-
-        private static async Task<Cover> GetObjectFromServer(string WhereClause, string ImagePath)
+        private static async Task<Cover> GetObjectFromServer(long searchValue, string ImagePath)
         {
             // get Cover metadata
             Communications comms = new Communications();
-            var results = await comms.APIComm<Cover>(IGDBClient.Endpoints.Covers, fieldList, WhereClause);
+            var results = await comms.APIComm<Cover>(Communications.MetadataEndpoint.Cover, searchValue);
             var result = results.First();
 
             return result;

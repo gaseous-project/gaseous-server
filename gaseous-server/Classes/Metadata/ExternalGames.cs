@@ -5,9 +5,9 @@ using IGDB.Models;
 
 namespace gaseous_server.Classes.Metadata
 {
-	public class ExternalGames
+    public class ExternalGames
     {
-        const string fieldList = "fields category,checksum,countries,created_at,game,media,name,platform,uid,updated_at,url,year;";
+        public const string fieldList = "fields category,checksum,countries,created_at,game,media,name,platform,uid,updated_at,url,year;";
 
         public ExternalGames()
         {
@@ -21,63 +21,35 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<ExternalGame> RetVal = _GetExternalGames(SearchUsing.id, Id);
+                Task<ExternalGame> RetVal = _GetExternalGames((long)Id);
                 return RetVal.Result;
             }
         }
 
-        public static ExternalGame GetExternalGames(string Slug)
-        {
-            Task<ExternalGame> RetVal = _GetExternalGames(SearchUsing.slug, Slug);
-            return RetVal.Result;
-        }
-
-        private static async Task<ExternalGame> _GetExternalGames(SearchUsing searchUsing, object searchValue)
+        private static async Task<ExternalGame> _GetExternalGames(long searchValue)
         {
             // check database first
-            Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
-            if (searchUsing == SearchUsing.id)
-            {
-                cacheStatus = Storage.GetCacheStatus("ExternalGame", (long)searchValue);
-            }
-            else
-            {
-                cacheStatus = Storage.GetCacheStatus("ExternalGame", (string)searchValue);
-            }
-
-            // set up where clause
-            string WhereClause = "";
-            switch (searchUsing)
-            {
-                case SearchUsing.id:
-                    WhereClause = "where id = " + searchValue;
-                    break;
-                case SearchUsing.slug:
-                    WhereClause = "where slug = " + searchValue;
-                    break;
-                default:
-                    throw new Exception("Invalid search type");
-            }
+            Storage.CacheStatus? cacheStatus = Storage.GetCacheStatus("ExternalGame", searchValue);
 
             ExternalGame returnValue = new ExternalGame();
             switch (cacheStatus)
             {
                 case Storage.CacheStatus.NotPresent:
-                    returnValue = await GetObjectFromServer(WhereClause);
+                    returnValue = await GetObjectFromServer(searchValue);
                     if (returnValue != null)
                     {
                         Storage.NewCacheValue(returnValue);
                     }
-                    break;  
+                    break;
                 case Storage.CacheStatus.Expired:
                     try
                     {
-                        returnValue = await GetObjectFromServer(WhereClause);
+                        returnValue = await GetObjectFromServer(searchValue);
                         Storage.NewCacheValue(returnValue, true);
                     }
                     catch (Exception ex)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
+                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. Id: " + searchValue, ex);
                         returnValue = Storage.GetCacheValue<ExternalGame>(returnValue, "id", (long)searchValue);
                     }
                     break;
@@ -91,17 +63,11 @@ namespace gaseous_server.Classes.Metadata
             return returnValue;
         }
 
-        private enum SearchUsing
-        {
-            id,
-            slug
-        }
-
-        private static async Task<ExternalGame?> GetObjectFromServer(string WhereClause)
+        private static async Task<ExternalGame?> GetObjectFromServer(long searchValue)
         {
             // get ExternalGames metadata
             Communications comms = new Communications();
-            var results = await comms.APIComm<ExternalGame>(IGDBClient.Endpoints.ExternalGames, fieldList, WhereClause);
+            var results = await comms.APIComm<ExternalGame>(Communications.MetadataEndpoint.ExternalGame, searchValue);
             if (results.Length > 0)
             {
                 var result = results.First();
@@ -113,6 +79,6 @@ namespace gaseous_server.Classes.Metadata
                 return null;
             }
         }
-	}
+    }
 }
 

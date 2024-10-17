@@ -7,7 +7,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class GameModes
     {
-        const string fieldList = "fields checksum,created_at,name,slug,updated_at,url;";
+        public const string fieldList = "fields checksum,created_at,name,slug,updated_at,url;";
 
         public GameModes()
         {
@@ -21,60 +21,32 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<GameMode> RetVal = _GetGame_Modes(SearchUsing.id, Id);
+                Task<GameMode> RetVal = _GetGame_Modes((long)Id);
                 return RetVal.Result;
             }
         }
 
-        public static GameMode GetGame_Modes(string Slug)
-        {
-            Task<GameMode> RetVal = _GetGame_Modes(SearchUsing.slug, Slug);
-            return RetVal.Result;
-        }
-
-        private static async Task<GameMode> _GetGame_Modes(SearchUsing searchUsing, object searchValue)
+        private static async Task<GameMode> _GetGame_Modes(long searchValue)
         {
             // check database first
-            Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
-            if (searchUsing == SearchUsing.id)
-            {
-                cacheStatus = Storage.GetCacheStatus("GameMode", (long)searchValue);
-            }
-            else
-            {
-                cacheStatus = Storage.GetCacheStatus("GameMode", (string)searchValue);
-            }
-
-            // set up where clause
-            string WhereClause = "";
-            switch (searchUsing)
-            {
-                case SearchUsing.id:
-                    WhereClause = "where id = " + searchValue;
-                    break;
-                case SearchUsing.slug:
-                    WhereClause = "where slug = " + searchValue;
-                    break;
-                default:
-                    throw new Exception("Invalid search type");
-            }
+            Storage.CacheStatus? cacheStatus = Storage.GetCacheStatus("GameMode", searchValue);
 
             GameMode returnValue = new GameMode();
             switch (cacheStatus)
             {
                 case Storage.CacheStatus.NotPresent:
-                    returnValue = await GetObjectFromServer(WhereClause);
+                    returnValue = await GetObjectFromServer(searchValue);
                     Storage.NewCacheValue(returnValue);
                     break;
                 case Storage.CacheStatus.Expired:
                     try
                     {
-                        returnValue = await GetObjectFromServer(WhereClause);
+                        returnValue = await GetObjectFromServer(searchValue);
                         Storage.NewCacheValue(returnValue, true);
                     }
                     catch (Exception ex)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
+                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. Id: " + searchValue, ex);
                         returnValue = Storage.GetCacheValue<GameMode>(returnValue, "id", (long)searchValue);
                     }
                     break;
@@ -88,17 +60,11 @@ namespace gaseous_server.Classes.Metadata
             return returnValue;
         }
 
-        private enum SearchUsing
-        {
-            id,
-            slug
-        }
-
-        private static async Task<GameMode> GetObjectFromServer(string WhereClause)
+        private static async Task<GameMode> GetObjectFromServer(long searchValue)
         {
             // get Game_Modes metadata
             Communications comms = new Communications();
-            var results = await comms.APIComm<GameMode>(IGDBClient.Endpoints.GameModes, fieldList, WhereClause);
+            var results = await comms.APIComm<GameMode>(Communications.MetadataEndpoint.GameMode, searchValue);
             var result = results.First();
 
             return result;

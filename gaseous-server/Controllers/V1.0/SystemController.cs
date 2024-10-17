@@ -73,6 +73,7 @@ namespace gaseous_server.Controllers
         [HttpGet]
         [Route("Version")]
         [ProducesResponseType(typeof(Dictionary<string, object>), StatusCodes.Status200OK)]
+        [AllowAnonymous]
         public ActionResult GetSystemVersion()
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);

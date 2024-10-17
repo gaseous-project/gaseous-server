@@ -7,7 +7,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class PlatformVersions
     {
-        const string fieldList = "fields checksum,companies,connectivity,cpu,graphics,main_manufacturer,media,memory,name,online,os,output,platform_logo,platform_version_release_dates,resolutions,slug,sound,storage,summary,url;";
+        public const string fieldList = "fields checksum,companies,connectivity,cpu,graphics,main_manufacturer,media,memory,name,online,os,output,platform_logo,platform_version_release_dates,resolutions,slug,sound,storage,summary,url;";
 
         public PlatformVersions()
         {
@@ -21,49 +21,21 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<PlatformVersion> RetVal = _GetPlatformVersion(SearchUsing.id, Id, ParentPlatform, GetImages);
+                Task<PlatformVersion> RetVal = _GetPlatformVersion((long)Id, ParentPlatform, GetImages);
                 return RetVal.Result;
             }
         }
 
-        public static PlatformVersion GetPlatformVersion(string Slug, Platform ParentPlatform, bool GetImages = false)
-        {
-            Task<PlatformVersion> RetVal = _GetPlatformVersion(SearchUsing.slug, Slug, ParentPlatform, GetImages);
-            return RetVal.Result;
-        }
-
-        private static async Task<PlatformVersion> _GetPlatformVersion(SearchUsing searchUsing, object searchValue, Platform ParentPlatform, bool GetImages)
+        private static async Task<PlatformVersion> _GetPlatformVersion(long searchValue, Platform ParentPlatform, bool GetImages)
         {
             // check database first
-            Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
-            if (searchUsing == SearchUsing.id)
-            {
-                cacheStatus = Storage.GetCacheStatus("PlatformVersion", (long)searchValue);
-            }
-            else
-            {
-                cacheStatus = Storage.GetCacheStatus("PlatformVersion", (string)searchValue);
-            }
-
-            // set up where clause
-            string WhereClause = "";
-            switch (searchUsing)
-            {
-                case SearchUsing.id:
-                    WhereClause = "where id = " + searchValue;
-                    break;
-                case SearchUsing.slug:
-                    WhereClause = "where slug = " + searchValue;
-                    break;
-                default:
-                    throw new Exception("Invalid search type");
-            }
+            Storage.CacheStatus? cacheStatus = Storage.GetCacheStatus("PlatformVersion", searchValue);
 
             PlatformVersion returnValue = new PlatformVersion();
             switch (cacheStatus)
             {
                 case Storage.CacheStatus.NotPresent:
-                    returnValue = await GetObjectFromServer(WhereClause);
+                    returnValue = await GetObjectFromServer(searchValue);
                     if (returnValue != null)
                     {
                         Storage.NewCacheValue(returnValue);
@@ -73,13 +45,13 @@ namespace gaseous_server.Classes.Metadata
                 case Storage.CacheStatus.Expired:
                     try
                     {
-                        returnValue = await GetObjectFromServer(WhereClause);
+                        returnValue = await GetObjectFromServer(searchValue);
                         Storage.NewCacheValue(returnValue, true);
                         UpdateSubClasses(ParentPlatform, returnValue, GetImages);
                     }
                     catch (Exception ex)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
+                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. Id: " + searchValue, ex);
                         returnValue = Storage.GetCacheValue<PlatformVersion>(returnValue, "id", (long)searchValue);
                     }
                     return returnValue;
@@ -108,17 +80,11 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        private enum SearchUsing
-        {
-            id,
-            slug
-        }
-
-        private static async Task<PlatformVersion?> GetObjectFromServer(string WhereClause)
+        private static async Task<PlatformVersion?> GetObjectFromServer(long searchValue)
         {
             // get PlatformVersion metadata
             Communications comms = new Communications();
-            var results = await comms.APIComm<PlatformVersion>(IGDBClient.Endpoints.PlatformVersions, fieldList, WhereClause);
+            var results = await comms.APIComm<PlatformVersion>(Communications.MetadataEndpoint.PlatformVersion, searchValue);
             if (results.Length > 0)
             {
                 var result = results.First();

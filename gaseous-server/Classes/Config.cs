@@ -677,6 +677,14 @@ namespace gaseous_server.Classes
 
             public class MetadataAPI
             {
+                public static string _HasheousClientAPIKey
+                {
+                    get
+                    {
+                        return "Pna5SRcbJ6R8aasytab_6vZD0aBKDGNZKRz4WY4xArpfZ-3mdZq0hXIGyy0AD43b";
+                    }
+                }
+
                 private static HasheousClient.Models.MetadataModel.MetadataSources _MetadataSource
                 {
                     get
@@ -748,6 +756,9 @@ namespace gaseous_server.Classes
                 public bool HasheousSubmitFixes = _HasheousSubmitFixes;
 
                 public string HasheousAPIKey = _HasheousAPIKey;
+
+                [JsonIgnore]
+                public string HasheousClientAPIKey = _HasheousClientAPIKey;
 
                 public int MaxLibraryScanWorkers = _MaxLibraryScanWorkers;
 

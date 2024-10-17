@@ -202,7 +202,8 @@ namespace gaseous_server.Classes
 								}
 							}
 
-							HasheousClient.WebApp.HttpHelper.AddHeader("X-API-Key", Config.MetadataConfiguration.HasheousAPIKey);
+							HasheousClient.WebApp.HttpHelper.APIKey = Config.MetadataConfiguration.HasheousAPIKey;
+							HasheousClient.WebApp.HttpHelper.ClientKey = Config.MetadataConfiguration.HasheousClientAPIKey;
 							HasheousClient.Hasheous hasheousClient = new HasheousClient.Hasheous();
 							List<MetadataMatch> metadataMatchList = new List<MetadataMatch>();
 							metadataMatchList.Add(new MetadataMatch(HasheousClient.Models.MetadataSources.IGDB, platform.Slug, game.Slug));

@@ -197,7 +197,11 @@ namespace gaseous_server.Classes
                                     libraryRootPath += Path.DirectorySeparatorChar;
                                 }
 
-                                bool GetLastThreeElements = (bool)row["DefaultLibrary"];
+                                bool GetLastThreeElements = false;
+                                if ((int)row["DefaultLibrary"] == 1)
+                                {
+                                    GetLastThreeElements = true;
+                                }
 
                                 foreach (DataRow romRow in romData.Rows)
                                 {
