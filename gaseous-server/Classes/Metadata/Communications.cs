@@ -1,7 +1,9 @@
+using System.Collections;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
 using System.Net;
+using System.Reflection;
 using System.Security.Policy;
 using HasheousClient.Models.Metadata.IGDB;
 using Humanizer;
@@ -67,8 +69,8 @@ namespace gaseous_server.Classes.Metadata
 
                     case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
                         // set rate limiter avoidance values
-                        RateLimitAvoidanceWait = 1500;
-                        RateLimitAvoidanceThreshold = 3;
+                        RateLimitAvoidanceWait = 250;
+                        RateLimitAvoidanceThreshold = 10;
                         RateLimitAvoidancePeriod = 1;
 
                         // set rate limiter recovery values
@@ -253,7 +255,9 @@ namespace gaseous_server.Classes.Metadata
                     return await IGDBAPI<T>(EndpointString, fieldList, query);
 
                 case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
-                    return null;
+                    ConfigureHasheousClient();
+
+                    return await HasheousAPI<T>(Endpoint.ToString(), "slug", Slug);
 
                 default:
                     return null;
@@ -411,10 +415,46 @@ namespace gaseous_server.Classes.Metadata
                     return await IGDBAPI<T>(EndpointString, fieldList, query);
 
                 case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
-                    return null;
+                    ConfigureHasheousClient();
 
+                    return await HasheousAPI<T>(Endpoint.ToString(), "id", Id.ToString());
                 default:
                     return null;
+            }
+        }
+
+        private void ConfigureHasheousClient()
+        {
+            // configure the Hasheous client
+            hasheous = new HasheousClient.Hasheous();
+
+            // set the base URI
+            if (HasheousClient.WebApp.HttpHelper.BaseUri == null)
+            {
+                string HasheousHost = "";
+                if (Config.MetadataConfiguration.HasheousHost == null)
+                {
+                    HasheousHost = "https://hasheous.org/";
+                }
+                else
+                {
+                    HasheousHost = Config.MetadataConfiguration.HasheousHost;
+                }
+                HasheousClient.WebApp.HttpHelper.BaseUri = HasheousHost;
+            }
+
+            // set the client API key
+            HasheousClient.WebApp.HttpHelper.ClientKey = Config.MetadataConfiguration.HasheousClientAPIKey;
+            if (client.DefaultRequestHeaders.Contains("X-Client-API-Key"))
+            {
+                client.DefaultRequestHeaders.Remove("X-Client-API-Key");
+            }
+            client.DefaultRequestHeaders.Add("X-Client-API-Key", Config.MetadataConfiguration.HasheousClientAPIKey);
+
+            // set the client secret
+            if (Config.MetadataConfiguration.HasheousAPIKey != null)
+            {
+                HasheousClient.WebApp.HttpHelper.APIKey = Config.MetadataConfiguration.HasheousAPIKey;
             }
         }
 
@@ -435,32 +475,7 @@ namespace gaseous_server.Classes.Metadata
                 case HasheousClient.Models.MetadataModel.MetadataSources.IGDB:
                     return await IGDBAPI<T>(Endpoint, Fields, Query);
                 case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
-                    // configure the Hasheous client
-                    hasheous = new HasheousClient.Hasheous();
-
-                    // set the base URI
-                    string HasheousHost = "";
-                    if (Config.MetadataConfiguration.HasheousHost == null)
-                    {
-                        HasheousHost = "https://hasheous.org/";
-                    }
-                    else
-                    {
-                        HasheousHost = Config.MetadataConfiguration.HasheousHost;
-                    }
-
-                    // set the client API key
-                    HasheousClient.WebApp.HttpHelper.ClientKey = Config.MetadataConfiguration.HasheousClientAPIKey;
-
-                    // set the client secret
-                    if (Config.MetadataConfiguration.HasheousAPIKey != null)
-                    {
-                        HasheousClient.WebApp.HttpHelper.APIKey = Config.MetadataConfiguration.HasheousAPIKey;
-                    }
-
-                    // return from Hasheous
-                    return await HasheousAPI<T>(Endpoint, Fields, Query);
-
+                    return null;
                 default:
                     return null;
             }
@@ -564,7 +579,7 @@ namespace gaseous_server.Classes.Metadata
 
             if (RateLimitResumeTime > DateTime.UtcNow)
             {
-                Logging.Log(Logging.LogType.Information, "API Connection", "IGDB rate limit hit. Pausing API communications until " + RateLimitResumeTime.ToString() + ". Attempt " + RetryAttempts + " of " + RetryAttemptsMax + " retries.");
+                Logging.Log(Logging.LogType.Information, "API Connection", "Hasheous rate limit hit. Pausing API communications until " + RateLimitResumeTime.ToString() + ". Attempt " + RetryAttempts + " of " + RetryAttemptsMax + " retries.");
                 Thread.Sleep(RateLimitRecoveryWaitTime);
             }
 
@@ -573,28 +588,12 @@ namespace gaseous_server.Classes.Metadata
                 if (InRateLimitAvoidanceMode == true)
                 {
                     // sleep for a moment to help avoid hitting the rate limiter
-                    Logging.Log(Logging.LogType.Information, "API Connection: Endpoint:" + Endpoint, "IGDB rate limit hit. Pausing API communications for " + RateLimitAvoidanceWait + " milliseconds to avoid rate limiter.");
+                    Logging.Log(Logging.LogType.Information, "API Connection: Endpoint:" + Endpoint, "Hasheous rate limit hit. Pausing API communications for " + RateLimitAvoidanceWait + " milliseconds to avoid rate limiter.");
                     Thread.Sleep(RateLimitAvoidanceWait);
                 }
 
                 // perform the actual API call
-                //var results = await igdb.QueryAsync<T>(Endpoint, query: Fields + " " + Query + ";");
-
-                T result1;
-                if (Fields == "slug")
-                {
-                    result1 = hasheous.GetMetadataProxy<T>(HasheousClient.Hasheous.MetadataProvider.IGDB, Query);
-                }
-                else if (Fields == "id")
-                {
-                    result1 = hasheous.GetMetadataProxy<T>(HasheousClient.Hasheous.MetadataProvider.IGDB, Query);
-                }
-                else
-                {
-                    throw new Exception("Fields must be either 'slug' or 'id'");
-                }
-
-                var results1 = new T[] { result1 };
+                var results1 = HasheousAPIFetch<T>(Endpoint, Fields, Query).Result;
 
                 // increment rate limiter avoidance call count
                 RateLimitAvoidanceCallCount += 1;
@@ -608,36 +607,23 @@ namespace gaseous_server.Classes.Metadata
                     case HttpStatusCode.TooManyRequests:
                         if (RetryAttempts >= RetryAttemptsMax)
                         {
-                            Logging.Log(Logging.LogType.Warning, "API Connection", "IGDB rate limiter attempts expired. Aborting.", apiEx);
+                            Logging.Log(Logging.LogType.Warning, "API Connection", "Hasheous rate limiter attempts expired. Aborting.", apiEx);
                             throw;
                         }
                         else
                         {
-                            Logging.Log(Logging.LogType.Information, "API Connection", "IGDB API rate limit hit while accessing endpoint " + Endpoint, apiEx);
+                            Logging.Log(Logging.LogType.Information, "API Connection", "Hasheous API rate limit hit while accessing endpoint " + Endpoint, apiEx);
 
                             RetryAttempts += 1;
 
-                            T result2;
-                            if (Fields == "slug")
-                            {
-                                result2 = hasheous.GetMetadataProxy<T>(HasheousClient.Hasheous.MetadataProvider.IGDB, Query);
-                            }
-                            else if (Fields == "id")
-                            {
-                                result2 = hasheous.GetMetadataProxy<T>(HasheousClient.Hasheous.MetadataProvider.IGDB, Query);
-                            }
-                            else
-                            {
-                                throw new Exception("Fields must be either 'slug' or 'id'");
-                            }
-
-                            var results2 = new T[] { result2 };
+                            // perform the actual API call
+                            var results2 = HasheousAPIFetch<T>(Endpoint, Fields, Query).Result;
 
                             return results2;
                         }
 
                     case HttpStatusCode.Unauthorized:
-                        Logging.Log(Logging.LogType.Information, "API Connection", "IGDB API unauthorised error while accessing endpoint " + Endpoint + ". Waiting " + RateLimitAvoidanceWait + " milliseconds and resetting IGDB client.", apiEx);
+                        Logging.Log(Logging.LogType.Information, "API Connection", "Hasheous API unauthorised error while accessing endpoint " + Endpoint + ". Waiting " + RateLimitAvoidanceWait + " milliseconds and resetting Hasheous client.", apiEx);
 
                         Thread.Sleep(RateLimitAvoidanceWait);
 
@@ -649,21 +635,8 @@ namespace gaseous_server.Classes.Metadata
 
                         RetryAttempts += 1;
 
-                        T result3;
-                        if (Fields == "slug")
-                        {
-                            result3 = hasheous.GetMetadataProxy<T>(HasheousClient.Hasheous.MetadataProvider.IGDB, Query);
-                        }
-                        else if (Fields == "id")
-                        {
-                            result3 = hasheous.GetMetadataProxy<T>(HasheousClient.Hasheous.MetadataProvider.IGDB, Query);
-                        }
-                        else
-                        {
-                            throw new Exception("Fields must be either 'slug' or 'id'");
-                        }
-
-                        var results3 = new T[] { result3 };
+                        // perform the actual API call
+                        var results3 = HasheousAPIFetch<T>(Endpoint, Fields, Query).Result;
 
                         return results3;
 
@@ -678,6 +651,307 @@ namespace gaseous_server.Classes.Metadata
                 throw;
             }
         }
+
+        private async Task<T[]> HasheousAPIFetch<T>(string Endpoint, string Fields, object Query)
+        {
+            // drop out early if Fields is not valid
+            if (Fields != "slug" && Fields != "id")
+            {
+                throw new Exception("Fields must be either 'slug' or 'id'");
+            }
+
+            // get type name of T
+            string typeName = typeof(T).Name.ToLower();
+
+            switch (typeName)
+            {
+                case "agerating":
+                    HasheousClient.Models.Metadata.IGDB.AgeRating ageRatingResult = new AgeRating();
+                    ageRatingResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.AgeRating>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(ageRatingResult) };
+
+                case "ageratingcontentdescription":
+                    HasheousClient.Models.Metadata.IGDB.AgeRatingContentDescription ageRatingContentDescriptionResult = new AgeRatingContentDescription();
+                    ageRatingContentDescriptionResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.AgeRatingContentDescription>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(ageRatingContentDescriptionResult) };
+
+                case "alternativename":
+                    HasheousClient.Models.Metadata.IGDB.AlternativeName alternativeNameResult = new AlternativeName();
+                    alternativeNameResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.AlternativeName>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(alternativeNameResult) };
+
+                case "artwork":
+                    HasheousClient.Models.Metadata.IGDB.Artwork artworkResult = new Artwork();
+                    artworkResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Artwork>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(artworkResult) };
+
+                case "collection":
+                    HasheousClient.Models.Metadata.IGDB.Collection collectionResult = new Collection();
+                    collectionResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Collection>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(collectionResult) };
+
+                case "company":
+                    HasheousClient.Models.Metadata.IGDB.Company companyResult = new Company();
+                    companyResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Company>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(companyResult) };
+
+                case "companylogo":
+                    HasheousClient.Models.Metadata.IGDB.CompanyLogo companyLogoResult = new CompanyLogo();
+                    companyLogoResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.CompanyLogo>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(companyLogoResult) };
+
+                case "companywebsite":
+                    HasheousClient.Models.Metadata.IGDB.CompanyWebsite companyWebsiteResult = new CompanyWebsite();
+                    companyWebsiteResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.CompanyWebsite>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(companyWebsiteResult) };
+
+                case "cover":
+                    HasheousClient.Models.Metadata.IGDB.Cover coverResult = new Cover();
+                    coverResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Cover>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(coverResult) };
+
+                case "externalgame":
+                    HasheousClient.Models.Metadata.IGDB.ExternalGame externalGameResult = new ExternalGame();
+                    externalGameResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.ExternalGame>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(externalGameResult) };
+
+                case "franchise":
+                    HasheousClient.Models.Metadata.IGDB.Franchise franchiseResult = new Franchise();
+                    franchiseResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Franchise>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(franchiseResult) };
+
+                case "game":
+                    HasheousClient.Models.Metadata.IGDB.Game gameResult = new Game();
+                    if (Fields == "slug")
+                    {
+                        gameResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Game>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, Query.ToString());
+                    }
+                    else if (Fields == "id")
+                    {
+                        gameResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Game>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                    }
+
+                    return new T[] { ConvertToIGDBModel<T>(gameResult) };
+
+                case "gameengine":
+                    HasheousClient.Models.Metadata.IGDB.GameEngine gameEngineResult = new GameEngine();
+                    gameEngineResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.GameEngine>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(gameEngineResult) };
+
+                case "gameenginelogo":
+                    HasheousClient.Models.Metadata.IGDB.GameEngineLogo gameEngineLogoResult = new GameEngineLogo();
+                    gameEngineLogoResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.GameEngineLogo>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(gameEngineLogoResult) };
+
+                case "gamelocalization":
+                    HasheousClient.Models.Metadata.IGDB.GameLocalization gameLocalizationResult = new GameLocalization();
+                    gameLocalizationResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.GameLocalization>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(gameLocalizationResult) };
+
+                case "gamemode":
+                    HasheousClient.Models.Metadata.IGDB.GameMode gameModeResult = new GameMode();
+                    gameModeResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.GameMode>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(gameModeResult) };
+
+                case "gamevideo":
+                    HasheousClient.Models.Metadata.IGDB.GameVideo gameVideoResult = new GameVideo();
+                    gameVideoResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.GameVideo>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(gameVideoResult) };
+
+                case "genre":
+                    HasheousClient.Models.Metadata.IGDB.Genre genreResult = new Genre();
+                    genreResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Genre>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(genreResult) };
+
+                case "involvedcompany":
+                    HasheousClient.Models.Metadata.IGDB.InvolvedCompany involvedCompanyResult = new InvolvedCompany();
+                    involvedCompanyResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.InvolvedCompany>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(involvedCompanyResult) };
+
+                case "multiplayermode":
+                    HasheousClient.Models.Metadata.IGDB.MultiplayerMode multiplayerModeResult = new MultiplayerMode();
+                    multiplayerModeResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.MultiplayerMode>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(multiplayerModeResult) };
+
+                case "platformlogo":
+                    HasheousClient.Models.Metadata.IGDB.PlatformLogo platformLogoResult = new PlatformLogo();
+                    platformLogoResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.PlatformLogo>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(platformLogoResult) };
+
+                case "platform":
+                    HasheousClient.Models.Metadata.IGDB.Platform platformResult = new Platform();
+                    if (Fields == "slug")
+                    {
+                        platformResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Platform>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, Query.ToString());
+                    }
+                    else if (Fields == "id")
+                    {
+                        platformResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Platform>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                    }
+
+                    return new T[] { ConvertToIGDBModel<T>(platformResult) };
+
+                case "platformversion":
+                    HasheousClient.Models.Metadata.IGDB.PlatformVersion platformVersionResult = new PlatformVersion();
+                    platformVersionResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.PlatformVersion>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(platformVersionResult) };
+
+                case "playerperspective":
+                    HasheousClient.Models.Metadata.IGDB.PlayerPerspective playerPerspectiveResult = new PlayerPerspective();
+                    playerPerspectiveResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.PlayerPerspective>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(playerPerspectiveResult) };
+
+                case "releasedate":
+                    HasheousClient.Models.Metadata.IGDB.ReleaseDate releaseDateResult = new ReleaseDate();
+                    releaseDateResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.ReleaseDate>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(releaseDateResult) };
+
+                case "screenshot":
+                    HasheousClient.Models.Metadata.IGDB.Screenshot screenshotResult = new Screenshot();
+                    screenshotResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Screenshot>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(screenshotResult) };
+
+                case "theme":
+                    HasheousClient.Models.Metadata.IGDB.Theme themeResult = new Theme();
+                    themeResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Theme>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                    return new T[] { ConvertToIGDBModel<T>(themeResult) };
+
+                default:
+                    throw new Exception("Type not supported");
+            }
+        }
+
+        /// <summary>
+        /// Convert an input object IGDB.Models object
+        /// </summary>
+        /// <typeparam name="T">The type of object to convert to</typeparam>
+        /// <param name="input">The object to convert</param>
+        /// <returns>The converted object</returns>
+        public T ConvertToIGDBModel<T>(object input)
+        {
+            // loop through the properties of intput and copy all strings to an output object of type T
+
+            object output = Activator.CreateInstance(typeof(T));
+            PropertyInfo[] properties = output.GetType().GetProperties();
+
+            foreach (PropertyInfo property in properties)
+            {
+                string propertyTypeName = property.PropertyType.Name.ToLower();
+                if (propertyTypeName == "nullable`1")
+                {
+                    propertyTypeName = property.PropertyType.GenericTypeArguments[0].Name.ToLower();
+                }
+
+                propertyTypeName = propertyTypeName.Replace("?", "");
+
+                // check if the property is an enum
+                if (property.PropertyType.IsEnum)
+                {
+                    // get the enum type
+                    Type enumType = property.PropertyType;
+                    // get the enum value
+                    object enumValue = Enum.Parse(enumType, input.GetType().GetProperty(property.Name).GetValue(input).ToString());
+                    // set the enum value
+                    property.SetValue(output, enumValue);
+                }
+                else
+                {
+                    PropertyInfo inputProperty = input.GetType().GetProperty(property.Name);
+                    if (inputProperty != null)
+                    {
+                        switch (propertyTypeName)
+                        {
+                            case "string":
+                            case "int":
+                            case "int32":
+                            case "int64":
+                            case "long":
+                            case "datetime":
+                            case "datetimeoffset":
+                            case "bool":
+                                property.SetValue(output, inputProperty.GetValue(input));
+                                break;
+
+                            case "identityorvalue`1":
+                                // create new identityorvalue object, set the id property to the input property value
+
+                                // get the input property value
+                                object inputPropertyValue = input.GetType().GetProperty(property.Name).GetValue(input);
+
+                                if (inputPropertyValue != null)
+                                {
+                                    // create a new identityorvalue object
+                                    object identityOrValue = Activator.CreateInstance(property.PropertyType);
+
+                                    // set the id property of the identityorvalue object
+                                    PropertyInfo idProperty = property.PropertyType.GetProperty("Id");
+                                    idProperty.SetValue(identityOrValue, inputPropertyValue);
+
+                                    // set the output property to the identityorvalue object
+                                    property.SetValue(output, identityOrValue);
+                                }
+                                break;
+
+                            case "identitiesorvalues`1":
+                                // create new identitiesorvalues object, set the ids property to the input property value
+
+                                // get the input property value
+                                object inputPropertyValues = input.GetType().GetProperty(property.Name).GetValue(input);
+
+                                if (inputPropertyValues != null)
+                                {
+                                    // convert input property values to a list of longs
+                                    List<long> ids = new List<long>();
+                                    foreach (object id in (IEnumerable)inputPropertyValues)
+                                    {
+                                        ids.Add((long)id);
+                                    }
+
+                                    // create a new identitiesorvalues object
+                                    object identitiesOrValues = Activator.CreateInstance(property.PropertyType);
+
+                                    // set the ids property of the identitiesorvalues object
+                                    PropertyInfo idsProperty = property.PropertyType.GetProperty("Ids");
+                                    idsProperty.SetValue(identitiesOrValues, ids.ToArray());
+
+                                    // set the output property to the identitiesorvalues object
+                                    property.SetValue(output, identitiesOrValues);
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+
+            return (T)output;
+        }
+
+
 
         /// <summary>
         /// Download from the specified uri
@@ -754,7 +1028,7 @@ namespace gaseous_server.Classes.Metadata
                     }
                 }
 
-                Logging.Log(Logging.LogType.Warning, "Download Images", "Error downloading file: ", ex);
+                Logging.Log(Logging.LogType.Warning, "Download Images", "Error downloading file from Uri: " + uri.ToString(), ex);
             }
 
             return false;
@@ -813,14 +1087,14 @@ namespace gaseous_server.Classes.Metadata
                     // these sizes are IGDB native
                     if (RateLimitResumeTime > DateTime.UtcNow)
                     {
-                        Logging.Log(Logging.LogType.Information, "API Connection", "IGDB rate limit hit. Pausing API communications until " + RateLimitResumeTime.ToString() + ". Attempt " + RetryAttempts + " of " + RetryAttemptsMax + " retries.");
+                        Logging.Log(Logging.LogType.Information, "API Connection", "Metadata source rate limit hit. Pausing API communications until " + RateLimitResumeTime.ToString() + ". Attempt " + RetryAttempts + " of " + RetryAttemptsMax + " retries.");
                         Thread.Sleep(RateLimitRecoveryWaitTime);
                     }
 
                     if (InRateLimitAvoidanceMode == true)
                     {
                         // sleep for a moment to help avoid hitting the rate limiter
-                        Logging.Log(Logging.LogType.Information, "API Connection: Fetch Image", "IGDB rate limit hit. Pausing API communications for " + RateLimitAvoidanceWait + " milliseconds to avoid rate limiter.");
+                        Logging.Log(Logging.LogType.Information, "API Connection: Fetch Image", "Metadata source rate limit hit. Pausing API communications for " + RateLimitAvoidanceWait + " milliseconds to avoid rate limiter.");
                         Thread.Sleep(RateLimitAvoidanceWait);
                     }
 
@@ -838,7 +1112,19 @@ namespace gaseous_server.Classes.Metadata
                         // fail early if the file is already downloaded
                         if (!File.Exists(returnPath))
                         {
-                            await comms.IGDBAPI_GetImage(imageSizes, ImageId, ImagePath);
+                            switch (_MetadataSource)
+                            {
+                                case HasheousClient.Models.MetadataModel.MetadataSources.IGDB:
+                                    await comms.IGDBAPI_GetImage(imageSizes, ImageId, ImagePath);
+                                    break;
+
+                                case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
+                                    await comms.HasheousAPI_GetImage(imageSizes, ImageId, ImagePath);
+                                    break;
+
+                                default:
+                                    break;
+                            }
                         }
 
                     }
@@ -935,6 +1221,18 @@ namespace gaseous_server.Classes.Metadata
 
                 await _DownloadFile(new Uri(url), fullPath);
             }
+        }
+
+        public async Task HasheousAPI_GetImage(List<IGDBAPI_ImageSize> ImageSizes, string ImageId, string OutputPath)
+        {
+            string urlTemplate = HasheousClient.WebApp.HttpHelper.BaseUri + "api/v1/MetadataProxy/IGDB/Image/{hash}.jpg";
+
+            string url = urlTemplate.Replace("{hash}", ImageId);
+            string newOutputPath = Path.Combine(OutputPath, "original");
+            string OutputFile = ImageId + ".jpg";
+            string fullPath = Path.Combine(newOutputPath, OutputFile);
+
+            await _DownloadFile(new Uri(url), fullPath);
         }
 
         public enum IGDBAPI_ImageSize
