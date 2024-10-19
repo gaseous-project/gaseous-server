@@ -181,16 +181,40 @@ class PreferencesWindow {
                 "Adult"
             ];
             for (let j = 0; j < ratingGroupsOrder.length; j++) {
-                let ageGroupValue = AgeRatingGroups[ratingGroupsOrder[j]];
-                let iconIdList = ageGroupValue[key.toLowerCase()];
+                let ratingGroup = ratingGroupsOrder[j];
+                let ageGroupValue = AgeRatingGroups[ratingGroup];
+                let ageGroupValueLower = {};
+                for (const [key, value] of Object.entries(ageGroupValue)) {
+                    ageGroupValueLower[key.toLowerCase()] = value;
+                }
+
+                let iconIdList = ageGroupValueLower[key.toLowerCase()];
+                console.log(key.toLowerCase());
+                if (key == 'clasS_IND' || key == 'CLASS_IND') {
+                    console.log("here");
+                }
                 // loop the age rating icons
-                for (let i = 0; i < iconIdList.length; i++) {
-                    let icon = document.createElement('img');
-                    // icon.src = "/images/Ratings/" + key + "/" + AgeRatingStrings[iconIdList[i]] + ".svg";
-                    icon.src = "/images/Ratings/" + key + "/" + iconIdList[i] + ".svg";
-                    icon.title = AgeRatingStrings[iconIdList[i]];
-                    icon.classList.add("rating_image_mini");
-                    classificationIcons.appendChild(icon);
+                if (iconIdList) {
+                    for (const [i, value] of Object.entries(iconIdList)) {
+                        console.log("  " + iconIdList[i]);
+                        let icon = document.createElement('img');
+
+                        // get age rating strings
+                        let iconId = iconIdList[i];
+                        let ageRatingString;
+                        for (const [x, y] of Object.entries(AgeRatingStrings)) {
+                            if (AgeRatingStrings[x] == iconId) {
+                                ageRatingString = AgeRatingStrings[x];
+                                break;
+                            }
+                        }
+
+                        icon.src = "/images/Ratings/" + key + "/" + ageRatingString + ".svg";
+                        icon.title = ageRatingString;
+                        icon.alt = ageRatingString;
+                        icon.classList.add("rating_image_mini");
+                        classificationIcons.appendChild(icon);
+                    }
                 }
             }
             classificationItemBox.appendChild(classificationIcons);

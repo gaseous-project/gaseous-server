@@ -410,7 +410,7 @@ function LoadGamePlatforms() {
         let platformContainer = document.getElementById('gamesummaryplatformscontent');
         platformContainer.innerHTML = '';
         for (let i = 0; i < result.length; i++) {
-            let logoUrl = '/api/v1/Platforms/' + result[i].id + '/platformlogo/original/logo.png';
+            let logoUrl = '/api/v1.1/Platforms/' + result[i].id + '/platformlogo/original/logo.png';
 
             // create platform container
             let platformItem = document.createElement('div');
