@@ -271,7 +271,7 @@ namespace gaseous_server.Classes
 				PlatformId = (long)romDR["platformid"],
 				Platform = (string)romDR["platformname"],
 				GameId = (long)romDR["gameid"],
-				Game = (string)romDR["gamename"],
+				Game = (string)Common.ReturnValueIfNull(romDR["gamename"], ""),
 				Name = (string)romDR["name"],
 				Size = (long)romDR["size"],
 				Crc = ((string)romDR["crc"]).ToLower(),

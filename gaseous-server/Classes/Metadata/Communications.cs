@@ -1,6 +1,7 @@
 using System.Collections;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 using System.Net;
 using System.Reflection;
@@ -666,73 +667,73 @@ namespace gaseous_server.Classes.Metadata
             switch (typeName)
             {
                 case "agerating":
-                    HasheousClient.Models.Metadata.IGDB.AgeRating ageRatingResult = new AgeRating();
+                    HasheousClient.Models.Metadata.IGDB.AgeRating ageRatingResult = new HasheousClient.Models.Metadata.IGDB.AgeRating();
                     ageRatingResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.AgeRating>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(ageRatingResult) };
 
                 case "ageratingcontentdescription":
-                    HasheousClient.Models.Metadata.IGDB.AgeRatingContentDescription ageRatingContentDescriptionResult = new AgeRatingContentDescription();
+                    HasheousClient.Models.Metadata.IGDB.AgeRatingContentDescription ageRatingContentDescriptionResult = new HasheousClient.Models.Metadata.IGDB.AgeRatingContentDescription();
                     ageRatingContentDescriptionResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.AgeRatingContentDescription>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(ageRatingContentDescriptionResult) };
 
                 case "alternativename":
-                    HasheousClient.Models.Metadata.IGDB.AlternativeName alternativeNameResult = new AlternativeName();
+                    HasheousClient.Models.Metadata.IGDB.AlternativeName alternativeNameResult = new HasheousClient.Models.Metadata.IGDB.AlternativeName();
                     alternativeNameResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.AlternativeName>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(alternativeNameResult) };
 
                 case "artwork":
-                    HasheousClient.Models.Metadata.IGDB.Artwork artworkResult = new Artwork();
+                    HasheousClient.Models.Metadata.IGDB.Artwork artworkResult = new HasheousClient.Models.Metadata.IGDB.Artwork();
                     artworkResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Artwork>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(artworkResult) };
 
                 case "collection":
-                    HasheousClient.Models.Metadata.IGDB.Collection collectionResult = new Collection();
+                    HasheousClient.Models.Metadata.IGDB.Collection collectionResult = new HasheousClient.Models.Metadata.IGDB.Collection();
                     collectionResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Collection>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(collectionResult) };
 
                 case "company":
-                    HasheousClient.Models.Metadata.IGDB.Company companyResult = new Company();
+                    HasheousClient.Models.Metadata.IGDB.Company companyResult = new HasheousClient.Models.Metadata.IGDB.Company();
                     companyResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Company>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(companyResult) };
 
                 case "companylogo":
-                    HasheousClient.Models.Metadata.IGDB.CompanyLogo companyLogoResult = new CompanyLogo();
+                    HasheousClient.Models.Metadata.IGDB.CompanyLogo companyLogoResult = new HasheousClient.Models.Metadata.IGDB.CompanyLogo();
                     companyLogoResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.CompanyLogo>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(companyLogoResult) };
 
                 case "companywebsite":
-                    HasheousClient.Models.Metadata.IGDB.CompanyWebsite companyWebsiteResult = new CompanyWebsite();
+                    HasheousClient.Models.Metadata.IGDB.CompanyWebsite companyWebsiteResult = new HasheousClient.Models.Metadata.IGDB.CompanyWebsite();
                     companyWebsiteResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.CompanyWebsite>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(companyWebsiteResult) };
 
                 case "cover":
-                    HasheousClient.Models.Metadata.IGDB.Cover coverResult = new Cover();
+                    HasheousClient.Models.Metadata.IGDB.Cover coverResult = new HasheousClient.Models.Metadata.IGDB.Cover();
                     coverResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Cover>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(coverResult) };
 
                 case "externalgame":
-                    HasheousClient.Models.Metadata.IGDB.ExternalGame externalGameResult = new ExternalGame();
+                    HasheousClient.Models.Metadata.IGDB.ExternalGame externalGameResult = new HasheousClient.Models.Metadata.IGDB.ExternalGame();
                     externalGameResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.ExternalGame>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(externalGameResult) };
 
                 case "franchise":
-                    HasheousClient.Models.Metadata.IGDB.Franchise franchiseResult = new Franchise();
+                    HasheousClient.Models.Metadata.IGDB.Franchise franchiseResult = new HasheousClient.Models.Metadata.IGDB.Franchise();
                     franchiseResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Franchise>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(franchiseResult) };
 
                 case "game":
-                    HasheousClient.Models.Metadata.IGDB.Game gameResult = new Game();
+                    HasheousClient.Models.Metadata.IGDB.Game gameResult = new HasheousClient.Models.Metadata.IGDB.Game();
                     if (Fields == "slug")
                     {
                         gameResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Game>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, Query.ToString());
@@ -745,61 +746,61 @@ namespace gaseous_server.Classes.Metadata
                     return new T[] { ConvertToIGDBModel<T>(gameResult) };
 
                 case "gameengine":
-                    HasheousClient.Models.Metadata.IGDB.GameEngine gameEngineResult = new GameEngine();
+                    HasheousClient.Models.Metadata.IGDB.GameEngine gameEngineResult = new HasheousClient.Models.Metadata.IGDB.GameEngine();
                     gameEngineResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.GameEngine>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(gameEngineResult) };
 
                 case "gameenginelogo":
-                    HasheousClient.Models.Metadata.IGDB.GameEngineLogo gameEngineLogoResult = new GameEngineLogo();
+                    HasheousClient.Models.Metadata.IGDB.GameEngineLogo gameEngineLogoResult = new HasheousClient.Models.Metadata.IGDB.GameEngineLogo();
                     gameEngineLogoResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.GameEngineLogo>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(gameEngineLogoResult) };
 
                 case "gamelocalization":
-                    HasheousClient.Models.Metadata.IGDB.GameLocalization gameLocalizationResult = new GameLocalization();
+                    HasheousClient.Models.Metadata.IGDB.GameLocalization gameLocalizationResult = new HasheousClient.Models.Metadata.IGDB.GameLocalization();
                     gameLocalizationResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.GameLocalization>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(gameLocalizationResult) };
 
                 case "gamemode":
-                    HasheousClient.Models.Metadata.IGDB.GameMode gameModeResult = new GameMode();
+                    HasheousClient.Models.Metadata.IGDB.GameMode gameModeResult = new HasheousClient.Models.Metadata.IGDB.GameMode();
                     gameModeResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.GameMode>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(gameModeResult) };
 
                 case "gamevideo":
-                    HasheousClient.Models.Metadata.IGDB.GameVideo gameVideoResult = new GameVideo();
+                    HasheousClient.Models.Metadata.IGDB.GameVideo gameVideoResult = new HasheousClient.Models.Metadata.IGDB.GameVideo();
                     gameVideoResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.GameVideo>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(gameVideoResult) };
 
                 case "genre":
-                    HasheousClient.Models.Metadata.IGDB.Genre genreResult = new Genre();
+                    HasheousClient.Models.Metadata.IGDB.Genre genreResult = new HasheousClient.Models.Metadata.IGDB.Genre();
                     genreResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Genre>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(genreResult) };
 
                 case "involvedcompany":
-                    HasheousClient.Models.Metadata.IGDB.InvolvedCompany involvedCompanyResult = new InvolvedCompany();
+                    HasheousClient.Models.Metadata.IGDB.InvolvedCompany involvedCompanyResult = new HasheousClient.Models.Metadata.IGDB.InvolvedCompany();
                     involvedCompanyResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.InvolvedCompany>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(involvedCompanyResult) };
 
                 case "multiplayermode":
-                    HasheousClient.Models.Metadata.IGDB.MultiplayerMode multiplayerModeResult = new MultiplayerMode();
+                    HasheousClient.Models.Metadata.IGDB.MultiplayerMode multiplayerModeResult = new HasheousClient.Models.Metadata.IGDB.MultiplayerMode();
                     multiplayerModeResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.MultiplayerMode>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(multiplayerModeResult) };
 
                 case "platformlogo":
-                    HasheousClient.Models.Metadata.IGDB.PlatformLogo platformLogoResult = new PlatformLogo();
+                    HasheousClient.Models.Metadata.IGDB.PlatformLogo platformLogoResult = new HasheousClient.Models.Metadata.IGDB.PlatformLogo();
                     platformLogoResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.PlatformLogo>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(platformLogoResult) };
 
                 case "platform":
-                    HasheousClient.Models.Metadata.IGDB.Platform platformResult = new Platform();
+                    HasheousClient.Models.Metadata.IGDB.Platform platformResult = new HasheousClient.Models.Metadata.IGDB.Platform();
                     if (Fields == "slug")
                     {
                         platformResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Platform>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, Query.ToString());
@@ -812,31 +813,31 @@ namespace gaseous_server.Classes.Metadata
                     return new T[] { ConvertToIGDBModel<T>(platformResult) };
 
                 case "platformversion":
-                    HasheousClient.Models.Metadata.IGDB.PlatformVersion platformVersionResult = new PlatformVersion();
+                    HasheousClient.Models.Metadata.IGDB.PlatformVersion platformVersionResult = new HasheousClient.Models.Metadata.IGDB.PlatformVersion();
                     platformVersionResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.PlatformVersion>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(platformVersionResult) };
 
                 case "playerperspective":
-                    HasheousClient.Models.Metadata.IGDB.PlayerPerspective playerPerspectiveResult = new PlayerPerspective();
+                    HasheousClient.Models.Metadata.IGDB.PlayerPerspective playerPerspectiveResult = new HasheousClient.Models.Metadata.IGDB.PlayerPerspective();
                     playerPerspectiveResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.PlayerPerspective>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(playerPerspectiveResult) };
 
                 case "releasedate":
-                    HasheousClient.Models.Metadata.IGDB.ReleaseDate releaseDateResult = new ReleaseDate();
+                    HasheousClient.Models.Metadata.IGDB.ReleaseDate releaseDateResult = new HasheousClient.Models.Metadata.IGDB.ReleaseDate();
                     releaseDateResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.ReleaseDate>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(releaseDateResult) };
 
                 case "screenshot":
-                    HasheousClient.Models.Metadata.IGDB.Screenshot screenshotResult = new Screenshot();
+                    HasheousClient.Models.Metadata.IGDB.Screenshot screenshotResult = new HasheousClient.Models.Metadata.IGDB.Screenshot();
                     screenshotResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Screenshot>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(screenshotResult) };
 
                 case "theme":
-                    HasheousClient.Models.Metadata.IGDB.Theme themeResult = new Theme();
+                    HasheousClient.Models.Metadata.IGDB.Theme themeResult = new HasheousClient.Models.Metadata.IGDB.Theme();
                     themeResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Theme>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                     return new T[] { ConvertToIGDBModel<T>(themeResult) };
@@ -872,12 +873,29 @@ namespace gaseous_server.Classes.Metadata
                 // check if the property is an enum
                 if (property.PropertyType.IsEnum)
                 {
-                    // get the enum type
-                    Type enumType = property.PropertyType;
-                    // get the enum value
-                    object enumValue = Enum.Parse(enumType, input.GetType().GetProperty(property.Name).GetValue(input).ToString());
-                    // set the enum value
-                    property.SetValue(output, enumValue);
+                    // check if property is null
+                    if (input.GetType().GetProperty(property.Name).GetValue(input) != null)
+                    {
+                        // get the enum type
+                        Type enumType = property.PropertyType;
+                        // get the enum value
+                        object enumValue = Enum.Parse(enumType, input.GetType().GetProperty(property.Name).GetValue(input).ToString());
+                        // set the enum value
+                        property.SetValue(output, enumValue);
+                    }
+                }
+                else if (Common.IsNullableEnum(property.PropertyType))
+                {
+                    // check if property is null
+                    if (input.GetType().GetProperty(property.Name).GetValue(input) != null)
+                    {
+                        // get the enum type
+                        Type enumType = property.PropertyType;
+                        // get the enum value
+                        object enumValue = Enum.Parse(enumType.GenericTypeArguments[0], input.GetType().GetProperty(property.Name).GetValue(input).ToString());
+                        // set the enum value
+                        property.SetValue(output, enumValue);
+                    }
                 }
                 else
                 {
@@ -886,17 +904,6 @@ namespace gaseous_server.Classes.Metadata
                     {
                         switch (propertyTypeName)
                         {
-                            case "string":
-                            case "int":
-                            case "int32":
-                            case "int64":
-                            case "long":
-                            case "datetime":
-                            case "datetimeoffset":
-                            case "bool":
-                                property.SetValue(output, inputProperty.GetValue(input));
-                                break;
-
                             case "identityorvalue`1":
                                 // create new identityorvalue object, set the id property to the input property value
 
@@ -943,6 +950,10 @@ namespace gaseous_server.Classes.Metadata
                                     property.SetValue(output, identitiesOrValues);
                                 }
                                 break;
+
+                            default:
+                                property.SetValue(output, inputProperty.GetValue(input));
+                                break;
                         }
                     }
                 }
@@ -967,6 +978,8 @@ namespace gaseous_server.Classes.Metadata
 
         private async Task<bool?> _DownloadFile(Uri uri, string DestinationFile)
         {
+            ConfigureHasheousClient();
+
             string DestinationDirectory = new FileInfo(DestinationFile).Directory.FullName;
             if (!Directory.Exists(DestinationDirectory))
             {
@@ -1036,121 +1049,69 @@ namespace gaseous_server.Classes.Metadata
 
         public async Task<string> GetSpecificImageFromServer(string ImagePath, string ImageId, IGDBAPI_ImageSize size, List<IGDBAPI_ImageSize>? FallbackSizes = null)
         {
-            string returnPath = "";
+            string originalPath = Path.Combine(ImagePath, IGDBAPI_ImageSize.original.ToString(), ImageId + ".jpg");
+            string requestedPath = Path.Combine(ImagePath, size.ToString(), ImageId + ".jpg");
 
-            // check for artificial sizes first
-            switch (size)
+            // create the directory if it doesn't exist
+            if (!Directory.Exists(Path.GetDirectoryName(originalPath)))
             {
-                case IGDBAPI_ImageSize.screenshot_small:
-                case IGDBAPI_ImageSize.screenshot_thumb:
-                    string BasePath = Path.Combine(ImagePath, size.ToString());
-                    if (!Directory.Exists(BasePath))
-                    {
-                        Directory.CreateDirectory(BasePath);
-                    }
-                    returnPath = Path.Combine(BasePath, ImageId + ".jpg");
-                    if (!File.Exists(returnPath))
-                    {
-                        // get original size image and resize
-                        string originalSizePath = await GetSpecificImageFromServer(ImagePath, ImageId, IGDBAPI_ImageSize.original, null);
-
-                        int width = 0;
-                        int height = 0;
-
-                        switch (size)
-                        {
-                            case IGDBAPI_ImageSize.screenshot_small:
-                                // 235x128
-                                width = 235;
-                                height = 128;
-                                break;
-
-                            case IGDBAPI_ImageSize.screenshot_thumb:
-                                // 165x90
-                                width = 165;
-                                height = 90;
-                                break;
-
-                        }
-
-                        using (var image = new ImageMagick.MagickImage(originalSizePath))
-                        {
-                            image.Resize(width, height);
-                            image.Strip();
-                            image.Write(returnPath);
-                        }
-                    }
-
-                    break;
-
-                default:
-                    // these sizes are IGDB native
-                    if (RateLimitResumeTime > DateTime.UtcNow)
-                    {
-                        Logging.Log(Logging.LogType.Information, "API Connection", "Metadata source rate limit hit. Pausing API communications until " + RateLimitResumeTime.ToString() + ". Attempt " + RetryAttempts + " of " + RetryAttemptsMax + " retries.");
-                        Thread.Sleep(RateLimitRecoveryWaitTime);
-                    }
-
-                    if (InRateLimitAvoidanceMode == true)
-                    {
-                        // sleep for a moment to help avoid hitting the rate limiter
-                        Logging.Log(Logging.LogType.Information, "API Connection: Fetch Image", "Metadata source rate limit hit. Pausing API communications for " + RateLimitAvoidanceWait + " milliseconds to avoid rate limiter.");
-                        Thread.Sleep(RateLimitAvoidanceWait);
-                    }
-
-                    Communications comms = new Communications();
-                    List<IGDBAPI_ImageSize> imageSizes = new List<IGDBAPI_ImageSize>
-                    {
-                        size
-                    };
-
-                    // get the image
-                    try
-                    {
-                        returnPath = Path.Combine(ImagePath, size.ToString(), ImageId + ".jpg");
-
-                        // fail early if the file is already downloaded
-                        if (!File.Exists(returnPath))
-                        {
-                            switch (_MetadataSource)
-                            {
-                                case HasheousClient.Models.MetadataModel.MetadataSources.IGDB:
-                                    await comms.IGDBAPI_GetImage(imageSizes, ImageId, ImagePath);
-                                    break;
-
-                                case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
-                                    await comms.HasheousAPI_GetImage(imageSizes, ImageId, ImagePath);
-                                    break;
-
-                                default:
-                                    break;
-                            }
-                        }
-
-                    }
-                    catch (HttpRequestException ex)
-                    {
-                        if (ex.StatusCode == HttpStatusCode.NotFound)
-                        {
-                            Logging.Log(Logging.LogType.Information, "Image Download", "Image not found, trying a different size.");
-
-                            if (FallbackSizes != null)
-                            {
-                                foreach (Communications.IGDBAPI_ImageSize imageSize in FallbackSizes)
-                                {
-                                    returnPath = await GetSpecificImageFromServer(ImagePath, ImageId, imageSize, null);
-                                }
-                            }
-                        }
-                    }
-
-                    // increment rate limiter avoidance call count
-                    RateLimitAvoidanceCallCount += 1;
-
-                    break;
+                Directory.CreateDirectory(Path.GetDirectoryName(originalPath));
+            }
+            if (!Directory.Exists(Path.GetDirectoryName(requestedPath)))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(originalPath));
             }
 
-            return returnPath;
+            // get the resolution attribute for enum size
+            Point resolution = Common.GetResolution(size);
+
+            // check if the original image exists
+            if (!File.Exists(originalPath))
+            {
+                // sleep if the rate limiter is active
+                if (RateLimitResumeTime > DateTime.UtcNow)
+                {
+                    Logging.Log(Logging.LogType.Information, "API Connection", "Metadata source rate limit hit. Pausing API communications until " + RateLimitResumeTime.ToString() + ". Attempt " + RetryAttempts + " of " + RetryAttemptsMax + " retries.");
+                    Thread.Sleep(RateLimitRecoveryWaitTime);
+                }
+
+                if (InRateLimitAvoidanceMode == true)
+                {
+                    // sleep for a moment to help avoid hitting the rate limiter
+                    Logging.Log(Logging.LogType.Information, "API Connection: Fetch Image", "Metadata source rate limit hit. Pausing API communications for " + RateLimitAvoidanceWait + " milliseconds to avoid rate limiter.");
+                    Thread.Sleep(RateLimitAvoidanceWait);
+                }
+
+                // get the original image
+                Communications comms = new Communications();
+                switch (_MetadataSource)
+                {
+                    case HasheousClient.Models.MetadataModel.MetadataSources.IGDB:
+                        await comms.IGDBAPI_GetImage(ImageId, ImagePath);
+                        break;
+
+                    case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
+                        await comms.HasheousAPI_GetImage(ImageId, ImagePath);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
+            // check if the requested image exists
+            if (!File.Exists(requestedPath))
+            {
+                // get the original image
+                using (var image = new ImageMagick.MagickImage(originalPath))
+                {
+                    image.Resize(resolution.X, resolution.Y);
+                    image.Strip();
+                    image.Write(requestedPath);
+                }
+            }
+
+            return requestedPath;
         }
 
         public static T? GetSearchCache<T>(string SearchFields, string SearchString)
@@ -1208,22 +1169,19 @@ namespace gaseous_server.Classes.Metadata
         /// </summary>
         /// <param name="ImageId"></param>
         /// <param name="outputPath">The path to save the downloaded files to
-        public async Task IGDBAPI_GetImage(List<IGDBAPI_ImageSize> ImageSizes, string ImageId, string OutputPath)
+        public async Task IGDBAPI_GetImage(string ImageId, string OutputPath)
         {
             string urlTemplate = "https://images.igdb.com/igdb/image/upload/t_{size}/{hash}.jpg";
 
-            foreach (IGDBAPI_ImageSize ImageSize in ImageSizes)
-            {
-                string url = urlTemplate.Replace("{size}", Common.GetDescription(ImageSize)).Replace("{hash}", ImageId);
-                string newOutputPath = Path.Combine(OutputPath, Common.GetDescription(ImageSize));
-                string OutputFile = ImageId + ".jpg";
-                string fullPath = Path.Combine(newOutputPath, OutputFile);
+            string url = urlTemplate.Replace("{size}", "original").Replace("{hash}", ImageId);
+            string newOutputPath = Path.Combine(OutputPath, "original");
+            string OutputFile = ImageId + ".jpg";
+            string fullPath = Path.Combine(newOutputPath, OutputFile);
 
-                await _DownloadFile(new Uri(url), fullPath);
-            }
+            await _DownloadFile(new Uri(url), fullPath);
         }
 
-        public async Task HasheousAPI_GetImage(List<IGDBAPI_ImageSize> ImageSizes, string ImageId, string OutputPath)
+        public async Task HasheousAPI_GetImage(string ImageId, string OutputPath)
         {
             string urlTemplate = HasheousClient.WebApp.HttpHelper.BaseUri + "api/v1/MetadataProxy/IGDB/Image/{hash}.jpg";
 
@@ -1241,79 +1199,118 @@ namespace gaseous_server.Classes.Metadata
             /// 90x128 Fit
             /// </summary>
             [Description("cover_small")]
+            [Resolution(90, 128)]
             cover_small,
 
             /// <summary>
             /// 264x374 Fit
             /// </summary>
             [Description("cover_big")]
+            [Resolution(264, 374)]
             cover_big,
 
             /// <summary>
             /// 165x90 Lfill, Centre gravity - resized by Gaseous and is not a real IGDB size
             /// </summary>
             [Description("screenshot_thumb")]
+            [Resolution(165, 90)]
             screenshot_thumb,
 
             /// <summary>
             /// 235x128 Lfill, Centre gravity - resized by Gaseous and is not a real IGDB size
             /// </summary>
             [Description("screenshot_small")]
+            [Resolution(235, 128)]
             screenshot_small,
 
             /// <summary>
             /// 589x320 Lfill, Centre gravity
             /// </summary>
             [Description("screenshot_med")]
+            [Resolution(589, 320)]
             screenshot_med,
 
             /// <summary>
             /// 889x500 Lfill, Centre gravity
             /// </summary>
             [Description("screenshot_big")]
+            [Resolution(889, 500)]
             screenshot_big,
 
             /// <summary>
             /// 1280x720 Lfill, Centre gravity
             /// </summary>
             [Description("screenshot_huge")]
+            [Resolution(1280, 720)]
             screenshot_huge,
 
             /// <summary>
             /// 284x160 Fit
             /// </summary>
             [Description("logo_med")]
+            [Resolution(284, 160)]
             logo_med,
 
             /// <summary>
             /// 90x90 Thumb, Centre gravity
             /// </summary>
             [Description("thumb")]
+            [Resolution(90, 90)]
             thumb,
 
             /// <summary>
             /// 35x35 Thumb, Centre gravity
             /// </summary>
             [Description("micro")]
+            [Resolution(35, 35)]
             micro,
 
             /// <summary>
             /// 1280x720 Fit, Centre gravity
             /// </summary>
             [Description("720p")]
+            [Resolution(1280, 720)]
             r720p,
 
             /// <summary>
             /// 1920x1080 Fit, Centre gravity
             /// </summary>
             [Description("1080p")]
+            [Resolution(1920, 1080)]
             r1080p,
 
             /// <summary>
             /// The originally uploaded image
             /// </summary>
             [Description("original")]
+            [Resolution(0, 0)]
             original
+        }
+
+
+        /// <summary>
+        /// Specifies a resolution for an image size enum
+        /// </summary>
+        [AttributeUsage(AttributeTargets.All)]
+        public class ResolutionAttribute : Attribute
+        {
+            public static readonly ResolutionAttribute Default = new ResolutionAttribute();
+
+            public ResolutionAttribute() : this(0, 0)
+            {
+            }
+
+            public ResolutionAttribute(int width, int height)
+            {
+                ResolutionWidth = width;
+                ResolutionHeight = height;
+            }
+
+            public virtual int width => ResolutionWidth;
+            public virtual int height => ResolutionHeight;
+
+            protected int ResolutionWidth { get; set; }
+            protected int ResolutionHeight { get; set; }
         }
     }
 }

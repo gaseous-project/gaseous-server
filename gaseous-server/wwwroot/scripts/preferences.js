@@ -182,11 +182,12 @@ class PreferencesWindow {
             ];
             for (let j = 0; j < ratingGroupsOrder.length; j++) {
                 let ageGroupValue = AgeRatingGroups[ratingGroupsOrder[j]];
-                let iconIdList = ageGroupValue[key];
+                let iconIdList = ageGroupValue[key.toLowerCase()];
                 // loop the age rating icons
                 for (let i = 0; i < iconIdList.length; i++) {
                     let icon = document.createElement('img');
-                    icon.src = "/images/Ratings/" + key + "/" + AgeRatingStrings[iconIdList[i]] + ".svg";
+                    // icon.src = "/images/Ratings/" + key + "/" + AgeRatingStrings[iconIdList[i]] + ".svg";
+                    icon.src = "/images/Ratings/" + key + "/" + iconIdList[i] + ".svg";
                     icon.title = AgeRatingStrings[iconIdList[i]];
                     icon.classList.add("rating_image_mini");
                     classificationIcons.appendChild(icon);

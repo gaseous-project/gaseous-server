@@ -2594,6 +2594,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 .section-header {
+    position: relative;
     background-color: var(--section-header-background);
     padding: 10px;
     font-weight: bold;

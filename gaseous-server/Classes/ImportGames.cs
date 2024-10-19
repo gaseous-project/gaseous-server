@@ -213,29 +213,36 @@ namespace gaseous_server.Classes
                 {
                     Logging.Log(Logging.LogType.Information, "Import Game", "  Search type: " + searchType.ToString());
                     IGDB.Models.Game[] games = Metadata.Games.SearchForGame(SearchCandidate, PlatformId, searchType);
-                    if (games.Length == 1)
+                    if (games != null)
                     {
-                        // exact match!
-                        determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false, false);
-                        Logging.Log(Logging.LogType.Information, "Import Game", "  IGDB game: " + determinedGame.Name);
-                        GameFound = true;
-                        break;
-                    }
-                    else if (games.Length > 0)
-                    {
-                        Logging.Log(Logging.LogType.Information, "Import Game", "  " + games.Length + " search results found");
-
-                        // quite likely we've found sequels and alternate types
-                        foreach (Game game in games)
+                        if (games.Length == 1)
                         {
-                            if (game.Name == SearchCandidate)
+                            // exact match!
+                            determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false, false);
+                            Logging.Log(Logging.LogType.Information, "Import Game", "  IGDB game: " + determinedGame.Name);
+                            GameFound = true;
+                            break;
+                        }
+                        else if (games.Length > 0)
+                        {
+                            Logging.Log(Logging.LogType.Information, "Import Game", "  " + games.Length + " search results found");
+
+                            // quite likely we've found sequels and alternate types
+                            foreach (Game game in games)
                             {
-                                // found game title matches the search candidate
-                                determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false, false);
-                                Logging.Log(Logging.LogType.Information, "Import Game", "Found exact match!");
-                                GameFound = true;
-                                break;
+                                if (game.Name == SearchCandidate)
+                                {
+                                    // found game title matches the search candidate
+                                    determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false, false);
+                                    Logging.Log(Logging.LogType.Information, "Import Game", "Found exact match!");
+                                    GameFound = true;
+                                    break;
+                                }
                             }
+                        }
+                        else
+                        {
+                            Logging.Log(Logging.LogType.Information, "Import Game", "  No search results found");
                         }
                     }
                     else

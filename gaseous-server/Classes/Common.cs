@@ -1,9 +1,11 @@
 ﻿using System.Collections.Concurrent;
 using System.ComponentModel;
 using System.Data;
+using System.Drawing;
 using System.IO.Compression;
 using System.Reflection;
 using System.Security.Cryptography;
+using static gaseous_server.Classes.Metadata.Communications;
 
 namespace gaseous_server.Classes
 {
@@ -124,6 +126,27 @@ namespace gaseous_server.Classes
 				value.GetType().GetFields(BindingFlags.Public | BindingFlags.Static)
 					.Single(x => x.GetValue(null).Equals(value)),
 				typeof(DescriptionAttribute)))?.Description ?? value.ToString();
+		}
+
+		public static Point GetResolution(this Enum value)
+		{
+			string width = ((ResolutionAttribute)Attribute.GetCustomAttribute(
+				value.GetType().GetFields(BindingFlags.Public | BindingFlags.Static)
+					.Single(x => x.GetValue(null).Equals(value)),
+				typeof(ResolutionAttribute)))?.width.ToString() ?? value.ToString();
+
+			string height = ((ResolutionAttribute)Attribute.GetCustomAttribute(
+			value.GetType().GetFields(BindingFlags.Public | BindingFlags.Static)
+				.Single(x => x.GetValue(null).Equals(value)),
+			typeof(ResolutionAttribute)))?.height.ToString() ?? value.ToString();
+
+			return new Point(int.Parse(width), int.Parse(height));
+		}
+
+		public static bool IsNullableEnum(this Type t)
+		{
+			Type u = Nullable.GetUnderlyingType(t);
+			return u != null && u.IsEnum;
 		}
 
 		// compression
