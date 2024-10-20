@@ -69,29 +69,14 @@ namespace gaseous_server.Classes.Metadata
                     throw new Exception("How did you get here?");
             }
 
-            string localFile = Path.Combine(ImagePath, Communications.IGDBAPI_ImageSize.original.ToString(), returnValue.ImageId + ".jpg");
             if (GetImages == true)
             {
-                if ((!File.Exists(localFile)) || forceImageDownload == true)
+                if (forceImageDownload == true)
                 {
                     Logging.Log(Logging.LogType.Information, "Metadata: " + returnValue.GetType().Name, "Cover download forced.");
 
-                    // check for presence of image file - download if absent or force download is true
-                    List<Communications.IGDBAPI_ImageSize> imageSizes = new List<Communications.IGDBAPI_ImageSize>{
-                        Communications.IGDBAPI_ImageSize.cover_big,
-                        Communications.IGDBAPI_ImageSize.cover_small,
-                        Communications.IGDBAPI_ImageSize.original
-                    };
-
                     Communications comms = new Communications();
-                    foreach (Communications.IGDBAPI_ImageSize size in imageSizes)
-                    {
-                        localFile = Path.Combine(ImagePath, size.ToString(), returnValue.ImageId + ".jpg");
-                        if ((!File.Exists(localFile)) || forceImageDownload == true)
-                        {
-                            comms.GetSpecificImageFromServer(ImagePath, returnValue.ImageId, size, null);
-                        }
-                    }
+                    comms.GetSpecificImageFromServer(ImagePath, returnValue.ImageId, Communications.IGDBAPI_ImageSize.original, null);
                 }
             }
 

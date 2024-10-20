@@ -71,9 +71,7 @@ namespace gaseous_server.Classes.Metadata
 
             if (returnValue != null)
             {
-                // check for presence of "original" quality file - download if absent or force download is true
-                string localFile = Path.Combine(ImagePath, Communications.IGDBAPI_ImageSize.original.ToString(), returnValue.ImageId + ".jpg");
-                if ((!File.Exists(localFile)) || forceImageDownload == true)
+                if (forceImageDownload == true)
                 {
                     Logging.Log(Logging.LogType.Information, "Metadata: " + returnValue.GetType().Name, "Platform logo download forced.");
 

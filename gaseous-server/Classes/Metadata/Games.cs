@@ -243,13 +243,13 @@ namespace gaseous_server.Classes.Metadata
                     Collection GameCollection = Collections.GetCollections(Game.Collection.Id);
                 }
 
-                if (Game.ExternalGames != null)
-                {
-                    foreach (long ExternalGameId in Game.ExternalGames.Ids)
-                    {
-                        ExternalGame GameExternalGame = ExternalGames.GetExternalGames(ExternalGameId);
-                    }
-                }
+                // if (Game.ExternalGames != null)
+                // {
+                //     foreach (long ExternalGameId in Game.ExternalGames.Ids)
+                //     {
+                //         ExternalGame GameExternalGame = ExternalGames.GetExternalGames(ExternalGameId);
+                //     }
+                // }
 
                 if (Game.Franchise != null)
                 {

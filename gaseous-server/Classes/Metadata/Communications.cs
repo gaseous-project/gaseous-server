@@ -70,8 +70,8 @@ namespace gaseous_server.Classes.Metadata
 
                     case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
                         // set rate limiter avoidance values
-                        RateLimitAvoidanceWait = 250;
-                        RateLimitAvoidanceThreshold = 10;
+                        RateLimitAvoidanceWait = 1500;
+                        RateLimitAvoidanceThreshold = 6;
                         RateLimitAvoidancePeriod = 1;
 
                         // set rate limiter recovery values
@@ -1059,7 +1059,7 @@ namespace gaseous_server.Classes.Metadata
             }
             if (!Directory.Exists(Path.GetDirectoryName(requestedPath)))
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(originalPath));
+                Directory.CreateDirectory(Path.GetDirectoryName(requestedPath));
             }
 
             // get the resolution attribute for enum size
