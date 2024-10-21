@@ -699,25 +699,108 @@ class BackgroundImageRotator {
     }
 }
 
-function BuildLaunchLink(engine, core, platformId, gameId, romId, isMediaGroup, filename) {
+async function BuildLaunchLink(engine, core, platformId, gameId, romId, isMediaGroup, filename) {
     let launchLink = '/index.html?page=emulator&engine=<ENGINE>&core=<CORE>&platformid=<PLATFORMID>&gameid=<GAMEID>&romid=<ROMID>&mediagroup=<ISMEDIAGROUP>&rompath=<FILENAME>';
 
-    // http://localhost:5198/index.html?page=emulator&engine=EmulatorJS&core=amiga&platformid=16&gameid=5519&romid=19&mediagroup=1&rompath=%2Fapi%2Fv1.1%2FGames%2F5519%2Fromgroup%2F19%2FCannon%20Fodder.zip
+    let isValid = true;
 
-    // http://localhost:5198/index.html?page=emulator&engine=EmulatorJS&core=amiga&platformid=16&gameid=5519&romid=102&mediagroup=0&rompath=%2Fapi%2Fv1.1%2FGames%2F5519%2Froms%2F102%2FCannon%20Fodder%20(1993)(Virgin)(Disk%201%20of%203)%5Bcr%20CSL%5D.adf
+    console.log('Validating launch link: ' + engine + ' ' + core + ' ' + platformId + ' ' + gameId + ' ' + romId + ' ' + isMediaGroup + ' ' + filename);
 
-    launchLink = launchLink.replace('<ENGINE>', engine);
-    launchLink = launchLink.replace('<CORE>', core);
-    launchLink = launchLink.replace('<PLATFORMID>', platformId);
-    launchLink = launchLink.replace('<GAMEID>', gameId);
-    launchLink = launchLink.replace('<ROMID>', romId);
-    if (isMediaGroup == true) {
-        launchLink = launchLink.replace('<ISMEDIAGROUP>', 1);
-        launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + encodeURI(gameId) + '/romgroup/' + encodeURI(romId) + '/' + encodeURI(filename) + '.zip');
-    } else {
-        launchLink = launchLink.replace('<ISMEDIAGROUP>', 0);
-        launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + encodeURI(gameId) + '/roms/' + encodeURI(romId) + '/' + encodeURI(filename));
+    let returnLink = '/index.html';
+
+    // check if engine is valid
+    let validEngines = ['EmulatorJS'];
+    if (!validEngines.includes(engine)) {
+        isValid = false;
+        console.log('Engine is invalid!');
     }
 
-    return launchLink;
+    // fetch valid cores from json file /emulators/EmulatorJS/data/cores.json
+    let validCores = [];
+    await fetch('/emulators/EmulatorJS/data/cores/cores.json', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            validCores = data;
+
+            for (let i = 0; i < validCores.length; i++) {
+                if (validCores[i].name == core) {
+                    isValid = true;
+                    break;
+                } else {
+                    isValid = false;
+                }
+            }
+            if (isValid == false) {
+                console.log('Core is invalid!');
+            }
+
+            // check if platformId is an int64
+            if (!Number(platformId)) {
+                isValid = false;
+                console.log('PlatformId is invalid!');
+            }
+
+            // check if gameId is a an int64
+            if (!Number(gameId)) {
+                isValid = false;
+                console.log('GameId is invalid!');
+            }
+
+            // check if romId is a an int64
+            if (!Number(romId)) {
+                isValid = false;
+                console.log('RomId is invalid!');
+            }
+
+            // check if isMediaGroup is a boolean in a number format
+            if (typeof (isMediaGroup) == 'boolean' && (Number(isMediaGroup) == 0 || Number(isMediaGroup) == 1)) {
+                isValid = false;
+                console.log('IsMediaGroup is invalid!');
+            }
+
+            // check if filename is a string
+            if (typeof (filename) != 'string') {
+                isValid = false;
+                console.log('Filename is invalid!');
+            }
+
+            if (isValid == false) {
+                console.log('Link is invalid!');
+                returnLink = '/index.html';
+                return;
+            }
+
+            // generate the launch link
+            launchLink = launchLink.replace('<ENGINE>', engine);
+            launchLink = launchLink.replace('<CORE>', core);
+            launchLink = launchLink.replace('<PLATFORMID>', platformId);
+            launchLink = launchLink.replace('<GAMEID>', gameId);
+            launchLink = launchLink.replace('<ROMID>', romId);
+            if (isMediaGroup == true) {
+                launchLink = launchLink.replace('<ISMEDIAGROUP>', 1);
+                launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + encodeURI(gameId) + '/romgroup/' + encodeURI(romId) + '/' + encodeURI(filename) + '.zip');
+            } else {
+                launchLink = launchLink.replace('<ISMEDIAGROUP>', 0);
+                launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + encodeURI(gameId) + '/roms/' + encodeURI(romId) + '/' + encodeURI(filename));
+            }
+
+            console.log('Validated link: ' + launchLink);
+
+            returnLink = launchLink;
+
+            return;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            isValid = false;
+            console.log('Link is invalid!');
+            returnLink = '/index.html';
+        });
+
+    return returnLink;
 }

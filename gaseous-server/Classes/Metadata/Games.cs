@@ -477,48 +477,60 @@ namespace gaseous_server.Classes.Metadata
 
         private static async Task<Game[]> _SearchForGameRemote(string SearchString, long PlatformId, SearchType searchType)
         {
-            string searchBody = "";
-            string searchFields = "fields id,name,slug,platforms,summary; ";
-            bool allowSearch = true;
-            switch (searchType)
+            switch (Communications.MetadataSource)
             {
-                case SearchType.searchNoPlatform:
-                    searchBody = "search \"" + SearchString + "\"; ";
+                case HasheousClient.Models.MetadataModel.MetadataSources.None:
+                    return new Game[0];
+                case HasheousClient.Models.MetadataModel.MetadataSources.IGDB:
+                    string searchBody = "";
+                    string searchFields = "fields id,name,slug,platforms,summary; ";
+                    bool allowSearch = true;
+                    switch (searchType)
+                    {
+                        case SearchType.searchNoPlatform:
+                            searchBody = "search \"" + SearchString + "\"; ";
 
-                    allowSearch = AllowNoPlatformSearch;
-                    break;
-                case SearchType.search:
-                    searchBody = "search \"" + SearchString + "\"; where platforms = (" + PlatformId + ");";
-                    break;
-                case SearchType.wherefuzzy:
-                    searchBody = "where platforms = (" + PlatformId + ") & name ~ *\"" + SearchString + "\"*;";
-                    break;
-                case SearchType.where:
-                    searchBody = "where platforms = (" + PlatformId + ") & name ~ \"" + SearchString + "\";";
-                    break;
-            }
+                            allowSearch = AllowNoPlatformSearch;
+                            break;
+                        case SearchType.search:
+                            searchBody = "search \"" + SearchString + "\"; where platforms = (" + PlatformId + ");";
+                            break;
+                        case SearchType.wherefuzzy:
+                            searchBody = "where platforms = (" + PlatformId + ") & name ~ *\"" + SearchString + "\"*;";
+                            break;
+                        case SearchType.where:
+                            searchBody = "where platforms = (" + PlatformId + ") & name ~ \"" + SearchString + "\";";
+                            break;
+                    }
 
-            // check search cache
-            Game[]? games = Communications.GetSearchCache<Game[]?>(searchFields, searchBody);
+                    // check search cache
+                    Game[]? games = Communications.GetSearchCache<Game[]?>(searchFields, searchBody);
 
-            if (games == null)
-            {
-                // cache miss
-                // get Game metadata
-                Communications comms = new Communications();
-                Game[]? results = new Game[0];
-                if (allowSearch == true)
-                {
-                    results = await comms.APIComm<Game>(IGDBClient.Endpoints.Games, searchFields, searchBody);
+                    if (games == null)
+                    {
+                        // cache miss
+                        // get Game metadata
+                        Communications comms = new Communications();
+                        Game[]? results = new Game[0];
+                        if (allowSearch == true)
+                        {
+                            results = await comms.APIComm<Game>(IGDBClient.Endpoints.Games, searchFields, searchBody);
 
-                    Communications.SetSearchCache<Game[]?>(searchFields, searchBody, results);
-                }
+                            Communications.SetSearchCache<Game[]?>(searchFields, searchBody, results);
+                        }
 
-                return results;
-            }
-            else
-            {
-                return games.ToArray();
+                        return results;
+                    }
+                    else
+                    {
+                        return games.ToArray();
+                    }
+
+                case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
+                    return new Game[0];
+
+                default:
+                    return new Game[0];
             }
         }
 

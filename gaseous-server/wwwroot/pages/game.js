@@ -406,7 +406,7 @@ function SetupPage() {
 
 function LoadGamePlatforms() {
     // get platforms
-    ajaxCall('/api/v1.1/Games/' + gameId + '/platforms', 'GET', function (result) {
+    ajaxCall('/api/v1.1/Games/' + gameId + '/platforms', 'GET', async function (result) {
         let platformContainer = document.getElementById('gamesummaryplatformscontent');
         platformContainer.innerHTML = '';
         for (let i = 0; i < result.length; i++) {
@@ -437,7 +437,7 @@ function LoadGamePlatforms() {
                 platformItem.setAttribute('isFavourite', true);
                 platformItem.classList.add('platform_item_green');
 
-                let launchLink = BuildLaunchLink(platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, Number(gameId), platformData.favouriteRomId, platformData.favouriteRomIsMediagroup, platformData.favouriteRomName);
+                let launchLink = await BuildLaunchLink(platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, Number(gameId), platformData.favouriteRomId, platformData.favouriteRomIsMediagroup, platformData.favouriteRomName);
 
                 platformItem.addEventListener('click', () => {
                     window.location.href = launchLink;
@@ -450,7 +450,7 @@ function LoadGamePlatforms() {
                 platformItem.setAttribute('isLastUsed', true);
                 platformItem.classList.add('platform_item_green');
 
-                let launchLink = BuildLaunchLink(platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, Number(gameId), platformData.lastPlayedRomId, platformData.lastPlayedRomIsMediagroup, platformData.lastPlayedRomName);
+                let launchLink = await BuildLaunchLink(platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, Number(gameId), platformData.lastPlayedRomId, platformData.lastPlayedRomIsMediagroup, platformData.lastPlayedRomName);
 
                 platformItem.addEventListener('click', () => {
                     window.location.href = launchLink;

@@ -197,12 +197,12 @@ class UploadItem {
         // file name label
         this.filenameLabel = document.createElement('div');
         this.filenameLabel.classList.add('uploadItem-Label');
-        this.filenameLabel.innerHTML = this.Filename;
+        this.filenameLabel.textContent = this.Filename;
 
         // status label
         this.statusLabel = document.createElement('div');
         this.statusLabel.classList.add('uploadItem-Status');
-        this.statusLabel.innerHTML = UploadItem.StatusValues[this.Status];
+        this.statusLabel.textContent = UploadItem.StatusValues[this.Status];
 
         // game name label
         this.gameNameLabel = document.createElement('div');

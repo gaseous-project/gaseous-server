@@ -707,6 +707,42 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
+        [Route("{GameId}/gamemode")]
+        [ProducesResponseType(typeof(List<GameMode>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
+        public async Task<ActionResult> GameMode(long GameId)
+        {
+            try
+            {
+                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                if (gameObject != null)
+                {
+                    List<IGDB.Models.GameMode> gameModeObjects = new List<GameMode>();
+                    if (gameObject.GameModes != null)
+                    {
+                        foreach (long gameModeId in gameObject.GameModes.Ids)
+                        {
+                            gameModeObjects.Add(Classes.Metadata.GameModes.GetGame_Modes(gameModeId));
+                        }
+                    }
+
+                    return Ok(gameModeObjects);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpGet]
         [Route("{GameId}/genre")]
         [ProducesResponseType(typeof(List<Genre>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
