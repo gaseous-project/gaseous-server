@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Security.Cryptography.X509Certificates;
 using gaseous_server.Models;
 using IGDB;
 using IGDB.Models;
@@ -527,7 +528,16 @@ namespace gaseous_server.Classes.Metadata
                     }
 
                 case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
-                    return new Game[0];
+                    HasheousClient.Hasheous hasheous = new HasheousClient.Hasheous();
+                    HasheousClient.Models.Metadata.IGDB.Game[] hResults = hasheous.GetMetadataProxy_SearchGame<HasheousClient.Models.Metadata.IGDB.Game>(HasheousClient.Hasheous.MetadataProvider.IGDB, PlatformId.ToString(), SearchString);
+
+                    List<Game> hGames = new List<Game>();
+                    foreach (HasheousClient.Models.Metadata.IGDB.Game hResult in hResults)
+                    {
+                        hGames.Add(Communications.ConvertToIGDBModel<Game>(hResult));
+                    }
+
+                    return hGames.ToArray();
 
                 default:
                     return new Game[0];

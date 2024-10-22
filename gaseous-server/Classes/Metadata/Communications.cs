@@ -256,7 +256,7 @@ namespace gaseous_server.Classes.Metadata
                     return await IGDBAPI<T>(EndpointString, fieldList, query);
 
                 case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
-                    ConfigureHasheousClient();
+                    ConfigureHasheousClient(ref hasheous);
 
                     return await HasheousAPI<T>(Endpoint.ToString(), "slug", Slug);
 
@@ -416,7 +416,7 @@ namespace gaseous_server.Classes.Metadata
                     return await IGDBAPI<T>(EndpointString, fieldList, query);
 
                 case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
-                    ConfigureHasheousClient();
+                    ConfigureHasheousClient(ref hasheous);
 
                     return await HasheousAPI<T>(Endpoint.ToString(), "id", Id.ToString());
                 default:
@@ -424,7 +424,7 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        private void ConfigureHasheousClient()
+        public static void ConfigureHasheousClient(ref HasheousClient.Hasheous hasheous)
         {
             // configure the Hasheous client
             hasheous = new HasheousClient.Hasheous();
@@ -853,7 +853,7 @@ namespace gaseous_server.Classes.Metadata
         /// <typeparam name="T">The type of object to convert to</typeparam>
         /// <param name="input">The object to convert</param>
         /// <returns>The converted object</returns>
-        public T ConvertToIGDBModel<T>(object input)
+        public static T ConvertToIGDBModel<T>(object input)
         {
             // loop through the properties of intput and copy all strings to an output object of type T
 
@@ -978,7 +978,7 @@ namespace gaseous_server.Classes.Metadata
 
         private async Task<bool?> _DownloadFile(Uri uri, string DestinationFile)
         {
-            ConfigureHasheousClient();
+            ConfigureHasheousClient(ref hasheous);
 
             string DestinationDirectory = new FileInfo(DestinationFile).Directory.FullName;
             if (!Directory.Exists(DestinationDirectory))
