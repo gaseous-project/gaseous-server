@@ -16,17 +16,16 @@ RUN dotnet restore "gaseous-server/gaseous-server.csproj" -a $TARGETARCH
 # Build and publish a release
 RUN dotnet publish "gaseous-server/gaseous-server.csproj" --use-current-runtime --self-contained true -c Release -o out -a $TARGETARCH
 
-# Build Gaseous CLI
-# Restore as distinct layers
-RUN dotnet restore "gaseous-cli/gaseous-cli.csproj" -a $TARGETARCH
-# Build and publish a release
-RUN dotnet publish "gaseous-cli/gaseous-cli.csproj" --use-current-runtime --self-contained true -c Release -o out -a $TARGETARCH
-
 # update apt-get
 RUN apt-get update
 
-# # download and unzip EmulatorJS from CDN
+# download and unzip EmulatorJS from CDN
 RUN apt-get install -y p7zip-full
+RUN mkdir -p out/wwwroot/emulators/EmulatorJS
+RUN wget https://cdn.emulatorjs.org/releases/4.1.1.7z
+RUN 7z x -y -oout/wwwroot/emulators/EmulatorJS 4.1.1.7z
+
+RUN wget --recursive --no-parent https://cdn.emulatorjs.org/latest/
 RUN mkdir -p out/wwwroot/emulators/EmulatorJS
 RUN wget https://cdn.emulatorjs.org/releases/4.0.12.7z
 RUN 7z x -y -oout/wwwroot/emulators/EmulatorJS 4.0.12.7z
