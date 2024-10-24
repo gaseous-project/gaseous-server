@@ -41,11 +41,10 @@
     EJS_threads = false;
 
     EJS_Buttons = {
-        saveSavFiles: false,
-        loadSavFiles: false
+        exitEmulation: false
     }
 
-    EJS_onSaveState = function(e) {
+    EJS_onSaveState = function (e) {
         var returnValue = {
             "ScreenshotByteArrayBase64": btoa(Uint8ToString(e.screenshot)),
             "StateByteArrayBase64": btoa(Uint8ToString(e.state))
@@ -72,7 +71,7 @@
         returnValue = undefined;
     }
 
-    EJS_onLoadState = function(e) {
+    EJS_onLoadState = function (e) {
         showDialog('emulatorloadstate', { "romId": romId, "IsMediaGroup": IsMediaGroup });
     }
 </script>
