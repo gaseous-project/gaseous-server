@@ -46,6 +46,14 @@ AgeRatings.PopulateAgeMap();
 // load app settings
 Config.InitSettings();
 
+// set default search settings
+Config.SetSetting<List<gaseous_server.Classes.Metadata.Games.SearchType>>("DefaultSearchMethods", new List<gaseous_server.Classes.Metadata.Games.SearchType>() {
+    Games.SearchType.where,
+    Games.SearchType.wherefuzzy,
+    Games.SearchType.search,
+    Games.SearchType.searchNoPlatform
+});
+
 // disable hasheous
 Config.MetadataConfiguration.SignatureSource = HasheousClient.Models.MetadataModel.SignatureSources.LocalOnly;
 

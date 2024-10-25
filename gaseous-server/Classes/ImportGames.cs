@@ -181,7 +181,13 @@ namespace gaseous_server.Classes
 
                 Logging.Log(Logging.LogType.Information, "Import Game", "  Searching for title: " + SearchCandidate);
 
-                foreach (Metadata.Games.SearchType searchType in Enum.GetValues(typeof(Metadata.Games.SearchType)))
+                List<Metadata.Games.SearchType> allowedSearchTypes = Config.ReadSetting<List<Metadata.Games.SearchType>>("DefaultSearchMethods", new List<gaseous_server.Classes.Metadata.Games.SearchType>() {
+                    Games.SearchType.where,
+                    Games.SearchType.wherefuzzy,
+                    Games.SearchType.search,
+                    Games.SearchType.searchNoPlatform
+                });
+                foreach (Metadata.Games.SearchType searchType in allowedSearchTypes)
                 {
                     Logging.Log(Logging.LogType.Information, "Import Game", "  Search type: " + searchType.ToString());
                     IGDB.Models.Game[] games = Metadata.Games.SearchForGame(SearchCandidate, PlatformId, searchType);
@@ -239,7 +245,13 @@ namespace gaseous_server.Classes
 
             foreach (string SearchCandidate in SearchCandidates)
             {
-                foreach (Metadata.Games.SearchType searchType in Enum.GetValues(typeof(Metadata.Games.SearchType)))
+                List<Metadata.Games.SearchType> allowedSearchTypes = Config.ReadSetting<List<Metadata.Games.SearchType>>("DefaultSearchMethods", new List<gaseous_server.Classes.Metadata.Games.SearchType>() {
+                    Games.SearchType.where,
+                    Games.SearchType.wherefuzzy,
+                    Games.SearchType.search,
+                    Games.SearchType.searchNoPlatform
+                });
+                foreach (Metadata.Games.SearchType searchType in allowedSearchTypes)
                 {
                     if ((PlatformId == 0 && searchType == SearchType.searchNoPlatform) || (PlatformId != 0 && searchType != SearchType.searchNoPlatform))
                     {

@@ -260,7 +260,13 @@ namespace gaseous_server.Controllers
             {
                 AlwaysLogToDisk = Config.LoggingConfiguration.AlwaysLogToDisk,
                 MinimumLogRetentionPeriod = Config.LoggingConfiguration.LogRetention,
-                EmulatorDebugMode = Boolean.Parse(Config.ReadSetting<string>("emulatorDebugMode", false.ToString()))
+                EmulatorDebugMode = Boolean.Parse(Config.ReadSetting<string>("emulatorDebugMode", false.ToString())),
+                SearchTypes = Config.ReadSetting<List<Classes.Metadata.Games.SearchType>>("DefaultSearchMethods", new List<gaseous_server.Classes.Metadata.Games.SearchType>() {
+                    Games.SearchType.where,
+                    Games.SearchType.wherefuzzy,
+                    Games.SearchType.search,
+                    Games.SearchType.searchNoPlatform
+                })
             };
 
             return Ok(systemSettingsModel);
@@ -279,6 +285,7 @@ namespace gaseous_server.Controllers
                 Config.LoggingConfiguration.AlwaysLogToDisk = model.AlwaysLogToDisk;
                 Config.LoggingConfiguration.LogRetention = model.MinimumLogRetentionPeriod;
                 Config.SetSetting<string>("emulatorDebugMode", model.EmulatorDebugMode.ToString());
+                Config.SetSetting<List<Classes.Metadata.Games.SearchType>>("DefaultSearchMethods", model.SearchTypes);
                 Config.UpdateConfig();
             }
 
@@ -719,5 +726,6 @@ namespace gaseous_server.Controllers
         public bool AlwaysLogToDisk { get; set; }
         public int MinimumLogRetentionPeriod { get; set; }
         public bool EmulatorDebugMode { get; set; }
+        public List<Classes.Metadata.Games.SearchType> SearchTypes { get; set; }
     }
 }
