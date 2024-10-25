@@ -22,8 +22,8 @@ RUN apt-get update
 # download and unzip EmulatorJS from CDN
 RUN apt-get install -y p7zip-full
 RUN mkdir -p out/wwwroot/emulators/EmulatorJS
-RUN cp -fr cdn.emulatorjs.org/latest/* out/wwwroot/emulators/EmulatorJS
-RUN rm -Rf cdn.emulatorjs.org
+RUN wget https://cdn.emulatorjs.org/releases/4.1.1.7z
+RUN 7z x -y -oout/wwwroot/emulators/EmulatorJS 4.1.1.7z
 
 # clean up apt-get
 RUN apt-get clean && rm -rf /var/lib/apt/lists
