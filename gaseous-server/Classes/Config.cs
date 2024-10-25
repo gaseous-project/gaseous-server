@@ -361,25 +361,38 @@ namespace gaseous_server.Classes
             {
                 sql = "REPLACE INTO Settings (Setting, ValueType, Value, ValueDate) VALUES (@SettingName, @ValueType, @Value, @ValueDate)";
                 Type type = typeof(T);
-                if (type.ToString() == "System.DateTime")
+
+                switch (type.ToString())
                 {
-                    dbDict = new Dictionary<string, object>
-                    {
-                        { "SettingName", SettingName },
-                        { "ValueType", 1 },
-                        { "Value", null },
-                        { "ValueDate", Value }
-                    };
-                }
-                else
-                {
-                    dbDict = new Dictionary<string, object>
-                    {
-                        { "SettingName", SettingName },
-                        { "ValueType", 0 },
-                        { "Value", Value },
-                        { "ValueDate", null }
-                    };
+                    case "System.DateTime":
+                        dbDict = new Dictionary<string, object>
+                        {
+                            { "SettingName", SettingName },
+                            { "ValueType", 1 },
+                            { "Value", null },
+                            { "ValueDate", Value }
+                        };
+                        break;
+
+                    case "System.Collections.Generic.List`1[gaseous_server.Classes.Metadata.Games+SearchType]":
+                        dbDict = new Dictionary<string, object>
+                        {
+                            { "SettingName", SettingName },
+                            { "ValueType", 2 },
+                            { "Value", JsonConvert.SerializeObject(Value) },
+                            { "ValueDate", null }
+                        };
+                        break;
+
+                    default:
+                        dbDict = new Dictionary<string, object>
+                        {
+                            { "SettingName", SettingName },
+                            { "ValueType", 0 },
+                            { "Value", Value },
+                            { "ValueDate", null }
+                        };
+                        break;
                 }
             }
             else
