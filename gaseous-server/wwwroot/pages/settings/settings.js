@@ -21,10 +21,27 @@ function getSystemSettings() {
 
                 case "Hasheous":
                     document.getElementById('settings_signaturesource_hasheous').checked = true;
-                    document.getElementById('settings_hasheoushost_row').style.display = '';
                     break;
 
             }
+
+            switch (result.metadataSource.source) {
+                case "None":
+                    document.getElementById('settings_metadatasource_none').checked = true;
+                    break;
+
+                case "Hasheous":
+                    document.getElementById('settings_metadatasource_hasheous').checked = true;
+                    break;
+
+                case "IGDB":
+                    document.getElementById('settings_metadatasource_igdb').checked = true;
+                    break;
+
+            }
+
+            document.getElementById('settings_igdbclientid').value = result.metadataSource.igdbClientId;
+            document.getElementById('settings_igdbclientkey').value = result.metadataSource.igdbClientSecret;
 
             document.getElementById('settings_signaturesource_hasheoushost').value = result.signatureSource.hasheousHost;
 
@@ -56,6 +73,11 @@ function setSystemSettings() {
         "alwaysLogToDisk": alwaysLogToDisk,
         "minimumLogRetentionPeriod": Number(retentionValue),
         "emulatorDebugMode": document.getElementById('settings_emulator_debug').checked,
+        "metadataSource": {
+            "Source": $("input[type='radio'][name='settings_metadatasource']:checked").val(),
+            "IgdbClientId": document.getElementById('settings_igdbclientid').value,
+            "IgdbClientSecret": document.getElementById('settings_igdbclientkey').value
+        },
         "signatureSource": {
             "Source": $("input[type='radio'][name='settings_signaturesource']:checked").val(),
             "HasheousHost": document.getElementById('settings_signaturesource_hasheoushost').value,

@@ -97,3 +97,11 @@ SELECT *, DATE_ADD(
         SessionTime, INTERVAL SessionLength MINUTE
     ) AS SessionEnd
 FROM UserTimeTracking;
+
+CREATE INDEX idx_game_name ON Game (`Name`);
+CREATE INDEX idx_game_totalratingcount ON Game (TotalRatingCount);
+CREATE INDEX idx_alternativename_game ON AlternativeName (Game);
+CREATE INDEX idx_gamestate_romid ON GameState (RomId);
+CREATE INDEX idx_gamestate_ismediagroup_userid ON GameState (IsMediaGroup, UserId);
+CREATE INDEX idx_rommediagroup_gameid ON RomMediaGroup (GameId);
+CREATE INDEX idx_favourites_userid_gameid ON Favourites (UserId, GameId);

@@ -553,6 +553,7 @@ FROM
     Favourites ON Game.Id = Favourites.GameId AND Favourites.UserId = @userid " + whereClause + " " + havingClause + " " + orderByClause;
             List<Games.MinimalGameItem> RetVal = new List<Games.MinimalGameItem>();
 
+            Console.WriteLine(sql);
             DataTable dbResponse = db.ExecuteCMD(sql, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
 
             // get count

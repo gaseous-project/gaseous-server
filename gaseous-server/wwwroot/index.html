@@ -129,6 +129,15 @@
                             head.appendChild(newLink);
                         }
 
+                        // wait for all scripts to load
+                        do {
+                            if (typeof getQueryString === "function") {
+                                break;
+                            }
+                            console.log("Waiting for scripts to load...");
+                            await new Promise(r => setTimeout(r, 100));
+                        } while (typeof getQueryString !== "function");
+
                         // start the application
                         console.log("Starting Gaseous");
                         console.log("App Version: " + AppVersion);
@@ -157,8 +166,9 @@
                                             let pageSelection = getQueryString('page', 'string');
 
                                             if (!pageSelection) {
-                                                pageSelection = GetPreference("DefaultHomePage", 'home');
+                                                pageSelection = GetPreference("DefaultHomePage", "home");
                                             }
+                                            console.log("Loading page: " + pageSelection);
                                             await LoadPageContent(pageSelection, 'content');
                                         } else {
                                             // user is not signed in - load login page

@@ -311,6 +311,12 @@ namespace gaseous_server.Controllers
                     HasheousHost = Config.MetadataConfiguration.HasheousHost,
                     HasheousSubmitFixes = (bool)Config.MetadataConfiguration.HasheousSubmitFixes,
                     HasheousAPIKey = Config.MetadataConfiguration.HasheousAPIKey
+                },
+                MetadataSource = new SystemSettingsModel.MetadataSourceItem()
+                {
+                    Source = Config.MetadataConfiguration.MetadataSource,
+                    IGDBClientId = Config.IGDB.ClientId,
+                    IGDBClientSecret = Config.IGDB.Secret
                 }
             };
 
@@ -334,6 +340,9 @@ namespace gaseous_server.Controllers
                 Config.MetadataConfiguration.HasheousHost = model.SignatureSource.HasheousHost;
                 Config.MetadataConfiguration.HasheousAPIKey = model.SignatureSource.HasheousAPIKey;
                 Config.MetadataConfiguration.HasheousSubmitFixes = model.SignatureSource.HasheousSubmitFixes;
+                Config.MetadataConfiguration.MetadataSource = model.MetadataSource.Source;
+                Config.IGDB.ClientId = model.MetadataSource.IGDBClientId;
+                Config.IGDB.Secret = model.MetadataSource.IGDBClientSecret;
                 Config.UpdateConfig();
             }
 
@@ -776,6 +785,7 @@ namespace gaseous_server.Controllers
         public int MinimumLogRetentionPeriod { get; set; }
         public bool EmulatorDebugMode { get; set; }
         public SignatureSourceItem SignatureSource { get; set; }
+        public MetadataSourceItem MetadataSource { get; set; }
 
         public class SignatureSourceItem
         {
@@ -783,6 +793,13 @@ namespace gaseous_server.Controllers
             public string HasheousHost { get; set; }
             public string HasheousAPIKey { get; set; }
             public bool HasheousSubmitFixes { get; set; }
+        }
+
+        public class MetadataSourceItem
+        {
+            public HasheousClient.Models.MetadataModel.MetadataSources Source { get; set; }
+            public string IGDBClientId { get; set; }
+            public string IGDBClientSecret { get; set; }
         }
     }
 }
