@@ -757,10 +757,16 @@ async function BuildLaunchLink(engine, core, platformId, gameId, romId, isMediaG
                 console.log('RomId is invalid!');
             }
 
-            // check if isMediaGroup is a boolean in a number format
-            if (typeof (isMediaGroup) == 'boolean' && (Number(isMediaGroup) == 0 || Number(isMediaGroup) == 1)) {
-                isValid = false;
-                console.log('IsMediaGroup is invalid!');
+            // check if isMediaGroup is a boolean in a number format - if not, verify it is a boolean
+            if (isMediaGroup == 0 || isMediaGroup == 1) {
+                // value is a number, and is valid
+            } else {
+                if (isMediaGroup == true || isMediaGroup == false) {
+                    // value is a boolean, and is valid
+                } else {
+                    isValid = false;
+                    console.log('IsMediaGroup is invalid!');
+                }
             }
 
             // check if filename is a string
