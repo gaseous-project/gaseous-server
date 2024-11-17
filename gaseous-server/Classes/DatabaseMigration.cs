@@ -3,7 +3,6 @@ using System.Data;
 using System.Reflection;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
-using IGDB.Models;
 
 namespace gaseous_server.Classes
 {
@@ -394,8 +393,8 @@ namespace gaseous_server.Classes
                     (string)row["Path"]
                 );
 
-                Platform platform = Platforms.GetPlatform((long)row["PlatformId"], false);
-                Game game = Games.GetGame((long)row["GameId"], false, false, false);
+                HasheousClient.Models.Metadata.IGDB.Platform platform = Platforms.GetPlatform((long)row["PlatformId"]);
+                Game game = Games.GetGame(Communications.MetadataSource, (long)row["GameId"]);
 
                 ImportGame.StoreROM(library, hash, game, platform, signature, (string)row["Path"], (long)row["Id"]);
 

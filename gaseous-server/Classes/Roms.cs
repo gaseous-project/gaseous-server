@@ -3,7 +3,6 @@ using System.Data;
 using gaseous_signature_parser.models.RomSignatureObject;
 using static gaseous_server.Classes.RomMediaGroup;
 using gaseous_server.Classes.Metadata;
-using IGDB.Models;
 using static HasheousClient.Models.FixMatchModel;
 using NuGet.Protocol.Core.Types;
 using static gaseous_server.Classes.FileSignature;
@@ -154,10 +153,10 @@ namespace gaseous_server.Classes
 		public static GameRomItem UpdateRom(long RomId, long PlatformId, long GameId)
 		{
 			// ensure metadata for platformid is present
-			IGDB.Models.Platform platform = Classes.Metadata.Platforms.GetPlatform(PlatformId);
+			HasheousClient.Models.Metadata.IGDB.Platform platform = Classes.Metadata.Platforms.GetPlatform(PlatformId);
 
 			// ensure metadata for gameid is present
-			IGDB.Models.Game game = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+			Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid WHERE Id = @id";

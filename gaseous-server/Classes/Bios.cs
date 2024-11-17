@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Classes
 {
@@ -94,7 +95,7 @@ namespace gaseous_server.Classes
             {
                 if (platformMapping.Bios != null)
                 {
-                    IGDB.Models.Platform platform = Metadata.Platforms.GetPlatform(platformMapping.IGDBId);
+                    Platform platform = Metadata.Platforms.GetPlatform(platformMapping.IGDBId);
 
                     foreach (Models.PlatformMapping.PlatformMapItem.EmulatorBiosItem emulatorBios in platformMapping.Bios)
                     {

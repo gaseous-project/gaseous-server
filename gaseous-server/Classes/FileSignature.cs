@@ -342,7 +342,7 @@ namespace gaseous_server.Classes
                                             switch (metadataResult.Source)
                                             {
                                                 case HasheousClient.Models.MetadataSources.IGDB:
-                                                    signature.Flags.IGDBGameId = (long)Games.GetGame(metadataResult.Id, false, false, false).Id;
+                                                    signature.Flags.IGDBGameId = (long)Games.GetGame(Communications.MetadataSource, metadataResult.Id).Id;
                                                     break;
                                             }
                                         }

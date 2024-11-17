@@ -99,9 +99,157 @@ SELECT *, DATE_ADD(
 FROM UserTimeTracking;
 
 CREATE INDEX idx_game_name ON Game (`Name`);
+
 CREATE INDEX idx_game_totalratingcount ON Game (TotalRatingCount);
+
 CREATE INDEX idx_alternativename_game ON AlternativeName (Game);
+
 CREATE INDEX idx_gamestate_romid ON GameState (RomId);
+
 CREATE INDEX idx_gamestate_ismediagroup_userid ON GameState (IsMediaGroup, UserId);
+
 CREATE INDEX idx_rommediagroup_gameid ON RomMediaGroup (GameId);
+
 CREATE INDEX idx_favourites_userid_gameid ON Favourites (UserId, GameId);
+
+CREATE TABLE `MetadataMap` (
+    `Id` bigint(20) NOT NULL AUTO_INCREMENT,
+    `PlatformId` bigint(20) NOT NULL,
+    PRIMARY KEY (`id`)
+);
+
+CREATE TABLE `MetadataMapBridge` (
+    `ParentMapId` bigint(20) NOT NULL,
+    `MetadataSourceType` int(11) NOT NULL DEFAULT 0,
+    `MetadataSourceId` bigint(20) NOT NULL `Preferred` BOOLEAN NOT NULL DEFAULT 0,
+    PRIMARY KEY (
+        `ParentMapId`,
+        `MetadataSourceType`,
+        `MetadataSourceId`
+    )
+);
+
+ALTER TABLE `Games_Roms`
+ADD COLUMN `MetadataMapId` BIGINT NOT NULL DEFAULT 0;
+
+ALTER TABLE `AgeGroup`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `AgeRating`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `AgeRatingContentDescription`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `AlternativeName`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `Artwork`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `Collection`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `Company`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `CompanyLogo`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `Cover`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `ExternalGame`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `Franchise`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `Game`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP INDEX IF EXISTS `Id_UNIQUE`,
+DROP INDEX IF EXISTS `PRIMARY`,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `GameMode`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `GameVideo`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `Genre`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `InvolvedCompany`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `MultiplayerMode`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `Platform`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP INDEX IF EXISTS `Id_UNIQUE`,
+DROP INDEX IF EXISTS `PRIMARY`,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `PlatformLogo`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `PlatformVersion`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `PlayerPerspective`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `ReleaseDate`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `Screenshot`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);
+
+ALTER TABLE `Theme`
+ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
+DROP PRIMARY KEY,
+ADD PRIMARY KEY (`Id`, `SourceId`);

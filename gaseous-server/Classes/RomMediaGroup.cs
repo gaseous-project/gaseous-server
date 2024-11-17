@@ -2,12 +2,12 @@ using System;
 using System.Data;
 using gaseous_signature_parser.models.RomSignatureObject;
 using Microsoft.VisualBasic;
-using IGDB.Models;
 using gaseous_server.Classes.Metadata;
 using System.IO.Compression;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using gaseous_server.Models;
+using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Classes
 {
@@ -296,8 +296,8 @@ namespace gaseous_server.Classes
             GameRomMediaGroupItem mediaGroupItem = GetMediaGroup(Id);
             if (mediaGroupItem.Status == GameRomMediaGroupItem.GroupBuildStatus.WaitingForBuild)
             {
-                Game GameObject = Games.GetGame(mediaGroupItem.GameId, false, false, false);
-                Platform PlatformObject = Platforms.GetPlatform(mediaGroupItem.PlatformId, false);
+                Models.Game GameObject = Games.GetGame(Communications.MetadataSource, mediaGroupItem.GameId);
+                Platform PlatformObject = Platforms.GetPlatform(mediaGroupItem.PlatformId);
                 PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(mediaGroupItem.PlatformId);
 
                 Logging.Log(Logging.LogType.Information, "Media Group", "Beginning build of media group: " + GameObject.Name + " for platform " + PlatformObject.Name);
@@ -557,7 +557,7 @@ namespace gaseous_server.Classes
                 {
                     try
                     {
-                        return Platforms.GetPlatform(PlatformId, false).Name;
+                        return Platforms.GetPlatform(PlatformId).Name;
                     }
                     catch
                     {

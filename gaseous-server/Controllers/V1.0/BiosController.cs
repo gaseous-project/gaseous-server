@@ -10,8 +10,8 @@ using Asp.Versioning;
 using Authentication;
 using Microsoft.AspNetCore.Identity;
 using gaseous_server.Models;
-using IGDB.Models;
 using gaseous_server.Classes.Metadata;
+using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Controllers
 {

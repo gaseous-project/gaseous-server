@@ -2,8 +2,6 @@
 using System.Data;
 using System.Security.Cryptography.X509Certificates;
 using gaseous_server.Models;
-using IGDB;
-using IGDB.Models;
 
 namespace gaseous_server.Classes.Metadata
 {
@@ -22,39 +20,24 @@ namespace gaseous_server.Classes.Metadata
             { }
         }
 
-        public static Game? GetGame(long Id, bool getAllMetadata, bool followSubGames, bool forceRefresh)
+        public static Game? GetGame(HasheousClient.Models.MetadataModel.MetadataSources SourceType, long? Id)
         {
-            if (Id == 0)
+            if ((Id == 0) || (Id == null))
             {
-                Game returnValue = new Game();
-                if (Storage.GetCacheStatus("Game", 0) == Storage.CacheStatus.NotPresent)
-                {
-                    returnValue = new Game
-                    {
-                        Id = 0,
-                        Name = "Unknown Title",
-                        Slug = "Unknown"
-                    };
-                    Storage.NewCacheValue(returnValue);
-
-                    return returnValue;
-                }
-                else
-                {
-                    return Storage.GetCacheValue<Game>(returnValue, "id", 0);
-                }
+                return null;
             }
             else
             {
-                Task<Game> RetVal = _GetGame(SearchUsing.Id, Id, getAllMetadata, followSubGames, forceRefresh);
-                return RetVal.Result;
+                Game? RetVal = Metadata.GetMetadata<Game>(SourceType, (long)Id, false);
+                RetVal.MetadataSource = SourceType;
+                RetVal = MassageResult(RetVal);
+                return RetVal;
             }
         }
 
-        public static Game GetGame(string Slug, bool getAllMetadata, bool followSubGames, bool forceRefresh)
+        public static Game? GetGame(HasheousClient.Models.MetadataModel.MetadataSources SourceType, string? Slug)
         {
-            Task<Game> RetVal = _GetGame(SearchUsing.Slug, Slug, getAllMetadata, followSubGames, forceRefresh);
-            return RetVal.Result;
+            throw new NotImplementedException();
         }
 
         public static Game GetGame(DataRow dataRow)
@@ -62,342 +45,35 @@ namespace gaseous_server.Classes.Metadata
             return Storage.BuildCacheObject<Game>(new Game(), dataRow);
         }
 
-        private static async Task<Game> _GetGame(SearchUsing searchUsing, object searchValue, bool getAllMetadata = true, bool followSubGames = false, bool forceRefresh = false)
-        {
-            // check database first
-            Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
-            if (searchUsing == SearchUsing.Id)
-            {
-                cacheStatus = Storage.GetCacheStatus("Game", (long)searchValue);
-            }
-            else
-            {
-                cacheStatus = Storage.GetCacheStatus("Game", (string)searchValue);
-            }
-
-            if (forceRefresh == true)
-            {
-                if (cacheStatus == Storage.CacheStatus.Current) { cacheStatus = Storage.CacheStatus.Expired; }
-            }
-
-            Game returnValue = new Game();
-            switch (cacheStatus)
-            {
-                case Storage.CacheStatus.NotPresent:
-                    if (searchUsing == SearchUsing.Id)
-                    {
-                        returnValue = await GetObjectFromServer((long)searchValue);
-                    }
-                    else
-                    {
-                        returnValue = await GetObjectFromServer((string)searchValue);
-                    }
-                    Storage.NewCacheValue(returnValue);
-                    UpdateSubClasses(returnValue, getAllMetadata, followSubGames, forceRefresh);
-                    return returnValue;
-                case Storage.CacheStatus.Expired:
-                    try
-                    {
-                        if (searchUsing == SearchUsing.Id)
-                        {
-                            returnValue = await GetObjectFromServer((long)searchValue);
-                        }
-                        else
-                        {
-                            returnValue = await GetObjectFromServer((string)searchValue);
-                        }
-                        Storage.NewCacheValue(returnValue, true);
-                        UpdateSubClasses(returnValue, getAllMetadata, followSubGames, forceRefresh);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. Id/Slug: " + searchValue, ex);
-                        returnValue = Storage.GetCacheValue<Game>(returnValue, searchUsing.ToString(), searchValue);
-                    }
-                    return returnValue;
-                case Storage.CacheStatus.Current:
-                    returnValue = Storage.GetCacheValue<Game>(returnValue, searchUsing.ToString(), searchValue);
-                    UpdateSubClasses(returnValue, false, false, false);
-                    return returnValue;
-                default:
-                    throw new Exception("How did you get here?");
-            }
-        }
-
-        private static void UpdateSubClasses(Game Game, bool getAllMetadata, bool followSubGames, bool forceRefresh)
-        {
-            // required metadata
-            // if (Game.Cover != null)
-            // {
-            //     try
-            //     {
-            //         Cover GameCover = Covers.GetCover(Game.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), forceRefresh);
-            //     }
-            //     catch (Exception ex)
-            //     {
-            //         Logging.Log(Logging.LogType.Critical, "Game Metadata", "Unable to fetch cover artwork.", ex);
-            //     }
-            // }
-
-            if (Game.Genres != null)
-            {
-                foreach (long GenreId in Game.Genres.Ids)
-                {
-                    Genre GameGenre = Genres.GetGenres(GenreId);
-                }
-            }
-
-            if (Game.GameModes != null)
-            {
-                foreach (long gameModeId in Game.GameModes.Ids)
-                {
-                    GameMode gameMode = GameModes.GetGame_Modes(gameModeId);
-                }
-            }
-
-            if (Game.MultiplayerModes != null)
-            {
-                foreach (long multiplayerModeId in Game.MultiplayerModes.Ids)
-                {
-                    MultiplayerMode multiplayerMode = MultiplayerModes.GetGame_MultiplayerModes(multiplayerModeId);
-                }
-            }
-
-            if (Game.PlayerPerspectives != null)
-            {
-                foreach (long PerspectiveId in Game.PlayerPerspectives.Ids)
-                {
-                    PlayerPerspective GamePlayPerspective = PlayerPerspectives.GetGame_PlayerPerspectives(PerspectiveId);
-                }
-            }
-
-            if (Game.Themes != null)
-            {
-                foreach (long ThemeId in Game.Themes.Ids)
-                {
-                    Theme GameTheme = Themes.GetGame_Themes(ThemeId);
-                }
-            }
-
-            if (Game.AgeRatings != null)
-            {
-                foreach (long AgeRatingId in Game.AgeRatings.Ids)
-                {
-                    AgeRating GameAgeRating = AgeRatings.GetAgeRatings(AgeRatingId);
-                }
-            }
-            AgeGroups.GetAgeGroup(Game);
-
-            if (Game.ReleaseDates != null)
-            {
-                foreach (long ReleaseDateId in Game.ReleaseDates.Ids)
-                {
-                    ReleaseDate GameReleaseDate = ReleaseDates.GetReleaseDates(ReleaseDateId);
-                }
-            }
-
-            // optional metadata - usually downloaded as needed
-            if (getAllMetadata == true)
-            {
-                if (Game.AlternativeNames != null)
-                {
-                    foreach (long AlternativeNameId in Game.AlternativeNames.Ids)
-                    {
-                        AlternativeName GameAlternativeName = AlternativeNames.GetAlternativeNames(AlternativeNameId);
-                    }
-                }
-
-                if (Game.Artworks != null)
-                {
-                    foreach (long ArtworkId in Game.Artworks.Ids)
-                    {
-                        try
-                        {
-                            Artwork GameArtwork = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), forceRefresh);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Log(Logging.LogType.Critical, "Game Metadata", "Unable to fetch artwork id: " + ArtworkId, ex);
-                        }
-                    }
-                }
-
-                if (followSubGames)
-                {
-                    List<long> gamesToFetch = new List<long>();
-                    if (Game.Bundles != null) { gamesToFetch.AddRange(Game.Bundles.Ids); }
-                    if (Game.Dlcs != null) { gamesToFetch.AddRange(Game.Dlcs.Ids); }
-                    if (Game.Expansions != null) { gamesToFetch.AddRange(Game.Expansions.Ids); }
-                    if (Game.ParentGame != null) { gamesToFetch.Add((long)Game.ParentGame.Id); }
-                    //if (Game.SimilarGames != null) { gamesToFetch.AddRange(Game.SimilarGames.Ids); }
-                    if (Game.StandaloneExpansions != null) { gamesToFetch.AddRange(Game.StandaloneExpansions.Ids); }
-                    if (Game.VersionParent != null) { gamesToFetch.Add((long)Game.VersionParent.Id); }
-
-                    foreach (long gameId in gamesToFetch)
-                    {
-                        Game relatedGame = GetGame(gameId, false, true, false);
-                    }
-                }
-
-                if (Game.Collection != null)
-                {
-                    Collection GameCollection = Collections.GetCollections(Game.Collection.Id);
-                }
-
-                // if (Game.ExternalGames != null)
-                // {
-                //     foreach (long ExternalGameId in Game.ExternalGames.Ids)
-                //     {
-                //         ExternalGame GameExternalGame = ExternalGames.GetExternalGames(ExternalGameId);
-                //     }
-                // }
-
-                if (Game.Franchise != null)
-                {
-                    Franchise GameFranchise = Franchises.GetFranchises(Game.Franchise.Id);
-                }
-
-                if (Game.Franchises != null)
-                {
-                    foreach (long FranchiseId in Game.Franchises.Ids)
-                    {
-                        Franchise GameFranchise = Franchises.GetFranchises(FranchiseId);
-                    }
-                }
-
-                if (Game.InvolvedCompanies != null)
-                {
-                    foreach (long involvedCompanyId in Game.InvolvedCompanies.Ids)
-                    {
-                        InvolvedCompany involvedCompany = InvolvedCompanies.GetInvolvedCompanies(involvedCompanyId);
-                    }
-                }
-
-                if (Game.Platforms != null)
-                {
-                    foreach (long PlatformId in Game.Platforms.Ids)
-                    {
-                        Platform GamePlatform = Platforms.GetPlatform(PlatformId);
-                    }
-                }
-
-                if (Game.Screenshots != null)
-                {
-                    foreach (long ScreenshotId in Game.Screenshots.Ids)
-                    {
-                        try
-                        {
-                            Screenshot GameScreenshot = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), forceRefresh);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Log(Logging.LogType.Critical, "Game Metadata", "Unable to fetch screenshot id: " + ScreenshotId, ex);
-                        }
-                    }
-                }
-
-                if (Game.Videos != null)
-                {
-                    foreach (long GameVideoId in Game.Videos.Ids)
-                    {
-                        GameVideo gameVideo = GamesVideos.GetGame_Videos(GameVideoId);
-                    }
-                }
-            }
-        }
-
-        private enum SearchUsing
-        {
-            Id,
-            Slug
-        }
-
-        private static async Task<Game> GetObjectFromServer(string Slug)
-        {
-            // get Game metadata
-            Communications comms = new Communications();
-            var results = await comms.APIComm<Game>(Communications.MetadataEndpoint.Game, Slug);
-            var result = results.First();
-
-            result = MassageResult(result);
-
-            return result;
-        }
-
-        private static async Task<Game> GetObjectFromServer(long Id)
-        {
-            // get Game metadata
-            Communications comms = new Communications();
-            var results = await comms.APIComm<Game>(Communications.MetadataEndpoint.Game, Id);
-            var result = results.First();
-
-            result = MassageResult(result);
-
-            return result;
-        }
-
         private static Game MassageResult(Game result)
         {
-            // add artificial unknown platform mapping
-            List<long> platformIds = new List<long>();
-            platformIds.Add(0);
-            if (result.Platforms != null)
-            {
-                if (result.Platforms.Ids != null)
-                {
-                    platformIds.AddRange(result.Platforms.Ids.ToList());
-                }
-            }
-            result.Platforms = new IdentitiesOrValues<Platform>(
-                ids: platformIds.ToArray<long>()
-            );
+            Game? parentGame = null;
 
             // get cover art from parent if this has no cover
             if (result.Cover == null)
             {
                 if (result.ParentGame != null)
                 {
-                    if (result.ParentGame.Id != null)
-                    {
-                        Logging.Log(Logging.LogType.Information, "Game Metadata", "Game has no cover art, fetching cover art from parent game");
-                        Game parentGame = GetGame((long)result.ParentGame.Id, false, false, false);
-                        result.Cover = parentGame.Cover;
-                    }
+                    Logging.Log(Logging.LogType.Information, "Game Metadata", "Game has no cover art, fetching cover art from parent game");
+                    parentGame = GetGame(result.MetadataSource, (long)result.ParentGame);
+                    result.Cover = parentGame.Cover;
                 }
             }
 
             // get missing metadata from parent if this is a port
-            if (result.Category == Category.Port)
+            if (result.Category == HasheousClient.Models.Metadata.IGDB.Category.Port)
             {
                 if (result.Summary == null)
                 {
                     if (result.ParentGame != null)
                     {
-                        if (result.ParentGame.Id != null)
-                        {
-                            Logging.Log(Logging.LogType.Information, "Game Metadata", "Game has no summary, fetching summary from parent game");
-                            Game parentGame = GetGame((long)result.ParentGame.Id, false, false, false);
-                            result.Summary = parentGame.Summary;
-                        }
+                        Logging.Log(Logging.LogType.Information, "Game Metadata", "Game has no summary, fetching summary from parent game");
+                        result.Summary = parentGame.Summary;
                     }
                 }
             }
 
             return result;
-        }
-
-        public static void AssignAllGamesToPlatformIdZero()
-        {
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM Game;";
-            DataTable gamesTable = db.ExecuteCMD(sql);
-            foreach (DataRow gameRow in gamesTable.Rows)
-            {
-                sql = "DELETE FROM Relation_Game_Platforms WHERE PlatformsId = 0 AND GameId = @Id; INSERT INTO Relation_Game_Platforms (GameId, PlatformsId) VALUES (@Id, 0);";
-                Dictionary<string, object> dbDict = new Dictionary<string, object>();
-                dbDict.Add("Id", (long)gameRow["Id"]);
-                db.ExecuteCMD(sql, dbDict);
-            }
         }
 
         private static bool AllowNoPlatformSearch = false;
@@ -515,7 +191,7 @@ namespace gaseous_server.Classes.Metadata
                         Game[]? results = new Game[0];
                         if (allowSearch == true)
                         {
-                            results = await comms.APIComm<Game>(IGDBClient.Endpoints.Games, searchFields, searchBody);
+                            results = await comms.APIComm<Game>(IGDB.IGDBClient.Endpoints.Games, searchFields, searchBody);
 
                             Communications.SetSearchCache<Game[]?>(searchFields, searchBody, results);
                         }
@@ -598,7 +274,7 @@ ORDER BY Platform.`Name`;";
             List<AvailablePlatformItem> platforms = new List<AvailablePlatformItem>();
             foreach (DataRow row in data.Rows)
             {
-                IGDB.Models.Platform platform = Platforms.GetPlatform((long)row["PlatformId"]);
+                HasheousClient.Models.Metadata.IGDB.Platform platform = Platforms.GetPlatform((long)row["PlatformId"]);
                 PlatformMapping.UserEmulatorConfiguration? emulatorConfiguration = platformMapping.GetUserEmulator(UserId, GameId, (long)platform.Id);
 
                 if (emulatorConfiguration == null)
@@ -688,7 +364,7 @@ ORDER BY Platform.`Name`;";
             db.ExecuteCMD(sql, dbDict);
         }
 
-        public class AvailablePlatformItem : IGDB.Models.Platform
+        public class AvailablePlatformItem : HasheousClient.Models.Metadata.IGDB.Platform
         {
             public PlatformMapping.UserEmulatorConfiguration emulatorConfiguration { get; set; }
             public long? LastPlayedRomId { get; set; }
@@ -727,12 +403,12 @@ ORDER BY Platform.`Name`;";
                 this.FirstReleaseDate = gameObject.FirstReleaseDate;
 
                 // compile age ratings
-                this.AgeRatings = new List<AgeRating>();
+                this.AgeRatings = new List<object>();
                 if (gameObject.AgeRatings != null)
                 {
-                    foreach (long ageRatingId in gameObject.AgeRatings.Ids)
+                    foreach (long ageRatingId in gameObject.AgeRatings)
                     {
-                        AgeRating? rating = Classes.Metadata.AgeRatings.GetAgeRatings(ageRatingId);
+                        HasheousClient.Models.Metadata.IGDB.AgeRating? rating = Classes.Metadata.AgeRatings.GetAgeRating(gameObject.MetadataSource, ageRatingId);
                         if (rating != null)
                         {
                             this.AgeRatings.Add(rating);
@@ -751,9 +427,9 @@ ORDER BY Platform.`Name`;";
             public bool HasSavedGame { get; set; } = false;
             public bool IsFavourite { get; set; } = false;
             public DateTimeOffset? FirstReleaseDate { get; set; }
-            public IGDB.IdentityOrValue<IGDB.Models.Cover> Cover { get; set; }
-            public IGDB.IdentitiesOrValues<IGDB.Models.Artwork> Artworks { get; set; }
-            public List<IGDB.Models.AgeRating> AgeRatings { get; set; }
+            public object Cover { get; set; }
+            public List<object> Artworks { get; set; }
+            public List<object> AgeRatings { get; set; }
         }
     }
 }

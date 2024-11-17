@@ -7,12 +7,12 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
-using IGDB.Models;
 using NuGet.Common;
 using NuGet.LibraryModel;
 using static gaseous_server.Classes.Metadata.Games;
 using static gaseous_server.Classes.FileSignature;
 using HasheousClient.Models;
+using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Classes
 {
@@ -47,7 +47,7 @@ namespace gaseous_server.Classes
             }
         }
 
-        public Dictionary<string, object> ImportGameFile(string GameFileImportPath, IGDB.Models.Platform? OverridePlatform)
+        public Dictionary<string, object> ImportGameFile(string GameFileImportPath, Platform? OverridePlatform)
         {
             Dictionary<string, object> RetVal = new Dictionary<string, object>();
             RetVal.Add("path", Path.GetFileName(GameFileImportPath));
@@ -110,13 +110,13 @@ namespace gaseous_server.Classes
                         gaseous_server.Models.Signatures_Games discoveredSignature = fileSignature.GetFileSignature(GameLibrary.GetDefaultLibrary, hash, fi, GameFileImportPath);
 
                         // get discovered platform
-                        IGDB.Models.Platform? determinedPlatform = null;
+                        Platform? determinedPlatform = null;
                         if (OverridePlatform == null)
                         {
                             determinedPlatform = Metadata.Platforms.GetPlatform(discoveredSignature.Flags.IGDBPlatformId);
                             if (determinedPlatform == null)
                             {
-                                determinedPlatform = new IGDB.Models.Platform();
+                                determinedPlatform = new Platform();
                             }
                         }
                         else
@@ -126,7 +126,7 @@ namespace gaseous_server.Classes
                             discoveredSignature.Flags.IGDBPlatformName = determinedPlatform.Name;
                         }
 
-                        IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature, discoveredSignature.Flags.IGDBPlatformId, true);
+                        gaseous_server.Models.Game determinedGame = SearchForGame(discoveredSignature, discoveredSignature.Flags.IGDBPlatformId, true);
 
                         // add to database
                         long RomId = StoreROM(GameLibrary.GetDefaultLibrary, hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath, 0, true);
@@ -157,7 +157,7 @@ namespace gaseous_server.Classes
                                 File.Move(GameFileImportPath, biosItem.biosPath, true);
 
                                 RetVal.Add("name", biosItem.filename);
-                                RetVal.Add("platform", Platforms.GetPlatform(biosItem.platformid, false, false));
+                                RetVal.Add("platform", Platforms.GetPlatform(biosItem.platformid));
                                 RetVal["status"] = "imported";
 
                                 return RetVal;
@@ -178,7 +178,7 @@ namespace gaseous_server.Classes
             return RetVal;
         }
 
-        public static IGDB.Models.Game SearchForGame(gaseous_server.Models.Signatures_Games Signature, long PlatformId, bool FullDownload)
+        public static gaseous_server.Models.Game SearchForGame(gaseous_server.Models.Signatures_Games Signature, long PlatformId, bool FullDownload)
         {
             if (Signature.Flags != null)
             {
@@ -187,7 +187,7 @@ namespace gaseous_server.Classes
                     // game was determined elsewhere - probably a Hasheous server
                     try
                     {
-                        return Games.GetGame(Signature.Flags.IGDBGameId, false, false, FullDownload);
+                        return Games.GetGame(Communications.MetadataSource, Signature.Flags.IGDBGameId);
                     }
                     catch (Exception ex)
                     {
@@ -197,7 +197,7 @@ namespace gaseous_server.Classes
             }
 
             // search discovered game - case insensitive exact match first
-            IGDB.Models.Game determinedGame = new IGDB.Models.Game();
+            gaseous_server.Models.Game determinedGame = new gaseous_server.Models.Game();
 
             string GameName = Signature.Game.Name;
 
@@ -212,13 +212,13 @@ namespace gaseous_server.Classes
                 foreach (Metadata.Games.SearchType searchType in Enum.GetValues(typeof(Metadata.Games.SearchType)))
                 {
                     Logging.Log(Logging.LogType.Information, "Import Game", "  Search type: " + searchType.ToString());
-                    IGDB.Models.Game[] games = Metadata.Games.SearchForGame(SearchCandidate, PlatformId, searchType);
+                    gaseous_server.Models.Game[] games = Metadata.Games.SearchForGame(SearchCandidate, PlatformId, searchType);
                     if (games != null)
                     {
                         if (games.Length == 1)
                         {
                             // exact match!
-                            determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false, false);
+                            determinedGame = Metadata.Games.GetGame(Communications.MetadataSource, (long)games[0].Id);
                             Logging.Log(Logging.LogType.Information, "Import Game", "  IGDB game: " + determinedGame.Name);
                             GameFound = true;
                             break;
@@ -228,12 +228,12 @@ namespace gaseous_server.Classes
                             Logging.Log(Logging.LogType.Information, "Import Game", "  " + games.Length + " search results found");
 
                             // quite likely we've found sequels and alternate types
-                            foreach (Game game in games)
+                            foreach (gaseous_server.Models.Game game in games)
                             {
                                 if (game.Name == SearchCandidate)
                                 {
                                     // found game title matches the search candidate
-                                    determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false, false);
+                                    determinedGame = Metadata.Games.GetGame(Communications.MetadataSource, (long)games[0].Id);
                                     Logging.Log(Logging.LogType.Information, "Import Game", "Found exact match!");
                                     GameFound = true;
                                     break;
@@ -254,7 +254,7 @@ namespace gaseous_server.Classes
             }
             if (determinedGame == null)
             {
-                determinedGame = new IGDB.Models.Game();
+                determinedGame = new gaseous_server.Models.Game();
             }
 
             string destSlug = "";
@@ -266,9 +266,9 @@ namespace gaseous_server.Classes
             return determinedGame;
         }
 
-        public static List<IGDB.Models.Game> SearchForGame_GetAll(string GameName, long PlatformId)
+        public static List<gaseous_server.Models.Game> SearchForGame_GetAll(string GameName, long PlatformId)
         {
-            List<IGDB.Models.Game> searchResults = new List<IGDB.Models.Game>();
+            List<gaseous_server.Models.Game> searchResults = new List<gaseous_server.Models.Game>();
 
             List<string> SearchCandidates = GetSearchCandidates(GameName);
 
@@ -278,11 +278,11 @@ namespace gaseous_server.Classes
                 {
                     if ((PlatformId == 0 && searchType == SearchType.searchNoPlatform) || (PlatformId != 0 && searchType != SearchType.searchNoPlatform))
                     {
-                        IGDB.Models.Game[] games = Metadata.Games.SearchForGame(SearchCandidate, PlatformId, searchType);
-                        foreach (IGDB.Models.Game foundGame in games)
+                        gaseous_server.Models.Game[] games = Metadata.Games.SearchForGame(SearchCandidate, PlatformId, searchType);
+                        foreach (gaseous_server.Models.Game foundGame in games)
                         {
                             bool gameInResults = false;
-                            foreach (IGDB.Models.Game searchResult in searchResults)
+                            foreach (gaseous_server.Models.Game searchResult in searchResults)
                             {
                                 if (searchResult.Id == foundGame.Id)
                                 {
@@ -333,7 +333,7 @@ namespace gaseous_server.Classes
             return SearchCandidates;
         }
 
-        public static long StoreROM(GameLibrary.LibraryItem library, Common.hashObject hash, IGDB.Models.Game determinedGame, IGDB.Models.Platform determinedPlatform, gaseous_server.Models.Signatures_Games discoveredSignature, string GameFileImportPath, long UpdateId = 0, bool SourceIsExternal = false)
+        public static long StoreROM(GameLibrary.LibraryItem library, Common.hashObject hash, gaseous_server.Models.Game determinedGame, Platform determinedPlatform, gaseous_server.Models.Signatures_Games discoveredSignature, string GameFileImportPath, long UpdateId = 0, bool SourceIsExternal = false)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
@@ -415,8 +415,8 @@ namespace gaseous_server.Classes
             Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
 
             // get metadata
-            IGDB.Models.Platform platform = gaseous_server.Classes.Metadata.Platforms.GetPlatform(rom.PlatformId);
-            IGDB.Models.Game game = gaseous_server.Classes.Metadata.Games.GetGame(rom.GameId, false, false, false);
+            Platform platform = gaseous_server.Classes.Metadata.Platforms.GetPlatform(rom.PlatformId);
+            gaseous_server.Models.Game game = gaseous_server.Classes.Metadata.Games.GetGame(Communications.MetadataSource, rom.GameId);
 
             // build path
             string platformSlug = "Unknown Platform";
@@ -728,7 +728,7 @@ namespace gaseous_server.Classes
                         {
                             // get discovered platform
                             long PlatformId;
-                            IGDB.Models.Platform determinedPlatform;
+                            Platform determinedPlatform;
 
                             if (sig.Flags.IGDBPlatformId == null || sig.Flags.IGDBPlatformId == 0)
                             {
@@ -742,7 +742,7 @@ namespace gaseous_server.Classes
                             }
                             determinedPlatform = Platforms.GetPlatform(PlatformId);
 
-                            IGDB.Models.Game determinedGame = SearchForGame(sig, PlatformId, true);
+                            gaseous_server.Models.Game determinedGame = SearchForGame(sig, PlatformId, true);
 
                             StoreROM(library, hash, determinedGame, determinedPlatform, sig, LibraryFile);
                         }
@@ -854,7 +854,7 @@ namespace gaseous_server.Classes
 
                     // get discovered platform
                     long PlatformId;
-                    IGDB.Models.Platform determinedPlatform;
+                    Platform determinedPlatform;
 
                     if (sig.Flags.IGDBPlatformId == null || sig.Flags.IGDBPlatformId == 0)
                     {
@@ -868,7 +868,7 @@ namespace gaseous_server.Classes
                     }
                     determinedPlatform = Platforms.GetPlatform(PlatformId);
 
-                    IGDB.Models.Game determinedGame = SearchForGame(sig, PlatformId, true);
+                    gaseous_server.Models.Game determinedGame = SearchForGame(sig, PlatformId, true);
 
                     StoreROM(library, hash, determinedGame, determinedPlatform, sig, romPath, romId);
 

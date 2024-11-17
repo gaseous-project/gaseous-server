@@ -8,12 +8,12 @@ using System.Threading.Tasks;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
-using IGDB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Scripting;
 using Asp.Versioning;
+using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Controllers
 {
@@ -60,7 +60,7 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
+                Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
 
                 if (platformObject != null)
                 {
@@ -87,10 +87,11 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
+                Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
                 if (platformObject != null)
                 {
-                    IGDB.Models.PlatformLogo logoObject = PlatformLogos.GetPlatformLogo(platformObject.PlatformLogo.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject));
+                    PlatformLogo logoObjectParent = (PlatformLogo)platformObject.PlatformLogo;
+                    PlatformLogo logoObject = PlatformLogos.GetPlatformLogo(logoObjectParent.Id);
                     if (logoObject != null)
                     {
                         return Ok(logoObject);
@@ -121,21 +122,22 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
-                IGDB.Models.PlatformLogo? logoObject = null;
+                Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
+                PlatformLogo? logoObject = null;
                 try
                 {
-                    logoObject = PlatformLogos.GetPlatformLogo(platformObject.PlatformLogo.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject));
+
+                    logoObject = PlatformLogos.GetPlatformLogo((long)platformObject.PlatformLogo);
                 }
                 catch
                 {
                     // getting the logo failed, so we'll try a platform variant if available
                     if (platformObject.Versions != null)
                     {
-                        if (platformObject.Versions.Ids.Length > 0)
+                        if (platformObject.Versions.Count > 0)
                         {
-                            IGDB.Models.PlatformVersion platformVersion = Classes.Metadata.PlatformVersions.GetPlatformVersion(platformObject.Versions.Ids[0], platformObject);
-                            logoObject = PlatformLogos.GetPlatformLogo(platformVersion.PlatformLogo.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject));
+                            PlatformVersion platformVersion = Classes.Metadata.PlatformVersions.GetPlatformVersion(Communications.MetadataSource, (long)platformObject.Versions[0]);
+                            logoObject = PlatformLogos.GetPlatformLogo((long)platformVersion.PlatformLogo);
                         }
                         else
                         {

@@ -1,5 +1,3 @@
-using IGDB.Models;
-
 namespace gaseous_server.Models
 {
     public class UserProfile
@@ -11,7 +9,7 @@ namespace gaseous_server.Models
         public class NowPlayingItem
         {
             public Game Game { get; set; }
-            public Platform Platform { get; set; }
+            public HasheousClient.Models.Metadata.IGDB.Platform Platform { get; set; }
             public long Duration { get; set; }
         }
         public ProfileImageItem? Avatar { get; set; }

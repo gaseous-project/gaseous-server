@@ -8,13 +8,13 @@ using System.Reflection;
 using System.Threading.Tasks;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
-using IGDB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Scripting;
 using static gaseous_server.Classes.Metadata.AgeRatings;
 using Asp.Versioning;
+using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Controllers
 {
@@ -62,7 +62,7 @@ namespace gaseous_server.Controllers
                 }
 
                 // get override platform if specified
-                IGDB.Models.Platform? OverridePlatform = null;
+                Platform? OverridePlatform = null;
                 if (OverridePlatformId != null)
                 {
                     OverridePlatform = Platforms.GetPlatform((long)OverridePlatformId);
@@ -76,10 +76,10 @@ namespace gaseous_server.Controllers
                     case "rom":
                         if (RetVal["status"] == "imported")
                         {
-                            IGDB.Models.Game? game = (IGDB.Models.Game)RetVal["game"];
+                            gaseous_server.Models.Game? game = (gaseous_server.Models.Game)RetVal["game"];
                             if (game.Id == null)
                             {
-                                RetVal["game"] = Games.GetGame(0, false, false, false);
+                                RetVal["game"] = Games.GetGame(Communications.MetadataSource, 0);
                             }
                         }
                         break;

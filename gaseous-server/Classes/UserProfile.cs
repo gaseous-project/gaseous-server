@@ -1,6 +1,5 @@
 using System.Data;
 using gaseous_server.Classes.Metadata;
-using IGDB.Models;
 
 namespace gaseous_server.Classes
 {
@@ -62,8 +61,8 @@ namespace gaseous_server.Classes
             {
                 NowPlaying = new Models.UserProfile.NowPlayingItem
                 {
-                    Game = Games.GetGame((long)nowPlayingData.Rows[0]["GameId"], false, false, false),
-                    Platform = Platforms.GetPlatform((long)nowPlayingData.Rows[0]["PlatformId"], false, false),
+                    Game = Games.GetGame(Communications.MetadataSource, (long)nowPlayingData.Rows[0]["GameId"]),
+                    Platform = Platforms.GetPlatform((long)nowPlayingData.Rows[0]["PlatformId"]),
                     Duration = Convert.ToInt64(nowPlayingData.Rows[0]["SessionLength"])
                 };
             }

@@ -2,8 +2,7 @@
 using System.Buffers;
 using System.Reflection;
 using System.Text.Json.Serialization;
-using IGDB;
-using IGDB.Models;
+using HasheousClient.Models.Metadata.IGDB;
 using Microsoft.CodeAnalysis.Classification;
 
 namespace gaseous_server.Classes.Metadata
@@ -16,7 +15,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static AgeRating? GetAgeRatings(long? Id)
+        public static AgeRating? GetAgeRating(HasheousClient.Models.MetadataModel.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -24,72 +23,16 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<AgeRating> RetVal = _GetAgeRatings((long)Id);
-                return RetVal.Result;
+                AgeRating? RetVal = Metadata.GetMetadata<AgeRating>(SourceType, (long)Id, false);
+                return RetVal;
             }
         }
 
-        private static async Task<AgeRating> _GetAgeRatings(long searchValue)
-        {
-            // check database first
-            Storage.CacheStatus? cacheStatus = Storage.GetCacheStatus("AgeRating", (long)searchValue);
-
-            AgeRating returnValue = new AgeRating();
-            switch (cacheStatus)
-            {
-                case Storage.CacheStatus.NotPresent:
-                    returnValue = await GetObjectFromServer(searchValue);
-                    Storage.NewCacheValue(returnValue);
-                    UpdateSubClasses(returnValue);
-                    break;
-                case Storage.CacheStatus.Expired:
-                    try
-                    {
-                        returnValue = await GetObjectFromServer(searchValue);
-                        Storage.NewCacheValue(returnValue, true);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. Id: " + searchValue, ex);
-                        returnValue = Storage.GetCacheValue<AgeRating>(returnValue, "id", (long)searchValue);
-                    }
-                    break;
-                case Storage.CacheStatus.Current:
-                    returnValue = Storage.GetCacheValue<AgeRating>(returnValue, "id", (long)searchValue);
-                    break;
-                default:
-                    throw new Exception("How did you get here?");
-            }
-
-            return returnValue;
-        }
-
-        private static void UpdateSubClasses(AgeRating ageRating)
-        {
-            if (ageRating.ContentDescriptions != null)
-            {
-                foreach (long AgeRatingContentDescriptionId in ageRating.ContentDescriptions.Ids)
-                {
-                    AgeRatingContentDescription ageRatingContentDescription = AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(AgeRatingContentDescriptionId);
-                }
-            }
-        }
-
-        private static async Task<AgeRating> GetObjectFromServer(long searchValue)
-        {
-            // get AgeRatings metadata
-            Communications comms = new Communications();
-            var results = await comms.APIComm<AgeRating>(Communications.MetadataEndpoint.AgeRating, searchValue);
-            var result = results.First();
-
-            return result;
-        }
-
-        public static GameAgeRating GetConsolidatedAgeRating(long RatingId)
+        public static GameAgeRating GetConsolidatedAgeRating(HasheousClient.Models.MetadataModel.MetadataSources SourceType, long RatingId)
         {
             GameAgeRating gameAgeRating = new GameAgeRating();
 
-            AgeRating ageRating = GetAgeRatings(RatingId);
+            AgeRating ageRating = GetAgeRating(SourceType, RatingId);
             gameAgeRating.Id = (long)ageRating.Id;
             gameAgeRating.RatingBoard = (AgeRatingCategory)ageRating.Category;
             gameAgeRating.RatingTitle = (AgeRatingTitle)ageRating.Rating;
@@ -97,9 +40,9 @@ namespace gaseous_server.Classes.Metadata
             List<string> descriptions = new List<string>();
             if (ageRating.ContentDescriptions != null)
             {
-                foreach (long ContentId in ageRating.ContentDescriptions.Ids)
+                foreach (long ContentId in ageRating.ContentDescriptions)
                 {
-                    AgeRatingContentDescription ageRatingContentDescription = AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(ContentId);
+                    AgeRatingContentDescription ageRatingContentDescription = AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(SourceType, ContentId);
                     descriptions.Add(ageRatingContentDescription.Description);
                 }
             }

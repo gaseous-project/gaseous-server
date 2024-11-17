@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
 
 namespace gaseous_server.Classes
@@ -8,10 +9,10 @@ namespace gaseous_server.Classes
 	{
 		public void RefreshMetadata(bool forceRefresh = false)
 		{
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "";
+			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+			string sql = "";
 			DataTable dt = new DataTable();
-			
+
 			// disabling forceRefresh
 			forceRefresh = false;
 
@@ -27,7 +28,7 @@ namespace gaseous_server.Classes
 				try
 				{
 					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Refreshing metadata for platform " + dr["name"] + " (" + dr["id"] + ")");
-					Metadata.Platforms.GetPlatform((long)dr["id"], true);
+					Metadata.Platforms.GetPlatform((long)dr["id"]);
 				}
 				catch (Exception ex)
 				{
@@ -59,7 +60,7 @@ namespace gaseous_server.Classes
 				try
 				{
 					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ")");
-					Metadata.Games.GetGame((long)dr["id"], true, false, true);
+					Metadata.Games.GetGame(Communications.MetadataSource, (long)dr["id"]);
 				}
 				catch (Exception ex)
 				{
@@ -69,7 +70,7 @@ namespace gaseous_server.Classes
 				StatusCounter += 1;
 			}
 			ClearStatus();
-        }
+		}
 	}
 }
 

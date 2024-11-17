@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Authentication;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
-using IGDB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -19,6 +18,7 @@ using Microsoft.CodeAnalysis.Scripting;
 using static gaseous_server.Classes.Metadata.AgeRatings;
 using Asp.Versioning;
 using Humanizer;
+using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Controllers.v1_1
 {
@@ -117,13 +117,13 @@ namespace gaseous_server.Controllers.v1_1
                 dbDict.Add("id", GameId);
                 dbDict.Add("agegroupid", (int)user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction);
 
-                List<IGDB.Models.Game> RetVal = new List<IGDB.Models.Game>();
+                List<Models.Game> RetVal = new List<Models.Game>();
 
                 DataTable dbResponse = db.ExecuteCMD(sql, dbDict);
 
                 foreach (DataRow dr in dbResponse.Rows)
                 {
-                    RetVal.Add(Classes.Metadata.Games.GetGame((long)dr["SimilarGamesId"], false, false, false));
+                    RetVal.Add(Classes.Metadata.Games.GetGame(Communications.MetadataSource, (long)dr["SimilarGamesId"]));
                 }
 
                 GameReturnPackage gameReturn = new GameReturnPackage(RetVal.Count, RetVal);
@@ -571,7 +571,7 @@ FROM
                     }
                 }
 
-                Game retGame = Storage.BuildCacheObject<Game>(new Game(), dbResponse.Rows[i]);
+                Models.Game retGame = Storage.BuildCacheObject<Models.Game>(new Models.Game(), dbResponse.Rows[i]);
                 Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
                 retMinGame.Index = i;
                 if (dbResponse.Rows[i]["RomSaveCount"] != DBNull.Value || dbResponse.Rows[i]["MediaGroupSaveCount"] != DBNull.Value)
@@ -654,12 +654,12 @@ FROM
 
             }
 
-            public GameReturnPackage(int Count, List<Game> Games)
+            public GameReturnPackage(int Count, List<Models.Game> Games)
             {
                 this.Count = Count;
 
                 List<Games.MinimalGameItem> minimalGames = new List<Games.MinimalGameItem>();
-                foreach (Game game in Games)
+                foreach (Models.Game game in Games)
                 {
                     minimalGames.Add(new Classes.Metadata.Games.MinimalGameItem(game));
                 }

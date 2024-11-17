@@ -10,7 +10,6 @@ using Authentication;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
-using IGDB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -19,6 +18,7 @@ using Microsoft.CodeAnalysis.Scripting;
 using static gaseous_server.Classes.Metadata.AgeRatings;
 using Asp.Versioning;
 using static gaseous_server.Models.PlatformMapping;
+using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Controllers
 {
@@ -43,7 +43,7 @@ namespace gaseous_server.Controllers
 
         [MapToApiVersion("1.0")]
         [HttpGet]
-        [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<gaseous_server.Models.Game>), StatusCodes.Status200OK)]
         public async Task<ActionResult> Game(
             string name = "",
             string platform = "",
@@ -59,7 +59,7 @@ namespace gaseous_server.Controllers
             return Ok(GetGames(name, platform, genre, gamemode, playerperspective, theme, minrating, maxrating, "Adult", true, true, sortdescending));
         }
 
-        public static List<Game> GetGames(
+        public static List<gaseous_server.Models.Game> GetGames(
             string name = "",
             string platform = "",
             string genre = "",
@@ -283,7 +283,7 @@ namespace gaseous_server.Controllers
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT DISTINCT view_Games_Roms.GameId AS ROMGameId, Game.*, case when Game.`Name` like 'The %' then CONCAT(trim(substr(Game.`Name` from 4)), ', The') else Game.`Name` end as NameThe FROM view_Games_Roms LEFT JOIN Game ON Game.Id = view_Games_Roms.GameId LEFT JOIN Relation_Game_Genres ON Game.Id = Relation_Game_Genres.GameId LEFT JOIN Relation_Game_GameModes ON Game.Id = Relation_Game_GameModes.GameId LEFT JOIN Relation_Game_PlayerPerspectives ON Game.Id = Relation_Game_PlayerPerspectives.GameId LEFT JOIN Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId LEFT JOIN (SELECT Relation_Game_AgeRatings.GameId, AgeRating.* FROM Relation_Game_AgeRatings JOIN AgeRating ON Relation_Game_AgeRatings.AgeRatingsId = AgeRating.Id) view_AgeRatings ON Game.Id = view_AgeRatings.GameId " + whereClause + " " + havingClause + " " + orderByClause;
 
-            List<IGDB.Models.Game> RetVal = new List<IGDB.Models.Game>();
+            List<gaseous_server.Models.Game> RetVal = new List<gaseous_server.Models.Game>();
 
             DataTable dbResponse = db.ExecuteCMD(sql, whereParams);
             foreach (DataRow dr in dbResponse.Rows)
@@ -299,14 +299,14 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("{GameId}")]
-        [ProducesResponseType(typeof(Game), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(gaseous_server.Models.Game), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "5Minute")]
         public async Task<ActionResult> Game(long GameId)
         {
             try
             {
-                Game game = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 if (game != null)
                 {
@@ -334,14 +334,14 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
-                if (gameObject.AlternativeNames != null)
+                if (game.AlternativeNames != null)
                 {
                     List<AlternativeName> altNames = new List<AlternativeName>();
-                    foreach (long altNameId in gameObject.AlternativeNames.Ids)
+                    foreach (long altNameId in game.AlternativeNames)
                     {
-                        altNames.Add(AlternativeNames.GetAlternativeNames(altNameId));
+                        altNames.Add(AlternativeNames.GetAlternativeNames(game.MetadataSource, altNameId));
                     }
                     return Ok(altNames);
                 }
@@ -367,14 +367,14 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
-                if (gameObject.AgeRatings != null)
+                if (game.AgeRatings != null)
                 {
                     List<AgeRatings.GameAgeRating> ageRatings = new List<AgeRatings.GameAgeRating>();
-                    foreach (long ageRatingId in gameObject.AgeRatings.Ids)
+                    foreach (long ageRatingId in game.AgeRatings)
                     {
-                        ageRatings.Add(AgeRatings.GetConsolidatedAgeRating(ageRatingId));
+                        ageRatings.Add(AgeRatings.GetConsolidatedAgeRating(game.MetadataSource, ageRatingId));
                     }
                     return Ok(ageRatings);
                 }
@@ -400,14 +400,14 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 List<Artwork> artworks = new List<Artwork>();
-                if (gameObject.Artworks != null)
+                if (game.Artworks != null)
                 {
-                    foreach (long ArtworkId in gameObject.Artworks.Ids)
+                    foreach (long ArtworkId in game.Artworks)
                     {
-                        Artwork GameArtwork = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), false);
+                        Artwork GameArtwork = Artworks.GetArtwork(game.MetadataSource, ArtworkId);
                         artworks.Add(GameArtwork);
                     }
                 }
@@ -431,11 +431,11 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 try
                 {
-                    IGDB.Models.Artwork artworkObject = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), false);
+                    Artwork artworkObject = Artworks.GetArtwork(game.MetadataSource, ArtworkId);
                     if (artworkObject != null)
                     {
                         return Ok(artworkObject);
@@ -467,10 +467,10 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
-                if (gameObject != null)
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                if (game != null)
                 {
-                    IGDB.Models.Cover coverObject = Covers.GetCover(gameObject.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), false);
+                    Cover coverObject = Covers.GetCover(game.MetadataSource, (long?)game.Cover);
                     if (coverObject != null)
                     {
                         return Ok(coverObject);
@@ -502,7 +502,7 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 string? imageId = null;
                 string? imageTypePath = null;
@@ -510,14 +510,11 @@ namespace gaseous_server.Controllers
                 switch (imageType)
                 {
                     case MetadataImageType.cover:
-                        if (gameObject.Cover != null)
+                        if (game.Cover != null)
                         {
-                            if (gameObject.Cover.Id != null)
-                            {
-                                IGDB.Models.Cover cover = Classes.Metadata.Covers.GetCover(gameObject.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), false);
-                                imageId = cover.ImageId;
-                                imageTypePath = "Covers";
-                            }
+                            Cover cover = Classes.Metadata.Covers.GetCover(game.MetadataSource, (long?)game.Cover);
+                            imageId = cover.ImageId;
+                            imageTypePath = "Covers";
                         }
                         else
                         {
@@ -526,11 +523,11 @@ namespace gaseous_server.Controllers
                         break;
 
                     case MetadataImageType.screenshots:
-                        if (gameObject.Screenshots != null)
+                        if (game.Screenshots != null)
                         {
-                            if (gameObject.Screenshots.Ids.Contains(ImageId))
+                            if (game.Screenshots.Contains(ImageId))
                             {
-                                IGDB.Models.Screenshot imageObject = Screenshots.GetScreenshot(ImageId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), true);
+                                Screenshot imageObject = Screenshots.GetScreenshot(game.MetadataSource, ImageId);
 
                                 imageId = imageObject.ImageId;
                                 imageTypePath = "Screenshots";
@@ -543,11 +540,11 @@ namespace gaseous_server.Controllers
                         break;
 
                     case MetadataImageType.artwork:
-                        if (gameObject.Artworks != null)
+                        if (game.Artworks != null)
                         {
-                            if (gameObject.Artworks.Ids.Contains(ImageId))
+                            if (game.Artworks.Contains(ImageId))
                             {
-                                IGDB.Models.Artwork imageObject = Artworks.GetArtwork(ImageId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), true);
+                                Artwork imageObject = Artworks.GetArtwork(game.MetadataSource, ImageId);
 
                                 imageId = imageObject.ImageId;
                                 imageTypePath = "Artwork";
@@ -568,13 +565,13 @@ namespace gaseous_server.Controllers
                     return NotFound();
                 }
 
-                string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), imageTypePath);
-                string imagePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), imageTypePath, size.ToString(), imageId + ".jpg");
+                string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(game), imageTypePath);
+                string imagePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(game), imageTypePath, size.ToString(), imageId + ".jpg");
 
                 if (!System.IO.File.Exists(imagePath))
                 {
                     Communications comms = new Communications();
-                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), imageTypePath), imageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
+                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(game), imageTypePath), imageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
 
                     imagePath = ImgFetch.Result;
                 }
@@ -640,9 +637,9 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
-                if (gameObject != null)
+                if (game != null)
                 {
                     var user = await _userManager.GetUserAsync(User);
 
@@ -677,9 +674,9 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
-                if (gameObject != null)
+                if (game != null)
                 {
                     var user = await _userManager.GetUserAsync(User);
 
@@ -715,15 +712,15 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
-                if (gameObject != null)
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                if (game != null)
                 {
-                    List<IGDB.Models.GameMode> gameModeObjects = new List<GameMode>();
-                    if (gameObject.GameModes != null)
+                    List<GameMode> gameModeObjects = new List<GameMode>();
+                    if (game.GameModes != null)
                     {
-                        foreach (long gameModeId in gameObject.GameModes.Ids)
+                        foreach (long gameModeId in game.GameModes)
                         {
-                            gameModeObjects.Add(Classes.Metadata.GameModes.GetGame_Modes(gameModeId));
+                            gameModeObjects.Add(Classes.Metadata.GameModes.GetGame_Modes(game.MetadataSource, gameModeId));
                         }
                     }
 
@@ -751,19 +748,19 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
-                if (gameObject != null)
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                if (game != null)
                 {
-                    List<IGDB.Models.Genre> genreObjects = new List<Genre>();
-                    if (gameObject.Genres != null)
+                    List<Genre> genreObjects = new List<Genre>();
+                    if (game.Genres != null)
                     {
-                        foreach (long genreId in gameObject.Genres.Ids)
+                        foreach (long genreId in game.Genres)
                         {
-                            genreObjects.Add(Classes.Metadata.Genres.GetGenres(genreId));
+                            genreObjects.Add(Classes.Metadata.Genres.GetGenres(game.MetadataSource, genreId));
                         }
                     }
 
-                    List<IGDB.Models.Genre> sortedGenreObjects = genreObjects.OrderBy(o => o.Name).ToList();
+                    List<Genre> sortedGenreObjects = genreObjects.OrderBy(o => o.Name).ToList();
 
                     return Ok(sortedGenreObjects);
                 }
@@ -789,16 +786,16 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
-                if (gameObject != null)
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                if (game != null)
                 {
                     List<Dictionary<string, object>> icObjects = new List<Dictionary<string, object>>();
-                    if (gameObject.InvolvedCompanies != null)
+                    if (game.InvolvedCompanies != null)
                     {
-                        foreach (long icId in gameObject.InvolvedCompanies.Ids)
+                        foreach (long icId in game.InvolvedCompanies)
                         {
                             InvolvedCompany involvedCompany = Classes.Metadata.InvolvedCompanies.GetInvolvedCompanies(icId);
-                            Company company = Classes.Metadata.Companies.GetCompanies(involvedCompany.Company.Id);
+                            Company company = Classes.Metadata.Companies.GetCompanies(game.MetadataSource, (long?)involvedCompany.Company);
                             company.Developed = null;
                             company.Published = null;
 
@@ -834,14 +831,14 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
-                if (gameObject != null)
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                if (game != null)
                 {
                     List<Dictionary<string, object>> icObjects = new List<Dictionary<string, object>>();
-                    if (gameObject.InvolvedCompanies != null)
+                    if (game.InvolvedCompanies != null)
                     {
                         InvolvedCompany involvedCompany = Classes.Metadata.InvolvedCompanies.GetInvolvedCompanies(CompanyId);
-                        Company company = Classes.Metadata.Companies.GetCompanies(involvedCompany.Company.Id);
+                        Company company = Classes.Metadata.Companies.GetCompanies(game.MetadataSource, (long?)involvedCompany.Company);
                         company.Developed = null;
                         company.Published = null;
 
@@ -877,10 +874,10 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 InvolvedCompany involvedCompany = Classes.Metadata.InvolvedCompanies.GetInvolvedCompanies(CompanyId);
-                Company company = Classes.Metadata.Companies.GetCompanies(involvedCompany.Company.Id);
+                Company company = Classes.Metadata.Companies.GetCompanies(game.MetadataSource, (long?)involvedCompany.Company);
 
                 string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Company(company), "Logo_Medium.png");
                 if (System.IO.File.Exists(coverFilePath))
@@ -923,11 +920,11 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
-                if (gameObject != null)
+                if (game != null)
                 {
-                    IGDB.Models.Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
+                    Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
 
                     if (platformObject != null)
                     {
@@ -965,11 +962,11 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
-                if (gameObject != null)
+                if (game != null)
                 {
-                    IGDB.Models.Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
+                    Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
 
                     if (platformObject != null)
                     {
@@ -1004,11 +1001,11 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
-                if (gameObject != null)
+                if (game != null)
                 {
-                    IGDB.Models.Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
+                    Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
 
                     if (platformObject != null)
                     {
@@ -1070,15 +1067,15 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
-                if (gameObject != null)
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                if (game != null)
                 {
                     List<ReleaseDate> rdObjects = new List<ReleaseDate>();
-                    if (gameObject.ReleaseDates != null)
+                    if (game.ReleaseDates != null)
                     {
-                        foreach (long icId in gameObject.ReleaseDates.Ids)
+                        foreach (long icId in game.ReleaseDates)
                         {
-                            ReleaseDate releaseDate = Classes.Metadata.ReleaseDates.GetReleaseDates(icId);
+                            ReleaseDate releaseDate = Classes.Metadata.ReleaseDates.GetReleaseDates(game.MetadataSource, icId);
 
                             rdObjects.Add(releaseDate);
                         }
@@ -1110,7 +1107,7 @@ namespace gaseous_server.Controllers
 
             try
             {
-                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 return Ok(Classes.Roms.GetRoms(GameId, PlatformId, NameSearch, pageNumber, pageSize, user.Id));
             }
@@ -1131,7 +1128,7 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
                 if (rom.GameId == GameId)
@@ -1160,7 +1157,7 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
                 if (rom.GameId == GameId)
@@ -1190,7 +1187,7 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
                 if (rom.GameId == GameId)
@@ -1221,7 +1218,7 @@ namespace gaseous_server.Controllers
             {
                 ApplicationUser? user = await _userManager.GetUserAsync(User);
 
-                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 if (IsMediaGroup == false)
                 {
@@ -1283,7 +1280,7 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
                 if (rom.GameId != GameId)
@@ -1322,7 +1319,7 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
                 if (rom.GameId != GameId || rom.Name != FileName)
@@ -1361,7 +1358,7 @@ namespace gaseous_server.Controllers
 
             try
             {
-                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomGroupId, user.Id);
                 if (rom.GameId == GameId)
@@ -1391,7 +1388,7 @@ namespace gaseous_server.Controllers
 
             try
             {
-                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 try
                 {
@@ -1420,7 +1417,7 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 try
                 {
@@ -1451,7 +1448,7 @@ namespace gaseous_server.Controllers
 
             try
             {
-                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomGroupId, user.Id);
                 if (rom.GameId == GameId)
@@ -1481,7 +1478,7 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomGroupId);
                 if (rom.GameId == GameId)
@@ -1514,7 +1511,7 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomGroupId);
                 if (rom.GameId != GameId)
@@ -1529,7 +1526,7 @@ namespace gaseous_server.Controllers
                     string returnFileName = "";
                     if (filename == "")
                     {
-                        returnFileName = gameObject.Name + ".zip";
+                        returnFileName = game.Name + ".zip";
                     }
                     else
                     {
@@ -1553,7 +1550,7 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("search")]
-        [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<gaseous_server.Models.Game>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult> GameSearch(long RomId = 0, string SearchString = "")
         {
@@ -1565,7 +1562,7 @@ namespace gaseous_server.Controllers
                     Common.hashObject hash = new Common.hashObject(romItem.Path);
                     FileSignature fileSignature = new FileSignature();
                     gaseous_server.Models.Signatures_Games romSig = fileSignature.GetFileSignature(romItem.Library, hash, new FileInfo(romItem.Path), romItem.Path);
-                    List<Game> searchResults = Classes.ImportGame.SearchForGame_GetAll(romSig.Game.Name, romSig.Flags.IGDBPlatformId);
+                    List<gaseous_server.Models.Game> searchResults = Classes.ImportGame.SearchForGame_GetAll(romSig.Game.Name, romSig.Flags.IGDBPlatformId);
 
                     return Ok(searchResults);
                 }
@@ -1573,7 +1570,7 @@ namespace gaseous_server.Controllers
                 {
                     if (SearchString.Length > 0)
                     {
-                        List<Game> searchResults = Classes.ImportGame.SearchForGame_GetAll(SearchString, 0);
+                        List<gaseous_server.Models.Game> searchResults = Classes.ImportGame.SearchForGame_GetAll(SearchString, 0);
 
                         return Ok(searchResults);
                     }
@@ -1600,14 +1597,14 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 List<Screenshot> screenshots = new List<Screenshot>();
-                if (gameObject.Screenshots != null)
+                if (game.Screenshots != null)
                 {
-                    foreach (long ScreenshotId in gameObject.Screenshots.Ids)
+                    foreach (long ScreenshotId in game.Screenshots)
                     {
-                        Screenshot GameScreenshot = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), false);
+                        Screenshot GameScreenshot = Screenshots.GetScreenshot(game.MetadataSource, ScreenshotId);
                         screenshots.Add(GameScreenshot);
                     }
                 }
@@ -1631,10 +1628,10 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
-                if (gameObject != null)
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                if (game != null)
                 {
-                    IGDB.Models.Screenshot screenshotObject = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), false);
+                    Screenshot screenshotObject = Screenshots.GetScreenshot(game.MetadataSource, ScreenshotId);
                     if (screenshotObject != null)
                     {
                         return Ok(screenshotObject);
@@ -1655,57 +1652,6 @@ namespace gaseous_server.Controllers
             }
         }
 
-        // [MapToApiVersion("1.0")]
-        // [MapToApiVersion("1.1")]
-        // [HttpGet]
-        // [Route("{GameId}/screenshots/{ScreenshotId}/image/{size}")]
-        // [Route("{GameId}/screenshots/{ScreenshotId}/image/{size}/{ImageName}")]
-        // [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
-        // [ProducesResponseType(StatusCodes.Status404NotFound)]
-        // public async Task<ActionResult> GameScreenshotImage(long GameId, long ScreenshotId, Communications.IGDBAPI_ImageSize Size, string ImageName)
-        // {
-        //     try
-        //     {
-        //         IGDB.Models.Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
-
-        //         IGDB.Models.Screenshot screenshotObject = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), true);
-
-        //         string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(gameObject), "Screenshots");
-
-        //         Communications comms = new Communications();
-        //         Task<string> ImgFetch = comms.GetSpecificImageFromServer(basePath, screenshotObject.ImageId, Size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.original });
-
-        //         string coverFilePath = ImgFetch.Result;
-
-        //         if (System.IO.File.Exists(coverFilePath))
-        //         {
-        //             string filename = screenshotObject.ImageId + ".jpg";
-        //             string filepath = coverFilePath;
-        //             byte[] filedata = System.IO.File.ReadAllBytes(filepath);
-        //             string contentType = "image/jpg";
-
-        //             var cd = new System.Net.Mime.ContentDisposition
-        //             {
-        //                 FileName = filename,
-        //                 Inline = true,
-        //             };
-
-        //             Response.Headers.Add("Content-Disposition", cd.ToString());
-        //             Response.Headers.Add("Cache-Control", "public, max-age=604800");
-
-        //             return File(filedata, contentType);
-        //         }
-        //         else
-        //         {
-        //             return NotFound();
-        //         }
-        //     }
-        //     catch
-        //     {
-        //         return NotFound();
-        //     }
-        // }
-
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
@@ -1717,14 +1663,14 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                Game gameObject = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
 
                 List<GameVideo> videos = new List<GameVideo>();
-                if (gameObject.Videos != null)
+                if (game.Videos != null)
                 {
-                    foreach (long VideoId in gameObject.Videos.Ids)
+                    foreach (long VideoId in game.Videos)
                     {
-                        GameVideo gameVideo = GamesVideos.GetGame_Videos(VideoId);
+                        GameVideo gameVideo = GamesVideos.GetGame_Videos(game.MetadataSource, VideoId);
                         videos.Add(gameVideo);
                     }
                 }

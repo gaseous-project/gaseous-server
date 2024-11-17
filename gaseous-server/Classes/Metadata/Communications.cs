@@ -211,7 +211,7 @@ namespace gaseous_server.Classes.Metadata
         }
 
         /// <summary>
-        /// Request data from the metadata API using a slug
+        /// Request data from the metadata API using a slug using the default source
         /// </summary>
         /// <typeparam name="T">
         /// The type of object to return
@@ -227,7 +227,27 @@ namespace gaseous_server.Classes.Metadata
         /// </returns>
         public async Task<T[]?> APIComm<T>(MetadataEndpoint Endpoint, string Slug)
         {
-            switch (_MetadataSource)
+            return await APIComm<T>(_MetadataSource, Endpoint, Slug);
+        }
+
+        /// <summary>
+        /// Request data from the metadata API using a slug
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of object to return
+        /// </typeparam>
+        /// <param name="Endpoint">
+        /// The endpoint to access - can only be either Platform or Game
+        /// </param>
+        /// <param name="Slug">
+        /// The slug to query for
+        /// </param>
+        /// <returns>
+        /// The object requested
+        /// </returns>
+        public async Task<T[]?> APIComm<T>(HasheousClient.Models.MetadataModel.MetadataSources SourceType, MetadataEndpoint Endpoint, string Slug)
+        {
+            switch (SourceType)
             {
                 case HasheousClient.Models.MetadataModel.MetadataSources.None:
                     return null;
@@ -266,7 +286,7 @@ namespace gaseous_server.Classes.Metadata
         }
 
         /// <summary>
-        /// Request data from the metadata API using an id
+        /// Request data from the metadata API using an id using the default source
         /// </summary>
         /// <typeparam name="T">
         /// The type of object to return
@@ -282,7 +302,30 @@ namespace gaseous_server.Classes.Metadata
         /// </returns>
         public async Task<T[]> APIComm<T>(MetadataEndpoint Endpoint, long Id)
         {
-            switch (_MetadataSource)
+            return await APIComm<T>(_MetadataSource, Endpoint, Id);
+        }
+
+        /// <summary>
+        /// Request data from the metadata API using an id
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of object to return
+        /// </typeparam>
+        /// <param name="SourceType">
+        /// The source of the metadata
+        /// </param>
+        /// <param name="Endpoint">
+        /// The endpoint to access
+        /// </param>
+        /// <param name="Id">
+        /// The Id to query for
+        /// </param>
+        /// <returns>
+        /// The object requested
+        /// </returns>
+        public async Task<T[]> APIComm<T>(HasheousClient.Models.MetadataModel.MetadataSources SourceType, MetadataEndpoint Endpoint, long Id)
+        {
+            switch (SourceType)
             {
                 case HasheousClient.Models.MetadataModel.MetadataSources.None:
                     return null;
@@ -874,14 +917,17 @@ namespace gaseous_server.Classes.Metadata
                 if (property.PropertyType.IsEnum)
                 {
                     // check if property is null
-                    if (input.GetType().GetProperty(property.Name).GetValue(input) != null)
+                    if (input.GetType().GetProperty(property.Name) != null)
                     {
-                        // get the enum type
-                        Type enumType = property.PropertyType;
-                        // get the enum value
-                        object enumValue = Enum.Parse(enumType, input.GetType().GetProperty(property.Name).GetValue(input).ToString());
-                        // set the enum value
-                        property.SetValue(output, enumValue);
+                        if (input.GetType().GetProperty(property.Name).GetValue(input) != null)
+                        {
+                            // get the enum type
+                            Type enumType = property.PropertyType;
+                            // get the enum value
+                            object enumValue = Enum.Parse(enumType, input.GetType().GetProperty(property.Name).GetValue(input).ToString());
+                            // set the enum value
+                            property.SetValue(output, enumValue);
+                        }
                     }
                 }
                 else if (Common.IsNullableEnum(property.PropertyType))

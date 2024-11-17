@@ -8,7 +8,7 @@ using System.Web;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
-using IGDB.Models;
+using HasheousClient.Models.Metadata.IGDB;
 using Newtonsoft.Json;
 
 namespace gaseous_server.Models
@@ -92,9 +92,9 @@ namespace gaseous_server.Models
             }
         }
 
-        private static IGDB.Models.Platform CreateDummyPlatform(PlatformMapItem mapItem)
+        private static Platform CreateDummyPlatform(PlatformMapItem mapItem)
         {
-            IGDB.Models.Platform platform = new IGDB.Models.Platform
+            Platform platform = new Platform
             {
                 Id = mapItem.IGDBId,
                 Name = mapItem.IGDBName,
@@ -102,9 +102,9 @@ namespace gaseous_server.Models
                 AlternativeName = mapItem.AlternateNames.FirstOrDefault()
             };
 
-            if (Storage.GetCacheStatus("Platform", mapItem.IGDBId) == Storage.CacheStatus.NotPresent)
+            if (Storage.GetCacheStatus(Communications.MetadataSource, "Platform", mapItem.IGDBId) == Storage.CacheStatus.NotPresent)
             {
-                Storage.NewCacheValue(platform);
+                Storage.NewCacheValue(Communications.MetadataSource, platform);
             }
 
             return platform;
@@ -310,15 +310,14 @@ namespace gaseous_server.Models
             string sql = "";
 
             // get platform data
-            // IGDB.Models.Platform? platform = Platforms.GetPlatform(IGDBId, false);
-            IGDB.Models.Platform? platform = null;
-            if (Storage.GetCacheStatus("Platform", IGDBId) == Storage.CacheStatus.NotPresent)
+            Platform? platform = null;
+            if (Storage.GetCacheStatus(Communications.MetadataSource, "Platform", IGDBId) == Storage.CacheStatus.NotPresent)
             {
                 //platform = Platforms.GetPlatform(IGDBId, false);
             }
             else
             {
-                platform = (IGDB.Models.Platform)Storage.GetCacheValue<IGDB.Models.Platform>(new Platform(), "id", IGDBId);
+                platform = (Platform)Storage.GetCacheValue<Platform>(Communications.MetadataSource, new Platform(), "id", IGDBId);
             }
 
             if (platform != null)
