@@ -120,14 +120,25 @@ CREATE TABLE `MetadataMap` (
 
 CREATE TABLE `MetadataMapBridge` (
     `ParentMapId` bigint(20) NOT NULL,
+    `SignatureGameName` varchar(255) NOT NULL,
+    `SignaturePlatformId` bigint(20) NOT NULL,
     `MetadataSourceType` int(11) NOT NULL DEFAULT 0,
-    `MetadataSourceId` bigint(20) NOT NULL `Preferred` BOOLEAN NOT NULL DEFAULT 0,
+    `MetadataSourceId` bigint(20) NOT NULL,
+    `Preferred` BOOLEAN NOT NULL DEFAULT 0,
+    `ProcessedAtImport` BOOLEAN NOT NULL DEFAULT 0,
     PRIMARY KEY (
         `ParentMapId`,
         `MetadataSourceType`,
         `MetadataSourceId`
+    ),
+    INDEX `idx_gamename` (
+        `SignatureGameName`,
+        `SignaturePlatformId`
     )
 );
+
+ALTER TABLE `Games_Roms`
+ADD CONSTRAINT metadataMapId FOREIGN KEY (`MetadataMapId`) REFERENCES `MetadataMapBridge` (`ParentMapId`) ON DELETE CASCADE;
 
 ALTER TABLE `Games_Roms`
 ADD COLUMN `MetadataMapId` BIGINT NOT NULL DEFAULT 0;

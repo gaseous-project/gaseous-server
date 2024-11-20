@@ -27,9 +27,19 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        public static Platform GetPlatform(string Slug, bool forceRefresh = false, bool GetImages = false)
+        public static Platform GetPlatform(string Slug)
         {
-            throw new NotImplementedException();
+            // get platform id from slug - query Platform table
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string query = "SELECT Id FROM Platform WHERE slug = @slug AND SourceId = @sourceid;";
+            DataTable result = db.ExecuteCMD(query, new Dictionary<string, object> { { "@slug", Slug }, { "@sourceid", Communications.MetadataSource } });
+            if (result.Rows.Count == 0)
+            {
+                throw new Metadata.InvalidMetadataId(Slug);
+            }
+
+            long Id = (long)result.Rows[0]["Id"];
+            return GetPlatform(Id);
         }
 
         private static void AddPlatformMapping(Platform platform)

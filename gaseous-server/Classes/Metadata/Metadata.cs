@@ -17,7 +17,7 @@ namespace gaseous_server.Classes.Metadata
             {
             }
 
-            public InvalidMetadataId(string SourceType, string Id) : base("Invalid Metadata id: " + Id + " from source: " + SourceType)
+            public InvalidMetadataId(HasheousClient.Models.MetadataModel.MetadataSources SourceType, string Id) : base("Invalid Metadata id: " + Id + " from source: " + SourceType)
             {
             }
         }
@@ -77,14 +77,30 @@ namespace gaseous_server.Classes.Metadata
             return _GetMetadata<T>(SourceType, Id, ForceRefresh);
         }
 
-        private static T? _GetMetadata<T>(HasheousClient.Models.MetadataModel.MetadataSources SourceType, long Id, Boolean ForceRefresh) where T : class
+        public static T? GetMetadata<T>(HasheousClient.Models.MetadataModel.MetadataSources SourceType, string Slug, Boolean ForceRefresh = false) where T : class
+        {
+            return _GetMetadata<T>(SourceType, Slug, ForceRefresh);
+        }
+
+        private static T? _GetMetadata<T>(HasheousClient.Models.MetadataModel.MetadataSources SourceType, object Id, Boolean ForceRefresh) where T : class
         {
             // get T type as string
             string type = typeof(T).Name;
 
+            // get type of Id as string
+            IdType idType = Id.GetType() == typeof(long) ? IdType.Long : IdType.String;
+
             // check cached metadata status
             // if metadata is not cached or expired, get it from the source. Otherwise, return the cached metadata
-            Storage.CacheStatus? cacheStatus = Storage.GetCacheStatus(SourceType, type, Id);
+            Storage.CacheStatus? cacheStatus;
+            if (idType == IdType.Long)
+            {
+                cacheStatus = Storage.GetCacheStatus(SourceType, type, (long)Id);
+            }
+            else
+            {
+                cacheStatus = Storage.GetCacheStatus(SourceType, type, (string)Id);
+            }
 
             // if ForceRefresh is true, set cache status to expired if it is current
             if (ForceRefresh == true)
@@ -100,16 +116,37 @@ namespace gaseous_server.Classes.Metadata
             switch (cacheStatus)
             {
                 case Storage.CacheStatus.Current:
-                    metadata = Storage.GetCacheValue<T>(SourceType, metadata, "Id", Id);
+                    if (idType == IdType.Long)
+                    {
+                        metadata = Storage.GetCacheValue<T>(SourceType, metadata, "Id", (long)Id);
+                    }
+                    else
+                    {
+                        metadata = Storage.GetCacheValue<T>(SourceType, metadata, "Slug", (string)Id);
+                    }
                     break;
 
                 case Storage.CacheStatus.Expired:
-                    metadata = GetMetadataFromServer<T>(SourceType, Id).Result;
+                    if (idType == IdType.Long)
+                    {
+                        metadata = GetMetadataFromServer<T>(SourceType, (long)Id).Result;
+                    }
+                    else
+                    {
+                        metadata = GetMetadataFromServer<T>(SourceType, (string)Id).Result;
+                    }
                     Storage.NewCacheValue<T>(SourceType, metadata, true);
                     break;
 
                 case Storage.CacheStatus.NotPresent:
-                    metadata = GetMetadataFromServer<T>(SourceType, Id).Result;
+                    if (idType == IdType.Long)
+                    {
+                        metadata = GetMetadataFromServer<T>(SourceType, (long)Id).Result;
+                    }
+                    else
+                    {
+                        metadata = GetMetadataFromServer<T>(SourceType, (string)Id).Result;
+                    }
                     Storage.NewCacheValue<T>(SourceType, metadata, false);
                     break;
             }
@@ -117,7 +154,31 @@ namespace gaseous_server.Classes.Metadata
             return metadata;
         }
 
+        private enum IdType
+        {
+            Long,
+            String
+        }
+
         private static async Task<T> GetMetadataFromServer<T>(HasheousClient.Models.MetadataModel.MetadataSources SourceType, long Id) where T : class
+        {
+            // get T type as string
+            string type = typeof(T).Name;
+
+            // get metadata from the server
+            Communications comms = new Communications();
+            var results = await comms.APIComm<T>(SourceType, (Communications.MetadataEndpoint)Enum.Parse(typeof(Communications.MetadataEndpoint), type, true), Id);
+
+            // check for errors
+            if (results == null)
+            {
+                throw new InvalidMetadataId(SourceType, Id);
+            }
+
+            return results.FirstOrDefault<T>();
+        }
+
+        private static async Task<T> GetMetadataFromServer<T>(HasheousClient.Models.MetadataModel.MetadataSources SourceType, string Id) where T : class
         {
             // get T type as string
             string type = typeof(T).Name;

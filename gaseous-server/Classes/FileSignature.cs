@@ -322,7 +322,7 @@ namespace gaseous_server.Classes
                                             switch (metadataResult.Source)
                                             {
                                                 case HasheousClient.Models.MetadataSources.IGDB:
-                                                    signature.Flags.IGDBPlatformId = (long)Platforms.GetPlatform(metadataResult.Id, false).Id;
+                                                    signature.Flags.IGDBPlatformId = (long)Platforms.GetPlatform(metadataResult.Id).Id;
                                                     break;
                                             }
                                         }

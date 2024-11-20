@@ -37,7 +37,10 @@ namespace gaseous_server.Classes.Metadata
 
         public static Game? GetGame(HasheousClient.Models.MetadataModel.MetadataSources SourceType, string? Slug)
         {
-            throw new NotImplementedException();
+            Game? RetVal = Metadata.GetMetadata<Game>(SourceType, Slug, false);
+            RetVal.MetadataSource = SourceType;
+            RetVal = MassageResult(RetVal);
+            return RetVal;
         }
 
         public static Game GetGame(DataRow dataRow)
