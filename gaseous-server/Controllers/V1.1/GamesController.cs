@@ -483,6 +483,8 @@ namespace gaseous_server.Controllers.v1_1
 SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
 SELECT DISTINCT
     Game.Id,
+    Game.MetadataMapId,
+    Game.GameIdType,
     Game.`Name`,
     Game.NameThe,
     Game.Slug,
@@ -507,15 +509,11 @@ SELECT DISTINCT
 FROM
     (SELECT DISTINCT
         Game.*,
-            CASE
-                WHEN Game.`Name` LIKE 'The %' THEN CONCAT(TRIM(SUBSTR(Game.`Name` FROM 4)), ', The')
-                ELSE Game.`Name`
-            END AS NameThe,
             view_Games_Roms.PlatformId,
             AgeGroup.AgeGroupId,
             COUNT(view_Games_Roms.Id) AS RomCount
     FROM
-        Game
+        view_GamesWithRoms AS Game
     LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId
     LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId" + platformWhereClause + @"
     LEFT JOIN AlternativeName ON Game.Id = AlternativeName.Game " + nameWhereClause + @"
@@ -553,7 +551,6 @@ FROM
     Favourites ON Game.Id = Favourites.GameId AND Favourites.UserId = @userid " + whereClause + " " + havingClause + " " + orderByClause;
             List<Games.MinimalGameItem> RetVal = new List<Games.MinimalGameItem>();
 
-            Console.WriteLine(sql);
             DataTable dbResponse = db.ExecuteCMD(sql, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
 
             // get count
@@ -572,6 +569,9 @@ FROM
                 }
 
                 Models.Game retGame = Storage.BuildCacheObject<Models.Game>(new Models.Game(), dbResponse.Rows[i]);
+                retGame.MetadataMapId = (long)dbResponse.Rows[i]["MetadataMapId"];
+                retGame.MetadataSource = (HasheousClient.Models.MetadataSources)dbResponse.Rows[i]["GameIdType"];
+
                 Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
                 retMinGame.Index = i;
                 if (dbResponse.Rows[i]["RomSaveCount"] != DBNull.Value || dbResponse.Rows[i]["MediaGroupSaveCount"] != DBNull.Value)

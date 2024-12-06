@@ -5,19 +5,19 @@ namespace gaseous_server.Classes.Metadata
         #region Exception Handling
         public class InvalidMetadataId : Exception
         {
-            public InvalidMetadataId(long Id) : base("Invalid Metadata id: " + Id + " from source: " + Communications.MetadataSource + " (default)")
+            public InvalidMetadataId(long Id) : base("Invalid Metadata id: " + Id + " from source: " + HasheousClient.Models.MetadataSources.IGDB + " (default)")
             {
             }
 
-            public InvalidMetadataId(HasheousClient.Models.MetadataModel.MetadataSources SourceType, long Id) : base("Invalid Metadata id: " + Id + " from source: " + SourceType)
+            public InvalidMetadataId(HasheousClient.Models.MetadataSources SourceType, long Id) : base("Invalid Metadata id: " + Id + " from source: " + SourceType)
             {
             }
 
-            public InvalidMetadataId(string Id) : base("Invalid Metadata id: " + Id + " from source: " + Communications.MetadataSource + " (default)")
+            public InvalidMetadataId(string Id) : base("Invalid Metadata id: " + Id + " from source: " + HasheousClient.Models.MetadataSources.IGDB + " (default)")
             {
             }
 
-            public InvalidMetadataId(HasheousClient.Models.MetadataModel.MetadataSources SourceType, string Id) : base("Invalid Metadata id: " + Id + " from source: " + SourceType)
+            public InvalidMetadataId(HasheousClient.Models.MetadataSources SourceType, string Id) : base("Invalid Metadata id: " + Id + " from source: " + SourceType)
             {
             }
         }
@@ -46,7 +46,7 @@ namespace gaseous_server.Classes.Metadata
                 throw new InvalidMetadataId(Id);
             }
 
-            return _GetMetadata<T>(Communications.MetadataSource, Id, ForceRefresh);
+            return _GetMetadata<T>(HasheousClient.Models.MetadataSources.IGDB, Id, ForceRefresh);
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace gaseous_server.Classes.Metadata
         /// <exception cref="InvalidMetadataId">
         /// Thrown when the id is invalid
         /// </exception>
-        public static T? GetMetadata<T>(HasheousClient.Models.MetadataModel.MetadataSources SourceType, long Id, Boolean ForceRefresh = false) where T : class
+        public static T? GetMetadata<T>(HasheousClient.Models.MetadataSources SourceType, long Id, Boolean ForceRefresh = false) where T : class
         {
             if (Id < 0)
             {
@@ -77,12 +77,12 @@ namespace gaseous_server.Classes.Metadata
             return _GetMetadata<T>(SourceType, Id, ForceRefresh);
         }
 
-        public static T? GetMetadata<T>(HasheousClient.Models.MetadataModel.MetadataSources SourceType, string Slug, Boolean ForceRefresh = false) where T : class
+        public static T? GetMetadata<T>(HasheousClient.Models.MetadataSources SourceType, string Slug, Boolean ForceRefresh = false) where T : class
         {
             return _GetMetadata<T>(SourceType, Slug, ForceRefresh);
         }
 
-        private static T? _GetMetadata<T>(HasheousClient.Models.MetadataModel.MetadataSources SourceType, object Id, Boolean ForceRefresh) where T : class
+        private static T? _GetMetadata<T>(HasheousClient.Models.MetadataSources SourceType, object Id, Boolean ForceRefresh) where T : class
         {
             // get T type as string
             string type = typeof(T).Name;
@@ -160,7 +160,7 @@ namespace gaseous_server.Classes.Metadata
             String
         }
 
-        private static async Task<T> GetMetadataFromServer<T>(HasheousClient.Models.MetadataModel.MetadataSources SourceType, long Id) where T : class
+        private static async Task<T> GetMetadataFromServer<T>(HasheousClient.Models.MetadataSources SourceType, long Id) where T : class
         {
             // get T type as string
             string type = typeof(T).Name;
@@ -178,7 +178,7 @@ namespace gaseous_server.Classes.Metadata
             return results.FirstOrDefault<T>();
         }
 
-        private static async Task<T> GetMetadataFromServer<T>(HasheousClient.Models.MetadataModel.MetadataSources SourceType, string Id) where T : class
+        private static async Task<T> GetMetadataFromServer<T>(HasheousClient.Models.MetadataSources SourceType, string Id) where T : class
         {
             // get T type as string
             string type = typeof(T).Name;

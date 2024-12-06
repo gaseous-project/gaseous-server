@@ -61,7 +61,7 @@ namespace gaseous_server.Classes
             {
                 NowPlaying = new Models.UserProfile.NowPlayingItem
                 {
-                    Game = Games.GetGame(Communications.MetadataSource, (long)nowPlayingData.Rows[0]["GameId"]),
+                    Game = Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, (long)nowPlayingData.Rows[0]["GameId"]),
                     Platform = Platforms.GetPlatform((long)nowPlayingData.Rows[0]["PlatformId"]),
                     Duration = Convert.ToInt64(nowPlayingData.Rows[0]["SessionLength"])
                 };

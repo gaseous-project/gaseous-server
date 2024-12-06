@@ -159,30 +159,15 @@ namespace gaseous_server.Classes
                 FileSignature fileSignature = new FileSignature();
                 gaseous_server.Models.Signatures_Games discoveredSignature = fileSignature.GetFileSignature(GameLibrary.GetDefaultLibrary, Hash, fi, FilePath);
 
-                // get discovered platform
-                Platform? determinedPlatform = null;
-                if (OverridePlatform == null)
-                {
-                    determinedPlatform = Metadata.Platforms.GetPlatform(discoveredSignature.Flags.IGDBPlatformId);
-                    if (determinedPlatform == null)
-                    {
-                        determinedPlatform = new Platform();
-                    }
-                }
-                else
-                {
-                    determinedPlatform = OverridePlatform;
-                    discoveredSignature.Flags.IGDBPlatformId = (long)determinedPlatform.Id;
-                    discoveredSignature.Flags.IGDBPlatformName = determinedPlatform.Name;
-                }
-
                 // add to database
-                long RomId = StoreGame(GameLibrary.GetDefaultLibrary, Hash, discoveredSignature, determinedPlatform, FilePath, 0, false);
+                Platform? determinedPlatform = Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId);
+                Models.Game? determinedGame = Metadata.Games.GetGame(discoveredSignature.Flags.GameMetadataSource, discoveredSignature.Flags.GameId);
+                long RomId = StoreGame(GameLibrary.GetDefaultLibrary, Hash, discoveredSignature, determinedPlatform, FilePath, 0, true);
 
                 // build return value
                 GameFileInfo.Add("romid", RomId);
                 GameFileInfo.Add("platform", determinedPlatform);
-                GameFileInfo.Add("game", discoveredSignature.Game.Name);
+                GameFileInfo.Add("game", determinedGame);
                 GameFileInfo.Add("signature", discoveredSignature);
                 GameFileInfo.Add("status", "imported");
             }
@@ -217,34 +202,45 @@ namespace gaseous_server.Classes
 
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
 
-            // add the metadata map
-            // check if the map exists already
-            long mapId = 0;
-            sql = "SELECT ParentMapId FROM MetadataMapBridge WHERE SignatureGameName=@gamename AND SignaturePlatformId=@platformid;";
-            dbDict = new Dictionary<string, object>(){
-                { "gamename", signature.Game.Name },
-                { "platformid", platform.Id }
-            };
-            DataTable mapDT = db.ExecuteCMD(sql, dbDict);
+            // add/get the metadata map
+            MetadataMap? map = MetadataManagement.NewMetadataMap((long)platform.Id, signature.Game.Name);
 
-            if (mapDT.Rows.Count > 0)
+            // populate map with the sources from the signature if they don't already exist
+            bool reloadMap = false;
+            foreach (MetadataSources source in Enum.GetValues(typeof(MetadataSources)))
             {
-                mapId = (long)mapDT.Rows[0]["ParentMapId"];
+                if (source != MetadataSources.None)
+                {
+                    // check the signature for the source, and if it exists, add it to the map if it's not already there
+                    foreach (Signatures_Games.SourceValues.SourceValueItem signatureSource in signature.MetadataSources.Games)
+                    {
+                        // check if the metadata map contains the source
+                        bool sourceExists = false;
+                        foreach (MetadataMap.MetadataMapItem mapSource in map.MetadataMapItems)
+                        {
+                            if (mapSource.SourceType == source)
+                            {
+                                sourceExists = true;
+                            }
+                        }
+
+                        if (sourceExists == false)
+                        {
+                            // add the source to the map
+                            bool preferred = false;
+                            if (source == Config.MetadataConfiguration.DefaultMetadataSource)
+                            {
+                                preferred = true;
+                            }
+                            MetadataManagement.AddMetadataMapItem((long)map.Id, source, signatureSource.Id, preferred);
+                            reloadMap = true;
+                        }
+                    }
+                }
             }
-            else
+            if (reloadMap == true)
             {
-                sql = "INSERT INTO MetadataMapBridge (ParentMapId, SignatureGameName, SignaturePlatformId, MetadataSourceType, MetadataSourceId, Preferred, ProcessedAtImport) VALUES (@parentmapid, @gamename, @platformid, @metadatasourcetype, @metadatasourceid, @preferred, @processedatimport); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
-                dbDict = new Dictionary<string, object>(){
-                    { "parentmapid", 0 },
-                    { "gamename", signature.Game.Name },
-                    { "platformid", platform.Id },
-                    { "metadatasourcetype", MetadataModel.MetadataSources.None },
-                    { "metadatasourceid", 0 }, // set to zero as an initial value - another process will update this later
-                    { "preferred", 1 },
-                    { "processedatimport", 0 }
-                };
-                DataTable mapInsert = db.ExecuteCMD(sql, dbDict);
-                mapId = (long)mapInsert.Rows[0][0];
+                map = MetadataManagement.GetMetadataMap((long)map.Id);
             }
 
             // add or update the rom
@@ -271,7 +267,7 @@ namespace gaseous_server.Classes
             dbDict.Add("metadataversion", 2);
             dbDict.Add("libraryid", library.Id);
             dbDict.Add("romdataversion", 2);
-            dbDict.Add("metadatamapid", mapId);
+            dbDict.Add("metadatamapid", map.Id);
 
             if (signature.Rom.Attributes != null)
             {
@@ -308,7 +304,7 @@ namespace gaseous_server.Classes
             // move to destination
             if (library.IsDefaultLibrary == true)
             {
-                //MoveGameFile(romId, SourceIsExternal);
+                MoveGameFile(romId, SourceIsExternal);
             }
 
             return romId;
@@ -318,12 +314,12 @@ namespace gaseous_server.Classes
         {
             if (Signature.Flags != null)
             {
-                if (Signature.Flags.IGDBGameId != null && Signature.Flags.IGDBGameId != 0)
+                if (Signature.Flags.GameId != null && Signature.Flags.GameId != 0)
                 {
                     // game was determined elsewhere - probably a Hasheous server
                     try
                     {
-                        return Games.GetGame(Communications.MetadataSource, Signature.Flags.IGDBGameId);
+                        return Games.GetGame(MetadataSources.IGDB, Signature.Flags.GameId);
                     }
                     catch (Exception ex)
                     {
@@ -354,7 +350,7 @@ namespace gaseous_server.Classes
                         if (games.Length == 1)
                         {
                             // exact match!
-                            determinedGame = Metadata.Games.GetGame(Communications.MetadataSource, (long)games[0].Id);
+                            determinedGame = Metadata.Games.GetGame(MetadataSources.IGDB, (long)games[0].Id);
                             Logging.Log(Logging.LogType.Information, "Import Game", "  IGDB game: " + determinedGame.Name);
                             GameFound = true;
                             break;
@@ -369,7 +365,7 @@ namespace gaseous_server.Classes
                                 if (game.Name == SearchCandidate)
                                 {
                                     // found game title matches the search candidate
-                                    determinedGame = Metadata.Games.GetGame(Communications.MetadataSource, (long)games[0].Id);
+                                    determinedGame = Metadata.Games.GetGame(MetadataSources.IGDB, (long)games[0].Id);
                                     Logging.Log(Logging.LogType.Information, "Import Game", "Found exact match!");
                                     GameFound = true;
                                     break;
@@ -551,8 +547,8 @@ namespace gaseous_server.Classes
             Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
 
             // get metadata
-            Platform platform = gaseous_server.Classes.Metadata.Platforms.GetPlatform(rom.PlatformId);
-            gaseous_server.Models.Game game = gaseous_server.Classes.Metadata.Games.GetGame(Communications.MetadataSource, rom.GameId);
+            Platform? platform = gaseous_server.Classes.Metadata.Platforms.GetPlatform(rom.PlatformId);
+            gaseous_server.Models.Game? game = gaseous_server.Classes.Metadata.Games.GetGame(Config.MetadataConfiguration.DefaultMetadataSource, rom.GameId);
 
             // build path
             string platformSlug = "Unknown Platform";
@@ -866,7 +862,7 @@ namespace gaseous_server.Classes
                             long PlatformId;
                             Platform determinedPlatform;
 
-                            if (sig.Flags.IGDBPlatformId == null || sig.Flags.IGDBPlatformId == 0)
+                            if (sig.Flags.PlatformId == null || sig.Flags.PlatformId == 0)
                             {
                                 // no platform discovered in the signature
                                 PlatformId = library.DefaultPlatformId;
@@ -874,7 +870,7 @@ namespace gaseous_server.Classes
                             else
                             {
                                 // use the platform discovered in the signature
-                                PlatformId = sig.Flags.IGDBPlatformId;
+                                PlatformId = (long)sig.Flags.PlatformId;
                             }
                             determinedPlatform = Platforms.GetPlatform(PlatformId);
 
@@ -992,7 +988,7 @@ namespace gaseous_server.Classes
                     long PlatformId;
                     Platform determinedPlatform;
 
-                    if (sig.Flags.IGDBPlatformId == null || sig.Flags.IGDBPlatformId == 0)
+                    if (sig.Flags.PlatformId == null || sig.Flags.PlatformId == 0)
                     {
                         // no platform discovered in the signature
                         PlatformId = library.DefaultPlatformId;
@@ -1000,7 +996,7 @@ namespace gaseous_server.Classes
                     else
                     {
                         // use the platform discovered in the signature
-                        PlatformId = sig.Flags.IGDBPlatformId;
+                        PlatformId = (long)sig.Flags.PlatformId;
                     }
                     determinedPlatform = Platforms.GetPlatform(PlatformId);
 

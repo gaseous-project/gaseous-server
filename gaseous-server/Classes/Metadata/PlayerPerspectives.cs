@@ -12,7 +12,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static PlayerPerspective? GetGame_PlayerPerspectives(HasheousClient.Models.MetadataModel.MetadataSources SourceType, long? Id)
+        public static PlayerPerspective? GetGame_PlayerPerspectives(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {

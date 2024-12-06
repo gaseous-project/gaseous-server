@@ -77,9 +77,9 @@ namespace gaseous_server.Controllers
                         if (RetVal["status"] == "imported")
                         {
                             gaseous_server.Models.Game? game = (gaseous_server.Models.Game)RetVal["game"];
-                            if (game.Id == null)
+                            if (game == null || game.Id == null)
                             {
-                                RetVal["game"] = Games.GetGame(Communications.MetadataSource, 0);
+                                RetVal["game"] = Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, 0);
                             }
                         }
                         break;

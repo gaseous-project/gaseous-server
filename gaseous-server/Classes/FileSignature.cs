@@ -3,6 +3,7 @@ using System.IO.Compression;
 using System.Net;
 using gaseous_server.Classes.Metadata;
 using HasheousClient.Models;
+using HasheousClient.Models.Metadata.IGDB;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NuGet.Common;
 using SevenZip;
@@ -185,6 +186,22 @@ namespace gaseous_server.Classes
                 }
             }
 
+            // get discovered platform
+            Platform? determinedPlatform = null;
+            if (library.DefaultPlatformId == null || library.DefaultPlatformId == 0)
+            {
+                determinedPlatform = Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId);
+                if (determinedPlatform == null)
+                {
+                    determinedPlatform = new Platform();
+                }
+            }
+            else
+            {
+                determinedPlatform = Metadata.Platforms.GetPlatform((long)library.DefaultPlatformId);
+                discoveredSignature.MetadataSources.AddPlatform((long)determinedPlatform.Id, determinedPlatform.Name, MetadataSources.None);
+            }
+
             return discoveredSignature;
         }
 
@@ -237,7 +254,7 @@ namespace gaseous_server.Classes
             gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, ImageExtension, false);
 
             Logging.Log(Logging.LogType.Information, "Import Game", "  Determined import file as: " + discoveredSignature.Game.Name + " (" + discoveredSignature.Game.Year + ") " + discoveredSignature.Game.System);
-            Logging.Log(Logging.LogType.Information, "Import Game", "  Platform determined to be: " + discoveredSignature.Flags.IGDBPlatformName + " (" + discoveredSignature.Flags.IGDBPlatformId + ")");
+            Logging.Log(Logging.LogType.Information, "Import Game", "  Platform determined to be: " + discoveredSignature.Flags.PlatformName + " (" + discoveredSignature.Flags.PlatformId + ")");
 
             return discoveredSignature;
         }
@@ -319,12 +336,8 @@ namespace gaseous_server.Classes
                                     {
                                         if (metadataResult.Id.Length > 0)
                                         {
-                                            switch (metadataResult.Source)
-                                            {
-                                                case HasheousClient.Models.MetadataSources.IGDB:
-                                                    signature.Flags.IGDBPlatformId = (long)Platforms.GetPlatform(metadataResult.Id).Id;
-                                                    break;
-                                            }
+                                            Platform hasheousPlatform = Platforms.GetPlatform(metadataResult.Id);
+                                            signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataResult.Source);
                                         }
                                     }
                                 }
@@ -339,12 +352,8 @@ namespace gaseous_server.Classes
                                     {
                                         if (metadataResult.Id.Length > 0)
                                         {
-                                            switch (metadataResult.Source)
-                                            {
-                                                case HasheousClient.Models.MetadataSources.IGDB:
-                                                    signature.Flags.IGDBGameId = (long)Games.GetGame(Communications.MetadataSource, metadataResult.Id).Id;
-                                                    break;
-                                            }
+                                            Game hasheousGame = Games.GetGame(MetadataSources.IGDB, metadataResult.Id);
+                                            signature.MetadataSources.AddGame((long)hasheousGame.Id, hasheousGame.Name, metadataResult.Source);
                                         }
                                     }
                                 }

@@ -113,7 +113,7 @@ namespace gaseous_server.Classes
 		public static GameRomItem GetRom(long RomId)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "SELECT view_Games_Roms.*, Platform.`Name` AS platformname, Game.`Name` AS gamename FROM view_Games_Roms LEFT JOIN Platform ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN Game ON view_Games_Roms.GameId = Game.Id WHERE view_Games_Roms.Id = @id";
+			string sql = "SELECT DISTINCT view_Games_Roms.*, Platform.`Name` AS platformname, view_GamesWithRoms.`Name` AS gamename FROM view_Games_Roms LEFT JOIN Platform ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN view_GamesWithRoms ON view_Games_Roms.GameId = view_GamesWithRoms.Id WHERE view_Games_Roms.Id = @id";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 			dbDict.Add("id", RomId);
 			DataTable romDT = db.ExecuteCMD(sql, dbDict);
@@ -133,7 +133,7 @@ namespace gaseous_server.Classes
 		public static GameRomItem GetRom(string MD5)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "SELECT view_Games_Roms.*, Platform.`Name` AS platformname, Game.`Name` AS gamename FROM view_Games_Roms LEFT JOIN Platform ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN Game ON view_Games_Roms.GameId = Game.Id WHERE view_Games_Roms.MD5 = @id";
+			string sql = "SELECT DISTINCT view_Games_Roms.*, Platform.`Name` AS platformname, view_GamesWithRoms.`Name` AS gamename FROM view_Games_Roms LEFT JOIN Platform ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN view_GamesWithRoms ON view_Games_Roms.GameId = view_GamesWithRoms.Id WHERE view_Games_Roms.MD5 = @id";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 			dbDict.Add("id", MD5);
 			DataTable romDT = db.ExecuteCMD(sql, dbDict);
@@ -156,7 +156,7 @@ namespace gaseous_server.Classes
 			HasheousClient.Models.Metadata.IGDB.Platform platform = Classes.Metadata.Platforms.GetPlatform(PlatformId);
 
 			// ensure metadata for gameid is present
-			Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+			Models.Game game = Classes.Metadata.Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, GameId);
 
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid WHERE Id = @id";

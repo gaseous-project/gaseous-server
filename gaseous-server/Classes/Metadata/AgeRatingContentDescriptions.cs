@@ -12,7 +12,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static AgeRatingContentDescription? GetAgeRatingContentDescriptions(HasheousClient.Models.MetadataModel.MetadataSources SourceType, long? Id)
+        public static AgeRatingContentDescription? GetAgeRatingContentDescriptions(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {

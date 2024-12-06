@@ -52,7 +52,7 @@ Config.UpdateConfig();
 GameLibrary.UpdateDefaultLibraryPath();
 
 // set api metadata source from config
-Communications.MetadataSource = Config.MetadataConfiguration.MetadataSource;
+Communications.MetadataSource = Config.MetadataConfiguration.DefaultMetadataSource;
 
 // set up hasheous client
 HasheousClient.WebApp.HttpHelper.BaseUri = Config.MetadataConfiguration.HasheousHost;

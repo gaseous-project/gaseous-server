@@ -22,7 +22,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Platform? RetVal = Metadata.GetMetadata<Platform>(Communications.MetadataSource, (long)Id, false);
+                Platform? RetVal = Metadata.GetMetadata<Platform>(HasheousClient.Models.MetadataSources.IGDB, (long)Id, false);
                 return RetVal;
             }
         }
@@ -32,7 +32,7 @@ namespace gaseous_server.Classes.Metadata
             // get platform id from slug - query Platform table
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string query = "SELECT Id FROM Platform WHERE slug = @slug AND SourceId = @sourceid;";
-            DataTable result = db.ExecuteCMD(query, new Dictionary<string, object> { { "@slug", Slug }, { "@sourceid", Communications.MetadataSource } });
+            DataTable result = db.ExecuteCMD(query, new Dictionary<string, object> { { "@slug", Slug }, { "@sourceid", HasheousClient.Models.MetadataSources.IGDB } });
             if (result.Rows.Count == 0)
             {
                 throw new Metadata.InvalidMetadataId(Slug);

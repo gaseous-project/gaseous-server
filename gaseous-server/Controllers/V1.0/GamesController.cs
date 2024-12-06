@@ -1562,7 +1562,7 @@ namespace gaseous_server.Controllers
                     Common.hashObject hash = new Common.hashObject(romItem.Path);
                     FileSignature fileSignature = new FileSignature();
                     gaseous_server.Models.Signatures_Games romSig = fileSignature.GetFileSignature(romItem.Library, hash, new FileInfo(romItem.Path), romItem.Path);
-                    List<gaseous_server.Models.Game> searchResults = Classes.ImportGame.SearchForGame_GetAll(romSig.Game.Name, romSig.Flags.IGDBPlatformId);
+                    List<gaseous_server.Models.Game> searchResults = Classes.ImportGame.SearchForGame_GetAll(romSig.Game.Name, romSig.Flags.PlatformId);
 
                     return Ok(searchResults);
                 }

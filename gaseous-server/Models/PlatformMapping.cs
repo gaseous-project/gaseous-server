@@ -446,8 +446,8 @@ namespace gaseous_server.Models
                         {
                             if (Signature.Game != null) { Signature.Game.System = PlatformMapping.IGDBName; }
                         }
-                        Signature.Flags.IGDBPlatformId = PlatformMapping.IGDBId;
-                        Signature.Flags.IGDBPlatformName = PlatformMapping.IGDBName;
+                        Signature.Flags.PlatformId = PlatformMapping.IGDBId;
+                        Signature.Flags.PlatformName = PlatformMapping.IGDBName;
 
                         PlatformFound = true;
 
@@ -470,8 +470,8 @@ namespace gaseous_server.Models
                         {
                             if (Signature.Game != null) { Signature.Game.System = PlatformMapping.IGDBName; }
                         }
-                        Signature.Flags.IGDBPlatformId = PlatformMapping.IGDBId;
-                        Signature.Flags.IGDBPlatformName = PlatformMapping.IGDBName;
+                        Signature.Flags.PlatformId = PlatformMapping.IGDBId;
+                        Signature.Flags.PlatformName = PlatformMapping.IGDBName;
 
                         PlatformFound = true;
 

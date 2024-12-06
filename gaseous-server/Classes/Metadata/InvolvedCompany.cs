@@ -19,7 +19,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                InvolvedCompany? RetVal = Metadata.GetMetadata<InvolvedCompany>(Communications.MetadataSource, (long)Id, false);
+                InvolvedCompany? RetVal = Metadata.GetMetadata<InvolvedCompany>(HasheousClient.Models.MetadataSources.IGDB, (long)Id, false);
                 return RetVal;
             }
         }

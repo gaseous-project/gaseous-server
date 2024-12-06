@@ -14,7 +14,10 @@ namespace gaseous_server.Models
         public bool HasSavedGame { get; set; } = false;
 
         [NoDatabase]
-        public HasheousClient.Models.MetadataModel.MetadataSources MetadataSource { get; set; }
+        public long MetadataMapId { get; set; }
+
+        [NoDatabase]
+        public HasheousClient.Models.MetadataSources MetadataSource { get; set; }
     }
 
     internal class NoDatabaseAttribute : Attribute

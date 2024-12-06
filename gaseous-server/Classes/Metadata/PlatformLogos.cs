@@ -20,7 +20,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                PlatformLogo? RetVal = Metadata.GetMetadata<PlatformLogo>(Communications.MetadataSource, (long)Id, false);
+                PlatformLogo? RetVal = Metadata.GetMetadata<PlatformLogo>(HasheousClient.Models.MetadataSources.IGDB, (long)Id, false);
                 return RetVal;
             }
         }

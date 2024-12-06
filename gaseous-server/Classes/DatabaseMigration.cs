@@ -394,7 +394,7 @@ namespace gaseous_server.Classes
                 );
 
                 HasheousClient.Models.Metadata.IGDB.Platform platform = Platforms.GetPlatform((long)row["PlatformId"]);
-                Game game = Games.GetGame(Communications.MetadataSource, (long)row["GameId"]);
+                Game game = Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, (long)row["GameId"]);
 
                 ImportGame.StoreROM(library, hash, game, platform, signature, (string)row["Path"], (long)row["Id"]);
 

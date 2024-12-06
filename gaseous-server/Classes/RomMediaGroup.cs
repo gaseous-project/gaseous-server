@@ -296,7 +296,7 @@ namespace gaseous_server.Classes
             GameRomMediaGroupItem mediaGroupItem = GetMediaGroup(Id);
             if (mediaGroupItem.Status == GameRomMediaGroupItem.GroupBuildStatus.WaitingForBuild)
             {
-                Models.Game GameObject = Games.GetGame(Communications.MetadataSource, mediaGroupItem.GameId);
+                Models.Game GameObject = Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, mediaGroupItem.GameId);
                 Platform PlatformObject = Platforms.GetPlatform(mediaGroupItem.PlatformId);
                 PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(mediaGroupItem.PlatformId);
 

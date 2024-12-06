@@ -12,7 +12,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static MultiplayerMode? GetGame_MultiplayerModes(long? Id)
+        public static MultiplayerMode? GetGame_MultiplayerModes(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -20,7 +20,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                MultiplayerMode? RetVal = Metadata.GetMetadata<MultiplayerMode>(Communications.MetadataSource, (long)Id, false);
+                MultiplayerMode? RetVal = Metadata.GetMetadata<MultiplayerMode>(SourceType, (long)Id, false);
                 return RetVal;
             }
         }

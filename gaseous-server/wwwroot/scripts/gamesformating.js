@@ -60,6 +60,7 @@ var pageReloadInterval;
 var firstLoad = true;
 
 function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScrollTop) {
+    console.log(result);
     // set page mode buttons
     let pageViewButton = document.getElementById('games_library_button_pagedview');
     let infiniteViewButton = document.getElementById('games_library_button_infiniteview');
@@ -434,7 +435,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
     }
     // gameImage.src = '/images/unknowngame.png';
     if (gameObject.cover) {
-        gameImage.setAttribute('data-src', '/api/v1.1/Games/' + gameObject.id + '/cover/' + gameObject.cover.id + '/image/cover_big/' + gameObject.cover.id + '.jpg');
+        gameImage.setAttribute('data-src', '/api/v1.1/Games/' + gameObject.id + '/cover/' + gameObject.cover + '/image/cover_big/' + gameObject.cover + '.jpg');
     } else {
         gameImage.classList.add(...classes['game_tile_image unknown']);
         gameImage.setAttribute('data-src', '/images/unknowngame.png');

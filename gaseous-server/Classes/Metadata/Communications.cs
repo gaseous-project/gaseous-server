@@ -45,7 +45,7 @@ namespace gaseous_server.Classes.Metadata
         /// <summary>
         /// Configure metadata API communications
         /// </summary>
-        public static HasheousClient.Models.MetadataModel.MetadataSources MetadataSource
+        public static HasheousClient.Models.MetadataSources MetadataSource
         {
             get
             {
@@ -57,25 +57,27 @@ namespace gaseous_server.Classes.Metadata
 
                 switch (value)
                 {
-                    case HasheousClient.Models.MetadataModel.MetadataSources.IGDB:
-                        // set rate limiter avoidance values
-                        RateLimitAvoidanceWait = 1500;
-                        RateLimitAvoidanceThreshold = 3;
-                        RateLimitAvoidancePeriod = 1;
+                    case HasheousClient.Models.MetadataSources.IGDB:
+                        if (Config.MetadataConfiguration.MetadataUseHasheousProxy == false)
+                        {
+                            // set rate limiter avoidance values
+                            RateLimitAvoidanceWait = 1500;
+                            RateLimitAvoidanceThreshold = 3;
+                            RateLimitAvoidancePeriod = 1;
 
-                        // set rate limiter recovery values
-                        RateLimitRecoveryWaitTime = 10000;
+                            // set rate limiter recovery values
+                            RateLimitRecoveryWaitTime = 10000;
+                        }
+                        else
+                        {
+                            // set rate limiter avoidance values
+                            RateLimitAvoidanceWait = 1500;
+                            RateLimitAvoidanceThreshold = 6;
+                            RateLimitAvoidancePeriod = 1;
 
-                        break;
-
-                    case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
-                        // set rate limiter avoidance values
-                        RateLimitAvoidanceWait = 1500;
-                        RateLimitAvoidanceThreshold = 6;
-                        RateLimitAvoidancePeriod = 1;
-
-                        // set rate limiter recovery values
-                        RateLimitRecoveryWaitTime = 10000;
+                            // set rate limiter recovery values
+                            RateLimitRecoveryWaitTime = 10000;
+                        }
 
                         break;
 
@@ -85,7 +87,7 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
         }
-        private static HasheousClient.Models.MetadataModel.MetadataSources _MetadataSource = HasheousClient.Models.MetadataModel.MetadataSources.None;
+        private static HasheousClient.Models.MetadataSources _MetadataSource = HasheousClient.Models.MetadataSources.None;
 
         // rate limit avoidance - what can we do to ensure that rate limiting is avoided?
         // these values affect all communications
@@ -245,40 +247,44 @@ namespace gaseous_server.Classes.Metadata
         /// <returns>
         /// The object requested
         /// </returns>
-        public async Task<T[]?> APIComm<T>(HasheousClient.Models.MetadataModel.MetadataSources SourceType, MetadataEndpoint Endpoint, string Slug)
+        public async Task<T[]?> APIComm<T>(HasheousClient.Models.MetadataSources SourceType, MetadataEndpoint Endpoint, string Slug)
         {
             switch (SourceType)
             {
-                case HasheousClient.Models.MetadataModel.MetadataSources.None:
+                case HasheousClient.Models.MetadataSources.None:
                     return null;
-                case HasheousClient.Models.MetadataModel.MetadataSources.IGDB:
-                    string fieldList = "";
-                    string query = "where slug = \"" + Slug + "\"";
-                    string EndpointString = "";
-
-                    switch (Endpoint)
+                case HasheousClient.Models.MetadataSources.IGDB:
+                    if (Config.MetadataConfiguration.MetadataUseHasheousProxy == false)
                     {
-                        case MetadataEndpoint.Platform:
-                            fieldList = Platforms.fieldList;
-                            EndpointString = IGDBClient.Endpoints.Platforms;
-                            break;
+                        string fieldList = "";
+                        string query = "where slug = \"" + Slug + "\"";
+                        string EndpointString = "";
 
-                        case MetadataEndpoint.Game:
-                            fieldList = Games.fieldList;
-                            EndpointString = IGDBClient.Endpoints.Games;
-                            break;
+                        switch (Endpoint)
+                        {
+                            case MetadataEndpoint.Platform:
+                                fieldList = Platforms.fieldList;
+                                EndpointString = IGDBClient.Endpoints.Platforms;
+                                break;
 
-                        default:
-                            throw new Exception("Endpoint must be either Platform or Game");
+                            case MetadataEndpoint.Game:
+                                fieldList = Games.fieldList;
+                                EndpointString = IGDBClient.Endpoints.Games;
+                                break;
 
+                            default:
+                                throw new Exception("Endpoint must be either Platform or Game");
+
+                        }
+
+                        return await IGDBAPI<T>(EndpointString, fieldList, query);
                     }
+                    else
+                    {
+                        ConfigureHasheousClient(ref hasheous);
 
-                    return await IGDBAPI<T>(EndpointString, fieldList, query);
-
-                case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
-                    ConfigureHasheousClient(ref hasheous);
-
-                    return await HasheousAPI<T>(Endpoint.ToString(), "slug", Slug);
+                        return await HasheousAPI<T>(Endpoint.ToString(), "slug", Slug);
+                    }
 
                 default:
                     return null;
@@ -323,145 +329,149 @@ namespace gaseous_server.Classes.Metadata
         /// <returns>
         /// The object requested
         /// </returns>
-        public async Task<T[]> APIComm<T>(HasheousClient.Models.MetadataModel.MetadataSources SourceType, MetadataEndpoint Endpoint, long Id)
+        public async Task<T[]> APIComm<T>(HasheousClient.Models.MetadataSources SourceType, MetadataEndpoint Endpoint, long Id)
         {
             switch (SourceType)
             {
-                case HasheousClient.Models.MetadataModel.MetadataSources.None:
+                case HasheousClient.Models.MetadataSources.None:
                     return null;
-                case HasheousClient.Models.MetadataModel.MetadataSources.IGDB:
-                    string fieldList = "";
-                    string query = "where id = " + Id;
-                    string EndpointString = "";
-
-                    switch (Endpoint)
+                case HasheousClient.Models.MetadataSources.IGDB:
+                    if (Config.MetadataConfiguration.MetadataUseHasheousProxy == false)
                     {
-                        case MetadataEndpoint.AgeRating:
-                            fieldList = AgeRatings.fieldList;
-                            EndpointString = IGDBClient.Endpoints.AgeRating;
-                            break;
+                        string fieldList = "";
+                        string query = "where id = " + Id;
+                        string EndpointString = "";
 
-                        case MetadataEndpoint.AgeRatingContentDescription:
-                            fieldList = AgeRatingContentDescriptions.fieldList;
-                            EndpointString = IGDBClient.Endpoints.AgeRatingContentDescriptions;
-                            break;
+                        switch (Endpoint)
+                        {
+                            case MetadataEndpoint.AgeRating:
+                                fieldList = AgeRatings.fieldList;
+                                EndpointString = IGDBClient.Endpoints.AgeRating;
+                                break;
 
-                        case MetadataEndpoint.AlternativeName:
-                            fieldList = AlternativeNames.fieldList;
-                            EndpointString = IGDBClient.Endpoints.AlternativeNames;
-                            break;
+                            case MetadataEndpoint.AgeRatingContentDescription:
+                                fieldList = AgeRatingContentDescriptions.fieldList;
+                                EndpointString = IGDBClient.Endpoints.AgeRatingContentDescriptions;
+                                break;
 
-                        case MetadataEndpoint.Artwork:
-                            fieldList = Artworks.fieldList;
-                            EndpointString = IGDBClient.Endpoints.Artworks;
-                            break;
+                            case MetadataEndpoint.AlternativeName:
+                                fieldList = AlternativeNames.fieldList;
+                                EndpointString = IGDBClient.Endpoints.AlternativeNames;
+                                break;
 
-                        case MetadataEndpoint.Collection:
-                            fieldList = Collections.fieldList;
-                            EndpointString = IGDBClient.Endpoints.Collections;
-                            break;
+                            case MetadataEndpoint.Artwork:
+                                fieldList = Artworks.fieldList;
+                                EndpointString = IGDBClient.Endpoints.Artworks;
+                                break;
 
-                        case MetadataEndpoint.Company:
-                            fieldList = Companies.fieldList;
-                            EndpointString = IGDBClient.Endpoints.Companies;
-                            break;
+                            case MetadataEndpoint.Collection:
+                                fieldList = Collections.fieldList;
+                                EndpointString = IGDBClient.Endpoints.Collections;
+                                break;
 
-                        case MetadataEndpoint.CompanyLogo:
-                            fieldList = CompanyLogos.fieldList;
-                            EndpointString = IGDBClient.Endpoints.CompanyLogos;
-                            break;
+                            case MetadataEndpoint.Company:
+                                fieldList = Companies.fieldList;
+                                EndpointString = IGDBClient.Endpoints.Companies;
+                                break;
 
-                        case MetadataEndpoint.Cover:
-                            fieldList = Covers.fieldList;
-                            EndpointString = IGDBClient.Endpoints.Covers;
-                            break;
+                            case MetadataEndpoint.CompanyLogo:
+                                fieldList = CompanyLogos.fieldList;
+                                EndpointString = IGDBClient.Endpoints.CompanyLogos;
+                                break;
 
-                        case MetadataEndpoint.ExternalGame:
-                            fieldList = ExternalGames.fieldList;
-                            EndpointString = IGDBClient.Endpoints.ExternalGames;
-                            break;
+                            case MetadataEndpoint.Cover:
+                                fieldList = Covers.fieldList;
+                                EndpointString = IGDBClient.Endpoints.Covers;
+                                break;
 
-                        case MetadataEndpoint.Franchise:
-                            fieldList = Franchises.fieldList;
-                            EndpointString = IGDBClient.Endpoints.Franchies;
-                            break;
+                            case MetadataEndpoint.ExternalGame:
+                                fieldList = ExternalGames.fieldList;
+                                EndpointString = IGDBClient.Endpoints.ExternalGames;
+                                break;
 
-                        case MetadataEndpoint.GameMode:
-                            fieldList = GameModes.fieldList;
-                            EndpointString = IGDBClient.Endpoints.GameModes;
-                            break;
+                            case MetadataEndpoint.Franchise:
+                                fieldList = Franchises.fieldList;
+                                EndpointString = IGDBClient.Endpoints.Franchies;
+                                break;
 
-                        case MetadataEndpoint.Game:
-                            fieldList = Games.fieldList;
-                            EndpointString = IGDBClient.Endpoints.Games;
-                            break;
+                            case MetadataEndpoint.GameMode:
+                                fieldList = GameModes.fieldList;
+                                EndpointString = IGDBClient.Endpoints.GameModes;
+                                break;
 
-                        case MetadataEndpoint.GameVideo:
-                            fieldList = GamesVideos.fieldList;
-                            EndpointString = IGDBClient.Endpoints.GameVideos;
-                            break;
+                            case MetadataEndpoint.Game:
+                                fieldList = Games.fieldList;
+                                EndpointString = IGDBClient.Endpoints.Games;
+                                break;
 
-                        case MetadataEndpoint.Genre:
-                            fieldList = Genres.fieldList;
-                            EndpointString = IGDBClient.Endpoints.Genres;
-                            break;
+                            case MetadataEndpoint.GameVideo:
+                                fieldList = GamesVideos.fieldList;
+                                EndpointString = IGDBClient.Endpoints.GameVideos;
+                                break;
 
-                        case MetadataEndpoint.InvolvedCompany:
-                            fieldList = InvolvedCompanies.fieldList;
-                            EndpointString = IGDBClient.Endpoints.InvolvedCompanies;
-                            break;
+                            case MetadataEndpoint.Genre:
+                                fieldList = Genres.fieldList;
+                                EndpointString = IGDBClient.Endpoints.Genres;
+                                break;
 
-                        case MetadataEndpoint.MultiplayerMode:
-                            fieldList = MultiplayerModes.fieldList;
-                            EndpointString = IGDBClient.Endpoints.MultiplayerModes;
-                            break;
+                            case MetadataEndpoint.InvolvedCompany:
+                                fieldList = InvolvedCompanies.fieldList;
+                                EndpointString = IGDBClient.Endpoints.InvolvedCompanies;
+                                break;
 
-                        case MetadataEndpoint.PlatformLogo:
-                            fieldList = PlatformLogos.fieldList;
-                            EndpointString = IGDBClient.Endpoints.PlatformLogos;
-                            break;
+                            case MetadataEndpoint.MultiplayerMode:
+                                fieldList = MultiplayerModes.fieldList;
+                                EndpointString = IGDBClient.Endpoints.MultiplayerModes;
+                                break;
 
-                        case MetadataEndpoint.Platform:
-                            fieldList = Platforms.fieldList;
-                            EndpointString = IGDBClient.Endpoints.Platforms;
-                            break;
+                            case MetadataEndpoint.PlatformLogo:
+                                fieldList = PlatformLogos.fieldList;
+                                EndpointString = IGDBClient.Endpoints.PlatformLogos;
+                                break;
 
-                        case MetadataEndpoint.PlatformVersion:
-                            fieldList = PlatformVersions.fieldList;
-                            EndpointString = IGDBClient.Endpoints.PlatformVersions;
-                            break;
+                            case MetadataEndpoint.Platform:
+                                fieldList = Platforms.fieldList;
+                                EndpointString = IGDBClient.Endpoints.Platforms;
+                                break;
 
-                        case MetadataEndpoint.PlayerPerspective:
-                            fieldList = PlayerPerspectives.fieldList;
-                            EndpointString = IGDBClient.Endpoints.PlayerPerspectives;
-                            break;
+                            case MetadataEndpoint.PlatformVersion:
+                                fieldList = PlatformVersions.fieldList;
+                                EndpointString = IGDBClient.Endpoints.PlatformVersions;
+                                break;
 
-                        case MetadataEndpoint.ReleaseDate:
-                            fieldList = ReleaseDates.fieldList;
-                            EndpointString = IGDBClient.Endpoints.ReleaseDates;
-                            break;
+                            case MetadataEndpoint.PlayerPerspective:
+                                fieldList = PlayerPerspectives.fieldList;
+                                EndpointString = IGDBClient.Endpoints.PlayerPerspectives;
+                                break;
 
-                        case MetadataEndpoint.Screenshot:
-                            fieldList = Screenshots.fieldList;
-                            EndpointString = IGDBClient.Endpoints.Screenshots;
-                            break;
+                            case MetadataEndpoint.ReleaseDate:
+                                fieldList = ReleaseDates.fieldList;
+                                EndpointString = IGDBClient.Endpoints.ReleaseDates;
+                                break;
 
-                        case MetadataEndpoint.Theme:
-                            fieldList = Themes.fieldList;
-                            EndpointString = IGDBClient.Endpoints.Themes;
-                            break;
+                            case MetadataEndpoint.Screenshot:
+                                fieldList = Screenshots.fieldList;
+                                EndpointString = IGDBClient.Endpoints.Screenshots;
+                                break;
 
-                        default:
-                            throw new Exception("Endpoint must be either Platform or Game");
+                            case MetadataEndpoint.Theme:
+                                fieldList = Themes.fieldList;
+                                EndpointString = IGDBClient.Endpoints.Themes;
+                                break;
 
+                            default:
+                                throw new Exception("Endpoint must be either Platform or Game");
+
+                        }
+
+                        return await IGDBAPI<T>(EndpointString, fieldList, query);
                     }
+                    else
+                    {
+                        ConfigureHasheousClient(ref hasheous);
 
-                    return await IGDBAPI<T>(EndpointString, fieldList, query);
-
-                case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
-                    ConfigureHasheousClient(ref hasheous);
-
-                    return await HasheousAPI<T>(Endpoint.ToString(), "id", Id.ToString());
+                        return await HasheousAPI<T>(Endpoint.ToString(), "id", Id.ToString());
+                    }
                 default:
                     return null;
             }
@@ -514,12 +524,17 @@ namespace gaseous_server.Classes.Metadata
         {
             switch (_MetadataSource)
             {
-                case HasheousClient.Models.MetadataModel.MetadataSources.None:
+                case HasheousClient.Models.MetadataSources.None:
                     return null;
-                case HasheousClient.Models.MetadataModel.MetadataSources.IGDB:
-                    return await IGDBAPI<T>(Endpoint, Fields, Query);
-                case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
-                    return null;
+                case HasheousClient.Models.MetadataSources.IGDB:
+                    if (Config.MetadataConfiguration.MetadataUseHasheousProxy == false)
+                    {
+                        return await IGDBAPI<T>(Endpoint, Fields, Query);
+                    }
+                    else
+                    {
+                        return null;
+                    }
                 default:
                     return null;
             }
@@ -1132,12 +1147,15 @@ namespace gaseous_server.Classes.Metadata
                 Communications comms = new Communications();
                 switch (_MetadataSource)
                 {
-                    case HasheousClient.Models.MetadataModel.MetadataSources.IGDB:
-                        await comms.IGDBAPI_GetImage(ImageId, ImagePath);
-                        break;
-
-                    case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
-                        await comms.HasheousAPI_GetImage(ImageId, ImagePath);
+                    case HasheousClient.Models.MetadataSources.IGDB:
+                        if (Config.MetadataConfiguration.MetadataUseHasheousProxy == false)
+                        {
+                            await comms.IGDBAPI_GetImage(ImageId, ImagePath);
+                        }
+                        else
+                        {
+                            await comms.HasheousAPI_GetImage(ImageId, ImagePath);
+                        }
                         break;
 
                     default:

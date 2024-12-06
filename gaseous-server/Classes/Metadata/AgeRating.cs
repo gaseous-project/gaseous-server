@@ -15,7 +15,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static AgeRating? GetAgeRating(HasheousClient.Models.MetadataModel.MetadataSources SourceType, long? Id)
+        public static AgeRating? GetAgeRating(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -28,7 +28,7 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        public static GameAgeRating GetConsolidatedAgeRating(HasheousClient.Models.MetadataModel.MetadataSources SourceType, long RatingId)
+        public static GameAgeRating GetConsolidatedAgeRating(HasheousClient.Models.MetadataSources SourceType, long RatingId)
         {
             GameAgeRating gameAgeRating = new GameAgeRating();
 

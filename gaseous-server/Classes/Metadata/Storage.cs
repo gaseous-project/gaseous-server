@@ -45,7 +45,7 @@ namespace gaseous_server.Classes.Metadata
         /// <returns>
         /// The cache status of the record
         /// </returns>
-        public static CacheStatus GetCacheStatus(HasheousClient.Models.MetadataModel.MetadataSources SourceType, string Endpoint, string Slug)
+        public static CacheStatus GetCacheStatus(HasheousClient.Models.MetadataSources SourceType, string Endpoint, string Slug)
         {
             return _GetCacheStatus(SourceType, Endpoint, "slug", Slug);
         }
@@ -65,7 +65,7 @@ namespace gaseous_server.Classes.Metadata
         /// <returns>
         /// The cache status of the record
         /// </returns>
-        public static CacheStatus GetCacheStatus(HasheousClient.Models.MetadataModel.MetadataSources SourceType, string Endpoint, long Id)
+        public static CacheStatus GetCacheStatus(HasheousClient.Models.MetadataSources SourceType, string Endpoint, long Id)
         {
             return _GetCacheStatus(SourceType, Endpoint, "id", Id);
         }
@@ -102,7 +102,7 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        private static CacheStatus _GetCacheStatus(HasheousClient.Models.MetadataModel.MetadataSources SourceType, string Endpoint, string SearchField, object SearchValue)
+        private static CacheStatus _GetCacheStatus(HasheousClient.Models.MetadataSources SourceType, string Endpoint, string SearchField, object SearchValue)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
@@ -145,7 +145,7 @@ namespace gaseous_server.Classes.Metadata
         /// <param name="UpdateRecord">
         /// Whether to update the record if it already exists
         /// </param>
-        public static void NewCacheValue<T>(HasheousClient.Models.MetadataModel.MetadataSources SourceType, T ObjectToCache, bool UpdateRecord = false)
+        public static void NewCacheValue<T>(HasheousClient.Models.MetadataSources SourceType, T ObjectToCache, bool UpdateRecord = false)
         {
             // get the object type name
             string ObjectTypeName = ObjectToCache.GetType().Name;
@@ -182,7 +182,7 @@ namespace gaseous_server.Classes.Metadata
                 }
                 fieldList = fieldList + key.Key;
                 valueList = valueList + "@" + key.Key;
-                if ((key.Key != "id") && (key.Key != "dateAdded"))
+                if ((key.Key != "id") && (key.Key != "dateAdded") && (key.Key != "SourceId"))
                 {
                     if (updateFieldValueList.Length > 0)
                     {
@@ -239,11 +239,11 @@ namespace gaseous_server.Classes.Metadata
             string sql = "";
             if (UpdateRecord == false)
             {
-                sql = "INSERT INTO " + ObjectTypeName + " (" + fieldList + ") VALUES (" + valueList + ")";
+                sql = "INSERT INTO " + ObjectTypeName + " (" + fieldList + ") VALUES (" + valueList + ");";
             }
             else
             {
-                sql = "UPDATE " + ObjectTypeName + " SET " + updateFieldValueList + " WHERE Id = @Id";
+                sql = "UPDATE " + ObjectTypeName + " SET " + updateFieldValueList + " WHERE Id = @Id AND SourceId = @SourceId;";
             }
 
             // execute sql
@@ -275,7 +275,7 @@ namespace gaseous_server.Classes.Metadata
         /// <exception cref="Exception">
         /// Thrown when no record is found that matches the search criteria
         /// </exception>
-        public static T GetCacheValue<T>(HasheousClient.Models.MetadataModel.MetadataSources SourceType, T? EndpointType, string SearchField, object SearchValue)
+        public static T GetCacheValue<T>(HasheousClient.Models.MetadataSources SourceType, T? EndpointType, string SearchField, object SearchValue)
         {
             string Endpoint = EndpointType.GetType().Name;
 
@@ -311,55 +311,58 @@ namespace gaseous_server.Classes.Metadata
                 if (property.GetCustomAttribute<Models.NoDatabaseAttribute>() == null)
                 {
                     // get the value from the DataRow with the same name as the property
-                    object? value = dataRow[property.Name];
-
-                    if (value != null && value != DBNull.Value)
+                    if (dataRow.Table.Columns.Contains(property.Name) == true)
                     {
-                        // check the property type - if it's a list or array, deserialize it. Otherwise, just set the value
-                        Type objectType = EndpointType.GetType();
-                        if (objectType != null)
+                        object? value = dataRow[property.Name];
+
+                        if (value != null && value != DBNull.Value)
                         {
-                            // fullname = System.Nullable`1[[System.DateTimeOffset,
-                            string propertyTypeName = property.PropertyType.FullName.Split(",")[0];
-                            bool isNullable = false;
-                            if (propertyTypeName.StartsWith("System.Nullable"))
+                            // check the property type - if it's a list or array, deserialize it. Otherwise, just set the value
+                            Type objectType = EndpointType.GetType();
+                            if (objectType != null)
                             {
-                                isNullable = true;
-                                propertyTypeName = propertyTypeName.Split("[[")[1];
-                            }
-                            propertyTypeName = propertyTypeName.Split("`")[0];
+                                // fullname = System.Nullable`1[[System.DateTimeOffset,
+                                string propertyTypeName = property.PropertyType.FullName.Split(",")[0];
+                                bool isNullable = false;
+                                if (propertyTypeName.StartsWith("System.Nullable"))
+                                {
+                                    isNullable = true;
+                                    propertyTypeName = propertyTypeName.Split("[[")[1];
+                                }
+                                propertyTypeName = propertyTypeName.Split("`")[0];
 
-                            switch (propertyTypeName.ToLower())
-                            {
-                                case "system.collections.generic.list":
-                                    var listArray = Newtonsoft.Json.JsonConvert.DeserializeObject<List<object>>(value.ToString());
-                                    property.SetValue(EndpointType, listArray);
-                                    break;
+                                switch (propertyTypeName.ToLower())
+                                {
+                                    case "system.collections.generic.list":
+                                        var listArray = Newtonsoft.Json.JsonConvert.DeserializeObject<List<object>>(value.ToString());
+                                        property.SetValue(EndpointType, listArray);
+                                        break;
 
-                                case "system.int32[]":
-                                    var int32array = Newtonsoft.Json.JsonConvert.DeserializeObject<int[]>(value.ToString());
-                                    property.SetValue(EndpointType, int32array);
-                                    break;
+                                    case "system.int32[]":
+                                        var int32array = Newtonsoft.Json.JsonConvert.DeserializeObject<int[]>(value.ToString());
+                                        property.SetValue(EndpointType, int32array);
+                                        break;
 
-                                case "system.datetimeoffset":
-                                    property.SetValue(EndpointType, (DateTimeOffset)(DateTime?)value);
-                                    break;
+                                    case "system.datetimeoffset":
+                                        property.SetValue(EndpointType, (DateTimeOffset)(DateTime?)value);
+                                        break;
 
-                                default:
-                                    // check if property is an enum
-                                    if (property.PropertyType.IsEnum)
-                                    {
-                                        property.SetValue(EndpointType, Enum.Parse(property.PropertyType, value.ToString()));
-                                    }
-                                    else if (Common.IsNullableEnum(property.PropertyType))
-                                    {
-                                        property.SetValue(EndpointType, Enum.Parse(Nullable.GetUnderlyingType(property.PropertyType), value.ToString()));
-                                    }
-                                    else
-                                    {
-                                        property.SetValue(EndpointType, value);
-                                    }
-                                    break;
+                                    default:
+                                        // check if property is an enum
+                                        if (property.PropertyType.IsEnum)
+                                        {
+                                            property.SetValue(EndpointType, Enum.Parse(property.PropertyType, value.ToString()));
+                                        }
+                                        else if (Common.IsNullableEnum(property.PropertyType))
+                                        {
+                                            property.SetValue(EndpointType, Enum.Parse(Nullable.GetUnderlyingType(property.PropertyType), value.ToString()));
+                                        }
+                                        else
+                                        {
+                                            property.SetValue(EndpointType, value);
+                                        }
+                                        break;
+                                }
                             }
                         }
                     }

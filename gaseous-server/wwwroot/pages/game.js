@@ -13,6 +13,7 @@ function SetupPage() {
     document.head.appendChild(mappingScript);
 
     ajaxCall('/api/v1.1/Games/' + gameId, 'GET', function (result) {
+        console.log(result);
         // populate games page
         gameData = result;
 
@@ -21,19 +22,19 @@ function SetupPage() {
         gameTitleLabel.innerHTML = result.name;
 
         // get critic rating
-        if (gameData.totalRating) {
+        if (gameData.total_rating) {
             var criticscoreval = document.getElementById('gametitle_criticrating_value');
-            criticscoreval.innerHTML = Math.floor(gameData.totalRating) + '%';
+            criticscoreval.innerHTML = Math.floor(gameData.total_rating) + '%';
 
-            if (gameData.totalRatingCount) {
+            if (gameData.total_rating_count) {
                 var criticscorelabel = document.getElementById('gametitle_criticrating_label');
-                criticscorelabel.innerHTML = '<img src="/images/IGDB_logo.svg" style="filter: invert(100%); height: 13px; margin-bottom: -5px;" /><span style="font-size: 10px;"> User Rating<br />' + "based on " + gameData.totalRatingCount + " votes</span>"
+                criticscorelabel.innerHTML = '<img src="/images/IGDB_logo.svg" style="filter: invert(100%); height: 13px; margin-bottom: -5px;" /><span style="font-size: 10px;"> User Rating<br />' + "based on " + gameData.total_rating_count + " votes</span>"
             }
         }
 
         // get alt name
         var gameTitleAltLabel = document.getElementById('gametitle_alts');
-        if (result.alternativeNames) {
+        if (result.alternative_names) {
             ajaxCall('/api/v1.1/Games/' + gameId + '/alternativename', 'GET', function (result) {
                 var altNames = '';
                 for (var i = 0; i < result.length; i++) {
@@ -103,7 +104,7 @@ function SetupPage() {
         var gamePublisherContent = document.getElementById('gamesummary_publishers_content');
         var gameDeveloperLoaded = false;
         var gamePublisherLoaded = false;
-        if (result.involvedCompanies) {
+        if (result.involved_companies) {
             ajaxCall('/api/v1.1/Games/' + gameId + '/companies', 'GET', function (result) {
                 var lstDevelopers = [];
                 var lstPublishers = [];
@@ -199,9 +200,9 @@ function SetupPage() {
         // load release date
         var gameSummaryRelease = document.getElementById('gamesummary_firstrelease');
         var gameSummaryReleaseContent = document.getElementById('gamesummary_firstrelease_content');
-        if (result.firstReleaseDate) {
+        if (result.first_release_date) {
             var firstRelease = document.createElement('span');
-            firstRelease.innerHTML = moment(result.firstReleaseDate).format('LL') + ' (' + moment(result.firstReleaseDate).fromNow() + ')';
+            firstRelease.innerHTML = moment(result.first_release_date).format('LL') + ' (' + moment(result.first_release_date).fromNow() + ')';
             gameSummaryReleaseContent.appendChild(firstRelease);
         } else {
             gameSummaryRelease.setAttribute('style', 'display: none;');
@@ -210,7 +211,7 @@ function SetupPage() {
         // load ratings
         let gameSummaryRatings = document.getElementById('gamesummary_ratings');
         let gameSummaryRatingsContent = document.getElementById('gamesummary_ratings_content');
-        if (result.ageRatings) {
+        if (result.age_ratings) {
             ajaxCall('/api/v1.1/Games/' + gameId + '/agerating', 'GET', function (result) {
                 let classTable = document.createElement('table');
 
@@ -305,7 +306,7 @@ function SetupPage() {
             var gameScreenshots_Gallery = document.getElementById('gamescreenshots_gallery_panel');
             var imageIndex = 0;
             if (result.videos) {
-                imageIndex = result.videos.ids.length;
+                imageIndex = result.videos.length;
             }
             if (result.screenshots) {
                 ajaxCall('/api/v1.1/Games/' + gameId + '/screenshots', 'GET', function (screenshotsItem) {
@@ -335,10 +336,10 @@ function SetupPage() {
                         var vScreenshotItem = document.createElement('li');
                         vScreenshotItem.id = 'gamescreenshots_gallery_' + i;
                         vScreenshotItem.setAttribute('name', 'gamescreenshots_gallery_item');
-                        vScreenshotItem.setAttribute('style', 'background-image: url("https://i.ytimg.com/vi/' + result[i].videoId + '/hqdefault.jpg"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
+                        vScreenshotItem.setAttribute('style', 'background-image: url("https://i.ytimg.com/vi/' + result[i].video_id + '/hqdefault.jpg"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
                         vScreenshotItem.setAttribute('imageid', i);
                         vScreenshotItem.setAttribute('imagetype', 1);
-                        vScreenshotItem.setAttribute('imageref', result[i].videoId);
+                        vScreenshotItem.setAttribute('imageref', result[i].video_id);
                         vScreenshotItem.className = 'gamescreenshots_gallery_item';
                         vScreenshotItem.setAttribute('onclick', 'selectScreenshot(' + i + ');');
 
@@ -1448,7 +1449,7 @@ class RomManagement {
                             id: data[i].id,
                             text: data[i].name,
                             cover: data[i].cover,
-                            releaseDate: data[i].firstReleaseDate
+                            releaseDate: data[i].first_release_date
                         });
                     }
 
@@ -1466,8 +1467,8 @@ function loadArtwork(game, cover) {
 
     // default background should be the artworks
     if (game.artworks) {
-        for (let i = 0; i < game.artworks.ids.length; i++) {
-            URLList.push("/api/v1.1/Games/" + gameId + "/artwork/" + game.artworks.ids[i] + "/image/original/" + game.artworks.ids[i] + ".jpg");
+        for (let i = 0; i < game.artworks.length; i++) {
+            URLList.push("/api/v1.1/Games/" + gameId + "/artwork/" + game.artworks[i] + "/image/original/" + game.artworks[i] + ".jpg");
         }
     } else if (game.cover) {
         // backup background is the cover artwork

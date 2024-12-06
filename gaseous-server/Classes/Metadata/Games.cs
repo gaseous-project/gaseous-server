@@ -20,7 +20,7 @@ namespace gaseous_server.Classes.Metadata
             { }
         }
 
-        public static Game? GetGame(HasheousClient.Models.MetadataModel.MetadataSources SourceType, long? Id)
+        public static Game? GetGame(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -35,7 +35,7 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        public static Game? GetGame(HasheousClient.Models.MetadataModel.MetadataSources SourceType, string? Slug)
+        public static Game? GetGame(HasheousClient.Models.MetadataSources SourceType, string? Slug)
         {
             Game? RetVal = Metadata.GetMetadata<Game>(SourceType, Slug, false);
             RetVal.MetadataSource = SourceType;
@@ -157,67 +157,70 @@ namespace gaseous_server.Classes.Metadata
 
         private static async Task<Game[]> _SearchForGameRemote(string SearchString, long PlatformId, SearchType searchType)
         {
-            switch (Communications.MetadataSource)
+            switch (Config.MetadataConfiguration.DefaultMetadataSource)
             {
-                case HasheousClient.Models.MetadataModel.MetadataSources.None:
+                case HasheousClient.Models.MetadataSources.None:
                     return new Game[0];
-                case HasheousClient.Models.MetadataModel.MetadataSources.IGDB:
-                    string searchBody = "";
-                    string searchFields = "fields id,name,slug,platforms,summary; ";
-                    bool allowSearch = true;
-                    switch (searchType)
+                case HasheousClient.Models.MetadataSources.IGDB:
+                    if (Config.MetadataConfiguration.MetadataUseHasheousProxy == false)
                     {
-                        case SearchType.searchNoPlatform:
-                            searchBody = "search \"" + SearchString + "\"; ";
-
-                            allowSearch = AllowNoPlatformSearch;
-                            break;
-                        case SearchType.search:
-                            searchBody = "search \"" + SearchString + "\"; where platforms = (" + PlatformId + ");";
-                            break;
-                        case SearchType.wherefuzzy:
-                            searchBody = "where platforms = (" + PlatformId + ") & name ~ *\"" + SearchString + "\"*;";
-                            break;
-                        case SearchType.where:
-                            searchBody = "where platforms = (" + PlatformId + ") & name ~ \"" + SearchString + "\";";
-                            break;
-                    }
-
-                    // check search cache
-                    Game[]? games = Communications.GetSearchCache<Game[]?>(searchFields, searchBody);
-
-                    if (games == null)
-                    {
-                        // cache miss
-                        // get Game metadata
-                        Communications comms = new Communications();
-                        Game[]? results = new Game[0];
-                        if (allowSearch == true)
+                        string searchBody = "";
+                        string searchFields = "fields id,name,slug,platforms,summary; ";
+                        bool allowSearch = true;
+                        switch (searchType)
                         {
-                            results = await comms.APIComm<Game>(IGDB.IGDBClient.Endpoints.Games, searchFields, searchBody);
+                            case SearchType.searchNoPlatform:
+                                searchBody = "search \"" + SearchString + "\"; ";
 
-                            Communications.SetSearchCache<Game[]?>(searchFields, searchBody, results);
+                                allowSearch = AllowNoPlatformSearch;
+                                break;
+                            case SearchType.search:
+                                searchBody = "search \"" + SearchString + "\"; where platforms = (" + PlatformId + ");";
+                                break;
+                            case SearchType.wherefuzzy:
+                                searchBody = "where platforms = (" + PlatformId + ") & name ~ *\"" + SearchString + "\"*;";
+                                break;
+                            case SearchType.where:
+                                searchBody = "where platforms = (" + PlatformId + ") & name ~ \"" + SearchString + "\";";
+                                break;
                         }
 
-                        return results;
+                        // check search cache
+                        Game[]? games = Communications.GetSearchCache<Game[]?>(searchFields, searchBody);
+
+                        if (games == null)
+                        {
+                            // cache miss
+                            // get Game metadata
+                            Communications comms = new Communications();
+                            Game[]? results = new Game[0];
+                            if (allowSearch == true)
+                            {
+                                results = await comms.APIComm<Game>(IGDB.IGDBClient.Endpoints.Games, searchFields, searchBody);
+
+                                Communications.SetSearchCache<Game[]?>(searchFields, searchBody, results);
+                            }
+
+                            return results;
+                        }
+                        else
+                        {
+                            return games.ToArray();
+                        }
                     }
                     else
                     {
-                        return games.ToArray();
+                        HasheousClient.Hasheous hasheous = new HasheousClient.Hasheous();
+                        HasheousClient.Models.Metadata.IGDB.Game[] hResults = hasheous.GetMetadataProxy_SearchGame<HasheousClient.Models.Metadata.IGDB.Game>(HasheousClient.Hasheous.MetadataProvider.IGDB, PlatformId.ToString(), SearchString);
+
+                        List<Game> hGames = new List<Game>();
+                        foreach (HasheousClient.Models.Metadata.IGDB.Game hResult in hResults)
+                        {
+                            hGames.Add(Communications.ConvertToIGDBModel<Game>(hResult));
+                        }
+
+                        return hGames.ToArray();
                     }
-
-                case HasheousClient.Models.MetadataModel.MetadataSources.Hasheous:
-                    HasheousClient.Hasheous hasheous = new HasheousClient.Hasheous();
-                    HasheousClient.Models.Metadata.IGDB.Game[] hResults = hasheous.GetMetadataProxy_SearchGame<HasheousClient.Models.Metadata.IGDB.Game>(HasheousClient.Hasheous.MetadataProvider.IGDB, PlatformId.ToString(), SearchString);
-
-                    List<Game> hGames = new List<Game>();
-                    foreach (HasheousClient.Models.Metadata.IGDB.Game hResult in hResults)
-                    {
-                        hGames.Add(Communications.ConvertToIGDBModel<Game>(hResult));
-                    }
-
-                    return hGames.ToArray();
-
                 default:
                     return new Game[0];
             }
@@ -396,6 +399,7 @@ ORDER BY Platform.`Name`;";
             public MinimalGameItem(Game gameObject)
             {
                 this.Id = gameObject.Id;
+                this.MetadataMapId = gameObject.MetadataMapId;
                 this.Name = gameObject.Name;
                 this.Slug = gameObject.Slug;
                 this.Summary = gameObject.Summary;
@@ -421,6 +425,7 @@ ORDER BY Platform.`Name`;";
             }
 
             public long? Id { get; set; }
+            public long? MetadataMapId { get; set; }
             public long Index { get; set; }
             public string Name { get; set; }
             public string Slug { get; set; }

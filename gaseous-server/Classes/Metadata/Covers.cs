@@ -11,7 +11,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static Cover? GetCover(HasheousClient.Models.MetadataModel.MetadataSources SourceType, long? Id)
+        public static Cover? GetCover(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {

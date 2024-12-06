@@ -314,7 +314,8 @@ namespace gaseous_server.Controllers
                 },
                 MetadataSource = new SystemSettingsModel.MetadataSourceItem()
                 {
-                    Source = Config.MetadataConfiguration.MetadataSource,
+                    Source = Config.MetadataConfiguration.DefaultMetadataSource,
+                    UseHasheousProxy = Config.MetadataConfiguration.MetadataUseHasheousProxy,
                     IGDBClientId = Config.IGDB.ClientId,
                     IGDBClientSecret = Config.IGDB.Secret
                 }
@@ -340,7 +341,8 @@ namespace gaseous_server.Controllers
                 Config.MetadataConfiguration.HasheousHost = model.SignatureSource.HasheousHost;
                 Config.MetadataConfiguration.HasheousAPIKey = model.SignatureSource.HasheousAPIKey;
                 Config.MetadataConfiguration.HasheousSubmitFixes = model.SignatureSource.HasheousSubmitFixes;
-                Config.MetadataConfiguration.MetadataSource = model.MetadataSource.Source;
+                Config.MetadataConfiguration.DefaultMetadataSource = model.MetadataSource.Source;
+                Config.MetadataConfiguration.MetadataUseHasheousProxy = model.MetadataSource.UseHasheousProxy;
                 Config.IGDB.ClientId = model.MetadataSource.IGDBClientId;
                 Config.IGDB.Secret = model.MetadataSource.IGDBClientSecret;
                 Config.UpdateConfig();
@@ -797,7 +799,8 @@ namespace gaseous_server.Controllers
 
         public class MetadataSourceItem
         {
-            public HasheousClient.Models.MetadataModel.MetadataSources Source { get; set; }
+            public HasheousClient.Models.MetadataSources Source { get; set; }
+            public bool UseHasheousProxy { get; set; }
             public string IGDBClientId { get; set; }
             public string IGDBClientSecret { get; set; }
         }

@@ -12,7 +12,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static AlternativeName? GetAlternativeNames(HasheousClient.Models.MetadataModel.MetadataSources SourceType, long? Id)
+        public static AlternativeName? GetAlternativeNames(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
