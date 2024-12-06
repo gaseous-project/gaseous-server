@@ -8,6 +8,17 @@ namespace gaseous_server.Models
         public long PlatformId { get; set; }
         public string SignatureGameName { get; set; }
         public List<MetadataMapItem> MetadataMapItems { get; set; }
+        public MetadataMapItem? PreferredMetadataMapItem
+        {
+            get
+            {
+                if (MetadataMapItems == null || MetadataMapItems.Count == 0)
+                {
+                    return null;
+                }
+                return MetadataMapItems.FirstOrDefault(mmi => mmi.Preferred);
+            }
+        }
 
         public class MetadataMapItem
         {

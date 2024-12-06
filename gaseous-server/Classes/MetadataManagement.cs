@@ -46,11 +46,13 @@ namespace gaseous_server.Classes
 			long metadataMapId = (long)dt.Rows[0][0];
 
 			// create dummy game metadata item and capture id
-			sql = "INSERT INTO Game (SourceId, Name) VALUES (@sourceid, @name); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+			sql = "INSERT INTO Game (SourceId, Name, dateAdded, lastUpdated) VALUES (@sourceid, @name, @dateadded, @lastupdated); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
 			dbDict = new Dictionary<string, object>()
 			{
 				{ "@sourceid", HasheousClient.Models.MetadataSources.None },
-				{ "@name", name }
+				{ "@name", name },
+				{ "@dateadded", DateTime.UtcNow },
+				{ "@lastupdated", DateTime.UtcNow }
 			};
 			dt = db.ExecuteCMD(sql, dbDict);
 

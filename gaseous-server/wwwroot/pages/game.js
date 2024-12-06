@@ -51,8 +51,9 @@ function SetupPage() {
         }
 
         // get summary
-        var gameSummaryLabel = document.getElementById('gamesummarytext_label');
+        let gameSummaryBox = document.getElementById('gamesummarytext');
         if (result.summary || result.storyline) {
+            let gameSummaryLabel = document.getElementById('gamesummarytext_label');
             if (result.summary) {
                 gameSummaryLabel.innerHTML = result.summary.replaceAll("\n", "<br />");
             } else {
@@ -68,7 +69,7 @@ function SetupPage() {
                 // your element doesn't overflow (not truncated)
             }
         } else {
-            gameSummaryLabel.setAttribute('style', 'display: none;');
+            gameSummaryBox.setAttribute('style', 'display: none;');
         }
 
         // load cover

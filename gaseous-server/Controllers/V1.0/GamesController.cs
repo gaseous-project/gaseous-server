@@ -298,15 +298,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}")]
+        [Route("{MetadataMapId}")]
         [ProducesResponseType(typeof(gaseous_server.Models.Game), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "5Minute")]
-        public async Task<ActionResult> Game(long GameId)
+        public async Task<ActionResult> Game(long MetadataMapId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 if (game != null)
                 {
@@ -326,15 +327,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/alternativename")]
+        [Route("{MetadataMapId}/alternativename")]
         [ProducesResponseType(typeof(List<AlternativeName>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameAlternativeNames(long GameId)
+        public async Task<ActionResult> GameAlternativeNames(long MetadataMapId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 if (game.AlternativeNames != null)
                 {
@@ -359,15 +361,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/agerating")]
+        [Route("{MetadataMapId}/agerating")]
         [ProducesResponseType(typeof(List<AgeRatings.GameAgeRating>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameAgeClassification(long GameId)
+        public async Task<ActionResult> GameAgeClassification(long MetadataMapId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 if (game.AgeRatings != null)
                 {
@@ -392,15 +395,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/artwork")]
+        [Route("{MetadataMapId}/artwork")]
         [ProducesResponseType(typeof(List<Artwork>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameArtwork(long GameId)
+        public async Task<ActionResult> GameArtwork(long MetadataMapId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 List<Artwork> artworks = new List<Artwork>();
                 if (game.Artworks != null)
@@ -423,15 +427,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/artwork/{ArtworkId}")]
+        [Route("{MetadataMapId}/artwork/{ArtworkId}")]
         [ProducesResponseType(typeof(Artwork), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameArtwork(long GameId, long ArtworkId)
+        public async Task<ActionResult> GameArtwork(long MetadataMapId, long ArtworkId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 try
                 {
@@ -459,15 +464,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/cover")]
+        [Route("{MetadataMapId}/cover")]
         [ProducesResponseType(typeof(Cover), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameCover(long GameId)
+        public async Task<ActionResult> GameCover(long MetadataMapId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 if (game != null)
                 {
                     Cover coverObject = Covers.GetCover(game.MetadataSource, (long?)game.Cover);
@@ -494,15 +500,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/{ImageType}/{ImageId}/image/{size}")]
-        [Route("{GameId}/{ImageType}/{ImageId}/image/{size}/{imagename}")]
+        [Route("{MetadataMapId}/{ImageType}/{ImageId}/image/{size}")]
+        [Route("{MetadataMapId}/{ImageType}/{ImageId}/image/{size}/{imagename}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameImage(long GameId, MetadataImageType imageType, long ImageId, Communications.IGDBAPI_ImageSize size, string imagename = "")
+        public async Task<ActionResult> GameImage(long MetadataMapId, MetadataImageType imageType, long ImageId, Communications.IGDBAPI_ImageSize size, string imagename = "")
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 string? imageId = null;
                 string? imageTypePath = null;
@@ -630,14 +637,15 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/favourite")]
+        [Route("{MetadataMapId}/favourite")]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameGetFavouriteAsync(long GameId)
+        public async Task<ActionResult> GameGetFavouriteAsync(long MetadataMapId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 if (game != null)
                 {
@@ -646,7 +654,7 @@ namespace gaseous_server.Controllers
                     if (user != null)
                     {
                         Favourites favourites = new Favourites();
-                        return Ok(favourites.GetFavourite(user.Id, GameId));
+                        return Ok(favourites.GetFavourite(user.Id, MetadataMapId));
                     }
                     else
                     {
@@ -667,14 +675,15 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpPost]
-        [Route("{GameId}/favourite")]
+        [Route("{MetadataMapId}/favourite")]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameSetFavouriteAsync(long GameId, bool favourite)
+        public async Task<ActionResult> GameSetFavouriteAsync(long MetadataMapId, bool favourite)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 if (game != null)
                 {
@@ -683,7 +692,7 @@ namespace gaseous_server.Controllers
                     if (user != null)
                     {
                         Favourites favourites = new Favourites();
-                        return Ok(favourites.SetFavourite(user.Id, GameId, favourite));
+                        return Ok(favourites.SetFavourite(user.Id, MetadataMapId, favourite));
                     }
                     else
                     {
@@ -704,15 +713,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/gamemode")]
+        [Route("{MetadataMapId}/gamemode")]
         [ProducesResponseType(typeof(List<GameMode>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameMode(long GameId)
+        public async Task<ActionResult> GameMode(long MetadataMapId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 if (game != null)
                 {
                     List<GameMode> gameModeObjects = new List<GameMode>();
@@ -740,15 +750,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/genre")]
+        [Route("{MetadataMapId}/genre")]
         [ProducesResponseType(typeof(List<Genre>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameGenre(long GameId)
+        public async Task<ActionResult> GameGenre(long MetadataMapId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 if (game != null)
                 {
                     List<Genre> genreObjects = new List<Genre>();
@@ -778,15 +789,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/companies")]
+        [Route("{MetadataMapId}/companies")]
         [ProducesResponseType(typeof(List<Dictionary<string, object>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameInvolvedCompanies(long GameId)
+        public async Task<ActionResult> GameInvolvedCompanies(long MetadataMapId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 if (game != null)
                 {
                     List<Dictionary<string, object>> icObjects = new List<Dictionary<string, object>>();
@@ -823,15 +835,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/companies/{CompanyId}")]
+        [Route("{MetadataMapId}/companies/{CompanyId}")]
         [ProducesResponseType(typeof(Dictionary<string, object>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameInvolvedCompanies(long GameId, long CompanyId)
+        public async Task<ActionResult> GameInvolvedCompanies(long MetadataMapId, long CompanyId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 if (game != null)
                 {
                     List<Dictionary<string, object>> icObjects = new List<Dictionary<string, object>>();
@@ -867,14 +880,15 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/companies/{CompanyId}/image")]
+        [Route("{MetadataMapId}/companies/{CompanyId}/image")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameCompanyImage(long GameId, long CompanyId)
+        public async Task<ActionResult> GameCompanyImage(long MetadataMapId, long CompanyId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 InvolvedCompany involvedCompany = Classes.Metadata.InvolvedCompanies.GetInvolvedCompanies(CompanyId);
                 Company company = Classes.Metadata.Companies.GetCompanies(game.MetadataSource, (long?)involvedCompany.Company);
@@ -912,15 +926,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/emulatorconfiguration/{PlatformId}")]
+        [Route("{MetadataMapId}/emulatorconfiguration/{PlatformId}")]
         [Authorize]
         [ProducesResponseType(typeof(UserEmulatorConfiguration), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GetGameEmulator(long GameId, long PlatformId)
+        public async Task<ActionResult> GetGameEmulator(long MetadataMapId, long PlatformId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 if (game != null)
                 {
@@ -933,7 +948,7 @@ namespace gaseous_server.Controllers
                         if (user != null)
                         {
                             PlatformMapping platformMapping = new PlatformMapping();
-                            UserEmulatorConfiguration platformMappingObject = platformMapping.GetUserEmulator(user.Id, GameId, PlatformId);
+                            UserEmulatorConfiguration platformMappingObject = platformMapping.GetUserEmulator(user.Id, MetadataMapId, PlatformId);
 
                             if (platformMappingObject != null)
                             {
@@ -954,15 +969,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpPost]
-        [Route("{GameId}/emulatorconfiguration/{PlatformId}")]
+        [Route("{MetadataMapId}/emulatorconfiguration/{PlatformId}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> SetGameEmulator(long GameId, long PlatformId, UserEmulatorConfiguration configuration)
+        public async Task<ActionResult> SetGameEmulator(long MetadataMapId, long PlatformId, UserEmulatorConfiguration configuration)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 if (game != null)
                 {
@@ -975,7 +991,7 @@ namespace gaseous_server.Controllers
                         if (user != null)
                         {
                             PlatformMapping platformMapping = new PlatformMapping();
-                            platformMapping.SetUserEmulator(user.Id, GameId, PlatformId, configuration);
+                            platformMapping.SetUserEmulator(user.Id, MetadataMapId, PlatformId, configuration);
 
                             return Ok();
                         }
@@ -993,15 +1009,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpDelete]
-        [Route("{GameId}/emulatorconfiguration/{PlatformId}")]
+        [Route("{MetadataMapId}/emulatorconfiguration/{PlatformId}")]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> DeleteGameEmulator(long GameId, long PlatformId)
+        public async Task<ActionResult> DeleteGameEmulator(long MetadataMapId, long PlatformId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 if (game != null)
                 {
@@ -1014,7 +1031,7 @@ namespace gaseous_server.Controllers
                         if (user != null)
                         {
                             PlatformMapping platformMapping = new PlatformMapping();
-                            platformMapping.DeleteUserEmulator(user.Id, GameId, PlatformId);
+                            platformMapping.DeleteUserEmulator(user.Id, MetadataMapId, PlatformId);
 
                             return Ok();
                         }
@@ -1032,10 +1049,10 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/platforms")]
+        [Route("{MetadataMapId}/platforms")]
         [ProducesResponseType(typeof(List<Games.AvailablePlatformItem>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GamePlatforms(long GameId)
+        public async Task<ActionResult> GamePlatforms(long MetadataMapId)
         {
             try
             {
@@ -1043,7 +1060,7 @@ namespace gaseous_server.Controllers
 
                 if (user != null)
                 {
-                    return Ok(Games.GetAvailablePlatforms(user.Id, GameId));
+                    return Ok(Games.GetAvailablePlatforms(user.Id, MetadataMapId));
                 }
                 else
                 {
@@ -1059,15 +1076,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/releasedates")]
+        [Route("{MetadataMapId}/releasedates")]
         [ProducesResponseType(typeof(List<ReleaseDate>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameReleaseDates(long GameId)
+        public async Task<ActionResult> GameReleaseDates(long MetadataMapId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 if (game != null)
                 {
                     List<ReleaseDate> rdObjects = new List<ReleaseDate>();
@@ -1097,19 +1115,20 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/roms")]
+        [Route("{MetadataMapId}/roms")]
         [ProducesResponseType(typeof(Classes.Roms.GameRomObject), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         //[ResponseCache(CacheProfileName = "5Minute")]
-        public async Task<ActionResult> GameRomAsync(long GameId, int pageNumber = 0, int pageSize = 0, long PlatformId = -1, string NameSearch = "")
+        public async Task<ActionResult> GameRomAsync(long MetadataMapId, int pageNumber = 0, int pageSize = 0, long PlatformId = -1, string NameSearch = "")
         {
             var user = await _userManager.GetUserAsync(User);
 
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
-                return Ok(Classes.Roms.GetRoms(GameId, PlatformId, NameSearch, pageNumber, pageSize, user.Id));
+                return Ok(Classes.Roms.GetRoms(MetadataMapId, PlatformId, NameSearch, pageNumber, pageSize, user.Id));
             }
             catch
             {
@@ -1120,18 +1139,19 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/roms/{RomId}")]
+        [Route("{MetadataMapId}/roms/{RomId}")]
         [ProducesResponseType(typeof(Classes.Roms.GameRomItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         //[ResponseCache(CacheProfileName = "5Minute")]
-        public async Task<ActionResult> GameRom(long GameId, long RomId)
+        public async Task<ActionResult> GameRom(long MetadataMapId, long RomId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
-                if (rom.GameId == GameId)
+                if (rom.GameId == MetadataMapId)
                 {
                     return Ok(rom);
                 }
@@ -1150,17 +1170,18 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpPatch]
         [Authorize(Roles = "Admin,Gamer")]
-        [Route("{GameId}/roms/{RomId}")]
+        [Route("{MetadataMapId}/roms/{RomId}")]
         [ProducesResponseType(typeof(Classes.Roms.GameRomItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameRomRename(long GameId, long RomId, long NewPlatformId, long NewGameId)
+        public async Task<ActionResult> GameRomRename(long MetadataMapId, long RomId, long NewPlatformId, long NewGameId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
-                if (rom.GameId == GameId)
+                if (rom.GameId == MetadataMapId)
                 {
                     rom = Classes.Roms.UpdateRom(RomId, NewPlatformId, NewGameId);
                     return Ok(rom);
@@ -1180,17 +1201,18 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpDelete]
         [Authorize(Roles = "Admin,Gamer")]
-        [Route("{GameId}/roms/{RomId}")]
+        [Route("{MetadataMapId}/roms/{RomId}")]
         [ProducesResponseType(typeof(Classes.Roms.GameRomItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameRomDelete(long GameId, long RomId)
+        public async Task<ActionResult> GameRomDelete(long MetadataMapId, long RomId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
-                if (rom.GameId == GameId)
+                if (rom.GameId == MetadataMapId)
                 {
                     Classes.Roms.DeleteRom(RomId);
                     return Ok(rom);
@@ -1209,29 +1231,30 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpPost]
-        [Route("{GameId}/roms/{RomId}/{PlatformId}/favourite")]
+        [Route("{MetadataMapId}/roms/{RomId}/{PlatformId}/favourite")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameRomFavourite(long GameId, long RomId, long PlatformId, bool IsMediaGroup, bool favourite)
+        public async Task<ActionResult> GameRomFavourite(long MetadataMapId, long RomId, long PlatformId, bool IsMediaGroup, bool favourite)
         {
             try
             {
                 ApplicationUser? user = await _userManager.GetUserAsync(User);
 
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 if (IsMediaGroup == false)
                 {
                     Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
-                    if (rom.GameId == GameId)
+                    if (rom.GameId == MetadataMapId)
                     {
                         if (favourite == true)
                         {
-                            Classes.Metadata.Games.GameSetFavouriteRom(user.Id, GameId, PlatformId, RomId, IsMediaGroup);
+                            Classes.Metadata.Games.GameSetFavouriteRom(user.Id, MetadataMapId, PlatformId, RomId, IsMediaGroup);
                         }
                         else
                         {
-                            Classes.Metadata.Games.GameClearFavouriteRom(user.Id, GameId, PlatformId);
+                            Classes.Metadata.Games.GameClearFavouriteRom(user.Id, MetadataMapId, PlatformId);
                         }
                         return Ok();
                     }
@@ -1243,15 +1266,15 @@ namespace gaseous_server.Controllers
                 else
                 {
                     Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomId, user.Id);
-                    if (rom.GameId == GameId)
+                    if (rom.GameId == MetadataMapId)
                     {
                         if (favourite == true)
                         {
-                            Classes.Metadata.Games.GameSetFavouriteRom(user.Id, GameId, PlatformId, RomId, IsMediaGroup);
+                            Classes.Metadata.Games.GameSetFavouriteRom(user.Id, MetadataMapId, PlatformId, RomId, IsMediaGroup);
                         }
                         else
                         {
-                            Classes.Metadata.Games.GameClearFavouriteRom(user.Id, GameId, PlatformId);
+                            Classes.Metadata.Games.GameClearFavouriteRom(user.Id, MetadataMapId, PlatformId);
                         }
                         return Ok();
                     }
@@ -1273,17 +1296,18 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpHead]
-        [Route("{GameId}/roms/{RomId}/file")]
+        [Route("{MetadataMapId}/roms/{RomId}/file")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameRomFile(long GameId, long RomId)
+        public async Task<ActionResult> GameRomFile(long MetadataMapId, long RomId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
-                if (rom.GameId != GameId)
+                if (rom.GameId != MetadataMapId)
                 {
                     return NotFound();
                 }
@@ -1312,17 +1336,18 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpHead]
-        [Route("{GameId}/roms/{RomId}/{FileName}")]
+        [Route("{MetadataMapId}/roms/{RomId}/{FileName}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameRomFile(long GameId, long RomId, string FileName)
+        public async Task<ActionResult> GameRomFile(long MetadataMapId, long RomId, string FileName)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
-                if (rom.GameId != GameId || rom.Name != FileName)
+                if (rom.GameId != MetadataMapId || rom.Name != FileName)
                 {
                     return NotFound();
                 }
@@ -1348,20 +1373,21 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/romgroup/{RomGroupId}")]
+        [Route("{MetadataMapId}/romgroup/{RomGroupId}")]
         [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         //[ResponseCache(CacheProfileName = "5Minute")]
-        public async Task<ActionResult> GameRomGroupAsync(long GameId, long RomGroupId)
+        public async Task<ActionResult> GameRomGroupAsync(long MetadataMapId, long RomGroupId)
         {
             var user = await _userManager.GetUserAsync(User);
 
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomGroupId, user.Id);
-                if (rom.GameId == GameId)
+                if (rom.GameId == MetadataMapId)
                 {
                     return Ok(rom);
                 }
@@ -1379,20 +1405,21 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/romgroup")]
+        [Route("{MetadataMapId}/romgroup")]
         [ProducesResponseType(typeof(List<RomMediaGroup.GameRomMediaGroupItem>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GetGameRomGroupAsync(long GameId, long? PlatformId = null)
+        public async Task<ActionResult> GetGameRomGroupAsync(long MetadataMapId, long? PlatformId = null)
         {
             var user = await _userManager.GetUserAsync(User);
 
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 try
                 {
-                    return Ok(RomMediaGroup.GetMediaGroupsFromGameId(GameId, user.Id, PlatformId));
+                    return Ok(RomMediaGroup.GetMediaGroupsFromGameId(MetadataMapId, user.Id, PlatformId));
                 }
                 catch (Exception ex)
                 {
@@ -1410,18 +1437,19 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpPost]
         [Authorize(Roles = "Admin,Gamer")]
-        [Route("{GameId}/romgroup")]
+        [Route("{MetadataMapId}/romgroup")]
         [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> NewGameRomGroup(long GameId, long PlatformId, [FromBody] List<long> RomIds)
+        public async Task<ActionResult> NewGameRomGroup(long MetadataMapId, long PlatformId, [FromBody] List<long> RomIds)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 try
                 {
-                    Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.CreateMediaGroup(GameId, PlatformId, RomIds);
+                    Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.CreateMediaGroup(MetadataMapId, PlatformId, RomIds);
                     return Ok(rom);
                 }
                 catch
@@ -1439,19 +1467,20 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpPatch]
         [Authorize(Roles = "Admin,Gamer")]
-        [Route("{GameId}/romgroup/{RomId}")]
+        [Route("{MetadataMapId}/romgroup/{RomId}")]
         [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameRomGroupMembersAsync(long GameId, long RomGroupId, [FromBody] List<long> RomIds)
+        public async Task<ActionResult> GameRomGroupMembersAsync(long MetadataMapId, long RomGroupId, [FromBody] List<long> RomIds)
         {
             var user = await _userManager.GetUserAsync(User);
 
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomGroupId, user.Id);
-                if (rom.GameId == GameId)
+                if (rom.GameId == MetadataMapId)
                 {
                     rom = Classes.RomMediaGroup.EditMediaGroup(RomGroupId, RomIds);
                     return Ok(rom);
@@ -1471,17 +1500,18 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpDelete]
         [Authorize(Roles = "Admin,Gamer")]
-        [Route("{GameId}/romgroup/{RomGroupId}")]
+        [Route("{MetadataMapId}/romgroup/{RomGroupId}")]
         [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameRomGroupDelete(long GameId, long RomGroupId)
+        public async Task<ActionResult> GameRomGroupDelete(long MetadataMapId, long RomGroupId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomGroupId);
-                if (rom.GameId == GameId)
+                if (rom.GameId == MetadataMapId)
                 {
                     Classes.RomMediaGroup.DeleteMediaGroup(RomGroupId);
                     return Ok(rom);
@@ -1503,18 +1533,19 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpHead]
-        [Route("{GameId}/romgroup/{RomGroupId}/file")]
-        [Route("{GameId}/romgroup/{RomGroupId}/{filename}")]
+        [Route("{MetadataMapId}/romgroup/{RomGroupId}/file")]
+        [Route("{MetadataMapId}/romgroup/{RomGroupId}/{filename}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameRomGroupFile(long GameId, long RomGroupId, string filename = "")
+        public async Task<ActionResult> GameRomGroupFile(long MetadataMapId, long RomGroupId, string filename = "")
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomGroupId);
-                if (rom.GameId != GameId)
+                if (rom.GameId != MetadataMapId)
                 {
                     return NotFound();
                 }
@@ -1589,15 +1620,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/screenshots")]
+        [Route("{MetadataMapId}/screenshots")]
         [ProducesResponseType(typeof(List<Screenshot>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameScreenshot(long GameId)
+        public async Task<ActionResult> GameScreenshot(long MetadataMapId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 List<Screenshot> screenshots = new List<Screenshot>();
                 if (game.Screenshots != null)
@@ -1620,15 +1652,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/screenshots/{ScreenshotId}")]
+        [Route("{MetadataMapId}/screenshots/{ScreenshotId}")]
         [ProducesResponseType(typeof(Screenshot), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameScreenshot(long GameId, long ScreenshotId)
+        public async Task<ActionResult> GameScreenshot(long MetadataMapId, long ScreenshotId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 if (game != null)
                 {
                     Screenshot screenshotObject = Screenshots.GetScreenshot(game.MetadataSource, ScreenshotId);
@@ -1655,15 +1688,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/videos")]
+        [Route("{MetadataMapId}/videos")]
         [ProducesResponseType(typeof(List<GameVideo>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameVideo(long GameId)
+        public async Task<ActionResult> GameVideo(long MetadataMapId)
         {
             try
             {
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(Communications.MetadataSource, GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 List<GameVideo> videos = new List<GameVideo>();
                 if (game.Videos != null)

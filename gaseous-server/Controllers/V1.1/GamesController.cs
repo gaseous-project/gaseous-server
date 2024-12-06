@@ -19,6 +19,7 @@ using static gaseous_server.Classes.Metadata.AgeRatings;
 using Asp.Versioning;
 using Humanizer;
 using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Models;
 
 namespace gaseous_server.Controllers.v1_1
 {
@@ -97,9 +98,9 @@ namespace gaseous_server.Controllers.v1_1
 
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/Related")]
+        [Route("{MetadataMapId}/Related")]
         [ProducesResponseType(typeof(GameReturnPackage), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GameRelated(long GameId)
+        public async Task<IActionResult> GameRelated(long MetadataMapId)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -114,7 +115,7 @@ namespace gaseous_server.Controllers.v1_1
                 Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
                 string sql = "SELECT view_Games.Id, view_Games.AgeGroupId, Relation_Game_SimilarGames.SimilarGamesId FROM view_Games JOIN Relation_Game_SimilarGames ON view_Games.Id = Relation_Game_SimilarGames.GameId AND Relation_Game_SimilarGames.SimilarGamesId IN (SELECT Id FROM view_Games) WHERE view_Games.Id = @id AND (view_Games.AgeGroupId <= @agegroupid" + IncludeUnrated + ")";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
-                dbDict.Add("id", GameId);
+                dbDict.Add("id", MetadataMapId);
                 dbDict.Add("agegroupid", (int)user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction);
 
                 List<Models.Game> RetVal = new List<Models.Game>();
@@ -123,7 +124,8 @@ namespace gaseous_server.Controllers.v1_1
 
                 foreach (DataRow dr in dbResponse.Rows)
                 {
-                    RetVal.Add(Classes.Metadata.Games.GetGame(Communications.MetadataSource, (long)dr["SimilarGamesId"]));
+                    MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                    RetVal.Add(Classes.Metadata.Games.GetGame(metadataMap.SourceType, (long)dr["SimilarGamesId"]));
                 }
 
                 GameReturnPackage gameReturn = new GameReturnPackage(RetVal.Count, RetVal);
