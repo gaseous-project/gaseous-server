@@ -1151,7 +1151,7 @@ namespace gaseous_server.Controllers
                 gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
-                if (rom.GameId == MetadataMapId)
+                if (rom.MetadataMapId == MetadataMapId)
                 {
                     return Ok(rom);
                 }
@@ -1212,7 +1212,7 @@ namespace gaseous_server.Controllers
                 gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
-                if (rom.GameId == MetadataMapId)
+                if (rom.MetadataMapId == MetadataMapId)
                 {
                     Classes.Roms.DeleteRom(RomId);
                     return Ok(rom);
@@ -1246,7 +1246,7 @@ namespace gaseous_server.Controllers
                 if (IsMediaGroup == false)
                 {
                     Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
-                    if (rom.GameId == MetadataMapId)
+                    if (rom.MetadataMapId == MetadataMapId)
                     {
                         if (favourite == true)
                         {
@@ -1347,7 +1347,7 @@ namespace gaseous_server.Controllers
                 gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
-                if (rom.GameId != MetadataMapId || rom.Name != FileName)
+                if (rom.MetadataMapId != MetadataMapId || rom.Name != FileName)
                 {
                     return NotFound();
                 }

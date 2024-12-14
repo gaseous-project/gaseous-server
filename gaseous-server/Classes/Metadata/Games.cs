@@ -30,6 +30,7 @@ namespace gaseous_server.Classes.Metadata
             {
                 Game? RetVal = Metadata.GetMetadata<Game>(SourceType, (long)Id, false);
                 RetVal.MetadataSource = SourceType;
+                RetVal.MetadataMapId = (long)Id;
                 RetVal = MassageResult(RetVal);
                 return RetVal;
             }
@@ -267,7 +268,7 @@ FROM
         LEFT JOIN
     view_Games_Roms AS GFV ON GFV.Id = User_GameFavouriteRoms.RomId
 WHERE
-    view_Games_Roms.GameId = @gameid
+    view_Games_Roms.MetadataMapId = @gameid
 ORDER BY Platform.`Name`;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>
             {

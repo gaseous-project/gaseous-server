@@ -13,7 +13,6 @@ function SetupPage() {
     document.head.appendChild(mappingScript);
 
     ajaxCall('/api/v1.1/Games/' + gameId, 'GET', function (result) {
-        console.log(result);
         // populate games page
         gameData = result;
 
@@ -934,6 +933,7 @@ class RomManagement {
         }).then(async response => {
             if (response.ok) {
                 let result = await response.json();
+                console.log(result);
                 let romCount = this.romsModal.modalElement.querySelector('#games_roms_count');
                 this.RomCount = result.count;
                 if (result.count != 1) {
