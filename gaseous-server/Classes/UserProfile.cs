@@ -59,12 +59,19 @@ namespace gaseous_server.Classes
             DataTable nowPlayingData = db.ExecuteCMD(sql, dbDict);
             if (nowPlayingData.Rows.Count > 0)
             {
-                NowPlaying = new Models.UserProfile.NowPlayingItem
+                try
                 {
-                    Game = Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, (long)nowPlayingData.Rows[0]["GameId"]),
-                    Platform = Platforms.GetPlatform((long)nowPlayingData.Rows[0]["PlatformId"]),
-                    Duration = Convert.ToInt64(nowPlayingData.Rows[0]["SessionLength"])
-                };
+                    NowPlaying = new Models.UserProfile.NowPlayingItem
+                    {
+                        Game = Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, (long)nowPlayingData.Rows[0]["GameId"]),
+                        Platform = Platforms.GetPlatform((long)nowPlayingData.Rows[0]["PlatformId"]),
+                        Duration = Convert.ToInt64(nowPlayingData.Rows[0]["SessionLength"])
+                    };
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
             }
 
             // return the user profile object

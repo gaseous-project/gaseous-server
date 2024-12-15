@@ -232,6 +232,7 @@ namespace gaseous_server.Classes.Metadata
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = @"
 SELECT DISTINCT
+	view_Games_Roms.MetadataMapId,
     view_Games_Roms.GameId,
     view_Games_Roms.PlatformId,
     Platform.`Name`,
@@ -239,7 +240,7 @@ SELECT DISTINCT
     User_RecentPlayedRoms.RomId AS MostRecentRomId,
     CASE User_RecentPlayedRoms.IsMediaGroup
         WHEN 0 THEN GMR.`Name`
-        WHEN 1 THEN 'Media Group'
+        WHEN 1 THEN view_Games_Roms.`MetadataGameName`
         ELSE NULL
     END AS `MostRecentRomName`,
     User_RecentPlayedRoms.IsMediaGroup AS MostRecentRomIsMediaGroup,
@@ -247,7 +248,7 @@ SELECT DISTINCT
     User_GameFavouriteRoms.RomId AS FavouriteRomId,
     CASE User_GameFavouriteRoms.IsMediaGroup
         WHEN 0 THEN GFV.`Name`
-        WHEN 1 THEN 'Media Group'
+        WHEN 1 THEN view_Games_Roms.`MetadataGameName`
         ELSE NULL
     END AS `FavouriteRomName`,
     User_GameFavouriteRoms.IsMediaGroup AS FavouriteRomIsMediaGroup
@@ -257,11 +258,11 @@ FROM
     Platform ON view_Games_Roms.PlatformId = Platform.Id
         LEFT JOIN
     User_RecentPlayedRoms ON User_RecentPlayedRoms.UserId = @userid
-        AND User_RecentPlayedRoms.GameId = view_Games_Roms.GameId
+        AND User_RecentPlayedRoms.GameId = view_Games_Roms.MetadataMapId
         AND User_RecentPlayedRoms.PlatformId = view_Games_Roms.PlatformId
         LEFT JOIN
     User_GameFavouriteRoms ON User_GameFavouriteRoms.UserId = @userid
-        AND User_GameFavouriteRoms.GameId = view_Games_Roms.GameId
+        AND User_GameFavouriteRoms.GameId = view_Games_Roms.MetadataMapId
         AND User_GameFavouriteRoms.PlatformId = view_Games_Roms.PlatformId
         LEFT JOIN
     view_Games_Roms AS GMR ON GMR.Id = User_RecentPlayedRoms.RomId

@@ -1511,7 +1511,7 @@ namespace gaseous_server.Controllers
                 gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.GetMediaGroup(RomGroupId);
-                if (rom.GameId == MetadataMapId)
+                if (rom != null)
                 {
                     Classes.RomMediaGroup.DeleteMediaGroup(RomGroupId);
                     return Ok(rom);

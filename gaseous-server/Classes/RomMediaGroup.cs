@@ -193,7 +193,7 @@ namespace gaseous_server.Classes
         public static void DeleteMediaGroup(long Id)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "DELETE FROM RomMediaGroup WHERE Id=@id; DELETE FROM GameState WHERE RomId=@id AND IsMediaGroup=1; UPDATE UserTimeTracking SET PlatformId = NULL, IsMediaGroup = NULL, RomId = NULL WHERE RomId=@id AND IsMediaGroup = 1;";
+            string sql = "DELETE FROM RomMediaGroup WHERE Id=@id; DELETE FROM GameState WHERE RomId=@id AND IsMediaGroup=1; DELETE FROM User_GameFavouriteRoms WHERE RomId = @id AND IsMediaGroup = 1; DELETE FROM User_RecentPlayedRoms WHERE RomId = @id AND IsMediaGroup = 1; UPDATE UserTimeTracking SET PlatformId = NULL, IsMediaGroup = NULL, RomId = NULL WHERE RomId=@id AND IsMediaGroup = 1;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", Id);
             db.ExecuteCMD(sql, dbDict);
@@ -296,7 +296,8 @@ namespace gaseous_server.Classes
             GameRomMediaGroupItem mediaGroupItem = GetMediaGroup(Id);
             if (mediaGroupItem.Status == GameRomMediaGroupItem.GroupBuildStatus.WaitingForBuild)
             {
-                Models.Game GameObject = Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, mediaGroupItem.GameId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(mediaGroupItem.GameId).PreferredMetadataMapItem;
+                Models.Game GameObject = Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 Platform PlatformObject = Platforms.GetPlatform(mediaGroupItem.PlatformId);
                 PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(mediaGroupItem.PlatformId);
 

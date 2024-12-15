@@ -430,6 +430,7 @@ function LoadGamePlatforms() {
             // 1. if FavouriteRomId is not null, load the rom, otherwise
             // 2. if LastPlayedRomId is null, load the rom, otherwise
             // 3. load the rom management dialog
+            console.log(result[i]);
             if (result[i].emulatorConfiguration.emulatorType.length > 0 && result[i].emulatorConfiguration.core.length > 0 && result[i].favouriteRomId) {
                 showSaveState = true;
                 romId = result[i].favouriteRomId;
@@ -687,6 +688,7 @@ class RomManagement {
                 'Content-Type': 'application/json'
             }
         }).then(response => response.json()).then(result => {
+            console.log(result);
             // display media groups
             if (result.length == 0) {
                 this.MediaGroups.style.display = 'none';
@@ -821,7 +823,7 @@ class RomManagement {
 
                         let deleteButton = new ModalButton("Delete", 2, deleteWindow, function (callingObject) {
                             ajaxCall(
-                                '/api/v1.1/Games/' + gameData.id + '/romgroup/' + mediaGroup.id,
+                                '/api/v1.1/Games/' + gameId + '/romgroup/' + mediaGroup.id,
                                 'DELETE',
                                 function (result) {
                                     thisObject.#loadRoms();

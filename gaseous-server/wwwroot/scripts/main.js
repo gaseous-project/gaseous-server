@@ -717,7 +717,7 @@ async function BuildLaunchLink(engine, core, platformId, gameId, romId, isMediaG
 
     // fetch valid cores from json file /emulators/EmulatorJS/data/cores.json
     let validCores = [];
-    await fetch('/emulators/EmulatorJS/data/cores/cores.json', {
+    await fetch('/api/v1.1/PlatformMaps', {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json'
@@ -728,11 +728,26 @@ async function BuildLaunchLink(engine, core, platformId, gameId, romId, isMediaG
             validCores = data;
 
             for (let i = 0; i < validCores.length; i++) {
-                if (validCores[i].name == core) {
-                    isValid = true;
+                isValid = false;
+                if (validCores[i].webEmulator) {
+                    if (validCores[i].webEmulator.availableWebEmulators) {
+                        for (let y = 0; y < validCores[i].webEmulator.availableWebEmulators.length; y++) {
+                            if (validCores[i].webEmulator.availableWebEmulators[y].emulatorType == engine) {
+                                for (let x = 0; x < validCores[i].webEmulator.availableWebEmulators[y].availableWebEmulatorCores.length; x++) {
+                                    if (validCores[i].webEmulator.availableWebEmulators[y].availableWebEmulatorCores[x].core == core ||
+                                        validCores[i].webEmulator.availableWebEmulators[y].availableWebEmulatorCores[x].alternateCoreName == core
+                                    ) {
+                                        isValid = true;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if (isValid == true) {
                     break;
-                } else {
-                    isValid = false;
                 }
             }
             if (isValid == false) {

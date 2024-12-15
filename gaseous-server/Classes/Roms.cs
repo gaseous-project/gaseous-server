@@ -253,7 +253,7 @@ namespace gaseous_server.Classes
 				}
 
 				Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-				string sql = "DELETE FROM Games_Roms WHERE Id = @id; DELETE FROM GameState WHERE RomId = @id; UPDATE UserTimeTracking SET PlatformId = NULL, IsMediaGroup = NULL, RomId = NULL WHERE RomId = @id AND IsMediaGroup = 0;";
+				string sql = "DELETE FROM Games_Roms WHERE Id = @id; DELETE FROM GameState WHERE RomId = @id; DELETE FROM User_GameFavouriteRoms WHERE RomId = @id AND IsMediaGroup = 0; DELETE FROM User_RecentPlayedRoms WHERE RomId = @id AND IsMediaGroup = 0; UPDATE UserTimeTracking SET PlatformId = NULL, IsMediaGroup = NULL, RomId = NULL WHERE RomId = @id AND IsMediaGroup = 0;";
 				Dictionary<string, object> dbDict = new Dictionary<string, object>();
 				dbDict.Add("id", RomId);
 				db.ExecuteCMD(sql, dbDict);

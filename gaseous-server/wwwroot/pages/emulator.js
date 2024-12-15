@@ -29,7 +29,7 @@ function SetupPage() {
         gameData = result;
 
         if (result.cover) {
-            emuBackground = '/api/v1.1/Games/' + gameId + '/cover/' + result.cover.id + '/image/original/' + result.cover.imageId + '.jpg';
+            emuBackground = '/api/v1.1/Games/' + gameId + '/cover/' + result.cover + '/image/original/' + result.cover + '.jpg';
         }
 
         emuGameTitle = gameData.name;
