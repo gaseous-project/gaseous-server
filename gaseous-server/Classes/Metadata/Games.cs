@@ -30,7 +30,11 @@ namespace gaseous_server.Classes.Metadata
             {
                 Game? RetVal = Metadata.GetMetadata<Game>(SourceType, (long)Id, false);
                 RetVal.MetadataSource = SourceType;
-                RetVal.MetadataMapId = (long)Id;
+                long? metadataMap = MetadataManagement.GetMetadataMapIdFromSourceId(SourceType, (long)Id);
+                if (metadataMap != null)
+                {
+                    RetVal.MetadataMapId = (long)metadataMap;
+                }
                 RetVal = MassageResult(RetVal);
                 return RetVal;
             }

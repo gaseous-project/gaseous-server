@@ -1,5 +1,7 @@
 using System.Data;
 using gaseous_server.Classes.Metadata;
+using gaseous_server.Models;
+using HasheousClient.Models;
 
 namespace gaseous_server.Classes
 {
@@ -61,9 +63,10 @@ namespace gaseous_server.Classes
             {
                 try
                 {
+                    gaseous_server.Models.MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap((long)nowPlayingData.Rows[0]["GameId"]).PreferredMetadataMapItem;
                     NowPlaying = new Models.UserProfile.NowPlayingItem
                     {
-                        Game = Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, (long)nowPlayingData.Rows[0]["GameId"]),
+                        Game = Games.GetGame(metadataMap.SourceType, metadataMap.SourceId),
                         Platform = Platforms.GetPlatform((long)nowPlayingData.Rows[0]["PlatformId"]),
                         Duration = Convert.ToInt64(nowPlayingData.Rows[0]["SessionLength"])
                     };

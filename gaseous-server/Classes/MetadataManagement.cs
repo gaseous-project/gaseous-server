@@ -200,6 +200,84 @@ namespace gaseous_server.Classes
 			return null;
 		}
 
+		/// <summary>
+		/// Get the MetadataMapItem for the provided metadata source, and source id
+		/// </summary>
+		/// <param name="sourceType">
+		/// The type of the metadata source.
+		/// </param>
+		/// <param name="sourceId">
+		/// The ID of the metadata source.
+		/// </param>
+		/// <returns>
+		/// The MetadataMapItem, or null if it does not exist.
+		/// </returns>
+		/// <remarks>
+		/// This method will return the MetadataMapItem with the given sourceType and sourceId.
+		/// </remarks>
+		public static MetadataMap.MetadataMapItem? GetMetadataMapFromSourceId(HasheousClient.Models.MetadataSources sourceType, long sourceId)
+		{
+			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+			string sql = "";
+			Dictionary<string, object> dbDict = new Dictionary<string, object>()
+			{
+				{ "@sourceType", sourceType },
+				{ "@sourceId", sourceId }
+			};
+			DataTable dt = new DataTable();
+
+			sql = "SELECT * FROM MetadataMapBridge WHERE MetadataSourceType = @sourceType AND MetadataSourceId = @sourceId;";
+			dt = db.ExecuteCMD(sql, dbDict);
+
+			if (dt.Rows.Count > 0)
+			{
+				MetadataMap.MetadataMapItem metadataMapItem = new MetadataMap.MetadataMapItem()
+				{
+					SourceType = (HasheousClient.Models.MetadataSources)dt.Rows[0]["MetadataSourceType"],
+					SourceId = (long)dt.Rows[0]["MetadataSourceId"],
+					Preferred = (bool)dt.Rows[0]["Preferred"]
+				};
+
+				return metadataMapItem;
+			}
+
+			return null;
+		}
+
+		/// <summary>
+		/// Get the Id of the MetadataMap for the provided metadata source, and source id
+		/// </summary>
+		/// <param name="sourceType">
+		/// The type of the metadata source.
+		/// </param>
+		/// <param name="sourceId">
+		/// The ID of the metadata source.
+		/// </param>
+		/// <returns>
+		/// The ID of the MetadataMap, or null if it does not exist.
+		/// </returns>
+		public static long? GetMetadataMapIdFromSourceId(HasheousClient.Models.MetadataSources sourceType, long sourceId)
+		{
+			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+			string sql = "";
+			Dictionary<string, object> dbDict = new Dictionary<string, object>()
+			{
+				{ "@sourceType", sourceType },
+				{ "@sourceId", sourceId }
+			};
+			DataTable dt = new DataTable();
+
+			sql = "SELECT * FROM MetadataMapBridge WHERE MetadataSourceType = @sourceType AND MetadataSourceId = @sourceId;";
+			dt = db.ExecuteCMD(sql, dbDict);
+
+			if (dt.Rows.Count > 0)
+			{
+				return (long)dt.Rows[0]["ParentMapId"];
+			}
+
+			return null;
+		}
+
 		public void RefreshMetadata(bool forceRefresh = false)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);

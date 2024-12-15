@@ -2730,14 +2730,24 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     color: var(--profile-card-quip-text-color);
 }
 
+.profile-card-now-playing-body-bg {
+    position: relative;
+    min-height: 70px;
+    background-position: center;
+    background-size: cover;
+}
+
 .profile-card-now-playing-body {
     position: relative;
     min-height: 70px;
-    background-color: var(--profile-card-body-background);
-    padding-top: 0px;
+    /* background-color: var(--profile-card-body-background); */
+    background-color: var(--profile-card-now-playing-background-color);
+    padding-top: 10px;
     padding-left: 10px;
     padding-right: 10px;
     padding-bottom: 10px;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
 }
 
 .profile-card-now-playing-label {
@@ -2748,7 +2758,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .profile-card-now-playing-cover {
     position: absolute;
     left: 10px;
-    top: 25px;
+    top: 35px;
     width: 40px;
     height: 40px;
     background-position: center center;

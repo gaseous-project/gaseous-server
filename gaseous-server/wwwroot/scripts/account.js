@@ -368,6 +368,8 @@ class ProfileCard {
         this.ProfileBody.classList.add('profile-card-body');
         this.ProfileNowPlaying = document.createElement('div');
         this.ProfileNowPlaying.classList.add('profile-card-now-playing-body');
+        this.ProfileNowPlayingBg = document.createElement('div');
+        this.ProfileNowPlayingBg.classList.add('profile-card-now-playing-body-bg');
         this.ProfileNowPlayingLabel = document.createElement('div');
         this.ProfileNowPlayingLabel.classList.add('profile-card-now-playing-label');
         this.ProfileNowPlayingCover = document.createElement('div');
@@ -388,6 +390,7 @@ class ProfileCard {
         this.ProfileBody.appendChild(this.Quip);
 
         // now playing
+        this.ProfileNowPlayingBg.appendChild(this.ProfileNowPlaying);
         this.ProfileNowPlaying.appendChild(this.ProfileNowPlayingLabel);
         this.ProfileNowPlaying.appendChild(this.ProfileNowPlayingCover);
         this.ProfileNowPlaying.appendChild(this.ProfileNowPlayingTitle);
@@ -397,7 +400,7 @@ class ProfileCard {
         // assemble card
         this.Card.appendChild(this.BackgroundImage);
         this.Card.appendChild(this.ProfileBody);
-        this.Card.appendChild(this.ProfileNowPlaying);
+        this.Card.appendChild(this.ProfileNowPlayingBg);
         this.Card.appendChild(this.Avatar);
 
         this.ProfileData = null;
@@ -453,11 +456,14 @@ class ProfileCard {
 
                     if (profile.nowPlaying) {
                         callingObject.ProfileNowPlayingLabel.innerHTML = "Now Playing";
+                        let cardImage = '';
                         if (profile.nowPlaying.game.cover) {
-                            callingObject.ProfileNowPlayingCover.style = "background-image: url('/api/v1.1/Games/" + profile.nowPlaying.game.id + "/cover/" + profile.nowPlaying.game.cover.id + "/image/cover_big/" + profile.nowPlaying.game.cover.id + ".jpg');";
+                            cardImage = "/api/v1.1/Games/" + profile.nowPlaying.game.metadataMapId + "/cover/" + profile.nowPlaying.game.cover + "/image/cover_big/" + profile.nowPlaying.game.cover + ".jpg";
                         } else {
-                            callingObject.ProfileNowPlayingCover.style = "background-image: url('/images/unknowngame.png');";
+                            cardImage = "/images/unknowngame.png";
                         }
+                        callingObject.ProfileNowPlayingCover.style = "background-image: url(\"" + cardImage + "\");";
+                        callingObject.ProfileNowPlayingBg.style = "background-image: url(\"" + cardImage + "\");";
                         callingObject.ProfileNowPlayingTitle.innerHTML = profile.nowPlaying.game.name;
                         callingObject.ProfileNowPlayingPlatform.innerHTML = profile.nowPlaying.platform.name;
                         if (profile.nowPlaying.duration === 1) {
@@ -465,9 +471,9 @@ class ProfileCard {
                         } else {
                             callingObject.ProfileNowPlayingDuration.innerHTML = profile.nowPlaying.duration + " minutes";
                         }
-                        callingObject.ProfileNowPlaying.style.display = "";
+                        callingObject.ProfileNowPlayingBg.style.display = "";
                     } else {
-                        callingObject.ProfileNowPlaying.style.display = "none";
+                        callingObject.ProfileNowPlayingBg.style.display = "none";
                     }
 
                     callingObject.ProfileData = profile;
