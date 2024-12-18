@@ -9,6 +9,8 @@ namespace gaseous_server.Classes
 {
 	public class MetadataManagement : QueueItemStatus
 	{
+		private static bool Processing = false;
+
 		/// <summary>
 		/// Creates a new metadata map, if one with the same platformId and name does not already exist.
 		/// </summary>
@@ -23,6 +25,16 @@ namespace gaseous_server.Classes
 		/// </returns>
 		public static MetadataMap? NewMetadataMap(long platformId, string name)
 		{
+			if (Processing == true)
+			{
+				// loop until processing = false
+				while (Processing == true)
+				{
+					System.Threading.Thread.Sleep(500);
+				}
+			}
+			Processing = true;
+
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>()
@@ -36,6 +48,7 @@ namespace gaseous_server.Classes
 			MetadataMap? existingMetadataMap = GetMetadataMap(platformId, name);
 			if (existingMetadataMap != null)
 			{
+				Processing = false;
 				return existingMetadataMap;
 			}
 
@@ -62,7 +75,9 @@ namespace gaseous_server.Classes
 			AddMetadataMapItem(metadataMapId, HasheousClient.Models.MetadataSources.None, gameId, true);
 
 			// return the new metadata map
-			return GetMetadataMap(metadataMapId);
+			MetadataMap RetVal = GetMetadataMap(metadataMapId);
+			Processing = false;
+			return RetVal;
 		}
 
 		/// <summary>
@@ -129,7 +144,7 @@ namespace gaseous_server.Classes
 			Dictionary<string, object> dbDict = new Dictionary<string, object>()
 			{
 				{ "@platformId", platformId },
-				{ "@name", name }
+				{ "@name", name.Trim() }
 			};
 			DataTable dt = new DataTable();
 

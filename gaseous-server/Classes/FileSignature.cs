@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.IO.Compression;
 using System.Net;
 using gaseous_server.Classes.Metadata;
-using HasheousClient.Models;
+using gaseous_server.Models;
 using HasheousClient.Models.Metadata.IGDB;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NuGet.Common;
@@ -199,7 +199,7 @@ namespace gaseous_server.Classes
             else
             {
                 determinedPlatform = Metadata.Platforms.GetPlatform((long)library.DefaultPlatformId);
-                discoveredSignature.MetadataSources.AddPlatform((long)determinedPlatform.Id, determinedPlatform.Name, MetadataSources.None);
+                discoveredSignature.MetadataSources.AddPlatform((long)determinedPlatform.Id, determinedPlatform.Name, HasheousClient.Models.MetadataSources.None);
             }
 
             return discoveredSignature;
@@ -308,10 +308,10 @@ namespace gaseous_server.Classes
             {
                 HasheousClient.Hasheous hasheous = new HasheousClient.Hasheous();
                 Console.WriteLine(HasheousClient.WebApp.HttpHelper.BaseUri);
-                LookupItemModel? HasheousResult = null;
+                HasheousClient.Models.LookupItemModel? HasheousResult = null;
                 try
                 {
-                    HasheousResult = hasheous.RetrieveFromHasheous(new HashLookupModel
+                    HasheousResult = hasheous.RetrieveFromHasheous(new HasheousClient.Models.HashLookupModel
                     {
                         MD5 = hash.md5hash,
                         SHA1 = hash.sha1hash
@@ -334,10 +334,14 @@ namespace gaseous_server.Classes
                                 {
                                     foreach (HasheousClient.Models.MetadataItem metadataResult in HasheousResult.Platform.metadata)
                                     {
-                                        if (metadataResult.Id.Length > 0)
+                                        // only IGDB metadata is supported
+                                        if (metadataResult.Source == HasheousClient.Models.MetadataSources.IGDB)
                                         {
-                                            Platform hasheousPlatform = Platforms.GetPlatform(metadataResult.Id);
-                                            signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataResult.Source);
+                                            if (metadataResult.Id.Length > 0)
+                                            {
+                                                Platform hasheousPlatform = Platforms.GetPlatform(metadataResult.Id);
+                                                signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataResult.Source);
+                                            }
                                         }
                                     }
                                 }
@@ -350,10 +354,14 @@ namespace gaseous_server.Classes
                                 {
                                     foreach (HasheousClient.Models.MetadataItem metadataResult in HasheousResult.Metadata)
                                     {
-                                        if (metadataResult.Id.Length > 0)
+                                        // only IGDB metadata is supported
+                                        if (metadataResult.Source == HasheousClient.Models.MetadataSources.IGDB)
                                         {
-                                            Game hasheousGame = Games.GetGame(MetadataSources.IGDB, metadataResult.Id);
-                                            signature.MetadataSources.AddGame((long)hasheousGame.Id, hasheousGame.Name, metadataResult.Source);
+                                            if (metadataResult.Id.Length > 0)
+                                            {
+                                                gaseous_server.Models.Game hasheousGame = Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, metadataResult.Id);
+                                                signature.MetadataSources.AddGame((long)hasheousGame.Id, hasheousGame.Name, metadataResult.Source);
+                                            }
                                         }
                                     }
                                 }

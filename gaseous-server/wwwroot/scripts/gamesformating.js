@@ -405,8 +405,6 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
         showFavourite = true;
     }
 
-    console.log(gameObject);
-
     let classes = getViewModeClasses(listView);
 
     let gameBox = document.createElement('div');
@@ -532,7 +530,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
                 gameObject.isFavourite = true;
             }
 
-            fetch('/api/v1.1/Games/' + gameObject.metaDataMapId + '/favourite?favourite=' + gameObject.isFavourite, {
+            fetch('/api/v1.1/Games/' + gameObject.metadataMapId + '/favourite?favourite=' + gameObject.isFavourite, {
                 method: 'POST'
             }).then(response => {
                 if (response.ok) {

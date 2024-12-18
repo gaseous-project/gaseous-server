@@ -550,7 +550,7 @@ FROM
         LEFT JOIN
     Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId
         LEFT JOIN
-    Favourites ON Game.Id = Favourites.GameId AND Favourites.UserId = @userid " + whereClause + " " + havingClause + " " + orderByClause;
+    Favourites ON Game.MetadataMapId = Favourites.GameId AND Favourites.UserId = @userid " + whereClause + " " + havingClause + " " + orderByClause;
             List<Games.MinimalGameItem> RetVal = new List<Games.MinimalGameItem>();
 
             DataTable dbResponse = db.ExecuteCMD(sql, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));

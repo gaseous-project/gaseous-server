@@ -124,11 +124,11 @@ class UploadRom {
                                     uploadedItem.romId = response.romid;
 
                                     if (response.game) {
-                                        uploadedItem.gameId = response.game.id;
+                                        uploadedItem.gameId = response.game.metadataMapId;
                                         uploadedItem.gameName = response.game.name;
                                         if (response.game.cover != null) {
-                                            if (response.game.cover.id != null) {
-                                                uploadedItem.coverId = response.game.cover.id;
+                                            if (response.game.cover != null) {
+                                                uploadedItem.coverId = response.game.cover;
                                             }
                                         }
                                     }
