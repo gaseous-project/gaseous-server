@@ -159,6 +159,50 @@ namespace gaseous_server.Classes
 				return defaultValue;
 			}
 		}
+
+		public static int GetLookupByCode(LookupTypes LookupType, string Code)
+		{
+			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+			string sql = "SELECT Id FROM " + LookupType.ToString() + " WHERE Code = @code";
+			Dictionary<string, object> dbDict = new Dictionary<string, object>{
+				{ "code", Code }
+			};
+
+			DataTable data = db.ExecuteCMD(sql, dbDict);
+			if (data.Rows.Count == 0)
+			{
+				return -1;
+			}
+			else
+			{
+				return (int)data.Rows[0]["Id"];
+			}
+		}
+
+		public static int GetLookupByValue(LookupTypes LookupType, string Value)
+		{
+			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+			string sql = "SELECT Id FROM " + LookupType.ToString() + " WHERE Value = @value";
+			Dictionary<string, object> dbDict = new Dictionary<string, object>{
+				{ "value", Value }
+			};
+
+			DataTable data = db.ExecuteCMD(sql, dbDict);
+			if (data.Rows.Count == 0)
+			{
+				return -1;
+			}
+			else
+			{
+				return (int)data.Rows[0]["Id"];
+			}
+		}
+
+		public enum LookupTypes
+		{
+			Country,
+			Language
+		}
 	}
 
 	/// <summary>

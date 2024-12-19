@@ -429,23 +429,20 @@ namespace gaseous_server.Classes
                     Logging.Log(Logging.LogType.Information, "Move Game ROM", "Moving " + romPath + " to " + DestinationPath);
                     if (File.Exists(DestinationPath))
                     {
-                        Logging.Log(Logging.LogType.Information, "Move Game ROM", "A file with the same name exists at the destination - aborting");
-                        return false;
+                        Logging.Log(Logging.LogType.Information, "Move Game ROM", "A file with the same name exists at the destination - overwriting");
                     }
-                    else
-                    {
-                        File.Move(romPath, DestinationPath);
 
-                        // update the db
-                        Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                        string sql = "UPDATE Games_Roms SET Path=@path WHERE Id=@id";
-                        Dictionary<string, object> dbDict = new Dictionary<string, object>();
-                        dbDict.Add("id", RomId);
-                        dbDict.Add("path", DestinationPath);
-                        db.ExecuteCMD(sql, dbDict);
+                    File.Move(romPath, DestinationPath, true);
 
-                        return true;
-                    }
+                    // update the db
+                    Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                    string sql = "UPDATE Games_Roms SET Path=@path WHERE Id=@id";
+                    Dictionary<string, object> dbDict = new Dictionary<string, object>();
+                    dbDict.Add("id", RomId);
+                    dbDict.Add("path", DestinationPath);
+                    db.ExecuteCMD(sql, dbDict);
+
+                    return true;
                 }
             }
             else
