@@ -32,5 +32,8 @@ ENV INDOCKER=1
 WORKDIR /App
 COPY --from=build-env /App/out .
 
+# Configure healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 CMD curl --fail http://localhost:80/healthCheck || exit 1
+
 # start gaseous-server
 ENTRYPOINT ["dotnet", "gaseous-server.dll"]
