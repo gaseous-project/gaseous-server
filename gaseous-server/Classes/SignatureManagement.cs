@@ -56,8 +56,8 @@ namespace gaseous_server.Classes
                         System = (string)sigDbRow["Platform"],
                         SystemVariant = (string)sigDbRow["SystemVariant"],
                         Video = (string)sigDbRow["Video"],
-                        Country = (string)sigDbRow["Country"],
-                        Language = (string)sigDbRow["Language"],
+                        Country = "",
+                        Language = "",
                         Copyright = (string)sigDbRow["Copyright"]
                     },
                     Rom = new gaseous_server.Models.Signatures_Games.RomItem
@@ -69,13 +69,22 @@ namespace gaseous_server.Classes
                         Md5 = ((string)sigDbRow["MD5"]).ToLower(),
                         Sha1 = ((string)sigDbRow["SHA1"]).ToLower(),
                         DevelopmentStatus = (string)sigDbRow["DevelopmentStatus"],
-                        Attributes = Newtonsoft.Json.JsonConvert.DeserializeObject<List<KeyValuePair<string, object>>>((string)Common.ReturnValueIfNull(sigDbRow["Attributes"], "[]")),
                         RomType = (gaseous_server.Models.Signatures_Games.RomItem.RomTypes)(int)sigDbRow["RomType"],
                         RomTypeMedia = (string)sigDbRow["RomTypeMedia"],
                         MediaLabel = (string)sigDbRow["MediaLabel"],
                         SignatureSource = (gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType)(Int32)sigDbRow["MetadataSource"]
                     }
                 };
+                string attributeValues = (string)Common.ReturnValueIfNull(sigDbRow["Attributes"], "[]");
+                Dictionary<string, object> attributesDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(attributeValues);
+                if (attributesDict != null)
+                {
+                    gameItem.Rom.Attributes = [.. attributesDict];
+                }
+                else
+                {
+                    gameItem.Rom.Attributes = new List<KeyValuePair<string, object>>();
+                }
                 GamesList.Add(gameItem);
             }
             return GamesList;

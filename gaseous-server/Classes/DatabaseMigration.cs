@@ -64,6 +64,8 @@ namespace gaseous_server.Classes
 
         public static void PostUpgradeScript(int TargetSchemaVersion, Database.databaseType? DatabaseType)
         {
+            var assembly = Assembly.GetExecutingAssembly();
+
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
@@ -102,6 +104,48 @@ namespace gaseous_server.Classes
                             // delete old format LastRun_* settings from settings table
                             sql = "DELETE FROM Settings WHERE Setting LIKE 'LastRun_%';";
                             db.ExecuteNonQuery(sql);
+                            break;
+
+                        case 1023:
+                            // load country list
+                            Logging.Log(Logging.LogType.Information, "Database Upgrade", "Adding country look up table contents");
+
+                            string countryResourceName = "gaseous_server.Support.Country.txt";
+                            using (Stream stream = assembly.GetManifestResourceStream(countryResourceName))
+                            using (StreamReader reader = new StreamReader(stream))
+                            {
+                                do
+                                {
+                                    string[] line = reader.ReadLine().Split("|");
+
+                                    sql = "INSERT INTO Country (Code, Value) VALUES (@code, @value);";
+                                    dbDict = new Dictionary<string, object>{
+                                { "code", line[0] },
+                                { "value", line[1] }
+                            };
+                                    db.ExecuteNonQuery(sql, dbDict);
+                                } while (reader.EndOfStream == false);
+                            }
+
+                            // load language list
+                            Logging.Log(Logging.LogType.Information, "Database Upgrade", "Adding language look up table contents");
+
+                            string languageResourceName = "gaseous_server.Support.Language.txt";
+                            using (Stream stream = assembly.GetManifestResourceStream(languageResourceName))
+                            using (StreamReader reader = new StreamReader(stream))
+                            {
+                                do
+                                {
+                                    string[] line = reader.ReadLine().Split("|");
+
+                                    sql = "INSERT INTO Language (Code, Value) VALUES (@code, @value);";
+                                    dbDict = new Dictionary<string, object>{
+                                { "code", line[0] },
+                                { "value", line[1] }
+                            };
+                                    db.ExecuteNonQuery(sql, dbDict);
+                                } while (reader.EndOfStream == false);
+                            }
                             break;
                     }
                     break;

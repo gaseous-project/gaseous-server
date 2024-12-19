@@ -245,14 +245,32 @@ namespace gaseous_server
                                         CallingQueueItem = this
                                     };
 
-                                    Logging.Log(Logging.LogType.Debug, "Signature Import", "Processing TOSEC files");
-                                    tIngest.Import(Path.Combine(Config.LibraryConfiguration.LibrarySignatureImportDirectory, "TOSEC"), gaseous_signature_parser.parser.SignatureParser.TOSEC);
+                                    foreach (int i in Enum.GetValues(typeof(gaseous_signature_parser.parser.SignatureParser)))
+                                    {
+                                        gaseous_signature_parser.parser.SignatureParser parserType = (gaseous_signature_parser.parser.SignatureParser)i;
+                                        if (
+                                            parserType != gaseous_signature_parser.parser.SignatureParser.Auto &&
+                                            parserType != gaseous_signature_parser.parser.SignatureParser.Unknown
+                                        )
+                                        {
+                                            Logging.Log(Logging.LogType.Debug, "Signature Import", "Processing " + parserType + " files");
 
-                                    Logging.Log(Logging.LogType.Debug, "Signature Import", "Processing MAME Arcade files");
-                                    tIngest.Import(Path.Combine(Config.LibraryConfiguration.LibrarySignatureImportDirectory, "MAME Arcade"), gaseous_signature_parser.parser.SignatureParser.MAMEArcade);
+                                            string SignaturePath = Path.Combine(Config.LibraryConfiguration.LibrarySignatureImportDirectory, parserType.ToString());
+                                            string SignatureProcessedPath = Path.Combine(Config.LibraryConfiguration.LibrarySignatureImportDirectory, parserType.ToString());
 
-                                    Logging.Log(Logging.LogType.Debug, "Signature Import", "Processing MAME MESS files");
-                                    tIngest.Import(Path.Combine(Config.LibraryConfiguration.LibrarySignatureImportDirectory, "MAME MESS"), gaseous_signature_parser.parser.SignatureParser.MAMEMess);
+                                            if (!Directory.Exists(SignaturePath))
+                                            {
+                                                Directory.CreateDirectory(SignaturePath);
+                                            }
+
+                                            if (!Directory.Exists(SignatureProcessedPath))
+                                            {
+                                                Directory.CreateDirectory(SignatureProcessedPath);
+                                            }
+
+                                            tIngest.Import(SignaturePath, SignatureProcessedPath, parserType);
+                                        }
+                                    }
 
                                     _SaveLastRunTime = true;
 
