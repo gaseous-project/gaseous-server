@@ -136,7 +136,7 @@ builder.Services.AddControllers(options =>
 });
 builder.Services.AddApiVersioning(config =>
 {
-    config.DefaultApiVersion = new ApiVersion(1, 0);
+    config.DefaultApiVersion = new ApiVersion(1, 1);
     config.AssumeDefaultVersionWhenUnspecified = true;
     config.ReportApiVersions = true;
     config.ApiVersionReader = ApiVersionReader.Combine(new UrlSegmentApiVersionReader(),
@@ -207,6 +207,9 @@ builder.Services.AddSwaggerGen(options =>
         // using System.Reflection;
         var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
         options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+
+        // sort the endpoints
+        options.OrderActionsBy((apiDesc) => $"{apiDesc.RelativePath}_{apiDesc.HttpMethod}");
     }
 );
 builder.Services.AddHostedService<TimedHostedService>();
@@ -271,9 +274,12 @@ app.UseSwaggerUI(options =>
         var descriptions = app.DescribeApiVersions();
         foreach (var description in descriptions)
         {
-            var url = $"/swagger/{description.GroupName}/swagger.json";
-            var name = description.GroupName.ToUpperInvariant();
-            options.SwaggerEndpoint(url, name);
+            if (description.IsDeprecated == false)
+            {
+                var url = $"/swagger/{description.GroupName}/swagger.json";
+                var name = description.GroupName.ToUpperInvariant();
+                options.SwaggerEndpoint(url, name);
+            }
         }
     }
 );

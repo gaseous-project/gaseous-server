@@ -15,7 +15,7 @@ using Asp.Versioning;
 namespace gaseous_server.Controllers
 {
     [Route("api/v{version:apiVersion}/[controller]")]
-    [ApiVersion("1.0")]
+    [ApiVersion("1.0", Deprecated = true)]
     [ApiVersion("1.1")]
     [Authorize]
     [ApiController]
@@ -23,7 +23,7 @@ namespace gaseous_server.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly SignInManager<ApplicationUser> _signInManager;
-        
+
         public FilterController(
             UserManager<ApplicationUser> userManager,
             SignInManager<ApplicationUser> signInManager)
@@ -40,7 +40,7 @@ namespace gaseous_server.Controllers
         public async Task<IActionResult> FilterAsync()
         {
             var user = await _userManager.GetUserAsync(User);
-            
+
             return Ok(Filters.Filter(user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction, user.SecurityProfile.AgeRestrictionPolicy.IncludeUnrated));
         }
     }

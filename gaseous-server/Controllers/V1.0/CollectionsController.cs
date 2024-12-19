@@ -14,7 +14,7 @@ namespace gaseous_server.Controllers
 {
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
-    [ApiVersion("1.0")]
+    [ApiVersion("1.0", Deprecated = true)]
     [ApiVersion("1.1")]
     [Authorize]
     public class CollectionsController : Controller
@@ -29,7 +29,7 @@ namespace gaseous_server.Controllers
             _userManager = userManager;
             _signInManager = signInManager;
         }
-        
+
         /// <summary>
         /// Gets all ROM collections
         /// </summary>
@@ -145,7 +145,7 @@ namespace gaseous_server.Controllers
                 }
                 catch (Exception ex)
                 {
-                return NotFound(ex);
+                    return NotFound(ex);
                 }
             }
             else
@@ -212,7 +212,7 @@ namespace gaseous_server.Controllers
         public async Task<ActionResult> NewCollectionAsync(Classes.Collections.CollectionItem Item)
         {
             var user = await _userManager.GetUserAsync(User);
-            
+
             if (user != null)
             {
                 try
@@ -246,7 +246,7 @@ namespace gaseous_server.Controllers
         public async Task<ActionResult> EditCollection(long CollectionId, Classes.Collections.CollectionItem Item)
         {
             var user = await _userManager.GetUserAsync(User);
-            
+
             if (user != null)
             {
                 try
@@ -277,10 +277,10 @@ namespace gaseous_server.Controllers
         [Route("{CollectionId}/AlwaysInclude")]
         [ProducesResponseType(typeof(Classes.Collections.CollectionItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> EditCollectionAlwaysInclude(long CollectionId, [FromQuery]bool Rebuild, [FromBody]Collections.CollectionItem.AlwaysIncludeItem Inclusion)
+        public async Task<ActionResult> EditCollectionAlwaysInclude(long CollectionId, [FromQuery] bool Rebuild, [FromBody] Collections.CollectionItem.AlwaysIncludeItem Inclusion)
         {
             var user = await _userManager.GetUserAsync(User);
-            
+
             if (user != null)
             {
                 try
@@ -326,7 +326,7 @@ namespace gaseous_server.Controllers
         public async Task<ActionResult> DeleteCollection(long CollectionId)
         {
             var user = await _userManager.GetUserAsync(User);
-            
+
             if (user != null)
             {
                 try
