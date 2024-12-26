@@ -294,12 +294,24 @@ ORDER BY Platform.`Name`;";
                     if (platform.Id != 0)
                     {
                         Models.PlatformMapping.PlatformMapItem platformMap = PlatformMapping.GetPlatformMap((long)platform.Id);
-                        emulatorConfiguration = new PlatformMapping.UserEmulatorConfiguration
+                        if (platformMap != null)
                         {
-                            EmulatorType = platformMap.WebEmulator.Type,
-                            Core = platformMap.WebEmulator.Core,
-                            EnableBIOSFiles = platformMap.EnabledBIOSHashes
-                        };
+                            emulatorConfiguration = new PlatformMapping.UserEmulatorConfiguration
+                            {
+                                EmulatorType = platformMap.WebEmulator.Type,
+                                Core = platformMap.WebEmulator.Core,
+                                EnableBIOSFiles = platformMap.EnabledBIOSHashes
+                            };
+                        }
+                        else
+                        {
+                            emulatorConfiguration = new PlatformMapping.UserEmulatorConfiguration
+                            {
+                                EmulatorType = "",
+                                Core = "",
+                                EnableBIOSFiles = new List<string>()
+                            };
+                        }
                     }
                 }
 

@@ -54,6 +54,21 @@ namespace gaseous_server.Models
                     }
                 }
 
+                if (_flags.PlatformId == 0)
+                {
+                    // fall back to the IGDB source if present
+                    foreach (SourceValues.SourceValueItem source in MetadataSources.Platforms)
+                    {
+                        if (source.Source == HasheousClient.Models.MetadataSources.IGDB)
+                        {
+                            _flags.PlatformId = source.Id;
+                            _flags.PlatformName = source.Name;
+                            _flags.PlatformMetadataSource = source.Source;
+                            break;
+                        }
+                    }
+                }
+
                 foreach (SourceValues.SourceValueItem source in MetadataSources.Games)
                 {
                     if (source.Source == Config.MetadataConfiguration.DefaultMetadataSource)
@@ -63,6 +78,13 @@ namespace gaseous_server.Models
                         _flags.GameMetadataSource = source.Source;
                         break;
                     }
+                }
+
+                if (_flags.GameId == null || _flags.GameId == 0)
+                {
+                    _flags.GameId = 0;
+                    _flags.GameName = "Unknown Game";
+                    _flags.GameMetadataSource = HasheousClient.Models.MetadataSources.None;
                 }
 
                 return _flags;

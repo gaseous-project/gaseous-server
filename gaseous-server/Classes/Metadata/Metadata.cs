@@ -93,21 +93,13 @@ namespace gaseous_server.Classes.Metadata
             // check cached metadata status
             // if metadata is not cached or expired, get it from the source. Otherwise, return the cached metadata
             Storage.CacheStatus? cacheStatus;
-            if (SourceType == HasheousClient.Models.MetadataSources.None)
+            if (idType == IdType.Long)
             {
-                // if source is None, set cache status to current
-                cacheStatus = Storage.CacheStatus.Current;
+                cacheStatus = Storage.GetCacheStatus(SourceType, type, (long)Id);
             }
             else
             {
-                if (idType == IdType.Long)
-                {
-                    cacheStatus = Storage.GetCacheStatus(SourceType, type, (long)Id);
-                }
-                else
-                {
-                    cacheStatus = Storage.GetCacheStatus(SourceType, type, (string)Id);
-                }
+                cacheStatus = Storage.GetCacheStatus(SourceType, type, (string)Id);
             }
 
             // if ForceRefresh is true, set cache status to expired if it is current

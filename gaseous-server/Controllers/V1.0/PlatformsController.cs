@@ -127,7 +127,7 @@ namespace gaseous_server.Controllers
                 try
                 {
 
-                    logoObject = PlatformLogos.GetPlatformLogo((long)platformObject.PlatformLogo);
+                    logoObject = PlatformLogos.GetPlatformLogo((long)platformObject.PlatformLogo, Communications.MetadataSource);
                 }
                 catch
                 {
@@ -141,17 +141,17 @@ namespace gaseous_server.Controllers
                         }
                         else
                         {
-                            return NotFound();
+                            return GetDummyImage();
                         }
                     }
                     else
                     {
-                        return NotFound();
+                        return GetDummyImage();
                     }
                 }
 
-                string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject));
-                string imagePath = Path.Combine(basePath, size.ToString(), logoObject.ImageId + ".jpg");
+                string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject), Communications.MetadataSource.ToString());
+                string imagePath = Path.Combine(basePath, size.ToString(), logoObject.ImageId);
 
                 if (!System.IO.File.Exists(imagePath))
                 {
@@ -171,9 +171,71 @@ namespace gaseous_server.Controllers
 
                 if (System.IO.File.Exists(imagePath))
                 {
-                    string filename = logoObject.ImageId + ".jpg";
+                    // get image info
+                    var info = new ImageMagick.MagickImageInfo(imagePath);
+                    string extension = ".jpg";
+                    string mimeType = "image/jpg";
+                    switch (info.Format)
+                    {
+                        case ImageMagick.MagickFormat.Jpeg:
+                            extension = ".jpg";
+                            mimeType = "image/jpg";
+                            break;
+
+                        case ImageMagick.MagickFormat.Png:
+                            extension = ".png";
+                            mimeType = "image/png";
+                            break;
+
+                        case ImageMagick.MagickFormat.Gif:
+                            extension = ".gif";
+                            mimeType = "image/gif";
+                            break;
+
+                        case ImageMagick.MagickFormat.Bmp:
+                            extension = ".bmp";
+                            mimeType = "image/bmp";
+                            break;
+
+                        case ImageMagick.MagickFormat.Tiff:
+                            extension = ".tiff";
+                            mimeType = "image/tiff";
+                            break;
+
+                        case ImageMagick.MagickFormat.Unknown:
+                            extension = ".jpg";
+                            mimeType = "image/jpg";
+                            break;
+
+                        case ImageMagick.MagickFormat.WebP:
+                            extension = ".webp";
+                            mimeType = "image/webp";
+                            break;
+
+                        case ImageMagick.MagickFormat.Heic:
+                            extension = ".heic";
+                            mimeType = "image/heic";
+                            break;
+
+                        case ImageMagick.MagickFormat.Heif:
+                            extension = ".heif";
+                            mimeType = "image/heif";
+                            break;
+
+                        case ImageMagick.MagickFormat.Svg:
+                            extension = ".svg";
+                            mimeType = "image/svg+xml";
+                            break;
+
+                        default:
+                            extension = ".jpg";
+                            mimeType = "image/jpg";
+                            break;
+                    }
+
+                    string filename = logoObject.ImageId + extension;
                     string filepath = imagePath;
-                    string contentType = "image/jpg";
+                    string contentType = mimeType;
 
                     var cd = new System.Net.Mime.ContentDisposition
                     {
@@ -195,10 +257,56 @@ namespace gaseous_server.Controllers
 
                     return File(filedata, contentType);
                 }
-
-                return NotFound();
+                else
+                {
+                    return NotFound();
+                }
             }
             catch
+            {
+                return NotFound();
+            }
+        }
+
+        private ActionResult GetDummyImage()
+        {
+            // return resource named DefaultPlatformLogo.svg
+            var assembly = Assembly.GetExecutingAssembly();
+            string resourceName = "gaseous_server.Support.DefaultPlatformLogo.svg";
+            string[] resources = Assembly.GetExecutingAssembly().GetManifestResourceNames();
+            if (resources.Contains(resourceName))
+            {
+                string svgData = "";
+                using (Stream stream = assembly.GetManifestResourceStream(resourceName))
+                using (StreamReader reader = new StreamReader(stream))
+                {
+                    svgData = reader.ReadToEnd();
+                }
+
+                var cd = new System.Net.Mime.ContentDisposition
+                {
+                    FileName = "DefaultPlatformLogo.svg",
+                    Inline = true,
+                };
+
+                Response.Headers.Add("Content-Disposition", cd.ToString());
+                Response.Headers.Add("Cache-Control", "public, max-age=604800");
+
+                byte[] filedata = null;
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    using (StreamWriter writer = new StreamWriter(ms))
+                    {
+                        writer.Write(svgData);
+                        writer.Flush();
+                        ms.Position = 0;
+                        filedata = ms.ToArray();
+                    }
+                }
+
+                return File(filedata, "image/svg+xml");
+            }
+            else
             {
                 return NotFound();
             }

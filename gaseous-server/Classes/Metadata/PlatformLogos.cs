@@ -1,5 +1,6 @@
 ﻿using System;
 using HasheousClient.Models.Metadata.IGDB;
+using static gaseous_server.Models.PlatformMapping;
 
 
 namespace gaseous_server.Classes.Metadata
@@ -12,7 +13,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static PlatformLogo? GetPlatformLogo(long? Id)
+        public static PlatformLogo? GetPlatformLogo(long? Id, HasheousClient.Models.MetadataSources SourceType = HasheousClient.Models.MetadataSources.IGDB)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -20,7 +21,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                PlatformLogo? RetVal = Metadata.GetMetadata<PlatformLogo>(HasheousClient.Models.MetadataSources.IGDB, (long)Id, false);
+                PlatformLogo? RetVal = Metadata.GetMetadata<PlatformLogo>(SourceType, (long)Id, false);
                 return RetVal;
             }
         }

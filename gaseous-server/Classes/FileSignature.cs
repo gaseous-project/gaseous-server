@@ -337,10 +337,22 @@ namespace gaseous_server.Classes
                                         // only IGDB metadata is supported
                                         if (metadataResult.Source == HasheousClient.Models.MetadataSources.IGDB)
                                         {
-                                            if (metadataResult.Id.Length > 0)
+                                            if (metadataResult.ImmutableId.Length > 0)
                                             {
+                                                // use immutable id
+                                                Platform hasheousPlatform = Platforms.GetPlatform(long.Parse(metadataResult.ImmutableId));
+                                                signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataResult.Source);
+                                            }
+                                            else if (metadataResult.Id.Length > 0)
+                                            {
+                                                // fall back to id
                                                 Platform hasheousPlatform = Platforms.GetPlatform(metadataResult.Id);
                                                 signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataResult.Source);
+                                            }
+                                            else
+                                            {
+                                                // no id or immutable id - use unknown platform
+                                                signature.MetadataSources.AddPlatform(0, "Unknown Platform", HasheousClient.Models.MetadataSources.None);
                                             }
                                         }
                                     }
@@ -357,10 +369,19 @@ namespace gaseous_server.Classes
                                         // only IGDB metadata is supported
                                         if (metadataResult.Source == HasheousClient.Models.MetadataSources.IGDB)
                                         {
-                                            if (metadataResult.Id.Length > 0)
+                                            if (metadataResult.ImmutableId.Length > 0)
+                                            {
+                                                signature.MetadataSources.AddGame(long.Parse(metadataResult.ImmutableId), HasheousResult.Name, metadataResult.Source);
+                                            }
+                                            else if (metadataResult.Id.Length > 0)
                                             {
                                                 gaseous_server.Models.Game hasheousGame = Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, metadataResult.Id);
                                                 signature.MetadataSources.AddGame((long)hasheousGame.Id, hasheousGame.Name, metadataResult.Source);
+                                            }
+                                            else
+                                            {
+                                                // no id or immutable id - use unknown game
+                                                signature.MetadataSources.AddGame(0, "Unknown Game", HasheousClient.Models.MetadataSources.None);
                                             }
                                         }
                                     }

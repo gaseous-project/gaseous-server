@@ -2930,6 +2930,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     cursor: pointer;
     display: flex;
     gap: 20px;
+    padding-left: 0;
     align-items: center;
     position: relative;
     overflow: hidden;
@@ -2946,15 +2947,24 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .platform_item_background:hover {}
 
 .platform_image_container {
-    margin-left: 10px;
     margin-right: 10px;
-    max-width: 50px;
-    max-height: 50px;
+    width: 70px;
+    height: 70px;
     flex-grow: 0;
+    /* text-align: center;
+    vertical-align: middle;
+    line-height: 75px; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding-left: 20px;
+    padding-right: 20px;
+    background-color: white;
 }
 
 .platform_image {
-    width: 40px;
+    width: 70px;
 }
 
 .platform_name_container {

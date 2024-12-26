@@ -1,27 +1,25 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/dotnet
 {
-	"name": "C# (.NET)",
+	"name": "Gaseous C# (.NET)",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	//"image": "mcr.microsoft.com/devcontainers/dotnet:1-8.0-bookworm",
 	"dockerComposeFile": "docker-compose.yml",
 	"service": "development",
 	"workspaceFolder": "/workspace",
-
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	// "features": {},
-
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	"forwardPorts": [5198],
+	"forwardPorts": [
+		5198
+	],
 	"portsAttributes": {
-			"5198": {
-				"protocol": "http"
-			}
+		"5198": {
+			"protocol": "http"
+		}
 	},
-
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": "dotnet restore",
-
 	// Configure tool-specific properties.
 	"customizations": {
 		"vscode": {
@@ -38,11 +36,11 @@
 				"ms-dotnettools.vscodeintellicode-csharp",
 				"Zignd.html-css-class-completion",
 				"PWABuilder.pwa-studio",
-				"ms-azuretools.vscode-docker"
+				"ms-azuretools.vscode-docker",
+				"SonarSource.sonarlint-vscode"
 			]
 		}
 	}
-
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	// "remoteUser": "root"
 }

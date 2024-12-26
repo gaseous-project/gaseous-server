@@ -561,7 +561,7 @@ namespace gaseous_server.Classes
             {
                 gameSlug = game.Slug;
             }
-            string DestinationPath = Path.Combine(GameLibrary.GetDefaultLibrary.Path, gameSlug, platformSlug);
+            string DestinationPath = Path.Combine(GameLibrary.GetDefaultLibrary.Path, platformSlug);
             if (!Directory.Exists(DestinationPath))
             {
                 Directory.CreateDirectory(DestinationPath);

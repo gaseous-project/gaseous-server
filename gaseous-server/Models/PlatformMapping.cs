@@ -102,9 +102,16 @@ namespace gaseous_server.Models
                 AlternativeName = mapItem.AlternateNames.FirstOrDefault()
             };
 
-            if (Storage.GetCacheStatus(Communications.MetadataSource, "Platform", mapItem.IGDBId) == Storage.CacheStatus.NotPresent)
+            if (Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.None, "Platform", mapItem.IGDBId) == Storage.CacheStatus.NotPresent)
             {
-                Storage.NewCacheValue(Communications.MetadataSource, platform);
+                Storage.NewCacheValue(HasheousClient.Models.MetadataSources.None, platform);
+            }
+
+            Communications.PopulateHasheousPlatformData(mapItem.IGDBId);
+
+            if (Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.IGDB, "Platform", mapItem.IGDBId) == Storage.CacheStatus.NotPresent)
+            {
+                Storage.NewCacheValue(HasheousClient.Models.MetadataSources.IGDB, platform);
             }
 
             return platform;

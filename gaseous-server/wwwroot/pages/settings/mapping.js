@@ -15,6 +15,7 @@ function loadPlatformMapping(Overwrite) {
                 createTableRow(
                     true,
                     [
+                        '',
                         'Platform',
                         'Supported File Extensions',
                         'Unique File Extensions',
@@ -27,6 +28,12 @@ function loadPlatformMapping(Overwrite) {
             );
 
             for (let i = 0; i < result.length; i++) {
+                let logo = document.createElement('img');
+                logo.src = '/api/v1.1/Platforms/' + result[i].igdbId + '/platformlogo/original/logo.png';
+                logo.alt = result[i].igdbName;
+                logo.title = result[i].igdbName;
+                logo.classList.add('platform_image');
+
                 let hasWebEmulator = '';
                 if (result[i].webEmulator.type.length > 0) {
                     hasWebEmulator = 'Yes';
@@ -49,6 +56,7 @@ function loadPlatformMapping(Overwrite) {
                 }
 
                 let newRow = [
+                    logo,
                     result[i].igdbName,
                     result[i].extensions.supportedFileExtensions.join(', '),
                     result[i].extensions.uniqueFileExtensions.join(', '),

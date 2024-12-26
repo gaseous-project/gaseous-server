@@ -1110,8 +1110,10 @@ namespace gaseous_server.Classes.Metadata
 
         public async Task<string> GetSpecificImageFromServer(string ImagePath, string ImageId, IGDBAPI_ImageSize size, List<IGDBAPI_ImageSize>? FallbackSizes = null)
         {
-            string originalPath = Path.Combine(ImagePath, IGDBAPI_ImageSize.original.ToString(), ImageId + ".jpg");
-            string requestedPath = Path.Combine(ImagePath, size.ToString(), ImageId + ".jpg");
+            string originalPath = Path.Combine(ImagePath, _MetadataSource.ToString(), IGDBAPI_ImageSize.original.ToString());
+            string originalFilePath = Path.Combine(originalPath, ImageId);
+            string requestedPath = Path.Combine(ImagePath, _MetadataSource.ToString(), size.ToString());
+            string requestedFilePath = Path.Combine(requestedPath, ImageId);
 
             // create the directory if it doesn't exist
             if (!Directory.Exists(Path.GetDirectoryName(originalPath)))
@@ -1127,7 +1129,7 @@ namespace gaseous_server.Classes.Metadata
             Point resolution = Common.GetResolution(size);
 
             // check if the original image exists
-            if (!File.Exists(originalPath))
+            if (!File.Exists(originalFilePath))
             {
                 // sleep if the rate limiter is active
                 if (RateLimitResumeTime > DateTime.UtcNow)
@@ -1147,14 +1149,21 @@ namespace gaseous_server.Classes.Metadata
                 Communications comms = new Communications();
                 switch (_MetadataSource)
                 {
+                    case HasheousClient.Models.MetadataSources.None:
+                        await comms.API_GetURL(ImageId, originalPath);
+
+                        return originalFilePath;
+
                     case HasheousClient.Models.MetadataSources.IGDB:
+                        originalFilePath = originalFilePath + ".jpg";
+                        requestedFilePath = requestedFilePath + ".jpg";
                         if (Config.MetadataConfiguration.MetadataUseHasheousProxy == false)
                         {
-                            await comms.IGDBAPI_GetImage(ImageId, ImagePath);
+                            await comms.IGDBAPI_GetImage(ImageId, originalPath);
                         }
                         else
                         {
-                            await comms.HasheousAPI_GetImage(ImageId, ImagePath);
+                            await comms.HasheousAPI_GetImage(ImageId, originalPath);
                         }
                         break;
 
@@ -1164,10 +1173,10 @@ namespace gaseous_server.Classes.Metadata
             }
 
             // check if the requested image exists
-            if (!File.Exists(requestedPath))
+            if (!File.Exists(requestedFilePath))
             {
                 // get the original image
-                using (var image = new ImageMagick.MagickImage(originalPath))
+                using (var image = new ImageMagick.MagickImage(originalFilePath))
                 {
                     image.Resize(resolution.X, resolution.Y);
                     image.Strip();
@@ -1175,7 +1184,7 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
 
-            return requestedPath;
+            return requestedFilePath;
         }
 
         public static T? GetSearchCache<T>(string SearchFields, string SearchString)
@@ -1228,6 +1237,80 @@ namespace gaseous_server.Classes.Metadata
             db.ExecuteNonQuery(sql, dbDict);
         }
 
+        public static void PopulateHasheousPlatformData(long Id)
+        {
+            // fetch all platforms
+            ConfigureHasheousClient(ref hasheous);
+            var hasheousPlatforms = hasheous.GetPlatforms();
+
+            foreach (var hasheousPlatform in hasheousPlatforms)
+            {
+                // check the metadata attribute for a igdb platform id
+                if (hasheousPlatform.Metadata != null)
+                {
+                    foreach (var metadata in hasheousPlatform.Metadata)
+                    {
+                        if (metadata.Source == HasheousClient.Models.MetadataSources.IGDB)
+                        {
+                            if (metadata.ImmutableId.Length > 0)
+                            {
+                                long objId = 0;
+                                long.TryParse(metadata.ImmutableId, out objId);
+                                if (objId == Id)
+                                {
+                                    // we have a match - check hasheousPlatform attributes for a logo
+                                    foreach (var hasheousPlatformAttribute in hasheousPlatform.Attributes)
+                                    {
+                                        if (
+                                            hasheousPlatformAttribute.attributeType == HasheousClient.Models.AttributeItem.AttributeType.ImageId &&
+                                            hasheousPlatformAttribute.attributeName == HasheousClient.Models.AttributeItem.AttributeName.Logo &&
+                                            hasheousPlatformAttribute.Value != null
+                                            )
+                                        {
+                                            Uri logoUrl = new Uri(
+                                                new Uri(HasheousClient.WebApp.HttpHelper.BaseUri, UriKind.Absolute),
+                                                new Uri("/api/v1/images/" + hasheousPlatformAttribute.Value, UriKind.Relative));
+
+                                            // generate a platform logo object
+                                            HasheousClient.Models.Metadata.IGDB.PlatformLogo platformLogo = new HasheousClient.Models.Metadata.IGDB.PlatformLogo
+                                            {
+                                                AlphaChannel = false,
+                                                Animated = false,
+                                                ImageId = (string)hasheousPlatformAttribute.Value,
+                                                Url = logoUrl.ToString()
+                                            };
+
+                                            // generate a long id from the value
+                                            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(platformLogo.ImageId);
+                                            long longId = BitConverter.ToInt64(bytes, 0);
+                                            platformLogo.Id = longId;
+
+                                            // store the platform logo object
+                                            Storage.CacheStatus cacheStatus = Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.None, "PlatformLogo", longId);
+                                            switch (cacheStatus)
+                                            {
+                                                case Storage.CacheStatus.NotPresent:
+                                                    Storage.NewCacheValue<PlatformLogo>(HasheousClient.Models.MetadataSources.None, platformLogo, false);
+                                                    break;
+                                            }
+
+                                            // update the platform object
+                                            Platform? platform = Platforms.GetPlatform(Id);
+                                            if (platform != null)
+                                            {
+                                                platform.PlatformLogo = platformLogo.Id;
+                                                Storage.NewCacheValue<Platform>(HasheousClient.Models.MetadataSources.None, platform, true);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// See https://api-docs.igdb.com/?javascript#images for more information about the image url structure
         /// </summary>
@@ -1238,9 +1321,8 @@ namespace gaseous_server.Classes.Metadata
             string urlTemplate = "https://images.igdb.com/igdb/image/upload/t_{size}/{hash}.jpg";
 
             string url = urlTemplate.Replace("{size}", "original").Replace("{hash}", ImageId);
-            string newOutputPath = Path.Combine(OutputPath, "original");
             string OutputFile = ImageId + ".jpg";
-            string fullPath = Path.Combine(newOutputPath, OutputFile);
+            string fullPath = Path.Combine(OutputPath, OutputFile);
 
             await _DownloadFile(new Uri(url), fullPath);
         }
@@ -1250,9 +1332,19 @@ namespace gaseous_server.Classes.Metadata
             string urlTemplate = HasheousClient.WebApp.HttpHelper.BaseUri + "api/v1/MetadataProxy/IGDB/Image/{hash}.jpg";
 
             string url = urlTemplate.Replace("{hash}", ImageId);
-            string newOutputPath = Path.Combine(OutputPath, "original");
             string OutputFile = ImageId + ".jpg";
-            string fullPath = Path.Combine(newOutputPath, OutputFile);
+            string fullPath = Path.Combine(OutputPath, OutputFile);
+
+            await _DownloadFile(new Uri(url), fullPath);
+        }
+
+        public async Task API_GetURL(string FileName, string OutputPath)
+        {
+            string urlTemplate = HasheousClient.WebApp.HttpHelper.BaseUri + "api/v1/images/{imageid}";
+
+            string url = urlTemplate.Replace("{imageid}", FileName);
+            string OutputFile = FileName;
+            string fullPath = Path.Combine(OutputPath, OutputFile);
 
             await _DownloadFile(new Uri(url), fullPath);
         }
