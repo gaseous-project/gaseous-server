@@ -2958,6 +2958,8 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     justify-content: center;
     align-items: center;
 
+    padding-top: 10px;
+    padding-bottom: 10px;
     padding-left: 20px;
     padding-right: 20px;
     background-color: white;
@@ -2965,6 +2967,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
 .platform_image {
     width: 70px;
+    max-height: 70px;
 }
 
 .platform_name_container {

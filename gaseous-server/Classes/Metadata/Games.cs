@@ -454,7 +454,7 @@ ORDER BY Platform.`Name`;";
             public bool IsFavourite { get; set; } = false;
             public DateTimeOffset? FirstReleaseDate { get; set; }
             public object Cover { get; set; }
-            public List<object> Artworks { get; set; }
+            public List<long> Artworks { get; set; }
             public List<object> AgeRatings { get; set; }
         }
     }

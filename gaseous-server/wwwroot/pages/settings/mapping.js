@@ -28,11 +28,16 @@ function loadPlatformMapping(Overwrite) {
             );
 
             for (let i = 0; i < result.length; i++) {
+                let logoBox = document.createElement('div');
+                logoBox.classList.add('platform_image_container');
+
                 let logo = document.createElement('img');
-                logo.src = '/api/v1.1/Platforms/' + result[i].igdbId + '/platformlogo/original/logo.png';
+                logo.src = '/api/v1.1/Platforms/' + result[i].igdbId + '/platformlogo/original/';
                 logo.alt = result[i].igdbName;
                 logo.title = result[i].igdbName;
                 logo.classList.add('platform_image');
+
+                logoBox.appendChild(logo);
 
                 let hasWebEmulator = '';
                 if (result[i].webEmulator.type.length > 0) {
@@ -56,7 +61,7 @@ function loadPlatformMapping(Overwrite) {
                 }
 
                 let newRow = [
-                    logo,
+                    logoBox,
                     result[i].igdbName,
                     result[i].extensions.supportedFileExtensions.join(', '),
                     result[i].extensions.uniqueFileExtensions.join(', '),

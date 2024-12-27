@@ -334,7 +334,7 @@ namespace gaseous_server.Classes
 			else
 			{
 				// when run normally, update all games (since this will honour cache timeouts)
-				sql = "SELECT Id, `Name` FROM Game;";
+				sql = "SELECT MetadataSourceId AS `Id`, MetadataSourceType AS `GameIdType`, SignatureGameName AS `Name` FROM gaseous.view_MetadataMap;";
 			}
 			dt = db.ExecuteCMD(sql);
 
@@ -345,8 +345,8 @@ namespace gaseous_server.Classes
 
 				try
 				{
-					MetadataSources metadataSource = MetadataSources.IGDB;
-					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ")");
+					MetadataSources metadataSource = (MetadataSources)Enum.Parse(typeof(MetadataSources), dr["GameIdType"].ToString());
+					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ") using source " + metadataSource.ToString());
 					HasheousClient.Models.Metadata.IGDB.Game game = Metadata.Games.GetGame(metadataSource, (long)dr["id"]);
 
 					// get supporting metadata

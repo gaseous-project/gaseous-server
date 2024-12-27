@@ -18,14 +18,30 @@ namespace gaseous_server.Classes.Metadata
         {
             if ((Id == 0) || (Id == null))
             {
-                return null;
+                Platform returnValue = new Platform();
+                if (Storage.GetCacheStatus(Communications.MetadataSource, "Platform", 0) == Storage.CacheStatus.NotPresent)
+                {
+                    returnValue = new Platform
+                    {
+                        Id = 0,
+                        Name = "Unknown Platform",
+                        Slug = "Unknown"
+                    };
+                    Storage.NewCacheValue(Communications.MetadataSource, returnValue);
+
+                    return returnValue;
+                }
+                else
+                {
+                    return Storage.GetCacheValue<Platform>(Communications.MetadataSource, returnValue, "id", 0);
+                }
             }
             else
             {
                 Platform? RetVal = new Platform();
                 if (Config.MetadataConfiguration.DefaultMetadataSource == HasheousClient.Models.MetadataSources.None)
                 {
-                    
+
                     RetVal = (Platform?)Storage.GetCacheValue<Platform>(HasheousClient.Models.MetadataSources.None, RetVal, "Id", (long)Id);
                 }
                 else

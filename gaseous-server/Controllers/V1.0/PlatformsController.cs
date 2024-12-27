@@ -77,44 +77,45 @@ namespace gaseous_server.Controllers
             }
         }
 
-        [MapToApiVersion("1.0")]
-        [MapToApiVersion("1.1")]
-        [HttpGet]
-        [Route("{PlatformId}/platformlogo")]
-        [ProducesResponseType(typeof(PlatformLogo), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult PlatformLogo(long PlatformId)
-        {
-            try
-            {
-                Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
-                if (platformObject != null)
-                {
-                    PlatformLogo logoObjectParent = (PlatformLogo)platformObject.PlatformLogo;
-                    PlatformLogo logoObject = PlatformLogos.GetPlatformLogo(logoObjectParent.Id);
-                    if (logoObject != null)
-                    {
-                        return Ok(logoObject);
-                    }
-                    else
-                    {
-                        return NotFound();
-                    }
-                }
-                else
-                {
-                    return NotFound();
-                }
-            }
-            catch
-            {
-                return NotFound();
-            }
-        }
+        // [MapToApiVersion("1.0")]
+        // [MapToApiVersion("1.1")]
+        // [HttpGet]
+        // [Route("{PlatformId}/platformlogo")]
+        // [ProducesResponseType(typeof(PlatformLogo), StatusCodes.Status200OK)]
+        // [ProducesResponseType(StatusCodes.Status404NotFound)]
+        // public ActionResult PlatformLogo(long PlatformId)
+        // {
+        //     try
+        //     {
+        //         Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
+        //         if (platformObject != null)
+        //         {
+        //             PlatformLogo logoObjectParent = (PlatformLogo)platformObject.PlatformLogo;
+        //             PlatformLogo logoObject = PlatformLogos.GetPlatformLogo(logoObjectParent.Id);
+        //             if (logoObject != null)
+        //             {
+        //                 return Ok(logoObject);
+        //             }
+        //             else
+        //             {
+        //                 return NotFound();
+        //             }
+        //         }
+        //         else
+        //         {
+        //             return NotFound();
+        //         }
+        //     }
+        //     catch
+        //     {
+        //         return NotFound();
+        //     }
+        // }
 
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
+        [Route("{PlatformId}/platformlogo/{size}/")]
         [Route("{PlatformId}/platformlogo/{size}/logo.png")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -124,12 +125,10 @@ namespace gaseous_server.Controllers
             {
                 Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
                 PlatformLogo? logoObject = null;
-                try
-                {
 
-                    logoObject = PlatformLogos.GetPlatformLogo((long)platformObject.PlatformLogo, Communications.MetadataSource);
-                }
-                catch
+                logoObject = PlatformLogos.GetPlatformLogo((long)platformObject.PlatformLogo, Communications.MetadataSource);
+
+                if (logoObject == null)
                 {
                     // getting the logo failed, so we'll try a platform variant if available
                     if (platformObject.Versions != null)
