@@ -287,8 +287,11 @@ ORDER BY Platform.`Name`;";
             foreach (DataRow row in data.Rows)
             {
                 HasheousClient.Models.Metadata.IGDB.Platform platform = Platforms.GetPlatform((long)row["PlatformId"]);
+
+                // get the user emulator configuration
                 PlatformMapping.UserEmulatorConfiguration? emulatorConfiguration = platformMapping.GetUserEmulator(UserId, GameId, (long)platform.Id);
 
+                // if no user configuration, get the platform emulator configuration
                 if (emulatorConfiguration == null)
                 {
                     if (platform.Id != 0)
@@ -303,16 +306,18 @@ ORDER BY Platform.`Name`;";
                                 EnableBIOSFiles = platformMap.EnabledBIOSHashes
                             };
                         }
-                        else
-                        {
-                            emulatorConfiguration = new PlatformMapping.UserEmulatorConfiguration
-                            {
-                                EmulatorType = "",
-                                Core = "",
-                                EnableBIOSFiles = new List<string>()
-                            };
-                        }
                     }
+                }
+
+                // if still no configuration, create a blank one
+                if (emulatorConfiguration == null)
+                {
+                    emulatorConfiguration = new PlatformMapping.UserEmulatorConfiguration
+                    {
+                        EmulatorType = "",
+                        Core = "",
+                        EnableBIOSFiles = new List<string>()
+                    };
                 }
 
                 long? LastPlayedRomId = null;

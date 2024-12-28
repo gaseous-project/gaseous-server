@@ -334,7 +334,7 @@ namespace gaseous_server.Classes.Metadata
                                 switch (propertyTypeName.ToLower())
                                 {
                                     case "system.collections.generic.list":
-                                        var listArray = Newtonsoft.Json.JsonConvert.DeserializeObject<List<object>>(value.ToString());
+                                        var listArray = Newtonsoft.Json.JsonConvert.DeserializeObject<List<long>>(value.ToString());
                                         property.SetValue(EndpointType, listArray);
                                         break;
 

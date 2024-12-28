@@ -345,99 +345,108 @@ namespace gaseous_server.Classes
 
 				try
 				{
-					MetadataSources metadataSource = (MetadataSources)Enum.Parse(typeof(MetadataSources), dr["GameIdType"].ToString());
-					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ") using source " + metadataSource.ToString());
-					HasheousClient.Models.Metadata.IGDB.Game game = Metadata.Games.GetGame(metadataSource, (long)dr["id"]);
-
-					// get supporting metadata
-					if (game != null)
+					MetadataSources metadataSource;
+					if (dr["GameIdType"] == DBNull.Value)
 					{
-						if (game.AgeRatings != null)
+						Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Unable to refresh metadata for game " + dr["name"] + " (" + dr["id"] + ") - no source type specified");
+					}
+					else
+					{
+						metadataSource = (MetadataSources)Enum.Parse(typeof(MetadataSources), dr["GameIdType"].ToString());
+
+						Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ") using source " + metadataSource.ToString());
+						HasheousClient.Models.Metadata.IGDB.Game game = Metadata.Games.GetGame(metadataSource, (long)dr["id"]);
+
+						// get supporting metadata
+						if (game != null)
 						{
-							foreach (long ageRatingId in game.AgeRatings)
+							if (game.AgeRatings != null)
 							{
-								AgeRating ageRating = Metadata.AgeRatings.GetAgeRating(metadataSource, ageRatingId);
-								if (ageRating.ContentDescriptions != null)
+								foreach (long ageRatingId in game.AgeRatings)
 								{
-									foreach (long ageRatingContentDescriptionId in ageRating.ContentDescriptions)
+									AgeRating ageRating = Metadata.AgeRatings.GetAgeRating(metadataSource, ageRatingId);
+									if (ageRating.ContentDescriptions != null)
 									{
-										Metadata.AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(metadataSource, ageRatingContentDescriptionId);
+										foreach (long ageRatingContentDescriptionId in ageRating.ContentDescriptions)
+										{
+											Metadata.AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(metadataSource, ageRatingContentDescriptionId);
+										}
 									}
 								}
 							}
-						}
-						if (game.AlternativeNames != null)
-						{
-							foreach (long alternateNameId in game.AlternativeNames)
+							if (game.AlternativeNames != null)
 							{
-								Metadata.AlternativeNames.GetAlternativeNames(metadataSource, alternateNameId);
+								foreach (long alternateNameId in game.AlternativeNames)
+								{
+									Metadata.AlternativeNames.GetAlternativeNames(metadataSource, alternateNameId);
+								}
 							}
-						}
-						if (game.Artworks != null)
-						{
-							foreach (long artworkId in game.Artworks)
+							if (game.Artworks != null)
 							{
-								Metadata.Artworks.GetArtwork(metadataSource, artworkId);
+								foreach (long artworkId in game.Artworks)
+								{
+									Metadata.Artworks.GetArtwork(metadataSource, artworkId);
+								}
 							}
-						}
-						if (game.Cover != null)
-						{
-							Metadata.Covers.GetCover(metadataSource, (long?)game.Cover);
-						}
-						if (game.GameModes != null)
-						{
-							foreach (long gameModeId in game.GameModes)
+							if (game.Cover != null)
 							{
-								Metadata.GameModes.GetGame_Modes(metadataSource, gameModeId);
+								Metadata.Covers.GetCover(metadataSource, (long?)game.Cover);
 							}
-						}
-						if (game.Genres != null)
-						{
-							foreach (long genreId in game.Genres)
+							if (game.GameModes != null)
 							{
-								Metadata.Genres.GetGenres(metadataSource, genreId);
+								foreach (long gameModeId in game.GameModes)
+								{
+									Metadata.GameModes.GetGame_Modes(metadataSource, gameModeId);
+								}
 							}
-						}
-						if (game.Videos != null)
-						{
-							foreach (long gameVideoId in game.Videos)
+							if (game.Genres != null)
 							{
-								Metadata.GamesVideos.GetGame_Videos(metadataSource, gameVideoId);
+								foreach (long genreId in game.Genres)
+								{
+									Metadata.Genres.GetGenres(metadataSource, genreId);
+								}
 							}
-						}
-						if (game.MultiplayerModes != null)
-						{
-							foreach (long multiplayerModeId in game.MultiplayerModes)
+							if (game.Videos != null)
 							{
-								Metadata.MultiplayerModes.GetGame_MultiplayerModes(metadataSource, multiplayerModeId);
+								foreach (long gameVideoId in game.Videos)
+								{
+									Metadata.GamesVideos.GetGame_Videos(metadataSource, gameVideoId);
+								}
 							}
-						}
-						if (game.PlayerPerspectives != null)
-						{
-							foreach (long playerPerspectiveId in game.PlayerPerspectives)
+							if (game.MultiplayerModes != null)
 							{
-								Metadata.PlayerPerspectives.GetGame_PlayerPerspectives(metadataSource, playerPerspectiveId);
+								foreach (long multiplayerModeId in game.MultiplayerModes)
+								{
+									Metadata.MultiplayerModes.GetGame_MultiplayerModes(metadataSource, multiplayerModeId);
+								}
 							}
-						}
-						if (game.ReleaseDates != null)
-						{
-							foreach (long releaseDateId in game.ReleaseDates)
+							if (game.PlayerPerspectives != null)
 							{
-								Metadata.ReleaseDates.GetReleaseDates(metadataSource, releaseDateId);
+								foreach (long playerPerspectiveId in game.PlayerPerspectives)
+								{
+									Metadata.PlayerPerspectives.GetGame_PlayerPerspectives(metadataSource, playerPerspectiveId);
+								}
 							}
-						}
-						if (game.Screenshots != null)
-						{
-							foreach (long screenshotId in game.Screenshots)
+							if (game.ReleaseDates != null)
 							{
-								Metadata.Screenshots.GetScreenshot(metadataSource, screenshotId);
+								foreach (long releaseDateId in game.ReleaseDates)
+								{
+									Metadata.ReleaseDates.GetReleaseDates(metadataSource, releaseDateId);
+								}
 							}
-						}
-						if (game.Themes != null)
-						{
-							foreach (long themeId in game.Themes)
+							if (game.Screenshots != null)
 							{
-								Metadata.Themes.GetGame_Themes(metadataSource, themeId);
+								foreach (long screenshotId in game.Screenshots)
+								{
+									Metadata.Screenshots.GetScreenshot(metadataSource, screenshotId);
+								}
+							}
+							if (game.Themes != null)
+							{
+								foreach (long themeId in game.Themes)
+								{
+									Metadata.Themes.GetGame_Themes(metadataSource, themeId);
+								}
 							}
 						}
 					}

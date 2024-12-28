@@ -1901,8 +1901,9 @@ div[name="properties_profile_toc_item"]:hover {
 
 button:not(.select2-selection__choice__remove):not(.select2-selection__clear):not(.ejs_menu_button):not(.bigbutton) {
     background-color: var(--button-background);
+    background: var(--button-background-gradient);
     color: var(--button-font-colour);
-    border-width: 1px;
+    border-width: 0px;
     border-color: var(--button-border);
     border-style: solid;
     border-radius: var(--standard-radius);
@@ -1918,6 +1919,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
 button:not(.select2-selection__choice__remove):not(.select2-selection__clear):not(.ejs_menu_button):hover {
     background-color: var(--button-background-hover);
+    background: var(--button-background-hover);
     border-color: var(--button-border-hover);
     color: var(--button-font-colour-hover);
     cursor: pointer;
@@ -1947,36 +1949,42 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
 .redbutton {
     background-color: var(--button-red-background) !important;
+    background: var(--button-red-background-gradient) !important;
     border-color: var(--button-red-border) !important;
     color: var(--button-red-font-colour) !important;
 }
 
 .redbutton:hover {
     background-color: var(--button-red-background-hover) !important;
+    background: var(--button-red-background-hover) !important;
     border-color: var(--button-red-border-hover) !important;
     color: var(--button-red-font-colour-hover) !important;
 }
 
 .redbutton:disabled {
     background-color: var(--button-red-background-disabled) !important;
+    background: var(--button-red-background-disabled) !important;
     border-color: var(--button-red-border-disabled) !important;
     color: var(--button-red-font-colour-disabled) !important;
 }
 
 .bluebutton {
     background-color: var(--button-blue-background) !important;
+    background: var(--button-blue-background-gradient) !important;
     border-color: var(--button-blue-border) !important;
     color: var(--button-blue-font-colour) !important;
 }
 
 .bluebutton:hover {
     background-color: var(--button-blue-background-hover) !important;
+    background: var(--button-blue-background-hover) !important;
     border-color: var(--button-blue-border-hover) !important;
     color: var(--button-blue-font-colour-hover) !important;
 }
 
 .bluebutton:disabled {
     background-color: var(--button-blue-background-disabled) !important;
+    background: var(--button-blue-background-disabled) !important;
     border-color: var(--button-blue-border-disabled) !important;
     color: var(--button-blue-font-colour-disabled) !important;
 }

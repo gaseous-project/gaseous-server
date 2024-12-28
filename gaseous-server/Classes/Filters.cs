@@ -25,6 +25,7 @@ namespace gaseous_server.Classes
             }
 
             string sql = "SELECT Platform.Id, Platform.`Name`, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT Game.Id, view_Games_Roms.PlatformId, COUNT(view_Games_Roms.Id) AS RomCount FROM Game LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + ageRestriction_Platform + ") GROUP BY Game.Id , view_Games_Roms.PlatformId HAVING RomCount > 0) Game JOIN Platform ON Game.PlatformId = Platform.Id GROUP BY Platform.`Name`;";
+            Console.WriteLine(sql);
 
             DataTable dbResponse = db.ExecuteCMD(sql, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 300));
 
