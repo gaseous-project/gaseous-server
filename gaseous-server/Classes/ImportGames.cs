@@ -678,7 +678,7 @@ namespace gaseous_server.Classes
         public static List<GameLibrary.LibraryItem> LibrariesToScan = new List<GameLibrary.LibraryItem>();
         public void LibraryScan()
         {
-            int maxWorkers = Config.MetadataConfiguration.MaxLibraryScanWorkers;
+            int maxWorkers = 4;
 
             if (LibrariesToScan.Count == 0)
             {

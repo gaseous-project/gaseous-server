@@ -136,9 +136,8 @@ namespace gaseous_server.Classes
                                 _config.DatabaseConfiguration.DatabaseName = (string)Common.GetEnvVar("dbname", _config.DatabaseConfiguration.DatabaseName);
                                 _config.DatabaseConfiguration.Port = int.Parse((string)Common.GetEnvVar("dbport", _config.DatabaseConfiguration.Port.ToString()));
                                 _config.MetadataConfiguration.DefaultMetadataSource = (HasheousClient.Models.MetadataSources)Enum.Parse(typeof(HasheousClient.Models.MetadataSources), (string)Common.GetEnvVar("metadatasource", _config.MetadataConfiguration.DefaultMetadataSource.ToString()));
-                                _config.MetadataConfiguration.MetadataUseHasheousProxy = bool.Parse((string)Common.GetEnvVar("metadatausehasheousproxy", _config.MetadataConfiguration.MetadataUseHasheousProxy.ToString()));
+                                _config.IGDBConfiguration.UseHasheousProxy = bool.Parse((string)Common.GetEnvVar("metadatausehasheousproxy", _config.IGDBConfiguration.UseHasheousProxy.ToString()));
                                 _config.MetadataConfiguration.SignatureSource = (HasheousClient.Models.MetadataModel.SignatureSources)Enum.Parse(typeof(HasheousClient.Models.MetadataModel.SignatureSources), (string)Common.GetEnvVar("signaturesource", _config.MetadataConfiguration.SignatureSource.ToString())); ;
-                                _config.MetadataConfiguration.MaxLibraryScanWorkers = int.Parse((string)Common.GetEnvVar("maxlibraryscanworkers", _config.MetadataConfiguration.MaxLibraryScanWorkers.ToString()));
                                 _config.MetadataConfiguration.HasheousHost = (string)Common.GetEnvVar("hasheoushost", _config.MetadataConfiguration.HasheousHost);
                                 _config.IGDBConfiguration.ClientId = (string)Common.GetEnvVar("igdbclientid", _config.IGDBConfiguration.ClientId);
                                 _config.IGDBConfiguration.Secret = (string)Common.GetEnvVar("igdbclientsecret", _config.IGDBConfiguration.Secret);
@@ -739,21 +738,6 @@ namespace gaseous_server.Classes
 
                 private static string _HasheousAPIKey { get; set; } = "";
 
-                private static int _MaxLibraryScanWorkers
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("maxlibraryscanworkers")))
-                        {
-                            return int.Parse(Environment.GetEnvironmentVariable("maxlibraryscanworkers"));
-                        }
-                        else
-                        {
-                            return 4;
-                        }
-                    }
-                }
-
                 private static string _HasheousHost
                 {
                     get
@@ -771,8 +755,6 @@ namespace gaseous_server.Classes
 
                 public HasheousClient.Models.MetadataSources DefaultMetadataSource = _MetadataSource;
 
-                public bool MetadataUseHasheousProxy = _MetadataUseHasheousProxy;
-
                 public HasheousClient.Models.MetadataModel.SignatureSources SignatureSource = _SignatureSource;
 
                 public bool HasheousSubmitFixes = _HasheousSubmitFixes;
@@ -781,8 +763,6 @@ namespace gaseous_server.Classes
 
                 [JsonIgnore]
                 public string HasheousClientAPIKey = _HasheousClientAPIKey;
-
-                public int MaxLibraryScanWorkers = _MaxLibraryScanWorkers;
 
                 public string HasheousHost = _HasheousHost;
             }
@@ -819,8 +799,24 @@ namespace gaseous_server.Classes
                     }
                 }
 
+                private static bool _MetadataUseHasheousProxy
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("igdbusehasheousproxy")))
+                        {
+                            return bool.Parse(Environment.GetEnvironmentVariable("igdbusehasheousproxy"));
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
+
                 public string ClientId = _DefaultIGDBClientId;
                 public string Secret = _DefaultIGDBSecret;
+                public bool UseHasheousProxy = _MetadataUseHasheousProxy;
             }
 
             public class Logging

@@ -14,12 +14,14 @@ namespace gaseous_server.Classes.Metadata
 
         }
 
-        public static Platform? GetPlatform(long Id)
+        public static Platform? GetPlatform(long Id, HasheousClient.Models.MetadataSources? SourceType = null)
         {
+            HasheousClient.Models.MetadataSources Source = SourceType ?? Communications.MetadataSource;
+
             if ((Id == 0) || (Id == null))
             {
                 Platform returnValue = new Platform();
-                if (Storage.GetCacheStatus(Communications.MetadataSource, "Platform", 0) == Storage.CacheStatus.NotPresent)
+                if (Storage.GetCacheStatus(Source, "Platform", 0) == Storage.CacheStatus.NotPresent)
                 {
                     returnValue = new Platform
                     {
@@ -27,26 +29,26 @@ namespace gaseous_server.Classes.Metadata
                         Name = "Unknown Platform",
                         Slug = "Unknown"
                     };
-                    Storage.NewCacheValue(Communications.MetadataSource, returnValue);
+                    Storage.NewCacheValue(Source, returnValue);
 
                     return returnValue;
                 }
                 else
                 {
-                    return Storage.GetCacheValue<Platform>(Communications.MetadataSource, returnValue, "id", 0);
+                    return Storage.GetCacheValue<Platform>(Source, returnValue, "id", 0);
                 }
             }
             else
             {
                 Platform? RetVal = new Platform();
-                if (Config.MetadataConfiguration.DefaultMetadataSource == HasheousClient.Models.MetadataSources.None)
+                if (Source == HasheousClient.Models.MetadataSources.None)
                 {
 
                     RetVal = (Platform?)Storage.GetCacheValue<Platform>(HasheousClient.Models.MetadataSources.None, RetVal, "Id", (long)Id);
                 }
                 else
                 {
-                    RetVal = Metadata.GetMetadata<Platform>(HasheousClient.Models.MetadataSources.IGDB, (long)Id, false);
+                    RetVal = Metadata.GetMetadata<Platform>(Source, (long)Id, false);
                 }
                 return RetVal;
             }

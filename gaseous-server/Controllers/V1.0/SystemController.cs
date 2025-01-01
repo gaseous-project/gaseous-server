@@ -312,12 +312,10 @@ namespace gaseous_server.Controllers
                     HasheousSubmitFixes = (bool)Config.MetadataConfiguration.HasheousSubmitFixes,
                     HasheousAPIKey = Config.MetadataConfiguration.HasheousAPIKey
                 },
-                MetadataSource = new SystemSettingsModel.MetadataSourceItem()
+                MetadataSources = new List<SystemSettingsModel.MetadataSourceItem>
                 {
-                    Source = Config.MetadataConfiguration.DefaultMetadataSource,
-                    UseHasheousProxy = Config.MetadataConfiguration.MetadataUseHasheousProxy,
-                    IGDBClientId = Config.IGDB.ClientId,
-                    IGDBClientSecret = Config.IGDB.Secret
+                    new SystemSettingsModel.MetadataSourceItem(HasheousClient.Models.MetadataSources.None, false, "", "", Config.MetadataConfiguration.DefaultMetadataSource),
+                    new SystemSettingsModel.MetadataSourceItem(HasheousClient.Models.MetadataSources.IGDB, Config.IGDB.UseHasheousProxy, Config.IGDB.ClientId, Config.IGDB.Secret, Config.MetadataConfiguration.DefaultMetadataSource)
                 }
             };
 
@@ -341,10 +339,34 @@ namespace gaseous_server.Controllers
                 Config.MetadataConfiguration.HasheousHost = model.SignatureSource.HasheousHost;
                 Config.MetadataConfiguration.HasheousAPIKey = model.SignatureSource.HasheousAPIKey;
                 Config.MetadataConfiguration.HasheousSubmitFixes = model.SignatureSource.HasheousSubmitFixes;
-                Config.MetadataConfiguration.DefaultMetadataSource = model.MetadataSource.Source;
-                Config.MetadataConfiguration.MetadataUseHasheousProxy = model.MetadataSource.UseHasheousProxy;
-                Config.IGDB.ClientId = model.MetadataSource.IGDBClientId;
-                Config.IGDB.Secret = model.MetadataSource.IGDBClientSecret;
+                foreach (SystemSettingsModel.MetadataSourceItem metadataSourceItem in model.MetadataSources)
+                {
+                    // configure the default metadata source
+                    if (metadataSourceItem.Default == true)
+                    {
+                        Config.MetadataConfiguration.DefaultMetadataSource = metadataSourceItem.Source;
+                    }
+                    else
+                    {
+                        Config.MetadataConfiguration.DefaultMetadataSource = HasheousClient.Models.MetadataSources.None;
+                    }
+
+                    // configure the metadata source
+                    switch (metadataSourceItem.Source)
+                    {
+                        case HasheousClient.Models.MetadataSources.None:
+                            break;
+                        case HasheousClient.Models.MetadataSources.IGDB:
+                            Config.IGDB.UseHasheousProxy = metadataSourceItem.UseHasheousProxy;
+                            Config.IGDB.ClientId = metadataSourceItem.ClientId;
+                            Config.IGDB.Secret = metadataSourceItem.Secret;
+                            break;
+                        case HasheousClient.Models.MetadataSources.TheGamesDb:
+                            break;
+                        default:
+                            break;
+                    }
+                }
                 Config.UpdateConfig();
             }
 
@@ -787,7 +809,7 @@ namespace gaseous_server.Controllers
         public int MinimumLogRetentionPeriod { get; set; }
         public bool EmulatorDebugMode { get; set; }
         public SignatureSourceItem SignatureSource { get; set; }
-        public MetadataSourceItem MetadataSource { get; set; }
+        public List<MetadataSourceItem> MetadataSources { get; set; }
 
         public class SignatureSourceItem
         {
@@ -799,10 +821,97 @@ namespace gaseous_server.Controllers
 
         public class MetadataSourceItem
         {
+            public MetadataSourceItem()
+            {
+
+            }
+
+            public MetadataSourceItem(HasheousClient.Models.MetadataSources source, bool useHasheousProxy, string clientId, string secret, HasheousClient.Models.MetadataSources defaultSource)
+            {
+                Source = source;
+                UseHasheousProxy = useHasheousProxy;
+                ClientId = clientId;
+                Secret = secret;
+                if (Source == defaultSource)
+                {
+                    Default = true;
+                }
+                else
+                {
+                    Default = false;
+                }
+            }
+
             public HasheousClient.Models.MetadataSources Source { get; set; }
             public bool UseHasheousProxy { get; set; }
-            public string IGDBClientId { get; set; }
-            public string IGDBClientSecret { get; set; }
+            public string ClientId { get; set; }
+            public string Secret { get; set; }
+            public bool Default { get; set; }
+            public bool? Configured
+            {
+                get
+                {
+                    switch (Source)
+                    {
+                        case HasheousClient.Models.MetadataSources.None:
+                            return true;
+                        case HasheousClient.Models.MetadataSources.IGDB:
+                            if ((!String.IsNullOrEmpty(ClientId) && !String.IsNullOrEmpty(Secret)) || UseHasheousProxy == true)
+                            {
+                                return true;
+                            }
+                            else
+                            {
+                                return false;
+                            }
+                        case HasheousClient.Models.MetadataSources.TheGamesDb:
+                            if ((!String.IsNullOrEmpty(ClientId) && !String.IsNullOrEmpty(Secret)) || UseHasheousProxy == true)
+                            {
+                                return true;
+                            }
+                            else
+                            {
+                                return false;
+                            }
+                        default:
+                            return false;
+                    }
+                }
+            }
+            public bool? UsesProxy
+            {
+                get
+                {
+                    switch (Source)
+                    {
+                        case HasheousClient.Models.MetadataSources.None:
+                            return false;
+                        case HasheousClient.Models.MetadataSources.IGDB:
+                            return true;
+                        case HasheousClient.Models.MetadataSources.TheGamesDb:
+                            return true;
+                        default:
+                            return false;
+                    }
+                }
+            }
+            public bool? UsesClientIdAndSecret
+            {
+                get
+                {
+                    switch (Source)
+                    {
+                        case HasheousClient.Models.MetadataSources.None:
+                            return false;
+                        case HasheousClient.Models.MetadataSources.IGDB:
+                            return true;
+                        case HasheousClient.Models.MetadataSources.TheGamesDb:
+                            return true;
+                        default:
+                            return false;
+                    }
+                }
+            }
         }
     }
 }

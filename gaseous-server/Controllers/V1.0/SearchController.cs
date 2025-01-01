@@ -67,7 +67,7 @@ namespace gaseous_server.Controllers
             switch (Config.MetadataConfiguration.DefaultMetadataSource)
             {
                 case HasheousClient.Models.MetadataSources.IGDB:
-                    if (Config.MetadataConfiguration.MetadataUseHasheousProxy == false)
+                    if (Config.IGDB.UseHasheousProxy == false)
                     {
                         string searchBody = "";
                         string searchFields = "fields *; ";

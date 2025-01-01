@@ -58,7 +58,7 @@ namespace gaseous_server.Classes.Metadata
                 switch (value)
                 {
                     case HasheousClient.Models.MetadataSources.IGDB:
-                        if (Config.MetadataConfiguration.MetadataUseHasheousProxy == false)
+                        if (Config.IGDB.UseHasheousProxy == false)
                         {
                             // set rate limiter avoidance values
                             RateLimitAvoidanceWait = 1500;
@@ -254,7 +254,7 @@ namespace gaseous_server.Classes.Metadata
                 case HasheousClient.Models.MetadataSources.None:
                     return null;
                 case HasheousClient.Models.MetadataSources.IGDB:
-                    if (Config.MetadataConfiguration.MetadataUseHasheousProxy == false)
+                    if (Config.IGDB.UseHasheousProxy == false)
                     {
                         string fieldList = "";
                         string query = "where slug = \"" + Slug + "\"";
@@ -336,7 +336,7 @@ namespace gaseous_server.Classes.Metadata
                 case HasheousClient.Models.MetadataSources.None:
                     return null;
                 case HasheousClient.Models.MetadataSources.IGDB:
-                    if (Config.MetadataConfiguration.MetadataUseHasheousProxy == false)
+                    if (Config.IGDB.UseHasheousProxy == false)
                     {
                         string fieldList = "";
                         string query = "where id = " + Id;
@@ -527,7 +527,7 @@ namespace gaseous_server.Classes.Metadata
                 case HasheousClient.Models.MetadataSources.None:
                     return null;
                 case HasheousClient.Models.MetadataSources.IGDB:
-                    if (Config.MetadataConfiguration.MetadataUseHasheousProxy == false)
+                    if (Config.IGDB.UseHasheousProxy == false)
                     {
                         return await IGDBAPI<T>(Endpoint, Fields, Query);
                     }
@@ -1157,7 +1157,7 @@ namespace gaseous_server.Classes.Metadata
                     case HasheousClient.Models.MetadataSources.IGDB:
                         originalFilePath = originalFilePath + ".jpg";
                         requestedFilePath = requestedFilePath + ".jpg";
-                        if (Config.MetadataConfiguration.MetadataUseHasheousProxy == false)
+                        if (Config.IGDB.UseHasheousProxy == false)
                         {
                             await comms.IGDBAPI_GetImage(ImageId, originalPath);
                         }

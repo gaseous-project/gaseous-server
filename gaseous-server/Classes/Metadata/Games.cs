@@ -167,7 +167,7 @@ namespace gaseous_server.Classes.Metadata
                 case HasheousClient.Models.MetadataSources.None:
                     return new Game[0];
                 case HasheousClient.Models.MetadataSources.IGDB:
-                    if (Config.MetadataConfiguration.MetadataUseHasheousProxy == false)
+                    if (Config.IGDB.UseHasheousProxy == false)
                     {
                         string searchBody = "";
                         string searchFields = "fields id,name,slug,platforms,summary; ";

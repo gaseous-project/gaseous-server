@@ -111,6 +111,15 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
 
+            // if the source is "none", cache status should be "current" or "not present"
+            if (SourceType == HasheousClient.Models.MetadataSources.None)
+            {
+                if (cacheStatus == Storage.CacheStatus.Expired)
+                {
+                    cacheStatus = Storage.CacheStatus.Current;
+                }
+            }
+
             T? metadata = (T)Activator.CreateInstance(typeof(T));
 
             switch (cacheStatus)
