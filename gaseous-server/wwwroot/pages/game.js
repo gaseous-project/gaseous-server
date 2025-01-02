@@ -440,6 +440,7 @@ function LoadGamePlatforms() {
                 platformItem.classList.add('platform_item_green');
 
                 let launchLink = await BuildLaunchLink(platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, Number(gameId), platformData.favouriteRomId, platformData.favouriteRomIsMediagroup, platformData.favouriteRomName);
+                console.log(launchLink);
 
                 platformItem.addEventListener('click', () => {
                     window.location.href = launchLink;
@@ -453,6 +454,7 @@ function LoadGamePlatforms() {
                 platformItem.classList.add('platform_item_green');
 
                 let launchLink = await BuildLaunchLink(platformData.emulatorConfiguration.emulatorType, platformData.emulatorConfiguration.core, platformData.id, Number(gameId), platformData.lastPlayedRomId, platformData.lastPlayedRomIsMediagroup, platformData.lastPlayedRomName);
+                console.log(launchLink);
 
                 platformItem.addEventListener('click', () => {
                     window.location.href = launchLink;

@@ -340,9 +340,9 @@ ORDER BY Platform.`Name`;";
                 {
                     FavouriteRomId = (long?)row["FavouriteRomId"];
                     FavouriteRomIsMediagroup = (bool)row["FavouriteRomIsMediaGroup"];
-                    if (row["MostRecentRomName"] != System.DBNull.Value)
+                    if (row["FavouriteRomName"] != System.DBNull.Value)
                     {
-                        FavouriteRomName = string.IsNullOrEmpty((string?)row["MostRecentRomName"]) ? "" : (string)row["MostRecentRomName"];
+                        FavouriteRomName = string.IsNullOrEmpty((string?)row["FavouriteRomName"]) ? "" : (string)row["FavouriteRomName"];
                     }
                 }
 

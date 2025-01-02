@@ -2169,9 +2169,9 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     float: right;
 }
 
-#rom_edit {
+/* #rom_edit {
     padding: 10px;
-}
+} */
 
 #rom_edit_panel {
     background-color: rgba(56, 56, 56, 0.3);
