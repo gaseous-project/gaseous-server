@@ -1108,21 +1108,21 @@ namespace gaseous_server.Classes.Metadata
             return false;
         }
 
-        public async Task<string> GetSpecificImageFromServer(string ImagePath, string ImageId, IGDBAPI_ImageSize size, List<IGDBAPI_ImageSize>? FallbackSizes = null)
+        public async Task<string> GetSpecificImageFromServer(HasheousClient.Models.MetadataSources SourceType, string ImagePath, string ImageId, IGDBAPI_ImageSize size, List<IGDBAPI_ImageSize>? FallbackSizes = null)
         {
-            string originalPath = Path.Combine(ImagePath, _MetadataSource.ToString(), IGDBAPI_ImageSize.original.ToString());
+            string originalPath = Path.Combine(ImagePath, SourceType.ToString(), IGDBAPI_ImageSize.original.ToString());
             string originalFilePath = Path.Combine(originalPath, ImageId);
-            string requestedPath = Path.Combine(ImagePath, _MetadataSource.ToString(), size.ToString());
+            string requestedPath = Path.Combine(ImagePath, SourceType.ToString(), size.ToString());
             string requestedFilePath = Path.Combine(requestedPath, ImageId);
 
             // create the directory if it doesn't exist
-            if (!Directory.Exists(Path.GetDirectoryName(originalPath)))
+            if (!Directory.Exists(originalPath))
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(originalPath));
+                Directory.CreateDirectory(originalPath);
             }
-            if (!Directory.Exists(Path.GetDirectoryName(requestedPath)))
+            if (!Directory.Exists(requestedPath))
             {
-                Directory.CreateDirectory(Path.GetDirectoryName(requestedPath));
+                Directory.CreateDirectory(requestedPath);
             }
 
             // get the resolution attribute for enum size
@@ -1147,7 +1147,7 @@ namespace gaseous_server.Classes.Metadata
 
                 // get the original image
                 Communications comms = new Communications();
-                switch (_MetadataSource)
+                switch (SourceType)
                 {
                     case HasheousClient.Models.MetadataSources.None:
                         await comms.API_GetURL(ImageId, originalPath);
@@ -1180,7 +1180,7 @@ namespace gaseous_server.Classes.Metadata
                 {
                     image.Resize(resolution.X, resolution.Y);
                     image.Strip();
-                    image.Write(requestedPath);
+                    image.Write(requestedFilePath);
                 }
             }
 

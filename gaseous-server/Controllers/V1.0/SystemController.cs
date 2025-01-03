@@ -51,7 +51,19 @@ namespace gaseous_server.Controllers
             ReturnValue.DatabaseSize = (long)(System.Decimal)dbResponse.Rows[0][1];
 
             // platform statistics
-            sql = "SELECT Platform.`name`, grc.Count, grs.Size FROM Platform INNER JOIN (SELECT Platform.`name` AS `Name`, SUM(grs.Size) AS Size FROM Platform JOIN view_Games_Roms AS grs ON (grs.PlatformId = Platform.Id) GROUP BY Platform.`name`) grs ON (grs.`Name` = Platform.`name`) INNER JOIN (SELECT Platform.`name` AS `Name`, COUNT(grc.Size) AS Count FROM Platform JOIN view_Games_Roms AS grc ON (grc.PlatformId = Platform.Id) GROUP BY Platform.`name`) grc ON (grc.`Name` = Platform.`name`) ORDER BY Platform.`name`;";
+            sql = @"
+SELECT 
+    view_Games_Roms.PlatformId,
+    Platform.`Name`,
+    SUM(view_Games_Roms.Size) AS Size,
+    COUNT(view_Games_Roms.`Id`) AS Count
+FROM
+    view_Games_Roms
+        LEFT JOIN
+    Platform ON view_Games_Roms.PlatformId = Platform.`Id`
+        AND Platform.SourceId = 0
+GROUP BY Platform.`Name`
+ORDER BY Platform.`Name`; ";
             dbResponse = db.ExecuteCMD(sql);
             ReturnValue.PlatformStatistics = new List<SystemInfo.PlatformStatisticsItem>();
             foreach (DataRow dr in dbResponse.Rows)

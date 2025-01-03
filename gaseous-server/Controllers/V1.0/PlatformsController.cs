@@ -155,7 +155,7 @@ namespace gaseous_server.Controllers
                 if (!System.IO.File.Exists(imagePath))
                 {
                     Communications comms = new Communications();
-                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject)), logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
+                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(Communications.MetadataSource, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject)), logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
 
                     imagePath = ImgFetch.Result;
                 }
@@ -163,7 +163,7 @@ namespace gaseous_server.Controllers
                 if (!System.IO.File.Exists(imagePath))
                 {
                     Communications comms = new Communications();
-                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(basePath, logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
+                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(Communications.MetadataSource, basePath, logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
 
                     imagePath = ImgFetch.Result;
                 }

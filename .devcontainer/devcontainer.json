@@ -37,7 +37,8 @@
 				"Zignd.html-css-class-completion",
 				"PWABuilder.pwa-studio",
 				"ms-azuretools.vscode-docker",
-				"SonarSource.sonarlint-vscode"
+				"SonarSource.sonarlint-vscode",
+				"oderwat.indent-rainbow"
 			]
 		}
 	}
