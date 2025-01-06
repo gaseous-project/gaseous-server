@@ -217,13 +217,13 @@ namespace gaseous_server.Classes.Metadata
                                     newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(newDict["Ids"]);
                                     objectDict[key.Key] = newObjectValue;
 
-                                    StoreRelations(ObjectTypeName, key.Key, (long)objectDict["Id"], newObjectValue);
+                                    StoreRelations(SourceType, ObjectTypeName, key.Key, (long)objectDict["Id"], newObjectValue);
                                     break;
                                 case "list":
                                     newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(objectValue);
                                     objectDict[key.Key] = newObjectValue;
 
-                                    StoreRelations(ObjectTypeName, key.Key, (long)objectDict["Id"], newObjectValue);
+                                    StoreRelations(SourceType, ObjectTypeName, key.Key, (long)objectDict["Id"], newObjectValue);
 
                                     break;
                                 case "int32[]":
@@ -372,7 +372,7 @@ namespace gaseous_server.Classes.Metadata
             return EndpointType;
         }
 
-        private static void StoreRelations(string PrimaryTable, string SecondaryTable, long ObjectId, string Relations)
+        private static void StoreRelations(HasheousClient.Models.MetadataSources SourceType, string PrimaryTable, string SecondaryTable, long ObjectId, string Relations)
         {
             string TableName = "Relation_" + PrimaryTable + "_" + SecondaryTable;
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -381,7 +381,13 @@ namespace gaseous_server.Classes.Metadata
             if (data.Rows.Count == 0)
             {
                 // table doesn't exist, create it
-                sql = "CREATE TABLE `" + Config.DatabaseConfiguration.DatabaseName + "`.`" + TableName + "` (`" + PrimaryTable + "Id` BIGINT NOT NULL, `" + SecondaryTable + "Id` BIGINT NOT NULL, PRIMARY KEY (`" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`), INDEX `idx_PrimaryColumn` (`" + PrimaryTable + "Id` ASC) VISIBLE);";
+                sql = @"
+                    CREATE TABLE 
+                    `" + Config.DatabaseConfiguration.DatabaseName + "`.`" + TableName + @"` 
+                    (`" + PrimaryTable + @"SourceId` INT NOT NULL, 
+                    `" + PrimaryTable + @"Id` BIGINT NOT NULL, 
+                    `" + SecondaryTable + @"Id` BIGINT NOT NULL, 
+                    PRIMARY KEY (`" + PrimaryTable + "SourceId`, `" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`), INDEX `idx_PrimaryColumn` (`" + PrimaryTable + "Id` ASC) VISIBLE);";
                 db.ExecuteCMD(sql);
             }
             else
@@ -397,10 +403,13 @@ namespace gaseous_server.Classes.Metadata
             long[] RelationValues = Newtonsoft.Json.JsonConvert.DeserializeObject<long[]>(Relations);
             foreach (long RelationValue in RelationValues)
             {
-                sql = "INSERT INTO " + TableName + " (`" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`) VALUES (@objectid, @relationvalue);";
-                Dictionary<string, object> dbDict = new Dictionary<string, object>();
-                dbDict.Add("objectid", ObjectId);
-                dbDict.Add("relationvalue", RelationValue);
+                sql = "INSERT INTO " + TableName + " (`" + PrimaryTable + "SourceId`, `" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`) VALUES (@sourceid, @objectid, @relationvalue);";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>
+                {
+                    { "sourceid", SourceType },
+                    { "objectid", ObjectId },
+                    { "relationvalue", RelationValue }
+                };
                 db.ExecuteCMD(sql, dbDict);
             }
         }
@@ -422,7 +431,13 @@ namespace gaseous_server.Classes.Metadata
                     if (data.Rows.Count == 0)
                     {
                         // table doesn't exist, create it
-                        sql = "CREATE TABLE `" + Config.DatabaseConfiguration.DatabaseName + "`.`" + TableName + "` (`" + PrimaryTable + "Id` BIGINT NOT NULL, `" + SecondaryTable + "Id` BIGINT NOT NULL, PRIMARY KEY (`" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`), INDEX `idx_PrimaryColumn` (`" + PrimaryTable + "Id` ASC) VISIBLE);";
+                        sql = @"
+                            CREATE TABLE 
+                            `" + Config.DatabaseConfiguration.DatabaseName + "`.`" + TableName + @"` 
+                            (`" + PrimaryTable + @"SourceId` INT NOT NULL, 
+                            `" + PrimaryTable + @"Id` BIGINT NOT NULL, 
+                            `" + SecondaryTable + @"Id` BIGINT NOT NULL, 
+                            PRIMARY KEY (`" + PrimaryTable + "SourceId`, `" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`), INDEX `idx_PrimaryColumn` (`" + PrimaryTable + "Id` ASC) VISIBLE);";
                         db.ExecuteCMD(sql);
                     }
                 }

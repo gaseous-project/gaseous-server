@@ -231,7 +231,7 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        public static List<AvailablePlatformItem> GetAvailablePlatforms(string UserId, long GameId)
+        public static List<AvailablePlatformItem> GetAvailablePlatforms(string UserId, HasheousClient.Models.MetadataSources SourceType, long GameId)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = @"
@@ -273,10 +273,11 @@ FROM
         LEFT JOIN
     view_Games_Roms AS GFV ON GFV.Id = User_GameFavouriteRoms.RomId
 WHERE
-    view_Games_Roms.MetadataMapId = @gameid
+    view_Games_Roms.GameIdType = @sourcetype AND view_Games_Roms.GameId = @gameid
 ORDER BY Platform.`Name`;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>
             {
+                { "sourcetype", (int)SourceType },
                 { "gameid", GameId },
                 { "userid", UserId }
             };

@@ -465,83 +465,6 @@ namespace gaseous_server.Classes
             return SearchCandidates;
         }
 
-        public static long StoreROM(GameLibrary.LibraryItem library, Common.hashObject hash, gaseous_server.Models.Game determinedGame, Platform determinedPlatform, gaseous_server.Models.Signatures_Games discoveredSignature, string GameFileImportPath, long UpdateId = 0, bool SourceIsExternal = false)
-        {
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-
-            string sql = "";
-
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
-
-            if (UpdateId == 0)
-            {
-                sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, RelativePath, MetadataSource, MetadataGameName, MetadataVersion, LibraryId, RomDataVersion) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @Attributes, @romtype, @romtypemedia, @medialabel, @path, @metadatasource, @metadatagamename, @metadataversion, @libraryid, @romdataversion); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
-            }
-            else
-            {
-                sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid, Name=@name, Size=@size, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion, RomDataVersion=@romdataversion WHERE Id=@id;";
-                dbDict.Add("id", UpdateId);
-            }
-            dbDict.Add("platformid", Common.ReturnValueIfNull(determinedPlatform.Id, 0));
-            dbDict.Add("gameid", Common.ReturnValueIfNull(determinedGame.Id, 0));
-            dbDict.Add("name", Common.ReturnValueIfNull(discoveredSignature.Rom.Name, 0));
-            dbDict.Add("size", Common.ReturnValueIfNull(discoveredSignature.Rom.Size, 0));
-            dbDict.Add("md5", hash.md5hash);
-            dbDict.Add("sha1", hash.sha1hash);
-            dbDict.Add("crc", Common.ReturnValueIfNull(discoveredSignature.Rom.Crc, ""));
-            dbDict.Add("developmentstatus", Common.ReturnValueIfNull(discoveredSignature.Rom.DevelopmentStatus, ""));
-            dbDict.Add("metadatasource", discoveredSignature.Rom.SignatureSource);
-            dbDict.Add("metadatagamename", discoveredSignature.Game.Name);
-            dbDict.Add("metadataversion", 2);
-            dbDict.Add("libraryid", library.Id);
-            dbDict.Add("romdataversion", 2);
-
-            if (discoveredSignature.Rom.Attributes != null)
-            {
-                if (discoveredSignature.Rom.Attributes.Count > 0)
-                {
-                    dbDict.Add("attributes", Newtonsoft.Json.JsonConvert.SerializeObject(discoveredSignature.Rom.Attributes));
-                }
-                else
-                {
-                    dbDict.Add("attributes", "[ ]");
-                }
-            }
-            else
-            {
-                dbDict.Add("attributes", "[ ]");
-            }
-            dbDict.Add("romtype", (int)discoveredSignature.Rom.RomType);
-            dbDict.Add("romtypemedia", Common.ReturnValueIfNull(discoveredSignature.Rom.RomTypeMedia, ""));
-            dbDict.Add("medialabel", Common.ReturnValueIfNull(discoveredSignature.Rom.MediaLabel, ""));
-
-            string libraryRootPath = library.Path;
-            if (libraryRootPath.EndsWith(Path.DirectorySeparatorChar.ToString()) == false)
-            {
-                libraryRootPath += Path.DirectorySeparatorChar;
-            }
-            dbDict.Add("path", GameFileImportPath.Replace(libraryRootPath, ""));
-
-            DataTable romInsert = db.ExecuteCMD(sql, dbDict);
-            long romId = 0;
-            if (UpdateId == 0)
-            {
-                romId = (long)romInsert.Rows[0][0];
-            }
-            else
-            {
-                romId = UpdateId;
-            }
-
-            // move to destination
-            if (library.IsDefaultLibrary == true)
-            {
-                MoveGameFile(romId, SourceIsExternal);
-            }
-
-            return romId;
-        }
-
         public static string ComputeROMPath(long RomId)
         {
             Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
@@ -716,8 +639,7 @@ namespace gaseous_server.Classes
                         1,
                         new List<ProcessQueue.QueueItemType>
                         {
-                        ProcessQueue.QueueItemType.OrganiseLibrary,
-                        ProcessQueue.QueueItemType.Rematcher
+                        ProcessQueue.QueueItemType.OrganiseLibrary
                         },
                         false,
                         true)
@@ -876,7 +798,7 @@ namespace gaseous_server.Classes
 
                             gaseous_server.Models.Game determinedGame = SearchForGame(sig, PlatformId, true);
 
-                            StoreROM(library, hash, determinedGame, determinedPlatform, sig, LibraryFile);
+                            StoreGame(library, hash, sig, determinedPlatform, LibraryFile, 0, false);
                         }
                         catch (Exception ex)
                         {
@@ -937,86 +859,6 @@ namespace gaseous_server.Classes
             }
 
             Logging.Log(Logging.LogType.Information, "Library Scan", "Library scan completed");
-        }
-
-        public void Rematcher(bool ForceExecute = false)
-        {
-            // rescan all titles with an unknown platform or title and see if we can get a match
-            Logging.Log(Logging.LogType.Information, "Rematch Scan", "Rematch scan starting");
-
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-
-            foreach (GameLibrary.LibraryItem library in GameLibrary.GetLibraries)
-            {
-                Logging.Log(Logging.LogType.Information, "Rematch Scan", "Rematch on library " + library.Name);
-
-                string sql = "";
-                if (ForceExecute == false)
-                {
-                    sql = "SELECT * FROM view_Games_Roms WHERE (PlatformId = 0 AND GameId <> 0) OR (((PlatformId = 0 OR GameId = 0) AND MetadataSource = 0) OR (PlatformId = 0 AND GameId = 0)) AND (LastMatchAttemptDate IS NULL OR LastMatchAttemptDate < @lastmatchattemptdate) AND LibraryId = @libraryid LIMIT 100;";
-                }
-                else
-                {
-                    sql = "SELECT * FROM view_Games_Roms WHERE (PlatformId = 0 AND GameId <> 0) OR (((PlatformId = 0 OR GameId = 0) AND MetadataSource = 0) OR (PlatformId = 0 AND GameId = 0)) AND LibraryId = @libraryid;";
-                }
-                Dictionary<string, object> dbDict = new Dictionary<string, object>();
-                dbDict.Add("lastmatchattemptdate", DateTime.UtcNow.AddDays(-7));
-                dbDict.Add("libraryid", library.Id);
-                DataTable data = db.ExecuteCMD(sql, dbDict);
-                int StatusCount = -0;
-                foreach (DataRow row in data.Rows)
-                {
-                    SetStatus(StatusCount, data.Rows.Count, "Running rematcher");
-
-                    // get rom info
-                    long romId = (long)row["Id"];
-                    string romPath = (string)row["Path"];
-                    Common.hashObject hash = new Common.hashObject
-                    {
-                        md5hash = (string)row["MD5"],
-                        sha1hash = (string)row["SHA1"]
-                    };
-                    FileInfo fi = new FileInfo(romPath);
-
-                    Logging.Log(Logging.LogType.Information, "Rematch Scan", "Running rematch against " + romPath);
-
-                    // determine rom signature
-                    FileSignature fileSignature = new FileSignature();
-                    gaseous_server.Models.Signatures_Games sig = fileSignature.GetFileSignature(library, hash, fi, romPath);
-
-                    // get discovered platform
-                    long PlatformId;
-                    Platform determinedPlatform;
-
-                    if (sig.Flags.PlatformId == null || sig.Flags.PlatformId == 0)
-                    {
-                        // no platform discovered in the signature
-                        PlatformId = library.DefaultPlatformId;
-                    }
-                    else
-                    {
-                        // use the platform discovered in the signature
-                        PlatformId = (long)sig.Flags.PlatformId;
-                    }
-                    determinedPlatform = Platforms.GetPlatform(PlatformId);
-
-                    gaseous_server.Models.Game determinedGame = SearchForGame(sig, PlatformId, true);
-
-                    StoreROM(library, hash, determinedGame, determinedPlatform, sig, romPath, romId);
-
-                    string attemptSql = "UPDATE Games_Roms SET LastMatchAttemptDate=@lastmatchattemptdate WHERE Id=@id;";
-                    Dictionary<string, object> dbLastAttemptDict = new Dictionary<string, object>();
-                    dbLastAttemptDict.Add("id", romId);
-                    dbLastAttemptDict.Add("lastmatchattemptdate", DateTime.UtcNow);
-                    db.ExecuteCMD(attemptSql, dbLastAttemptDict);
-
-                    StatusCount += 1;
-                }
-                ClearStatus();
-
-                Logging.Log(Logging.LogType.Information, "Rematch Scan", "Rematch scan completed");
-                ClearStatus();
-            }
         }
     }
 }

@@ -351,9 +351,6 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.LibraryScan)
     );
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.Rematcher)
-    );
 
 // maintenance tasks
 ProcessQueue.QueueItem dailyMaintenance = new ProcessQueue.QueueItem(

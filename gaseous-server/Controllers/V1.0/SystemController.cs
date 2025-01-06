@@ -525,8 +525,7 @@ ORDER BY Platform.`Name`; ";
                     this._Blocks = new List<ProcessQueue.QueueItemType>{
                         ProcessQueue.QueueItemType.LibraryScan,
                         ProcessQueue.QueueItemType.LibraryScanWorker,
-                        ProcessQueue.QueueItemType.TitleIngestor,
-                        ProcessQueue.QueueItemType.Rematcher
+                        ProcessQueue.QueueItemType.TitleIngestor
                     };
                     break;
 
@@ -548,32 +547,7 @@ ORDER BY Platform.`Name`; ";
                     this.DefaultAllowedEndHours = 23;
                     this.DefaultAllowedEndMinutes = 59;
                     this._Blocks = new List<ProcessQueue.QueueItemType>{
-                        ProcessQueue.QueueItemType.OrganiseLibrary,
-                        ProcessQueue.QueueItemType.Rematcher
-                    };
-                    break;
-
-                case ProcessQueue.QueueItemType.Rematcher:
-                    this._UserManageable = true;
-                    this.DefaultInterval = 1440;
-                    this.MinimumAllowedInterval = 360;
-                    this.DefaultAllowedDays = new List<DayOfWeek>{
-                        DayOfWeek.Sunday,
-                        DayOfWeek.Monday,
-                        DayOfWeek.Tuesday,
-                        DayOfWeek.Wednesday,
-                        DayOfWeek.Thursday,
-                        DayOfWeek.Friday,
-                        DayOfWeek.Saturday
-                    };
-                    this.DefaultAllowedStartHours = 0;
-                    this.DefaultAllowedStartMinutes = 0;
-                    this.DefaultAllowedEndHours = 23;
-                    this.DefaultAllowedEndMinutes = 59;
-                    this._Blocks = new List<ProcessQueue.QueueItemType>{
-                        ProcessQueue.QueueItemType.OrganiseLibrary,
-                        ProcessQueue.QueueItemType.LibraryScan,
-                        ProcessQueue.QueueItemType.LibraryScanWorker
+                        ProcessQueue.QueueItemType.OrganiseLibrary
                     };
                     break;
 

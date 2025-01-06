@@ -1,3 +1,5 @@
+using System.Data;
+
 namespace gaseous_server.Classes.Metadata
 {
     public class Metadata
@@ -174,17 +176,43 @@ namespace gaseous_server.Classes.Metadata
             // get T type as string
             string type = typeof(T).Name;
 
-            // get metadata from the server
-            Communications comms = new Communications();
-            var results = await comms.APIComm<T>(SourceType, (Communications.MetadataEndpoint)Enum.Parse(typeof(Communications.MetadataEndpoint), type, true), Id);
-
-            // check for errors
-            if (results == null)
+            if (SourceType == HasheousClient.Models.MetadataSources.None)
             {
-                throw new InvalidMetadataId(SourceType, Id);
-            }
+                // generate a dummy object
+                var returnObject = (T)Activator.CreateInstance(typeof(T));
+                returnObject.GetType().GetProperty("Id").SetValue(returnObject, Id);
 
-            return results.FirstOrDefault<T>();
+                // if returnObject has a property called "name", query the metadatamap view for the name
+                if (returnObject.GetType().GetProperty("Name") != null)
+                {
+                    Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                    string sql = "SELECT SignatureGameName FROM view_MetadataMap WHERE `Id` = @id;";
+                    DataTable dataTable = db.ExecuteCMD(sql, new Dictionary<string, object>
+                    {
+                        { "@id", Id }
+                    });
+                    if (dataTable.Rows.Count > 0)
+                    {
+                        returnObject.GetType().GetProperty("Name").SetValue(returnObject, dataTable.Rows[0]["SignatureGameName"].ToString());
+                    }
+                }
+
+                return returnObject;
+            }
+            else
+            {
+                // get metadata from the server
+                Communications comms = new Communications();
+                var results = await comms.APIComm<T>(SourceType, (Communications.MetadataEndpoint)Enum.Parse(typeof(Communications.MetadataEndpoint), type, true), Id);
+
+                // check for errors
+                if (results == null)
+                {
+                    throw new InvalidMetadataId(SourceType, Id);
+                }
+
+                return results.FirstOrDefault<T>();
+            }
         }
 
         private static async Task<T> GetMetadataFromServer<T>(HasheousClient.Models.MetadataSources SourceType, string Id) where T : class
@@ -192,17 +220,25 @@ namespace gaseous_server.Classes.Metadata
             // get T type as string
             string type = typeof(T).Name;
 
-            // get metadata from the server
-            Communications comms = new Communications();
-            var results = await comms.APIComm<T>(SourceType, (Communications.MetadataEndpoint)Enum.Parse(typeof(Communications.MetadataEndpoint), type, true), Id);
-
-            // check for errors
-            if (results == null)
+            if (SourceType == HasheousClient.Models.MetadataSources.None)
             {
-                throw new InvalidMetadataId(SourceType, Id);
+                // generate a dummy object
+                return (T)Activator.CreateInstance(typeof(T));
             }
+            else
+            {
+                // get metadata from the server
+                Communications comms = new Communications();
+                var results = await comms.APIComm<T>(SourceType, (Communications.MetadataEndpoint)Enum.Parse(typeof(Communications.MetadataEndpoint), type, true), Id);
 
-            return results.FirstOrDefault<T>();
+                // check for errors
+                if (results == null)
+                {
+                    throw new InvalidMetadataId(SourceType, Id);
+                }
+
+                return results.FirstOrDefault<T>();
+            }
         }
 
         #endregion

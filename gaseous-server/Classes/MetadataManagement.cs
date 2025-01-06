@@ -334,7 +334,7 @@ namespace gaseous_server.Classes
 			else
 			{
 				// when run normally, update all games (since this will honour cache timeouts)
-				sql = "SELECT MetadataSourceId AS `Id`, MetadataSourceType AS `GameIdType`, SignatureGameName AS `Name` FROM gaseous.view_MetadataMap;";
+				sql = "SELECT DISTINCT MetadataSourceId AS `Id`, MetadataSourceType AS `GameIdType`, SignatureGameName AS `Name` FROM gaseous.view_MetadataMap;";
 			}
 			dt = db.ExecuteCMD(sql);
 

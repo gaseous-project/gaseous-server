@@ -1060,7 +1060,8 @@ namespace gaseous_server.Controllers
 
                 if (user != null)
                 {
-                    return Ok(Games.GetAvailablePlatforms(user.Id, MetadataMapId));
+                    MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                    return Ok(Games.GetAvailablePlatforms(user.Id, metadataMap.SourceType, metadataMap.SourceId));
                 }
                 else
                 {
