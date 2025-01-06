@@ -489,6 +489,16 @@ function LoadGamePlatforms() {
             let platformEditButtonContainer = document.createElement('div');
             platformEditButtonContainer.className = 'platform_edit_button_container';
 
+            // create user manual button
+            let userManualButton = document.createElement('div');
+            userManualButton.className = 'platform_edit_button';
+            userManualButton.innerHTML = '<img src="/images/manual.svg" class="banner_button_image" />';
+            userManualButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                let guideUrl = window.open(result[i].userManualLink, '_blank');
+                guideUrl.opener = null;
+            });
+
             // create platform state manager button
             let platformStateManagerButton = document.createElement('div');
             if (showSaveState === true) {
@@ -518,10 +528,15 @@ function LoadGamePlatforms() {
             platformNameContainer.appendChild(platformName);
             platformItem.appendChild(platformNameContainer);
             platformItem.appendChild(platformEditButtonContainer);
-            platformItem.appendChild(platformEditButton);
+
             if (showSaveState === true) {
-                platformItem.appendChild(platformStateManagerButton);
+                platformEditButtonContainer.appendChild(platformStateManagerButton);
             }
+            if (result[i].userManualLink) {
+                platformEditButtonContainer.appendChild(userManualButton);
+            }
+            platformEditButtonContainer.appendChild(platformEditButton);
+
             platformContainer.appendChild(platformItem);
         }
     });

@@ -205,6 +205,15 @@ namespace gaseous_server.Classes
             // add/get the metadata map
             MetadataMap? map = MetadataManagement.NewMetadataMap((long)platform.Id, signature.Game.Name);
 
+            // add any metadata attributes that may be supplied as part of the signature
+            if (signature.Game.UserManual != null)
+            {
+                if (signature.Game.UserManual.Length > 0)
+                {
+                    MetadataManagement.SetMetadataSupportData((long)map.Id, MetadataManagement.MetadataMapSupportDataTypes.UserManualLink, signature.Game.UserManual);
+                }
+            }
+
             // populate map with the sources from the signature if they don't already exist
             bool reloadMap = false;
             foreach (MetadataSources source in Enum.GetValues(typeof(MetadataSources)))

@@ -239,6 +239,7 @@ SELECT DISTINCT
 	view_Games_Roms.MetadataMapId,
     view_Games_Roms.GameId,
     view_Games_Roms.PlatformId,
+    view_Games_Roms.UserManualLink,
     Platform.`Name`,
     User_RecentPlayedRoms.UserId AS MostRecentUserId,
     User_RecentPlayedRoms.RomId AS MostRecentRomId,
@@ -310,7 +311,7 @@ ORDER BY Platform.`Name`;";
                     }
                 }
 
-                // if still no configuration, create a blank one
+                // if still no emulator configuration, create a blank one
                 if (emulatorConfiguration == null)
                 {
                     emulatorConfiguration = new PlatformMapping.UserEmulatorConfiguration
@@ -347,6 +348,12 @@ ORDER BY Platform.`Name`;";
                     }
                 }
 
+                string? UserManualLink = null;
+                if (row["UserManualLink"] != DBNull.Value)
+                {
+                    UserManualLink = string.IsNullOrEmpty((string?)row["UserManualLink"]) ? "" : (string)row["UserManualLink"];
+                }
+
                 AvailablePlatformItem valuePair = new AvailablePlatformItem
                 {
                     Id = platform.Id,
@@ -358,7 +365,8 @@ ORDER BY Platform.`Name`;";
                     LastPlayedRomName = LastPlayedRomName,
                     FavouriteRomId = FavouriteRomId,
                     FavouriteRomIsMediagroup = FavouriteRomIsMediagroup,
-                    FavouriteRomName = FavouriteRomName
+                    FavouriteRomName = FavouriteRomName,
+                    UserManualLink = UserManualLink
                 };
                 platforms.Add(valuePair);
             }
@@ -403,6 +411,7 @@ ORDER BY Platform.`Name`;";
             public long? FavouriteRomId { get; set; }
             public bool? FavouriteRomIsMediagroup { get; set; }
             public string? FavouriteRomName { get; set; }
+            public string? UserManualLink { get; set; }
         }
 
         public enum SearchType

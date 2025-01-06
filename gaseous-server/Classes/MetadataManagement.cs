@@ -11,6 +11,11 @@ namespace gaseous_server.Classes
 	{
 		private static bool Processing = false;
 
+		public enum MetadataMapSupportDataTypes
+		{
+			UserManualLink
+		}
+
 		/// <summary>
 		/// Creates a new metadata map, if one with the same platformId and name does not already exist.
 		/// </summary>
@@ -213,6 +218,32 @@ namespace gaseous_server.Classes
 			}
 
 			return null;
+		}
+
+		public static void SetMetadataSupportData(long metadataMapId, MetadataMapSupportDataTypes dataType, string data)
+		{
+			// verify the metadata map exists
+			MetadataMap? metadataMap = GetMetadataMap(metadataMapId);
+			if (metadataMap == null)
+			{
+				return;
+			}
+
+			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+			string sql = "";
+			Dictionary<string, object> dbDict = new Dictionary<string, object>()
+			{
+				{ "@metadataMapId", metadataMapId },
+				{ "@data", data }
+			};
+
+			switch (dataType)
+			{
+				case MetadataMapSupportDataTypes.UserManualLink:
+					sql = "UPDATE MetadataMap SET UserManualLink = @data WHERE Id = @metadataMapId;";
+					db.ExecuteCMD(sql, dbDict);
+					break;
+			}
 		}
 
 		/// <summary>

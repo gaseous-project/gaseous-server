@@ -2987,16 +2987,21 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 .platform_edit_button_container {
-    width: 90px;
+    /* width: 90px; */
     flex-grow: 0;
+    text-align: right;
+    padding-right: 5px;
 }
 
 .platform_edit_button {
-    position: absolute;
+    /* position: absolute;
     right: 14px;
-    top: 14px;
+    top: 14px;*/
     width: 20px;
     height: 20px;
+    display: inline-block;
+    margin-left: 10px;
+
     background-color: var(--fancybutton-background);
     border-radius: var(--standard-radius);
     border-width: 1px;

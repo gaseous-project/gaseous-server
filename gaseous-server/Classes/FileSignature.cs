@@ -388,6 +388,21 @@ namespace gaseous_server.Classes
                                 }
                             }
 
+                            // check attributes for a user manual link
+                            if (HasheousResult.Attributes != null)
+                            {
+                                if (HasheousResult.Attributes.Count > 0)
+                                {
+                                    foreach (HasheousClient.Models.AttributeItem attribute in HasheousResult.Attributes)
+                                    {
+                                        if (attribute.attributeName == HasheousClient.Models.AttributeItem.AttributeName.VIMMManualId)
+                                        {
+                                            signature.Game.UserManual = attribute.GetType().GetProperty("Link").GetValue(attribute).ToString();
+                                        }
+                                    }
+                                }
+                            }
+
                             return signature;
                         }
                     }

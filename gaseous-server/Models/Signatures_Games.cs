@@ -159,6 +159,8 @@ namespace gaseous_server.Models
 
             }
 
+            public string UserManual { get; set; }
+
             [JsonIgnore]
             public int Score
             {

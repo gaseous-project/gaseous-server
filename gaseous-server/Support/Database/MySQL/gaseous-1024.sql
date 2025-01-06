@@ -116,6 +116,7 @@ CREATE TABLE `MetadataMap` (
     `Id` bigint(20) NOT NULL AUTO_INCREMENT,
     `PlatformId` bigint(20) NOT NULL,
     `SignatureGameName` varchar(255) NOT NULL,
+    `UserManualLink` varchar(255) DEFAULT NULL,
     PRIMARY KEY (`id`),
     INDEX `idx_gamename` (
         `SignatureGameName`,
@@ -286,6 +287,7 @@ SELECT
     `view_MetadataMap`.`Id` AS `MetadataMapId`,
     `view_MetadataMap`.`MetadataSourceType` AS `GameIdType`,
     `view_MetadataMap`.`MetadataSourceId` AS `GameId`,
+    `view_MetadataMap`.`UserManualLink` AS `UserManualLink`,
     `Games_Roms`.`Name` AS `Name`,
     `Games_Roms`.`Size` AS `Size`,
     `Games_Roms`.`CRC` AS `CRC`,
