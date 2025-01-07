@@ -16,6 +16,22 @@ function SetupPage() {
         // populate games page
         gameData = result;
 
+        switch (gameData.metadataSource) {
+            case "IGDB":
+                let attributionSection = document.getElementById('gamesmetadataprovider');
+                attributionSection.style.display = 'block';
+
+                let attributionIcon = document.getElementById('metadata-attribution-icon');
+                attributionIcon.setAttribute('src', '/images/IGDB_Logo.svg');
+
+                let attributionText = document.getElementById('metadata-attribution-text');
+                attributionText.innerHTML = 'This game\'s metadata is provided by IGDB. <a href="https://www.igdb.com/games/' + gameData.slug + '" class="romlink" target="_blank" rel="noopener noreferrer">Source Page</a>';
+                break;
+
+            default:
+                break;
+        }
+
         // get name
         var gameTitleLabel = document.getElementById('gametitle_label');
         gameTitleLabel.innerHTML = result.name;
@@ -27,7 +43,7 @@ function SetupPage() {
 
             if (gameData.total_rating_count) {
                 var criticscorelabel = document.getElementById('gametitle_criticrating_label');
-                criticscorelabel.innerHTML = '<img src="/images/IGDB_logo.svg" style="filter: invert(100%); height: 13px; margin-bottom: -5px;" /><span style="font-size: 10px;"> User Rating<br />' + "based on " + gameData.total_rating_count + " votes</span>"
+                criticscorelabel.innerHTML = '<span style="font-size: 10px;"> User Rating<br />' + "based on " + gameData.total_rating_count + " votes</span>"
             }
         }
 

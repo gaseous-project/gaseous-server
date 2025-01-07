@@ -3045,3 +3045,10 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     width: 160px;
     white-space: normal;
 }
+
+.metadata-attribution-icon {
+    width: 30px;
+    height: 30px;
+    margin-right: 5px;
+    filter: invert(1);
+}
