@@ -540,7 +540,7 @@ FROM
     JOIN GameState ON RomMediaGroup.Id = GameState.RomId
         AND GameState.IsMediaGroup = 1
         AND GameState.UserId = @userid
-    GROUP BY RomMediaGroup.GameId) RomGroupSavedStates ON Game.Id = RomGroupSavedStates.GameId
+    GROUP BY RomMediaGroup.GameId) RomGroupSavedStates ON Game.MetadataMapId = RomGroupSavedStates.GameId
         LEFT JOIN
     Relation_Game_Genres ON Game.Id = Relation_Game_Genres.GameId
         LEFT JOIN
@@ -552,6 +552,8 @@ FROM
         LEFT JOIN
     Favourites ON Game.MetadataMapId = Favourites.GameId AND Favourites.UserId = @userid " + whereClause + " " + havingClause + " " + orderByClause;
             List<Games.MinimalGameItem> RetVal = new List<Games.MinimalGameItem>();
+
+            Console.WriteLine(sql);
 
             DataTable dbResponse = db.ExecuteCMD(sql, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
 
