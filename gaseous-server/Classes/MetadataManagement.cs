@@ -127,6 +127,31 @@ namespace gaseous_server.Classes
 			db.ExecuteCMD(sql, dbDict);
 		}
 
+		public static void UpdateMetadataMapItem(long metadataMapId, HasheousClient.Models.MetadataSources SourceType, long sourceId, bool? preferred = null)
+		{
+			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+			string sql = "";
+			Dictionary<string, object> dbDict = new Dictionary<string, object>()
+			{
+				{ "@metadataMapId", metadataMapId },
+				{ "@sourceType", SourceType },
+				{ "@sourceId", sourceId },
+				{ "@preferred", preferred }
+			};
+
+			if (preferred == true)
+			{
+				// set all other items to not preferred
+				sql = "UPDATE MetadataMapBridge SET Preferred = 0 WHERE ParentMapId = @metadataMapId; UPDATE MetadataMapBridge SET MetadataSourceId = @sourceId, Preferred = @preferred WHERE ParentMapId = @metadataMapId AND MetadataSourceType = @sourceType;";
+				db.ExecuteCMD(sql, dbDict);
+			}
+			else
+			{
+				sql = "UPDATE MetadataMapBridge SET MetadataSourceId = @sourceId WHERE ParentMapId = @metadataMapId AND MetadataSourceType = @sourceType;";
+				db.ExecuteCMD(sql, dbDict);
+			}
+		}
+
 		/// <summary>
 		/// Gets a metadata map from the database.
 		/// </summary>
@@ -333,7 +358,7 @@ namespace gaseous_server.Classes
 			// disabling forceRefresh
 			forceRefresh = false;
 
-			// update platforms
+			// update platform metadata
 			sql = "SELECT Id, `Name` FROM Platform;";
 			dt = db.ExecuteCMD(sql);
 
@@ -356,7 +381,68 @@ namespace gaseous_server.Classes
 			}
 			ClearStatus();
 
-			// update games
+			// update rom signatures - only valid if Haseheous is enabled
+			if (Config.MetadataConfiguration.SignatureSource == MetadataModel.SignatureSources.Hasheous)
+			{
+				// get all ROMs in the database
+				sql = "SELECT * FROM view_Games_Roms;";
+				dt = db.ExecuteCMD(sql);
+
+				StatusCounter = 1;
+				foreach (DataRow dr in dt.Rows)
+				{
+					SetStatus(StatusCounter, dt.Rows.Count, "Refreshing signature for ROM " + dr["Name"]);
+
+					try
+					{
+						Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Refreshing signature for ROM " + dr["Name"] + " (" + dr["Id"] + ")");
+
+						// get the hash of the ROM from the datarow
+						string? md5 = dr["MD5"] == DBNull.Value ? null : dr["MD5"].ToString();
+						string? sha1 = dr["SHA1"] == DBNull.Value ? null : dr["SHA1"].ToString();
+						Common.hashObject hash = new Common.hashObject();
+						if (md5 != null)
+						{
+							hash.md5hash = md5;
+						}
+						if (sha1 != null)
+						{
+							hash.sha1hash = sha1;
+						}
+
+						// get the library for the ROM
+						GameLibrary.LibraryItem library = GameLibrary.GetLibrary((int)dr["LibraryId"]);
+
+						// get the signature for the ROM
+						FileInfo fi = new FileInfo(dr["Path"].ToString());
+						FileSignature fileSignature = new FileSignature();
+						gaseous_server.Models.Signatures_Games signature = fileSignature.GetFileSignature(library, hash, fi, fi.FullName);
+
+						// validate the signature - if it is invalid, skip the rest of the loop
+						// validation rules: 1) signature must not be null, 2) signature must have a platform ID
+						if (signature == null || signature.Flags.PlatformId == null)
+						{
+							Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Signature for " + dr["RomName"] + " is invalid - skipping metadata refresh");
+							StatusCounter += 1;
+							continue;
+						}
+
+						// update the signature in the database
+						Platform? signaturePlatform = Metadata.Platforms.GetPlatform((long)signature.Flags.PlatformId);
+						ImportGame.StoreGame(library, hash, signature, signaturePlatform, fi.FullName, (long)dr["Id"], false);
+					}
+					catch (Exception ex)
+					{
+						Logging.Log(Logging.LogType.Critical, "Metadata Refresh", "An error occurred while refreshing metadata for " + dr["RomName"], ex);
+					}
+
+					StatusCounter += 1;
+				}
+				ClearStatus();
+			}
+
+
+			// update game metadata
 			if (forceRefresh == true)
 			{
 				// when forced, only update games with ROMs for

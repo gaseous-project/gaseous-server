@@ -648,6 +648,13 @@ namespace gaseous_server.Classes
                     return MetadataPath;
                 }
 
+                public string LibraryMetadataDirectory_Hasheous()
+                {
+                    string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Hasheous");
+                    if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
+                    return MetadataPath;
+                }
+
                 public string LibrarySignaturesDirectory
                 {
                     get
@@ -668,7 +675,6 @@ namespace gaseous_server.Classes
                 {
                     if (!Directory.Exists(LibraryRootDirectory)) { Directory.CreateDirectory(LibraryRootDirectory); }
                     if (!Directory.Exists(LibraryImportDirectory)) { Directory.CreateDirectory(LibraryImportDirectory); }
-                    // if (!Directory.Exists(LibraryBIOSDirectory)) { Directory.CreateDirectory(LibraryBIOSDirectory); }
                     if (!Directory.Exists(LibraryFirmwareDirectory)) { Directory.CreateDirectory(LibraryFirmwareDirectory); }
                     if (!Directory.Exists(LibraryUploadDirectory)) { Directory.CreateDirectory(LibraryUploadDirectory); }
                     if (!Directory.Exists(LibraryMetadataDirectory)) { Directory.CreateDirectory(LibraryMetadataDirectory); }

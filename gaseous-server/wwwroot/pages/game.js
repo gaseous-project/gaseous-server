@@ -15,6 +15,7 @@ function SetupPage() {
     ajaxCall('/api/v1.1/Games/' + gameId, 'GET', function (result) {
         // populate games page
         gameData = result;
+        console.log(gameData);
 
         switch (gameData.metadataSource) {
             case "IGDB":
@@ -43,7 +44,7 @@ function SetupPage() {
 
             if (gameData.total_rating_count) {
                 var criticscorelabel = document.getElementById('gametitle_criticrating_label');
-                criticscorelabel.innerHTML = '<span style="font-size: 10px;"> User Rating<br />' + "based on " + gameData.total_rating_count + " votes</span>"
+                criticscorelabel.innerHTML = '<span style="font-size: 10px;"> User rating<br />based on ' + gameData.total_rating_count + ' votes</span>'
             }
         }
 
@@ -610,7 +611,116 @@ class RomManagement {
         this.#SetupFixPlatformDropDown();
 
         // add buttons
-        let platformEditButton = new ModalButton('Edit Platform', 0, this, async function (callingObject) {
+        let platformMappingButton = new ModalButton('Metadata Mapping', 0, this, async function (callingObject) {
+            let metadataModal = await new Modal('messagebox');
+            await metadataModal.BuildModal();
+
+            // override the dialog size
+            metadataModal.modalElement.style = 'width: 600px; height: 400px; min-width: unset; min-height: 400px; max-width: unset; max-height: 400px;';
+
+            // set the title
+            metadataModal.modalElement.querySelector('#modal-header-text').innerHTML = callingObject.Platform.name + ' Metadata Mapping';
+
+            // set the content
+            let metadataContent = metadataModal.modalElement.querySelector('#modal-body');
+
+            // fetch the metadata map
+            let metadataMap = await fetch('/api/v1.1/Games/' + gameId + '/metadata', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json());
+            console.log(metadataMap);
+
+            metadataMap.metadataMapItems.forEach(element => {
+                let itemSection = document.createElement('div');
+                itemSection.className = 'section';
+
+                // header
+                let itemSectionHeader = document.createElement('div');
+                itemSectionHeader.className = 'section-header';
+
+                let itemSectionHeaderRadio = document.createElement('input');
+                itemSectionHeaderRadio.id = 'platformMappingSource_' + element.sourceType;
+                itemSectionHeaderRadio.type = 'radio';
+                itemSectionHeaderRadio.name = 'platformMappingSource';
+                itemSectionHeaderRadio.value = element.sourceType;
+                itemSectionHeaderRadio.style.margin = '0px';
+                itemSectionHeaderRadio.style.height = 'unset';
+                itemSectionHeaderRadio.addEventListener('change', () => {
+                    console.log('Selected: ' + element.sourceType);
+                });
+                if (element.preferred == true) {
+                    itemSectionHeaderRadio.checked = true;
+                }
+                itemSectionHeader.appendChild(itemSectionHeaderRadio);
+
+                let itemSectionHeaderLabel = document.createElement('label');
+                itemSectionHeaderLabel.htmlFor = 'platformMappingSource_' + element.sourceType;
+                itemSectionHeaderLabel.style.marginLeft = '10px';
+                itemSectionHeaderLabel.innerHTML = element.sourceType;
+                itemSectionHeader.appendChild(itemSectionHeaderLabel);
+
+                itemSection.appendChild(itemSectionHeader);
+
+                // content
+                let itemSectionContent = document.createElement('div');
+                itemSectionContent.className = 'section-body';
+                switch (element.sourceType) {
+                    case 'None':
+                        let noneContent = document.createElement('div');
+                        noneContent.className = 'section-body-content';
+
+                        let noneContentLabel = document.createElement('label');
+                        noneContentLabel.innerHTML = 'No Metadata Source';
+                        noneContent.appendChild(noneContentLabel);
+
+                        itemSectionContent.appendChild(noneContent);
+                        break;
+
+                    default:
+                        let contentLabel2 = document.createElement('div');
+                        contentLabel2.innerHTML = 'ID: ' + element.sourceId;
+                        itemSectionContent.appendChild(contentLabel2);
+
+                        let contentLabel3 = document.createElement('div');
+                        contentLabel3.innerHTML = 'Slug: ' + element.sourceSlug;
+                        itemSectionContent.appendChild(contentLabel3);
+
+                        if (element.link) {
+                            if (element.link.length > 0) {
+                                let contentLabel4 = document.createElement('div');
+                                contentLabel4.innerHTML = 'Link: ' + element.link;
+                                itemSectionContent.appendChild(contentLabel4);
+                            }
+                        }
+                        break;
+
+                }
+                itemSection.appendChild(itemSectionContent);
+
+                metadataContent.appendChild(itemSection);
+            });
+
+
+            // setup the buttons
+            let okButton = new ModalButton('OK', 1, callingObject, async function (callingObject) {
+                metadataModal.close();
+            });
+            metadataModal.addButton(okButton);
+
+            let cancelButton = new ModalButton('Cancel', 0, metadataModal, async function (callingObject) {
+                metadataModal.close();
+            });
+            metadataModal.addButton(cancelButton);
+
+            // show the dialog
+            await metadataModal.open();
+        });
+        this.romsModal.addButton(platformMappingButton);
+
+        let platformEditButton = new ModalButton('Configure Emulator', 0, this, async function (callingObject) {
             let mappingModal = await new Modal('messagebox');
             await mappingModal.BuildModal();
 

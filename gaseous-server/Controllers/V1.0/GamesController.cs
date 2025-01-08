@@ -318,8 +318,8 @@ namespace gaseous_server.Controllers
                     return NotFound();
                 }
 
-                string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(game), imageTypePath);
-                string imagePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(game), imageTypePath, size.ToString(), imageId + ".jpg");
+                string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(game), imageTypePath, metadataMap.SourceType.ToString());
+                string imagePath = Path.Combine(basePath, size.ToString(), imageId + ".jpg");
 
                 if (!System.IO.File.Exists(imagePath))
                 {
@@ -796,16 +796,67 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("{MetadataMapId}/metadata")]
-        [ProducesResponseType(typeof(List<MetadataMap.MetadataMapItem>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(MetadataMap), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult> GameMetadataSources(long MetadataMapId)
         {
             try
             {
-                List<MetadataMap.MetadataMapItem> metadataMapItems = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).MetadataMapItems;
+                MetadataMap metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId);
 
-                // return metadataMapItems after first removing any items where sourceType = "TheGamesDb"
-                return Ok(metadataMapItems.Where(x => x.SourceType != HasheousClient.Models.MetadataSources.TheGamesDb).ToList());
+                // return metadataMap, but filter out metadataMapItems that = "TheGamesDb"
+                MetadataMap filteredMetadataMap = new MetadataMap();
+                filteredMetadataMap.MetadataMapItems = metadataMap.MetadataMapItems.Where(x => x.SourceType != HasheousClient.Models.MetadataSources.TheGamesDb).ToList();
+
+                metadataMap.MetadataMapItems = filteredMetadataMap.MetadataMapItems;
+
+                return Ok(metadataMap);
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpPut]
+        [Route("{MetadataMapId}/metadata")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(typeof(MetadataMap), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult> GameMetadataSources(long MetadataMapId, List<MetadataMap.MetadataMapItem> metadataMapItems)
+        {
+            try
+            {
+                MetadataMap existingMetadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId);
+
+                if (existingMetadataMap != null)
+                {
+                    foreach (MetadataMap.MetadataMapItem metadataMapItem in metadataMapItems)
+                    {
+                        if (metadataMapItem.SourceType != HasheousClient.Models.MetadataSources.None)
+                        {
+                            // check if existingMetadataMap.MetadataMapItems contains metadataMapItem.SourceType
+                            MetadataMap.MetadataMapItem existingMetadataMapItem = existingMetadataMap.MetadataMapItems.FirstOrDefault(x => x.SourceType == metadataMapItem.SourceType);
+
+                            if (existingMetadataMapItem != null)
+                            {
+                                MetadataManagement.UpdateMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, metadataMapItem.SourceId, metadataMapItem.Preferred);
+                            }
+                            else
+                            {
+                                MetadataManagement.AddMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, metadataMapItem.SourceId, metadataMapItem.Preferred);
+                            }
+                        }
+                    }
+
+                    return Ok(Classes.MetadataManagement.GetMetadataMap(MetadataMapId));
+                }
+                else
+                {
+                    return NotFound();
+                }
             }
             catch
             {

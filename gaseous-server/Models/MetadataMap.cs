@@ -1,3 +1,4 @@
+using gaseous_server.Classes.Metadata;
 using HasheousClient.Models;
 
 namespace gaseous_server.Models
@@ -25,6 +26,52 @@ namespace gaseous_server.Models
             public HasheousClient.Models.MetadataSources SourceType { get; set; }
             public long SourceId { get; set; }
             public bool Preferred { get; set; }
+            public string SourceSlug
+            {
+                get
+                {
+                    string slug = "";
+                    switch (SourceType)
+                    {
+                        case MetadataSources.IGDB:
+                            Game game = Games.GetGame(SourceType, (long)SourceId);
+                            if (game != null)
+                            {
+                                slug = game.Slug;
+                            }
+                            break;
+
+                        default:
+                            slug = SourceId.ToString();
+                            break;
+                    }
+
+                    return slug;
+                }
+            }
+            public string link
+            {
+                get
+                {
+                    string link = "";
+                    switch (SourceType)
+                    {
+                        case MetadataSources.IGDB:
+                            link = $"https://www.igdb.com/games/{SourceSlug}";
+                            break;
+
+                        case MetadataSources.TheGamesDb:
+                            link = $"https://thegamesdb.net/game.php?id={SourceId}";
+                            break;
+
+                        default:
+                            link = "";
+                            break;
+                    }
+
+                    return link;
+                }
+            }
         }
     }
 }

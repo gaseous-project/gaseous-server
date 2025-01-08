@@ -186,7 +186,7 @@ namespace gaseous_server.Classes.Metadata
                 if (returnObject.GetType().GetProperty("Name") != null)
                 {
                     Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                    string sql = "SELECT SignatureGameName FROM view_MetadataMap WHERE `Id` = @id;";
+                    string sql = "SELECT * FROM MetadataMap JOIN MetadataMapBridge ON MetadataMap.Id = MetadataMapBridge.ParentMapId WHERE MetadataSourceId = @id AND MetadataSourceType = 0;";
                     DataTable dataTable = db.ExecuteCMD(sql, new Dictionary<string, object>
                     {
                         { "@id", Id }

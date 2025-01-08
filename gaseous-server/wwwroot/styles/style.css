@@ -2923,7 +2923,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     display: flex;
     flex-wrap: wrap;
     flex-direction: row;
-    gap: 5px;
+    gap: 10px;
 }
 
 .platform_item {
@@ -2942,6 +2942,9 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     align-items: center;
     position: relative;
     overflow: hidden;
+    box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+    -webkit-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+    -moz-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
 }
 
 .platform_item:hover {
@@ -2971,11 +2974,14 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     padding-left: 20px;
     padding-right: 20px;
     background-color: white;
+    border-right-style: solid;
+    border-right-width: 1px;
+    border-right-color: #000000;
 }
 
 .platform_image {
-    width: 70px;
-    max-height: 70px;
+    max-width: 90px;
+    max-height: 60px;
 }
 
 .platform_name_container {
@@ -3049,6 +3055,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .metadata-attribution-icon {
     width: 30px;
     height: 30px;
-    margin-right: 5px;
+    margin-right: 13px;
+    margin-left: 10px;
     filter: invert(1);
 }

@@ -215,42 +215,42 @@ namespace gaseous_server.Classes
             }
 
             // populate map with the sources from the signature if they don't already exist
-            bool reloadMap = false;
             foreach (MetadataSources source in Enum.GetValues(typeof(MetadataSources)))
             {
+                bool sourceExists = false;
+
                 if (source != MetadataSources.None)
                 {
-                    // check the signature for the source, and if it exists, add it to the map if it's not already there
-                    foreach (Signatures_Games.SourceValues.SourceValueItem signatureSource in signature.MetadataSources.Games)
+                    // get the signature that matches this source
+                    Signatures_Games.SourceValues.SourceValueItem? signatureSource = signature.MetadataSources.Games.Find(x => x.Source == source);
+                    if (signatureSource == null)
                     {
-                        // check if the metadata map contains the source
-                        bool sourceExists = false;
-                        foreach (MetadataMap.MetadataMapItem mapSource in map.MetadataMapItems)
-                        {
-                            if (mapSource.SourceType == source)
-                            {
-                                sourceExists = true;
-                            }
-                        }
+                        Logging.Log(Logging.LogType.Information, "Import Game", "  No source found for " + source.ToString());
+                        continue;
+                    }
 
-                        if (sourceExists == false)
+                    // get the metadata map for this source
+                    MetadataMap.MetadataMapItem? mapSource = map.MetadataMapItems.Find(x => x.SourceType == source);
+                    if (mapSource == null)
+                    {
+                        // add the source to the map
+                        bool preferred = false;
+                        if (source == Config.MetadataConfiguration.DefaultMetadataSource)
                         {
-                            // add the source to the map
-                            bool preferred = false;
-                            if (source == Config.MetadataConfiguration.DefaultMetadataSource)
-                            {
-                                preferred = true;
-                            }
-                            MetadataManagement.AddMetadataMapItem((long)map.Id, source, signatureSource.Id, preferred);
-                            reloadMap = true;
+                            preferred = true;
                         }
+                        MetadataManagement.AddMetadataMapItem((long)map.Id, source, signatureSource.Id, preferred);
+                    }
+                    else
+                    {
+                        // update the source in the map - do not modify the preferred status
+                        MetadataManagement.UpdateMetadataMapItem((long)map.Id, source, signatureSource.Id, null);
                     }
                 }
             }
-            if (reloadMap == true)
-            {
-                map = MetadataManagement.GetMetadataMap((long)map.Id);
-            }
+            
+            // reload the map
+            map = MetadataManagement.GetMetadataMap((long)map.Id);
 
             // add or update the rom
             dbDict = new Dictionary<string, object>();
