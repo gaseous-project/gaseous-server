@@ -138,27 +138,43 @@ namespace gaseous_server.Classes.Metadata
                     break;
 
                 case Storage.CacheStatus.Expired:
-                    if (idType == IdType.Long)
+                    try
                     {
-                        metadata = GetMetadataFromServer<T>(SourceType, (long)Id).Result;
+                        if (idType == IdType.Long)
+                        {
+                            metadata = GetMetadataFromServer<T>(SourceType, (long)Id).Result;
+                        }
+                        else
+                        {
+                            metadata = GetMetadataFromServer<T>(SourceType, (string)Id).Result;
+                        }
+                        Storage.NewCacheValue<T>(SourceType, metadata, true);
                     }
-                    else
+                    catch (Exception e)
                     {
-                        metadata = GetMetadataFromServer<T>(SourceType, (string)Id).Result;
+                        Logging.Log(Logging.LogType.Warning, "Fetch Metadata", "Failed to fetch metadata from source: " + SourceType + " for id: " + Id + " of type: " + type + ". Error: " + e.Message);
+                        metadata = null;
                     }
-                    Storage.NewCacheValue<T>(SourceType, metadata, true);
                     break;
 
                 case Storage.CacheStatus.NotPresent:
-                    if (idType == IdType.Long)
+                    try
                     {
-                        metadata = GetMetadataFromServer<T>(SourceType, (long)Id).Result;
+                        if (idType == IdType.Long)
+                        {
+                            metadata = GetMetadataFromServer<T>(SourceType, (long)Id).Result;
+                        }
+                        else
+                        {
+                            metadata = GetMetadataFromServer<T>(SourceType, (string)Id).Result;
+                        }
+                        Storage.NewCacheValue<T>(SourceType, metadata, false);
                     }
-                    else
+                    catch (Exception e)
                     {
-                        metadata = GetMetadataFromServer<T>(SourceType, (string)Id).Result;
+                        Logging.Log(Logging.LogType.Warning, "Fetch Metadata", "Failed to fetch metadata from source: " + SourceType + " for id: " + Id + " of type: " + type + ". Error: " + e.Message);
+                        metadata = null;
                     }
-                    Storage.NewCacheValue<T>(SourceType, metadata, false);
                     break;
             }
 

@@ -808,6 +808,9 @@ namespace gaseous_server.Controllers
                 MetadataMap filteredMetadataMap = new MetadataMap();
                 filteredMetadataMap.MetadataMapItems = metadataMap.MetadataMapItems.Where(x => x.SourceType != HasheousClient.Models.MetadataSources.TheGamesDb).ToList();
 
+                // further filter out metadataMapItems where sourceId = 0
+                filteredMetadataMap.MetadataMapItems = filteredMetadataMap.MetadataMapItems.Where(x => x.SourceId != 0).ToList();
+
                 metadataMap.MetadataMapItems = filteredMetadataMap.MetadataMapItems;
 
                 return Ok(metadataMap);
