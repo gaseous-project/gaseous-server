@@ -12,7 +12,9 @@ function SetupPage() {
     mappingScript.src = '/pages/settings/mapping.js';
     document.head.appendChild(mappingScript);
 
-    ajaxCall('/api/v1.1/Games/' + gameId, 'GET', function (result) {
+    let nonce = (Math.random() + 1).toString(36).substring(7);
+
+    ajaxCall('/api/v1.1/Games/' + gameId + '?nonce=' + nonce, 'GET', function (result) {
         // populate games page
         gameData = result;
         console.log(gameData);
@@ -649,7 +651,13 @@ class RomManagement {
                 itemSectionHeaderRadio.style.margin = '0px';
                 itemSectionHeaderRadio.style.height = 'unset';
                 itemSectionHeaderRadio.addEventListener('change', () => {
+                    metadataMap.metadataMapItems.forEach(element => {
+                        element.preferred = false;
+                    });
+
+                    element.preferred = true;
                     console.log('Selected: ' + element.sourceType);
+                    console.log(metadataMap);
                 });
                 if (element.preferred == true) {
                     itemSectionHeaderRadio.checked = true;
@@ -706,7 +714,17 @@ class RomManagement {
 
             // setup the buttons
             let okButton = new ModalButton('OK', 1, callingObject, async function (callingObject) {
-                metadataModal.close();
+                let model = metadataMap.metadataMapItems;
+
+                await fetch('/api/v1.1/Games/' + gameId + '/metadata', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(model)
+                }).then(response => response.json()).then(result => {
+                    location.reload(true);
+                });
             });
             metadataModal.addButton(okButton);
 

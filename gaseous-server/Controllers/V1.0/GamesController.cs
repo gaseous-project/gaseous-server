@@ -47,7 +47,7 @@ namespace gaseous_server.Controllers
         [Route("{MetadataMapId}")]
         [ProducesResponseType(typeof(gaseous_server.Models.Game), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ResponseCache(CacheProfileName = "5Minute")]
+        [ResponseCache(CacheProfileName = "None")]
         public async Task<ActionResult> Game(long MetadataMapId)
         {
             try
@@ -848,6 +848,11 @@ namespace gaseous_server.Controllers
                             {
                                 MetadataManagement.AddMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, metadataMapItem.SourceId, metadataMapItem.Preferred);
                             }
+                        }
+                        else
+                        {
+                            MetadataMap.MetadataMapItem existingMetadataMapItem = existingMetadataMap.MetadataMapItems.FirstOrDefault(x => x.SourceType == HasheousClient.Models.MetadataSources.None);
+                            MetadataManagement.UpdateMetadataMapItem(MetadataMapId, existingMetadataMapItem.SourceType, existingMetadataMapItem.SourceId, metadataMapItem.Preferred);
                         }
                     }
 
