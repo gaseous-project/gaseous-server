@@ -81,6 +81,12 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
 
+            // populate age group data
+            if (result.MetadataSource == HasheousClient.Models.MetadataSources.IGDB)
+            {
+                AgeGroups.GetAgeGroup(result);
+            }
+
             return result;
         }
 
@@ -260,7 +266,7 @@ SELECT DISTINCT
 FROM
     view_Games_Roms
         LEFT JOIN
-    Platform ON view_Games_Roms.PlatformId = Platform.Id
+    Platform ON view_Games_Roms.PlatformId = Platform.Id AND Platform.SourceId = view_Games_Roms.GameIdType
         LEFT JOIN
     User_RecentPlayedRoms ON User_RecentPlayedRoms.UserId = @userid
         AND User_RecentPlayedRoms.GameId = view_Games_Roms.MetadataMapId
@@ -358,6 +364,7 @@ ORDER BY Platform.`Name`;";
                 {
                     Id = platform.Id,
                     Name = platform.Name,
+                    MetadataMapId = (long)row["MetadataMapId"],
                     Category = platform.Category,
                     emulatorConfiguration = emulatorConfiguration,
                     LastPlayedRomId = LastPlayedRomId,
@@ -370,6 +377,9 @@ ORDER BY Platform.`Name`;";
                 };
                 platforms.Add(valuePair);
             }
+
+            // sort platforms by the Name attribute
+            platforms.Sort((x, y) => x.Name.CompareTo(y.Name));
 
             return platforms;
         }
@@ -404,6 +414,7 @@ ORDER BY Platform.`Name`;";
 
         public class AvailablePlatformItem : HasheousClient.Models.Metadata.IGDB.Platform
         {
+            public long MetadataMapId { get; set; }
             public PlatformMapping.UserEmulatorConfiguration emulatorConfiguration { get; set; }
             public long? LastPlayedRomId { get; set; }
             public bool? LastPlayedRomIsMediagroup { get; set; }

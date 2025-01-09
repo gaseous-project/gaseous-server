@@ -370,7 +370,7 @@ namespace gaseous_server.Classes
 				try
 				{
 					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Refreshing metadata for platform " + dr["name"] + " (" + dr["id"] + ")");
-					Metadata.Platforms.GetPlatform((long)dr["id"]);
+					Metadata.Platforms.GetPlatform((long)dr["id"], MetadataSources.None);
 				}
 				catch (Exception ex)
 				{

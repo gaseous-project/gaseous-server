@@ -2990,6 +2990,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
 .platform_name {
     display: block;
+    max-width: 75px;
 }
 
 .platform_edit_button_container {

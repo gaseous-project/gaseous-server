@@ -1298,6 +1298,7 @@ namespace gaseous_server.Classes.Metadata
                                             Platform? platform = Platforms.GetPlatform(Id);
                                             if (platform != null)
                                             {
+                                                platform.Name = hasheousPlatform.Name;
                                                 platform.PlatformLogo = (long)platformLogo.Id;
                                                 Storage.NewCacheValue<Platform>(HasheousClient.Models.MetadataSources.None, platform, true);
                                             }

@@ -627,7 +627,7 @@ class RomManagement {
             let metadataContent = metadataModal.modalElement.querySelector('#modal-body');
 
             // fetch the metadata map
-            let metadataMap = await fetch('/api/v1.1/Games/' + gameId + '/metadata', {
+            let metadataMap = await fetch('/api/v1.1/Games/' + callingObject.Platform.metadataMapId + '/metadata', {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -699,7 +699,7 @@ class RomManagement {
                         if (element.link) {
                             if (element.link.length > 0) {
                                 let contentLabel4 = document.createElement('div');
-                                contentLabel4.innerHTML = 'Link: ' + element.link;
+                                contentLabel4.innerHTML = 'Link: <a href="' + element.link + '" target="_blank" rel="noopener noreferrer" class="romlink">' + element.link + '</a>';
                                 itemSectionContent.appendChild(contentLabel4);
                             }
                         }
@@ -716,7 +716,7 @@ class RomManagement {
             let okButton = new ModalButton('OK', 1, callingObject, async function (callingObject) {
                 let model = metadataMap.metadataMapItems;
 
-                await fetch('/api/v1.1/Games/' + gameId + '/metadata', {
+                await fetch('/api/v1.1/Games/' + callingObject.Platform.metadataMapId + '/metadata', {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -755,7 +755,7 @@ class RomManagement {
             let defaultPlatformMap = platformMap;
 
             // get the user emulation configuration
-            let userEmuConfig = await fetch('/api/v1.1/Games/' + gameId + '/emulatorconfiguration/' + callingObject.Platform.id, {
+            let userEmuConfig = await fetch('/api/v1.1/Games/' + callingObject.Platform.metadataMapId + '/emulatorconfiguration/' + callingObject.Platform.id, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -783,7 +783,7 @@ class RomManagement {
 
             // setup the buttons
             let resetButton = new ModalButton('Reset to Default', 0, callingObject, async function (callingObject) {
-                await fetch('/api/v1.1/Games/' + gameId + '/emulatorconfiguration/' + callingObject.Platform.id, {
+                await fetch('/api/v1.1/Games/' + callingObject.Platform.metadataMapId + '/emulatorconfiguration/' + callingObject.Platform.id, {
                     method: 'DELETE'
                 });
                 callingObject.Platform.emulatorConfiguration.emulatorType = defaultPlatformMap.webEmulator.type;
@@ -802,7 +802,7 @@ class RomManagement {
                     EnableBIOSFiles: emuConfig.PlatformMap.enabledBIOSHashes
                 }
 
-                await fetch('/api/v1.1/Games/' + gameId + '/emulatorconfiguration/' + callingObject.Platform.id, {
+                await fetch('/api/v1.1/Games/' + callingObject.Platform.metadataMapId + '/emulatorconfiguration/' + callingObject.Platform.id, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -843,7 +843,7 @@ class RomManagement {
     async #loadMediaGroups() {
         this.MediaGroupCount = 0;
 
-        fetch('/api/v1.1/Games/' + gameId + '/romgroup?platformid=' + this.Platform.id, {
+        fetch('/api/v1.1/Games/' + this.Platform.metadataMapId + '/romgroup?platformid=' + this.Platform.id, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -872,7 +872,7 @@ class RomManagement {
                     let saveStatesButton = '';
                     if (this.Platform.emulatorConfiguration) {
                         if ((this.Platform.emulatorConfiguration.emulatorType.length > 0) && (this.Platform.emulatorConfiguration.core.length > 0)) {
-                            let romPath = encodeURIComponent('/api/v1.1/Games/' + gameId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '.zip');
+                            let romPath = encodeURIComponent('/api/v1.1/Games/' + this.Platform.metadataMapId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '.zip');
 
                             if (mediaGroup.hasSaveStates == true) {
                                 let modalVariables = {
@@ -887,13 +887,13 @@ class RomManagement {
                                 };
                                 saveStatesButton = document.createElement('div');
                                 saveStatesButton.addEventListener('click', () => {
-                                    let stateManager = new EmulatorStateManager(mediaGroup.id, true, this.Platform.emulatorConfiguration.emulatorType, this.Platform.emulatorConfiguration.core, mediaGroup.platformId, gameId, romPath);
+                                    let stateManager = new EmulatorStateManager(mediaGroup.id, true, this.Platform.emulatorConfiguration.emulatorType, this.Platform.emulatorConfiguration.core, mediaGroup.platformId, this.Platform.metadataMapId, romPath);
                                     stateManager.open();
                                 });
                                 saveStatesButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstateicon" />';
                             }
 
-                            launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + mediaGroup.platformId + '&gameid=' + gameId + '&romid=' + mediaGroup.id + '&mediagroup=1&rompath=' + romPath + '" class="romstart">Launch</a>';
+                            launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + mediaGroup.platformId + '&gameid=' + this.Platform.metadataMapId + '&romid=' + mediaGroup.id + '&mediagroup=1&rompath=' + romPath + '" class="romstart">Launch</a>';
                         }
                     }
 
@@ -909,7 +909,7 @@ class RomManagement {
                         favouriteRom.src = '/images/favourite-empty.svg';
                     }
                     favouriteRom.addEventListener('click', async () => {
-                        await fetch('/api/v1.1/Games/' + gameId + '/roms/' + mediaGroup.id + '/' + mediaGroup.platformId + '/favourite?IsMediaGroup=true&favourite=true', {
+                        await fetch('/api/v1.1/Games/' + this.Platform.metadataMapId + '/roms/' + mediaGroup.id + '/' + mediaGroup.platformId + '/favourite?IsMediaGroup=true&favourite=true', {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json'
@@ -954,7 +954,7 @@ class RomManagement {
                             break;
                         case "Completed":
                             statusText = 'Available';
-                            downloadLink = '<a href="/api/v1.1/Games/' + gameId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '.zip" class="romlink"><img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" /></a>';
+                            downloadLink = '<a href="/api/v1.1/Games/' + this.Platform.metadataMapId + '/romgroup/' + mediaGroup.id + '/' + gameData.name + '.zip" class="romlink"><img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" /></a>';
                             packageSize = formatBytes(mediaGroup.size);
                             launchButtonContent = launchButton;
                             break;
@@ -984,7 +984,7 @@ class RomManagement {
 
                         let deleteButton = new ModalButton("Delete", 2, deleteWindow, function (callingObject) {
                             ajaxCall(
-                                '/api/v1.1/Games/' + gameId + '/romgroup/' + mediaGroup.id,
+                                '/api/v1.1/Games/' + this.Platform.metadataMapId + '/romgroup/' + mediaGroup.id,
                                 'DELETE',
                                 function (result) {
                                     thisObject.#loadRoms();
@@ -1088,7 +1088,7 @@ class RomManagement {
         let gameRomsSection = this.Roms;
         let gameRoms = this.RomsContent;
         let pageSize = 200;
-        await fetch('/api/v1.1/Games/' + gameId + '/roms?pageNumber=' + pageNumber + '&pageSize=' + pageSize + '&platformId=' + selectedPlatform + nameSearchQuery, {
+        await fetch('/api/v1.1/Games/' + this.Platform.metadataMapId + '/roms?pageNumber=' + pageNumber + '&pageSize=' + pageSize + '&platformId=' + selectedPlatform + nameSearchQuery, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -1153,7 +1153,7 @@ class RomManagement {
                         if (this.Platform.emulatorConfiguration) {
                             if (this.Platform.emulatorConfiguration.emulatorType) {
                                 if (this.Platform.emulatorConfiguration.emulatorType.length > 0) {
-                                    let romPath = encodeURIComponent('/api/v1.1/Games/' + gameId + '/roms/' + gameRomItems[i].id + '/' + gameRomItems[i].name);
+                                    let romPath = encodeURIComponent('/api/v1.1/Games/' + this.Platform.metadataMapId + '/roms/' + gameRomItems[i].id + '/' + gameRomItems[i].name);
                                     if (gameRomItems[i].hasSaveStates == true) {
                                         let modalVariables = {
                                             "romId": gameRomItems[i].id,
@@ -1161,28 +1161,27 @@ class RomManagement {
                                             "engine": this.Platform.emulatorConfiguration.emulatorType,
                                             "core": this.Platform.emulatorConfiguration.core,
                                             "platformid": gameRomItems[i].platformId,
-                                            "gameid": gameId,
+                                            "gameid": this.Platform.metadataMapId,
                                             "mediagroup": 0,
                                             "rompath": romPath
                                         };
                                         saveStatesButton = document.createElement('div');
                                         saveStatesButton.addEventListener('click', () => {
-                                            let stateManager = new EmulatorStateManager(gameRomItems[i].id, false, this.Platform.emulatorConfiguration.emulatorType, this.Platform.emulatorConfiguration.core, gameRomItems[i].platformId, gameId, gameRomItems[i].name);
+                                            let stateManager = new EmulatorStateManager(gameRomItems[i].id, false, this.Platform.emulatorConfiguration.emulatorType, this.Platform.emulatorConfiguration.core, gameRomItems[i].platformId, this.Platform.metadataMapId, gameRomItems[i].name);
                                             stateManager.open();
                                         });
                                         saveStatesButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstateicon" />';
                                     }
-                                    launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + gameRomItems[i].platformId + '&gameid=' + gameId + '&romid=' + gameRomItems[i].id + '&mediagroup=0&rompath=' + romPath + '" class="romstart">Launch</a>';
+                                    launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + gameRomItems[i].platformId + '&gameid=' + this.Platform.metadataMapId + '&romid=' + gameRomItems[i].id + '&mediagroup=0&rompath=' + romPath + '" class="romstart">Launch</a>';
                                 }
                             }
                         }
 
                         let romInfoButton = document.createElement('div');
                         romInfoButton.className = 'properties_button';
-                        //romInfoButton.setAttribute('onclick', 'showDialog(\'rominfo\', ' + gameRomItems[i].id + ');');
                         romInfoButton.setAttribute('data-romid', gameRomItems[i].id);
-                        romInfoButton.addEventListener('click', function () {
-                            const romInfoDialog = new rominfodialog(gameId, this.getAttribute('data-romid'));
+                        romInfoButton.addEventListener('click', () => {
+                            const romInfoDialog = new rominfodialog(this.Platform.metadataMapId, gameRomItems[i].id);
                             romInfoDialog.open();
                         });
                         romInfoButton.innerHTML = 'i';
@@ -1209,7 +1208,7 @@ class RomManagement {
                             favouriteRom.src = '/images/favourite-empty.svg';
                         }
                         favouriteRom.addEventListener('click', async () => {
-                            await fetch('/api/v1.1/Games/' + gameId + '/roms/' + gameRomItems[i].id + '/' + gameRomItems[i].platformId + '/favourite?IsMediaGroup=false&favourite=true', {
+                            await fetch('/api/v1.1/Games/' + this.Platform.metadataMapId + '/roms/' + gameRomItems[i].id + '/' + gameRomItems[i].platformId + '/favourite?IsMediaGroup=false&favourite=true', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json'
@@ -1236,7 +1235,7 @@ class RomManagement {
                         }
 
                         let romLink = document.createElement('a');
-                        romLink.href = '/api/v1.1/Games/' + gameId + '/roms/' + gameRomItems[i].id + '/' + encodeURIComponent(gameRomItems[i].name);
+                        romLink.href = '/api/v1.1/Games/' + this.Platform.metadataMapId + '/roms/' + gameRomItems[i].id + '/' + encodeURIComponent(gameRomItems[i].name);
                         romLink.className = 'romlink';
                         romLink.innerHTML = gameRomItems[i].name;
 
@@ -1265,51 +1264,51 @@ class RomManagement {
                         this.#DisplayROMCheckboxes(true);
                     }
 
-                    if (result.count > pageSize) {
-                        // draw pagination
-                        let numOfPages = Math.ceil(result.count / pageSize);
+                    // if (result.count > pageSize) {
+                    //     // draw pagination
+                    //     let numOfPages = Math.ceil(result.count / pageSize);
 
-                        let romPaginator = document.createElement('div');
-                        romPaginator.id = 'romPaginator';
-                        romPaginator.className = 'rom_pager';
+                    //     let romPaginator = document.createElement('div');
+                    //     romPaginator.id = 'romPaginator';
+                    //     romPaginator.className = 'rom_pager';
 
-                        // draw previous page button
-                        let prevPage = document.createElement('span');
-                        prevPage.className = 'rom_pager_number_disabled';
-                        prevPage.innerHTML = '&lt;';
-                        if (pageNumber != 1) {
-                            prevPage.setAttribute('onclick', 'loadRoms(' + undefined + ', ' + (pageNumber - 1) + ', ' + selectedPlatform + ');');
-                            prevPage.className = 'rom_pager_number';
-                        }
-                        romPaginator.appendChild(prevPage);
+                    //     // draw previous page button
+                    //     let prevPage = document.createElement('span');
+                    //     prevPage.className = 'rom_pager_number_disabled';
+                    //     prevPage.innerHTML = '&lt;';
+                    //     if (pageNumber != 1) {
+                    //         prevPage.setAttribute('onclick', 'loadRoms(' + undefined + ', ' + (pageNumber - 1) + ', ' + selectedPlatform + ');');
+                    //         prevPage.className = 'rom_pager_number';
+                    //     }
+                    //     romPaginator.appendChild(prevPage);
 
-                        // draw page numbers
-                        for (let i = 0; i < numOfPages; i++) {
-                            let romPaginatorPage = document.createElement('span');
-                            romPaginatorPage.className = 'rom_pager_number_disabled';
-                            romPaginatorPage.innerHTML = (i + 1);
-                            if ((i + 1) != pageNumber) {
-                                romPaginatorPage.setAttribute('onclick', 'loadRoms(' + undefined + ', ' + (i + 1) + ', ' + selectedPlatform + ');');
-                                romPaginatorPage.className = 'rom_pager_number';
-                            }
+                    //     // draw page numbers
+                    //     for (let i = 0; i < numOfPages; i++) {
+                    //         let romPaginatorPage = document.createElement('span');
+                    //         romPaginatorPage.className = 'rom_pager_number_disabled';
+                    //         romPaginatorPage.innerHTML = (i + 1);
+                    //         if ((i + 1) != pageNumber) {
+                    //             romPaginatorPage.setAttribute('onclick', 'loadRoms(' + undefined + ', ' + (i + 1) + ', ' + selectedPlatform + ');');
+                    //             romPaginatorPage.className = 'rom_pager_number';
+                    //         }
 
-                            romPaginator.appendChild(romPaginatorPage);
-                        }
+                    //         romPaginator.appendChild(romPaginatorPage);
+                    //     }
 
-                        // draw next page button
-                        let nextPage = document.createElement('span');
-                        nextPage.className = 'rom_pager_number_disabled';
-                        nextPage.innerHTML = '&gt;';
-                        if (pageNumber != numOfPages) {
-                            nextPage.setAttribute('onclick', 'loadRoms(' + undefined + ', ' + (pageNumber + 1) + ', ' + selectedPlatform + ');');
-                            nextPage.className = 'rom_pager_number';
-                        }
-                        romPaginator.appendChild(nextPage);
+                    //     // draw next page button
+                    //     let nextPage = document.createElement('span');
+                    //     nextPage.className = 'rom_pager_number_disabled';
+                    //     nextPage.innerHTML = '&gt;';
+                    //     if (pageNumber != numOfPages) {
+                    //         nextPage.setAttribute('onclick', 'loadRoms(' + undefined + ', ' + (pageNumber + 1) + ', ' + selectedPlatform + ');');
+                    //         nextPage.className = 'rom_pager_number';
+                    //     }
+                    //     romPaginator.appendChild(nextPage);
 
-                        gameRoms.appendChild(romPaginator);
+                    //     gameRoms.appendChild(romPaginator);
 
-                        gameRomsSection.appendChild(gameRoms);
-                    }
+                    //     gameRomsSection.appendChild(gameRoms);
+                    // }
                 } else {
                     gameRomsSection.setAttribute('style', 'display: none;');
                 }
@@ -1443,7 +1442,7 @@ class RomManagement {
             if (rom_checks[i].checked == true) {
                 let romId = rom_checks[i].getAttribute('data-romid');
                 remapCallCounter += 1;
-                let deletePath = '/api/v1.1/Games/' + gameId + '/roms/' + romId;
+                let deletePath = '/api/v1.1/Games/' + this.Platform.metadataMapId + '/roms/' + romId;
                 let parentObject = this;
                 ajaxCall(deletePath, 'DELETE', function (result) {
                     parentObject.#remapTitlesCallback();
@@ -1472,7 +1471,7 @@ class RomManagement {
                     if (rom_checks[i].checked == true) {
                         let romId = rom_checks[i].getAttribute('data-romid');
                         remapCallCounter += 1;
-                        ajaxCall('/api/v1.1/Games/' + gameId + '/roms/' + romId + '?NewPlatformId=' + fixplatform[0].id + '&NewGameId=' + fixgame[0].id, 'PATCH', function (result) {
+                        ajaxCall('/api/v1.1/Games/' + this.Platform.metadataMapId + '/roms/' + romId + '?NewPlatformId=' + fixplatform[0].id + '&NewGameId=' + fixgame[0].id, 'PATCH', function (result) {
                             thisObject.#remapTitlesCallback();
                         }, function (result) {
                             thisObject.#remapTitlesCallback();
@@ -1526,7 +1525,7 @@ class RomManagement {
         let currentObject = this;
 
         ajaxCall(
-            '/api/v1.1/Games/' + gameId + '/romgroup?PlatformId=' + platformId,
+            '/api/v1.1/Games/' + this.Platform.metadataMapId + '/romgroup?PlatformId=' + platformId,
             'POST',
             function (result) {
                 currentObject.#DisplayROMCheckboxes(false);

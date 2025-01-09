@@ -123,10 +123,12 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
+                HasheousClient.Models.MetadataSources metadataSources = HasheousClient.Models.MetadataSources.None;
+
+                Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId, metadataSources);
                 PlatformLogo? logoObject = null;
 
-                logoObject = PlatformLogos.GetPlatformLogo((long)platformObject.PlatformLogo, Communications.MetadataSource);
+                logoObject = PlatformLogos.GetPlatformLogo((long)platformObject.PlatformLogo, metadataSources);
 
                 if (logoObject == null)
                 {
@@ -135,7 +137,7 @@ namespace gaseous_server.Controllers
                     {
                         if (platformObject.Versions.Count > 0)
                         {
-                            PlatformVersion platformVersion = Classes.Metadata.PlatformVersions.GetPlatformVersion(Communications.MetadataSource, (long)platformObject.Versions[0]);
+                            PlatformVersion platformVersion = Classes.Metadata.PlatformVersions.GetPlatformVersion(metadataSources, (long)platformObject.Versions[0]);
                             logoObject = PlatformLogos.GetPlatformLogo((long)platformVersion.PlatformLogo);
                         }
                         else
@@ -149,13 +151,13 @@ namespace gaseous_server.Controllers
                     }
                 }
 
-                string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject), Communications.MetadataSource.ToString());
+                string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject), metadataSources.ToString());
                 string imagePath = Path.Combine(basePath, size.ToString(), logoObject.ImageId);
 
                 if (!System.IO.File.Exists(imagePath))
                 {
                     Communications comms = new Communications();
-                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(Communications.MetadataSource, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject)), logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
+                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(metadataSources, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject)), logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
 
                     imagePath = ImgFetch.Result;
                 }
@@ -163,7 +165,7 @@ namespace gaseous_server.Controllers
                 if (!System.IO.File.Exists(imagePath))
                 {
                     Communications comms = new Communications();
-                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(Communications.MetadataSource, basePath, logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
+                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(metadataSources, basePath, logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
 
                     imagePath = ImgFetch.Result;
                 }

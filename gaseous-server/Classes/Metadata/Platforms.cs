@@ -41,14 +41,13 @@ namespace gaseous_server.Classes.Metadata
             else
             {
                 Platform? RetVal = new Platform();
-                if (Source == HasheousClient.Models.MetadataSources.None)
+                RetVal = (Platform?)Storage.GetCacheValue<Platform>(HasheousClient.Models.MetadataSources.None, RetVal, "Id", (long)Id);
+                if (Source != HasheousClient.Models.MetadataSources.None)
                 {
-
-                    RetVal = (Platform?)Storage.GetCacheValue<Platform>(HasheousClient.Models.MetadataSources.None, RetVal, "Id", (long)Id);
-                }
-                else
-                {
-                    RetVal = Metadata.GetMetadata<Platform>(Source, (long)Id, false);
+                    if (RetVal == null)
+                    {
+                        RetVal = Metadata.GetMetadata<Platform>(Source, (long)Id, false);
+                    }
                 }
                 return RetVal;
             }
