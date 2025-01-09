@@ -318,14 +318,15 @@ namespace gaseous_server.Models
 
             // get platform data
             Platform? platform = null;
-            if (Storage.GetCacheStatus(Communications.MetadataSource, "Platform", IGDBId) == Storage.CacheStatus.NotPresent)
-            {
-                //platform = Platforms.GetPlatform(IGDBId, false);
-            }
-            else
-            {
-                platform = (Platform)Storage.GetCacheValue<Platform>(Communications.MetadataSource, new Platform(), "id", IGDBId);
-            }
+            // if (Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.None, "Platform", IGDBId) == Storage.CacheStatus.NotPresent)
+            // {
+            //     //platform = Platforms.GetPlatform(IGDBId, false);
+            // }
+            // else
+            // {
+            //     platform = (Platform)Storage.GetCacheValue<Platform>(HasheousClient.Models.MetadataSources.None, new Platform(), "id", IGDBId);
+            // }
+            platform = Platforms.GetPlatform(IGDBId, HasheousClient.Models.MetadataSources.None);
 
             if (platform != null)
             {
