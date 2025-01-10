@@ -613,221 +613,225 @@ class RomManagement {
         this.#SetupFixPlatformDropDown();
 
         // add buttons
-        let platformMappingButton = new ModalButton('Metadata Mapping', 0, this, async function (callingObject) {
-            let metadataModal = await new Modal('messagebox');
-            await metadataModal.BuildModal();
+        if (userProfile.roles.includes("Admin")) {
+            let platformMappingButton = new ModalButton('Metadata Mapping', 0, this, async function (callingObject) {
+                let metadataModal = await new Modal('messagebox');
+                await metadataModal.BuildModal();
 
-            // override the dialog size
-            metadataModal.modalElement.style = 'width: 600px; height: 400px; min-width: unset; min-height: 400px; max-width: unset; max-height: 400px;';
+                // override the dialog size
+                metadataModal.modalElement.style = 'width: 600px; height: 400px; min-width: unset; min-height: 400px; max-width: unset; max-height: 400px;';
 
-            // set the title
-            metadataModal.modalElement.querySelector('#modal-header-text').innerHTML = callingObject.Platform.name + ' Metadata Mapping';
+                // set the title
+                metadataModal.modalElement.querySelector('#modal-header-text').innerHTML = callingObject.Platform.name + ' Metadata Mapping';
 
-            // set the content
-            let metadataContent = metadataModal.modalElement.querySelector('#modal-body');
+                // set the content
+                let metadataContent = metadataModal.modalElement.querySelector('#modal-body');
 
-            // fetch the metadata map
-            let metadataMap = await fetch('/api/v1.1/Games/' + callingObject.Platform.metadataMapId + '/metadata', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }).then(response => response.json());
-            console.log(metadataMap);
+                // fetch the metadata map
+                let metadataMap = await fetch('/api/v1.1/Games/' + callingObject.Platform.metadataMapId + '/metadata', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => response.json());
+                console.log(metadataMap);
 
-            metadataMap.metadataMapItems.forEach(element => {
-                let itemSection = document.createElement('div');
-                itemSection.className = 'section';
+                metadataMap.metadataMapItems.forEach(element => {
+                    let itemSection = document.createElement('div');
+                    itemSection.className = 'section';
 
-                // header
-                let itemSectionHeader = document.createElement('div');
-                itemSectionHeader.className = 'section-header';
+                    // header
+                    let itemSectionHeader = document.createElement('div');
+                    itemSectionHeader.className = 'section-header';
 
-                let itemSectionHeaderRadio = document.createElement('input');
-                itemSectionHeaderRadio.id = 'platformMappingSource_' + element.sourceType;
-                itemSectionHeaderRadio.type = 'radio';
-                itemSectionHeaderRadio.name = 'platformMappingSource';
-                itemSectionHeaderRadio.value = element.sourceType;
-                itemSectionHeaderRadio.style.margin = '0px';
-                itemSectionHeaderRadio.style.height = 'unset';
-                itemSectionHeaderRadio.addEventListener('change', () => {
-                    metadataMap.metadataMapItems.forEach(element => {
-                        element.preferred = false;
+                    let itemSectionHeaderRadio = document.createElement('input');
+                    itemSectionHeaderRadio.id = 'platformMappingSource_' + element.sourceType;
+                    itemSectionHeaderRadio.type = 'radio';
+                    itemSectionHeaderRadio.name = 'platformMappingSource';
+                    itemSectionHeaderRadio.value = element.sourceType;
+                    itemSectionHeaderRadio.style.margin = '0px';
+                    itemSectionHeaderRadio.style.height = 'unset';
+                    itemSectionHeaderRadio.addEventListener('change', () => {
+                        metadataMap.metadataMapItems.forEach(element => {
+                            element.preferred = false;
+                        });
+
+                        element.preferred = true;
+                        console.log('Selected: ' + element.sourceType);
+                        console.log(metadataMap);
                     });
+                    if (element.preferred == true) {
+                        itemSectionHeaderRadio.checked = true;
+                    }
+                    itemSectionHeader.appendChild(itemSectionHeaderRadio);
 
-                    element.preferred = true;
-                    console.log('Selected: ' + element.sourceType);
-                    console.log(metadataMap);
-                });
-                if (element.preferred == true) {
-                    itemSectionHeaderRadio.checked = true;
-                }
-                itemSectionHeader.appendChild(itemSectionHeaderRadio);
+                    let itemSectionHeaderLabel = document.createElement('label');
+                    itemSectionHeaderLabel.htmlFor = 'platformMappingSource_' + element.sourceType;
+                    itemSectionHeaderLabel.style.marginLeft = '10px';
+                    itemSectionHeaderLabel.innerHTML = element.sourceType;
+                    itemSectionHeader.appendChild(itemSectionHeaderLabel);
 
-                let itemSectionHeaderLabel = document.createElement('label');
-                itemSectionHeaderLabel.htmlFor = 'platformMappingSource_' + element.sourceType;
-                itemSectionHeaderLabel.style.marginLeft = '10px';
-                itemSectionHeaderLabel.innerHTML = element.sourceType;
-                itemSectionHeader.appendChild(itemSectionHeaderLabel);
+                    itemSection.appendChild(itemSectionHeader);
 
-                itemSection.appendChild(itemSectionHeader);
+                    // content
+                    let itemSectionContent = document.createElement('div');
+                    itemSectionContent.className = 'section-body';
+                    switch (element.sourceType) {
+                        case 'None':
+                            let noneContent = document.createElement('div');
+                            noneContent.className = 'section-body-content';
 
-                // content
-                let itemSectionContent = document.createElement('div');
-                itemSectionContent.className = 'section-body';
-                switch (element.sourceType) {
-                    case 'None':
-                        let noneContent = document.createElement('div');
-                        noneContent.className = 'section-body-content';
+                            let noneContentLabel = document.createElement('label');
+                            noneContentLabel.innerHTML = 'No Metadata Source';
+                            noneContent.appendChild(noneContentLabel);
 
-                        let noneContentLabel = document.createElement('label');
-                        noneContentLabel.innerHTML = 'No Metadata Source';
-                        noneContent.appendChild(noneContentLabel);
+                            itemSectionContent.appendChild(noneContent);
+                            break;
 
-                        itemSectionContent.appendChild(noneContent);
-                        break;
+                        default:
+                            let contentLabel2 = document.createElement('div');
+                            contentLabel2.innerHTML = 'ID: ' + element.sourceId;
+                            itemSectionContent.appendChild(contentLabel2);
 
-                    default:
-                        let contentLabel2 = document.createElement('div');
-                        contentLabel2.innerHTML = 'ID: ' + element.sourceId;
-                        itemSectionContent.appendChild(contentLabel2);
+                            let contentLabel3 = document.createElement('div');
+                            contentLabel3.innerHTML = 'Slug: ' + element.sourceSlug;
+                            itemSectionContent.appendChild(contentLabel3);
 
-                        let contentLabel3 = document.createElement('div');
-                        contentLabel3.innerHTML = 'Slug: ' + element.sourceSlug;
-                        itemSectionContent.appendChild(contentLabel3);
-
-                        if (element.link) {
-                            if (element.link.length > 0) {
-                                let contentLabel4 = document.createElement('div');
-                                contentLabel4.innerHTML = 'Link: <a href="' + element.link + '" target="_blank" rel="noopener noreferrer" class="romlink">' + element.link + '</a>';
-                                itemSectionContent.appendChild(contentLabel4);
+                            if (element.link) {
+                                if (element.link.length > 0) {
+                                    let contentLabel4 = document.createElement('div');
+                                    contentLabel4.innerHTML = 'Link: <a href="' + element.link + '" target="_blank" rel="noopener noreferrer" class="romlink">' + element.link + '</a>';
+                                    itemSectionContent.appendChild(contentLabel4);
+                                }
                             }
-                        }
-                        break;
+                            break;
 
-                }
-                itemSection.appendChild(itemSectionContent);
+                    }
+                    itemSection.appendChild(itemSectionContent);
 
-                metadataContent.appendChild(itemSection);
+                    metadataContent.appendChild(itemSection);
+                });
+
+
+                // setup the buttons
+                let okButton = new ModalButton('OK', 1, callingObject, async function (callingObject) {
+                    let model = metadataMap.metadataMapItems;
+
+                    await fetch('/api/v1.1/Games/' + callingObject.Platform.metadataMapId + '/metadata', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(model)
+                    }).then(response => response.json()).then(result => {
+                        location.reload(true);
+                    });
+                });
+                metadataModal.addButton(okButton);
+
+                let cancelButton = new ModalButton('Cancel', 0, metadataModal, async function (callingObject) {
+                    metadataModal.close();
+                });
+                metadataModal.addButton(cancelButton);
+
+                // show the dialog
+                await metadataModal.open();
             });
+            this.romsModal.addButton(platformMappingButton);
+        }
 
+        if (this.Platform.id != 0) {
+            let platformEditButton = new ModalButton('Configure Emulator', 0, this, async function (callingObject) {
+                let mappingModal = await new Modal('messagebox');
+                await mappingModal.BuildModal();
 
-            // setup the buttons
-            let okButton = new ModalButton('OK', 1, callingObject, async function (callingObject) {
-                let model = metadataMap.metadataMapItems;
+                // override the dialog size
+                mappingModal.modalElement.style = 'width: 600px; height: 80%; min-width: unset; min-height: 400px; max-width: unset; max-height: 80%;';
 
-                await fetch('/api/v1.1/Games/' + callingObject.Platform.metadataMapId + '/metadata', {
-                    method: 'PUT',
+                // get the platform map
+                let platformMap = await fetch('/api/v1.1/PlatformMaps/' + callingObject.Platform.id, {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(model)
-                }).then(response => response.json()).then(result => {
-                    location.reload(true);
-                });
-            });
-            metadataModal.addButton(okButton);
+                    }
+                }).then(response => response.json());
+                let defaultPlatformMap = platformMap;
 
-            let cancelButton = new ModalButton('Cancel', 0, metadataModal, async function (callingObject) {
-                metadataModal.close();
-            });
-            metadataModal.addButton(cancelButton);
-
-            // show the dialog
-            await metadataModal.open();
-        });
-        this.romsModal.addButton(platformMappingButton);
-
-        let platformEditButton = new ModalButton('Configure Emulator', 0, this, async function (callingObject) {
-            let mappingModal = await new Modal('messagebox');
-            await mappingModal.BuildModal();
-
-            // override the dialog size
-            mappingModal.modalElement.style = 'width: 600px; height: 80%; min-width: unset; min-height: 400px; max-width: unset; max-height: 80%;';
-
-            // get the platform map
-            let platformMap = await fetch('/api/v1.1/PlatformMaps/' + callingObject.Platform.id, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }).then(response => response.json());
-            let defaultPlatformMap = platformMap;
-
-            // get the user emulation configuration
-            let userEmuConfig = await fetch('/api/v1.1/Games/' + callingObject.Platform.metadataMapId + '/emulatorconfiguration/' + callingObject.Platform.id, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }).then(response => response.json());
-            if (userEmuConfig) {
-                if (userEmuConfig.emulatorType || userEmuConfig.core) {
-                    platformMap.webEmulator.type = userEmuConfig.emulatorType;
-                    platformMap.webEmulator.core = userEmuConfig.core;
-                }
-                if (userEmuConfig.enableBIOSFiles) {
-                    platformMap.enabledBIOSHashes = userEmuConfig.enableBIOSFiles;
-                }
-            }
-
-            // set the title
-            mappingModal.modalElement.querySelector('#modal-header-text').innerHTML = callingObject.Platform.name + ' Emulation Settings';
-
-            // set the content
-            let mappingContent = mappingModal.modalElement.querySelector('#modal-body');
-            mappingContent.innerHTML = '';
-            let emuConfig = await new WebEmulatorConfiguration(platformMap)
-            emuConfig.open();
-            mappingContent.appendChild(emuConfig.panel);
-
-            // setup the buttons
-            let resetButton = new ModalButton('Reset to Default', 0, callingObject, async function (callingObject) {
-                await fetch('/api/v1.1/Games/' + callingObject.Platform.metadataMapId + '/emulatorconfiguration/' + callingObject.Platform.id, {
-                    method: 'DELETE'
-                });
-                callingObject.Platform.emulatorConfiguration.emulatorType = defaultPlatformMap.webEmulator.type;
-                callingObject.Platform.emulatorConfiguration.core = defaultPlatformMap.webEmulator.core;
-                callingObject.Platform.emulatorConfiguration.enabledBIOSHashes = defaultPlatformMap.enabledBIOSHashes;
-                callingObject.#loadRoms();
-                callingObject.OkCallback();
-                mappingModal.close();
-            });
-            mappingModal.addButton(resetButton);
-
-            let okButton = new ModalButton('OK', 1, callingObject, async function (callingObject) {
-                let model = {
-                    EmulatorType: emuConfig.PlatformMap.webEmulator.type,
-                    Core: emuConfig.PlatformMap.webEmulator.core,
-                    EnableBIOSFiles: emuConfig.PlatformMap.enabledBIOSHashes
-                }
-
-                await fetch('/api/v1.1/Games/' + callingObject.Platform.metadataMapId + '/emulatorconfiguration/' + callingObject.Platform.id, {
-                    method: 'POST',
+                // get the user emulation configuration
+                let userEmuConfig = await fetch('/api/v1.1/Games/' + callingObject.Platform.metadataMapId + '/emulatorconfiguration/' + callingObject.Platform.id, {
+                    method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(model)
+                    }
+                }).then(response => response.json());
+                if (userEmuConfig) {
+                    if (userEmuConfig.emulatorType || userEmuConfig.core) {
+                        platformMap.webEmulator.type = userEmuConfig.emulatorType;
+                        platformMap.webEmulator.core = userEmuConfig.core;
+                    }
+                    if (userEmuConfig.enableBIOSFiles) {
+                        platformMap.enabledBIOSHashes = userEmuConfig.enableBIOSFiles;
+                    }
+                }
+
+                // set the title
+                mappingModal.modalElement.querySelector('#modal-header-text').innerHTML = callingObject.Platform.name + ' Emulation Settings';
+
+                // set the content
+                let mappingContent = mappingModal.modalElement.querySelector('#modal-body');
+                mappingContent.innerHTML = '';
+                let emuConfig = await new WebEmulatorConfiguration(platformMap)
+                emuConfig.open();
+                mappingContent.appendChild(emuConfig.panel);
+
+                // setup the buttons
+                let resetButton = new ModalButton('Reset to Default', 0, callingObject, async function (callingObject) {
+                    await fetch('/api/v1.1/Games/' + callingObject.Platform.metadataMapId + '/emulatorconfiguration/' + callingObject.Platform.id, {
+                        method: 'DELETE'
+                    });
+                    callingObject.Platform.emulatorConfiguration.emulatorType = defaultPlatformMap.webEmulator.type;
+                    callingObject.Platform.emulatorConfiguration.core = defaultPlatformMap.webEmulator.core;
+                    callingObject.Platform.emulatorConfiguration.enabledBIOSHashes = defaultPlatformMap.enabledBIOSHashes;
+                    callingObject.#loadRoms();
+                    callingObject.OkCallback();
+                    mappingModal.close();
                 });
-                callingObject.Platform.emulatorConfiguration.emulatorType = emuConfig.PlatformMap.webEmulator.type;
-                callingObject.Platform.emulatorConfiguration.core = emuConfig.PlatformMap.webEmulator.core;
-                callingObject.Platform.emulatorConfiguration.enabledBIOSHashes = emuConfig.PlatformMap.enabledBIOSHashes;
+                mappingModal.addButton(resetButton);
 
-                callingObject.#loadRoms();
-                callingObject.OkCallback();
-                mappingModal.close();
+                let okButton = new ModalButton('OK', 1, callingObject, async function (callingObject) {
+                    let model = {
+                        EmulatorType: emuConfig.PlatformMap.webEmulator.type,
+                        Core: emuConfig.PlatformMap.webEmulator.core,
+                        EnableBIOSFiles: emuConfig.PlatformMap.enabledBIOSHashes
+                    }
+
+                    await fetch('/api/v1.1/Games/' + callingObject.Platform.metadataMapId + '/emulatorconfiguration/' + callingObject.Platform.id, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(model)
+                    });
+                    callingObject.Platform.emulatorConfiguration.emulatorType = emuConfig.PlatformMap.webEmulator.type;
+                    callingObject.Platform.emulatorConfiguration.core = emuConfig.PlatformMap.webEmulator.core;
+                    callingObject.Platform.emulatorConfiguration.enabledBIOSHashes = emuConfig.PlatformMap.enabledBIOSHashes;
+
+                    callingObject.#loadRoms();
+                    callingObject.OkCallback();
+                    mappingModal.close();
+                });
+                mappingModal.addButton(okButton);
+
+                let cancelButton = new ModalButton('Cancel', 0, mappingModal, async function (callingObject) {
+                    mappingModal.close();
+                });
+                mappingModal.addButton(cancelButton);
+
+                // show the dialog
+                await mappingModal.open();
             });
-            mappingModal.addButton(okButton);
-
-            let cancelButton = new ModalButton('Cancel', 0, mappingModal, async function (callingObject) {
-                mappingModal.close();
-            });
-            mappingModal.addButton(cancelButton);
-
-            // show the dialog
-            await mappingModal.open();
-        });
-        this.romsModal.addButton(platformEditButton);
+            this.romsModal.addButton(platformEditButton);
+        }
 
         let closeButton = new ModalButton('Close', 0, this, function (callingObject) {
             callingObject.romsModal.close();

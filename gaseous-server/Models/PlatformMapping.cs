@@ -107,11 +107,6 @@ namespace gaseous_server.Models
                 Storage.NewCacheValue(HasheousClient.Models.MetadataSources.None, platform);
             }
 
-            if (Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous)
-            {
-                Communications.PopulateHasheousPlatformData(mapItem.IGDBId);
-            }
-
             if (Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.IGDB, "Platform", mapItem.IGDBId) == Storage.CacheStatus.NotPresent)
             {
                 Storage.NewCacheValue(HasheousClient.Models.MetadataSources.IGDB, platform);

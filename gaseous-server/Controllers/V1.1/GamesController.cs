@@ -43,7 +43,7 @@ namespace gaseous_server.Controllers.v1_1
         [MapToApiVersion("1.1")]
         [HttpPost]
         [ProducesResponseType(typeof(GameReturnPackage), StatusCodes.Status200OK)]
-        public async Task<IActionResult> Game_v1_1(GameSearchModel model, int pageNumber = 0, int pageSize = 0)
+        public async Task<IActionResult> Game_v1_1(GameSearchModel model, int pageNumber = 0, int pageSize = 0, bool returnSummary = true, bool returnGames = true)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -88,7 +88,7 @@ namespace gaseous_server.Controllers.v1_1
                     model.GameAgeRating.IncludeUnrated = false;
                 }
 
-                return Ok(GetGames(model, user.Id, pageNumber, pageSize));
+                return Ok(GetGames(model, user.Id, pageNumber, pageSize, returnSummary, returnGames));
             }
             else
             {
@@ -190,7 +190,7 @@ namespace gaseous_server.Controllers.v1_1
             }
         }
 
-        public static GameReturnPackage GetGames(GameSearchModel model, string userid, int pageNumber = 0, int pageSize = 0)
+        public static GameReturnPackage GetGames(GameSearchModel model, string userid, int pageNumber = 0, int pageSize = 0, bool returnSummary = true, bool returnGames = true)
         {
             string whereClause = "";
             string havingClause = "";
@@ -551,89 +551,100 @@ FROM
     Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId
         LEFT JOIN
     Favourites ON Game.MetadataMapId = Favourites.GameId AND Favourites.UserId = @userid " + whereClause + " " + havingClause + " " + orderByClause;
-            List<Games.MinimalGameItem> RetVal = new List<Games.MinimalGameItem>();
+
+            // if (returnGames == true)
+            // {
+            //     sql += " LIMIT @pageOffset, @pageSize";
+            //     whereParams.Add("pageOffset", pageSize * (pageNumber - 1));
+            //     whereParams.Add("pageSize", pageSize);
+            // }
 
             DataTable dbResponse = db.ExecuteCMD(sql, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
 
             // get count
-            int RecordCount = dbResponse.Rows.Count;
-
-            // compile data for return
-            int pageOffset = pageSize * (pageNumber - 1);
-            for (int i = pageOffset; i < dbResponse.Rows.Count; i++)
+            int? RecordCount = null;
+            if (returnSummary == true)
             {
-                if (pageNumber != 0 && pageSize != 0)
-                {
-                    if (i >= (pageOffset + pageSize))
-                    {
-                        break;
-                    }
-                }
-
-                Models.Game retGame = Storage.BuildCacheObject<Models.Game>(new Models.Game(), dbResponse.Rows[i]);
-                retGame.MetadataMapId = (long)dbResponse.Rows[i]["MetadataMapId"];
-                retGame.MetadataSource = (HasheousClient.Models.MetadataSources)dbResponse.Rows[i]["GameIdType"];
-
-                Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
-                retMinGame.Index = i;
-                if (dbResponse.Rows[i]["RomSaveCount"] != DBNull.Value || dbResponse.Rows[i]["MediaGroupSaveCount"] != DBNull.Value)
-                {
-                    retMinGame.HasSavedGame = true;
-                }
-                else
-                {
-                    retMinGame.HasSavedGame = false;
-                }
-                if ((int)dbResponse.Rows[i]["Favourite"] == 0)
-                {
-                    retMinGame.IsFavourite = false;
-                }
-                else
-                {
-                    retMinGame.IsFavourite = true;
-                }
-
-                RetVal.Add(retMinGame);
+                RecordCount = dbResponse.Rows.Count;
             }
 
-            // build alpha list
-            Dictionary<string, int> AlphaList = new Dictionary<string, int>();
-            if (orderByField == "NameThe" || orderByField == "Name")
+            // compile data for return
+            List<Games.MinimalGameItem>? RetVal = null;
+            if (returnGames == true)
             {
-                int CurrentPage = 1;
-                int NextPageIndex = pageSize;
+                RetVal = new List<Games.MinimalGameItem>();
+                foreach (int i in Enumerable.Range(0, dbResponse.Rows.Count))
+                {
+                    Models.Game retGame = Storage.BuildCacheObject<Models.Game>(new Models.Game(), dbResponse.Rows[i]);
+                    retGame.MetadataMapId = (long)dbResponse.Rows[i]["MetadataMapId"];
+                    retGame.MetadataSource = (HasheousClient.Models.MetadataSources)dbResponse.Rows[i]["GameIdType"];
 
-                string alphaSearchField;
-                if (orderByField == "NameThe")
-                {
-                    alphaSearchField = "NameThe";
-                }
-                else
-                {
-                    alphaSearchField = "Name";
-                }
-
-                for (int i = 0; i < dbResponse.Rows.Count; i++)
-                {
-                    if (NextPageIndex == i + 1)
+                    Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
+                    retMinGame.Index = i;
+                    if (dbResponse.Rows[i]["RomSaveCount"] != DBNull.Value || dbResponse.Rows[i]["MediaGroupSaveCount"] != DBNull.Value)
                     {
-                        NextPageIndex += pageSize;
-                        CurrentPage += 1;
-                    }
-
-                    string firstChar = dbResponse.Rows[i][alphaSearchField].ToString().Substring(0, 1).ToUpperInvariant();
-                    if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(firstChar))
-                    {
-                        if (!AlphaList.ContainsKey(firstChar))
-                        {
-                            AlphaList.Add(firstChar, CurrentPage);
-                        }
+                        retMinGame.HasSavedGame = true;
                     }
                     else
                     {
-                        if (!AlphaList.ContainsKey("#"))
+                        retMinGame.HasSavedGame = false;
+                    }
+                    if ((int)dbResponse.Rows[i]["Favourite"] == 0)
+                    {
+                        retMinGame.IsFavourite = false;
+                    }
+                    else
+                    {
+                        retMinGame.IsFavourite = true;
+                    }
+
+                    RetVal.Add(retMinGame);
+                }
+            }
+
+            Dictionary<string, int>? AlphaList = null;
+            if (returnSummary == true)
+            {
+                AlphaList = new Dictionary<string, int>();
+
+                // build alpha list
+                if (orderByField == "NameThe" || orderByField == "Name")
+                {
+                    int CurrentPage = 1;
+                    int NextPageIndex = pageSize;
+
+                    string alphaSearchField;
+                    if (orderByField == "NameThe")
+                    {
+                        alphaSearchField = "NameThe";
+                    }
+                    else
+                    {
+                        alphaSearchField = "Name";
+                    }
+
+                    for (int i = 0; i < dbResponse.Rows.Count; i++)
+                    {
+                        if (NextPageIndex == i + 1)
                         {
-                            AlphaList.Add("#", 1);
+                            NextPageIndex += pageSize;
+                            CurrentPage += 1;
+                        }
+
+                        string firstChar = dbResponse.Rows[i][alphaSearchField].ToString().Substring(0, 1).ToUpperInvariant();
+                        if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(firstChar))
+                        {
+                            if (!AlphaList.ContainsKey(firstChar))
+                            {
+                                AlphaList.Add(firstChar, CurrentPage);
+                            }
+                        }
+                        else
+                        {
+                            if (!AlphaList.ContainsKey("#"))
+                            {
+                                AlphaList.Add("#", 1);
+                            }
                         }
                     }
                 }
@@ -669,9 +680,9 @@ FROM
                 this.Games = minimalGames;
             }
 
-            public int Count { get; set; }
-            public List<Games.MinimalGameItem> Games { get; set; } = new List<Games.MinimalGameItem>();
-            public Dictionary<string, int> AlphaList { get; set; }
+            public int? Count { get; set; }
+            public List<Games.MinimalGameItem>? Games { get; set; } = new List<Games.MinimalGameItem>();
+            public Dictionary<string, int>? AlphaList { get; set; }
         }
     }
 }

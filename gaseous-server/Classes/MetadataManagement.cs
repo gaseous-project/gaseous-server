@@ -370,7 +370,23 @@ namespace gaseous_server.Classes
 				try
 				{
 					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Refreshing metadata for platform " + dr["name"] + " (" + dr["id"] + ")");
-					Metadata.Platforms.GetPlatform((long)dr["id"], MetadataSources.None);
+
+					HasheousClient.Models.MetadataSources metadataSource = HasheousClient.Models.MetadataSources.None;
+
+					// fetch the platform metadata
+					Platform platform = Metadata.Platforms.GetPlatform((long)dr["id"], metadataSource);
+
+					// fetch the platform metadata from Hasheous
+					if (Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous)
+					{
+						Communications.PopulateHasheousPlatformData((long)dr["id"]);
+					}
+
+					// force platformLogo refresh
+					if (platform.PlatformLogo != null)
+					{
+						Metadata.PlatformLogos.GetPlatformLogo(platform.PlatformLogo, metadataSource);
+					}
 				}
 				catch (Exception ex)
 				{
