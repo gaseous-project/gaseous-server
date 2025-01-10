@@ -11,6 +11,7 @@ using Authentication;
 using Microsoft.AspNetCore.Identity;
 using gaseous_server.Classes.Metadata;
 using Asp.Versioning;
+using HasheousClient.Models.Metadata.IGDB;
 
 Logging.WriteToDiskOnly = true;
 Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server " + Assembly.GetExecutingAssembly().GetName().Version);
@@ -328,6 +329,11 @@ app.Use(async (context, next) =>
 
 // setup library directories
 Config.LibraryConfiguration.InitLibrary();
+
+// create unknown platform
+Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.None);
+Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.IGDB);
+Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.TheGamesDb);
 
 // extract platform map if not present
 PlatformMapping.ExtractPlatformMap();

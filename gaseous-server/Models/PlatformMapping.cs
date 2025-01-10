@@ -107,7 +107,10 @@ namespace gaseous_server.Models
                 Storage.NewCacheValue(HasheousClient.Models.MetadataSources.None, platform);
             }
 
-            Communications.PopulateHasheousPlatformData(mapItem.IGDBId);
+            if (Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous)
+            {
+                Communications.PopulateHasheousPlatformData(mapItem.IGDBId);
+            }
 
             if (Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.IGDB, "Platform", mapItem.IGDBId) == Storage.CacheStatus.NotPresent)
             {
@@ -318,15 +321,15 @@ namespace gaseous_server.Models
 
             // get platform data
             Platform? platform = null;
-            // if (Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.None, "Platform", IGDBId) == Storage.CacheStatus.NotPresent)
-            // {
-            //     //platform = Platforms.GetPlatform(IGDBId, false);
-            // }
-            // else
-            // {
-            //     platform = (Platform)Storage.GetCacheValue<Platform>(HasheousClient.Models.MetadataSources.None, new Platform(), "id", IGDBId);
-            // }
-            platform = Platforms.GetPlatform(IGDBId, HasheousClient.Models.MetadataSources.None);
+            if (Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.None, "Platform", IGDBId) == Storage.CacheStatus.NotPresent)
+            {
+                //platform = Platforms.GetPlatform(IGDBId, false);
+            }
+            else
+            {
+                // platform = (Platform)Storage.GetCacheValue<Platform>(HasheousClient.Models.MetadataSources.None, new Platform(), "id", IGDBId);
+                platform = Platforms.GetPlatform(IGDBId, HasheousClient.Models.MetadataSources.None);
+            }
 
             if (platform != null)
             {

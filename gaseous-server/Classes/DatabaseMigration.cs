@@ -246,6 +246,19 @@ namespace gaseous_server.Classes
                                 }
                             }
 
+                            // get all tables that have the prefix "Relation_" and drop them
+                            sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = @dbname AND table_name LIKE 'Relation_%';";
+                            dbDict = new Dictionary<string, object>
+                            {
+                                { "dbname", Config.DatabaseConfiguration.DatabaseName }
+                            };
+                            data = db.ExecuteCMD(sql, dbDict);
+                            foreach (DataRow row in data.Rows)
+                            {
+                                sql = "DROP TABLE " + (string)row["table_name"] + ";";
+                                db.ExecuteNonQuery(sql);
+                            }
+
                             // migrating metadata is a safe background task
                             BackgroundUpgradeTargetSchemaVersions.Add(1024);
                             break;

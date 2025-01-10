@@ -163,12 +163,14 @@ namespace gaseous_server.Classes
                 Platform? determinedPlatform = Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId);
                 Models.Game? determinedGame = Metadata.Games.GetGame(discoveredSignature.Flags.GameMetadataSource, discoveredSignature.Flags.GameId);
                 long RomId = StoreGame(GameLibrary.GetDefaultLibrary, Hash, discoveredSignature, determinedPlatform, FilePath, 0, true);
+                Roms.GameRomItem romItem = Roms.GetRom(RomId);
 
                 // build return value
                 GameFileInfo.Add("romid", RomId);
                 GameFileInfo.Add("platform", determinedPlatform);
                 GameFileInfo.Add("game", determinedGame);
                 GameFileInfo.Add("signature", discoveredSignature);
+                GameFileInfo.Add("rom", romItem);
                 GameFileInfo.Add("status", "imported");
             }
         }
@@ -248,7 +250,7 @@ namespace gaseous_server.Classes
                     }
                 }
             }
-            
+
             // reload the map
             map = MetadataManagement.GetMetadataMap((long)map.Id);
 
@@ -479,8 +481,9 @@ namespace gaseous_server.Classes
             Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
 
             // get metadata
+            MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(rom.MetadataMapId).PreferredMetadataMapItem;
             Platform? platform = gaseous_server.Classes.Metadata.Platforms.GetPlatform(rom.PlatformId);
-            gaseous_server.Models.Game? game = gaseous_server.Classes.Metadata.Games.GetGame(Config.MetadataConfiguration.DefaultMetadataSource, rom.GameId);
+            gaseous_server.Models.Game? game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
             // build path
             string platformSlug = "Unknown Platform";
