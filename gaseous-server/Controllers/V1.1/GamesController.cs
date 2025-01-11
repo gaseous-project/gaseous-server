@@ -113,7 +113,7 @@ namespace gaseous_server.Controllers.v1_1
                 }
 
                 Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                string sql = "SELECT view_Games.Id, view_Games.AgeGroupId, Relation_Game_SimilarGames.SimilarGamesId FROM view_Games JOIN Relation_Game_SimilarGames ON view_Games.Id = Relation_Game_SimilarGames.GameId AND Relation_Game_SimilarGames.SimilarGamesId IN (SELECT Id FROM view_Games) WHERE view_Games.Id = @id AND (view_Games.AgeGroupId <= @agegroupid" + IncludeUnrated + ")";
+                string sql = "SELECT view_Games.Id, view_Games.AgeGroupId, Relation_Game_SimilarGames.SimilarGamesId FROM view_Games JOIN Relation_Game_SimilarGames ON view_Games.Id = Relation_Game_SimilarGames.GameId AND view_Games.GameIdType = Relation_Game_SimilarGames.GameSourceId AND Relation_Game_SimilarGames.SimilarGamesId IN (SELECT Id FROM view_Games) WHERE view_Games.Id = @id AND (view_Games.AgeGroupId <= @agegroupid" + IncludeUnrated + ")";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
                 dbDict.Add("id", MetadataMapId);
                 dbDict.Add("agegroupid", (int)user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction);
@@ -542,13 +542,13 @@ FROM
         AND GameState.UserId = @userid
     GROUP BY RomMediaGroup.GameId) RomGroupSavedStates ON Game.MetadataMapId = RomGroupSavedStates.GameId
         LEFT JOIN
-    Relation_Game_Genres ON Game.Id = Relation_Game_Genres.GameId
+    Relation_Game_Genres ON Game.Id = Relation_Game_Genres.GameId AND Relation_Game_Genres.GameSourceId = Game.GameIdType
         LEFT JOIN
-    Relation_Game_GameModes ON Game.Id = Relation_Game_GameModes.GameId
+    Relation_Game_GameModes ON Game.Id = Relation_Game_GameModes.GameId AND Relation_Game_GameModes.GameSourceId = Game.GameIdType
         LEFT JOIN
-    Relation_Game_PlayerPerspectives ON Game.Id = Relation_Game_PlayerPerspectives.GameId
+    Relation_Game_PlayerPerspectives ON Game.Id = Relation_Game_PlayerPerspectives.GameId AND Relation_Game_PlayerPerspectives.GameSourceId = Game.GameIdType
         LEFT JOIN
-    Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId
+    Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId AND Relation_Game_Themes.GameSourceId = Game.GameIdType
         LEFT JOIN
     Favourites ON Game.MetadataMapId = Favourites.GameId AND Favourites.UserId = @userid " + whereClause + " " + havingClause + " " + orderByClause;
 

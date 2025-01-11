@@ -2929,7 +2929,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .platform_item {
     padding: 10px;
     flex-grow: 1;
-    flex-basis: 45%;
+    /* flex-basis: 45%; */
     border-radius: var(--standard-radius);
     /* background-color: var(--section-header-background); */
     background: linear-gradient(90deg, rgba(200, 200, 200, 0.7469362745098039) 0%, rgba(133, 133, 133, 1) 50%);
@@ -2991,6 +2991,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .platform_name {
     display: block;
     max-width: 75px;
+    height: auto;
 }
 
 .platform_edit_button_container {

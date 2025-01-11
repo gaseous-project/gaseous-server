@@ -138,7 +138,7 @@ namespace gaseous_server.Classes.Metadata
                     break;
             }
 
-            string sql = "SELECT Game.Id, Game.`Name`, Game.Slug, Relation_Game_Platforms.PlatformsId AS PlatformsId, Game.Summary FROM gaseous.Game JOIN Relation_Game_Platforms ON Game.Id = Relation_Game_Platforms.GameId WHERE " + whereClause + ";";
+            string sql = "SELECT Game.Id, Game.`Name`, Game.Slug, Relation_Game_Platforms.PlatformsId AS PlatformsId, Game.Summary FROM gaseous.Game JOIN Relation_Game_Platforms ON Game.Id = Relation_Game_Platforms.GameId AND Game.SourceId = Relation_Game_Platforms.GameSourceId WHERE " + whereClause + ";";
 
 
             // get Game metadata

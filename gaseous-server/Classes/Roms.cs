@@ -93,7 +93,9 @@ namespace gaseous_server.Classes
 				JOIN
 					GameLibraries ON Games_Roms.LibraryId = GameLibraries.Id
 				LEFT JOIN
-					Platform ON Games_Roms.PlatformId = Platform.Id LEFT JOIN view_GamesWithRoms ON view_GamesWithRoms.MetadataMapId = Games_Roms.MetadataMapId
+					Platform ON Games_Roms.PlatformId = Platform.Id AND Platform.SourceId = @platformsource
+				LEFT JOIN
+					view_GamesWithRoms ON view_GamesWithRoms.MetadataMapId = Games_Roms.MetadataMapId
 				LEFT JOIN
 					GameState ON (Games_Roms.Id = GameState.RomId AND GameState.UserId = @userid AND GameState.IsMediaGroup = 0) " + UserJoin + @"
 				WHERE
@@ -106,6 +108,7 @@ namespace gaseous_server.Classes
 				sqlCount = "SELECT COUNT(Games_Roms.Id) AS RomCount FROM Games_Roms WHERE Games_Roms.MetadataMapId = @id AND Games_Roms.PlatformId = @platformid" + NameSearchWhere + ";";
 
 				dbDict.Add("platformid", PlatformId);
+				dbDict.Add("platformsource", (int)HasheousClient.Models.MetadataSources.None);
 			}
 			DataTable romDT = db.ExecuteCMD(sql, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks));
 
