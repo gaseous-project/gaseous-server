@@ -11,6 +11,7 @@ using Authentication;
 using Microsoft.AspNetCore.Identity;
 using gaseous_server.Classes.Metadata;
 using Asp.Versioning;
+using HasheousClient.Models.Metadata.IGDB;
 
 Logging.WriteToDiskOnly = true;
 Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server " + Assembly.GetExecutingAssembly().GetName().Version);
@@ -52,7 +53,7 @@ Config.UpdateConfig();
 GameLibrary.UpdateDefaultLibraryPath();
 
 // set api metadata source from config
-Communications.MetadataSource = Config.MetadataConfiguration.MetadataSource;
+Communications.MetadataSource = Config.MetadataConfiguration.DefaultMetadataSource;
 
 // set up hasheous client
 HasheousClient.WebApp.HttpHelper.BaseUri = Config.MetadataConfiguration.HasheousHost;
@@ -329,11 +330,10 @@ app.Use(async (context, next) =>
 // setup library directories
 Config.LibraryConfiguration.InitLibrary();
 
-// insert unknown platform and game if not present
-gaseous_server.Classes.Metadata.Games.GetGame(0, false, false, false);
-gaseous_server.Classes.Metadata.Games.AssignAllGamesToPlatformIdZero();
-gaseous_server.Classes.Metadata.Platforms.GetPlatform(0);
-gaseous_server.Classes.Metadata.Platforms.AssignAllPlatformsToGameIdZero();
+// create unknown platform
+Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.None);
+Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.IGDB);
+Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.TheGamesDb);
 
 // extract platform map if not present
 PlatformMapping.ExtractPlatformMap();
@@ -356,9 +356,6 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.LibraryScan)
-    );
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.Rematcher)
     );
 
 // maintenance tasks

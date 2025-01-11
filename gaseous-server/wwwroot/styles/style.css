@@ -1109,6 +1109,7 @@ input[name='filter_panel_range_max'] {
     position: absolute;
     display: inline-block;
     top: 30%;
+    padding-top: 7px;
     right: 10px;
 }
 
@@ -1138,6 +1139,28 @@ input[name='filter_panel_range_max'] {
     display: inline-block;
     top: 30%;
     right: 50px;
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    padding-top: 5px;
+    padding-left: 4px;
+    padding-right: 3px;
+    padding-bottom: 5px;
+    border-color: transparent;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: var(--standard-radius);
+    z-index: +1;
+}
+
+.game_tile_box_row:hover>.game_tile_box_favouritegame_row {
+    border-color: var(--input-border);
+    background-color: var(--fancybutton-background);
+}
+
+.game_tile_box_row:hover>.game_tile_box_favouritegame_row:hover {
+    border-color: var(--input-border-hover);
+    background-color: var(--fancybutton-background-hover);
 }
 
 .game_tile_image {
@@ -1878,8 +1901,9 @@ div[name="properties_profile_toc_item"]:hover {
 
 button:not(.select2-selection__choice__remove):not(.select2-selection__clear):not(.ejs_menu_button):not(.bigbutton) {
     background-color: var(--button-background);
+    background: var(--button-background-gradient);
     color: var(--button-font-colour);
-    border-width: 1px;
+    border-width: 0px;
     border-color: var(--button-border);
     border-style: solid;
     border-radius: var(--standard-radius);
@@ -1895,6 +1919,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
 button:not(.select2-selection__choice__remove):not(.select2-selection__clear):not(.ejs_menu_button):hover {
     background-color: var(--button-background-hover);
+    background: var(--button-background-hover);
     border-color: var(--button-border-hover);
     color: var(--button-font-colour-hover);
     cursor: pointer;
@@ -1924,36 +1949,42 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
 .redbutton {
     background-color: var(--button-red-background) !important;
+    background: var(--button-red-background-gradient) !important;
     border-color: var(--button-red-border) !important;
     color: var(--button-red-font-colour) !important;
 }
 
 .redbutton:hover {
     background-color: var(--button-red-background-hover) !important;
+    background: var(--button-red-background-hover) !important;
     border-color: var(--button-red-border-hover) !important;
     color: var(--button-red-font-colour-hover) !important;
 }
 
 .redbutton:disabled {
     background-color: var(--button-red-background-disabled) !important;
+    background: var(--button-red-background-disabled) !important;
     border-color: var(--button-red-border-disabled) !important;
     color: var(--button-red-font-colour-disabled) !important;
 }
 
 .bluebutton {
     background-color: var(--button-blue-background) !important;
+    background: var(--button-blue-background-gradient) !important;
     border-color: var(--button-blue-border) !important;
     color: var(--button-blue-font-colour) !important;
 }
 
 .bluebutton:hover {
     background-color: var(--button-blue-background-hover) !important;
+    background: var(--button-blue-background-hover) !important;
     border-color: var(--button-blue-border-hover) !important;
     color: var(--button-blue-font-colour-hover) !important;
 }
 
 .bluebutton:disabled {
     background-color: var(--button-blue-background-disabled) !important;
+    background: var(--button-blue-background-disabled) !important;
     border-color: var(--button-blue-border-disabled) !important;
     color: var(--button-blue-font-colour-disabled) !important;
 }
@@ -2138,9 +2169,9 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     float: right;
 }
 
-#rom_edit {
+/* #rom_edit {
     padding: 10px;
-}
+} */
 
 #rom_edit_panel {
     background-color: rgba(56, 56, 56, 0.3);
@@ -2571,6 +2602,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 .section-header {
+    position: relative;
     background-color: var(--section-header-background);
     padding: 10px;
     font-weight: bold;
@@ -2706,14 +2738,24 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     color: var(--profile-card-quip-text-color);
 }
 
+.profile-card-now-playing-body-bg {
+    position: relative;
+    min-height: 70px;
+    background-position: center;
+    background-size: cover;
+}
+
 .profile-card-now-playing-body {
     position: relative;
     min-height: 70px;
-    background-color: var(--profile-card-body-background);
-    padding-top: 0px;
+    /* background-color: var(--profile-card-body-background); */
+    background-color: var(--profile-card-now-playing-background-color);
+    padding-top: 10px;
     padding-left: 10px;
     padding-right: 10px;
     padding-bottom: 10px;
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
 }
 
 .profile-card-now-playing-label {
@@ -2724,7 +2766,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .profile-card-now-playing-cover {
     position: absolute;
     left: 10px;
-    top: 25px;
+    top: 35px;
     width: 40px;
     height: 40px;
     background-position: center center;
@@ -2881,13 +2923,13 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     display: flex;
     flex-wrap: wrap;
     flex-direction: row;
-    gap: 5px;
+    gap: 10px;
 }
 
 .platform_item {
     padding: 10px;
     flex-grow: 1;
-    flex-basis: 45%;
+    /* flex-basis: 45%; */
     border-radius: var(--standard-radius);
     /* background-color: var(--section-header-background); */
     background: linear-gradient(90deg, rgba(200, 200, 200, 0.7469362745098039) 0%, rgba(133, 133, 133, 1) 50%);
@@ -2896,9 +2938,13 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     cursor: pointer;
     display: flex;
     gap: 20px;
+    padding-left: 0;
     align-items: center;
     position: relative;
     overflow: hidden;
+    box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+    -webkit-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+    -moz-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
 }
 
 .platform_item:hover {
@@ -2912,15 +2958,30 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .platform_item_background:hover {}
 
 .platform_image_container {
-    margin-left: 10px;
     margin-right: 10px;
-    max-width: 50px;
-    max-height: 50px;
+    width: 70px;
+    height: 70px;
     flex-grow: 0;
+    /* text-align: center;
+    vertical-align: middle;
+    line-height: 75px; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    padding-top: 10px;
+    padding-bottom: 10px;
+    padding-left: 20px;
+    padding-right: 20px;
+    background-color: white;
+    border-right-style: solid;
+    border-right-width: 1px;
+    border-right-color: #000000;
 }
 
 .platform_image {
-    width: 40px;
+    max-width: 90px;
+    max-height: 60px;
 }
 
 .platform_name_container {
@@ -2929,19 +2990,27 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
 .platform_name {
     display: block;
+    /* max-width: 75px; */
+    width: 25%;
+    height: auto;
 }
 
 .platform_edit_button_container {
-    width: 90px;
+    /* width: 90px; */
     flex-grow: 0;
+    text-align: right;
+    padding-right: 5px;
 }
 
 .platform_edit_button {
-    position: absolute;
+    /* position: absolute;
     right: 14px;
-    top: 14px;
+    top: 14px;*/
     width: 20px;
     height: 20px;
+    display: inline-block;
+    margin-left: 10px;
+
     background-color: var(--fancybutton-background);
     border-radius: var(--standard-radius);
     border-width: 1px;
@@ -2984,4 +3053,12 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     max-width: 160px;
     width: 160px;
     white-space: normal;
+}
+
+.metadata-attribution-icon {
+    width: 30px;
+    height: 30px;
+    margin-right: 13px;
+    margin-left: 10px;
+    filter: invert(1);
 }

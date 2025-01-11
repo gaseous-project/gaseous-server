@@ -15,6 +15,7 @@ function loadPlatformMapping(Overwrite) {
                 createTableRow(
                     true,
                     [
+                        '',
                         'Platform',
                         'Supported File Extensions',
                         'Unique File Extensions',
@@ -27,6 +28,17 @@ function loadPlatformMapping(Overwrite) {
             );
 
             for (let i = 0; i < result.length; i++) {
+                let logoBox = document.createElement('div');
+                logoBox.classList.add('platform_image_container');
+
+                let logo = document.createElement('img');
+                logo.src = '/api/v1.1/Platforms/' + result[i].igdbId + '/platformlogo/original/';
+                logo.alt = result[i].igdbName;
+                logo.title = result[i].igdbName;
+                logo.classList.add('platform_image');
+
+                logoBox.appendChild(logo);
+
                 let hasWebEmulator = '';
                 if (result[i].webEmulator.type.length > 0) {
                     hasWebEmulator = 'Yes';
@@ -49,6 +61,7 @@ function loadPlatformMapping(Overwrite) {
                 }
 
                 let newRow = [
+                    logoBox,
                     result[i].igdbName,
                     result[i].extensions.supportedFileExtensions.join(', '),
                     result[i].extensions.uniqueFileExtensions.join(', '),
@@ -70,6 +83,7 @@ function SetupButtons() {
     if (userProfile.roles.includes("Admin")) {
         document.getElementById('settings_mapping_import').style.display = '';
 
+        // Setup the JSON import button
         document.getElementById('uploadjson').addEventListener('change', function () {
             $(this).simpleUpload("/api/v1.1/PlatformMaps", {
                 start: function (file) {
@@ -84,6 +98,24 @@ function SetupButtons() {
         });
 
         document.getElementById('importjson').addEventListener('click', openDialog);
+
+        // Setup the JSON export button
+        document.getElementById('exportjson').addEventListener('click', DownloadJSON);
+
+        // Setup the reset to defaults button
+        document.getElementById('resetmapping').addEventListener('click', function () {
+            let warningDialog = new MessageBox("Platform Mapping Reset", "This will reset the platform mappings to the default values. Are you sure you want to continue?");
+            warningDialog.addButton(new ModalButton("OK", 2, warningDialog, async (callingObject) => {
+                loadPlatformMapping(true);
+                callingObject.msgDialog.close();
+                let completedDialog = new MessageBox("Platform Mapping Reset", "All platform mappings have been reset to default values.");
+                completedDialog.open();
+            }));
+            warningDialog.addButton(new ModalButton("Cancel", 0, warningDialog, async (callingObject) => {
+                callingObject.msgDialog.close();
+            }));
+            warningDialog.open();
+        });
     }
 }
 

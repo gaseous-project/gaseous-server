@@ -51,7 +51,19 @@ namespace gaseous_server.Controllers
             ReturnValue.DatabaseSize = (long)(System.Decimal)dbResponse.Rows[0][1];
 
             // platform statistics
-            sql = "SELECT Platform.`name`, grc.Count, grs.Size FROM Platform INNER JOIN (SELECT Platform.`name` AS `Name`, SUM(grs.Size) AS Size FROM Platform JOIN view_Games_Roms AS grs ON (grs.PlatformId = Platform.Id) GROUP BY Platform.`name`) grs ON (grs.`Name` = Platform.`name`) INNER JOIN (SELECT Platform.`name` AS `Name`, COUNT(grc.Size) AS Count FROM Platform JOIN view_Games_Roms AS grc ON (grc.PlatformId = Platform.Id) GROUP BY Platform.`name`) grc ON (grc.`Name` = Platform.`name`) ORDER BY Platform.`name`;";
+            sql = @"
+SELECT 
+    view_Games_Roms.PlatformId,
+    Platform.`Name`,
+    SUM(view_Games_Roms.Size) AS Size,
+    COUNT(view_Games_Roms.`Id`) AS Count
+FROM
+    view_Games_Roms
+        LEFT JOIN
+    Platform ON view_Games_Roms.PlatformId = Platform.`Id`
+        AND Platform.SourceId = 0
+GROUP BY Platform.`Name`
+ORDER BY Platform.`Name`; ";
             dbResponse = db.ExecuteCMD(sql);
             ReturnValue.PlatformStatistics = new List<SystemInfo.PlatformStatisticsItem>();
             foreach (DataRow dr in dbResponse.Rows)
@@ -72,10 +84,51 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("Version")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        public Version GetSystemVersion()
+        [ProducesResponseType(typeof(Dictionary<string, object>), StatusCodes.Status200OK)]
+        [AllowAnonymous]
+        public ActionResult GetSystemVersion()
         {
-            return Assembly.GetExecutingAssembly().GetName().Version;
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
+            // get age ratings dictionary
+            Dictionary<int, string> ClassificationBoardsStrings = new Dictionary<int, string>();
+            foreach (IGDB.Models.AgeRatingCategory ageRatingCategory in Enum.GetValues(typeof(IGDB.Models.AgeRatingCategory)))
+            {
+                ClassificationBoardsStrings.Add((int)ageRatingCategory, ageRatingCategory.ToString());
+            }
+
+            Dictionary<int, string> AgeRatingsStrings = new Dictionary<int, string>();
+            foreach (IGDB.Models.AgeRatingTitle ageRatingTitle in Enum.GetValues(typeof(IGDB.Models.AgeRatingTitle)))
+            {
+                AgeRatingsStrings.Add((int)ageRatingTitle, ageRatingTitle.ToString());
+            }
+
+            Dictionary<string, object> retVal = new Dictionary<string, object>
+            {
+                {
+                    "AppVersion", Assembly.GetExecutingAssembly().GetName().Version.ToString()
+                },
+                {
+                    "DBSchemaVersion", db.GetDatabaseSchemaVersion().ToString()
+                },
+                {
+                    "FirstRunStatus", Config.ReadSetting<string>("FirstRunStatus", "0")
+                },
+                {
+                    "AgeRatingBoardsStrings", ClassificationBoardsStrings
+                },
+                {
+                    "AgeRatingStrings", AgeRatingsStrings
+                },
+                {
+                    "AgeRatingGroups", AgeGroups.AgeGroupingsFlat
+                },
+                {
+                    "emulatorDebugMode", Config.ReadSetting<string>("emulatorDebugMode", false.ToString()).ToLower()
+                }
+            };
+
+            return Ok(retVal);
         }
 
         [MapToApiVersion("1.0")]
@@ -270,6 +323,11 @@ namespace gaseous_server.Controllers
                     HasheousHost = Config.MetadataConfiguration.HasheousHost,
                     HasheousSubmitFixes = (bool)Config.MetadataConfiguration.HasheousSubmitFixes,
                     HasheousAPIKey = Config.MetadataConfiguration.HasheousAPIKey
+                },
+                MetadataSources = new List<SystemSettingsModel.MetadataSourceItem>
+                {
+                    new SystemSettingsModel.MetadataSourceItem(HasheousClient.Models.MetadataSources.None, false, "", "", Config.MetadataConfiguration.DefaultMetadataSource),
+                    new SystemSettingsModel.MetadataSourceItem(HasheousClient.Models.MetadataSources.IGDB, Config.IGDB.UseHasheousProxy, Config.IGDB.ClientId, Config.IGDB.Secret, Config.MetadataConfiguration.DefaultMetadataSource)
                 }
             };
 
@@ -293,6 +351,34 @@ namespace gaseous_server.Controllers
                 Config.MetadataConfiguration.HasheousHost = model.SignatureSource.HasheousHost;
                 Config.MetadataConfiguration.HasheousAPIKey = model.SignatureSource.HasheousAPIKey;
                 Config.MetadataConfiguration.HasheousSubmitFixes = model.SignatureSource.HasheousSubmitFixes;
+                foreach (SystemSettingsModel.MetadataSourceItem metadataSourceItem in model.MetadataSources)
+                {
+                    // configure the default metadata source
+                    if (metadataSourceItem.Default == true)
+                    {
+                        Config.MetadataConfiguration.DefaultMetadataSource = metadataSourceItem.Source;
+                    }
+                    else
+                    {
+                        Config.MetadataConfiguration.DefaultMetadataSource = HasheousClient.Models.MetadataSources.None;
+                    }
+
+                    // configure the metadata source
+                    switch (metadataSourceItem.Source)
+                    {
+                        case HasheousClient.Models.MetadataSources.None:
+                            break;
+                        case HasheousClient.Models.MetadataSources.IGDB:
+                            Config.IGDB.UseHasheousProxy = metadataSourceItem.UseHasheousProxy;
+                            Config.IGDB.ClientId = metadataSourceItem.ClientId;
+                            Config.IGDB.Secret = metadataSourceItem.Secret;
+                            break;
+                        case HasheousClient.Models.MetadataSources.TheGamesDb:
+                            break;
+                        default:
+                            break;
+                    }
+                }
                 Config.UpdateConfig();
             }
 
@@ -439,8 +525,7 @@ namespace gaseous_server.Controllers
                     this._Blocks = new List<ProcessQueue.QueueItemType>{
                         ProcessQueue.QueueItemType.LibraryScan,
                         ProcessQueue.QueueItemType.LibraryScanWorker,
-                        ProcessQueue.QueueItemType.TitleIngestor,
-                        ProcessQueue.QueueItemType.Rematcher
+                        ProcessQueue.QueueItemType.TitleIngestor
                     };
                     break;
 
@@ -462,32 +547,7 @@ namespace gaseous_server.Controllers
                     this.DefaultAllowedEndHours = 23;
                     this.DefaultAllowedEndMinutes = 59;
                     this._Blocks = new List<ProcessQueue.QueueItemType>{
-                        ProcessQueue.QueueItemType.OrganiseLibrary,
-                        ProcessQueue.QueueItemType.Rematcher
-                    };
-                    break;
-
-                case ProcessQueue.QueueItemType.Rematcher:
-                    this._UserManageable = true;
-                    this.DefaultInterval = 1440;
-                    this.MinimumAllowedInterval = 360;
-                    this.DefaultAllowedDays = new List<DayOfWeek>{
-                        DayOfWeek.Sunday,
-                        DayOfWeek.Monday,
-                        DayOfWeek.Tuesday,
-                        DayOfWeek.Wednesday,
-                        DayOfWeek.Thursday,
-                        DayOfWeek.Friday,
-                        DayOfWeek.Saturday
-                    };
-                    this.DefaultAllowedStartHours = 0;
-                    this.DefaultAllowedStartMinutes = 0;
-                    this.DefaultAllowedEndHours = 23;
-                    this.DefaultAllowedEndMinutes = 59;
-                    this._Blocks = new List<ProcessQueue.QueueItemType>{
-                        ProcessQueue.QueueItemType.OrganiseLibrary,
-                        ProcessQueue.QueueItemType.LibraryScan,
-                        ProcessQueue.QueueItemType.LibraryScanWorker
+                        ProcessQueue.QueueItemType.OrganiseLibrary
                     };
                     break;
 
@@ -735,6 +795,7 @@ namespace gaseous_server.Controllers
         public int MinimumLogRetentionPeriod { get; set; }
         public bool EmulatorDebugMode { get; set; }
         public SignatureSourceItem SignatureSource { get; set; }
+        public List<MetadataSourceItem> MetadataSources { get; set; }
 
         public class SignatureSourceItem
         {
@@ -742,6 +803,101 @@ namespace gaseous_server.Controllers
             public string HasheousHost { get; set; }
             public string HasheousAPIKey { get; set; }
             public bool HasheousSubmitFixes { get; set; }
+        }
+
+        public class MetadataSourceItem
+        {
+            public MetadataSourceItem()
+            {
+
+            }
+
+            public MetadataSourceItem(HasheousClient.Models.MetadataSources source, bool useHasheousProxy, string clientId, string secret, HasheousClient.Models.MetadataSources defaultSource)
+            {
+                Source = source;
+                UseHasheousProxy = useHasheousProxy;
+                ClientId = clientId;
+                Secret = secret;
+                if (Source == defaultSource)
+                {
+                    Default = true;
+                }
+                else
+                {
+                    Default = false;
+                }
+            }
+
+            public HasheousClient.Models.MetadataSources Source { get; set; }
+            public bool UseHasheousProxy { get; set; }
+            public string ClientId { get; set; }
+            public string Secret { get; set; }
+            public bool Default { get; set; }
+            public bool? Configured
+            {
+                get
+                {
+                    switch (Source)
+                    {
+                        case HasheousClient.Models.MetadataSources.None:
+                            return true;
+                        case HasheousClient.Models.MetadataSources.IGDB:
+                            if ((!String.IsNullOrEmpty(ClientId) && !String.IsNullOrEmpty(Secret)) || UseHasheousProxy == true)
+                            {
+                                return true;
+                            }
+                            else
+                            {
+                                return false;
+                            }
+                        case HasheousClient.Models.MetadataSources.TheGamesDb:
+                            if ((!String.IsNullOrEmpty(ClientId) && !String.IsNullOrEmpty(Secret)) || UseHasheousProxy == true)
+                            {
+                                return true;
+                            }
+                            else
+                            {
+                                return false;
+                            }
+                        default:
+                            return false;
+                    }
+                }
+            }
+            public bool? UsesProxy
+            {
+                get
+                {
+                    switch (Source)
+                    {
+                        case HasheousClient.Models.MetadataSources.None:
+                            return false;
+                        case HasheousClient.Models.MetadataSources.IGDB:
+                            return true;
+                        case HasheousClient.Models.MetadataSources.TheGamesDb:
+                            return true;
+                        default:
+                            return false;
+                    }
+                }
+            }
+            public bool? UsesClientIdAndSecret
+            {
+                get
+                {
+                    switch (Source)
+                    {
+                        case HasheousClient.Models.MetadataSources.None:
+                            return false;
+                        case HasheousClient.Models.MetadataSources.IGDB:
+                            return true;
+                        case HasheousClient.Models.MetadataSources.TheGamesDb:
+                            return true;
+                        default:
+                            return false;
+                    }
+                }
+            }
         }
     }
 }

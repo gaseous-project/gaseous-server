@@ -2,7 +2,6 @@ using System;
 using System.Data;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
-using IGDB.Models;
 using Microsoft.CodeAnalysis.FlowAnalysis.DataFlow;
 
 namespace gaseous_server
@@ -237,7 +236,7 @@ namespace gaseous_server
                 {
                     if (_DefaultPlatformId != 0)
                     {
-                        Platform platform = Platforms.GetPlatform(_DefaultPlatformId);
+                        HasheousClient.Models.Metadata.IGDB.Platform platform = Platforms.GetPlatform(_DefaultPlatformId);
                         return platform.Name;
                     }
                     else

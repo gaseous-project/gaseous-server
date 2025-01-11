@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using gaseous_server.Classes.Metadata;
+using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Classes
 {
@@ -9,6 +11,37 @@ namespace gaseous_server.Classes
         public Bios()
         {
 
+        }
+
+        public static void ImportBiosFile(string FilePath, Common.hashObject Hash, ref Dictionary<string, object> BiosFileInfo)
+        {
+            BiosFileInfo.Add("type", "bios");
+            BiosFileInfo.Add("status", "notimported");
+
+            foreach (Classes.Bios.BiosItem biosItem in Classes.Bios.GetBios())
+            {
+                if (biosItem.Available == false)
+                {
+                    if (biosItem.hash == Hash.md5hash)
+                    {
+                        string biosPath = Path.Combine(Config.LibraryConfiguration.LibraryFirmwareDirectory, biosItem.hash + ".bios");
+                        Logging.Log(Logging.LogType.Information, "Import BIOS File", "  " + FilePath + " is a BIOS file - moving to " + biosPath);
+
+                        File.Move(FilePath, biosItem.biosPath, true);
+
+                        BiosFileInfo.Add("name", biosItem.filename);
+                        BiosFileInfo.Add("platform", Platforms.GetPlatform(biosItem.platformid));
+                        BiosFileInfo["status"] = "imported";
+                    }
+                }
+                else
+                {
+                    if (biosItem.hash == Hash.md5hash)
+                    {
+                        BiosFileInfo["status"] = "duplicate";
+                    }
+                }
+            }
         }
 
         public static void MigrateToNewFolderStructure()
@@ -94,7 +127,7 @@ namespace gaseous_server.Classes
             {
                 if (platformMapping.Bios != null)
                 {
-                    IGDB.Models.Platform platform = Metadata.Platforms.GetPlatform(platformMapping.IGDBId);
+                    Platform platform = Metadata.Platforms.GetPlatform(platformMapping.IGDBId);
 
                     foreach (Models.PlatformMapping.PlatformMapItem.EmulatorBiosItem emulatorBios in platformMapping.Bios)
                     {

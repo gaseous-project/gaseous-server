@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Data;
 using Newtonsoft.Json;
-using IGDB.Models;
 using gaseous_server.Classes.Metadata;
 using NuGet.Common;
 
@@ -115,7 +114,12 @@ namespace gaseous_server.Classes
                 if (File.Exists(ConfigurationFilePath))
                 {
                     string configRaw = File.ReadAllText(ConfigurationFilePath);
-                    ConfigFile? _tempConfig = Newtonsoft.Json.JsonConvert.DeserializeObject<ConfigFile>(configRaw);
+                    Newtonsoft.Json.JsonSerializerSettings serializerSettings = new Newtonsoft.Json.JsonSerializerSettings
+                    {
+                        NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+                        MissingMemberHandling = Newtonsoft.Json.MissingMemberHandling.Ignore
+                    };
+                    ConfigFile? _tempConfig = Newtonsoft.Json.JsonConvert.DeserializeObject<ConfigFile>(configRaw, serializerSettings);
                     if (_tempConfig != null)
                     {
                         _config = _tempConfig;
@@ -131,9 +135,9 @@ namespace gaseous_server.Classes
                                 _config.DatabaseConfiguration.Password = (string)Common.GetEnvVar("dbpass", _config.DatabaseConfiguration.Password);
                                 _config.DatabaseConfiguration.DatabaseName = (string)Common.GetEnvVar("dbname", _config.DatabaseConfiguration.DatabaseName);
                                 _config.DatabaseConfiguration.Port = int.Parse((string)Common.GetEnvVar("dbport", _config.DatabaseConfiguration.Port.ToString()));
-                                _config.MetadataConfiguration.MetadataSource = (HasheousClient.Models.MetadataModel.MetadataSources)Enum.Parse(typeof(HasheousClient.Models.MetadataModel.MetadataSources), (string)Common.GetEnvVar("metadatasource", _config.MetadataConfiguration.MetadataSource.ToString()));
+                                _config.MetadataConfiguration.DefaultMetadataSource = (HasheousClient.Models.MetadataSources)Enum.Parse(typeof(HasheousClient.Models.MetadataSources), (string)Common.GetEnvVar("metadatasource", _config.MetadataConfiguration.DefaultMetadataSource.ToString()));
+                                _config.IGDBConfiguration.UseHasheousProxy = bool.Parse((string)Common.GetEnvVar("metadatausehasheousproxy", _config.IGDBConfiguration.UseHasheousProxy.ToString()));
                                 _config.MetadataConfiguration.SignatureSource = (HasheousClient.Models.MetadataModel.SignatureSources)Enum.Parse(typeof(HasheousClient.Models.MetadataModel.SignatureSources), (string)Common.GetEnvVar("signaturesource", _config.MetadataConfiguration.SignatureSource.ToString())); ;
-                                _config.MetadataConfiguration.MaxLibraryScanWorkers = int.Parse((string)Common.GetEnvVar("maxlibraryscanworkers", _config.MetadataConfiguration.MaxLibraryScanWorkers.ToString()));
                                 _config.MetadataConfiguration.HasheousHost = (string)Common.GetEnvVar("hasheoushost", _config.MetadataConfiguration.HasheousHost);
                                 _config.IGDBConfiguration.ClientId = (string)Common.GetEnvVar("igdbclientid", _config.IGDBConfiguration.ClientId);
                                 _config.IGDBConfiguration.Secret = (string)Common.GetEnvVar("igdbclientsecret", _config.IGDBConfiguration.Secret);
@@ -623,23 +627,30 @@ namespace gaseous_server.Classes
                     }
                 }
 
-                public string LibraryMetadataDirectory_Platform(Platform platform)
+                public string LibraryMetadataDirectory_Platform(HasheousClient.Models.Metadata.IGDB.Platform platform)
                 {
                     string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Platforms", platform.Slug);
                     if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
                     return MetadataPath;
                 }
 
-                public string LibraryMetadataDirectory_Game(Game game)
+                public string LibraryMetadataDirectory_Game(gaseous_server.Models.Game game)
                 {
                     string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Games", game.Slug);
                     if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
                     return MetadataPath;
                 }
 
-                public string LibraryMetadataDirectory_Company(Company company)
+                public string LibraryMetadataDirectory_Company(HasheousClient.Models.Metadata.IGDB.Company company)
                 {
                     string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Companies", company.Slug);
+                    if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
+                    return MetadataPath;
+                }
+
+                public string LibraryMetadataDirectory_Hasheous()
+                {
+                    string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Hasheous");
                     if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
                     return MetadataPath;
                 }
@@ -664,7 +675,6 @@ namespace gaseous_server.Classes
                 {
                     if (!Directory.Exists(LibraryRootDirectory)) { Directory.CreateDirectory(LibraryRootDirectory); }
                     if (!Directory.Exists(LibraryImportDirectory)) { Directory.CreateDirectory(LibraryImportDirectory); }
-                    // if (!Directory.Exists(LibraryBIOSDirectory)) { Directory.CreateDirectory(LibraryBIOSDirectory); }
                     if (!Directory.Exists(LibraryFirmwareDirectory)) { Directory.CreateDirectory(LibraryFirmwareDirectory); }
                     if (!Directory.Exists(LibraryUploadDirectory)) { Directory.CreateDirectory(LibraryUploadDirectory); }
                     if (!Directory.Exists(LibraryMetadataDirectory)) { Directory.CreateDirectory(LibraryMetadataDirectory); }
@@ -677,17 +687,40 @@ namespace gaseous_server.Classes
 
             public class MetadataAPI
             {
-                private static HasheousClient.Models.MetadataModel.MetadataSources _MetadataSource
+                public static string _HasheousClientAPIKey
+                {
+                    get
+                    {
+                        return "Pna5SRcbJ6R8aasytab_6vZD0aBKDGNZKRz4WY4xArpfZ-3mdZq0hXIGyy0AD43b";
+                    }
+                }
+
+                private static HasheousClient.Models.MetadataSources _MetadataSource
                 {
                     get
                     {
                         if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("metadatasource")))
                         {
-                            return (HasheousClient.Models.MetadataModel.MetadataSources)Enum.Parse(typeof(HasheousClient.Models.MetadataModel.MetadataSources), Environment.GetEnvironmentVariable("metadatasource"));
+                            return (HasheousClient.Models.MetadataSources)Enum.Parse(typeof(HasheousClient.Models.MetadataSources), Environment.GetEnvironmentVariable("metadatasource"));
                         }
                         else
                         {
-                            return HasheousClient.Models.MetadataModel.MetadataSources.IGDB;
+                            return HasheousClient.Models.MetadataSources.IGDB;
+                        }
+                    }
+                }
+
+                private static bool _MetadataUseHasheousProxy
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("metadatausehasheousproxy")))
+                        {
+                            return bool.Parse(Environment.GetEnvironmentVariable("metadatausehasheousproxy"));
+                        }
+                        else
+                        {
+                            return true;
                         }
                     }
                 }
@@ -711,21 +744,6 @@ namespace gaseous_server.Classes
 
                 private static string _HasheousAPIKey { get; set; } = "";
 
-                private static int _MaxLibraryScanWorkers
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("maxlibraryscanworkers")))
-                        {
-                            return int.Parse(Environment.GetEnvironmentVariable("maxlibraryscanworkers"));
-                        }
-                        else
-                        {
-                            return 4;
-                        }
-                    }
-                }
-
                 private static string _HasheousHost
                 {
                     get
@@ -741,7 +759,7 @@ namespace gaseous_server.Classes
                     }
                 }
 
-                public HasheousClient.Models.MetadataModel.MetadataSources MetadataSource = _MetadataSource;
+                public HasheousClient.Models.MetadataSources DefaultMetadataSource = _MetadataSource;
 
                 public HasheousClient.Models.MetadataModel.SignatureSources SignatureSource = _SignatureSource;
 
@@ -749,7 +767,8 @@ namespace gaseous_server.Classes
 
                 public string HasheousAPIKey = _HasheousAPIKey;
 
-                public int MaxLibraryScanWorkers = _MaxLibraryScanWorkers;
+                [JsonIgnore]
+                public string HasheousClientAPIKey = _HasheousClientAPIKey;
 
                 public string HasheousHost = _HasheousHost;
             }
@@ -786,8 +805,24 @@ namespace gaseous_server.Classes
                     }
                 }
 
+                private static bool _MetadataUseHasheousProxy
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("igdbusehasheousproxy")))
+                        {
+                            return bool.Parse(Environment.GetEnvironmentVariable("igdbusehasheousproxy"));
+                        }
+                        else
+                        {
+                            return false;
+                        }
+                    }
+                }
+
                 public string ClientId = _DefaultIGDBClientId;
                 public string Secret = _DefaultIGDBSecret;
+                public bool UseHasheousProxy = _MetadataUseHasheousProxy;
             }
 
             public class Logging

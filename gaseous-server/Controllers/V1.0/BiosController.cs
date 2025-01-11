@@ -10,8 +10,8 @@ using Asp.Versioning;
 using Authentication;
 using Microsoft.AspNetCore.Identity;
 using gaseous_server.Models;
-using IGDB.Models;
 using gaseous_server.Classes.Metadata;
+using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Controllers
 {
@@ -99,7 +99,11 @@ namespace gaseous_server.Controllers
                             if (bios.hash == hash)
                             {
                                 // add the bios file to the zip
-                                zipArchive.CreateEntryFromFile(Path.Combine(Config.LibraryConfiguration.LibraryFirmwareDirectory, hash + ".bios"), bios.filename);
+                                string biosFilePath = Path.Combine(Config.LibraryConfiguration.LibraryFirmwareDirectory, hash + ".bios");
+                                if (System.IO.File.Exists(biosFilePath))
+                                {
+                                    zipArchive.CreateEntryFromFile(biosFilePath, bios.filename);
+                                }
                             }
                         }
                     }

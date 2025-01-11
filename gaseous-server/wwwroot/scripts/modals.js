@@ -503,20 +503,20 @@ class EmulatorStateManager {
                         let stateControlsLaunch = document.createElement('span');
                         stateControlsLaunch.id = 'stateControlsLaunch_' + result[i].id;
                         stateControlsLaunch.className = 'romstart';
-                        let emulatorTarget;// = '/index.html?page=emulator&engine=@engine&core=@core&platformid=@platformid&gameid=@gameid&romid=@romid&mediagroup=@mediagroup&rompath=@rompath&stateid=' + result[i].id;
+                        let emulatorTarget;
                         let mediagroupint = 0;
                         if (thisObject.IsMediaGroup == true) {
                             mediagroupint = 1;
                         }
                         switch (getQueryString('page', 'string')) {
                             case 'emulator':
-                                emulatorTarget = BuildLaunchLink(getQueryString('engine', 'string'), getQueryString('core', 'string'), getQueryString('platformid', 'string'), getQueryString('gameid', 'string'), getQueryString('romid', 'string'), mediagroupint, thisObject.rompath, result[i].id) + '&stateid=' + result[i].id;
+                                emulatorTarget = await BuildLaunchLink(getQueryString('engine', 'string'), getQueryString('core', 'string'), getQueryString('platformid', 'string'), getQueryString('gameid', 'string'), getQueryString('romid', 'string'), mediagroupint, thisObject.rompath, result[i].id) + '&stateid=' + result[i].id;
                                 stateControlsLaunch.addEventListener('click', () => {
                                     window.location.replace(emulatorTarget);
                                 });
                                 break;
                             case 'game':
-                                emulatorTarget = BuildLaunchLink(thisObject.engine, thisObject.core, thisObject.platformid, thisObject.gameid, thisObject.RomId, mediagroupint, thisObject.rompath, result[i].id) + '&stateid=' + result[i].id;
+                                emulatorTarget = await BuildLaunchLink(thisObject.engine, thisObject.core, thisObject.platformid, thisObject.gameid, thisObject.RomId, mediagroupint, thisObject.rompath, result[i].id) + '&stateid=' + result[i].id;
                                 stateControlsLaunch.addEventListener('click', () => {
                                     window.location.href = emulatorTarget;
                                 });

@@ -5,50 +5,22 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 
 namespace gaseous_server.Models
 {
-    public class GaseousGame : IGDB.Models.Game
+    public class Game : HasheousClient.Models.Metadata.IGDB.Game
     {
-        public GaseousGame()
-        {
+        [NoDatabase]
+        public bool IsFavourite { get; set; } = false;
 
-        }
-
-        public GaseousGame(IGDB.Models.Game game)
-        {
-            var targetType = this.GetType();
-            var sourceType = game.GetType();
-            foreach (var prop in targetType.GetProperties(BindingFlags.Instance | BindingFlags.Public | BindingFlags.SetProperty))
-            {
-                // check whether source object has the the property
-                var sp = sourceType.GetProperty(prop.Name);
-                if (sp != null)
-                {
-                    // if yes, copy the value to the matching property
-                    var value = sp.GetValue(game, null);
-                    prop.SetValue(this, value, null);
-                }
-            }
-        }
-
+        [NoDatabase]
         public bool HasSavedGame { get; set; } = false;
 
-        public IGDB.Models.Cover? CoverItem
-        {
-            get
-            {
-                if (this.Cover != null)
-                {
-                    if (this.Cover.Id != null)
-                    {
-                        // IGDB.Models.Cover cover = Covers.GetCover(Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(this), false);
-                        IGDB.Models.Cover cover = new IGDB.Models.Cover()
-                        {
-                            Id = this.Cover.Id
-                        };
-                    }
-                }
+        [NoDatabase]
+        public long MetadataMapId { get; set; }
 
-                return null;
-            }
-        }
+        [NoDatabase]
+        public HasheousClient.Models.MetadataSources MetadataSource { get; set; }
+    }
+
+    internal class NoDatabaseAttribute : Attribute
+    {
     }
 }

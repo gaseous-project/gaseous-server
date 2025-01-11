@@ -1,8 +1,8 @@
 using System;
 using System.Reflection;
 using System.Text.Json.Serialization;
-using IGDB;
-using IGDB.Models;
+using gaseous_server.Models;
+using HasheousClient.Models.Metadata.IGDB;
 using Microsoft.CodeAnalysis.Classification;
 
 namespace gaseous_server.Classes.Metadata
@@ -14,7 +14,7 @@ namespace gaseous_server.Classes.Metadata
 
         }
 
-        public static AgeGroup? GetAgeGroup(Game? game)
+        public static AgeGroup? GetAgeGroup(Models.Game? game)
         {
             if (game == null)
             {
@@ -23,7 +23,7 @@ namespace gaseous_server.Classes.Metadata
             else
             {
                 Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
-                cacheStatus = Storage.GetCacheStatus("AgeGroup", (long)game.Id);
+                cacheStatus = Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.IGDB, "AgeGroup", (long)game.Id);
 
                 AgeGroup? RetVal = new AgeGroup();
 
@@ -31,16 +31,16 @@ namespace gaseous_server.Classes.Metadata
                 {
                     case Storage.CacheStatus.NotPresent:
                         RetVal = _GetAgeGroup(game);
-                        Storage.NewCacheValue(RetVal, false);
+                        Storage.NewCacheValue(HasheousClient.Models.MetadataSources.IGDB, RetVal, false);
                         break;
 
                     case Storage.CacheStatus.Expired:
                         RetVal = _GetAgeGroup(game);
-                        Storage.NewCacheValue(RetVal, true);
+                        Storage.NewCacheValue(HasheousClient.Models.MetadataSources.IGDB, RetVal, true);
                         break;
 
                     case Storage.CacheStatus.Current:
-                        RetVal = Storage.GetCacheValue<AgeGroup>(RetVal, "Id", game.Id);
+                        RetVal = Storage.GetCacheValue<AgeGroup>(HasheousClient.Models.MetadataSources.IGDB, RetVal, "Id", game.Id);
                         break;
 
                     default:
@@ -51,20 +51,20 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        public static AgeGroup? _GetAgeGroup(Game game)
+        public static AgeGroup? _GetAgeGroup(Models.Game game)
         {
             // compile the maximum age group for the given game
             if (game != null)
             {
                 if (game.AgeRatings != null)
                 {
-                    if (game.AgeRatings.Ids != null)
+                    if (game.AgeRatings != null)
                     {
                         // collect ratings values from metadata
                         List<AgeRating> ageRatings = new List<AgeRating>();
-                        foreach (long ratingId in game.AgeRatings.Ids)
+                        foreach (long ratingId in game.AgeRatings)
                         {
-                            AgeRating? rating = AgeRatings.GetAgeRatings(ratingId);
+                            AgeRating? rating = AgeRatings.GetAgeRating(game.MetadataSource, ratingId);
                             if (rating != null)
                             {
                                 ageRatings.Add(rating);
@@ -262,13 +262,13 @@ namespace gaseous_server.Classes.Metadata
 
         public class AgeGroupItem
         {
-            public List<IGDB.Models.AgeRatingTitle> ACB { get; set; }
-            public List<IGDB.Models.AgeRatingTitle> CERO { get; set; }
-            public List<IGDB.Models.AgeRatingTitle> CLASS_IND { get; set; }
-            public List<IGDB.Models.AgeRatingTitle> ESRB { get; set; }
-            public List<IGDB.Models.AgeRatingTitle> GRAC { get; set; }
-            public List<IGDB.Models.AgeRatingTitle> PEGI { get; set; }
-            public List<IGDB.Models.AgeRatingTitle> USK { get; set; }
+            public List<AgeRatingTitle> ACB { get; set; }
+            public List<AgeRatingTitle> CERO { get; set; }
+            public List<AgeRatingTitle> CLASS_IND { get; set; }
+            public List<AgeRatingTitle> ESRB { get; set; }
+            public List<AgeRatingTitle> GRAC { get; set; }
+            public List<AgeRatingTitle> PEGI { get; set; }
+            public List<AgeRatingTitle> USK { get; set; }
 
             [JsonIgnore]
             [Newtonsoft.Json.JsonIgnore]

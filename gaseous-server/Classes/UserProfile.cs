@@ -1,6 +1,7 @@
 using System.Data;
 using gaseous_server.Classes.Metadata;
-using IGDB.Models;
+using gaseous_server.Models;
+using HasheousClient.Models;
 
 namespace gaseous_server.Classes
 {
@@ -60,12 +61,20 @@ namespace gaseous_server.Classes
             DataTable nowPlayingData = db.ExecuteCMD(sql, dbDict);
             if (nowPlayingData.Rows.Count > 0)
             {
-                NowPlaying = new Models.UserProfile.NowPlayingItem
+                try
                 {
-                    Game = Games.GetGame((long)nowPlayingData.Rows[0]["GameId"], false, false, false),
-                    Platform = Platforms.GetPlatform((long)nowPlayingData.Rows[0]["PlatformId"], false, false),
-                    Duration = Convert.ToInt64(nowPlayingData.Rows[0]["SessionLength"])
-                };
+                    gaseous_server.Models.MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap((long)nowPlayingData.Rows[0]["GameId"]).PreferredMetadataMapItem;
+                    NowPlaying = new Models.UserProfile.NowPlayingItem
+                    {
+                        Game = Games.GetGame(metadataMap.SourceType, metadataMap.SourceId),
+                        Platform = Platforms.GetPlatform((long)nowPlayingData.Rows[0]["PlatformId"]),
+                        Duration = Convert.ToInt64(nowPlayingData.Rows[0]["SessionLength"])
+                    };
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
             }
 
             // return the user profile object

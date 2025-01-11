@@ -2,12 +2,12 @@ using System;
 using System.Data;
 using gaseous_signature_parser.models.RomSignatureObject;
 using Microsoft.VisualBasic;
-using IGDB.Models;
 using gaseous_server.Classes.Metadata;
 using System.IO.Compression;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using gaseous_server.Models;
+using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Classes
 {
@@ -193,7 +193,7 @@ namespace gaseous_server.Classes
         public static void DeleteMediaGroup(long Id)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "DELETE FROM RomMediaGroup WHERE Id=@id; DELETE FROM GameState WHERE RomId=@id AND IsMediaGroup=1; UPDATE UserTimeTracking SET PlatformId = NULL, IsMediaGroup = NULL, RomId = NULL WHERE RomId=@id AND IsMediaGroup = 1;";
+            string sql = "DELETE FROM RomMediaGroup WHERE Id=@id; DELETE FROM GameState WHERE RomId=@id AND IsMediaGroup=1; DELETE FROM User_GameFavouriteRoms WHERE RomId = @id AND IsMediaGroup = 1; DELETE FROM User_RecentPlayedRoms WHERE RomId = @id AND IsMediaGroup = 1; UPDATE UserTimeTracking SET PlatformId = NULL, IsMediaGroup = NULL, RomId = NULL WHERE RomId=@id AND IsMediaGroup = 1;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", Id);
             db.ExecuteCMD(sql, dbDict);
@@ -296,8 +296,9 @@ namespace gaseous_server.Classes
             GameRomMediaGroupItem mediaGroupItem = GetMediaGroup(Id);
             if (mediaGroupItem.Status == GameRomMediaGroupItem.GroupBuildStatus.WaitingForBuild)
             {
-                Game GameObject = Games.GetGame(mediaGroupItem.GameId, false, false, false);
-                Platform PlatformObject = Platforms.GetPlatform(mediaGroupItem.PlatformId, false);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(mediaGroupItem.GameId).PreferredMetadataMapItem;
+                Models.Game GameObject = Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Platform PlatformObject = Platforms.GetPlatform(mediaGroupItem.PlatformId);
                 PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(mediaGroupItem.PlatformId);
 
                 Logging.Log(Logging.LogType.Information, "Media Group", "Beginning build of media group: " + GameObject.Name + " for platform " + PlatformObject.Name);
@@ -557,7 +558,7 @@ namespace gaseous_server.Classes
                 {
                     try
                     {
-                        return Platforms.GetPlatform(PlatformId, false).Name;
+                        return Platforms.GetPlatform(PlatformId).Name;
                     }
                     catch
                     {
