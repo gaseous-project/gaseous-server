@@ -54,7 +54,7 @@ namespace gaseous_server.Models
                     {
                         Logging.Log(Logging.LogType.Information, "Platform Map", "Importing " + mapItem.IGDBName + " from predefined data.");
                         // doesn't exist - add it
-                        WritePlatformMap(mapItem, false, true);
+                        WritePlatformMap(mapItem, false, true, true);
                     }
                 }
             }
