@@ -174,12 +174,10 @@ namespace gaseous_server.SignatureIngestors.XML
 
                                     List<int> gameCountries = new List<int>();
                                     if (
-                                        gameObject.Country != null &&
-                                        gameObject.Country != "Unknown"
+                                        gameObject.Country != null
                                         )
                                     {
-                                        string[] countries = gameObject.Country.Split(",");
-                                        foreach (string country in countries)
+                                        foreach (string country in gameObject.Country.Keys)
                                         {
                                             int countryId = -1;
                                             countryId = Common.GetLookupByCode(Common.LookupTypes.Country, (string)Common.ReturnValueIfNull(country.Trim(), ""));
@@ -208,12 +206,10 @@ namespace gaseous_server.SignatureIngestors.XML
 
                                     List<int> gameLanguages = new List<int>();
                                     if (
-                                        gameObject.Language != null &&
-                                        gameObject.Language != "nolang"
+                                        gameObject.Language != null
                                         )
                                     {
-                                        string[] languages = gameObject.Language.Split(",");
-                                        foreach (string language in languages)
+                                        foreach (string language in gameObject.Language.Keys)
                                         {
                                             int languageId = -1;
                                             languageId = Common.GetLookupByCode(Common.LookupTypes.Language, (string)Common.ReturnValueIfNull(language.Trim(), ""));

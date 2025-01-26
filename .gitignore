@@ -403,5 +403,7 @@ ASALocalRun/
 
 # Local History for Visual Studio
 .localhistory/
+
+.devcontainer/.env
 gaseous-server/.DS_Store
 gaseous-server/wwwroot/emulators/EmulatorJS

@@ -63,6 +63,7 @@ SK|Slovakia
 TH|Thailand
 TR|Turkey
 TW|Taiwan
+UK|United Kingdom
 US|United States
 USA|United States
 VN|Vietnam
