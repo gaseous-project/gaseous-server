@@ -3021,14 +3021,29 @@
       "PSP"
     ],
     "Extensions": {
-      "SupportedFileExtensions": [],
+      "SupportedFileExtensions": [
+        ".CSO",
+        ".ISO",
+        ".PBP"
+      ],
       "UniqueFileExtensions": []
     },
-    "RetroPieDirectoryName": "",
+    "RetroPieDirectoryName": "psp",
     "WebEmulator": {
-      "Type": "",
-      "Core": "",
-      "AvailableWebEmulators": null
+      "Type": "EmulatorJS",
+      "Core": "ppsspp",
+      "AvailableWebEmulators": [
+        {
+          "EmulatorType": "EmulatorJS",
+          "AvailableWebEmulatorCores": [
+            {
+              "Core": "ppsspp",
+              "AlternateCoreName": "",
+              "Default": true
+            }
+          ]
+        }
+      ]
     },
     "Bios": [],
     "EnabledBIOSHashes": []

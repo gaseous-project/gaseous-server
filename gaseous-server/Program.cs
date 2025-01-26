@@ -313,7 +313,24 @@ app.UseDefaultFiles();
 app.UseStaticFiles(new StaticFileOptions
 {
     ServeUnknownFileTypes = true, //allow unkown file types also to be served
-    DefaultContentType = "plain/text" //content type to returned if fileType is not known.
+    DefaultContentType = "plain/text", //content type to returned if fileType is not known.
+    OnPrepareResponse = ctx =>
+    {
+        if (ctx.Context.Request.QueryString.HasValue)
+        {
+            // get query items from query string
+            var queryItems = Microsoft.AspNetCore.WebUtilities.QueryHelpers.ParseQuery(ctx.Context.Request.QueryString.Value);
+            if (queryItems.ContainsKey("page"))
+            {
+                if (queryItems["page"].ToString().ToLower() == "emulator")
+                {
+                    // set the CORS header
+                    ctx.Context.Response.Headers.Add("Cross-Origin-Opener-Policy", "same-origin");
+                    ctx.Context.Response.Headers.Add("Cross-Origin-Embedder-Policy", "require-corp");
+                }
+            }
+        }
+    }
 });
 
 app.MapControllers();
