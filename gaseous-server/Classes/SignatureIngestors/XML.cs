@@ -298,7 +298,11 @@ namespace gaseous_server.SignatureIngestors.XML
                                     }
                                     else
                                     {
-                                        gameId = (int)sigDB.Rows[0][0];
+                                        gameId = (long)(int)sigDB.Rows[0]["Id"];
+
+                                        string gameSourceSql = "UPDATE Signatures_Games SET `Name`=@name, `Description`=@description, `Year`=@year WHERE `Id`=@gameid;";
+                                        dbDict.Add("gameid", gameId);
+                                        db.ExecuteCMD(gameSourceSql, dbDict);
                                     }
 
                                     // insert countries
@@ -355,7 +359,7 @@ namespace gaseous_server.SignatureIngestors.XML
                                             dbDict = new Dictionary<string, object>();
                                             dbDict.Add("gameid", gameId);
                                             dbDict.Add("name", Common.ReturnValueIfNull(romObject.Name, ""));
-                                            dbDict.Add("size", Common.ReturnValueIfNull(romObject.Size, ""));
+                                            dbDict.Add("size", Common.ReturnValueIfNull(romObject.Size, "0"));
                                             dbDict.Add("crc", Common.ReturnValueIfNull(romObject.Crc, "").ToString().ToLower());
                                             dbDict.Add("md5", Common.ReturnValueIfNull(romObject.Md5, "").ToString().ToLower());
                                             dbDict.Add("sha1", Common.ReturnValueIfNull(romObject.Sha1, "").ToString().ToLower());
@@ -390,15 +394,22 @@ namespace gaseous_server.SignatureIngestors.XML
                                                 sigDB = db.ExecuteCMD(sql, dbDict);
 
                                                 romId = Convert.ToInt32(sigDB.Rows[0][0]);
+
+                                                dbDict.Add("romid", romId);
                                             }
                                             else
                                             {
                                                 romId = (int)sigDB.Rows[0][0];
+
+                                                dbDict.Add("romid", romId);
+
+                                                // update the rom
+                                                sql = "UPDATE Signatures_Roms SET `GameId`=@gameid, `Name`=@name, `Size`=@size, `CRC`=@crc, `DevelopmentStatus`=@developmentstatus, `Attributes`=@attributes, `RomType`=@romtype, `RomTypeMedia`=@romtypemedia, `MediaLabel`=@medialabel, `MetadataSource`=@metadatasource, `IngestorVersion`=@ingestorversion WHERE `Id`=@romid;";
+                                                db.ExecuteCMD(sql, dbDict);
                                             }
 
                                             // map the rom to the source
                                             sql = "SELECT * FROM Signatures_RomToSource WHERE SourceId=@sourceid AND RomId=@romid;";
-                                            dbDict.Add("romid", romId);
                                             dbDict.Add("sourceId", sourceId);
 
                                             sigDB = db.ExecuteCMD(sql, dbDict);

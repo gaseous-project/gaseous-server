@@ -147,6 +147,16 @@ namespace gaseous_server.Classes
                                 } while (reader.EndOfStream == false);
                             }
                             break;
+
+                        case 1024:
+                            // attempt to re-import signature dats
+
+                            // delete existing signature sources to allow re-import
+                            Logging.Log(Logging.LogType.Information, "Database Upgrade", "Deleting existing signature sources");
+                            sql = "DELETE FROM Signatures_Sources;";
+                            db.ExecuteNonQuery(sql);
+
+                            break;
                     }
                     break;
             }
