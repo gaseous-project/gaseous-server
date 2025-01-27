@@ -18,7 +18,7 @@
   <ItemGroup>
     <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
-    <PackageReference Include="gaseous-signature-parser" Version="2.3.3" />
+    <PackageReference Include="gaseous-signature-parser" Version="2.3.5" />
     <PackageReference Include="gaseous.IGDB" Version="1.0.2" />
     <PackageReference Include="hasheous-client" Version="1.2.4" />
     <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="13.8.0" />
