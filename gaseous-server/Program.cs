@@ -439,9 +439,12 @@ PlatformMapping.ExtractPlatformMap();
 var platformMap = PlatformMapping.PlatformMap;
 
 // add background tasks
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.SignatureIngestor)
+ProcessQueue.QueueItem signatureIngestor = new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.SignatureIngestor
     );
+signatureIngestor.ForceExecute();
+ProcessQueue.QueueItems.Add(signatureIngestor);
+
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.TitleIngestor)
     );
