@@ -355,7 +355,7 @@ namespace gaseous_server.SignatureIngestors.XML
                                             dbDict = new Dictionary<string, object>();
                                             dbDict.Add("gameid", gameId);
                                             dbDict.Add("name", Common.ReturnValueIfNull(romObject.Name, ""));
-                                            dbDict.Add("size", Common.ReturnValueIfNull(romObject.Size, ""));
+                                            dbDict.Add("size", Common.ReturnValueIfNull(romObject.Size, "0"));
                                             dbDict.Add("crc", Common.ReturnValueIfNull(romObject.Crc, "").ToString().ToLower());
                                             dbDict.Add("md5", Common.ReturnValueIfNull(romObject.Md5, "").ToString().ToLower());
                                             dbDict.Add("sha1", Common.ReturnValueIfNull(romObject.Sha1, "").ToString().ToLower());

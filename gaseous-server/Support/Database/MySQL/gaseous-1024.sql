@@ -18,6 +18,12 @@ CREATE TABLE `Signatures_Games_Languages` (
     CONSTRAINT `GameLanguage` FOREIGN KEY (`GameId`) REFERENCES `Signatures_Games` (`Id`) ON DELETE CASCADE ON UPDATE NO ACTION
 );
 
+ALTER TABLE `Signatures_Games`
+CHANGE `Year` `Year` varchar(50) DEFAULT NULL;
+
+ALTER TABLE `Signatures_Roms`
+CHANGE `MediaLabel` `MediaLabel` varchar(255) DEFAULT NULL;
+
 ALTER TABLE `Games_Roms` ADD COLUMN `RomDataVersion` INT DEFAULT 1;
 
 CREATE TABLE UserProfiles (
