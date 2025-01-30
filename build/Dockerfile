@@ -32,8 +32,14 @@ ENV INDOCKER=1
 WORKDIR /App
 COPY --from=build-env /App/out .
 
+# Install curl
+RUN apt-get update && \
+    apt-get install -y curl && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists
+
 # Configure healthcheck
-HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 CMD curl --fail http://localhost:80/healthCheck || exit 1
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 CMD curl --fail http://localhost:80/api/v1.1/HealthCheck || exit 1
 
 # start gaseous-server
 ENTRYPOINT ["dotnet", "gaseous-server.dll"]
