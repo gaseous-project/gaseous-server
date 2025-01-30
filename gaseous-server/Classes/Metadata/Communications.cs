@@ -283,8 +283,12 @@ namespace gaseous_server.Classes.Metadata
                     {
                         ConfigureHasheousClient(ref hasheous);
 
-                        return await HasheousAPI<T>(Endpoint.ToString(), "slug", Slug);
+                        return await HasheousAPI<T>(SourceType, Endpoint.ToString(), "slug", Slug);
                     }
+
+                case HasheousClient.Models.MetadataSources.TheGamesDb:
+                    // not implemented
+                    return null;
 
                 default:
                     return null;
@@ -470,8 +474,21 @@ namespace gaseous_server.Classes.Metadata
                     {
                         ConfigureHasheousClient(ref hasheous);
 
-                        return await HasheousAPI<T>(Endpoint.ToString(), "id", Id.ToString());
+                        return await HasheousAPI<T>(SourceType, Endpoint.ToString(), "id", Id.ToString());
                     }
+
+                case HasheousClient.Models.MetadataSources.TheGamesDb:
+                    ConfigureHasheousClient(ref hasheous);
+
+                    switch (Endpoint)
+                    {
+                        case MetadataEndpoint.Game:
+                            return await HasheousAPI<T>(SourceType, Endpoint.ToString(), "id", Id.ToString());
+                        default:
+                            return null;
+                    }
+
+                    break;
                 default:
                     return null;
             }
@@ -620,6 +637,9 @@ namespace gaseous_server.Classes.Metadata
         /// <typeparam name="T">
         /// The type of object to return
         /// </typeparam>
+        /// <param name="SourceType">
+        /// The source of the metadata
+        /// </param>
         /// <param name="Endpoint">
         /// The endpoint to access
         /// </param>
@@ -632,7 +652,7 @@ namespace gaseous_server.Classes.Metadata
         /// <returns>
         /// The object requested
         /// </returns>
-        private async Task<T[]> HasheousAPI<T>(string Endpoint, string Fields, string Query)
+        private async Task<T[]> HasheousAPI<T>(HasheousClient.Models.MetadataSources SourceType, string Endpoint, string Fields, string Query)
         {
             Logging.Log(Logging.LogType.Debug, "API Connection", "Accessing API for endpoint: " + Endpoint);
 
@@ -652,7 +672,7 @@ namespace gaseous_server.Classes.Metadata
                 }
 
                 // perform the actual API call
-                var results1 = HasheousAPIFetch<T>(Endpoint, Fields, Query).Result;
+                var results1 = HasheousAPIFetch<T>(SourceType, Endpoint, Fields, Query).Result;
 
                 // increment rate limiter avoidance call count
                 RateLimitAvoidanceCallCount += 1;
@@ -676,7 +696,7 @@ namespace gaseous_server.Classes.Metadata
                             RetryAttempts += 1;
 
                             // perform the actual API call
-                            var results2 = HasheousAPIFetch<T>(Endpoint, Fields, Query).Result;
+                            var results2 = HasheousAPIFetch<T>(SourceType, Endpoint, Fields, Query).Result;
 
                             return results2;
                         }
@@ -695,7 +715,7 @@ namespace gaseous_server.Classes.Metadata
                         RetryAttempts += 1;
 
                         // perform the actual API call
-                        var results3 = HasheousAPIFetch<T>(Endpoint, Fields, Query).Result;
+                        var results3 = HasheousAPIFetch<T>(SourceType, Endpoint, Fields, Query).Result;
 
                         return results3;
 
@@ -711,7 +731,7 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        private async Task<T[]> HasheousAPIFetch<T>(string Endpoint, string Fields, object Query)
+        private async Task<T[]> HasheousAPIFetch<T>(HasheousClient.Models.MetadataSources SourceType, string Endpoint, string Fields, object Query)
         {
             // drop out early if Fields is not valid
             if (Fields != "slug" && Fields != "id")
@@ -1237,11 +1257,15 @@ namespace gaseous_server.Classes.Metadata
             db.ExecuteNonQuery(sql, dbDict);
         }
 
+        static List<HasheousClient.Models.DataObjectItem> hasheousPlatforms = new List<HasheousClient.Models.DataObjectItem>();
         public static void PopulateHasheousPlatformData(long Id)
         {
             // fetch all platforms
             ConfigureHasheousClient(ref hasheous);
-            var hasheousPlatforms = hasheous.GetPlatforms();
+            if (hasheousPlatforms.Count == 0)
+            {
+                hasheousPlatforms = hasheous.GetPlatforms();
+            }
 
             foreach (var hasheousPlatform in hasheousPlatforms)
             {

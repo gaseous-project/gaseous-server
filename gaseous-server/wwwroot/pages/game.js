@@ -19,16 +19,25 @@ function SetupPage() {
         gameData = result;
         console.log(gameData);
 
+        // display metadata attribution
+        let attributionSection = document.getElementById('gamesmetadataprovider');
+        let attributionIcon = document.getElementById('metadata-attribution-icon');
+        let attributionText = document.getElementById('metadata-attribution-text');
         switch (gameData.metadataSource) {
             case "IGDB":
-                let attributionSection = document.getElementById('gamesmetadataprovider');
                 attributionSection.style.display = 'block';
 
-                let attributionIcon = document.getElementById('metadata-attribution-icon');
                 attributionIcon.setAttribute('src', '/images/IGDB_Logo.svg');
 
-                let attributionText = document.getElementById('metadata-attribution-text');
                 attributionText.innerHTML = 'This game\'s metadata is provided by IGDB. <a href="https://www.igdb.com/games/' + gameData.slug + '" class="romlink" target="_blank" rel="noopener noreferrer">Source Page</a>';
+                break;
+
+            case "TheGamesDB":
+                attributionSection.style.display = 'block';
+
+                // attributionIcon.setAttribute('src', '/images/TheGamesDB_Logo.svg');
+
+                attributionText.innerHTML = 'This game\'s metadata is provided by TheGamesDB. <a href="https://thegamesdb.net/game/' + gameData.slug + '" class="romlink" target="_blank" rel="noopener noreferrer">Source Page</a>';
                 break;
 
             default:
@@ -1655,7 +1664,7 @@ function selectScreenshot(index) {
     var gameScreenshots_Selected = document.getElementById('gamescreenshots_gallery_' + index);
     var gameScreenshots_Items = document.getElementsByName('gamescreenshots_gallery_item');
 
-    // set the selction class
+    // set the selection class
     for (var i = 0; i < gameScreenshots_Items.length; i++) {
         if (gameScreenshots_Items[i].id == gameScreenshots_Selected.id) {
             gameScreenshots_Items[i].classList.add('gamescreenshosts_gallery_item_selected');

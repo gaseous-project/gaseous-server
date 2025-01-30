@@ -327,7 +327,8 @@ ORDER BY Platform.`Name`; ";
                 MetadataSources = new List<SystemSettingsModel.MetadataSourceItem>
                 {
                     new SystemSettingsModel.MetadataSourceItem(HasheousClient.Models.MetadataSources.None, false, "", "", Config.MetadataConfiguration.DefaultMetadataSource),
-                    new SystemSettingsModel.MetadataSourceItem(HasheousClient.Models.MetadataSources.IGDB, Config.IGDB.UseHasheousProxy, Config.IGDB.ClientId, Config.IGDB.Secret, Config.MetadataConfiguration.DefaultMetadataSource)
+                    new SystemSettingsModel.MetadataSourceItem(HasheousClient.Models.MetadataSources.IGDB, Config.IGDB.UseHasheousProxy, Config.IGDB.ClientId, Config.IGDB.Secret, Config.MetadataConfiguration.DefaultMetadataSource),
+                    new SystemSettingsModel.MetadataSourceItem(HasheousClient.Models.MetadataSources.TheGamesDb, true, "", "", Config.MetadataConfiguration.DefaultMetadataSource)
                 }
             };
 
@@ -351,16 +352,16 @@ ORDER BY Platform.`Name`; ";
                 Config.MetadataConfiguration.HasheousHost = model.SignatureSource.HasheousHost;
                 Config.MetadataConfiguration.HasheousAPIKey = model.SignatureSource.HasheousAPIKey;
                 Config.MetadataConfiguration.HasheousSubmitFixes = model.SignatureSource.HasheousSubmitFixes;
+
+                // reset the default metadata source to none
+                Config.MetadataConfiguration.DefaultMetadataSource = HasheousClient.Models.MetadataSources.None;
+
                 foreach (SystemSettingsModel.MetadataSourceItem metadataSourceItem in model.MetadataSources)
                 {
                     // configure the default metadata source
                     if (metadataSourceItem.Default == true)
                     {
                         Config.MetadataConfiguration.DefaultMetadataSource = metadataSourceItem.Source;
-                    }
-                    else
-                    {
-                        Config.MetadataConfiguration.DefaultMetadataSource = HasheousClient.Models.MetadataSources.None;
                     }
 
                     // configure the metadata source
@@ -892,7 +893,7 @@ ORDER BY Platform.`Name`; ";
                         case HasheousClient.Models.MetadataSources.IGDB:
                             return true;
                         case HasheousClient.Models.MetadataSources.TheGamesDb:
-                            return true;
+                            return false;
                         default:
                             return false;
                     }

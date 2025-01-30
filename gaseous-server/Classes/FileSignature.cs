@@ -340,7 +340,7 @@ namespace gaseous_server.Classes
                             {
                                 MD5 = hash.md5hash,
                                 SHA1 = hash.sha1hash
-                            });
+                            }, false);
 
                             if (HasheousResult != null)
                             {
