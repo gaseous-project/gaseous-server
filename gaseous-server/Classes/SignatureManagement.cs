@@ -1,4 +1,5 @@
 using System.Data;
+using System.Linq.Expressions;
 using gaseous_server.Models;
 using gaseous_signature_parser.models.RomSignatureObject;
 
@@ -75,14 +76,22 @@ namespace gaseous_server.Classes
                         SignatureSource = (gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType)(Int32)sigDbRow["MetadataSource"]
                     }
                 };
-                string attributeValues = (string)Common.ReturnValueIfNull(sigDbRow["Attributes"], "[]");
-                Dictionary<string, object> attributesDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(attributeValues);
-                if (attributesDict != null)
+                try
                 {
-                    gameItem.Rom.Attributes = [.. attributesDict];
+                    string attributeValues = (string)Common.ReturnValueIfNull(sigDbRow["Attributes"], "[]");
+                    Dictionary<string, object> attributesDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(attributeValues);
+                    if (attributesDict != null)
+                    {
+                        gameItem.Rom.Attributes = [.. attributesDict];
+                    }
+                    else
+                    {
+                        gameItem.Rom.Attributes = new List<KeyValuePair<string, object>>();
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
+                    Logging.Log(Logging.LogType.Warning, "Get Signature", "Error parsing attributes for game " + gameItem.Game.Name + ", attribute string: " + sigDbRow["Attributes"].ToString(), ex);
                     gameItem.Rom.Attributes = new List<KeyValuePair<string, object>>();
                 }
                 GamesList.Add(gameItem);
