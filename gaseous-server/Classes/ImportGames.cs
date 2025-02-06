@@ -158,6 +158,14 @@ namespace gaseous_server.Classes
                 FileInfo fi = new FileInfo(FilePath);
                 FileSignature fileSignature = new FileSignature();
                 gaseous_server.Models.Signatures_Games discoveredSignature = fileSignature.GetFileSignature(GameLibrary.GetDefaultLibrary, Hash, fi, FilePath);
+                if (discoveredSignature.Flags.GameId == 0)
+                {
+                    HasheousClient.Models.Metadata.IGDB.Game? discoveredGame = SearchForGame(discoveredSignature, discoveredSignature.Flags.PlatformId, false);
+                    if (discoveredGame != null)
+                    {
+                        discoveredSignature.MetadataSources.AddGame((long)discoveredGame.Id, discoveredGame.Name, MetadataSources.IGDB);
+                    }
+                }
 
                 // add to database
                 Platform? determinedPlatform = Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId);
@@ -494,9 +502,16 @@ namespace gaseous_server.Classes
             string gameSlug = "Unknown Title";
             if (game != null)
             {
-                gameSlug = game.Slug;
+                if (game.Slug != null)
+                {
+                    gameSlug = game.Slug;
+                }
+                else
+                {
+                    gameSlug = game.Name;
+                }
             }
-            string DestinationPath = Path.Combine(GameLibrary.GetDefaultLibrary.Path, platformSlug);
+            string DestinationPath = Path.Combine(GameLibrary.GetDefaultLibrary.Path, platformSlug, gameSlug);
             if (!Directory.Exists(DestinationPath))
             {
                 Directory.CreateDirectory(DestinationPath);

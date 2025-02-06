@@ -377,9 +377,19 @@ namespace gaseous_server.Classes
 					Platform platform = Metadata.Platforms.GetPlatform((long)dr["id"], metadataSource);
 
 					// fetch the platform metadata from Hasheous
-					if (Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous)
+					if ((long)dr["id"] != 0)
 					{
-						Communications.PopulateHasheousPlatformData((long)dr["id"]);
+						if (Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous)
+						{
+
+							Communications.PopulateHasheousPlatformData((long)dr["id"]);
+						}
+					}
+					else
+					{
+						// set the platform to unknown
+						sql = "UPDATE Platform SET Name = 'Unknown Platform', Slug = 'unknown', PlatformLogo = 0 WHERE Id = 0;";
+						db.ExecuteCMD(sql);
 					}
 
 					// force platformLogo refresh
@@ -438,7 +448,7 @@ namespace gaseous_server.Classes
 						// validation rules: 1) signature must not be null, 2) signature must have a platform ID
 						if (signature == null || signature.Flags.PlatformId == null)
 						{
-							Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Signature for " + dr["RomName"] + " is invalid - skipping metadata refresh");
+							Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Signature for " + dr["Name"] + " is invalid - skipping metadata refresh");
 							StatusCounter += 1;
 							continue;
 						}
@@ -449,7 +459,7 @@ namespace gaseous_server.Classes
 					}
 					catch (Exception ex)
 					{
-						Logging.Log(Logging.LogType.Critical, "Metadata Refresh", "An error occurred while refreshing metadata for " + dr["RomName"], ex);
+						Logging.Log(Logging.LogType.Critical, "Metadata Refresh", "An error occurred while refreshing metadata for " + dr["Name"], ex);
 					}
 
 					StatusCounter += 1;

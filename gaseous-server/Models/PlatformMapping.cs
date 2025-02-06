@@ -452,8 +452,7 @@ namespace gaseous_server.Models
                         {
                             if (Signature.Game != null) { Signature.Game.System = PlatformMapping.IGDBName; }
                         }
-                        Signature.Flags.PlatformId = PlatformMapping.IGDBId;
-                        Signature.Flags.PlatformName = PlatformMapping.IGDBName;
+                        Signature.MetadataSources.AddPlatform(PlatformMapping.IGDBId, PlatformMapping.IGDBName, HasheousClient.Models.MetadataSources.IGDB);
 
                         PlatformFound = true;
 
@@ -476,8 +475,7 @@ namespace gaseous_server.Models
                         {
                             if (Signature.Game != null) { Signature.Game.System = PlatformMapping.IGDBName; }
                         }
-                        Signature.Flags.PlatformId = PlatformMapping.IGDBId;
-                        Signature.Flags.PlatformName = PlatformMapping.IGDBName;
+                        Signature.MetadataSources.AddPlatform(PlatformMapping.IGDBId, PlatformMapping.IGDBName, HasheousClient.Models.MetadataSources.IGDB);
 
                         PlatformFound = true;
 

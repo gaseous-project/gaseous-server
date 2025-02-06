@@ -25,6 +25,8 @@ namespace gaseous_server.Controllers
     [ApiController]
     public class RomsController : Controller
     {
+        static bool uploadInProgress = false;
+
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpPost]
@@ -70,7 +72,14 @@ namespace gaseous_server.Controllers
 
                 // Process uploaded file
                 Classes.ImportGame uploadImport = new ImportGame();
+                // wait until uploadInProgress is false
+                while (uploadInProgress)
+                {
+                    await Task.Delay(1000);
+                }
+                uploadInProgress = true;
                 Dictionary<string, object> RetVal = uploadImport.ImportGameFile((string)UploadedFile["fullpath"], OverridePlatform);
+                uploadInProgress = false;
                 switch (RetVal["type"])
                 {
                     case "rom":
