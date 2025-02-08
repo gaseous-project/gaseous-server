@@ -28,16 +28,17 @@ function SetupPage() {
                 attributionSection.style.display = 'block';
 
                 attributionIcon.setAttribute('src', '/images/IGDB_Logo.svg');
+                attributionIcon.style.display = 'block';
 
                 attributionText.innerHTML = 'This game\'s metadata is provided by IGDB. <a href="https://www.igdb.com/games/' + gameData.slug + '" class="romlink" target="_blank" rel="noopener noreferrer">Source Page</a>';
                 break;
 
-            case "TheGamesDB":
+            case "TheGamesDb":
                 attributionSection.style.display = 'block';
 
                 // attributionIcon.setAttribute('src', '/images/TheGamesDB_Logo.svg');
 
-                attributionText.innerHTML = 'This game\'s metadata is provided by TheGamesDB. <a href="https://thegamesdb.net/game/' + gameData.slug + '" class="romlink" target="_blank" rel="noopener noreferrer">Source Page</a>';
+                attributionText.innerHTML = 'This game\'s metadata is provided by TheGamesDB. <a href="https://thegamesdb.net/game.php?id=' + gameData.id + '" class="romlink" target="_blank" rel="noopener noreferrer">Source Page</a>';
                 break;
 
             default:
@@ -125,13 +126,13 @@ function SetupPage() {
         gameSummaryCover.appendChild(gameImage);
 
         // load companies
-        var gameHeaderDeveloperLabel = document.getElementById('gamedeveloper_label');
-        var gameDeveloperLabel = document.getElementById('gamesummary_developer');
-        var gameDeveloperContent = document.getElementById('gamesummary_developer_content');
-        var gamePublisherLabel = document.getElementById('gamesummary_publishers');
-        var gamePublisherContent = document.getElementById('gamesummary_publishers_content');
-        var gameDeveloperLoaded = false;
-        var gamePublisherLoaded = false;
+        let gameHeaderDeveloperLabel = document.getElementById('gamedeveloper_label');
+        let gameDeveloperLabel = document.getElementById('gamesummary_developer');
+        let gameDeveloperContent = document.getElementById('gamesummary_developer_content');
+        let gamePublisherLabel = document.getElementById('gamesummary_publishers');
+        let gamePublisherContent = document.getElementById('gamesummary_publishers_content');
+        let gameDeveloperLoaded = false;
+        let gamePublisherLoaded = false;
         if (result.involved_companies) {
             ajaxCall('/api/v1.1/Games/' + gameId + '/companies', 'GET', function (result) {
                 var lstDevelopers = [];
@@ -311,7 +312,7 @@ function SetupPage() {
 
         // load screenshots
         var gameScreenshots = document.getElementById('gamescreenshots');
-        if (result.screenshots || result.videos) {
+        if ((result.screenshots && result.screenshots.length > 0) || (result.videos && result.videos.length > 0)) {
             var gameScreenshots_Main = document.getElementById('gamescreenshots_main');
 
             let gameScreenshots_Portal = document.getElementById('gamescreenshots');
@@ -336,7 +337,7 @@ function SetupPage() {
             if (result.videos) {
                 imageIndex = result.videos.length;
             }
-            if (result.screenshots) {
+            if (result.screenshots && result.screenshots.length > 0) {
                 ajaxCall('/api/v1.1/Games/' + gameId + '/screenshots', 'GET', function (screenshotsItem) {
                     for (var i = 0; i < screenshotsItem.length; i++) {
                         var screenshotItem = document.createElement('li');
@@ -357,7 +358,7 @@ function SetupPage() {
             }
 
             // load videos
-            if (result.videos) {
+            if (result.videos && result.videos.length > 0) {
                 ajaxCall('/api/v1.1/Games/' + gameId + '/videos', 'GET', function (result) {
                     var gameScreenshots_vGallery = document.getElementById('gamescreenshots_gallery_panel');
                     for (var i = 0; i < result.length; i++) {
@@ -511,7 +512,7 @@ function LoadGamePlatforms() {
             // create platform name
             let platformName = document.createElement('div');
             platformName.className = 'platform_name';
-            platformName.innerHTML = result[i].name;
+            platformName.innerHTML = '<strong>' + result[i].metadataGameName + '</strong><br />' + result[i].name;
 
             // create platform edit button container
             let platformEditButtonContainer = document.createElement('div');
@@ -906,7 +907,7 @@ class RomManagement {
                                 saveStatesButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstateicon" />';
                             }
 
-                            launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + mediaGroup.platformId + '&gameid=' + this.Platform.metadataMapId + '&romid=' + mediaGroup.id + '&mediagroup=1&rompath=' + romPath + '" class="romstart">Launch</a>';
+                            launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + mediaGroup.platformId + '&gameid=' + this.Platform.metadataMapId + '&romid=' + mediaGroup.id + '&mediagroup=1&rompath=' + romPath + '" class="romstart">Launch with ' + this.Platform.emulatorConfiguration.core + '</a>';
                         }
                     }
 
@@ -1185,7 +1186,7 @@ class RomManagement {
                                         });
                                         saveStatesButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstateicon" />';
                                     }
-                                    launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + gameRomItems[i].platformId + '&gameid=' + this.Platform.metadataMapId + '&romid=' + gameRomItems[i].id + '&mediagroup=0&rompath=' + romPath + '" class="romstart">Launch</a>';
+                                    launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + gameRomItems[i].platformId + '&gameid=' + this.Platform.metadataMapId + '&romid=' + gameRomItems[i].id + '&mediagroup=0&rompath=' + romPath + '" class="romstart">Launch with ' + this.Platform.emulatorConfiguration.core + '</a>';
                                 }
                             }
                         }

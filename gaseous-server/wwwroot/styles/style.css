@@ -1172,7 +1172,7 @@ input[name='filter_panel_range_max'] {
     max-width: 200px;
     min-width: 150px;
     max-height: 200px;
-    min-height: 200px;
+    /* min-height: 200px; */
     background-color: transparent;
 }
 
@@ -2942,7 +2942,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     height: 50px;
     cursor: pointer;
     display: flex;
-    gap: 20px;
+    gap: 10px;
     padding-left: 0;
     align-items: center;
     position: relative;
@@ -2996,8 +2996,11 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .platform_name {
     display: block;
     /* max-width: 75px; */
-    width: 25%;
+    /* width: 25%; */
     height: auto;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
 }
 
 .platform_edit_button_container {

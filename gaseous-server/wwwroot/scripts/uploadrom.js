@@ -178,7 +178,7 @@ class UploadRom {
         }
     }
 
-    MaxUploads = 2;
+    MaxUploads = 1;
     UploadCount = 0;
 }
 

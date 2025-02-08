@@ -26,6 +26,7 @@ namespace gaseous_server.Controllers
     public class RomsController : Controller
     {
         static bool uploadInProgress = false;
+        static DateTime uploadStartTime = DateTime.Now;
 
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
@@ -76,8 +77,17 @@ namespace gaseous_server.Controllers
                 while (uploadInProgress)
                 {
                     await Task.Delay(1000);
+
+                    // escape if upload is taking too long
+                    if (DateTime.Now.Subtract(uploadStartTime).TotalSeconds > 60)
+                    {
+                        uploadInProgress = false;
+                        break;
+                    }
                 }
                 uploadInProgress = true;
+                uploadStartTime = DateTime.Now;
+
                 Dictionary<string, object> RetVal = uploadImport.ImportGameFile((string)UploadedFile["fullpath"], OverridePlatform);
                 uploadInProgress = false;
                 switch (RetVal["type"])

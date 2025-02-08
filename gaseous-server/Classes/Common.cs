@@ -5,6 +5,7 @@ using System.Drawing;
 using System.IO.Compression;
 using System.Reflection;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 using static gaseous_server.Classes.Metadata.Communications;
 
 namespace gaseous_server.Classes
@@ -34,6 +35,22 @@ namespace gaseous_server.Classes
 			DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc);
 			dateTime = dateTime.AddSeconds(UnixTimeStamp).ToLocalTime();
 			return dateTime;
+		}
+
+		public static string StripVersionsFromFileName(string fileName)
+		{
+			fileName = Regex.Replace(fileName, @"v(\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+			fileName = Regex.Replace(fileName, @"Rev (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+			fileName = Regex.Replace(fileName, @"Release (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+			fileName = Regex.Replace(fileName, @"Build (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+			fileName = Regex.Replace(fileName, @"Beta (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+			fileName = Regex.Replace(fileName, @"Alpha (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+			fileName = Regex.Replace(fileName, @"RC (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+			fileName = Regex.Replace(fileName, @"SP (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+			fileName = Regex.Replace(fileName, @"Service Pack (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+			fileName = Regex.Replace(fileName, @"Set (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+
+			return fileName;
 		}
 
 		public class hashObject
@@ -119,6 +136,15 @@ namespace gaseous_server.Classes
 			return Path.GetFullPath(new Uri(path).LocalPath)
 					.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 		}
+
+		public static char[] GetInvalidFileNameChars() => new char[]
+		{
+			'\"', '<', '>', '|', '\0',
+			(char)1, (char)2, (char)3, (char)4, (char)5, (char)6, (char)7, (char)8, (char)9, (char)10,
+			(char)11, (char)12, (char)13, (char)14, (char)15, (char)16, (char)17, (char)18, (char)19, (char)20,
+			(char)21, (char)22, (char)23, (char)24, (char)25, (char)26, (char)27, (char)28, (char)29, (char)30,
+			(char)31, ':', '*', '?', '\\', '/'
+		};
 
 		public static string GetDescription(this Enum value)
 		{

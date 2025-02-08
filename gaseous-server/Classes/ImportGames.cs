@@ -161,7 +161,7 @@ namespace gaseous_server.Classes
                 if (discoveredSignature.Flags.GameId == 0)
                 {
                     HasheousClient.Models.Metadata.IGDB.Game? discoveredGame = SearchForGame(discoveredSignature, discoveredSignature.Flags.PlatformId, false);
-                    if (discoveredGame != null)
+                    if (discoveredGame != null && discoveredGame.Id != null)
                     {
                         discoveredSignature.MetadataSources.AddGame((long)discoveredGame.Id, discoveredGame.Name, MetadataSources.IGDB);
                     }
@@ -457,8 +457,7 @@ namespace gaseous_server.Classes
         private static List<string> GetSearchCandidates(string GameName)
         {
             // remove version numbers from name
-            GameName = Regex.Replace(GameName, @"v(\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
-            GameName = Regex.Replace(GameName, @"Rev (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+            GameName = Common.StripVersionsFromFileName(GameName);
 
             // assumption: no games have () in their titles so we'll remove them
             int idx = GameName.IndexOf('(');

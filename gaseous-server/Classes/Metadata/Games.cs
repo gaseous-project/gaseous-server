@@ -244,6 +244,7 @@ namespace gaseous_server.Classes.Metadata
             string sql = @"
 SELECT DISTINCT
 	view_Games_Roms.MetadataMapId,
+    view_Games_Roms.MetadataGameName,
     view_Games_Roms.GameId,
     view_Games_Roms.PlatformId,
     view_Games_Roms.UserManualLink,
@@ -282,7 +283,7 @@ FROM
     view_Games_Roms AS GFV ON GFV.Id = User_GameFavouriteRoms.RomId
 WHERE
     view_Games_Roms.GameIdType = @sourcetype AND view_Games_Roms.GameId = @gameid
-ORDER BY Platform.`Name`;";
+ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>
             {
                 { "sourcetype", (int)SourceType },
@@ -366,6 +367,7 @@ ORDER BY Platform.`Name`;";
                     Id = platform.Id,
                     Name = platform.Name,
                     MetadataMapId = (long)row["MetadataMapId"],
+                    MetadataGameName = (string)row["MetadataGameName"],
                     Category = platform.Category,
                     emulatorConfiguration = emulatorConfiguration,
                     LastPlayedRomId = LastPlayedRomId,
@@ -416,6 +418,7 @@ ORDER BY Platform.`Name`;";
         public class AvailablePlatformItem : HasheousClient.Models.Metadata.IGDB.Platform
         {
             public long MetadataMapId { get; set; }
+            public string? MetadataGameName { get; set; }
             public PlatformMapping.UserEmulatorConfiguration emulatorConfiguration { get; set; }
             public long? LastPlayedRomId { get; set; }
             public bool? LastPlayedRomIsMediagroup { get; set; }

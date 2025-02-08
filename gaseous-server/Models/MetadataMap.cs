@@ -64,6 +64,10 @@ namespace gaseous_server.Models
                             link = $"https://thegamesdb.net/game.php?id={SourceId}";
                             break;
 
+                        case MetadataSources.RetroAchievements:
+                            link = $"https://retroachievements.org/game/{SourceId}";
+                            break;
+
                         default:
                             link = "";
                             break;

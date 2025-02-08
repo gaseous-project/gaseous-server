@@ -11,6 +11,11 @@ namespace gaseous_server.Classes
 	{
 		private static bool Processing = false;
 
+		public static HasheousClient.Models.MetadataSources[] BlockedMetadataSource = new HasheousClient.Models.MetadataSources[]
+		{
+			HasheousClient.Models.MetadataSources.RetroAchievements
+		};
+
 		public enum MetadataMapSupportDataTypes
 		{
 			UserManualLink
@@ -40,6 +45,10 @@ namespace gaseous_server.Classes
 			}
 			Processing = true;
 
+			// strip version number from name
+			name = Common.StripVersionsFromFileName(name);
+
+			// store the metadata map
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>()
@@ -167,7 +176,7 @@ namespace gaseous_server.Classes
 		/// <remarks>
 		/// This method will return the first metadata map found with the given platformId and name.
 		/// </remarks>
-		public static MetadataMap? GetMetadataMap(long platformId, string name)
+		private static MetadataMap? GetMetadataMap(long platformId, string name)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
@@ -236,7 +245,10 @@ namespace gaseous_server.Classes
 						Preferred = (bool)dr["Preferred"]
 					};
 
-					metadataMap.MetadataMapItems.Add(metadataMapItem);
+					if (!BlockedMetadataSource.Contains(metadataMapItem.SourceType))
+					{
+						metadataMap.MetadataMapItems.Add(metadataMapItem);
+					}
 				}
 
 				return metadataMap;
