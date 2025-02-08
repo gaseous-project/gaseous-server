@@ -23,8 +23,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "screenshots", "screenshots"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-cli", "gaseous-cli\gaseous-cli.csproj", "{419CC4E4-8932-4E4A-B027-5521AA0CBA85}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hasheous-client", "..\home\vscode\hasheous-client\hasheous-client\hasheous-client.csproj", "{5EAB59DE-ABAB-444C-B56B-378E3881521F}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,10 +37,6 @@ Global
 		{419CC4E4-8932-4E4A-B027-5521AA0CBA85}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{419CC4E4-8932-4E4A-B027-5521AA0CBA85}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{419CC4E4-8932-4E4A-B027-5521AA0CBA85}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5EAB59DE-ABAB-444C-B56B-378E3881521F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5EAB59DE-ABAB-444C-B56B-378E3881521F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5EAB59DE-ABAB-444C-B56B-378E3881521F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5EAB59DE-ABAB-444C-B56B-378E3881521F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
