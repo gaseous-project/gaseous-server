@@ -7,6 +7,8 @@ var selectedScreenshot = 0;
 var remapCallCounter = 0;
 var remapCallCounterMax = 0;
 
+let contentSource = 'None';
+
 function SetupPage() {
     let mappingScript = document.createElement('script');
     mappingScript.src = '/pages/settings/mapping.js';
@@ -17,6 +19,7 @@ function SetupPage() {
     ajaxCall('/api/v1.1/Games/' + gameId + '?nonce=' + nonce, 'GET', function (result) {
         // populate games page
         gameData = result;
+        contentSource = gameData.metadataSource;
         console.log(gameData);
 
         // display metadata attribution
@@ -63,7 +66,7 @@ function SetupPage() {
         // get alt name
         var gameTitleAltLabel = document.getElementById('gametitle_alts');
         if (result.alternative_names) {
-            ajaxCall('/api/v1.1/Games/' + gameId + '/alternativename', 'GET', function (result) {
+            ajaxCall('/api/v1.1/Games/' + gameId + '/alternativename?sourceType=' + contentSource, 'GET', function (result) {
                 var altNames = '';
                 for (var i = 0; i < result.length; i++) {
                     if (altNames.length > 0) {
@@ -107,7 +110,7 @@ function SetupPage() {
         if (result.cover) {
             ajaxCall('/api/v1.1/Games/' + gameId + '/cover', 'GET', function (coverResult) {
                 if (coverResult) {
-                    gameImage.src = '/api/v1.1/Games/' + gameId + '/cover/' + coverResult.id + '/image/cover_big/' + coverResult.imageId + '.jpg';
+                    gameImage.src = '/api/v1.1/Games/' + gameId + '/cover/' + coverResult.id + '/image/cover_big/' + coverResult.imageId + '.jpg?sourceType=' + contentSource;
 
                     loadArtwork(result, coverResult);
                 } else {
@@ -134,7 +137,7 @@ function SetupPage() {
         let gameDeveloperLoaded = false;
         let gamePublisherLoaded = false;
         if (result.involved_companies) {
-            ajaxCall('/api/v1.1/Games/' + gameId + '/companies', 'GET', function (result) {
+            ajaxCall('/api/v1.1/Games/' + gameId + '/companies?sourceType=' + contentSource, 'GET', function (result) {
                 var lstDevelopers = [];
                 var lstPublishers = [];
 
@@ -182,7 +185,7 @@ function SetupPage() {
         }
 
         // load statistics
-        ajaxCall('/api/v1.1/Statistics/Games/' + gameId, 'GET', function (result) {
+        ajaxCall('/api/v1.1/Statistics/Games/' + gameId + '?sourceType=' + contentSource, 'GET', function (result) {
             var gameStat_lastPlayed = document.getElementById('gamestatistics_lastplayed_value');
             var gameStat_timePlayed = document.getElementById('gamestatistics_timeplayed_value');
             if (result) {
@@ -206,7 +209,7 @@ function SetupPage() {
         });
 
         // load favourites
-        ajaxCall('/api/v1.1/Games/' + gameId + '/favourite', 'GET', function (result) {
+        ajaxCall('/api/v1.1/Games/' + gameId + '/favourite?sourceType=' + contentSource, 'GET', function (result) {
             var gameFavButton = document.getElementById('gamestatistics_favourite_button');
             var gameFavIcon = document.createElement('img');
             gameFavIcon.id = "gamestatistics_favourite";
@@ -241,7 +244,7 @@ function SetupPage() {
         let gameSummaryRatings = document.getElementById('gamesummary_ratings');
         let gameSummaryRatingsContent = document.getElementById('gamesummary_ratings_content');
         if (result.age_ratings) {
-            ajaxCall('/api/v1.1/Games/' + gameId + '/agerating', 'GET', function (result) {
+            ajaxCall('/api/v1.1/Games/' + gameId + '/agerating?sourceType=' + contentSource, 'GET', function (result) {
                 let classTable = document.createElement('table');
 
                 let SpotlightClassifications = GetRatingsBoards();
@@ -294,7 +297,7 @@ function SetupPage() {
         var gameSummaryGenres = document.getElementById('gamesumarry_genres');
         var gameSummaryGenresContent = document.getElementById('gamesumarry_genres_content');
         if (result.genres) {
-            ajaxCall('/api/v1.1/Games/' + gameId + '/genre', 'GET', function (result) {
+            ajaxCall('/api/v1.1/Games/' + gameId + '/genre?sourceType=' + contentSource, 'GET', function (result) {
                 for (var i = 0; i < result.length; i++) {
                     var genreLabel = document.createElement('span');
                     genreLabel.className = 'gamegenrelabel';
@@ -338,13 +341,13 @@ function SetupPage() {
                 imageIndex = result.videos.length;
             }
             if (result.screenshots && result.screenshots.length > 0) {
-                ajaxCall('/api/v1.1/Games/' + gameId + '/screenshots', 'GET', function (screenshotsItem) {
+                ajaxCall('/api/v1.1/Games/' + gameId + '/screenshots?sourceType=' + contentSource, 'GET', function (screenshotsItem) {
                     for (var i = 0; i < screenshotsItem.length; i++) {
                         var screenshotItem = document.createElement('li');
                         screenshotItem.id = 'gamescreenshots_gallery_' + imageIndex;
                         screenshotItem.setAttribute('name', 'gamescreenshots_gallery_item');
-                        screenshotItem.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/screenshots/' + screenshotsItem[i].id + '/image/screenshot_thumb/' + screenshotsItem[i].imageId + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
-                        screenshotItem.setAttribute('data-url', '/api/v1.1/Games/' + gameId + '/screenshots/' + screenshotsItem[i].id + '/image/screenshot_thumb/' + screenshotsItem[i].imageId + '.jpg');
+                        screenshotItem.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/screenshots/' + screenshotsItem[i].id + '/image/screenshot_thumb/' + screenshotsItem[i].imageId + '.jpg?sourceType=' + contentSource + '"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
+                        screenshotItem.setAttribute('data-url', '/api/v1.1/Games/' + gameId + '/screenshots/' + screenshotsItem[i].id + '/image/screenshot_thumb/' + screenshotsItem[i].imageId + '.jpg?sourceType=' + contentSource);
                         screenshotItem.setAttribute('imageid', imageIndex);
                         screenshotItem.setAttribute('imagetype', 0);
                         screenshotItem.className = 'gamescreenshots_gallery_item';
@@ -359,7 +362,7 @@ function SetupPage() {
 
             // load videos
             if (result.videos && result.videos.length > 0) {
-                ajaxCall('/api/v1.1/Games/' + gameId + '/videos', 'GET', function (result) {
+                ajaxCall('/api/v1.1/Games/' + gameId + '/videos?sourceType=' + contentSource, 'GET', function (result) {
                     var gameScreenshots_vGallery = document.getElementById('gamescreenshots_gallery_panel');
                     for (var i = 0; i < result.length; i++) {
                         var vScreenshotItem = document.createElement('li');
@@ -412,7 +415,7 @@ function SetupPage() {
 
         // load similar
         var gameSummarySimilar = document.getElementById('gamesummarysimilar');
-        ajaxCall('/api/v1.1/Games/' + gameId + '/Related', 'GET', function (result) {
+        ajaxCall('/api/v1.1/Games/' + gameId + '/Related?sourceType=' + contentSource, 'GET', function (result) {
             if (result.games.length > 0) {
                 gameSummarySimilar.removeAttribute('style');
 
@@ -436,7 +439,7 @@ function SetupPage() {
 
 function LoadGamePlatforms() {
     // get platforms
-    ajaxCall('/api/v1.1/Games/' + gameId + '/platforms', 'GET', async function (result) {
+    ajaxCall('/api/v1.1/Games/' + gameId + '/platforms?sourceType=' + contentSource, 'GET', async function (result) {
         let platformContainer = document.getElementById('gamesummaryplatformscontent');
         platformContainer.innerHTML = '';
         for (let i = 0; i < result.length; i++) {
@@ -1645,11 +1648,11 @@ function loadArtwork(game, cover) {
     // default background should be the artworks
     if (game.artworks) {
         for (let i = 0; i < game.artworks.length; i++) {
-            URLList.push("/api/v1.1/Games/" + gameId + "/artwork/" + game.artworks[i] + "/image/original/" + game.artworks[i] + ".jpg");
+            URLList.push("/api/v1.1/Games/" + gameId + "/artwork/" + game.artworks[i] + "/image/original/" + game.artworks[i] + ".jpg?sourceType=" + contentSource);
         }
     } else if (game.cover) {
         // backup background is the cover artwork
-        URLList.push("/api/v1.1/Games/" + gameId + "/cover/" + cover.id + "/image/original/" + cover.imageId + ".jpg");
+        URLList.push("/api/v1.1/Games/" + gameId + "/cover/" + cover.id + "/image/original/" + cover.imageId + ".jpg?sourceType=" + contentSource);
     } else {
         // backup background is a random image
         var randomInt = randomIntFromInterval(1, 3);

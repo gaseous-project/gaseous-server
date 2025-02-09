@@ -484,6 +484,10 @@ namespace gaseous_server.Classes.Metadata
                     {
                         case MetadataEndpoint.Game:
                             return await HasheousAPI<T>(SourceType, Endpoint.ToString(), "id", Id.ToString());
+
+                        case MetadataEndpoint.Genre:
+                            return await HasheousAPI<T>(SourceType, Endpoint.ToString(), "id", Id.ToString());
+
                         default:
                             return null;
                     }
@@ -937,6 +941,13 @@ namespace gaseous_server.Classes.Metadata
 
                             // return the game object
                             return new T[] { (T)(object)gameResult };
+
+                        case "genres":
+                            HasheousClient.Models.Metadata.TheGamesDb.Genres genreResult = new HasheousClient.Models.Metadata.TheGamesDb.Genres();
+                            genreResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.TheGamesDb.Genres>(Endpoint, HasheousClient.Hasheous.MetadataProvider.TheGamesDb, long.Parse(Query.ToString()));
+
+                            // return the genre object
+                            return new T[] { (T)(object)genreResult };
 
                         default:
                             throw new Exception("Type not supported");

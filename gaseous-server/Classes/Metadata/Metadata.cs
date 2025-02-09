@@ -227,6 +227,40 @@ namespace gaseous_server.Classes.Metadata
                             // connect to hasheous api and get TheGamesDb metadata and convert it to IGDB metadata
                             var theGamesDbGameResult = await comms.APIComm<HasheousClient.Models.Metadata.TheGamesDb.GamesByGameID>(SourceType, Communications.MetadataEndpoint.Game, Id);
 
+                            // get genres from TheGamesDb if we haven't before
+                            Storage.CacheStatus genreStatus = Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.TheGamesDb, "Genre", 1);
+                            if (genreStatus == Storage.CacheStatus.NotPresent || genreStatus == Storage.CacheStatus.Expired)
+                            {
+                                var theGamesDbGenres = await comms.APIComm<HasheousClient.Models.Metadata.TheGamesDb.Genres>(SourceType, Communications.MetadataEndpoint.Genre, 1);
+                                if (theGamesDbGenres != null)
+                                {
+                                    HasheousClient.Models.Metadata.TheGamesDb.Genres genres = theGamesDbGenres[0];
+
+                                    foreach (string genre in genres.data.genres.Keys)
+                                    {
+                                        Storage.CacheStatus genreCacheStatus = Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.TheGamesDb, "Genre", genres.data.genres[genre].id);
+                                        switch (genreCacheStatus)
+                                        {
+                                            case Storage.CacheStatus.NotPresent:
+                                                Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, new HasheousClient.Models.Metadata.IGDB.Genre
+                                                {
+                                                    Id = genres.data.genres[genre].id,
+                                                    Name = genres.data.genres[genre].name
+                                                }, false);
+                                                break;
+
+                                            case Storage.CacheStatus.Expired:
+                                                Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, new HasheousClient.Models.Metadata.IGDB.Genre
+                                                {
+                                                    Id = genres.data.genres[genre].id,
+                                                    Name = genres.data.genres[genre].name
+                                                }, true);
+                                                break;
+                                        }
+                                    }
+                                }
+                            }
+
                             // create a new IGDB game object
                             HasheousClient.Models.Metadata.TheGamesDb.Game theGamesDbGame = theGamesDbGameResult[0].data.games[0];
 
@@ -425,7 +459,8 @@ namespace gaseous_server.Classes.Metadata
                                 Id = theGamesDbGame.id,
                                 Name = theGamesDbGame.game_title,
                                 Summary = theGamesDbGame.overview,
-                                Slug = string.Join("-", theGamesDbGame.game_title.Trim().ToLower().Replace(" ", "-").Split(Common.GetInvalidFileNameChars())) + "-" + theGamesDbGame.id
+                                Slug = string.Join("-", theGamesDbGame.game_title.Trim().ToLower().Replace(" ", "-").Split(Common.GetInvalidFileNameChars())) + "-" + theGamesDbGame.id,
+                                Genres = theGamesDbGame.genres?.Select(g => (long)g).ToList() ?? new List<long>()
                             };
 
                             if (theGamesDbGame.release_date != null && theGamesDbGame.release_date != "")
