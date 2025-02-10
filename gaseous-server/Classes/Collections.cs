@@ -278,7 +278,7 @@ namespace gaseous_server.Classes
                 List<Classes.Filters.FilterItem> filteredPlatforms = (List<Classes.Filters.FilterItem>)FilterDict["platforms"];
                 foreach (Filters.FilterItem filterItem in filteredPlatforms)
                 {
-                    platforms.Add(Platforms.GetPlatform(filterItem.Id));
+                    platforms.Add(Platforms.GetPlatform((long)filterItem.Id));
                 }
             }
 

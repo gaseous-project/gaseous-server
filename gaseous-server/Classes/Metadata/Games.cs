@@ -446,8 +446,10 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
 
             public MinimalGameItem(Game gameObject)
             {
+                this.PlatformIds = gameObject.Platforms;
                 this.Id = gameObject.Id;
                 this.MetadataMapId = gameObject.MetadataMapId;
+                this.MetadataSource = gameObject.MetadataSource;
                 this.Name = gameObject.Name;
                 this.Slug = gameObject.Slug;
                 this.Summary = gameObject.Summary;
@@ -457,8 +459,76 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                 this.Artworks = gameObject.Artworks;
                 this.FirstReleaseDate = gameObject.FirstReleaseDate;
 
+                // compile genres
+                this.Genres = new List<string>();
+                if (gameObject.Genres != null)
+                {
+                    foreach (long genreId in gameObject.Genres)
+                    {
+                        HasheousClient.Models.Metadata.IGDB.Genre? genre = Classes.Metadata.Genres.GetGenres(gameObject.MetadataSource, genreId);
+                        if (genre != null)
+                        {
+                            if (!this.Genres.Contains(genre.Name))
+                            {
+                                this.Genres.Add(genre.Name);
+                            }
+                        }
+                    }
+                }
+
+                // compile themes
+                this.Themes = new List<string>();
+                if (gameObject.Themes != null)
+                {
+                    foreach (long themeId in gameObject.Themes)
+                    {
+                        HasheousClient.Models.Metadata.IGDB.Theme? theme = Classes.Metadata.Themes.GetGame_Themes(gameObject.MetadataSource, themeId);
+                        if (theme != null)
+                        {
+                            if (!this.Themes.Contains(theme.Name))
+                            {
+                                this.Themes.Add(theme.Name);
+                            }
+                        }
+                    }
+                }
+
+                // compile players
+                this.Players = new List<string>();
+                if (gameObject.GameModes != null)
+                {
+                    foreach (long playerId in gameObject.GameModes)
+                    {
+                        HasheousClient.Models.Metadata.IGDB.GameMode? player = Classes.Metadata.GameModes.GetGame_Modes(gameObject.MetadataSource, playerId);
+                        if (player != null)
+                        {
+                            if (!this.Players.Contains(player.Name))
+                            {
+                                this.Players.Add(player.Name);
+                            }
+                        }
+                    }
+                }
+
+                // compile perspectives
+                this.Perspectives = new List<string>();
+                if (gameObject.PlayerPerspectives != null)
+                {
+                    foreach (long perspectiveId in gameObject.PlayerPerspectives)
+                    {
+                        HasheousClient.Models.Metadata.IGDB.PlayerPerspective? perspective = Classes.Metadata.PlayerPerspectives.GetGame_PlayerPerspectives(gameObject.MetadataSource, perspectiveId);
+                        if (perspective != null)
+                        {
+                            if (!this.Perspectives.Contains(perspective.Name))
+                            {
+                                this.Perspectives.Add(perspective.Name);
+                            }
+                        }
+                    }
+                }
+
                 // compile age ratings
-                this.AgeRatings = new List<object>();
+                this.AgeRatings = new List<HasheousClient.Models.Metadata.IGDB.AgeRating>();
                 if (gameObject.AgeRatings != null)
                 {
                     foreach (long ageRatingId in gameObject.AgeRatings)
@@ -472,20 +542,71 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                 }
             }
 
+            public List<long>? PlatformIds { get; set; }
             public long? Id { get; set; }
             public long? MetadataMapId { get; set; }
+            public HasheousClient.Models.MetadataSources MetadataSource { get; set; }
             public long Index { get; set; }
+            public string Alpha
+            {
+                get
+                {
+                    if (string.IsNullOrEmpty(Name) == false)
+                    {
+                        string firstLetter = Name.Substring(0, 1).ToUpper();
+                        if (char.IsLetter(firstLetter[0]))
+                        {
+                            return firstLetter;
+                        }
+                        else
+                        {
+                            return "#";
+                        }
+                    }
+                    else
+                    {
+                        return "#";
+                    }
+                }
+            }
             public string Name { get; set; }
+            public string NameThe
+            {
+                get
+                {
+                    // if Name starts with "The ", move it to the end
+                    if (Name.StartsWith("The ", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Name.Substring(4) + ", The";
+                    }
+                    else
+                    {
+                        return Name;
+                    }
+                }
+            }
+            public List<string> AlternateNames { get; set; }
             public string Slug { get; set; }
             public string Summary { get; set; }
             public double? TotalRating { get; set; }
             public int? TotalRatingCount { get; set; }
             public bool HasSavedGame { get; set; } = false;
             public bool IsFavourite { get; set; } = false;
+            public List<string> Genres { get; set; }
+            public List<string> Themes { get; set; }
+            public List<string> Players { get; set; }
+            public List<string> Perspectives { get; set; }
             public DateTimeOffset? FirstReleaseDate { get; set; }
             public object Cover { get; set; }
             public List<long> Artworks { get; set; }
-            public List<object> AgeRatings { get; set; }
+            public List<HasheousClient.Models.Metadata.IGDB.AgeRating> AgeRatings { get; set; }
+            public AgeGroups.AgeRestrictionGroupings AgeGroup
+            {
+                get
+                {
+                    return AgeGroups.GetAgeGroupFromAgeRatings(AgeRatings);
+                }
+            }
         }
     }
 }

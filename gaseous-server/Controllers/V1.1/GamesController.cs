@@ -483,7 +483,7 @@ namespace gaseous_server.Controllers.v1_1
 
             string sql = @"
 SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
-SELECT DISTINCT
+SELECT
     Game.Id,
     Game.MetadataMapId,
     Game.GameIdType,
@@ -501,6 +501,11 @@ SELECT DISTINCT
     Game.ParentGame,
     Game.AgeRatings,
     Game.AgeGroupId,
+    Game.Genres,
+    Game.GameModes,
+    Game.PlayerPerspectives,
+    Game.Themes,
+    CONCAT('[', GROUP_CONCAT(DISTINCT MetadataMap.PlatformId ORDER BY MetadataMap.PlatformId SEPARATOR ','), ']') AS Platforms,
     Game.RomCount,
     RomSavedStates.RomSaveCount,
     RomGroupSavedStates.MediaGroupSaveCount,
@@ -541,6 +546,10 @@ FROM
         AND GameState.IsMediaGroup = 1
         AND GameState.UserId = @userid
     GROUP BY RomMediaGroup.GameId) RomGroupSavedStates ON Game.MetadataMapId = RomGroupSavedStates.GameId
+        JOIN
+	MetadataMapBridge ON Game.Id = MetadataMapBridge.MetadataSourceId AND MetadataMapBridge.Preferred = 1
+		JOIN
+	MetadataMap ON MetadataMapBridge.ParentMapId = MetadataMap.Id
         LEFT JOIN
     Relation_Game_Genres ON Game.Id = Relation_Game_Genres.GameId AND Relation_Game_Genres.GameSourceId = Game.GameIdType
         LEFT JOIN
@@ -550,7 +559,8 @@ FROM
         LEFT JOIN
     Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId AND Relation_Game_Themes.GameSourceId = Game.GameIdType
         LEFT JOIN
-    Favourites ON Game.MetadataMapId = Favourites.GameId AND Favourites.UserId = @userid " + whereClause + " " + havingClause + " " + orderByClause;
+    Favourites ON Game.MetadataMapId = Favourites.GameId AND Favourites.UserId = @userid " + whereClause + " " + havingClause + " GROUP BY Game.Id " + orderByClause;
+            Console.WriteLine(sql);
 
             // if (returnGames == true)
             // {
