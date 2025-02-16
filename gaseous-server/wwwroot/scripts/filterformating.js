@@ -46,7 +46,7 @@ function formatFilterPanel(containerElement, result) {
             "name": "Favourite",
             "gameCount": 0
         }
-    ], true, false);
+    ], true, false, false);
 
     // platforms
     if (result.platforms) {
@@ -69,19 +69,19 @@ function formatFilterPanel(containerElement, result) {
     panel.appendChild(containerPanelReleaseYear);
 
     // players
-    if (result.gamemodes) {
-        buildFilterPanel(panel, 'gamemode', 'Players', result.gamemodes, true, false);
+    if (result.players) {
+        buildFilterPanel(panel, 'players', 'Players', result.players, true, false);
     }
 
     // player perspectives
-    if (result.playerperspectives) {
-        buildFilterPanel(panel, 'playerperspective', 'Player Perspectives', result.playerperspectives, true, false);
+    if (result.perspectives) {
+        buildFilterPanel(panel, 'perspectives', 'Player Perspectives', result.perspectives, true, false);
     }
 
     // age groups
-    if (result.agegroupings) {
-        if (result.agegroupings.length > 1) {
-            buildFilterPanel(panel, 'agegroupings', 'Age Groups', result.agegroupings, true, false);
+    if (result.ageGroups) {
+        if (result.ageGroups.length > 1) {
+            buildFilterPanel(panel, 'ageGroups', 'Age Groups', result.ageGroups, true, false);
         }
     }
 
@@ -153,7 +153,7 @@ function formatFilterPanel(containerElement, result) {
     executeFilter1_1(pageNumber);
 }
 
-function buildFilterPanel(targetElement, headerString, friendlyHeaderString, valueList, showToggle, initialDisplay) {
+function buildFilterPanel(targetElement, headerString, friendlyHeaderString, valueList, showToggle, initialDisplay, showTags = true) {
     if (showToggle == false) { initialDisplay = true; }
     var displayCookie = getCookie('filter_panel_box_' + headerString);
     if (displayCookie) {
@@ -167,17 +167,23 @@ function buildFilterPanel(targetElement, headerString, friendlyHeaderString, val
     if (initialDisplay == false) {
         containerPanel.setAttribute('style', 'display: none;');
     }
-    for (var i = 0; i < valueList.length; i++) {
-        var tags;
+    for (const value of valueList) {
+        if (value.gameCount > 0 || !showTags) {
+            let tags;
 
-        if (valueList[i].gameCount) {
-            tags = [
-                {
-                    'label': valueList[i].gameCount
-                }
-            ];
+            if (value.gameCount || showTags) {
+                tags = [
+                    {
+                        'label': value.gameCount
+                    }
+                ];
+            }
+            let valueId = value.id;
+            if (valueId === undefined) {
+                valueId = value.name;
+            }
+            containerPanel.appendChild(buildFilterPanelItem(headerString, valueId, value.name, tags));
         }
-        containerPanel.appendChild(buildFilterPanelItem(headerString, valueList[i].id, valueList[i].name, tags));
     }
     targetElement.appendChild(containerPanel);
 }

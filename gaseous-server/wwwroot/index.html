@@ -25,12 +25,14 @@
         ];
 
         let scriptLinks = [
-            "/scripts/filterformating.js",
-            "/scripts/gamesformating.js",
+            "/scripts/classifications.js",
+            "/scripts/filtering.js",
+            "/scripts/rendergames.js",
             "/scripts/main.js",
             "/scripts/modals.js",
             "/scripts/preferences.js",
             "/scripts/account.js",
+            "/scripts/database.js",
             "/scripts/libraries.js",
             "/scripts/notifications.js",
             "/scripts/rominfo.js",
@@ -69,6 +71,9 @@
         let AgeRatingStrings = {};
         let AgeRatingGroups = {};
         let emulatorDebugMode = "false";
+
+        let db = undefined;
+        let filter = undefined;
 
         let backgroundImageHandler = undefined;
 
@@ -158,6 +163,12 @@
                                             // user is signed in - start setting up the application
                                             console.log("User is logged in");
                                             userProfile = await response.json();
+
+                                            // set up system database
+                                            db = new Database();
+                                            filter = new Filtering();
+                                            await db.Initialize();
+                                            await db.SyncContent();
 
                                             // load page banner
                                             await LoadPageContent('banner', 'banner_target');

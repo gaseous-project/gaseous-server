@@ -451,19 +451,53 @@ h3 {
 #content {
     margin-top: 35px;
     padding-top: 5px;
-    padding-left: 5px;
-    padding-right: 5px;
+    padding-left: 0px;
+    padding-right: 0px;
     z-index: -100;
 }
 
-#games_filter_scroller {
+#games_filter_panel {
     position: fixed;
+    width: 220px;
+    top: 40px;
+    bottom: 0px;
+    margin-right: 0px;
+}
+
+.games_filter_controls {
+    position: absolute;
+    z-index: 10;
+    top: 0px;
+    left: 0px;
+    right: 20px;
+    height: 31px;
+    background-color: var(--section-header-background);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--section-header-background);
+    /* border-radius: var(--standard-radius); */
+    margin-bottom: 10px;
+    padding-left: 10px;
+    padding-top: 6px;
+    padding-bottom: 7px;
+    padding-right: 10px;
+    text-align: left;
+    font-weight: bold;
+    /* box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+    -webkit-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+    -moz-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44); */
+}
+
+#games_filter_scroller {
+    position: absolute;
     width: 210px;
     overflow-y: hidden;
     overflow-x: hidden;
     overscroll-behavior: contain;
-    top: 60px;
-    bottom: 20px;
+    top: 0px;
+    bottom: 0px;
     /* margin-right: 10px; */
 }
 
@@ -516,7 +550,7 @@ h3 {
 }
 
 #games_filter {
-
+    margin-top: 60px;
     width: 200px;
     /* border-style: solid;
     border-width: 1px;
@@ -666,11 +700,15 @@ input[name='filter_panel_range_max'] {
     text-decoration: underline;
 }
 
-#games_home {
+.games_home {
     display: absolute;
     margin-left: 210px;
-    margin-top: 20px;
-    right: 20px;
+    /* margin-top: 20px; */
+    right: 0px;
+}
+
+.games_home_expanded {
+    margin-left: 0px;
 }
 
 #games_home_box {
@@ -759,7 +797,7 @@ input[name='filter_panel_range_max'] {
     display: flex;
     position: relative;
     padding: 3px;
-    z-index: -1;
+    /* z-index: -1; */
 }
 
 .filter_panel_item_checkbox {
@@ -770,26 +808,30 @@ input[name='filter_panel_range_max'] {
     margin-right: 15px;
 }
 
-#games_library_controls {
+.games_library_controls {
     position: fixed;
     z-index: 10;
     left: 225px;
-    right: 10px;
+    right: 0px;
     background-color: var(--section-header-background);
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     border-style: solid;
     border-width: 1px;
     border-color: var(--section-header-background);
-    border-radius: var(--standard-radius);
+    /* border-radius: var(--standard-radius); */
     margin-bottom: 10px;
     padding-top: 7px;
     padding-bottom: 7px;
     padding-right: 20px;
     text-align: right;
-    box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+    /* box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
     -webkit-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
-    -moz-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+    -moz-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44); */
+}
+
+.games_library_controls_expanded {
+    left: 0px;
 }
 
 #rom_library_controls {
@@ -3069,4 +3111,29 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     margin-right: 13px;
     margin-left: 10px;
     filter: invert(1);
+}
+
+@-webkit-keyframes rotating {
+    from {
+        -webkit-transform: rotate(0deg);
+    }
+
+    to {
+        -webkit-transform: rotate(360deg);
+    }
+}
+
+@keyframes rotating {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.rotating {
+    -webkit-animation: rotating 2s linear infinite;
+    animation: rotating 2s linear infinite;
 }

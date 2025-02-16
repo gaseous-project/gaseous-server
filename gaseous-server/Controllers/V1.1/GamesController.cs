@@ -560,14 +560,13 @@ FROM
     Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId AND Relation_Game_Themes.GameSourceId = Game.GameIdType
         LEFT JOIN
     Favourites ON Game.MetadataMapId = Favourites.GameId AND Favourites.UserId = @userid " + whereClause + " " + havingClause + " GROUP BY Game.Id " + orderByClause;
-            Console.WriteLine(sql);
 
-            // if (returnGames == true)
-            // {
-            //     sql += " LIMIT @pageOffset, @pageSize";
-            //     whereParams.Add("pageOffset", pageSize * (pageNumber - 1));
-            //     whereParams.Add("pageSize", pageSize);
-            // }
+            if (returnGames == true)
+            {
+                sql += " LIMIT @pageOffset, @pageSize";
+                whereParams.Add("pageOffset", pageSize * (pageNumber - 1));
+                whereParams.Add("pageSize", pageSize);
+            }
 
             DataTable dbResponse = db.ExecuteCMD(sql, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
 

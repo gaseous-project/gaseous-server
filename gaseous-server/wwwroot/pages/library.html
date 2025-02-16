@@ -1,18 +1,28 @@
-﻿<div id="games_filter_scroller">
+﻿<div id="games_filter_panel">
+    <div class="games_filter_controls">
+        <div class="games_library_controlblock">
+            <span class="games_library_label">Filter</span>
+        </div>
+        <div id="games_filter_button_column" class="games_library_button" style="float: right;">
+            <img src="/images/column.svg" alt="Toggle Filter" title="Toggle Filter" class="games_library_button_icon" />
+        </div>
+    </div>
+    <div id="games_filter_scroller">
+    </div>
 </div>
-<div id="games_home">
+<div id="games_home" class="games_home">
     <div id="games_home_box">
-        <div id="games_library_controls">
-            <div id="games_library_button_pagedview" class="games_library_button"
+        <div id="games_library_controls" class="games_library_controls">
+            <!-- <div id="games_library_button_pagedview" class="games_library_button"
                 onclick="document.getElementById('games_library').innerHTML = ''; SetPreference('LibraryPagination', 'paged', executeFilter1_1(1));">
                 <img src="/images/viewpaged.svg" alt="Paged View" title="Paged View"
                     class="games_library_button_icon" />
-            </div>
-            <div id="games_library_button_infiniteview" class="games_library_button"
+            </div> -->
+            <!-- <div id="games_library_button_infiniteview" class="games_library_button"
                 onclick="document.getElementById('games_library').innerHTML = ''; SetPreference('LibraryPagination', 'infinite', executeFilter1_1(1));">
                 <img src="/images/viewinfinite.svg" alt="Continuous View" title="Continuous View"
                     class="games_library_button_icon" />
-            </div>
+            </div> -->
 
             <!-- list or icon view - true for list view, false for icon view -->
             <div id="games_library_button_iconview" class="games_library_button"
@@ -24,7 +34,7 @@
                 <img src="/images/viewlist.svg" alt="List View" title="List View" class="games_library_button_icon" />
             </div>
 
-            <div class="games_library_controlblock">
+            <!-- <div class="games_library_controlblock">
                 <span class="games_library_label">Page size: </span>
             </div>
             <div id="games_library_pagesize" class="games_library_controlblock" style="text-align: left;">
@@ -40,7 +50,7 @@
                     <option value="90">90</option>
                     <option value="100">100</option>
                 </select>
-            </div>
+            </div> -->
 
             <div class="games_library_controlblock">
                 <span class="games_library_label">Order by: </span>
