@@ -57,15 +57,16 @@ namespace gaseous_server.Classes.Metadata
         {
             Game? parentGame = null;
 
+            if (result.ParentGame != null)
+            {
+                parentGame = GetGame(result.MetadataSource, (long)result.ParentGame);
+            }
+
             // get cover art from parent if this has no cover
             if (result.Cover == null)
             {
-                if (result.ParentGame != null)
-                {
-                    Logging.Log(Logging.LogType.Information, "Game Metadata", "Game has no cover art, fetching cover art from parent game");
-                    parentGame = GetGame(result.MetadataSource, (long)result.ParentGame);
-                    result.Cover = parentGame.Cover;
-                }
+                Logging.Log(Logging.LogType.Information, "Game Metadata", "Game has no cover art, fetching cover art from parent game");
+                result.Cover = parentGame.Cover;
             }
 
             // get missing metadata from parent if this is a port

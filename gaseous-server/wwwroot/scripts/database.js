@@ -14,9 +14,6 @@ class Database {
     // initialize the database
     async Initialize() {
         return new Promise((resolve, reject) => {
-            // delete the database
-            // indexedDB.deleteDatabase('gaseous');
-
             let openRequest = indexedDB.open('gaseous', 1);
 
             openRequest.addEventListener('error', () => {
@@ -66,9 +63,29 @@ class Database {
         });
     }
 
+    databaseTerminated = false;
+    async DeleteDatabase() {
+        return new Promise((resolve, reject) => {
+            // delete the database
+            let deleteDb = indexedDB.deleteDatabase('gaseous');
+            this.databaseTerminated = true;
+
+            clearInterval(this.TimerRefreshDatabase);
+
+            // sleep for 2 seconds
+            setTimeout(() => {
+                console.log('Database deleted');
+                resolve();
+            }, 3000);
+        });
+    }
+
     // this is the database refresh timer, it's responsible for refreshing the database every 1 minute and 10 seconds
     TimerRefreshDatabase =
         setInterval(async () => {
+            if (this.databaseTerminated === true) {
+                return;
+            }
             console.log('Refreshing database');
             await this.SyncContent();
         }, 70000);

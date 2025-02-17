@@ -24,6 +24,7 @@
 
     /* page */
     --page-font-colour: rgb(255, 255, 255);
+    --page-font-colour-subtitle: rgb(143, 143, 143);
     --selected-item: rgba(0, 0, 170, 0.5);
     --selected-item-hover: rgb(0, 0, 255);
     --hover-selectable: rgb(255, 255, 0);

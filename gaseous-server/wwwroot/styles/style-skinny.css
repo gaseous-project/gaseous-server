@@ -1,0 +1,65 @@
+@media screen and (max-width: 1200px) {
+
+    /* applies when the viewport is < 1201px */
+
+}
+
+@media screen and (max-width: 1024px) {
+
+    /* applies when the viewport is < 1025px */
+
+}
+
+@media screen and (max-width: 889px) {
+
+    /* applies when the viewport is < 890px */
+    #banner_header_label {
+        display: none;
+    }
+
+    .game_tile {
+        width: 80px;
+        min-height: 130px;
+    }
+
+    .game_tile_image {
+        max-width: 100px;
+        min-width: 75px;
+        max-height: 100px;
+    }
+
+    .game_tile_box_ratingbanner {
+        display: none;
+    }
+
+    .game_tile_label {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        text-align: left;
+
+        @supports (-webkit-line-clamp: 2) {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: initial;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            text-align: left;
+        }
+    }
+
+    .rating_image_overlay {
+        max-width: 24px;
+        max-height: 24px;
+    }
+
+    .games_library_alpha_pager_letter {
+        font-size: 8px;
+    }
+}
+
+@media screen and (max-width: 749px) {
+
+    /* applies when the viewport is < 750px */
+}

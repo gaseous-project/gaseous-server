@@ -822,7 +822,8 @@ input[name='filter_panel_range_max'] {
     /* border-radius: var(--standard-radius); */
     margin-bottom: 10px;
     padding-top: 7px;
-    padding-bottom: 7px;
+    padding-bottom: 6px;
+    padding-left: 10px;
     padding-right: 20px;
     text-align: right;
     /* box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
@@ -1116,6 +1117,12 @@ input[name='filter_panel_range_max'] {
 
 .game_tile_label {
     font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.game_tile_subtitle {
+    font-weight: normal;
+    color: var(--page-font-colour-subtitle);
 }
 
 .game_tile_label_row {

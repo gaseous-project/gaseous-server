@@ -1,23 +1,10 @@
 async function SetupPage() {
     // setup view controls
     document.getElementById('games_filter_button_column').addEventListener('click', function () {
-        let filterPanel = document.getElementById('games_filter_panel');
-        let libraryControls = document.getElementById('games_library_controls');
-        let gamesHome = document.getElementById('games_home');
-
-        if (filterPanel.style.display == 'none') {
-            filterPanel.style.display = 'block';
-            libraryControls.classList.remove('games_library_controls_expanded');
-            gamesHome.classList.remove('games_home_expanded');
-        } else {
-            filterPanel.style.display = 'none';
-            libraryControls.classList.add('games_library_controls_expanded');
-            gamesHome.classList.add('games_home_expanded');
-        }
+        FilterDisplayToggle();
     });
-    $('#games_library_pagesize_select').select2();
-    $('#games_library_orderby_select').select2();
-    $('#games_library_orderby_direction_select').select2();
+
+    FilterDisplayToggle(GetPreference("LibraryShowFilter", true), false);
 
     let showTitle = GetPreference("LibraryShowGameTitle", true);
     let showRatings = GetPreference("LibraryShowGameRating", true);
@@ -84,16 +71,80 @@ async function SetupPage() {
                 // remove all children from the gamesElement
                 gamesElement.innerHTML = '';
 
-                // add the sorted children back to the gamesElement
+                // add the sorted children back to the gamesElement, and update the alpha pager
+                let alphaPager = document.getElementById('games_library_alpha_pager');
+                alphaPager.innerHTML = '';
+                let alphaAdded = [];
                 for (const gameTile of gameTiles) {
                     gamesElement.appendChild(gameTile);
+
+                    if (gameTile.getAttribute('data-alpha') != null) {
+                        let alpha = gameTile.getAttribute('data-alpha');
+                        if (alphaAdded.includes(alpha)) {
+                            continue;
+                        }
+                        let alphaButton = document.createElement('span');
+                        alphaButton.classList.add('games_library_alpha_pager_letter');
+                        alphaButton.innerText = alpha;
+                        alphaButton.addEventListener('click', function () {
+                            // scroll to the first game with the alpha
+                            let gameTiles = Array.from(document.getElementsByClassName('game_tile'));
+                            let gameTile = gameTiles.find(x => x.getAttribute('data-alpha') == alpha);
+                            if (gameTile) {
+                                // gameTile.scrollIntoView();
+                                // scroll to the game tile with the alpha - 100px
+                                window.scrollTo(0, gameTile.offsetTop - 100);
+                            }
+                        });
+                        alphaPager.appendChild(alphaButton);
+                        alphaAdded.push(alpha);
+                    }
                 }
             };
+
+            filter.OrderBySelector(document.getElementById('games_library_orderby_select'));
+            filter.OrderDirectionSelector(document.getElementById('games_library_orderby_direction_select'));
+
+            let orderBySelect = $('#games_library_orderby_select');
+            orderBySelect.select2();
+            if (filter.filterSelections['orderBy']) {
+                orderBySelect.val(filter.filterSelections['orderBy']).trigger('change');
+            }
+            orderBySelect.on('change', function (e) {
+                filter.SetOrderBy(orderBySelect.val());
+            });
+
+            let orderDirectionSelect = $('#games_library_orderby_direction_select');
+            orderDirectionSelect.select2();
+            if (filter.filterSelections['orderDirection']) {
+                orderDirectionSelect.val(filter.filterSelections['orderDirection']).trigger('change');
+            }
+            orderDirectionSelect.on('change', function (e) {
+                filter.SetOrderDirection(orderDirectionSelect.val());
+            });
 
             filter.ApplyFilter();
         });
 
         await db.GetGamesFilter();
+    }
+}
+
+function FilterDisplayToggle(display, storePreference = true) {
+    let filterPanel = document.getElementById('games_filter_panel');
+    let libraryControls = document.getElementById('games_library_controls');
+    let gamesHome = document.getElementById('games_home');
+
+    if (filterPanel.style.display == 'none' || display === "true") {
+        filterPanel.style.display = 'block';
+        libraryControls.classList.remove('games_library_controls_expanded');
+        gamesHome.classList.remove('games_home_expanded');
+        if (storePreference === true) { SetPreference("LibraryShowFilter", true); }
+    } else {
+        filterPanel.style.display = 'none';
+        libraryControls.classList.add('games_library_controls_expanded');
+        gamesHome.classList.add('games_home_expanded');
+        if (storePreference === true) { SetPreference("LibraryShowFilter", false); }
     }
 }
 

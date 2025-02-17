@@ -1,13 +1,49 @@
 class Filtering {
-    constructor(applyCallback) {
+    constructor(applyCallback, orderBySelector, orderDirectionSelector) {
         this.applyCallback = applyCallback;
+        this.orderBySelector = orderBySelector;
+        this.orderDirectionSelector = orderDirectionSelector;
+
+        if (this.orderBySelector) {
+            this.OrderBySelector(this.orderBySelector);
+        }
+
+        if (this.orderDirectionSelector) {
+            this.OrderDirectionSelector(this.orderDirectionSelector);
+        }
     }
 
-    #filterSelections = {
+    OrderBySelector(selector) {
+        this.orderBySelector = selector;
+        this.orderBySelector.addEventListener('change', () => {
+            this.filterSelections['orderBy'] = this.orderBySelector.value;
+            this.ApplyFilter();
+        });
+    }
+
+    SetOrderBy(value) {
+        this.filterSelections['orderBy'] = value;
+        this.ApplyFilter();
+    }
+
+    OrderDirectionSelector(selector) {
+        this.orderDirectionSelector = selector;
+        this.orderDirectionSelector.addEventListener('change', () => {
+            this.filterSelections['orderDirection'] = this.orderDirectionSelector.value;
+            this.ApplyFilter();
+        });
+    }
+
+    SetOrderDirection(value) {
+        this.filterSelections['orderDirection'] = value;
+        this.ApplyFilter();
+    }
+
+    filterSelections = {
 
     }
 
-    #filterCollapsed = {
+    filterCollapsed = {
 
     }
 
@@ -18,31 +54,31 @@ class Filtering {
 
     ApplyFilter() {
         // delete entries from filterSelections that are false or empty
-        for (let key in this.#filterSelections) {
-            if (typeof this.#filterSelections[key] === 'object') {
-                for (let subKey in this.#filterSelections[key]) {
-                    if (this.#filterSelections[key][subKey] === false) {
-                        delete this.#filterSelections[key][subKey];
+        for (let key in this.filterSelections) {
+            if (typeof this.filterSelections[key] === 'object') {
+                for (let subKey in this.filterSelections[key]) {
+                    if (this.filterSelections[key][subKey] === false) {
+                        delete this.filterSelections[key][subKey];
                     }
                 }
             } else {
-                if (this.#filterSelections[key] === false || this.#filterSelections[key] === '') {
-                    delete this.#filterSelections[key];
+                if (this.filterSelections[key] === false || this.filterSelections[key] === '') {
+                    delete this.filterSelections[key];
                 }
             }
         }
 
         // delete keys from filterSelections that are empty
-        for (let key in this.#filterSelections) {
-            if (typeof this.#filterSelections[key] === 'object') {
-                if (Object.keys(this.#filterSelections[key]).length === 0) {
-                    delete this.#filterSelections[key];
+        for (let key in this.filterSelections) {
+            if (typeof this.filterSelections[key] === 'object') {
+                if (Object.keys(this.filterSelections[key]).length === 0) {
+                    delete this.filterSelections[key];
                 }
             }
         }
 
         // store the filter selections in local storage
-        db.SetData('settings', 'libraryFilter', this.#filterSelections);
+        db.SetData('settings', 'libraryFilter', this.filterSelections);
 
         let results = [];
 
@@ -50,7 +86,7 @@ class Filtering {
         let transaction = db.db.transaction('games', 'readonly');
         let store = transaction.objectStore('games');
 
-        let filter = this.#filterSelections;
+        let filter = this.filterSelections;
 
         let request = store.openCursor();
         request.onsuccess = async () => {
@@ -203,11 +239,83 @@ class Filtering {
         };
 
         transaction.oncomplete = () => {
-            // sort results by name
-            results.sort((a, b) => {
-                return a.name.localeCompare(b.name);
-            });
+            // sort the results
+            if (this.filterSelections['orderBy'] === undefined) {
+                this.filterSelections['orderBy'] = 'Name';
+            }
+            switch (this.filterSelections['orderBy']) {
+                case 'Name':
+                    results.sort((a, b) => {
+                        return a.name.localeCompare(b.name);
+                    });
+                    break;
 
+                case 'NameThe':
+                    results.sort((a, b) => {
+                        return a.nameThe.localeCompare(b.nameThe);
+                    });
+                    break;
+
+                case 'Rating':
+                    results.sort((a, b) => {
+                        if (a.totalRating === undefined) {
+                            a.totalRating = 0;
+                        }
+                        if (b.totalRating === undefined) {
+                            b.totalRating = 0;
+                        }
+                        return Number(a.totalRating) - Number(b.totalRating);
+                    });
+                    break;
+
+                case 'RatingCount':
+                    results.sort((a, b) => {
+                        if (a.totalRatingCount === undefined) {
+                            a.totalRatingCount = 0;
+                        }
+                        if (b.totalRatingCount === undefined) {
+                            b.totalRatingCount = 0;
+                        }
+                        return Number(a.totalRatingCount) - Number(b.totalRatingCount);
+                    });
+                    break;
+
+                case 'ReleaseDate':
+                    results.sort((a, b) => {
+                        let aDate;
+                        let bDate;
+
+                        if (a.firstReleaseDate === undefined) {
+                            aDate = "0000-01-01";
+                        } else {
+                            aDate = a.firstReleaseDate.split('T')[0];
+                        }
+
+                        if (b.firstReleaseDate === undefined) {
+                            bDate = "0000-01-01";
+                        } else {
+                            bDate = b.firstReleaseDate.split('T')[0];
+                        }
+
+                        if (aDate > bDate) {
+                            return 1;
+                        } else if (aDate < bDate) {
+                            return -1;
+                        } else {
+                            return 0;
+                        }
+                    });
+                    break;
+            }
+
+            if (this.filterSelections['orderDirection'] === undefined) {
+                this.filterSelections['orderDirection'] = 'Ascending';
+            }
+            if (this.filterSelections['orderDirection'] === 'Descending') {
+                results.reverse();
+            }
+
+            // add a result index to each result
             for (let i = 0; i < results.length; i++) {
                 results[i]['resultIndex'] = i;
             }
@@ -222,7 +330,7 @@ class Filtering {
         let data = await db.GetData('settings', 'libraryFilter');
 
         if (data) {
-            this.#filterSelections = data.value;
+            this.filterSelections = data.value;
         }
     }
 
@@ -230,14 +338,14 @@ class Filtering {
         let data = await db.GetData('settings', 'libraryFilterCollapsed');
 
         if (data) {
-            this.#filterCollapsed = data.value;
+            this.filterCollapsed = data.value;
         }
     }
 
     async #StoreFilterCollapsedStatus(section, collapsed) {
-        this.#filterCollapsed[section] = collapsed;
+        this.filterCollapsed[section] = collapsed;
 
-        db.SetData('settings', 'libraryFilterCollapsed', this.#filterCollapsed);
+        db.SetData('settings', 'libraryFilterCollapsed', this.filterCollapsed);
     }
 
     BuildFilterTable(filter) {
@@ -249,15 +357,15 @@ class Filtering {
 
         // free text search
         let searchCollapsed = true;
-        if (this.#filterCollapsed['Title Search'] !== undefined) {
-            searchCollapsed = this.#filterCollapsed['Title Search'];
+        if (this.filterCollapsed['Title Search'] !== undefined) {
+            searchCollapsed = this.filterCollapsed['Title Search'];
         }
         panel.appendChild(this.#BuildBasicPanel('Title Search', true, searchCollapsed, this.#BuildStringPanel('search', 'Title Search'), null));
 
         // settings filter
         let settingsCollapsed = true;
-        if (this.#filterCollapsed['Settings'] !== undefined) {
-            settingsCollapsed = this.#filterCollapsed['Settings'];
+        if (this.filterCollapsed['Settings'] !== undefined) {
+            settingsCollapsed = this.filterCollapsed['Settings'];
         }
         panel.appendChild(this.#BuildBasicPanel('Settings', true, settingsCollapsed, this.#BuildCheckList('settings', [
             {
@@ -274,57 +382,57 @@ class Filtering {
 
         // platforms filter
         let platformsCollapsed = false;
-        if (this.#filterCollapsed['Platforms'] !== undefined) {
-            platformsCollapsed = this.#filterCollapsed['Platforms'];
+        if (this.filterCollapsed['Platforms'] !== undefined) {
+            platformsCollapsed = this.filterCollapsed['Platforms'];
         }
         panel.appendChild(this.#BuildBasicPanel('Platforms', true, platformsCollapsed, this.#BuildCheckList("Platforms", filter["platforms"], true), null));
 
         // genres filter
         let genresCollapsed = true;
-        if (this.#filterCollapsed['Genres'] !== undefined) {
-            genresCollapsed = this.#filterCollapsed['Genres'];
+        if (this.filterCollapsed['Genres'] !== undefined) {
+            genresCollapsed = this.filterCollapsed['Genres'];
         }
         panel.appendChild(this.#BuildBasicPanel('Genres', true, genresCollapsed, this.#BuildCheckList("Genres", filter["genres"], true), null));
 
         // themes filter
         let themesCollapsed = true;
-        if (this.#filterCollapsed['Themes'] !== undefined) {
-            themesCollapsed = this.#filterCollapsed['Themes'];
+        if (this.filterCollapsed['Themes'] !== undefined) {
+            themesCollapsed = this.filterCollapsed['Themes'];
         }
         panel.appendChild(this.#BuildBasicPanel('Themes', true, themesCollapsed, this.#BuildCheckList("Themes", filter["themes"], true), null));
 
         // release year filter
         let releaseYearCollapsed = true;
-        if (this.#filterCollapsed['Release Year'] !== undefined) {
-            releaseYearCollapsed = this.#filterCollapsed['Release Year'];
+        if (this.filterCollapsed['Release Year'] !== undefined) {
+            releaseYearCollapsed = this.filterCollapsed['Release Year'];
         }
         panel.appendChild(this.#BuildBasicPanel('Release Year', true, releaseYearCollapsed, this.#BuildRangePanel('releaseyear', 'Release Year', 1960, new Date().getFullYear()), null));
 
         // players filter
         let playersCollapsed = true;
-        if (this.#filterCollapsed['Players'] !== undefined) {
-            playersCollapsed = this.#filterCollapsed['Players'];
+        if (this.filterCollapsed['Players'] !== undefined) {
+            playersCollapsed = this.filterCollapsed['Players'];
         }
         panel.appendChild(this.#BuildBasicPanel('Players', true, playersCollapsed, this.#BuildCheckList("Players", filter["players"], true), null));
 
         // player perspectives filter
         let perspectivesCollapsed = true;
-        if (this.#filterCollapsed['Player Perspectives'] !== undefined) {
-            perspectivesCollapsed = this.#filterCollapsed['Player Perspectives'];
+        if (this.filterCollapsed['Player Perspectives'] !== undefined) {
+            perspectivesCollapsed = this.filterCollapsed['Player Perspectives'];
         }
         panel.appendChild(this.#BuildBasicPanel('Player Perspectives', true, perspectivesCollapsed, this.#BuildCheckList("perspectives", filter["perspectives"], true), null));
 
         // user rating filter
         let userRatingCollapsed = true;
-        if (this.#filterCollapsed['User Rating'] !== undefined) {
-            userRatingCollapsed = this.#filterCollapsed['User Rating'];
+        if (this.filterCollapsed['User Rating'] !== undefined) {
+            userRatingCollapsed = this.filterCollapsed['User Rating'];
         }
         panel.appendChild(this.#BuildBasicPanel('User Rating', true, userRatingCollapsed, this.#BuildRangePanel('userrating', 'User Rating', 0, 100), null));
 
         // user vote count
         let userVoteCountCollapsed = true;
-        if (this.#filterCollapsed['User Votes'] !== undefined) {
-            userVoteCountCollapsed = this.#filterCollapsed['User Votes'];
+        if (this.filterCollapsed['User Votes'] !== undefined) {
+            userVoteCountCollapsed = this.filterCollapsed['User Votes'];
         }
         panel.appendChild(this.#BuildBasicPanel('User Votes', true, userVoteCountCollapsed, this.#BuildRangePanel('uservotecount', 'User Votes', 0, 1000000), null));
 
@@ -389,13 +497,13 @@ class Filtering {
         input.id = fieldName;
         input.placeholder = displayName;
         input.name = fieldName;
-        if (this.#filterSelections[fieldName] !== undefined) {
-            input.value = this.#filterSelections[fieldName];
+        if (this.filterSelections[fieldName] !== undefined) {
+            input.value = this.filterSelections[fieldName];
         }
         input.addEventListener('keyup', (event) => {
             // input.addEventListener('keypress', (event) => {
             // if (event.key === 'Enter') {
-            this.#filterSelections[fieldName] = input.value;
+            this.filterSelections[fieldName] = input.value;
             this.ApplyFilter();
             // }
         });
@@ -446,16 +554,16 @@ class Filtering {
             input.id = fieldName + '_' + id;
             input.name = fieldName;
             // input.value = checkItem;
-            if (this.#filterSelections[fieldName] !== undefined) {
-                if (this.#filterSelections[fieldName][id] !== undefined) {
-                    input.checked = this.#filterSelections[fieldName];
+            if (this.filterSelections[fieldName] !== undefined) {
+                if (this.filterSelections[fieldName][id] !== undefined) {
+                    input.checked = this.filterSelections[fieldName];
                 }
             }
             input.addEventListener('change', () => {
-                if (!this.#filterSelections[fieldName]) {
-                    this.#filterSelections[fieldName] = {};
+                if (!this.filterSelections[fieldName]) {
+                    this.filterSelections[fieldName] = {};
                 }
-                this.#filterSelections[fieldName][id] = input.checked;
+                this.filterSelections[fieldName][id] = input.checked;
                 this.ApplyFilter();
             });
 
@@ -489,10 +597,10 @@ class Filtering {
         minInput.min = min;
         minInput.max = max;
         minInput.placeholder = min;
-        if (this.#filterSelections[fieldName] !== undefined) {
-            if (this.#filterSelections[fieldName].min !== undefined) {
+        if (this.filterSelections[fieldName] !== undefined) {
+            if (this.filterSelections[fieldName].min !== undefined) {
                 selectCheckbox.checked = true;
-                minInput.value = this.#filterSelections[fieldName].min;
+                minInput.value = this.filterSelections[fieldName].min;
             }
         }
 
@@ -503,10 +611,10 @@ class Filtering {
         maxInput.min = min;
         maxInput.max = max;
         maxInput.placeholder = max;
-        if (this.#filterSelections[fieldName] !== undefined) {
-            if (this.#filterSelections[fieldName].max !== undefined) {
+        if (this.filterSelections[fieldName] !== undefined) {
+            if (this.filterSelections[fieldName].max !== undefined) {
                 selectCheckbox.checked = true;
-                maxInput.value = this.#filterSelections[fieldName].max;
+                maxInput.value = this.filterSelections[fieldName].max;
             }
         }
 
@@ -515,22 +623,22 @@ class Filtering {
                 minInput.value = '';
                 maxInput.value = '';
 
-                if (this.#filterSelections[fieldName]) {
-                    delete this.#filterSelections[fieldName];
+                if (this.filterSelections[fieldName]) {
+                    delete this.filterSelections[fieldName];
                 }
             } else {
-                if (!this.#filterSelections[fieldName]) {
-                    this.#filterSelections[fieldName] = {
+                if (!this.filterSelections[fieldName]) {
+                    this.filterSelections[fieldName] = {
                         min: null,
                         max: null
                     };
                 }
 
-                if (!this.#filterSelections[fieldName].min) {
-                    this.#filterSelections[fieldName].min = Number(minInput.value);
+                if (!this.filterSelections[fieldName].min) {
+                    this.filterSelections[fieldName].min = Number(minInput.value);
                 }
-                if (!this.#filterSelections[fieldName].max) {
-                    this.#filterSelections[fieldName].max = Number(maxInput.value);
+                if (!this.filterSelections[fieldName].max) {
+                    this.filterSelections[fieldName].max = Number(maxInput.value);
                 }
             }
 
@@ -538,28 +646,28 @@ class Filtering {
         });
 
         minInput.addEventListener('change', () => {
-            if (!this.#filterSelections[fieldName]) {
-                this.#filterSelections[fieldName] = {
+            if (!this.filterSelections[fieldName]) {
+                this.filterSelections[fieldName] = {
                     min: null,
                     max: null
                 };
             }
 
-            this.#filterSelections[fieldName].min = Number(minInput.value);
+            this.filterSelections[fieldName].min = Number(minInput.value);
             selectCheckbox.checked = true;
 
             this.ApplyFilter();
         });
 
         maxInput.addEventListener('change', () => {
-            if (!this.#filterSelections[fieldName]) {
-                this.#filterSelections[fieldName] = {
+            if (!this.filterSelections[fieldName]) {
+                this.filterSelections[fieldName] = {
                     min: null,
                     max: null
                 };
             }
 
-            this.#filterSelections[fieldName].max = Number(maxInput.value);
+            this.filterSelections[fieldName].max = Number(maxInput.value);
             selectCheckbox.checked = true;
 
             this.ApplyFilter();

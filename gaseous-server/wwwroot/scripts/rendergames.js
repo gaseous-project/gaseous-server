@@ -14,12 +14,13 @@ class GameIcon {
         if (data.resultIndex) {
             gameTile.setAttribute('data-index', data.resultIndex);
         }
-        gameTile.addEventListener('click', () => {
-            window.location.href = '/index.html?page=game&id=' + data.metadataMapId;
-        });
+        gameTile.setAttribute('data-alpha', data.alpha);
 
         let gameTileBox = document.createElement('div');
         gameTileBox.classList.add('game_tile_box');
+        gameTileBox.addEventListener('click', () => {
+            window.location.href = '/index.html?page=game&id=' + data.metadataMapId;
+        });
         gameTile.appendChild(gameTileBox);
 
         // cover art
@@ -28,7 +29,7 @@ class GameIcon {
         gameTileImage.classList.add('lazy');
         gameTileImage.setAttribute('loading', 'lazy');
         if (data.cover) {
-            gameTileImage.setAttribute('src', '/api/v1.1/Games/' + data.metadataMapId + '/cover/94082/image/original/94081.jpg');
+            gameTileImage.setAttribute('src', '/api/v1.1/Games/' + data.metadataMapId + '/cover/94082/image/original/94081.jpg?sourceType=' + data.metadataSource);
         } else {
             gameTileImage.setAttribute('src', '/images/unknowngame.png');
         }
@@ -141,6 +142,15 @@ class GameIcon {
             gameBoxTitle.classList.add('game_tile_label');
             gameBoxTitle.innerHTML = data.name;
             gameTile.appendChild(gameBoxTitle);
+
+            // add game tile subtitle
+            if (data.firstReleaseDate !== undefined && data.firstReleaseDate !== null) {
+                let gameBoxSubtitle = document.createElement('div');
+                gameBoxSubtitle.classList.add('game_tile_label');
+                gameBoxSubtitle.classList.add('game_tile_subtitle');
+                gameBoxSubtitle.innerHTML = new Date(data.firstReleaseDate).getFullYear();
+                gameTile.appendChild(gameBoxSubtitle);
+            }
         }
 
         return gameTile;
