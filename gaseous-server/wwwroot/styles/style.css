@@ -997,7 +997,9 @@ input[name='filter_panel_range_max'] {
 .game_tile_small {
     min-height: 50px;
     min-width: 50px;
-    width: 105px;
+    width: 80px;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 .game_tile:hover {
@@ -1118,6 +1120,23 @@ input[name='filter_panel_range_max'] {
 .game_tile_label {
     font-weight: bold;
     margin-bottom: 5px;
+}
+
+.game_tile_label_small {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+
+    @supports (-webkit-line-clamp: 2) {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: initial;
+        display: -webkit-box;
+        -webkit-line-clamp: 2;
+        -webkit-box-orient: vertical;
+        text-align: left;
+    }
 }
 
 .game_tile_subtitle {
@@ -2404,7 +2423,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     padding-left: 0px;
     padding-right: 0px;
     padding-top: 0px;
-    padding-bottom: 0px;
+    padding-bottom: 2px;
     min-width: 10px;
     height: 10px;
     background-color: darkslategray;
@@ -3107,8 +3126,8 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 .homegame-item>.game_tile_small {
-    max-width: 160px;
-    width: 160px;
+    /* max-width: 160px;
+    width: 160px; */
     white-space: normal;
 }
 

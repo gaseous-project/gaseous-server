@@ -48,6 +48,7 @@ async function SetupPage() {
                 // render new games
                 let gamesElement = document.getElementById('games_library');
 
+                coverURLList = [];
                 for (const game of games) {
                     // if the game tile already exists, skip it
                     let existingGameTile = document.getElementById('game_tile_' + game.metadataMapId);
@@ -60,7 +61,16 @@ async function SetupPage() {
                     let gameObj = new GameIcon(game);
                     let gameTile = await gameObj.Render(showTitle, showRatings, showClassification, classificationDisplayOrder);
                     gamesElement.appendChild(gameTile);
+
+                    if (game.cover) {
+                        let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg?sourceType=' + game.metadataSource;
+                        if (!coverURLList.includes(coverUrl)) {
+                            coverURLList.push(coverUrl);
+                        }
+                    }
                 }
+
+                backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true);
 
                 // get all elemens in the node gamesElement and sort by the data-index attribute
                 gameTiles = Array.from(gamesElement.children);
@@ -147,5 +157,7 @@ function FilterDisplayToggle(display, storePreference = true) {
         if (storePreference === true) { SetPreference("LibraryShowFilter", false); }
     }
 }
+
+let coverURLList = [];
 
 SetupPage();

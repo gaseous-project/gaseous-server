@@ -52,41 +52,46 @@ class Filtering {
         await this.#LoadFilterCollapsedStatus();
     }
 
-    ApplyFilter() {
+    ApplyFilter(filterOverride) {
+        let filter = this.filterSelections;
+        if (filterOverride) {
+            filter = filterOverride;
+        }
+
         // delete entries from filterSelections that are false or empty
-        for (let key in this.filterSelections) {
-            if (typeof this.filterSelections[key] === 'object') {
-                for (let subKey in this.filterSelections[key]) {
-                    if (this.filterSelections[key][subKey] === false) {
-                        delete this.filterSelections[key][subKey];
+        for (let key in filter) {
+            if (typeof filter[key] === 'object') {
+                for (let subKey in filter[key]) {
+                    if (filter[key][subKey] === false) {
+                        delete filter[key][subKey];
                     }
                 }
             } else {
-                if (this.filterSelections[key] === false || this.filterSelections[key] === '') {
-                    delete this.filterSelections[key];
+                if (filter[key] === false || filter[key] === '') {
+                    delete filter[key];
                 }
             }
         }
 
         // delete keys from filterSelections that are empty
-        for (let key in this.filterSelections) {
-            if (typeof this.filterSelections[key] === 'object') {
-                if (Object.keys(this.filterSelections[key]).length === 0) {
-                    delete this.filterSelections[key];
+        for (let key in filter) {
+            if (typeof filter[key] === 'object') {
+                if (Object.keys(filter[key]).length === 0) {
+                    delete filter[key];
                 }
             }
         }
 
-        // store the filter selections in local storage
-        db.SetData('settings', 'libraryFilter', this.filterSelections);
+        if (!filterOverride) {
+            // store the filter selections in local storage
+            db.SetData('settings', 'libraryFilter', filter);
+        }
 
         let results = [];
 
         // return a list of ids that match the filter
         let transaction = db.db.transaction('games', 'readonly');
         let store = transaction.objectStore('games');
-
-        let filter = this.filterSelections;
 
         let request = store.openCursor();
         request.onsuccess = async () => {
@@ -240,10 +245,10 @@ class Filtering {
 
         transaction.oncomplete = () => {
             // sort the results
-            if (this.filterSelections['orderBy'] === undefined) {
-                this.filterSelections['orderBy'] = 'Name';
+            if (filter['orderBy'] === undefined) {
+                filter['orderBy'] = 'Name';
             }
-            switch (this.filterSelections['orderBy']) {
+            switch (filter['orderBy']) {
                 case 'Name':
                     results.sort((a, b) => {
                         return a.name.localeCompare(b.name);
@@ -308,16 +313,21 @@ class Filtering {
                     break;
             }
 
-            if (this.filterSelections['orderDirection'] === undefined) {
-                this.filterSelections['orderDirection'] = 'Ascending';
+            if (filter['orderDirection'] === undefined) {
+                filter['orderDirection'] = 'Ascending';
             }
-            if (this.filterSelections['orderDirection'] === 'Descending') {
+            if (filter['orderDirection'] === 'Descending') {
                 results.reverse();
             }
 
             // add a result index to each result
             for (let i = 0; i < results.length; i++) {
                 results[i]['resultIndex'] = i;
+            }
+
+            // remove all entries after filter['limit']
+            if (filter['limit']) {
+                results = results.slice(0, filter['limit']);
             }
 
             if (this.applyCallback) {

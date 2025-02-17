@@ -3,12 +3,15 @@ class GameIcon {
         this.data = data;
     }
 
-    async Render(showTitle, showRatings, showClassification, classificationDisplayOrder) {
+    async Render(showTitle, showRatings, showClassification, classificationDisplayOrder, showSubtitle = true, useSmallCover = false) {
         let data = this.data;
 
         let gameTile = document.createElement('div');
         gameTile.id = 'game_tile_' + data.metadataMapId;
         gameTile.classList.add('game_tile');
+        if (useSmallCover === true) {
+            gameTile.classList.add('game_tile_small');
+        }
         gameTile.setAttribute('data-id', data.metadataMapId);
         gameTile.name = 'game_tile';
         if (data.resultIndex) {
@@ -26,10 +29,13 @@ class GameIcon {
         // cover art
         let gameTileImage = document.createElement('img');
         gameTileImage.classList.add('game_tile_image');
+        if (useSmallCover == true) {
+            gameTileImage.classList.add('game_tile_image_small');
+        }
         gameTileImage.classList.add('lazy');
         gameTileImage.setAttribute('loading', 'lazy');
         if (data.cover) {
-            gameTileImage.setAttribute('src', '/api/v1.1/Games/' + data.metadataMapId + '/cover/94082/image/original/94081.jpg?sourceType=' + data.metadataSource);
+            gameTileImage.setAttribute('src', '/api/v1.1/Games/' + data.metadataMapId + '/cover/' + data.cover + '/image/original/' + data.cover + '.jpg?sourceType=' + data.metadataSource);
         } else {
             gameTileImage.setAttribute('src', '/images/unknowngame.png');
         }
@@ -140,16 +146,21 @@ class GameIcon {
         if (showTitle === true) {
             let gameBoxTitle = document.createElement('div');
             gameBoxTitle.classList.add('game_tile_label');
+            if (useSmallCover === true) {
+                gameBoxTitle.classList.add('game_tile_label_small');
+            }
             gameBoxTitle.innerHTML = data.name;
             gameTile.appendChild(gameBoxTitle);
 
             // add game tile subtitle
-            if (data.firstReleaseDate !== undefined && data.firstReleaseDate !== null) {
-                let gameBoxSubtitle = document.createElement('div');
-                gameBoxSubtitle.classList.add('game_tile_label');
-                gameBoxSubtitle.classList.add('game_tile_subtitle');
-                gameBoxSubtitle.innerHTML = new Date(data.firstReleaseDate).getFullYear();
-                gameTile.appendChild(gameBoxSubtitle);
+            if (showSubtitle === true) {
+                if (data.firstReleaseDate !== undefined && data.firstReleaseDate !== null) {
+                    let gameBoxSubtitle = document.createElement('div');
+                    gameBoxSubtitle.classList.add('game_tile_label');
+                    gameBoxSubtitle.classList.add('game_tile_subtitle');
+                    gameBoxSubtitle.innerHTML = new Date(data.firstReleaseDate).getFullYear();
+                    gameTile.appendChild(gameBoxSubtitle);
+                }
             }
         }
 
