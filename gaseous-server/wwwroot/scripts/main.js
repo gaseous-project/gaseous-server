@@ -592,6 +592,18 @@ function GetRatingsBoards() {
     return ratingsBoards;
 }
 
+/**
+  * @param {Object} object
+  * @param {string} key
+  * @return {any} value
+ */
+function getParameterCaseInsensitive(object, key) {
+    const asLowercase = key.toLowerCase();
+    return object[Object.keys(object)
+        .find(k => k.toLowerCase() === asLowercase)
+    ];
+}
+
 function BuildSpaceBar(LibrarySize, OtherSize, TotalSize) {
     let newTable = document.createElement('table');
     newTable.setAttribute('cellspacing', 0);
