@@ -11,7 +11,7 @@ namespace gaseous_server.Controllers
 {
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]")]
-    [ApiVersion("1.0")]
+    [ApiVersion("1.0", Deprecated = true)]
     [ApiVersion("1.1")]
     [Authorize(Roles = "Admin")]
     public class LibraryController : Controller
