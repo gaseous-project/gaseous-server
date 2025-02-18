@@ -71,31 +71,32 @@ namespace gaseous_server
             db.ExecuteCMD(sql, dbDict);
         }
 
-        public static List<LibraryItem> GetLibraries
+        public static List<LibraryItem> GetLibraries(bool GetStorageInfo = false)
         {
-            get
+            List<LibraryItem> libraryItems = new List<LibraryItem>();
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT * FROM GameLibraries ORDER BY `Name`;";
+            DataTable data = db.ExecuteCMD(sql);
+            foreach (DataRow row in data.Rows)
             {
-                List<LibraryItem> libraryItems = new List<LibraryItem>();
-                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                string sql = "SELECT * FROM GameLibraries ORDER BY `Name`;";
-                DataTable data = db.ExecuteCMD(sql);
-                foreach (DataRow row in data.Rows)
+                LibraryItem library = new LibraryItem((int)row["Id"], (string)row["Name"], (string)row["Path"], (long)row["DefaultPlatform"], Convert.ToBoolean((int)row["DefaultLibrary"]));
+                if (GetStorageInfo == true)
                 {
-                    LibraryItem library = new LibraryItem((int)row["Id"], (string)row["Name"], (string)row["Path"], (long)row["DefaultPlatform"], Convert.ToBoolean((int)row["DefaultLibrary"]));
-                    libraryItems.Add(library);
+                    library.PathInfo = Controllers.SystemController.GetDisk(library.Path);
+                }
+                libraryItems.Add(library);
 
-                    if (library.IsDefaultLibrary == true)
+                if (library.IsDefaultLibrary == true)
+                {
+                    // check directory exists
+                    if (!Directory.Exists(library.Path))
                     {
-                        // check directory exists
-                        if (!Directory.Exists(library.Path))
-                        {
-                            Directory.CreateDirectory(library.Path);
-                        }
+                        Directory.CreateDirectory(library.Path);
                     }
                 }
-
-                return libraryItems;
             }
+
+            return libraryItems;
         }
 
         public static LibraryItem AddLibrary(string Name, string Path, long DefaultPlatformId)
@@ -103,7 +104,7 @@ namespace gaseous_server
             string PathName = Common.NormalizePath(Path);
 
             // check path isn't already in place
-            foreach (LibraryItem item in GetLibraries)
+            foreach (LibraryItem item in GetLibraries())
             {
                 if (Common.NormalizePath(PathName) == Common.NormalizePath(item.Path))
                 {
@@ -167,7 +168,7 @@ namespace gaseous_server
             }
         }
 
-        public static LibraryItem GetLibrary(int LibraryId)
+        public static LibraryItem GetLibrary(int LibraryId, bool GetStorageInfo = false)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM GameLibraries WHERE Id=@id";
@@ -178,6 +179,12 @@ namespace gaseous_server
             {
                 DataRow row = data.Rows[0];
                 LibraryItem library = new LibraryItem((int)row["Id"], (string)row["Name"], (string)row["Path"], (long)row["DefaultPlatform"], Convert.ToBoolean((int)row["DefaultLibrary"]));
+
+                if (GetStorageInfo == true)
+                {
+                    library.PathInfo = Controllers.SystemController.GetDisk(library.Path);
+                }
+
                 return library;
             }
             else
@@ -246,6 +253,8 @@ namespace gaseous_server
                 }
             }
             public bool IsDefaultLibrary => _IsDefaultLibrary;
+
+            public Controllers.SystemController.SystemInfo.PathItem? PathInfo { get; set; }
         }
     }
 }

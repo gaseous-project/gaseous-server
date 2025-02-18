@@ -18,7 +18,7 @@ namespace gaseous_server.Classes
             // remove any entries from the library that have an invalid id
             Logging.Log(Logging.LogType.Information, "Maintenance", "Removing any entries from the library that have an invalid id");
             string LibraryWhereClause = "";
-            foreach (GameLibrary.LibraryItem library in GameLibrary.GetLibraries)
+            foreach (GameLibrary.LibraryItem library in GameLibrary.GetLibraries())
             {
                 if (LibraryWhereClause.Length > 0)
                 {

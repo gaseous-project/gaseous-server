@@ -380,7 +380,7 @@ namespace gaseous_server
                                 case QueueItemType.TempCleanup:
                                     try
                                     {
-                                        foreach (GameLibrary.LibraryItem libraryItem in GameLibrary.GetLibraries)
+                                        foreach (GameLibrary.LibraryItem libraryItem in GameLibrary.GetLibraries())
                                         {
                                             string rootPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, libraryItem.Id.ToString());
                                             if (Directory.Exists(rootPath))

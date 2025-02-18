@@ -631,7 +631,7 @@ namespace gaseous_server.Classes
 
             if (LibrariesToScan.Count == 0)
             {
-                LibrariesToScan.AddRange(GameLibrary.GetLibraries);
+                LibrariesToScan.AddRange(GameLibrary.GetLibraries());
             }
 
             // setup background tasks for each library

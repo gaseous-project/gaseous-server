@@ -592,6 +592,35 @@ function GetRatingsBoards() {
     return ratingsBoards;
 }
 
+function BuildSpaceBar(LibrarySize, OtherSize, TotalSize) {
+    let newTable = document.createElement('table');
+    newTable.setAttribute('cellspacing', 0);
+    newTable.setAttribute('style', 'width: 100%; height: 10px;');
+
+    let newRow = document.createElement('tr');
+
+    let LibrarySizePercent = Math.floor(LibrarySize / TotalSize * 100);
+    let OtherSizePercent = Math.floor(OtherSize / TotalSize * 100);
+    let FreeSizePercent = Math.floor((LibrarySize + OtherSize) / TotalSize * 100);
+
+    let LibraryCell = document.createElement('td');
+    LibraryCell.setAttribute('style', 'width: ' + LibrarySizePercent + '%; background-color: green;');
+
+    let OtherCell = document.createElement('td');
+    OtherCell.setAttribute('style', 'width: ' + OtherSizePercent + '%; background-color: lightgreen;');
+
+    let FreeCell = document.createElement('td');
+    FreeCell.setAttribute('style', 'width: ' + FreeSizePercent + '%; background-color: lightgray;');
+
+    newRow.appendChild(LibraryCell);
+    newRow.appendChild(OtherCell);
+    newRow.appendChild(FreeCell);
+
+    newTable.appendChild(newRow);
+
+    return newTable;
+}
+
 class BackgroundImageRotator {
     constructor(URLList, CustomClass, Randomise) {
         this.URLList = URLList;

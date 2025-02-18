@@ -20,9 +20,9 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(typeof(List<GameLibrary.LibraryItem>), StatusCodes.Status200OK)]
-        public ActionResult GetLibraries()
+        public ActionResult GetLibraries(bool GetStorageInfo = false)
         {
-            return Ok(GameLibrary.GetLibraries);
+            return Ok(GameLibrary.GetLibraries(GetStorageInfo));
         }
 
         [MapToApiVersion("1.0")]
@@ -30,11 +30,11 @@ namespace gaseous_server.Controllers
         [HttpGet("{LibraryId}")]
         [ProducesResponseType(typeof(GameLibrary.LibraryItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GetLibrary(int LibraryId)
+        public ActionResult GetLibrary(int LibraryId, bool GetStorageInfo = false)
         {
             try
             {
-                return Ok(GameLibrary.GetLibrary(LibraryId));
+                return Ok(GameLibrary.GetLibrary(LibraryId, GetStorageInfo));
             }
             catch
             {

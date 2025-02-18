@@ -36,7 +36,7 @@ namespace gaseous_server.Controllers
 
             // disk size
             List<SystemInfo.PathItem> Disks = new List<SystemInfo.PathItem>();
-            foreach (GameLibrary.LibraryItem libraryItem in GameLibrary.GetLibraries)
+            foreach (GameLibrary.LibraryItem libraryItem in GameLibrary.GetLibraries())
             {
                 SystemInfo.PathItem pathItem = GetDisk(libraryItem.Path);
                 pathItem.Name = libraryItem.Name;
@@ -386,7 +386,7 @@ ORDER BY Platform.`Name`; ";
             return Ok(model);
         }
 
-        private SystemInfo.PathItem GetDisk(string Path)
+        public static SystemInfo.PathItem GetDisk(string Path)
         {
             SystemInfo.PathItem pathItem = new SystemInfo.PathItem
             {

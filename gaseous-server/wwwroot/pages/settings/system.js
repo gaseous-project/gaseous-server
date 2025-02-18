@@ -106,50 +106,50 @@ function SystemLoadSystemStatus() {
         if (result) {
             let totalLibrarySpace = 0;
 
-            // disks
-            let newTable = document.createElement('table');
-            newTable.className = 'romtable';
-            newTable.setAttribute('cellspacing', 0);
-            newTable.appendChild(createTableRow(true, ['Path', 'Library Size <div id="disk_LibSize" style="width: 10px; height: 10px; background-color: green;"></div>', 'Other <div id="disk_OtherSize" style="width: 10px; height: 10px; background-color: lightgreen;"></div>', 'Total Size <div id="disk_FreeSize" style="width: 10px; height: 10px; background-color: lightgray;"></div>']));
+            // // disks
+            // let newTable = document.createElement('table');
+            // newTable.className = 'romtable';
+            // newTable.setAttribute('cellspacing', 0);
+            // newTable.appendChild(createTableRow(true, ['Path', 'Library Size <div id="disk_LibSize" style="width: 10px; height: 10px; background-color: green;"></div>', 'Other <div id="disk_OtherSize" style="width: 10px; height: 10px; background-color: lightgreen;"></div>', 'Total Size <div id="disk_FreeSize" style="width: 10px; height: 10px; background-color: lightgray;"></div>']));
 
             for (let i = 0; i < result.paths.length; i++) {
                 let spaceUsedByLibrary = result.paths[i].spaceUsed;
                 totalLibrarySpace += spaceUsedByLibrary;
-                let spaceUsedByOthers = result.paths[i].totalSpace - result.paths[i].spaceAvailable;
+                //     let spaceUsedByOthers = result.paths[i].totalSpace - result.paths[i].spaceAvailable;
 
-                let libraryRow = document.createElement('tbody');
-                libraryRow.className = 'romrow';
+                //     let libraryRow = document.createElement('tbody');
+                //     libraryRow.className = 'romrow';
 
-                let titleRow = document.createElement('tr');
-                let titleCell = document.createElement('td');
-                titleCell.setAttribute('colspan', 4);
-                titleCell.innerHTML = '<strong>' + result.paths[i].name + '</strong>';
-                titleCell.className = 'romcell';
-                titleRow.appendChild(titleCell);
-                libraryRow.appendChild(titleRow);
+                //     let titleRow = document.createElement('tr');
+                //     let titleCell = document.createElement('td');
+                //     titleCell.setAttribute('colspan', 4);
+                //     titleCell.innerHTML = '<strong>' + result.paths[i].name + '</strong>';
+                //     titleCell.className = 'romcell';
+                //     titleRow.appendChild(titleCell);
+                //     libraryRow.appendChild(titleRow);
 
-                let newRow = [
-                    result.paths[i].libraryPath,
-                    formatBytes(spaceUsedByLibrary),
-                    formatBytes(spaceUsedByOthers),
-                    formatBytes(result.paths[i].totalSpace)
-                ];
+                //     let newRow = [
+                //         result.paths[i].libraryPath,
+                //         formatBytes(spaceUsedByLibrary),
+                //         formatBytes(spaceUsedByOthers),
+                //         formatBytes(result.paths[i].totalSpace)
+                //     ];
 
-                libraryRow.appendChild(createTableRow(false, newRow, '', 'romcell'));
+                //     libraryRow.appendChild(createTableRow(false, newRow, '', 'romcell'));
 
-                let spaceRow = document.createElement('tr');
-                let spaceCell = document.createElement('td');
-                spaceCell.setAttribute('colspan', 4);
-                spaceCell.appendChild(BuildSpaceBar(spaceUsedByLibrary, spaceUsedByOthers, result.paths[i].totalSpace));
-                spaceRow.appendChild(spaceCell);
-                libraryRow.appendChild(spaceRow);
+                //     let spaceRow = document.createElement('tr');
+                //     let spaceCell = document.createElement('td');
+                //     spaceCell.setAttribute('colspan', 4);
+                //     spaceCell.appendChild(BuildSpaceBar(spaceUsedByLibrary, spaceUsedByOthers, result.paths[i].totalSpace));
+                //     spaceRow.appendChild(spaceCell);
+                //     libraryRow.appendChild(spaceRow);
 
-                newTable.appendChild(libraryRow);
+                //     newTable.appendChild(libraryRow);
             }
 
-            let targetDiv = document.getElementById('system_disks');
-            targetDiv.innerHTML = '';
-            targetDiv.appendChild(newTable);
+            // let targetDiv = document.getElementById('system_disks');
+            // targetDiv.innerHTML = '';
+            // targetDiv.appendChild(newTable);
 
             BuildLibraryStatisticsBar(document.getElementById('system_platforms'), document.getElementById('system_platforms_legend'), result.platformStatistics, totalLibrarySpace);
 
@@ -164,35 +164,6 @@ function SystemLoadSystemStatus() {
             targetDbDiv.appendChild(newDbTable);
         }
     });
-}
-
-function BuildSpaceBar(LibrarySize, OtherSize, TotalSize) {
-    let newTable = document.createElement('table');
-    newTable.setAttribute('cellspacing', 0);
-    newTable.setAttribute('style', 'width: 100%; height: 10px;');
-
-    let newRow = document.createElement('tr');
-
-    let LibrarySizePercent = Math.floor(LibrarySize / TotalSize * 100);
-    let OtherSizePercent = Math.floor(OtherSize / TotalSize * 100);
-    let FreeSizePercent = Math.floor((LibrarySize + OtherSize) / TotalSize * 100);
-
-    let LibraryCell = document.createElement('td');
-    LibraryCell.setAttribute('style', 'width: ' + LibrarySizePercent + '%; background-color: green;');
-
-    let OtherCell = document.createElement('td');
-    OtherCell.setAttribute('style', 'width: ' + OtherSizePercent + '%; background-color: lightgreen;');
-
-    let FreeCell = document.createElement('td');
-    FreeCell.setAttribute('style', 'width: ' + FreeSizePercent + '%; background-color: lightgray;');
-
-    newRow.appendChild(LibraryCell);
-    newRow.appendChild(OtherCell);
-    newRow.appendChild(FreeCell);
-
-    newTable.appendChild(newRow);
-
-    return newTable;
 }
 
 function BuildLibraryStatisticsBar(TargetObject, TargetObjectLegend, LibraryStatistics, LibrarySize) {
