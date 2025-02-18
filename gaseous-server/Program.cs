@@ -161,23 +161,23 @@ builder.Services.Configure<FormOptions>(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
     {
-        options.SwaggerDoc("v1", new OpenApiInfo
-        {
-            Version = "v1.0",
-            Title = "Gaseous Server API",
-            Description = "An API for managing the Gaseous Server",
-            TermsOfService = new Uri("https://github.com/gaseous-project/gaseous-server"),
-            Contact = new OpenApiContact
-            {
-                Name = "GitHub Repository",
-                Url = new Uri("https://github.com/gaseous-project/gaseous-server")
-            },
-            License = new OpenApiLicense
-            {
-                Name = "Gaseous Server License",
-                Url = new Uri("https://github.com/gaseous-project/gaseous-server/blob/main/LICENSE")
-            }
-        });
+        // options.SwaggerDoc("v1", new OpenApiInfo
+        // {
+        //     Version = "v1.0",
+        //     Title = "Gaseous Server API",
+        //     Description = "An API for managing the Gaseous Server",
+        //     TermsOfService = new Uri("https://github.com/gaseous-project/gaseous-server"),
+        //     Contact = new OpenApiContact
+        //     {
+        //         Name = "GitHub Repository",
+        //         Url = new Uri("https://github.com/gaseous-project/gaseous-server")
+        //     },
+        //     License = new OpenApiLicense
+        //     {
+        //         Name = "Gaseous Server License",
+        //         Url = new Uri("https://github.com/gaseous-project/gaseous-server/blob/main/LICENSE")
+        //     }
+        // });
 
         options.SwaggerDoc("v1.1", new OpenApiInfo
         {

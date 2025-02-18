@@ -46,8 +46,8 @@ namespace gaseous_server.Controllers
                 if (ModelState.IsValid)
                 {
                     ApplicationUser user = new ApplicationUser
-                    { 
-                        UserName = model.UserName, 
+                    {
+                        UserName = model.UserName,
                         NormalizedUserName = model.UserName.ToUpper(),
                         Email = model.Email,
                         NormalizedEmail = model.Email.ToUpper(),
@@ -67,7 +67,7 @@ namespace gaseous_server.Controllers
 
                         Logging.Log(Logging.LogType.Information, "First Run", "Signing in as " + model.Email);
                         await _signInManager.SignInAsync(user, isPersistent: true);
-                        
+
                         Logging.Log(Logging.LogType.Information, "First Run", "Setting first run state to 1");
                         Config.SetSetting<string>("FirstRunStatus", "1");
 
@@ -89,6 +89,39 @@ namespace gaseous_server.Controllers
                 }
 
                 return Problem(ModelState.ToString());
+            }
+            else
+            {
+                return NotFound();
+            }
+        }
+
+        [MapToApiVersion("1.1")]
+        [HttpPost]
+        [Route("1")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public ActionResult SetupDatasources(SystemSettingsModel model)
+        {
+            if (Config.ReadSetting<string>("FirstRunStatus", "0") == "1")
+            {
+                if (ModelState.IsValid)
+                {
+                    Logging.Log(Logging.LogType.Information, "First Run", "Setting up datasources");
+
+                    SystemController sys = new SystemController();
+                    sys.SetSystemSettings(model);
+
+                    Logging.Log(Logging.LogType.Information, "First Run", "Setting first run state to 1");
+                    Config.SetSetting<string>("FirstRunStatus", "2");
+
+                    return Ok();
+                }
+                else
+                {
+                    return Problem(ModelState.ToString());
+                }
             }
             else
             {
