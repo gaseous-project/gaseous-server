@@ -165,23 +165,32 @@
                                             console.log("User is logged in");
                                             userProfile = await response.json();
 
-                                            // set up system database
-                                            db = new Database();
-                                            filter = new Filtering();
-                                            await db.Initialize();
-                                            await db.SyncContent();
+                                            switch (FirstRunStatus) {
+                                                case "1":
+                                                    // first run - load second stage of wizard
+                                                    await LoadPageContent('first2', 'content');
+                                                    break;
 
-                                            // load page banner
-                                            await LoadPageContent('banner', 'banner_target');
+                                                default:
+                                                    // set up system database
+                                                    db = new Database();
+                                                    filter = new Filtering();
+                                                    await db.Initialize();
+                                                    await db.SyncContent();
 
-                                            // load page content
-                                            let pageSelection = getQueryString('page', 'string');
+                                                    // load page banner
+                                                    await LoadPageContent('banner', 'banner_target');
 
-                                            if (!pageSelection) {
-                                                pageSelection = GetPreference("DefaultHomePage", "home");
+                                                    // load page content
+                                                    let pageSelection = getQueryString('page', 'string');
+
+                                                    if (!pageSelection) {
+                                                        pageSelection = GetPreference("DefaultHomePage", "home");
+                                                    }
+                                                    console.log("Loading page: " + pageSelection);
+                                                    await LoadPageContent(pageSelection, 'content');
+                                                    break;
                                             }
-                                            console.log("Loading page: " + pageSelection);
-                                            await LoadPageContent(pageSelection, 'content');
                                         } else {
                                             // user is not signed in - load login page
                                             await LoadPageContent('login');

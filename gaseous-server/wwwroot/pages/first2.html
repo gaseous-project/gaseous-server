@@ -1,0 +1,203 @@
+<!-- first run wizard screen -->
+<div class="modal-background">
+    <div class="modal-window" id="first_configuration"
+        style="width: 600px; height: 550px; min-height: unset; min-width: unset; max-height: unset; max-width: unset;">
+        <div id="loginform" class="loginwindow-content">
+            <div class="loginwindow-logospace" style="min-width: 170px;">
+                <div class="loginwindow-logospace-banner loginwindow-logospace-banner-top">
+                    <div class="loginwindow-logospace-logo">&nbsp;</div>
+                    <div class="loginwindow-logospace-label">
+
+                    </div>
+                </div>
+                <div class="loginwindow-logospace-banner loginwindow-logospace-banner-bottom">
+                    <div class="loginwindow-logospace-linktable">
+                        <div class="loginwindow-logospace-linktable-link">
+                            <a href="https://github.com/gaseous-project/gaseous-server"
+                                class="romlink romlink-nounderline">
+                                <img src="/images/github-mark.svg" class="banner_button_image" />
+                                GitHub
+                            </a>
+                        </div>
+                        <div class="loginwindow-logospace-linktable-link">
+                            <a href="https://discord.gg/Nhu7wpT3k4" class="romlink romlink-nounderline">
+                                <img src="/images/discord.svg" class="banner_button_image" />
+                                Discord
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="first_signatures" class="loginwindow_loginspace" style="position: relative;">
+                <table id="signature_setup" style="border-width: 0;" cellspacing="0" cellpadding="2" name="wizard-page"
+                    data-page="0">
+                    <tr>
+                        <td colspan="2">
+                            <h2>Select Signature Source</h2>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <p>
+                                Signatures are used to match a ROM to a game name using the hash of the ROM (MD5 or
+                                SHA1).
+                                For more information, see the <a
+                                    href="https://github.com/gaseous-project/gaseous-server/wiki/Signatures"
+                                    class="romlink" target="_blank" rel="noopener noreferrer">Signatures</a> wiki page.
+                            </p>
+                        </td>
+                    </tr>
+                    <tbody id="signature_hasheous">
+                        <tr>
+                            <td>
+                                <input type="radio" id="login_signatures_hasheous" name="login_signatures"
+                                    value="Hasheous" />
+                            </td>
+                            <td>
+                                <label for="login_signatures_hasheous"><strong>Hasheous (Recommended)</strong></label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>
+                                <label for="login_signatures_hasheous">
+                                    Hasheous is a community-driven project that provides a database of ROM hashes and
+                                    game
+                                    names. It is the most accurate and up-to-date source of signatures.
+                                </label>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tr>
+                        <td colspan="2">
+                            &nbsp;
+                    </tr>
+                    <tbody id="signature_localonly">
+                        <tr>
+                            <td>
+                                <input type="radio" id="login_signatures_localonly" name="login_signatures"
+                                    value="LocalOnly" />
+                            </td>
+                            <td>
+                                <label for="login_signatures_localonly"><strong>Local Only</strong></label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>
+                                <label for="login_signatures_localonly">
+                                    Local Only uses the signatures that are stored in the Gaseous database. This is the
+                                    default
+                                    option and is useful if you are not connected to the internet.
+                                </label>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <table id="metadata_setup" style="border-width: 0; display: none;" cellspacing="0" cellpadding="2"
+                    name="wizard-page" data-page="1">
+                    <tr>
+                        <td colspan="2">
+                            <h2>Select Metadata Source</h2>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <p>
+                                Metadata is used to provide additional information about a game, such as the release
+                                date,
+                                publisher, and genre. For more information, see the <a
+                                    href="https://github.com/gaseous-project/gaseous-server/wiki/Metadata"
+                                    class="romlink" target="_blank" rel="noopener noreferrer">Metadata</a> wiki page.
+                            </p>
+                        </td>
+                    </tr>
+                    <tbody id="metadata_igdb">
+                        <tr>
+                            <td>
+                                <input type="radio" id="login_metadata_igdb" name="login_metadata" value="IGDB" />
+                            </td>
+                            <td>
+                                <label for="login_metadata_igdb"><strong>Internet Game Database
+                                        (Recommended)</strong></label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>
+                                <label for="login_metadata_igdb">
+                                    IGDB is a community-driven project that provides a database of game metadata. It is
+                                    the
+                                    most accurate and up-to-date source of metadata.
+                                </label>
+
+                                <br />
+                                <br />
+                                <button id="login_metadata_igdb_advanced" class="loginwindow_button">Advanced</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tr>
+                        <td colspan="2">
+                            &nbsp;
+                    </tr>
+                    <tbody id="metadata_thegamesdb">
+                        <tr>
+                            <td>
+                                <input type="radio" id="login_metadata_thegamesdb" name="login_metadata"
+                                    value="TheGamesDB" />
+                            </td>
+                            <td>
+                                <label for="login_metadata_thegamesdb"><strong>The Games DB</strong></label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>
+                                <label for="login_metadata_thegamesdb">
+                                    The Games DB is a community-driven project that provides a database of game
+                                    metadata.
+                                    It is
+                                    a good alternative to IGDB.
+                                </label>
+                            </td>
+                        </tr>
+                    </tbody>
+                    <tr>
+                        <td colspan="2">
+                            &nbsp;
+                    </tr>
+                    <tbody id="metadata_none">
+                        <tr>
+                            <td>
+                                <input type="radio" id="login_metadata_none" name="login_metadata" value="none" />
+                            </td>
+                            <td>
+                                <label for="login_metadata_none"><strong>None</strong></label>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td>
+                                <label for="login_metadata_none">
+                                    None disables metadata retrieval. This is useful if you do not want to use metadata
+                                    or
+                                    are not connected to the internet.
+                                </label>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div id="page_controls" style="position: absolute; bottom: 0; right: 0; padding: 20px;">
+                    <div class="loginwindow_controlsspace">
+                        <button id="wizard-prev" class="loginwindow_button" disabled="disabled">Previous</button>
+                        <button id="wizard-next" class="loginwindow_button" disabled="disabled">Next</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
