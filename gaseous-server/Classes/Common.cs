@@ -39,8 +39,15 @@ namespace gaseous_server.Classes
 
 		public static string StripVersionsFromFileName(string fileName)
 		{
+			// strip anything in brackets
+			fileName = Regex.Replace(fileName, @"\[.*?\]", "").Trim();
+			fileName = Regex.Replace(fileName, @"\{.*?\}", "").Trim();
+			fileName = Regex.Replace(fileName, @"\(.*?\)", "").Trim();
+
+			// strip versions
 			fileName = Regex.Replace(fileName, @"v(\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
 			fileName = Regex.Replace(fileName, @"Rev (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+			fileName = Regex.Replace(fileName, @"Revision (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
 			fileName = Regex.Replace(fileName, @"Release (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
 			fileName = Regex.Replace(fileName, @"Build (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
 			fileName = Regex.Replace(fileName, @"Beta (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();

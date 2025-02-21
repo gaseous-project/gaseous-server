@@ -282,7 +282,7 @@ namespace gaseous_server.Classes
             dbDict.Add("crc", Common.ReturnValueIfNull(signature.Rom.Crc, ""));
             dbDict.Add("developmentstatus", Common.ReturnValueIfNull(signature.Rom.DevelopmentStatus, ""));
             dbDict.Add("metadatasource", signature.Rom.SignatureSource);
-            dbDict.Add("metadatagamename", signature.Game.Name);
+            dbDict.Add("metadatagamename", Common.StripVersionsFromFileName(signature.Game.Name));
             dbDict.Add("metadataversion", 2);
             dbDict.Add("libraryid", library.Id);
             dbDict.Add("romdataversion", 2);

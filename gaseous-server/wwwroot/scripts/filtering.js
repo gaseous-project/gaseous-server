@@ -106,6 +106,7 @@ class Filtering {
                 let releaseYearMatch = true;
                 let playersMatch = true;
                 let perspectivesMatch = true;
+                let ageGroupsMatch = true;
                 let userRatingMatch = true;
                 let userVoteCountMatch = true;
 
@@ -185,6 +186,12 @@ class Filtering {
                             }
                             break;
 
+                        case 'agegroups':
+                            if (filter[key][game.ageGroup] === undefined) {
+                                ageGroupsMatch = false;
+                            }
+                            break;
+
                         case 'userrating':
                             if (game.totalRating) {
                                 if (filter[key].min) {
@@ -233,6 +240,7 @@ class Filtering {
                     releaseYearMatch === true &&
                     playersMatch === true &&
                     perspectivesMatch === true &&
+                    ageGroupsMatch === true &&
                     userRatingMatch === true &&
                     userVoteCountMatch === true
                 ) {
@@ -431,6 +439,13 @@ class Filtering {
             perspectivesCollapsed = this.filterCollapsed['Player Perspectives'];
         }
         panel.appendChild(this.#BuildBasicPanel('Player Perspectives', true, perspectivesCollapsed, this.#BuildCheckList("perspectives", filter["perspectives"], true), null));
+
+        // age groups filter
+        let ageGroupsCollapsed = true;
+        if (this.filterCollapsed['Age Groups'] !== undefined) {
+            ageGroupsCollapsed = this.filterCollapsed['Age Groups'];
+        }
+        panel.appendChild(this.#BuildBasicPanel('Age Groups', true, ageGroupsCollapsed, this.#BuildCheckList("ageGroups", filter["ageGroups"], true), null));
 
         // user rating filter
         let userRatingCollapsed = true;
