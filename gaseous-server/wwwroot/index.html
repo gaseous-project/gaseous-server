@@ -152,6 +152,10 @@
                             case 0:
                             case "0":
                                 // first run - load first run wizard
+                                // clear any database data
+                                DeleteAllDatabases();
+
+                                // load first stage of wizard
                                 await LoadPageContent('first', 'content');
                                 break;
 
@@ -168,6 +172,10 @@
                                             switch (FirstRunStatus) {
                                                 case "1":
                                                     // first run - load second stage of wizard
+
+                                                    DeleteAllDatabases();
+
+                                                    // load first stage of wizard
                                                     await LoadPageContent('first2', 'content');
                                                     break;
 
@@ -193,11 +201,17 @@
                                             }
                                         } else {
                                             // user is not signed in - load login page
+
+                                            // clear any database data
+                                            DeleteAllDatabases();
+
+                                            // load login page
                                             await LoadPageContent('login');
                                         }
                                     })
                                     .catch(async (error) => {
                                         console.log(error);
+                                        DeleteAllDatabases();
                                         await LoadPageContent('login');
                                     });
                                 break;
@@ -207,6 +221,16 @@
                 .catch(async (error) => {
                     console.log(error);
                 });
+        }
+
+        function DeleteAllDatabases() {
+            indexedDB.deleteDatabase('gaseous');
+            indexedDB.deleteDatabase('EmulatorJS-roms');
+            indexedDB.deleteDatabase('EmulatorJS-bios');
+            indexedDB.deleteDatabase('EmulatorJS-core');
+            indexedDB.deleteDatabase('/data/saves');
+
+            localStorage.clear();
         }
 
         window.document.addEventListener('DOMContentLoaded', startApp);

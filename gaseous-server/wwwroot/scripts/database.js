@@ -64,10 +64,18 @@ class Database {
     }
 
     databaseTerminated = false;
-    async DeleteDatabase() {
+    async DeleteDatabase(resolve, reject) {
         return new Promise((resolve, reject) => {
             // delete the database
-            let deleteDb = indexedDB.deleteDatabase('gaseous');
+            this.db.close();
+            indexedDB.deleteDatabase('gaseous');
+
+            // delete ejs databases
+            indexedDB.deleteDatabase('EmulatorJS-roms');
+            indexedDB.deleteDatabase('EmulatorJS-bios');
+            indexedDB.deleteDatabase('EmulatorJS-core');
+            indexedDB.deleteDatabase('/data/saves');
+
             this.databaseTerminated = true;
 
             clearInterval(this.TimerRefreshDatabase);

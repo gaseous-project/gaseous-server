@@ -34,16 +34,16 @@ namespace gaseous_server.Controllers
 
             SystemInfo ReturnValue = new SystemInfo();
 
-            // disk size
-            List<SystemInfo.PathItem> Disks = new List<SystemInfo.PathItem>();
-            foreach (GameLibrary.LibraryItem libraryItem in GameLibrary.GetLibraries())
-            {
-                SystemInfo.PathItem pathItem = GetDisk(libraryItem.Path);
-                pathItem.Name = libraryItem.Name;
+            // // disk size
+            // List<SystemInfo.PathItem> Disks = new List<SystemInfo.PathItem>();
+            // foreach (GameLibrary.LibraryItem libraryItem in GameLibrary.GetLibraries())
+            // {
+            //     SystemInfo.PathItem pathItem = GetDisk(libraryItem.Path);
+            //     pathItem.Name = libraryItem.Name;
 
-                Disks.Add(pathItem);
-            }
-            ReturnValue.Paths = Disks;
+            //     Disks.Add(pathItem);
+            // }
+            // ReturnValue.Paths = Disks;
 
             // database size
             string sql = "SELECT table_schema, SUM(data_length + index_length) FROM information_schema.tables WHERE table_schema = '" + Config.DatabaseConfiguration.DatabaseName + "'";

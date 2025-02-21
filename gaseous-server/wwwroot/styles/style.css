@@ -2687,6 +2687,14 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     padding: 10px 10px 12px 10px;
 }
 
+.section-body-button {
+    cursor: pointer;
+}
+
+.section-body-button:hover {
+    background-color: var(--section-header-background);
+}
+
 .listboxselector {
     overflow-x: scroll;
     height: 200px;

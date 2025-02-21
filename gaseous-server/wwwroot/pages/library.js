@@ -110,6 +110,13 @@ async function SetupPage() {
                         alphaAdded.push(alpha);
                     }
                 }
+
+                // restore the scroll position
+                let scrollPosition = localStorage.getItem('scrollPosition');
+                if (scrollPosition) {
+                    console.log('restoring scroll position: ' + scrollPosition);
+                    window.scrollTo(0, scrollPosition);
+                }
             };
 
             filter.OrderBySelector(document.getElementById('games_library_orderby_select'));
@@ -138,6 +145,12 @@ async function SetupPage() {
 
         await db.GetGamesFilter();
     }
+
+    // setup scroll position
+    window.addEventListener('scroll', (pos) => {
+        // save the scroll position to localStorage
+        localStorage.setItem('scrollPosition', window.scrollY);
+    });
 }
 
 function FilterDisplayToggle(display, storePreference = true) {

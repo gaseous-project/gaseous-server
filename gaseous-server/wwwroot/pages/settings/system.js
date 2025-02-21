@@ -104,54 +104,7 @@ function SystemLoadStatus() {
 function SystemLoadSystemStatus() {
     ajaxCall('/api/v1.1/System', 'GET', function (result) {
         if (result) {
-            let totalLibrarySpace = 0;
-
-            // // disks
-            // let newTable = document.createElement('table');
-            // newTable.className = 'romtable';
-            // newTable.setAttribute('cellspacing', 0);
-            // newTable.appendChild(createTableRow(true, ['Path', 'Library Size <div id="disk_LibSize" style="width: 10px; height: 10px; background-color: green;"></div>', 'Other <div id="disk_OtherSize" style="width: 10px; height: 10px; background-color: lightgreen;"></div>', 'Total Size <div id="disk_FreeSize" style="width: 10px; height: 10px; background-color: lightgray;"></div>']));
-
-            for (let i = 0; i < result.paths.length; i++) {
-                let spaceUsedByLibrary = result.paths[i].spaceUsed;
-                totalLibrarySpace += spaceUsedByLibrary;
-                //     let spaceUsedByOthers = result.paths[i].totalSpace - result.paths[i].spaceAvailable;
-
-                //     let libraryRow = document.createElement('tbody');
-                //     libraryRow.className = 'romrow';
-
-                //     let titleRow = document.createElement('tr');
-                //     let titleCell = document.createElement('td');
-                //     titleCell.setAttribute('colspan', 4);
-                //     titleCell.innerHTML = '<strong>' + result.paths[i].name + '</strong>';
-                //     titleCell.className = 'romcell';
-                //     titleRow.appendChild(titleCell);
-                //     libraryRow.appendChild(titleRow);
-
-                //     let newRow = [
-                //         result.paths[i].libraryPath,
-                //         formatBytes(spaceUsedByLibrary),
-                //         formatBytes(spaceUsedByOthers),
-                //         formatBytes(result.paths[i].totalSpace)
-                //     ];
-
-                //     libraryRow.appendChild(createTableRow(false, newRow, '', 'romcell'));
-
-                //     let spaceRow = document.createElement('tr');
-                //     let spaceCell = document.createElement('td');
-                //     spaceCell.setAttribute('colspan', 4);
-                //     spaceCell.appendChild(BuildSpaceBar(spaceUsedByLibrary, spaceUsedByOthers, result.paths[i].totalSpace));
-                //     spaceRow.appendChild(spaceCell);
-                //     libraryRow.appendChild(spaceRow);
-
-                //     newTable.appendChild(libraryRow);
-            }
-
-            // let targetDiv = document.getElementById('system_disks');
-            // targetDiv.innerHTML = '';
-            // targetDiv.appendChild(newTable);
-
-            BuildLibraryStatisticsBar(document.getElementById('system_platforms'), document.getElementById('system_platforms_legend'), result.platformStatistics, totalLibrarySpace);
+            BuildLibraryStatisticsBar(document.getElementById('system_platforms'), document.getElementById('system_platforms_legend'), result.platformStatistics);
 
             // database
             let newDbTable = document.createElement('table');
@@ -166,7 +119,7 @@ function SystemLoadSystemStatus() {
     });
 }
 
-function BuildLibraryStatisticsBar(TargetObject, TargetObjectLegend, LibraryStatistics, LibrarySize) {
+function BuildLibraryStatisticsBar(TargetObject, TargetObjectLegend, LibraryStatistics) {
     TargetObject.innerHTML = '';
     TargetObjectLegend.innerHTML = '';
 
@@ -176,6 +129,12 @@ function BuildLibraryStatisticsBar(TargetObject, TargetObjectLegend, LibraryStat
 
     let newRow = document.createElement('div');
     newRow.setAttribute('style', 'display: flex; width: 100%;');
+
+    let LibrarySize = 0;
+    // get LibarySize as sum of all platform sizes
+    for (let i = 0; i < LibraryStatistics.length; i++) {
+        LibrarySize += LibraryStatistics[i].totalSize;
+    }
 
     for (let i = 0; i < LibraryStatistics.length; i++) {
         let platformSizePercent = LibraryStatistics[i].totalSize / LibrarySize * 100;

@@ -110,7 +110,7 @@ function SetupPage() {
         if (result.cover) {
             ajaxCall('/api/v1.1/Games/' + gameId + '/cover', 'GET', function (coverResult) {
                 if (coverResult) {
-                    gameImage.src = '/api/v1.1/Games/' + gameId + '/cover/' + coverResult.id + '/image/cover_big/' + coverResult.imageId + '.jpg?sourceType=' + contentSource;
+                    gameImage.src = '/api/v1.1/Games/' + gameId + '/cover/' + coverResult.id + '/image/original/' + coverResult.id + '.jpg?sourceType=' + contentSource;
 
                     loadArtwork(result, coverResult);
                 } else {
@@ -609,10 +609,10 @@ class RomManagement {
         this.RomsDeleteButton.addEventListener('click', () => {
             this.#deleteGameRoms();
         });
-        this.RomsEditUpdateButton = this.romsModal.modalElement.querySelector('#rom_edit_update');
-        this.RomsEditUpdateButton.addEventListener('click', () => {
-            this.#remapTitles();
-        });
+        // this.RomsEditUpdateButton = this.romsModal.modalElement.querySelector('#rom_edit_update');
+        // this.RomsEditUpdateButton.addEventListener('click', () => {
+        //     this.#remapTitles();
+        // });
         this.RomsCreateMGGroupButton = this.romsModal.modalElement.querySelector('#rom_edit_creategroup');
         this.RomsCreateMGGroupButton.addEventListener('click', () => {
             this.#createMgGroup();
@@ -621,9 +621,9 @@ class RomManagement {
         this.RomsSearchButton.addEventListener('click', () => {
             this.#loadRoms();
         });
-        this.RomsFixPlatformDropdown = this.romsModal.modalElement.querySelector('#rom_edit_fixplatform');
-        this.RomsFixGameDropdown = this.romsModal.modalElement.querySelector('#rom_edit_fixgame');
-        this.#SetupFixPlatformDropDown();
+        // this.RomsFixPlatformDropdown = this.romsModal.modalElement.querySelector('#rom_edit_fixplatform');
+        // this.RomsFixGameDropdown = this.romsModal.modalElement.querySelector('#rom_edit_fixgame');
+        // this.#SetupFixPlatformDropDown();
 
         // add buttons
         if (userProfile.roles.includes("Admin")) {
@@ -1652,7 +1652,7 @@ function loadArtwork(game, cover) {
         }
     } else if (game.cover) {
         // backup background is the cover artwork
-        URLList.push("/api/v1.1/Games/" + gameId + "/cover/" + cover.id + "/image/original/" + cover.imageId + ".jpg?sourceType=" + contentSource);
+        URLList.push("/api/v1.1/Games/" + gameId + "/cover/" + cover.id + "/image/original/" + cover.id + ".jpg?sourceType=" + contentSource);
     } else {
         // backup background is a random image
         var randomInt = randomIntFromInterval(1, 3);
