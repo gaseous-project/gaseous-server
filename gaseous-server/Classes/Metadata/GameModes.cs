@@ -1,19 +1,20 @@
 ﻿using System;
-using IGDB;
-using IGDB.Models;
+using HasheousClient.Models.Metadata.IGDB;
 
 
 namespace gaseous_server.Classes.Metadata
 {
     public class GameModes
     {
-        const string fieldList = "fields checksum,created_at,name,slug,updated_at,url;";
+        public const string fieldList = "fields checksum,created_at,name,slug,updated_at,url;";
+
+        static List<GameModeItem> gameModeItemCache = new List<GameModeItem>();
 
         public GameModes()
         {
         }
 
-        public static GameMode? GetGame_Modes(long? Id)
+        public static GameMode? GetGame_Modes(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -21,88 +22,45 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<GameMode> RetVal = _GetGame_Modes(SearchUsing.id, Id);
-                return RetVal.Result;
-            }
-        }
+                // check cache for game mode
+                if (gameModeItemCache.Find(x => x.Id == Id && x.SourceType == SourceType) != null)
+                {
+                    GameModeItem gameModeItem = gameModeItemCache.Find(x => x.Id == Id && x.SourceType == SourceType);
 
-        public static GameMode GetGame_Modes(string Slug)
-        {
-            Task<GameMode> RetVal = _GetGame_Modes(SearchUsing.slug, Slug);
-            return RetVal.Result;
-        }
-
-        private static async Task<GameMode> _GetGame_Modes(SearchUsing searchUsing, object searchValue)
-        {
-            // check database first
-            Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
-            if (searchUsing == SearchUsing.id)
-            {
-                cacheStatus = Storage.GetCacheStatus("GameMode", (long)searchValue);
-            }
-            else
-            {
-                cacheStatus = Storage.GetCacheStatus("GameMode", (string)searchValue);
-            }
-
-            // set up where clause
-            string WhereClause = "";
-            switch (searchUsing)
-            {
-                case SearchUsing.id:
-                    WhereClause = "where id = " + searchValue;
-                    break;
-                case SearchUsing.slug:
-                    WhereClause = "where slug = " + searchValue;
-                    break;
-                default:
-                    throw new Exception("Invalid search type");
-            }
-
-            GameMode returnValue = new GameMode();
-            switch (cacheStatus)
-            {
-                case Storage.CacheStatus.NotPresent:
-                    returnValue = await GetObjectFromServer(WhereClause);
-                    Storage.NewCacheValue(returnValue);
-                    break;
-                case Storage.CacheStatus.Expired:
-                    try
+                    GameMode? nGameMode = new GameMode
                     {
-                        returnValue = await GetObjectFromServer(WhereClause);
-                        Storage.NewCacheValue(returnValue, true);
-                    }
-                    catch (Exception ex)
+                        Id = gameModeItem.Id,
+                        Name = gameModeItem.Name
+                    };
+
+                    return nGameMode;
+                }
+
+                GameMode? RetVal = Metadata.GetMetadata<GameMode>(SourceType, (long)Id, false);
+
+                if (RetVal != null)
+                {
+                    // add game mode to cache
+                    if (gameModeItemCache.Find(x => x.Id == Id && x.SourceType == SourceType) == null)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
-                        returnValue = Storage.GetCacheValue<GameMode>(returnValue, "id", (long)searchValue);
+                        GameModeItem gameModeItem = new GameModeItem();
+                        gameModeItem.Id = (long)Id;
+                        gameModeItem.SourceType = SourceType;
+                        gameModeItem.Name = RetVal.Name;
+                        gameModeItemCache.Add(gameModeItem);
                     }
-                    break;
-                case Storage.CacheStatus.Current:
-                    returnValue = Storage.GetCacheValue<GameMode>(returnValue, "id", (long)searchValue);
-                    break;
-                default:
-                    throw new Exception("How did you get here?");
+                }
+
+                return RetVal;
             }
-
-            return returnValue;
         }
+    }
 
-        private enum SearchUsing
-        {
-            id,
-            slug
-        }
-
-        private static async Task<GameMode> GetObjectFromServer(string WhereClause)
-        {
-            // get Game_Modes metadata
-            Communications comms = new Communications();
-            var results = await comms.APIComm<GameMode>(IGDBClient.Endpoints.GameModes, fieldList, WhereClause);
-            var result = results.First();
-
-            return result;
-        }
+    class GameModeItem
+    {
+        public long Id { get; set; }
+        public HasheousClient.Models.MetadataSources SourceType { get; set; }
+        public string Name { get; set; }
     }
 }
 

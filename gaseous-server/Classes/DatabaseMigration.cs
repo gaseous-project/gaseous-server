@@ -3,7 +3,6 @@ using System.Data;
 using System.Reflection;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
-using IGDB.Models;
 
 namespace gaseous_server.Classes
 {
@@ -197,7 +196,11 @@ namespace gaseous_server.Classes
                                     libraryRootPath += Path.DirectorySeparatorChar;
                                 }
 
-                                bool GetLastThreeElements = (bool)row["DefaultLibrary"];
+                                bool GetLastThreeElements = false;
+                                if ((int)row["DefaultLibrary"] == 1)
+                                {
+                                    GetLastThreeElements = true;
+                                }
 
                                 foreach (DataRow romRow in romData.Rows)
                                 {
@@ -241,6 +244,19 @@ namespace gaseous_server.Classes
                                     };
                                     db.ExecuteNonQuery(sql, dbDict);
                                 }
+                            }
+
+                            // get all tables that have the prefix "Relation_" and drop them
+                            sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = @dbname AND table_name LIKE 'Relation_%';";
+                            dbDict = new Dictionary<string, object>
+                            {
+                                { "dbname", Config.DatabaseConfiguration.DatabaseName }
+                            };
+                            data = db.ExecuteCMD(sql, dbDict);
+                            foreach (DataRow row in data.Rows)
+                            {
+                                sql = "DROP TABLE " + (string)row["table_name"] + ";";
+                                db.ExecuteNonQuery(sql);
                             }
 
                             // migrating metadata is a safe background task
@@ -390,10 +406,9 @@ namespace gaseous_server.Classes
                     (string)row["Path"]
                 );
 
-                Platform platform = Platforms.GetPlatform((long)row["PlatformId"], false);
-                Game game = Games.GetGame((long)row["GameId"], false, false, false);
+                HasheousClient.Models.Metadata.IGDB.Platform platform = Platforms.GetPlatform((long)row["PlatformId"]);
 
-                ImportGame.StoreROM(library, hash, game, platform, signature, (string)row["Path"], (long)row["Id"]);
+                ImportGame.StoreGame(library, hash, signature, platform, (string)row["Path"], (long)row["Id"]);
 
                 count += 1;
             }

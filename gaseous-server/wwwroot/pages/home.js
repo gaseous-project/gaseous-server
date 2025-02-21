@@ -16,8 +16,6 @@ class HomePageGameRow {
         this.games.classList.add("section-body");
         this.games.innerHTML = "<p>Loading...</p>";
         this.row.appendChild(this.games);
-
-        // this.populate();
     }
 
     async populate() {
@@ -31,50 +29,40 @@ class HomePageGameRow {
         showRatings = false;
         showClassification = false;
 
-        // get the games
-        let gamesCallURL = '/api/v1.1/Games?pageNumber=1&pageSize=20';
-        await fetch(gamesCallURL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(this.searchModel)
-        })
-            .then(response => response.json())
-            .then(data => {
-                this.games.innerHTML = "";
-                this.gamesResponse = data;
+        let gameFilter = new Filtering();
+        gameFilter.applyCallback = async (games) => {
+            this.games.innerHTML = "";
 
-                if (data.games.length == 0) {
-                    this.games.innerHTML = "<p>No games found</p>";
-                } else {
-                    let scroller = document.createElement("ul");
-                    scroller.classList.add("homegame-scroller");
+            if (games.length === 0) {
+                this.games.innerHTML = "<p>No games found.</p>";
+            } else {
+                let scroller = document.createElement("ul");
+                scroller.classList.add("homegame-scroller");
 
-                    for (let game of data.games) {
-                        let gameItem = document.createElement("li");
-                        gameItem.classList.add("homegame-item");
+                for (const game of games) {
+                    let gameItem = document.createElement("li");
+                    gameItem.classList.add("homegame-item");
 
-                        let gameIcon = renderGameIcon(game, true, showRatings, showClassification, classificationDisplayOrder, true, false);
-                        gameItem.appendChild(gameIcon);
-                        scroller.appendChild(gameItem);
-                    }
-                    this.games.appendChild(scroller);
+                    let gameObj = new GameIcon(game);
+                    let gameTile = await gameObj.Render(true, showRatings, showClassification, classificationDisplayOrder, false, true);
+                    gameItem.appendChild(gameTile);
 
-                    $('.lazy').Lazy({
-                        effect: 'fadeIn',
-                        effectTime: 500,
-                        visibleOnly: true,
-                        defaultImage: '/images/unknowngame.png',
-                        delay: 250,
-                        enableThrottle: true,
-                        throttle: 250,
-                        afterLoad: function (element) {
-                            //console.log(element[0].getAttribute('data-id'));
+                    scroller.appendChild(gameItem);
+
+                    if (game.cover) {
+                        let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg?sourceType=' + game.metadataSource;
+                        if (!coverURLList.includes(coverUrl)) {
+                            coverURLList.push(coverUrl);
                         }
-                    });
+                    }
                 }
-            });
+
+                this.games.appendChild(scroller);
+
+                backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true);
+            }
+        }
+        gameFilter.ApplyFilter(this.searchModel);
     }
 }
 
@@ -84,119 +72,50 @@ let gameRows = [];
 
 gameRows.push(new HomePageGameRow("Favourites",
     {
-        "Name": "",
-        "HasSavedGame": false,
-        "isFavourite": true,
-        "Platform": [],
-        "Genre": [],
-        "GameMode": [],
-        "PlayerPerspective": [],
-        "Theme": [],
-        "MinimumReleaseYear": -1,
-        "MaximumReleaseYear": -1,
-        "GameRating": {
-            "MinimumRating": -1,
-            "MinimumRatingCount": -1,
-            "MaximumRating": -1,
-            "MaximumRatingCount": -1,
-            "IncludeUnrated": false
+        "orderBy": "NameThe",
+        "orderDirection": "Ascending",
+        "settings": {
+            "isFavourite": true
         },
-        "GameAgeRating": {
-            "AgeGroupings": [],
-            "IncludeUnrated": false
-        },
-        "Sorting": {
-            "SortBy": "NameThe",
-            "SortAscending": true
-        }
+        "limit": 10
     }
 ));
 
 gameRows.push(new HomePageGameRow("Saved Games",
     {
-        "Name": "",
-        "HasSavedGame": true,
-        "isFavourite": false,
-        "Platform": [],
-        "Genre": [],
-        "GameMode": [],
-        "PlayerPerspective": [],
-        "Theme": [],
-        "MinimumReleaseYear": -1,
-        "MaximumReleaseYear": -1,
-        "GameRating": {
-            "MinimumRating": -1,
-            "MinimumRatingCount": -1,
-            "MaximumRating": -1,
-            "MaximumRatingCount": -1,
-            "IncludeUnrated": false
+        "orderBy": "NameThe",
+        "orderDirection": "Ascending",
+        "settings": {
+            "hasSavedGame": true
         },
-        "GameAgeRating": {
-            "AgeGroupings": [],
-            "IncludeUnrated": false
-        },
-        "Sorting": {
-            "SortBy": "NameThe",
-            "SortAscending": true
-        }
+        "limit": 10
     }
 ));
 
 gameRows.push(new HomePageGameRow("Top Rated Games",
     {
-        "Name": "",
-        "HasSavedGame": false,
-        "isFavourite": false,
-        "Platform": [],
-        "Genre": [],
-        "GameMode": [],
-        "PlayerPerspective": [],
-        "Theme": [],
-        "MinimumReleaseYear": -1,
-        "MaximumReleaseYear": -1,
-        "GameRating": {
-            "MinimumRating": -1,
-            "MinimumRatingCount": 15,
-            "MaximumRating": -1,
-            "MaximumRatingCount": -1,
-            "IncludeUnrated": false
+        "orderBy": "Rating",
+        "orderDirection": "Descending",
+        "uservotecount": {
+            "min": 15,
+            "max": null
         },
-        "GameAgeRating": {
-            "AgeGroupings": [],
-            "IncludeUnrated": false
-        },
-        "Sorting": {
-            "SortBy": "Rating",
-            "SortAscending": false
-        }
+        "limit": 10
     }
 ));
 
 async function populateRows() {
     // start populating the rows
-    let coverURLList = [];
+
     for (let row of gameRows) {
         targetDiv.appendChild(row.row);
         await row.populate();
-        console.log(row.gamesResponse);
-
-        // collect the cover URLs
-        for (let game of row.gamesResponse.games) {
-            if (game.cover) {
-                if (game.cover.id) {
-                    let coverUrl = '/api/v1.1/Games/' + game.id + '/cover/' + game.cover.id + '/image/cover_big/' + game.cover.id + '.jpg';
-                    if (!coverURLList.includes(coverUrl)) {
-                        coverURLList.push(coverUrl);
-                    }
-                }
-            }
-        }
     }
-
-    backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true);
 }
 
 populateRows();
+
+let coverURLList = [];
 
 let profileDiv = document.getElementById("gameprofile");
 profileDiv.innerHTML = "";

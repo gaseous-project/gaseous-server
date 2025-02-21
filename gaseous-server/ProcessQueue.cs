@@ -9,8 +9,8 @@ using NuGet.Packaging;
 
 namespace gaseous_server
 {
-	public static class ProcessQueue
-	{
+    public static class ProcessQueue
+    {
         public static List<QueueItem> QueueItems = new List<QueueItem>();
 
         public class QueueItem
@@ -115,8 +115,8 @@ namespace gaseous_server
             };
             private List<QueueItemType> _Blocks = new List<QueueItemType>();
 
-            public List<DayOfWeek> AllowedDays 
-            { 
+            public List<DayOfWeek> AllowedDays
+            {
                 get
                 {
                     return _AllowedDays;
@@ -124,7 +124,7 @@ namespace gaseous_server
                 set
                 {
                     _AllowedDays = value;
-                } 
+                }
             }
             public int AllowedStartHours { get; set; } = 0;
             public int AllowedStartMinutes { get; set; } = 0;
@@ -135,7 +135,7 @@ namespace gaseous_server
             public DateTime LastRunTime => _LastRunTime;
             public DateTime LastFinishTime => _LastFinishTime;
             public double LastRunDuration => _LastRunDuration;
-            public DateTime NextRunTime 
+            public DateTime NextRunTime
             {
                 get
                 {
@@ -338,18 +338,6 @@ namespace gaseous_server
 
                                     break;
 
-                                case QueueItemType.Rematcher:
-                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Rematch");
-                                    Classes.ImportGame importRematch = new ImportGame
-                                    {
-                                        CallingQueueItem = this
-                                    };
-                                    importRematch.Rematcher(_ForceExecute);
-
-                                    _SaveLastRunTime = true;
-
-                                    break;
-
                                 case QueueItemType.CollectionCompiler:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Collection Compiler");
                                     Dictionary<string, object> collectionOptions = (Dictionary<string, object>)Options;
@@ -368,7 +356,8 @@ namespace gaseous_server
 
                                 case QueueItemType.DailyMaintainer:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Daily Maintenance");
-                                    Classes.Maintenance maintenance = new Maintenance{
+                                    Classes.Maintenance maintenance = new Maintenance
+                                    {
                                         CallingQueueItem = this
                                     };
                                     maintenance.RunDailyMaintenance();
@@ -379,7 +368,8 @@ namespace gaseous_server
 
                                 case QueueItemType.WeeklyMaintainer:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Weekly Maintenance");
-                                    Classes.Maintenance weeklyMaintenance = new Maintenance{
+                                    Classes.Maintenance weeklyMaintenance = new Maintenance
+                                    {
                                         CallingQueueItem = this
                                     };
                                     weeklyMaintenance.RunWeeklyMaintenance();
@@ -390,7 +380,7 @@ namespace gaseous_server
                                 case QueueItemType.TempCleanup:
                                     try
                                     {
-                                        foreach (GameLibrary.LibraryItem libraryItem in GameLibrary.GetLibraries)
+                                        foreach (GameLibrary.LibraryItem libraryItem in GameLibrary.GetLibraries())
                                         {
                                             string rootPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, libraryItem.Id.ToString());
                                             if (Directory.Exists(rootPath))
@@ -571,11 +561,6 @@ namespace gaseous_server
             /// Performs the work for the LibraryScan task
             /// </summary>
             LibraryScanWorker,
-
-            /// <summary>
-            /// Looks for roms in the library that have an unknown platform or game match
-            /// </summary>
-            Rematcher,
 
             /// <summary>
             /// Builds collections - set the options attribute to the id of the collection to build

@@ -24,6 +24,7 @@
 
     /* page */
     --page-font-colour: rgb(255, 255, 255);
+    --page-font-colour-subtitle: rgb(143, 143, 143);
     --selected-item: rgba(0, 0, 170, 0.5);
     --selected-item-hover: rgb(0, 0, 255);
     --hover-selectable: rgb(255, 255, 0);
@@ -42,7 +43,8 @@
     --input-font-colour: var(--page-font-colour);
 
     /* button */
-    --button-background: rgb(85, 85, 85);
+    --button-background: rgb(110, 109, 109);
+    --button-background-gradient: linear-gradient(140deg, rgba(110, 109, 109, 1) 0%, rgba(85, 85, 85, 1) 100%);
     --button-background-hover: rgb(136, 136, 136);
     --button-background-disabled: var(--button-background-hover);
     --button-border: rgb(85, 85, 85);
@@ -51,19 +53,21 @@
     --button-font-colour: rgb(255, 255, 255);
     --button-font-colour-hover: var(--button-font-colour);
     --button-font-colour-disabled: var(--button-border-hover);
-    --button-red-background: darkred;
-    --button-red-background-hover: red;
+    --button-red-background: rgb(139, 0, 0);
+    --button-red-background-gradient: linear-gradient(140deg, rgba(255, 0, 0, 1) 0%, rgba(139, 0, 0, 1) 100%);
+    --button-red-background-hover: rgb(255, 0, 0);
     --button-red-background-disabled: rgb(85, 85, 85);
-    --button-red-border: darkred;
-    --button-red-border-hover: red;
+    --button-red-border: rgb(139, 0, 0);
+    --button-red-border-hover: rgb(255, 0, 0);
     --button-red-border-disabled: rgb(85, 85, 85);
     --button-red-font-colour: rgb(255, 255, 255);
     --button-red-font-colour-hover: var(--button-red-font-colour);
     --button-red-font-colour-disabled: var(--button-red-font-colour);
     --button-blue-background: rgb(0, 0, 170);
+    --button-blue-background-gradient: linear-gradient(140deg, rgba(0, 0, 255, 1) 0%, rgba(0, 0, 150, 1) 100%);
     --button-blue-background-hover: rgb(0, 0, 255);
     --button-blue-background-disabled: rgb(85, 85, 85);
-    --button-blue-border: rgb(0, 0, 170);
+    --button-blue-border: rgb(0, 0, 255);
     --button-blue-border-hover: rgb(0, 0, 255);
     --button-blue-border-disabled: rgb(85, 85, 85);
     --button-blue-font-colour: rgb(255, 255, 255);
@@ -124,6 +128,7 @@
     --profile-card-body-background: rgb(133, 156, 163);
     --profile-card-display-name-text-color: rgb(255, 255, 255);
     --profile-card-quip-text-color: var(--profile-card-display-name-text-color);
+    --profile-card-now-playing-background-color: rgba(0, 0, 0, 0.7);
 
     /* login */
     /* ------------------------------------------- */

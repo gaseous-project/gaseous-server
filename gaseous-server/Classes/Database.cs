@@ -2,6 +2,7 @@
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Linq.Expressions;
 using System.Reflection;
 using MySqlConnector;
 
@@ -434,19 +435,26 @@ namespace gaseous_server.Classes
 
 			public static object? GetCacheObject(string CacheKey)
 			{
-				if (MemoryCache.ContainsKey(CacheKey))
+				try
 				{
-					if (MemoryCache[CacheKey].expirationTime < Environment.TickCount)
+					if (MemoryCache.ContainsKey(CacheKey))
 					{
-						MemoryCache.Remove(CacheKey);
-						return null;
+						if (MemoryCache[CacheKey].expirationTime < Environment.TickCount)
+						{
+							MemoryCache.Remove(CacheKey);
+							return null;
+						}
+						else
+						{
+							return MemoryCache[CacheKey].cacheObject;
+						}
 					}
 					else
 					{
-						return MemoryCache[CacheKey].cacheObject;
+						return null;
 					}
 				}
-				else
+				catch
 				{
 					return null;
 				}

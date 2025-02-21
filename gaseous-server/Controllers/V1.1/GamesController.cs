@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 using Authentication;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
-using IGDB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
@@ -19,6 +18,8 @@ using Microsoft.CodeAnalysis.Scripting;
 using static gaseous_server.Classes.Metadata.AgeRatings;
 using Asp.Versioning;
 using Humanizer;
+using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Models;
 
 namespace gaseous_server.Controllers.v1_1
 {
@@ -42,7 +43,7 @@ namespace gaseous_server.Controllers.v1_1
         [MapToApiVersion("1.1")]
         [HttpPost]
         [ProducesResponseType(typeof(GameReturnPackage), StatusCodes.Status200OK)]
-        public async Task<IActionResult> Game_v1_1(GameSearchModel model, int pageNumber = 0, int pageSize = 0)
+        public async Task<IActionResult> Game_v1_1(GameSearchModel model, int pageNumber = 0, int pageSize = 0, bool returnSummary = true, bool returnGames = true)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -87,7 +88,7 @@ namespace gaseous_server.Controllers.v1_1
                     model.GameAgeRating.IncludeUnrated = false;
                 }
 
-                return Ok(GetGames(model, user.Id, pageNumber, pageSize));
+                return Ok(GetGames(model, user.Id, pageNumber, pageSize, returnSummary, returnGames));
             }
             else
             {
@@ -97,9 +98,9 @@ namespace gaseous_server.Controllers.v1_1
 
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{GameId}/Related")]
+        [Route("{MetadataMapId}/Related")]
         [ProducesResponseType(typeof(GameReturnPackage), StatusCodes.Status200OK)]
-        public async Task<IActionResult> GameRelated(long GameId)
+        public async Task<IActionResult> GameRelated(long MetadataMapId)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -112,18 +113,19 @@ namespace gaseous_server.Controllers.v1_1
                 }
 
                 Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                string sql = "SELECT view_Games.Id, view_Games.AgeGroupId, Relation_Game_SimilarGames.SimilarGamesId FROM view_Games JOIN Relation_Game_SimilarGames ON view_Games.Id = Relation_Game_SimilarGames.GameId AND Relation_Game_SimilarGames.SimilarGamesId IN (SELECT Id FROM view_Games) WHERE view_Games.Id = @id AND (view_Games.AgeGroupId <= @agegroupid" + IncludeUnrated + ")";
+                string sql = "SELECT view_Games.Id, view_Games.AgeGroupId, Relation_Game_SimilarGames.SimilarGamesId FROM view_Games JOIN Relation_Game_SimilarGames ON view_Games.Id = Relation_Game_SimilarGames.GameId AND view_Games.GameIdType = Relation_Game_SimilarGames.GameSourceId AND Relation_Game_SimilarGames.SimilarGamesId IN (SELECT Id FROM view_Games) WHERE view_Games.Id = @id AND (view_Games.AgeGroupId <= @agegroupid" + IncludeUnrated + ")";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
-                dbDict.Add("id", GameId);
+                dbDict.Add("id", MetadataMapId);
                 dbDict.Add("agegroupid", (int)user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction);
 
-                List<IGDB.Models.Game> RetVal = new List<IGDB.Models.Game>();
+                List<Models.Game> RetVal = new List<Models.Game>();
 
                 DataTable dbResponse = db.ExecuteCMD(sql, dbDict);
 
                 foreach (DataRow dr in dbResponse.Rows)
                 {
-                    RetVal.Add(Classes.Metadata.Games.GetGame((long)dr["SimilarGamesId"], false, false, false));
+                    MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                    RetVal.Add(Classes.Metadata.Games.GetGame(metadataMap.SourceType, (long)dr["SimilarGamesId"]));
                 }
 
                 GameReturnPackage gameReturn = new GameReturnPackage(RetVal.Count, RetVal);
@@ -188,7 +190,7 @@ namespace gaseous_server.Controllers.v1_1
             }
         }
 
-        public static GameReturnPackage GetGames(GameSearchModel model, string userid, int pageNumber = 0, int pageSize = 0)
+        public static GameReturnPackage GetGames(GameSearchModel model, string userid, int pageNumber = 0, int pageSize = 0, bool returnSummary = true, bool returnGames = true)
         {
             string whereClause = "";
             string havingClause = "";
@@ -481,8 +483,10 @@ namespace gaseous_server.Controllers.v1_1
 
             string sql = @"
 SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
-SELECT DISTINCT
+SELECT
     Game.Id,
+    Game.MetadataMapId,
+    Game.GameIdType,
     Game.`Name`,
     Game.NameThe,
     Game.Slug,
@@ -497,6 +501,11 @@ SELECT DISTINCT
     Game.ParentGame,
     Game.AgeRatings,
     Game.AgeGroupId,
+    Game.Genres,
+    Game.GameModes,
+    Game.PlayerPerspectives,
+    Game.Themes,
+    CONCAT('[', GROUP_CONCAT(DISTINCT MetadataMap.PlatformId ORDER BY MetadataMap.PlatformId SEPARATOR ','), ']') AS Platforms,
     Game.RomCount,
     RomSavedStates.RomSaveCount,
     RomGroupSavedStates.MediaGroupSaveCount,
@@ -507,15 +516,11 @@ SELECT DISTINCT
 FROM
     (SELECT DISTINCT
         Game.*,
-            CASE
-                WHEN Game.`Name` LIKE 'The %' THEN CONCAT(TRIM(SUBSTR(Game.`Name` FROM 4)), ', The')
-                ELSE Game.`Name`
-            END AS NameThe,
             view_Games_Roms.PlatformId,
             AgeGroup.AgeGroupId,
             COUNT(view_Games_Roms.Id) AS RomCount
     FROM
-        Game
+        view_GamesWithRoms AS Game
     LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId
     LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId" + platformWhereClause + @"
     LEFT JOIN AlternativeName ON Game.Id = AlternativeName.Game " + nameWhereClause + @"
@@ -540,97 +545,115 @@ FROM
     JOIN GameState ON RomMediaGroup.Id = GameState.RomId
         AND GameState.IsMediaGroup = 1
         AND GameState.UserId = @userid
-    GROUP BY RomMediaGroup.GameId) RomGroupSavedStates ON Game.Id = RomGroupSavedStates.GameId
+    GROUP BY RomMediaGroup.GameId) RomGroupSavedStates ON Game.MetadataMapId = RomGroupSavedStates.GameId
+        JOIN
+	MetadataMapBridge ON Game.Id = MetadataMapBridge.MetadataSourceId AND MetadataMapBridge.Preferred = 1
+		JOIN
+	MetadataMap ON MetadataMapBridge.ParentMapId = MetadataMap.Id
         LEFT JOIN
-    Relation_Game_Genres ON Game.Id = Relation_Game_Genres.GameId
+    Relation_Game_Genres ON Game.Id = Relation_Game_Genres.GameId AND Relation_Game_Genres.GameSourceId = Game.GameIdType
         LEFT JOIN
-    Relation_Game_GameModes ON Game.Id = Relation_Game_GameModes.GameId
+    Relation_Game_GameModes ON Game.Id = Relation_Game_GameModes.GameId AND Relation_Game_GameModes.GameSourceId = Game.GameIdType
         LEFT JOIN
-    Relation_Game_PlayerPerspectives ON Game.Id = Relation_Game_PlayerPerspectives.GameId
+    Relation_Game_PlayerPerspectives ON Game.Id = Relation_Game_PlayerPerspectives.GameId AND Relation_Game_PlayerPerspectives.GameSourceId = Game.GameIdType
         LEFT JOIN
-    Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId
+    Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId AND Relation_Game_Themes.GameSourceId = Game.GameIdType
         LEFT JOIN
-    Favourites ON Game.Id = Favourites.GameId AND Favourites.UserId = @userid " + whereClause + " " + havingClause + " " + orderByClause;
-            List<Games.MinimalGameItem> RetVal = new List<Games.MinimalGameItem>();
+    Favourites ON Game.MetadataMapId = Favourites.GameId AND Favourites.UserId = @userid " + whereClause + " " + havingClause + " GROUP BY Game.Id " + orderByClause;
+
+            if (returnGames == true)
+            {
+                sql += " LIMIT @pageOffset, @pageSize";
+                whereParams.Add("pageOffset", pageSize * (pageNumber - 1));
+                whereParams.Add("pageSize", pageSize);
+            }
 
             DataTable dbResponse = db.ExecuteCMD(sql, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
 
             // get count
-            int RecordCount = dbResponse.Rows.Count;
-
-            // compile data for return
-            int pageOffset = pageSize * (pageNumber - 1);
-            for (int i = pageOffset; i < dbResponse.Rows.Count; i++)
+            int? RecordCount = null;
+            if (returnSummary == true)
             {
-                if (pageNumber != 0 && pageSize != 0)
-                {
-                    if (i >= (pageOffset + pageSize))
-                    {
-                        break;
-                    }
-                }
-
-                Game retGame = Storage.BuildCacheObject<Game>(new Game(), dbResponse.Rows[i]);
-                Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
-                retMinGame.Index = i;
-                if (dbResponse.Rows[i]["RomSaveCount"] != DBNull.Value || dbResponse.Rows[i]["MediaGroupSaveCount"] != DBNull.Value)
-                {
-                    retMinGame.HasSavedGame = true;
-                }
-                else
-                {
-                    retMinGame.HasSavedGame = false;
-                }
-                if ((int)dbResponse.Rows[i]["Favourite"] == 0)
-                {
-                    retMinGame.IsFavourite = false;
-                }
-                else
-                {
-                    retMinGame.IsFavourite = true;
-                }
-
-                RetVal.Add(retMinGame);
+                RecordCount = dbResponse.Rows.Count;
             }
 
-            // build alpha list
-            Dictionary<string, int> AlphaList = new Dictionary<string, int>();
-            if (orderByField == "NameThe" || orderByField == "Name")
+            // compile data for return
+            List<Games.MinimalGameItem>? RetVal = null;
+            if (returnGames == true)
             {
-                int CurrentPage = 1;
-                int NextPageIndex = pageSize;
+                RetVal = new List<Games.MinimalGameItem>();
+                foreach (int i in Enumerable.Range(0, dbResponse.Rows.Count))
+                {
+                    Models.Game retGame = Storage.BuildCacheObject<Models.Game>(new Models.Game(), dbResponse.Rows[i]);
+                    retGame.MetadataMapId = (long)dbResponse.Rows[i]["MetadataMapId"];
+                    retGame.MetadataSource = (HasheousClient.Models.MetadataSources)dbResponse.Rows[i]["GameIdType"];
 
-                string alphaSearchField;
-                if (orderByField == "NameThe")
-                {
-                    alphaSearchField = "NameThe";
-                }
-                else
-                {
-                    alphaSearchField = "Name";
-                }
-
-                for (int i = 0; i < dbResponse.Rows.Count; i++)
-                {
-                    if (NextPageIndex == i + 1)
+                    Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
+                    retMinGame.Index = i;
+                    if (dbResponse.Rows[i]["RomSaveCount"] != DBNull.Value || dbResponse.Rows[i]["MediaGroupSaveCount"] != DBNull.Value)
                     {
-                        NextPageIndex += pageSize;
-                        CurrentPage += 1;
-                    }
-
-                    string firstChar = dbResponse.Rows[i][alphaSearchField].ToString().Substring(0, 1).ToUpperInvariant();
-                    if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(firstChar))
-                    {
-                        if (!AlphaList.ContainsKey(firstChar))
-                        {
-                            AlphaList.Add(firstChar, CurrentPage);
-                        }
+                        retMinGame.HasSavedGame = true;
                     }
                     else
                     {
-                        if (!AlphaList.ContainsKey("#"))
+                        retMinGame.HasSavedGame = false;
+                    }
+                    if ((int)dbResponse.Rows[i]["Favourite"] == 0)
+                    {
+                        retMinGame.IsFavourite = false;
+                    }
+                    else
+                    {
+                        retMinGame.IsFavourite = true;
+                    }
+
+                    RetVal.Add(retMinGame);
+                }
+            }
+
+            Dictionary<string, int>? AlphaList = null;
+            if (returnSummary == true)
+            {
+                AlphaList = new Dictionary<string, int>();
+
+                // build alpha list
+                if (orderByField == "NameThe" || orderByField == "Name")
+                {
+                    int CurrentPage = 1;
+                    int NextPageIndex = pageSize;
+
+                    string alphaSearchField;
+                    if (orderByField == "NameThe")
+                    {
+                        alphaSearchField = "NameThe";
+                    }
+                    else
+                    {
+                        alphaSearchField = "Name";
+                    }
+
+                    for (int i = 0; i < dbResponse.Rows.Count; i++)
+                    {
+                        if (NextPageIndex == i + 1)
                         {
-                            AlphaList.Add("#", 1);
+                            NextPageIndex += pageSize;
+                            CurrentPage += 1;
+                        }
+
+                        string firstChar = dbResponse.Rows[i][alphaSearchField].ToString().Substring(0, 1).ToUpperInvariant();
+                        if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(firstChar))
+                        {
+                            if (!AlphaList.ContainsKey(firstChar))
+                            {
+                                AlphaList.Add(firstChar, CurrentPage);
+                            }
+                        }
+                        else
+                        {
+                            if (!AlphaList.ContainsKey("#"))
+                            {
+                                AlphaList.Add("#", 1);
+                            }
                         }
                     }
                 }
@@ -653,12 +676,12 @@ FROM
 
             }
 
-            public GameReturnPackage(int Count, List<Game> Games)
+            public GameReturnPackage(int Count, List<Models.Game> Games)
             {
                 this.Count = Count;
 
                 List<Games.MinimalGameItem> minimalGames = new List<Games.MinimalGameItem>();
-                foreach (Game game in Games)
+                foreach (Models.Game game in Games)
                 {
                     minimalGames.Add(new Classes.Metadata.Games.MinimalGameItem(game));
                 }
@@ -666,9 +689,9 @@ FROM
                 this.Games = minimalGames;
             }
 
-            public int Count { get; set; }
-            public List<Games.MinimalGameItem> Games { get; set; } = new List<Games.MinimalGameItem>();
-            public Dictionary<string, int> AlphaList { get; set; }
+            public int? Count { get; set; }
+            public List<Games.MinimalGameItem>? Games { get; set; } = new List<Games.MinimalGameItem>();
+            public Dictionary<string, int>? AlphaList { get; set; }
         }
     }
 }

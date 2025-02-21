@@ -24,7 +24,7 @@ namespace gaseous_server.Classes
                 ageRestriction_Generic += " OR view_Games.AgeGroupId IS NULL";
             }
 
-            string sql = "SELECT Platform.Id, Platform.`Name`, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT Game.Id, view_Games_Roms.PlatformId, COUNT(view_Games_Roms.Id) AS RomCount FROM Game LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + ageRestriction_Platform + ") GROUP BY Game.Id , view_Games_Roms.PlatformId HAVING RomCount > 0) Game JOIN Platform ON Game.PlatformId = Platform.Id GROUP BY Platform.`Name`;";
+            string sql = "SELECT Platform.Id, Platform.`Name`, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT Game.Id, view_Games_Roms.PlatformId, COUNT(view_Games_Roms.Id) AS RomCount FROM Game LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + ageRestriction_Platform + ") GROUP BY Game.Id , view_Games_Roms.PlatformId HAVING RomCount > 0) Game JOIN Platform ON Game.PlatformId = Platform.Id AND Platform.SourceId = 0 GROUP BY Platform.`Name`;";
 
             DataTable dbResponse = db.ExecuteCMD(sql, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 300));
 
@@ -37,47 +37,19 @@ namespace gaseous_server.Classes
             FilterSet.Add("platforms", platforms);
 
             // genres
-            List<FilterItem> genres = new List<FilterItem>();
-            dbResponse = GetGenericFilterItem(db, "Genre", ageRestriction_Platform);
-
-            foreach (DataRow dr in dbResponse.Rows)
-            {
-                FilterItem genreItem = new FilterItem(dr);
-                genres.Add(genreItem);
-            }
+            List<FilterItem> genres = GenerateFilterSet(db, "Genre", ageRestriction_Platform);
             FilterSet.Add("genres", genres);
 
             // game modes
-            List<FilterItem> gameModes = new List<FilterItem>();
-            dbResponse = GetGenericFilterItem(db, "GameMode", ageRestriction_Platform);
-
-            foreach (DataRow dr in dbResponse.Rows)
-            {
-                FilterItem gameModeItem = new FilterItem(dr);
-                gameModes.Add(gameModeItem);
-            }
+            List<FilterItem> gameModes = GenerateFilterSet(db, "GameMode", ageRestriction_Platform);
             FilterSet.Add("gamemodes", gameModes);
 
             // player perspectives
-            List<FilterItem> playerPerspectives = new List<FilterItem>();
-            dbResponse = GetGenericFilterItem(db, "PlayerPerspective", ageRestriction_Platform);
-
-            foreach (DataRow dr in dbResponse.Rows)
-            {
-                FilterItem playerPerspectiveItem = new FilterItem(dr);
-                playerPerspectives.Add(playerPerspectiveItem);
-            }
+            List<FilterItem> playerPerspectives = GenerateFilterSet(db, "PlayerPerspective", ageRestriction_Platform);
             FilterSet.Add("playerperspectives", playerPerspectives);
 
             // themes
-            List<FilterItem> themes = new List<FilterItem>();
-            dbResponse = GetGenericFilterItem(db, "Theme", ageRestriction_Platform);
-
-            foreach (DataRow dr in dbResponse.Rows)
-            {
-                FilterItem themeItem = new FilterItem(dr);
-                themes.Add(themeItem);
-            }
+            List<FilterItem> themes = GenerateFilterSet(db, "Theme", ageRestriction_Platform);
             FilterSet.Add("themes", themes);
 
             // age groups
@@ -108,11 +80,53 @@ namespace gaseous_server.Classes
             return FilterSet;
         }
 
+        private static List<FilterItem> GenerateFilterSet(Database db, string Name, string AgeRestriction)
+        {
+            List<FilterItem> filter = new List<FilterItem>();
+            DataTable dbResponse = GetGenericFilterItem(db, Name, AgeRestriction);
+
+            foreach (DataRow dr in dbResponse.Rows)
+            {
+                FilterItem filterItem = new FilterItem(dr);
+                if (filterItem != null)
+                {
+                    bool nameExists = false;
+                    foreach (var filterObject in filter)
+                    {
+                        if (filterObject.Name == filterItem.Name)
+                        {
+                            // add the ids to the existing genre
+                            if (filterObject.Ids == null)
+                            {
+                                filterObject.Ids = new Dictionary<HasheousClient.Hasheous.MetadataProvider, long>();
+                            }
+
+                            foreach (var id in filterItem.Ids)
+                            {
+                                if (filterObject.Ids.ContainsKey(id.Key) == false)
+                                {
+                                    filterObject.Ids.Add(id.Key, id.Value);
+                                    filterObject.GameCount += filterItem.GameCount;
+                                }
+                            }
+
+                            nameExists = true;
+                        }
+                    }
+
+                    if (nameExists == false)
+                    {
+                        filter.Add(filterItem);
+                    }
+                }
+            }
+
+            return filter;
+        }
+
         private static DataTable GetGenericFilterItem(Database db, string Name, string AgeRestriction)
         {
-            //string sql = "SELECT DISTINCT <ITEMNAME>.Id, <ITEMNAME>.`Name`, COUNT(view_Games.Id) AS GameCount FROM <ITEMNAME> LEFT JOIN Relation_Game_<ITEMNAME>s ON Relation_Game_<ITEMNAME>s.<ITEMNAME>sId = <ITEMNAME>.Id LEFT JOIN view_Games ON view_Games.Id = Relation_Game_<ITEMNAME>s.GameId WHERE (" + AgeRestriction_Generic + ") GROUP BY <ITEMNAME>.Id HAVING GameCount > 0 ORDER BY <ITEMNAME>.`Name`;";
-
-            string sql = "SELECT <ITEMNAME>.Id, <ITEMNAME>.`Name`, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT Game.Id, AgeGroup.AgeGroupId, COUNT(view_Games_Roms.Id) AS RomCount FROM Game LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + AgeRestriction + ") GROUP BY Game.Id HAVING RomCount > 0) Game JOIN Relation_Game_<ITEMNAME>s ON Game.Id = Relation_Game_<ITEMNAME>s.GameId JOIN <ITEMNAME> ON Relation_Game_<ITEMNAME>s.<ITEMNAME>sId = <ITEMNAME>.Id GROUP BY <ITEMNAME>.`Name` ORDER BY <ITEMNAME>.`Name`;";
+            string sql = "SELECT Game.GameIdType, <ITEMNAME>.Id, <ITEMNAME>.`Name`, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT view_Games_Roms.GameIdType, Game.Id, AgeGroup.AgeGroupId, COUNT(view_Games_Roms.Id) AS RomCount FROM Game LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + AgeRestriction + ") GROUP BY Game.Id HAVING RomCount > 0) Game JOIN Relation_Game_<ITEMNAME>s ON Game.Id = Relation_Game_<ITEMNAME>s.GameId AND Game.GameIdType = Relation_Game_<ITEMNAME>s.GameSourceId JOIN <ITEMNAME> ON Relation_Game_<ITEMNAME>s.<ITEMNAME>sId = <ITEMNAME>.Id GROUP BY GameIdType, <ITEMNAME>.`Name` ORDER BY <ITEMNAME>.`Name`;";
             sql = sql.Replace("<ITEMNAME>", Name);
             DataTable dbResponse = db.ExecuteCMD(sql, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 300));
 
@@ -128,12 +142,32 @@ namespace gaseous_server.Classes
 
             public FilterItem(DataRow dr)
             {
-                this.Id = (long)dr["Id"];
+                if (dr.Table.Columns.Contains("GameIdType"))
+                {
+                    HasheousClient.Hasheous.MetadataProvider SourceId = (HasheousClient.Hasheous.MetadataProvider)Enum.Parse(typeof(HasheousClient.Hasheous.MetadataProvider), dr["GameIdType"].ToString());
+
+                    if (this.Ids == null)
+                    {
+                        this.Ids = new Dictionary<HasheousClient.Hasheous.MetadataProvider, long>();
+                    }
+
+                    if (this.Ids.ContainsKey(SourceId) == false)
+                    {
+                        this.Ids.Add(SourceId, (long)dr["Id"]);
+                    }
+                }
+                else
+                {
+                    this.Id = (long)dr["Id"];
+                }
+
                 this.Name = (string)dr["Name"];
                 this.GameCount = (int)(long)dr["GameCount"];
             }
 
-            public long Id { get; set; }
+            public long? Id { get; set; }
+
+            public Dictionary<HasheousClient.Hasheous.MetadataProvider, long>? Ids { get; set; }
 
             public string Name { get; set; }
 

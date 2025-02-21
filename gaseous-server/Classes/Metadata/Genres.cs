@@ -1,19 +1,20 @@
 ﻿using System;
-using IGDB;
-using IGDB.Models;
+using HasheousClient.Models.Metadata.IGDB;
 
 
 namespace gaseous_server.Classes.Metadata
 {
-	public class Genres
+    public class Genres
     {
-        const string fieldList = "fields checksum,created_at,name,slug,updated_at,url;";
+        public const string fieldList = "fields checksum,created_at,name,slug,updated_at,url;";
+
+        static List<GenreItem> genreItemCache = new List<GenreItem>();
 
         public Genres()
         {
         }
 
-        public static Genre? GetGenres(long? Id)
+        public static Genre? GetGenres(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -21,88 +22,46 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<Genre> RetVal = _GetGenres(SearchUsing.id, Id);
-                return RetVal.Result;
-            }
-        }
+                // check cache for genre
+                if (genreItemCache.Find(x => x.Id == Id && x.SourceType == SourceType) != null)
+                {
+                    GenreItem genreItem = genreItemCache.Find(x => x.Id == Id && x.SourceType == SourceType);
 
-        public static Genre GetGenres(string Slug)
-        {
-            Task<Genre> RetVal = _GetGenres(SearchUsing.slug, Slug);
-            return RetVal.Result;
-        }
-
-        private static async Task<Genre> _GetGenres(SearchUsing searchUsing, object searchValue)
-        {
-            // check database first
-            Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
-            if (searchUsing == SearchUsing.id)
-            {
-                cacheStatus = Storage.GetCacheStatus("Genre", (long)searchValue);
-            }
-            else
-            {
-                cacheStatus = Storage.GetCacheStatus("Genre", (string)searchValue);
-            }
-
-            // set up where clause
-            string WhereClause = "";
-            switch (searchUsing)
-            {
-                case SearchUsing.id:
-                    WhereClause = "where id = " + searchValue;
-                    break;
-                case SearchUsing.slug:
-                    WhereClause = "where slug = " + searchValue;
-                    break;
-                default:
-                    throw new Exception("Invalid search type");
-            }
-
-            Genre returnValue = new Genre();
-            switch (cacheStatus)
-            {
-                case Storage.CacheStatus.NotPresent:
-                    returnValue = await GetObjectFromServer(WhereClause);
-                    Storage.NewCacheValue(returnValue);
-                    break;  
-                case Storage.CacheStatus.Expired:
-                    try
+                    Genre? nGenre = new Genre
                     {
-                        returnValue = await GetObjectFromServer(WhereClause);
-                        Storage.NewCacheValue(returnValue, true);
-                    }
-                    catch (Exception ex)
+                        Id = genreItem.Id,
+                        Name = genreItem.Name
+                    };
+
+                    return nGenre;
+                }
+
+                // get genre from metadata
+                Genre? RetVal = Metadata.GetMetadata<Genre>(SourceType, (long)Id, false);
+
+                if (RetVal != null)
+                {
+                    // add genre to cache
+                    if (genreItemCache.Find(x => x.Id == Id && x.SourceType == SourceType) == null)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
-                        returnValue = Storage.GetCacheValue<Genre>(returnValue, "id", (long)searchValue);
+                        GenreItem genreItem = new GenreItem();
+                        genreItem.Id = (long)Id;
+                        genreItem.SourceType = SourceType;
+                        genreItem.Name = RetVal.Name;
+                        genreItemCache.Add(genreItem);
                     }
-                    break;
-                case Storage.CacheStatus.Current:
-                    returnValue = Storage.GetCacheValue<Genre>(returnValue, "id", (long)searchValue);
-                    break;
-                default:
-                    throw new Exception("How did you get here?");
+                }
+
+                return RetVal;
             }
-
-            return returnValue;
         }
+    }
 
-        private enum SearchUsing
-        {
-            id,
-            slug
-        }
-
-        private static async Task<Genre> GetObjectFromServer(string WhereClause)
-        {
-            // get Genres metadata
-            Communications comms = new Communications();
-            var results = await comms.APIComm<Genre>(IGDBClient.Endpoints.Genres, fieldList, WhereClause);
-            var result = results.First();
-
-            return result;
-        }
-	}
+    class GenreItem
+    {
+        public long Id { get; set; }
+        public HasheousClient.Models.MetadataSources SourceType { get; set; }
+        public string Name { get; set; }
+    }
 }
 

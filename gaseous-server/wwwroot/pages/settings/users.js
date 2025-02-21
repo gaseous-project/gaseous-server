@@ -569,13 +569,16 @@ class UserEdit {
             let tdCell = document.createElement('td');
 
             for (let i = 0; i < ageGroupList.length; i++) {
-                let ageRatingBadgeIndexes = AgeRatingGroups[ageGroupList[i]][key];
+                // let ageRatingBadgeIndexes = AgeRatingGroups[ageGroupList[i]][key.toLowerCase()];
+                let ageRatingBadgeIndexes = getParameterCaseInsensitive(AgeRatingGroups[ageGroupList[i]], key);
 
                 for (let j = 0; j < ageRatingBadgeIndexes.length; j++) {
                     let ageRatingBatch = document.createElement('img');
-                    ageRatingBatch.src = '/images/Ratings/' + key + '/' + AgeRatingStrings[ageRatingBadgeIndexes[j]] + '.svg';
+                    // let ageRatingBadge = AgeRatingStrings[ageRatingBadgeIndexes[j]];
+                    let ageRatingBadge = ageRatingBadgeIndexes[j];
+                    ageRatingBatch.src = '/images/Ratings/' + key + '/' + ageRatingBadge + '.svg';
                     ageRatingBatch.classList.add('rating_image_mini');
-                    ageRatingBatch.setAttribute('title', ClassificationRatings[AgeRatingStrings[ageRatingBadgeIndexes[j]]]);
+                    ageRatingBatch.setAttribute('title', ClassificationRatings[ageRatingBadge]);
                     tdCell.appendChild(ageRatingBatch);
                 }
 

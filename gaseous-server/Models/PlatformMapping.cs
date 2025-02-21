@@ -8,7 +8,7 @@ using System.Web;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
-using IGDB.Models;
+using HasheousClient.Models.Metadata.IGDB;
 using Newtonsoft.Json;
 
 namespace gaseous_server.Models
@@ -46,7 +46,7 @@ namespace gaseous_server.Models
                         }
                         else
                         {
-                            WritePlatformMap(mapItem, true, true);
+                            WritePlatformMap(mapItem, true, true, true);
                             Logging.Log(Logging.LogType.Information, "Platform Map", "Overwriting " + mapItem.IGDBName + " with default values.");
                         }
                     }
@@ -54,7 +54,7 @@ namespace gaseous_server.Models
                     {
                         Logging.Log(Logging.LogType.Information, "Platform Map", "Importing " + mapItem.IGDBName + " from predefined data.");
                         // doesn't exist - add it
-                        WritePlatformMap(mapItem, false, true);
+                        WritePlatformMap(mapItem, false, true, true);
                     }
                 }
             }
@@ -92,9 +92,9 @@ namespace gaseous_server.Models
             }
         }
 
-        private static IGDB.Models.Platform CreateDummyPlatform(PlatformMapItem mapItem)
+        private static Platform CreateDummyPlatform(PlatformMapItem mapItem)
         {
-            IGDB.Models.Platform platform = new IGDB.Models.Platform
+            Platform platform = new Platform
             {
                 Id = mapItem.IGDBId,
                 Name = mapItem.IGDBName,
@@ -102,9 +102,14 @@ namespace gaseous_server.Models
                 AlternativeName = mapItem.AlternateNames.FirstOrDefault()
             };
 
-            if (Storage.GetCacheStatus("Platform", mapItem.IGDBId) == Storage.CacheStatus.NotPresent)
+            if (Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.None, "Platform", mapItem.IGDBId) == Storage.CacheStatus.NotPresent)
             {
-                Storage.NewCacheValue(platform);
+                Storage.NewCacheValue(HasheousClient.Models.MetadataSources.None, platform);
+            }
+
+            if (Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.IGDB, "Platform", mapItem.IGDBId) == Storage.CacheStatus.NotPresent)
+            {
+                Storage.NewCacheValue(HasheousClient.Models.MetadataSources.IGDB, platform);
             }
 
             return platform;
@@ -164,7 +169,7 @@ namespace gaseous_server.Models
             }
         }
 
-        public static void WritePlatformMap(PlatformMapItem item, bool Update, bool AllowAvailableEmulatorOverwrite)
+        public static void WritePlatformMap(PlatformMapItem item, bool Update, bool AllowAvailableEmulatorOverwrite, bool overwriteBios = false)
         {
             CreateDummyPlatform(item);
 
@@ -247,13 +252,20 @@ namespace gaseous_server.Models
                 foreach (PlatformMapItem.EmulatorBiosItem biosItem in item.Bios)
                 {
                     bool isEnabled = false;
-                    if (item.EnabledBIOSHashes == null)
-                    {
-                        item.EnabledBIOSHashes = new List<string>();
-                    }
-                    if (item.EnabledBIOSHashes.Contains(biosItem.hash))
+                    if (overwriteBios == true)
                     {
                         isEnabled = true;
+                    }
+                    else
+                    {
+                        if (item.EnabledBIOSHashes == null)
+                        {
+                            item.EnabledBIOSHashes = new List<string>();
+                        }
+                        if (item.EnabledBIOSHashes.Contains(biosItem.hash))
+                        {
+                            isEnabled = true;
+                        }
                     }
 
                     sql = "INSERT INTO PlatformMap_Bios (Id, Filename, Description, Hash, Enabled) VALUES (@Id, @Filename, @Description, @Hash, @Enabled);";
@@ -303,15 +315,15 @@ namespace gaseous_server.Models
             string sql = "";
 
             // get platform data
-            // IGDB.Models.Platform? platform = Platforms.GetPlatform(IGDBId, false);
-            IGDB.Models.Platform? platform = null;
-            if (Storage.GetCacheStatus("Platform", IGDBId) == Storage.CacheStatus.NotPresent)
+            Platform? platform = null;
+            if (Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.None, "Platform", IGDBId) == Storage.CacheStatus.NotPresent)
             {
                 //platform = Platforms.GetPlatform(IGDBId, false);
             }
             else
             {
-                platform = (IGDB.Models.Platform)Storage.GetCacheValue<IGDB.Models.Platform>(new Platform(), "id", IGDBId);
+                // platform = (Platform)Storage.GetCacheValue<Platform>(HasheousClient.Models.MetadataSources.None, new Platform(), "id", IGDBId);
+                platform = Platforms.GetPlatform(IGDBId, HasheousClient.Models.MetadataSources.None);
             }
 
             if (platform != null)
@@ -440,8 +452,7 @@ namespace gaseous_server.Models
                         {
                             if (Signature.Game != null) { Signature.Game.System = PlatformMapping.IGDBName; }
                         }
-                        Signature.Flags.IGDBPlatformId = PlatformMapping.IGDBId;
-                        Signature.Flags.IGDBPlatformName = PlatformMapping.IGDBName;
+                        Signature.MetadataSources.AddPlatform(PlatformMapping.IGDBId, PlatformMapping.IGDBName, HasheousClient.Models.MetadataSources.IGDB);
 
                         PlatformFound = true;
 
@@ -464,8 +475,7 @@ namespace gaseous_server.Models
                         {
                             if (Signature.Game != null) { Signature.Game.System = PlatformMapping.IGDBName; }
                         }
-                        Signature.Flags.IGDBPlatformId = PlatformMapping.IGDBId;
-                        Signature.Flags.IGDBPlatformName = PlatformMapping.IGDBName;
+                        Signature.MetadataSources.AddPlatform(PlatformMapping.IGDBId, PlatformMapping.IGDBName, HasheousClient.Models.MetadataSources.IGDB);
 
                         PlatformFound = true;
 

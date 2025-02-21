@@ -3,7 +3,6 @@ using System.Data;
 using gaseous_signature_parser.models.RomSignatureObject;
 using static gaseous_server.Classes.RomMediaGroup;
 using gaseous_server.Classes.Metadata;
-using IGDB.Models;
 using static HasheousClient.Models.FixMatchModel;
 using NuGet.Protocol.Core.Types;
 using static gaseous_server.Classes.FileSignature;
@@ -39,7 +38,7 @@ namespace gaseous_server.Classes
 			string NameSearchWhere = "";
 			if (NameSearch.Length > 0)
 			{
-				NameSearchWhere = " AND view_Games_Roms.`Name` LIKE @namesearch";
+				NameSearchWhere = " AND Games_Roms.`Name` LIKE @namesearch";
 				dbDict.Add("namesearch", '%' + NameSearch + '%');
 			}
 
@@ -51,46 +50,72 @@ namespace gaseous_server.Classes
 				UserJoin = @"
 					LEFT JOIN
 				User_RecentPlayedRoms ON User_RecentPlayedRoms.UserId = @userid
-					AND User_RecentPlayedRoms.GameId = view_Games_Roms.GameId
-					AND User_RecentPlayedRoms.PlatformId = view_Games_Roms.PlatformId
-					AND User_RecentPlayedRoms.RomId = view_Games_Roms.Id
+					AND User_RecentPlayedRoms.GameId = Games_Roms.MetadataMapId
+					AND User_RecentPlayedRoms.PlatformId = Games_Roms.PlatformId
+					AND User_RecentPlayedRoms.RomId = Games_Roms.Id
 					AND User_RecentPlayedRoms.IsMediaGroup = 0
 					LEFT JOIN
 				User_GameFavouriteRoms ON User_GameFavouriteRoms.UserId = @userid
-					AND User_GameFavouriteRoms.GameId = view_Games_Roms.GameId
-					AND User_GameFavouriteRoms.PlatformId = view_Games_Roms.PlatformId
-					AND User_GameFavouriteRoms.RomId = view_Games_Roms.Id
+					AND User_GameFavouriteRoms.GameId = Games_Roms.MetadataMapId
+					AND User_GameFavouriteRoms.PlatformId = Games_Roms.PlatformId
+					AND User_GameFavouriteRoms.RomId = Games_Roms.Id
 					AND User_GameFavouriteRoms.IsMediaGroup = 0
 				";
 			}
 
 			// platform query
-			sqlPlatform = "SELECT DISTINCT view_Games_Roms.PlatformId, Platform.`Name` FROM view_Games_Roms LEFT JOIN Platform ON view_Games_Roms.PlatformId = Platform.Id WHERE GameId = @id ORDER BY Platform.`Name`;";
+			sqlPlatform = "SELECT DISTINCT Games_Roms.PlatformId, Platform.`Name` FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE GameId = @id ORDER BY Platform.`Name`;";
 
 			if (PlatformId == -1)
 			{
 				// data query
-				sql = "SELECT DISTINCT view_Games_Roms.*, Platform.`Name` AS platformname, Game.`Name` AS gamename, GameState.RomId AS SavedStateRomId" + UserFields + " FROM view_Games_Roms LEFT JOIN Platform ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN Game ON view_Games_Roms.GameId = Game.Id LEFT JOIN GameState ON (view_Games_Roms.Id = GameState.RomId AND GameState.UserId = @userid AND GameState.IsMediaGroup = 0) " + UserJoin + " WHERE view_Games_Roms.GameId = @id" + NameSearchWhere + " ORDER BY Platform.`Name`, view_Games_Roms.`Name` LIMIT 1000;";
+				sql = "SELECT DISTINCT view_Games_Roms.*, Platform.`Name` AS platformname, Game.`Name` AS gamename, GameState.RomId AS SavedStateRomId" + UserFields + " FROM view_Games_Roms LEFT JOIN Platform ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN Game ON view_Games_Roms.GameId = Game.Id LEFT JOIN GameState ON (view_Games_Roms.Id = GameState.RomId AND GameState.UserId = @userid AND GameState.IsMediaGroup = 0) " + UserJoin + " WHERE view_Games_Roms.MetadataMapId = @id" + NameSearchWhere + " ORDER BY Platform.`Name`, view_Games_Roms.`Name`;";
 
 				// count query
-				sqlCount = "SELECT COUNT(view_Games_Roms.Id) AS RomCount FROM view_Games_Roms WHERE view_Games_Roms.GameId = @id" + NameSearchWhere + ";";
+				sqlCount = "SELECT COUNT(view_Games_Roms.Id) AS RomCount FROM view_Games_Roms WHERE view_Games_Roms.MetadataMapId = @id" + NameSearchWhere + ";";
 			}
 			else
 			{
 				// data query
-				sql = "SELECT DISTINCT view_Games_Roms.*, Platform.`Name` AS platformname, Game.`Name` AS gamename, GameState.RomId AS SavedStateRomId" + UserFields + " FROM view_Games_Roms LEFT JOIN Platform ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN Game ON view_Games_Roms.GameId = Game.Id LEFT JOIN GameState ON (view_Games_Roms.Id = GameState.RomId AND GameState.UserId = @userid AND GameState.IsMediaGroup = 0) " + UserJoin + " WHERE view_Games_Roms.GameId = @id AND view_Games_Roms.PlatformId = @platformid" + NameSearchWhere + " ORDER BY Platform.`Name`, view_Games_Roms.`Name` LIMIT 1000;";
+				sql = @"
+				SELECT DISTINCT
+					Games_Roms.*,
+					Platform.`Name` AS platformname,
+					view_GamesWithRoms.`Name` AS gamename,
+					GameState.RomId AS SavedStateRomId,
+					CONCAT(`GameLibraries`.`Path`,
+						'/',
+						`Games_Roms`.`RelativePath`) AS `Path`,
+					`GameLibraries`.`Name` AS `LibraryName`
+					" + UserFields + @"
+				FROM
+					Games_Roms
+				JOIN
+					GameLibraries ON Games_Roms.LibraryId = GameLibraries.Id
+				LEFT JOIN
+					Platform ON Games_Roms.PlatformId = Platform.Id AND Platform.SourceId = @platformsource
+				LEFT JOIN
+					view_GamesWithRoms ON view_GamesWithRoms.MetadataMapId = Games_Roms.MetadataMapId
+				LEFT JOIN
+					GameState ON (Games_Roms.Id = GameState.RomId AND GameState.UserId = @userid AND GameState.IsMediaGroup = 0) " + UserJoin + @"
+				WHERE
+					Games_Roms.MetadataMapId = @id AND Games_Roms.PlatformId = @platformid" + NameSearchWhere + @"
+				ORDER BY
+					Platform.`Name`, Games_Roms.`Name`;
+				";
 
 				// count query
-				sqlCount = "SELECT COUNT(view_Games_Roms.Id) AS RomCount FROM view_Games_Roms WHERE view_Games_Roms.GameId = @id AND view_Games_Roms.PlatformId = @platformid" + NameSearchWhere + ";";
+				sqlCount = "SELECT COUNT(Games_Roms.Id) AS RomCount FROM Games_Roms WHERE Games_Roms.MetadataMapId = @id AND Games_Roms.PlatformId = @platformid" + NameSearchWhere + ";";
 
 				dbDict.Add("platformid", PlatformId);
+				dbDict.Add("platformsource", (int)HasheousClient.Models.MetadataSources.None);
 			}
 			DataTable romDT = db.ExecuteCMD(sql, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks));
-			Dictionary<string, object> rowCount = db.ExecuteCMDDict(sqlCount, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks))[0];
 
 			if (romDT.Rows.Count > 0)
 			{
 				// set count of roms
+				Dictionary<string, object> rowCount = db.ExecuteCMDDict(sqlCount, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks))[0];
 				GameRoms.Count = int.Parse((string)rowCount["RomCount"]);
 
 				int pageOffset = pageSize * (pageNumber - 1);
@@ -114,7 +139,7 @@ namespace gaseous_server.Classes
 		public static GameRomItem GetRom(long RomId)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "SELECT view_Games_Roms.*, Platform.`Name` AS platformname, Game.`Name` AS gamename FROM view_Games_Roms LEFT JOIN Platform ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN Game ON view_Games_Roms.GameId = Game.Id WHERE view_Games_Roms.Id = @id";
+			string sql = "SELECT DISTINCT view_Games_Roms.*, Platform.`Name` AS platformname, view_GamesWithRoms.`Name` AS gamename FROM view_Games_Roms LEFT JOIN Platform ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN view_GamesWithRoms ON view_Games_Roms.MetadataMapId = view_GamesWithRoms.MetadataMapId WHERE view_Games_Roms.Id = @id";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 			dbDict.Add("id", RomId);
 			DataTable romDT = db.ExecuteCMD(sql, dbDict);
@@ -134,7 +159,7 @@ namespace gaseous_server.Classes
 		public static GameRomItem GetRom(string MD5)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "SELECT view_Games_Roms.*, Platform.`Name` AS platformname, Game.`Name` AS gamename FROM view_Games_Roms LEFT JOIN Platform ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN Game ON view_Games_Roms.GameId = Game.Id WHERE view_Games_Roms.MD5 = @id";
+			string sql = "SELECT DISTINCT view_Games_Roms.*, Platform.`Name` AS platformname, view_GamesWithRoms.`Name` AS gamename FROM view_Games_Roms LEFT JOIN Platform ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN view_GamesWithRoms ON view_Games_Roms.MetadataMapId = view_GamesWithRoms.MetadataMapId WHERE view_Games_Roms.MD5 = @id";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 			dbDict.Add("id", MD5);
 			DataTable romDT = db.ExecuteCMD(sql, dbDict);
@@ -154,13 +179,13 @@ namespace gaseous_server.Classes
 		public static GameRomItem UpdateRom(long RomId, long PlatformId, long GameId)
 		{
 			// ensure metadata for platformid is present
-			IGDB.Models.Platform platform = Classes.Metadata.Platforms.GetPlatform(PlatformId);
+			HasheousClient.Models.Metadata.IGDB.Platform platform = Classes.Metadata.Platforms.GetPlatform(PlatformId);
 
 			// ensure metadata for gameid is present
-			IGDB.Models.Game game = Classes.Metadata.Games.GetGame(GameId, false, false, false);
+			Models.Game game = Classes.Metadata.Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, GameId);
 
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid WHERE Id = @id";
+			string sql = "UPDATE Games_Roms SET PlatformId=@platformid, MetadataMapId=@gameid WHERE Id = @id";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 			dbDict.Add("id", RomId);
 			dbDict.Add("platformid", PlatformId);
@@ -202,7 +227,8 @@ namespace gaseous_server.Classes
 								}
 							}
 
-							HasheousClient.WebApp.HttpHelper.AddHeader("X-API-Key", Config.MetadataConfiguration.HasheousAPIKey);
+							HasheousClient.WebApp.HttpHelper.APIKey = Config.MetadataConfiguration.HasheousAPIKey;
+							HasheousClient.WebApp.HttpHelper.ClientKey = Config.MetadataConfiguration.HasheousClientAPIKey;
 							HasheousClient.Hasheous hasheousClient = new HasheousClient.Hasheous();
 							List<MetadataMatch> metadataMatchList = new List<MetadataMatch>();
 							metadataMatchList.Add(new MetadataMatch(HasheousClient.Models.MetadataSources.IGDB, platform.Slug, game.Slug));
@@ -230,7 +256,7 @@ namespace gaseous_server.Classes
 				}
 
 				Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-				string sql = "DELETE FROM Games_Roms WHERE Id = @id; DELETE FROM GameState WHERE RomId = @id; UPDATE UserTimeTracking SET PlatformId = NULL, IsMediaGroup = NULL, RomId = NULL WHERE RomId = @id AND IsMediaGroup = 0;";
+				string sql = "DELETE FROM Games_Roms WHERE Id = @id; DELETE FROM GameState WHERE RomId = @id; DELETE FROM User_GameFavouriteRoms WHERE RomId = @id AND IsMediaGroup = 0; DELETE FROM User_RecentPlayedRoms WHERE RomId = @id AND IsMediaGroup = 0; UPDATE UserTimeTracking SET PlatformId = NULL, IsMediaGroup = NULL, RomId = NULL WHERE RomId = @id AND IsMediaGroup = 0;";
 				Dictionary<string, object> dbDict = new Dictionary<string, object>();
 				dbDict.Add("id", RomId);
 				db.ExecuteCMD(sql, dbDict);
@@ -269,8 +295,10 @@ namespace gaseous_server.Classes
 				Id = (long)romDR["id"],
 				PlatformId = (long)romDR["platformid"],
 				Platform = (string)romDR["platformname"],
+				MetadataMapId = (long)romDR["metadatamapid"],
+				MetadataSource = (HasheousClient.Models.MetadataSources)(int)romDR["metadatasource"],
 				GameId = (long)romDR["gameid"],
-				Game = (string)romDR["gamename"],
+				Game = (string)Common.ReturnValueIfNull(romDR["gamename"], ""),
 				Name = (string)romDR["name"],
 				Size = (long)romDR["size"],
 				Crc = ((string)romDR["crc"]).ToLower(),
@@ -320,6 +348,8 @@ namespace gaseous_server.Classes
 		{
 			public long PlatformId { get; set; }
 			public string Platform { get; set; }
+			public long MetadataMapId { get; set; }
+			public HasheousClient.Models.MetadataSources MetadataSource { get; set; }
 			public long GameId { get; set; }
 			public string Game { get; set; }
 			public string? Path { get; set; }

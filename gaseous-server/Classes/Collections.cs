@@ -9,7 +9,7 @@ using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
 using gaseous_server.Controllers.v1_1;
 using gaseous_server.Models;
-using IGDB.Models;
+using HasheousClient.Models.Metadata.IGDB;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;
@@ -18,9 +18,10 @@ using static gaseous_server.Classes.Metadata.Games;
 
 namespace gaseous_server.Classes
 {
-	public class Collections
-	{
-        public static List<CollectionItem> GetCollections(string userid) {
+    public class Collections
+    {
+        public static List<CollectionItem> GetCollections(string userid)
+        {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM RomCollections WHERE OwnedBy=@ownedby ORDER BY `Name`";
             Dictionary<string, object> dbDict = new Dictionary<string, object>{
@@ -30,16 +31,18 @@ namespace gaseous_server.Classes
 
             List<CollectionItem> collectionItems = new List<CollectionItem>();
 
-            foreach(DataRow row in data.Rows) {
+            foreach (DataRow row in data.Rows)
+            {
                 collectionItems.Add(BuildCollectionItem(row));
             }
 
             return collectionItems;
         }
 
-        public static CollectionItem GetCollection(long Id, string userid) {
+        public static CollectionItem GetCollection(long Id, string userid)
+        {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql;
+            string sql;
             if (userid == "")
             {
                 // reserved for internal operations
@@ -50,24 +53,24 @@ namespace gaseous_server.Classes
                 // instigated by a user
                 sql = "SELECT * FROM RomCollections WHERE Id = @id AND OwnedBy = @ownedby ORDER BY `Name`";
             }
-			Dictionary<string, object> dbDict = new Dictionary<string, object>
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
             {
                 { "id", Id },
                 { "ownedby", userid }
             };
-			DataTable romDT = db.ExecuteCMD(sql, dbDict);
+            DataTable romDT = db.ExecuteCMD(sql, dbDict);
 
-			if (romDT.Rows.Count > 0)
-			{
-				DataRow row = romDT.Rows[0];
-				CollectionItem collectionItem = BuildCollectionItem(row);
+            if (romDT.Rows.Count > 0)
+            {
+                DataRow row = romDT.Rows[0];
+                CollectionItem collectionItem = BuildCollectionItem(row);
 
-				return collectionItem;
-			}
-			else
-			{
-				throw new Exception("Unknown Collection Id");
-			}
+                return collectionItem;
+            }
+            else
+            {
+                throw new Exception("Unknown Collection Id");
+            }
         }
 
         public static CollectionItem NewCollection(CollectionItem item, string userid)
@@ -130,9 +133,9 @@ namespace gaseous_server.Classes
                 { "archivetype", Common.ReturnValueIfNull(item.ArchiveType, CollectionItem.ArchiveTypes.Zip) },
                 { "ownedby", userid }
             };
-            
+
             string CollectionZipFile = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, Id + item.ArchiveExtension);
-            if (ForceRebuild == true) 
+            if (ForceRebuild == true)
             {
                 dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.WaitingForBuild);
                 if (File.Exists(CollectionZipFile))
@@ -153,7 +156,7 @@ namespace gaseous_server.Classes
                 }
             }
             db.ExecuteCMD(sql, dbDict);
-            
+
             CollectionItem collectionItem = GetCollection(Id, userid);
 
             if (collectionItem.BuildStatus == CollectionItem.CollectionBuildStatus.WaitingForBuild)
@@ -208,7 +211,8 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static CollectionContents GetCollectionContent(CollectionItem collectionItem, string userid) {
+        public static CollectionContents GetCollectionContent(CollectionItem collectionItem, string userid)
+        {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
             // get age ratings for specified user
@@ -245,31 +249,36 @@ namespace gaseous_server.Classes
             List<Platform> platforms = new List<Platform>();
 
             // add platforms with an inclusion status
-            foreach (CollectionItem.AlwaysIncludeItem alwaysIncludeItem in collectionItem.AlwaysInclude) 
+            foreach (CollectionItem.AlwaysIncludeItem alwaysIncludeItem in collectionItem.AlwaysInclude)
             {
                 if (
                         alwaysIncludeItem.InclusionState == CollectionItem.AlwaysIncludeStatus.AlwaysInclude ||
                         alwaysIncludeItem.InclusionState == CollectionItem.AlwaysIncludeStatus.AlwaysExclude
                     )
+                {
+                    if (!platformids.Contains(alwaysIncludeItem.PlatformId))
                     {
-                        if (!platformids.Contains(alwaysIncludeItem.PlatformId))
-                        {
-                            platformids.Add(alwaysIncludeItem.PlatformId);
-                        }
+                        platformids.Add(alwaysIncludeItem.PlatformId);
+                    }
                 }
             }
 
             // add dynamic platforms
-            if (DynamicPlatforms.Count > 0) {
-                foreach (long PlatformId in platformids) {
+            if (DynamicPlatforms.Count > 0)
+            {
+                foreach (long PlatformId in platformids)
+                {
                     platforms.Add(Platforms.GetPlatform(PlatformId));
                 }
-            } else {
+            }
+            else
+            {
                 // get all platforms to pull from
                 Dictionary<string, List<Filters.FilterItem>> FilterDict = Filters.Filter(AgeGroups.AgeRestrictionGroupings.Adult, true);
                 List<Classes.Filters.FilterItem> filteredPlatforms = (List<Classes.Filters.FilterItem>)FilterDict["platforms"];
-                foreach (Filters.FilterItem filterItem in filteredPlatforms) {
-                    platforms.Add(Platforms.GetPlatform(filterItem.Id));
+                foreach (Filters.FilterItem filterItem in filteredPlatforms)
+                {
+                    platforms.Add(Platforms.GetPlatform((long)filterItem.Id));
                 }
             }
 
@@ -280,7 +289,8 @@ namespace gaseous_server.Classes
             // build collection
             List<CollectionContents.CollectionPlatformItem> platformItems = new List<CollectionContents.CollectionPlatformItem>();
 
-            foreach (Platform platform in platforms) {
+            foreach (Platform platform in platforms)
+            {
                 long TotalRomSize = 0;
                 long TotalGameCount = 0;
 
@@ -297,7 +307,8 @@ namespace gaseous_server.Classes
                 Controllers.v1_1.GamesController.GameReturnPackage games = new Controllers.v1_1.GamesController.GameReturnPackage();
                 if (isDynamic == true)
                 {
-                    Controllers.v1_1.GamesController.GameSearchModel searchModel = new Controllers.v1_1.GamesController.GameSearchModel{
+                    Controllers.v1_1.GamesController.GameSearchModel searchModel = new Controllers.v1_1.GamesController.GameSearchModel
+                    {
                         Name = "",
                         Platform = new List<string>{
                             platform.Id.ToString()
@@ -306,49 +317,52 @@ namespace gaseous_server.Classes
                         GameMode = collectionItem.Players.ConvertAll(s => s.ToString()),
                         PlayerPerspective = collectionItem.PlayerPerspectives.ConvertAll(s => s.ToString()),
                         Theme = collectionItem.Themes.ConvertAll(s => s.ToString()),
-                        GameRating = new Controllers.v1_1.GamesController.GameSearchModel.GameRatingItem{
+                        GameRating = new Controllers.v1_1.GamesController.GameSearchModel.GameRatingItem
+                        {
                             MinimumRating = collectionItem.MinimumRating,
                             MaximumRating = collectionItem.MaximumRating
                         },
-                        GameAgeRating = new Controllers.v1_1.GamesController.GameSearchModel.GameAgeRatingItem{
+                        GameAgeRating = new Controllers.v1_1.GamesController.GameSearchModel.GameAgeRatingItem
+                        {
                             AgeGroupings = UserAgeGroupings,
                             IncludeUnrated = UserAgeGroupIncludeUnrated
                         }
                     };
                     games = Controllers.v1_1.GamesController.GetGames(searchModel, userid);
-                    
+
                 }
 
                 CollectionContents.CollectionPlatformItem collectionPlatformItem = new CollectionContents.CollectionPlatformItem(platform);
                 collectionPlatformItem.Games = new List<CollectionContents.CollectionPlatformItem.CollectionGameItem>();
 
                 // add titles with an inclusion status
-                foreach (CollectionItem.AlwaysIncludeItem alwaysIncludeItem in collectionItem.AlwaysInclude) 
+                foreach (CollectionItem.AlwaysIncludeItem alwaysIncludeItem in collectionItem.AlwaysInclude)
                 {
                     if (
                         (
                             alwaysIncludeItem.InclusionState == CollectionItem.AlwaysIncludeStatus.AlwaysInclude ||
                             alwaysIncludeItem.InclusionState == CollectionItem.AlwaysIncludeStatus.AlwaysExclude
                         ) && alwaysIncludeItem.PlatformId == platform.Id
-                        ) 
-                        {
-                            MinimalGameItem AlwaysIncludeGame = new MinimalGameItem(Games.GetGame(alwaysIncludeItem.GameId, false, false, false));
-                            CollectionContents.CollectionPlatformItem.CollectionGameItem gameItem = new CollectionContents.CollectionPlatformItem.CollectionGameItem(AlwaysIncludeGame);
-                            gameItem.InclusionStatus = new CollectionItem.AlwaysIncludeItem();
-                            gameItem.InclusionStatus.PlatformId = alwaysIncludeItem.PlatformId;
-                            gameItem.InclusionStatus.GameId = alwaysIncludeItem.GameId;
-                            gameItem.InclusionStatus.InclusionState = alwaysIncludeItem.InclusionState;
-                            gameItem.Roms = Roms.GetRoms((long)gameItem.Id, (long)platform.Id).GameRomItems;
+                        )
+                    {
+                        MinimalGameItem AlwaysIncludeGame = new MinimalGameItem(Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, alwaysIncludeItem.GameId));
+                        CollectionContents.CollectionPlatformItem.CollectionGameItem gameItem = new CollectionContents.CollectionPlatformItem.CollectionGameItem(AlwaysIncludeGame);
+                        gameItem.InclusionStatus = new CollectionItem.AlwaysIncludeItem();
+                        gameItem.InclusionStatus.PlatformId = alwaysIncludeItem.PlatformId;
+                        gameItem.InclusionStatus.GameId = alwaysIncludeItem.GameId;
+                        gameItem.InclusionStatus.InclusionState = alwaysIncludeItem.InclusionState;
+                        gameItem.Roms = Roms.GetRoms((long)gameItem.Id, (long)platform.Id).GameRomItems;
 
-                            collectionPlatformItem.Games.Add(gameItem);
+                        collectionPlatformItem.Games.Add(gameItem);
                     }
                 }
 
-                foreach (MinimalGameItem game in games.Games) {
+                foreach (MinimalGameItem game in games.Games)
+                {
                     bool gameAlreadyInList = false;
-                    foreach (CollectionContents.CollectionPlatformItem.CollectionGameItem existingGame in collectionPlatformItem.Games) 
+                    foreach (CollectionContents.CollectionPlatformItem.CollectionGameItem existingGame in collectionPlatformItem.Games)
                     {
-                        if (existingGame.Id == game.Id) 
+                        if (existingGame.Id == game.Id)
                         {
                             gameAlreadyInList = true;
                         }
@@ -359,31 +373,37 @@ namespace gaseous_server.Classes
                         CollectionContents.CollectionPlatformItem.CollectionGameItem collectionGameItem = new CollectionContents.CollectionPlatformItem.CollectionGameItem(game);
 
                         List<Roms.GameRomItem> gameRoms = Roms.GetRoms((long)game.Id, (long)platform.Id).GameRomItems;
-                        
+
                         bool AddGame = false;
 
                         // calculate total rom size for the game
                         long GameRomSize = 0;
-                        foreach (Roms.GameRomItem gameRom in gameRoms) {
+                        foreach (Roms.GameRomItem gameRom in gameRoms)
+                        {
                             GameRomSize += (long)gameRom.Size;
                         }
-                        if (collectionItem.MaximumBytesPerPlatform > 0) {
-                            if ((TotalRomSize + GameRomSize) < collectionItem.MaximumBytesPerPlatform) {
+                        if (collectionItem.MaximumBytesPerPlatform > 0)
+                        {
+                            if ((TotalRomSize + GameRomSize) < collectionItem.MaximumBytesPerPlatform)
+                            {
                                 AddGame = true;
                             }
                         }
-                        else 
+                        else
                         {
                             AddGame = true;
                         }
 
-                        if (AddGame == true) {
+                        if (AddGame == true)
+                        {
                             TotalRomSize += GameRomSize;
 
                             bool AddRoms = false;
 
-                            if (collectionItem.MaximumRomsPerPlatform > 0) { 
-                                if (TotalGameCount < collectionItem.MaximumRomsPerPlatform) {
+                            if (collectionItem.MaximumRomsPerPlatform > 0)
+                            {
+                                if (TotalGameCount < collectionItem.MaximumRomsPerPlatform)
+                                {
                                     AddRoms = true;
                                 }
                             }
@@ -392,7 +412,8 @@ namespace gaseous_server.Classes
                                 AddRoms = true;
                             }
 
-                            if (AddRoms == true) {
+                            if (AddRoms == true)
+                            {
                                 TotalGameCount += 1;
                                 collectionGameItem.Roms = gameRoms;
                                 collectionPlatformItem.Games.Add(collectionGameItem);
@@ -401,7 +422,8 @@ namespace gaseous_server.Classes
                     }
 
                     // handle age grouping
-                    AgeGroups.AgeRestrictionGroupings CurrentAgeGroup = AgeGroups.GetAgeGroupFromAgeRatings(game.AgeRatings);
+                    List<AgeRating> gameAgeRatings = game.AgeRatings.Select(s => (AgeRating)s).ToList();
+                    AgeGroups.AgeRestrictionGroupings CurrentAgeGroup = AgeGroups.GetAgeGroupFromAgeRatings(gameAgeRatings);
                     if (CurrentAgeGroup > AgeGrouping)
                     {
                         AgeGrouping = CurrentAgeGroup;
@@ -469,14 +491,14 @@ namespace gaseous_server.Classes
                     { "agu", collectionContents.ContainsUnclassifiedAgeGroup }
                 };
                 db.ExecuteCMD(sql, dbDict);
-                
+
                 List<CollectionContents.CollectionPlatformItem> collectionPlatformItems = collectionContents.Collection;
                 string ZipFilePath = Path.Combine(Config.LibraryConfiguration.LibraryCollectionsDirectory, collectionItem.Id + collectionItem.ArchiveExtension);
                 string ZipFileTempPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, collectionItem.Id.ToString());
 
                 try
                 {
-                    
+
                     // clean up if needed
                     if (File.Exists(ZipFilePath))
                     {
@@ -500,11 +522,12 @@ namespace gaseous_server.Classes
                         if (collectionItem.IncludeBIOSFiles == true)
                         {
                             List<Bios.BiosItem> bios = Bios.GetBios(collectionPlatformItem.Id, true);
-                            if (!Directory.Exists(ZipBiosPath)) {
+                            if (!Directory.Exists(ZipBiosPath))
+                            {
                                 Directory.CreateDirectory(ZipBiosPath);
                             }
 
-                            foreach (Bios.BiosItem biosItem in bios) 
+                            foreach (Bios.BiosItem biosItem in bios)
                             {
                                 if (File.Exists(biosItem.biosPath))
                                 {
@@ -573,8 +596,8 @@ namespace gaseous_server.Classes
                                     case CollectionItem.FolderStructures.RetroPie:
                                         ZipGamePath = ZipPlatformPath;
                                         break;
-                                }                                    
-                                
+                                }
+
                                 // copy in roms
                                 foreach (Roms.GameRomItem gameRomItem in collectionGameItem.Roms)
                                 {
@@ -590,7 +613,7 @@ namespace gaseous_server.Classes
 
                     // compress to zip
                     Logging.Log(Logging.LogType.Information, "Collections", "Compressing collection");
-                    switch(collectionItem.ArchiveType)
+                    switch (collectionItem.ArchiveType)
                     {
                         case CollectionItem.ArchiveTypes.Zip:
                             ZipFile.CreateFromDirectory(ZipFileTempPath, ZipFilePath, CompressionLevel.SmallestSize, false);
@@ -601,10 +624,10 @@ namespace gaseous_server.Classes
                             break;
 
                         case CollectionItem.ArchiveTypes.SevenZip:
-                            
+
                             break;
                     }
-                    
+
 
                     // clean up
                     if (Directory.Exists(ZipFileTempPath))
@@ -639,7 +662,8 @@ namespace gaseous_server.Classes
             }
         }
 
-        private static CollectionItem BuildCollectionItem(DataRow row) {
+        private static CollectionItem BuildCollectionItem(DataRow row)
+        {
             string strPlatforms = (string)Common.ReturnValueIfNull(row["Platforms"], "[ ]");
             string strGenres = (string)Common.ReturnValueIfNull(row["Genres"], "[ ]");
             string strPlayers = (string)Common.ReturnValueIfNull(row["Players"], "[ ]");
@@ -704,7 +728,7 @@ namespace gaseous_server.Classes
                             case ArchiveTypes.Zip:
                             default:
                                 return ".zip";
-                            
+
                             case ArchiveTypes.RAR:
                                 return ".rar";
 
@@ -810,7 +834,8 @@ namespace gaseous_server.Classes
             }
         }
 
-        public class CollectionContents {
+        public class CollectionContents
+        {
             [JsonIgnore]
             public List<CollectionPlatformItem> Collection { get; set; }
 
@@ -840,13 +865,16 @@ namespace gaseous_server.Classes
             public AgeGroups.AgeRestrictionGroupings AgeGroup { get; set; }
             public bool ContainsUnclassifiedAgeGroup { get; set; }
 
-            public class CollectionPlatformItem {
-                public CollectionPlatformItem(IGDB.Models.Platform platform) {
+            public class CollectionPlatformItem
+            {
+                public CollectionPlatformItem(Platform platform)
+                {
                     string[] PropertyWhitelist = new string[] { "Id", "Name", "Slug" };
 
-                    PropertyInfo[] srcProperties = typeof(IGDB.Models.Platform).GetProperties();
+                    PropertyInfo[] srcProperties = typeof(Platform).GetProperties();
                     PropertyInfo[] dstProperties = typeof(CollectionPlatformItem).GetProperties();
-                    foreach (PropertyInfo srcProperty in srcProperties) {
+                    foreach (PropertyInfo srcProperty in srcProperties)
+                    {
                         if (PropertyWhitelist.Contains<string>(srcProperty.Name))
                         {
                             foreach (PropertyInfo dstProperty in dstProperties)
@@ -866,10 +894,13 @@ namespace gaseous_server.Classes
 
                 public List<CollectionGameItem> Games { get; set; }
 
-                public int RomCount {
-                    get {
+                public int RomCount
+                {
+                    get
+                    {
                         int Counter = 0;
-                        foreach (CollectionGameItem Game in Games) {
+                        foreach (CollectionGameItem Game in Games)
+                        {
                             Counter += 1;
                         }
 
@@ -877,11 +908,15 @@ namespace gaseous_server.Classes
                     }
                 }
 
-                public long RomSize {
-                    get {
+                public long RomSize
+                {
+                    get
+                    {
                         long Size = 0;
-                        foreach (CollectionGameItem Game in Games) {
-                            foreach (Roms.GameRomItem Rom in Game.Roms) {
+                        foreach (CollectionGameItem Game in Games)
+                        {
+                            foreach (Roms.GameRomItem Rom in Game.Roms)
+                            {
                                 Size += (long)Rom.Size;
                             }
                         }
@@ -904,29 +939,13 @@ namespace gaseous_server.Classes
                         this.FirstReleaseDate = gameObject.FirstReleaseDate;
                         this.AgeRatings = gameObject.AgeRatings;
                     }
-                    
-                    public IGDB.Models.Cover? CoverItem
+
+                    public AgeGroups.AgeRestrictionGroupings AgeGrouping
                     {
                         get
                         {
-                            if (Cover != null)
-                            {
-                                IGDB.Models.Cover cover = Covers.GetCover(Cover.Id, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory, "Games", Slug), false);
-
-                                return cover;
-                            }
-                            else
-                            {
-                                return null;
-                            }
-                        }
-                    }
-
-                    public AgeGroups.AgeRestrictionGroupings AgeGrouping
-                    { 
-                        get
-                        {
-                            return AgeGroups.GetAgeGroupFromAgeRatings(this.AgeRatings);
+                            List<AgeRating> gameAgeRatings = this.AgeRatings.Select(s => (AgeRating)s).ToList();
+                            return AgeGroups.GetAgeGroupFromAgeRatings(gameAgeRatings);
                         }
                     }
 
@@ -934,16 +953,19 @@ namespace gaseous_server.Classes
 
                     public List<Roms.GameRomItem> Roms { get; set; }
 
-                    public long RomSize {
-                    get {
-                        long Size = 0;
-                        foreach (Roms.GameRomItem Rom in Roms) {
-                            Size += (long)Rom.Size;
+                    public long RomSize
+                    {
+                        get
+                        {
+                            long Size = 0;
+                            foreach (Roms.GameRomItem Rom in Roms)
+                            {
+                                Size += (long)Rom.Size;
+                            }
+
+                            return Size;
                         }
-                    
-                        return Size;
                     }
-                }
                 }
             }
         }

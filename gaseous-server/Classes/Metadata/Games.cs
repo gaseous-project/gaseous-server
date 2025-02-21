@@ -1,14 +1,13 @@
 ﻿using System;
 using System.Data;
+using System.Security.Cryptography.X509Certificates;
 using gaseous_server.Models;
-using IGDB;
-using IGDB.Models;
 
 namespace gaseous_server.Classes.Metadata
 {
     public class Games
     {
-        const string fieldList = "fields age_ratings,aggregated_rating,aggregated_rating_count,alternative_names,artworks,bundles,category,checksum,collections,cover,created_at,dlcs,expanded_games,expansions,external_games,first_release_date,follows,forks,franchise,franchises,game_engines,game_localizations,game_modes,genres,hypes,involved_companies,keywords,language_supports,multiplayer_modes,name,parent_game,platforms,player_perspectives,ports,rating,rating_count,release_dates,remakes,remasters,screenshots,similar_games,slug,standalone_expansions,status,storyline,summary,tags,themes,total_rating,total_rating_count,updated_at,url,version_parent,version_title,videos,websites;";
+        public const string fieldList = "fields age_ratings,aggregated_rating,aggregated_rating_count,alternative_names,artworks,bundles,category,checksum,collections,cover,created_at,dlcs,expanded_games,expansions,external_games,first_release_date,follows,forks,franchise,franchises,game_engines,game_localizations,game_modes,genres,hypes,involved_companies,keywords,language_supports,multiplayer_modes,name,parent_game,platforms,player_perspectives,ports,rating,rating_count,release_dates,remakes,remasters,screenshots,similar_games,slug,standalone_expansions,status,storyline,summary,tags,themes,total_rating,total_rating_count,updated_at,url,version_parent,version_title,videos,websites;";
 
         public Games()
         {
@@ -21,39 +20,32 @@ namespace gaseous_server.Classes.Metadata
             { }
         }
 
-        public static Game? GetGame(long Id, bool getAllMetadata, bool followSubGames, bool forceRefresh)
+        public static Game? GetGame(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
-            if (Id == 0)
+            if ((Id == 0) || (Id == null))
             {
-                Game returnValue = new Game();
-                if (Storage.GetCacheStatus("Game", 0) == Storage.CacheStatus.NotPresent)
-                {
-                    returnValue = new Game
-                    {
-                        Id = 0,
-                        Name = "Unknown Title",
-                        Slug = "Unknown"
-                    };
-                    Storage.NewCacheValue(returnValue);
-
-                    return returnValue;
-                }
-                else
-                {
-                    return Storage.GetCacheValue<Game>(returnValue, "id", 0);
-                }
+                return null;
             }
             else
             {
-                Task<Game> RetVal = _GetGame(SearchUsing.id, Id, getAllMetadata, followSubGames, forceRefresh);
-                return RetVal.Result;
+                Game? RetVal = Metadata.GetMetadata<Game>(SourceType, (long)Id, false);
+                RetVal.MetadataSource = SourceType;
+                long? metadataMap = MetadataManagement.GetMetadataMapIdFromSourceId(SourceType, (long)Id);
+                if (metadataMap != null)
+                {
+                    RetVal.MetadataMapId = (long)metadataMap;
+                }
+                RetVal = MassageResult(RetVal);
+                return RetVal;
             }
         }
 
-        public static Game GetGame(string Slug, bool getAllMetadata, bool followSubGames, bool forceRefresh)
+        public static Game? GetGame(HasheousClient.Models.MetadataSources SourceType, string? Slug)
         {
-            Task<Game> RetVal = _GetGame(SearchUsing.slug, Slug, getAllMetadata, followSubGames, forceRefresh);
-            return RetVal.Result;
+            Game? RetVal = Metadata.GetMetadata<Game>(SourceType, Slug, false);
+            RetVal.MetadataSource = SourceType;
+            RetVal = MassageResult(RetVal);
+            return RetVal;
         }
 
         public static Game GetGame(DataRow dataRow)
@@ -61,325 +53,42 @@ namespace gaseous_server.Classes.Metadata
             return Storage.BuildCacheObject<Game>(new Game(), dataRow);
         }
 
-        private static async Task<Game> _GetGame(SearchUsing searchUsing, object searchValue, bool getAllMetadata = true, bool followSubGames = false, bool forceRefresh = false)
+        private static Game MassageResult(Game result)
         {
-            // check database first
-            Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
-            if (searchUsing == SearchUsing.id)
+            Game? parentGame = null;
+
+            if (result.ParentGame != null)
             {
-                cacheStatus = Storage.GetCacheStatus("Game", (long)searchValue);
+                parentGame = GetGame(result.MetadataSource, (long)result.ParentGame);
             }
-            else
-            {
-                cacheStatus = Storage.GetCacheStatus("Game", (string)searchValue);
-            }
-
-            if (forceRefresh == true)
-            {
-                if (cacheStatus == Storage.CacheStatus.Current) { cacheStatus = Storage.CacheStatus.Expired; }
-            }
-
-            string WhereClause = "";
-            string searchField = "";
-            switch (searchUsing)
-            {
-                case SearchUsing.id:
-                    WhereClause = "where id = " + searchValue;
-                    searchField = "id";
-                    break;
-                case SearchUsing.slug:
-                    WhereClause = "where slug = \"" + searchValue + "\"";
-                    searchField = "slug";
-                    break;
-                default:
-                    throw new Exception("Invalid search type");
-            }
-
-            Game returnValue = new Game();
-            switch (cacheStatus)
-            {
-                case Storage.CacheStatus.NotPresent:
-                    returnValue = await GetObjectFromServer(WhereClause);
-                    Storage.NewCacheValue(returnValue);
-                    UpdateSubClasses(returnValue, getAllMetadata, followSubGames, forceRefresh);
-                    return returnValue;
-                case Storage.CacheStatus.Expired:
-                    try
-                    {
-                        returnValue = await GetObjectFromServer(WhereClause);
-                        Storage.NewCacheValue(returnValue, true);
-                        UpdateSubClasses(returnValue, getAllMetadata, followSubGames, forceRefresh);
-                    }
-                    catch (Exception ex)
-                    {
-                        Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
-                        returnValue = Storage.GetCacheValue<Game>(returnValue, searchField, searchValue);
-                    }
-                    return returnValue;
-                case Storage.CacheStatus.Current:
-                    returnValue = Storage.GetCacheValue<Game>(returnValue, searchField, searchValue);
-                    UpdateSubClasses(returnValue, false, false, false);
-                    return returnValue;
-                default:
-                    throw new Exception("How did you get here?");
-            }
-        }
-
-        private static void UpdateSubClasses(Game Game, bool getAllMetadata, bool followSubGames, bool forceRefresh)
-        {
-            // required metadata
-            // if (Game.Cover != null)
-            // {
-            //     try
-            //     {
-            //         Cover GameCover = Covers.GetCover(Game.Cover.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), forceRefresh);
-            //     }
-            //     catch (Exception ex)
-            //     {
-            //         Logging.Log(Logging.LogType.Critical, "Game Metadata", "Unable to fetch cover artwork.", ex);
-            //     }
-            // }
-
-            if (Game.Genres != null)
-            {
-                foreach (long GenreId in Game.Genres.Ids)
-                {
-                    Genre GameGenre = Genres.GetGenres(GenreId);
-                }
-            }
-
-            if (Game.GameModes != null)
-            {
-                foreach (long gameModeId in Game.GameModes.Ids)
-                {
-                    GameMode gameMode = GameModes.GetGame_Modes(gameModeId);
-                }
-            }
-
-            if (Game.MultiplayerModes != null)
-            {
-                foreach (long multiplayerModeId in Game.MultiplayerModes.Ids)
-                {
-                    MultiplayerMode multiplayerMode = MultiplayerModes.GetGame_MultiplayerModes(multiplayerModeId);
-                }
-            }
-
-            if (Game.PlayerPerspectives != null)
-            {
-                foreach (long PerspectiveId in Game.PlayerPerspectives.Ids)
-                {
-                    PlayerPerspective GamePlayPerspective = PlayerPerspectives.GetGame_PlayerPerspectives(PerspectiveId);
-                }
-            }
-
-            if (Game.Themes != null)
-            {
-                foreach (long ThemeId in Game.Themes.Ids)
-                {
-                    Theme GameTheme = Themes.GetGame_Themes(ThemeId);
-                }
-            }
-
-            if (Game.AgeRatings != null)
-            {
-                foreach (long AgeRatingId in Game.AgeRatings.Ids)
-                {
-                    AgeRating GameAgeRating = AgeRatings.GetAgeRatings(AgeRatingId);
-                }
-            }
-            AgeGroups.GetAgeGroup(Game);
-
-            if (Game.ReleaseDates != null)
-            {
-                foreach (long ReleaseDateId in Game.ReleaseDates.Ids)
-                {
-                    ReleaseDate GameReleaseDate = ReleaseDates.GetReleaseDates(ReleaseDateId);
-                }
-            }
-
-            // optional metadata - usually downloaded as needed
-            if (getAllMetadata == true)
-            {
-                if (Game.AlternativeNames != null)
-                {
-                    foreach (long AlternativeNameId in Game.AlternativeNames.Ids)
-                    {
-                        AlternativeName GameAlternativeName = AlternativeNames.GetAlternativeNames(AlternativeNameId);
-                    }
-                }
-
-                if (Game.Artworks != null)
-                {
-                    foreach (long ArtworkId in Game.Artworks.Ids)
-                    {
-                        try
-                        {
-                            Artwork GameArtwork = Artworks.GetArtwork(ArtworkId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), forceRefresh);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Log(Logging.LogType.Critical, "Game Metadata", "Unable to fetch artwork id: " + ArtworkId, ex);
-                        }
-                    }
-                }
-
-                if (followSubGames)
-                {
-                    List<long> gamesToFetch = new List<long>();
-                    if (Game.Bundles != null) { gamesToFetch.AddRange(Game.Bundles.Ids); }
-                    if (Game.Dlcs != null) { gamesToFetch.AddRange(Game.Dlcs.Ids); }
-                    if (Game.Expansions != null) { gamesToFetch.AddRange(Game.Expansions.Ids); }
-                    if (Game.ParentGame != null) { gamesToFetch.Add((long)Game.ParentGame.Id); }
-                    //if (Game.SimilarGames != null) { gamesToFetch.AddRange(Game.SimilarGames.Ids); }
-                    if (Game.StandaloneExpansions != null) { gamesToFetch.AddRange(Game.StandaloneExpansions.Ids); }
-                    if (Game.VersionParent != null) { gamesToFetch.Add((long)Game.VersionParent.Id); }
-
-                    foreach (long gameId in gamesToFetch)
-                    {
-                        Game relatedGame = GetGame(gameId, false, true, false);
-                    }
-                }
-
-                if (Game.Collection != null)
-                {
-                    Collection GameCollection = Collections.GetCollections(Game.Collection.Id);
-                }
-
-                if (Game.ExternalGames != null)
-                {
-                    foreach (long ExternalGameId in Game.ExternalGames.Ids)
-                    {
-                        ExternalGame GameExternalGame = ExternalGames.GetExternalGames(ExternalGameId);
-                    }
-                }
-
-                if (Game.Franchise != null)
-                {
-                    Franchise GameFranchise = Franchises.GetFranchises(Game.Franchise.Id);
-                }
-
-                if (Game.Franchises != null)
-                {
-                    foreach (long FranchiseId in Game.Franchises.Ids)
-                    {
-                        Franchise GameFranchise = Franchises.GetFranchises(FranchiseId);
-                    }
-                }
-
-                if (Game.InvolvedCompanies != null)
-                {
-                    foreach (long involvedCompanyId in Game.InvolvedCompanies.Ids)
-                    {
-                        InvolvedCompany involvedCompany = InvolvedCompanies.GetInvolvedCompanies(involvedCompanyId);
-                    }
-                }
-
-                if (Game.Platforms != null)
-                {
-                    foreach (long PlatformId in Game.Platforms.Ids)
-                    {
-                        Platform GamePlatform = Platforms.GetPlatform(PlatformId);
-                    }
-                }
-
-                if (Game.Screenshots != null)
-                {
-                    foreach (long ScreenshotId in Game.Screenshots.Ids)
-                    {
-                        try
-                        {
-                            Screenshot GameScreenshot = Screenshots.GetScreenshot(ScreenshotId, Config.LibraryConfiguration.LibraryMetadataDirectory_Game(Game), forceRefresh);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.Log(Logging.LogType.Critical, "Game Metadata", "Unable to fetch screenshot id: " + ScreenshotId, ex);
-                        }
-                    }
-                }
-
-                if (Game.Videos != null)
-                {
-                    foreach (long GameVideoId in Game.Videos.Ids)
-                    {
-                        GameVideo gameVideo = GamesVideos.GetGame_Videos(GameVideoId);
-                    }
-                }
-            }
-        }
-
-        private enum SearchUsing
-        {
-            id,
-            slug
-        }
-
-        private static async Task<Game> GetObjectFromServer(string WhereClause)
-        {
-            // get Game metadata
-            Communications comms = new Communications();
-            var results = await comms.APIComm<Game>(IGDBClient.Endpoints.Games, fieldList, WhereClause);
-            var result = results.First();
-
-            // add artificial unknown platform mapping
-            List<long> platformIds = new List<long>();
-            platformIds.Add(0);
-            if (result.Platforms != null)
-            {
-                if (result.Platforms.Ids != null)
-                {
-                    platformIds.AddRange(result.Platforms.Ids.ToList());
-                }
-            }
-            result.Platforms = new IdentitiesOrValues<Platform>(
-                ids: platformIds.ToArray<long>()
-            );
 
             // get cover art from parent if this has no cover
             if (result.Cover == null)
             {
-                if (result.ParentGame != null)
-                {
-                    if (result.ParentGame.Id != null)
-                    {
-                        Logging.Log(Logging.LogType.Information, "Game Metadata", "Game has no cover art, fetching cover art from parent game");
-                        Game parentGame = GetGame((long)result.ParentGame.Id, false, false, false);
-                        result.Cover = parentGame.Cover;
-                    }
-                }
+                Logging.Log(Logging.LogType.Information, "Game Metadata", "Game has no cover art, fetching cover art from parent game");
+                result.Cover = parentGame.Cover;
             }
 
             // get missing metadata from parent if this is a port
-            if (result.Category == Category.Port)
+            if (result.Category == HasheousClient.Models.Metadata.IGDB.Category.Port)
             {
                 if (result.Summary == null)
                 {
                     if (result.ParentGame != null)
                     {
-                        if (result.ParentGame.Id != null)
-                        {
-                            Logging.Log(Logging.LogType.Information, "Game Metadata", "Game has no summary, fetching summary from parent game");
-                            Game parentGame = GetGame((long)result.ParentGame.Id, false, false, false);
-                            result.Summary = parentGame.Summary;
-                        }
+                        Logging.Log(Logging.LogType.Information, "Game Metadata", "Game has no summary, fetching summary from parent game");
+                        result.Summary = parentGame.Summary;
                     }
                 }
             }
 
-            return result;
-        }
-
-        public static void AssignAllGamesToPlatformIdZero()
-        {
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM Game;";
-            DataTable gamesTable = db.ExecuteCMD(sql);
-            foreach (DataRow gameRow in gamesTable.Rows)
+            // populate age group data
+            if (result.MetadataSource == HasheousClient.Models.MetadataSources.IGDB)
             {
-                sql = "DELETE FROM Relation_Game_Platforms WHERE PlatformsId = 0 AND GameId = @Id; INSERT INTO Relation_Game_Platforms (GameId, PlatformsId) VALUES (@Id, 0);";
-                Dictionary<string, object> dbDict = new Dictionary<string, object>();
-                dbDict.Add("Id", (long)gameRow["Id"]);
-                db.ExecuteCMD(sql, dbDict);
+                AgeGroups.GetAgeGroup(result);
             }
+
+            return result;
         }
 
         private static bool AllowNoPlatformSearch = false;
@@ -430,7 +139,7 @@ namespace gaseous_server.Classes.Metadata
                     break;
             }
 
-            string sql = "SELECT Game.Id, Game.`Name`, Game.Slug, Relation_Game_Platforms.PlatformsId AS PlatformsId, Game.Summary FROM gaseous.Game JOIN Relation_Game_Platforms ON Game.Id = Relation_Game_Platforms.GameId WHERE " + whereClause + ";";
+            string sql = "SELECT Game.Id, Game.`Name`, Game.Slug, Relation_Game_Platforms.PlatformsId AS PlatformsId, Game.Summary FROM gaseous.Game JOIN Relation_Game_Platforms ON Game.Id = Relation_Game_Platforms.GameId AND Game.SourceId = Relation_Game_Platforms.GameSourceId WHERE " + whereClause + ";";
 
 
             // get Game metadata
@@ -460,64 +169,92 @@ namespace gaseous_server.Classes.Metadata
 
         private static async Task<Game[]> _SearchForGameRemote(string SearchString, long PlatformId, SearchType searchType)
         {
-            string searchBody = "";
-            string searchFields = "fields id,name,slug,platforms,summary; ";
-            bool allowSearch = true;
-            switch (searchType)
+            switch (Config.MetadataConfiguration.DefaultMetadataSource)
             {
-                case SearchType.searchNoPlatform:
-                    searchBody = "search \"" + SearchString + "\"; ";
+                case HasheousClient.Models.MetadataSources.None:
+                    return new Game[0];
+                case HasheousClient.Models.MetadataSources.IGDB:
+                    if (Config.IGDB.UseHasheousProxy == false)
+                    {
+                        string searchBody = "";
+                        string searchFields = "fields id,name,slug,platforms,summary; ";
+                        bool allowSearch = true;
+                        switch (searchType)
+                        {
+                            case SearchType.searchNoPlatform:
+                                searchBody = "search \"" + SearchString + "\"; ";
 
-                    allowSearch = AllowNoPlatformSearch;
-                    break;
-                case SearchType.search:
-                    searchBody = "search \"" + SearchString + "\"; where platforms = (" + PlatformId + ");";
-                    break;
-                case SearchType.wherefuzzy:
-                    searchBody = "where platforms = (" + PlatformId + ") & name ~ *\"" + SearchString + "\"*;";
-                    break;
-                case SearchType.where:
-                    searchBody = "where platforms = (" + PlatformId + ") & name ~ \"" + SearchString + "\";";
-                    break;
-            }
+                                allowSearch = AllowNoPlatformSearch;
+                                break;
+                            case SearchType.search:
+                                searchBody = "search \"" + SearchString + "\"; where platforms = (" + PlatformId + ");";
+                                break;
+                            case SearchType.wherefuzzy:
+                                searchBody = "where platforms = (" + PlatformId + ") & name ~ *\"" + SearchString + "\"*;";
+                                break;
+                            case SearchType.where:
+                                searchBody = "where platforms = (" + PlatformId + ") & name ~ \"" + SearchString + "\";";
+                                break;
+                        }
 
-            // check search cache
-            Game[]? games = Communications.GetSearchCache<Game[]?>(searchFields, searchBody);
+                        // check search cache
+                        Game[]? games = Communications.GetSearchCache<Game[]?>(searchFields, searchBody);
 
-            if (games == null)
-            {
-                // cache miss
-                // get Game metadata
-                Communications comms = new Communications();
-                Game[]? results = new Game[0];
-                if (allowSearch == true)
-                {
-                    results = await comms.APIComm<Game>(IGDBClient.Endpoints.Games, searchFields, searchBody);
+                        if (games == null)
+                        {
+                            // cache miss
+                            // get Game metadata
+                            Communications comms = new Communications();
+                            Game[]? results = new Game[0];
+                            if (allowSearch == true)
+                            {
+                                results = await comms.APIComm<Game>(IGDB.IGDBClient.Endpoints.Games, searchFields, searchBody);
 
-                    Communications.SetSearchCache<Game[]?>(searchFields, searchBody, results);
-                }
+                                Communications.SetSearchCache<Game[]?>(searchFields, searchBody, results);
+                            }
 
-                return results;
-            }
-            else
-            {
-                return games.ToArray();
+                            return results;
+                        }
+                        else
+                        {
+                            return games.ToArray();
+                        }
+                    }
+                    else
+                    {
+                        HasheousClient.Hasheous hasheous = new HasheousClient.Hasheous();
+                        Communications.ConfigureHasheousClient(ref hasheous);
+                        HasheousClient.Models.Metadata.IGDB.Game[] hResults = hasheous.GetMetadataProxy_SearchGame<HasheousClient.Models.Metadata.IGDB.Game>(HasheousClient.Hasheous.MetadataProvider.IGDB, PlatformId.ToString(), SearchString);
+
+                        List<Game> hGames = new List<Game>();
+                        foreach (HasheousClient.Models.Metadata.IGDB.Game hResult in hResults)
+                        {
+                            hGames.Add(Communications.ConvertToIGDBModel<Game>(hResult));
+                        }
+
+                        return hGames.ToArray();
+                    }
+                default:
+                    return new Game[0];
             }
         }
 
-        public static List<AvailablePlatformItem> GetAvailablePlatforms(string UserId, long GameId)
+        public static List<AvailablePlatformItem> GetAvailablePlatforms(string UserId, HasheousClient.Models.MetadataSources SourceType, long GameId)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = @"
 SELECT DISTINCT
+	view_Games_Roms.MetadataMapId,
+    view_Games_Roms.MetadataGameName,
     view_Games_Roms.GameId,
     view_Games_Roms.PlatformId,
+    view_Games_Roms.UserManualLink,
     Platform.`Name`,
     User_RecentPlayedRoms.UserId AS MostRecentUserId,
     User_RecentPlayedRoms.RomId AS MostRecentRomId,
     CASE User_RecentPlayedRoms.IsMediaGroup
         WHEN 0 THEN GMR.`Name`
-        WHEN 1 THEN 'Media Group'
+        WHEN 1 THEN view_Games_Roms.`MetadataGameName`
         ELSE NULL
     END AS `MostRecentRomName`,
     User_RecentPlayedRoms.IsMediaGroup AS MostRecentRomIsMediaGroup,
@@ -525,31 +262,32 @@ SELECT DISTINCT
     User_GameFavouriteRoms.RomId AS FavouriteRomId,
     CASE User_GameFavouriteRoms.IsMediaGroup
         WHEN 0 THEN GFV.`Name`
-        WHEN 1 THEN 'Media Group'
+        WHEN 1 THEN view_Games_Roms.`MetadataGameName`
         ELSE NULL
     END AS `FavouriteRomName`,
     User_GameFavouriteRoms.IsMediaGroup AS FavouriteRomIsMediaGroup
 FROM
     view_Games_Roms
         LEFT JOIN
-    Platform ON view_Games_Roms.PlatformId = Platform.Id
+    Platform ON view_Games_Roms.PlatformId = Platform.Id AND Platform.SourceId = view_Games_Roms.GameIdType
         LEFT JOIN
     User_RecentPlayedRoms ON User_RecentPlayedRoms.UserId = @userid
-        AND User_RecentPlayedRoms.GameId = view_Games_Roms.GameId
+        AND User_RecentPlayedRoms.GameId = view_Games_Roms.MetadataMapId
         AND User_RecentPlayedRoms.PlatformId = view_Games_Roms.PlatformId
         LEFT JOIN
     User_GameFavouriteRoms ON User_GameFavouriteRoms.UserId = @userid
-        AND User_GameFavouriteRoms.GameId = view_Games_Roms.GameId
+        AND User_GameFavouriteRoms.GameId = view_Games_Roms.MetadataMapId
         AND User_GameFavouriteRoms.PlatformId = view_Games_Roms.PlatformId
         LEFT JOIN
     view_Games_Roms AS GMR ON GMR.Id = User_RecentPlayedRoms.RomId
         LEFT JOIN
     view_Games_Roms AS GFV ON GFV.Id = User_GameFavouriteRoms.RomId
 WHERE
-    view_Games_Roms.GameId = @gameid
-ORDER BY Platform.`Name`;";
+    view_Games_Roms.GameIdType = @sourcetype AND view_Games_Roms.GameId = @gameid
+ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>
             {
+                { "sourcetype", (int)SourceType },
                 { "gameid", GameId },
                 { "userid", UserId }
             };
@@ -559,21 +297,38 @@ ORDER BY Platform.`Name`;";
             List<AvailablePlatformItem> platforms = new List<AvailablePlatformItem>();
             foreach (DataRow row in data.Rows)
             {
-                IGDB.Models.Platform platform = Platforms.GetPlatform((long)row["PlatformId"]);
+                HasheousClient.Models.Metadata.IGDB.Platform platform = Platforms.GetPlatform((long)row["PlatformId"]);
+
+                // get the user emulator configuration
                 PlatformMapping.UserEmulatorConfiguration? emulatorConfiguration = platformMapping.GetUserEmulator(UserId, GameId, (long)platform.Id);
 
+                // if no user configuration, get the platform emulator configuration
                 if (emulatorConfiguration == null)
                 {
                     if (platform.Id != 0)
                     {
                         Models.PlatformMapping.PlatformMapItem platformMap = PlatformMapping.GetPlatformMap((long)platform.Id);
-                        emulatorConfiguration = new PlatformMapping.UserEmulatorConfiguration
+                        if (platformMap != null)
                         {
-                            EmulatorType = platformMap.WebEmulator.Type,
-                            Core = platformMap.WebEmulator.Core,
-                            EnableBIOSFiles = platformMap.EnabledBIOSHashes
-                        };
+                            emulatorConfiguration = new PlatformMapping.UserEmulatorConfiguration
+                            {
+                                EmulatorType = platformMap.WebEmulator.Type,
+                                Core = platformMap.WebEmulator.Core,
+                                EnableBIOSFiles = platformMap.EnabledBIOSHashes
+                            };
+                        }
                     }
+                }
+
+                // if still no emulator configuration, create a blank one
+                if (emulatorConfiguration == null)
+                {
+                    emulatorConfiguration = new PlatformMapping.UserEmulatorConfiguration
+                    {
+                        EmulatorType = "",
+                        Core = "",
+                        EnableBIOSFiles = new List<string>()
+                    };
                 }
 
                 long? LastPlayedRomId = null;
@@ -596,16 +351,24 @@ ORDER BY Platform.`Name`;";
                 {
                     FavouriteRomId = (long?)row["FavouriteRomId"];
                     FavouriteRomIsMediagroup = (bool)row["FavouriteRomIsMediaGroup"];
-                    if (row["MostRecentRomName"] != System.DBNull.Value)
+                    if (row["FavouriteRomName"] != System.DBNull.Value)
                     {
-                        FavouriteRomName = string.IsNullOrEmpty((string?)row["MostRecentRomName"]) ? "" : (string)row["MostRecentRomName"];
+                        FavouriteRomName = string.IsNullOrEmpty((string?)row["FavouriteRomName"]) ? "" : (string)row["FavouriteRomName"];
                     }
+                }
+
+                string? UserManualLink = null;
+                if (row["UserManualLink"] != DBNull.Value)
+                {
+                    UserManualLink = string.IsNullOrEmpty((string?)row["UserManualLink"]) ? "" : (string)row["UserManualLink"];
                 }
 
                 AvailablePlatformItem valuePair = new AvailablePlatformItem
                 {
                     Id = platform.Id,
                     Name = platform.Name,
+                    MetadataMapId = (long)row["MetadataMapId"],
+                    MetadataGameName = (string)row["MetadataGameName"],
                     Category = platform.Category,
                     emulatorConfiguration = emulatorConfiguration,
                     LastPlayedRomId = LastPlayedRomId,
@@ -613,10 +376,14 @@ ORDER BY Platform.`Name`;";
                     LastPlayedRomName = LastPlayedRomName,
                     FavouriteRomId = FavouriteRomId,
                     FavouriteRomIsMediagroup = FavouriteRomIsMediagroup,
-                    FavouriteRomName = FavouriteRomName
+                    FavouriteRomName = FavouriteRomName,
+                    UserManualLink = UserManualLink
                 };
                 platforms.Add(valuePair);
             }
+
+            // sort platforms by the Name attribute
+            platforms.Sort((x, y) => x.Name.CompareTo(y.Name));
 
             return platforms;
         }
@@ -649,8 +416,10 @@ ORDER BY Platform.`Name`;";
             db.ExecuteCMD(sql, dbDict);
         }
 
-        public class AvailablePlatformItem : IGDB.Models.Platform
+        public class AvailablePlatformItem : HasheousClient.Models.Metadata.IGDB.Platform
         {
+            public long MetadataMapId { get; set; }
+            public string? MetadataGameName { get; set; }
             public PlatformMapping.UserEmulatorConfiguration emulatorConfiguration { get; set; }
             public long? LastPlayedRomId { get; set; }
             public bool? LastPlayedRomIsMediagroup { get; set; }
@@ -658,6 +427,7 @@ ORDER BY Platform.`Name`;";
             public long? FavouriteRomId { get; set; }
             public bool? FavouriteRomIsMediagroup { get; set; }
             public string? FavouriteRomName { get; set; }
+            public string? UserManualLink { get; set; }
         }
 
         public enum SearchType
@@ -677,7 +447,10 @@ ORDER BY Platform.`Name`;";
 
             public MinimalGameItem(Game gameObject)
             {
+                this.PlatformIds = gameObject.Platforms;
                 this.Id = gameObject.Id;
+                this.MetadataMapId = gameObject.MetadataMapId;
+                this.MetadataSource = gameObject.MetadataSource;
                 this.Name = gameObject.Name;
                 this.Slug = gameObject.Slug;
                 this.Summary = gameObject.Summary;
@@ -687,13 +460,81 @@ ORDER BY Platform.`Name`;";
                 this.Artworks = gameObject.Artworks;
                 this.FirstReleaseDate = gameObject.FirstReleaseDate;
 
+                // compile genres
+                this.Genres = new List<string>();
+                if (gameObject.Genres != null)
+                {
+                    foreach (long genreId in gameObject.Genres)
+                    {
+                        HasheousClient.Models.Metadata.IGDB.Genre? genre = Classes.Metadata.Genres.GetGenres(gameObject.MetadataSource, genreId);
+                        if (genre != null)
+                        {
+                            if (!this.Genres.Contains(genre.Name))
+                            {
+                                this.Genres.Add(genre.Name);
+                            }
+                        }
+                    }
+                }
+
+                // compile themes
+                this.Themes = new List<string>();
+                if (gameObject.Themes != null)
+                {
+                    foreach (long themeId in gameObject.Themes)
+                    {
+                        HasheousClient.Models.Metadata.IGDB.Theme? theme = Classes.Metadata.Themes.GetGame_Themes(gameObject.MetadataSource, themeId);
+                        if (theme != null)
+                        {
+                            if (!this.Themes.Contains(theme.Name))
+                            {
+                                this.Themes.Add(theme.Name);
+                            }
+                        }
+                    }
+                }
+
+                // compile players
+                this.Players = new List<string>();
+                if (gameObject.GameModes != null)
+                {
+                    foreach (long playerId in gameObject.GameModes)
+                    {
+                        HasheousClient.Models.Metadata.IGDB.GameMode? player = Classes.Metadata.GameModes.GetGame_Modes(gameObject.MetadataSource, playerId);
+                        if (player != null)
+                        {
+                            if (!this.Players.Contains(player.Name))
+                            {
+                                this.Players.Add(player.Name);
+                            }
+                        }
+                    }
+                }
+
+                // compile perspectives
+                this.Perspectives = new List<string>();
+                if (gameObject.PlayerPerspectives != null)
+                {
+                    foreach (long perspectiveId in gameObject.PlayerPerspectives)
+                    {
+                        HasheousClient.Models.Metadata.IGDB.PlayerPerspective? perspective = Classes.Metadata.PlayerPerspectives.GetGame_PlayerPerspectives(gameObject.MetadataSource, perspectiveId);
+                        if (perspective != null)
+                        {
+                            if (!this.Perspectives.Contains(perspective.Name))
+                            {
+                                this.Perspectives.Add(perspective.Name);
+                            }
+                        }
+                    }
+                }
+
                 // compile age ratings
-                this.AgeRatings = new List<AgeRating>();
+                this.AgeRatings = new List<HasheousClient.Models.Metadata.IGDB.AgeRating>();
                 if (gameObject.AgeRatings != null)
                 {
-                    foreach (long ageRatingId in gameObject.AgeRatings.Ids)
+                    foreach (long ageRatingId in gameObject.AgeRatings)
                     {
-                        AgeRating? rating = Classes.Metadata.AgeRatings.GetAgeRatings(ageRatingId);
+                        HasheousClient.Models.Metadata.IGDB.AgeRating? rating = Classes.Metadata.AgeRatings.GetAgeRating(gameObject.MetadataSource, ageRatingId);
                         if (rating != null)
                         {
                             this.AgeRatings.Add(rating);
@@ -702,19 +543,71 @@ ORDER BY Platform.`Name`;";
                 }
             }
 
+            public List<long>? PlatformIds { get; set; }
             public long? Id { get; set; }
+            public long? MetadataMapId { get; set; }
+            public HasheousClient.Models.MetadataSources MetadataSource { get; set; }
             public long Index { get; set; }
+            public string Alpha
+            {
+                get
+                {
+                    if (string.IsNullOrEmpty(Name) == false)
+                    {
+                        string firstLetter = Name.Substring(0, 1).ToUpper();
+                        if (char.IsLetter(firstLetter[0]))
+                        {
+                            return firstLetter;
+                        }
+                        else
+                        {
+                            return "#";
+                        }
+                    }
+                    else
+                    {
+                        return "#";
+                    }
+                }
+            }
             public string Name { get; set; }
+            public string NameThe
+            {
+                get
+                {
+                    // if Name starts with "The ", move it to the end
+                    if (Name.StartsWith("The ", StringComparison.OrdinalIgnoreCase))
+                    {
+                        return Name.Substring(4) + ", The";
+                    }
+                    else
+                    {
+                        return Name;
+                    }
+                }
+            }
+            public List<string> AlternateNames { get; set; }
             public string Slug { get; set; }
             public string Summary { get; set; }
             public double? TotalRating { get; set; }
             public int? TotalRatingCount { get; set; }
             public bool HasSavedGame { get; set; } = false;
             public bool IsFavourite { get; set; } = false;
+            public List<string> Genres { get; set; }
+            public List<string> Themes { get; set; }
+            public List<string> Players { get; set; }
+            public List<string> Perspectives { get; set; }
             public DateTimeOffset? FirstReleaseDate { get; set; }
-            public IGDB.IdentityOrValue<IGDB.Models.Cover> Cover { get; set; }
-            public IGDB.IdentitiesOrValues<IGDB.Models.Artwork> Artworks { get; set; }
-            public List<IGDB.Models.AgeRating> AgeRatings { get; set; }
+            public object Cover { get; set; }
+            public List<long> Artworks { get; set; }
+            public List<HasheousClient.Models.Metadata.IGDB.AgeRating> AgeRatings { get; set; }
+            public AgeGroups.AgeRestrictionGroupings AgeGroup
+            {
+                get
+                {
+                    return AgeGroups.GetAgeGroupFromAgeRatings(AgeRatings);
+                }
+            }
         }
     }
 }

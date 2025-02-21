@@ -7,17 +7,26 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
-using IGDB.Models;
 using NuGet.Common;
 using NuGet.LibraryModel;
 using static gaseous_server.Classes.Metadata.Games;
 using static gaseous_server.Classes.FileSignature;
 using HasheousClient.Models;
+using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Classes
 {
     public class ImportGame : QueueItemStatus
     {
+        /// <summary>
+        /// Scan the import directory for games and process them
+        /// </summary>
+        /// <param name="ImportPath">
+        /// The path to the directory to scan
+        /// </param>
+        /// <exception cref="DirectoryNotFoundException">
+        /// Thrown when the import directory does not exist
+        /// </exception>
         public void ProcessDirectory(string ImportPath)
         {
             if (Directory.Exists(ImportPath))
@@ -47,14 +56,22 @@ namespace gaseous_server.Classes
             }
         }
 
-        public Dictionary<string, object> ImportGameFile(string GameFileImportPath, IGDB.Models.Platform? OverridePlatform)
+        /// <summary>
+        /// Import a single game file
+        /// </summary>
+        /// <param name="GameFileImportPath">
+        /// The path to the game file to import
+        /// </param>
+        /// <param name="OverridePlatform">
+        /// The platform to use for the game file
+        /// </param>
+        /// <returns>
+        /// A dictionary containing the results of the import
+        /// </returns>
+        public Dictionary<string, object> ImportGameFile(string GameFileImportPath, Platform? OverridePlatform)
         {
             Dictionary<string, object> RetVal = new Dictionary<string, object>();
             RetVal.Add("path", Path.GetFileName(GameFileImportPath));
-
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "";
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
 
             if (Common.SkippableFiles.Contains<string>(Path.GetFileName(GameFileImportPath), StringComparer.OrdinalIgnoreCase))
             {
@@ -62,7 +79,6 @@ namespace gaseous_server.Classes
             }
             else
             {
-                FileInfo fi = new FileInfo(GameFileImportPath);
                 Common.hashObject hash = new Common.hashObject(GameFileImportPath);
 
                 Models.PlatformMapping.PlatformMapItem? IsBios = Classes.Bios.BiosHashSignatureLookup(hash.md5hash);
@@ -70,124 +86,259 @@ namespace gaseous_server.Classes
                 if (IsBios == null)
                 {
                     // file is a rom
-                    RetVal.Add("type", "rom");
-
-                    // check to make sure we don't already have this file imported
-                    sql = "SELECT COUNT(Id) AS count FROM view_Games_Roms WHERE MD5=@md5 AND SHA1=@sha1";
-                    dbDict.Add("md5", hash.md5hash);
-                    dbDict.Add("sha1", hash.sha1hash);
-                    DataTable importDB = db.ExecuteCMD(sql, dbDict);
-                    if ((Int64)importDB.Rows[0]["count"] > 0)
-                    {
-                        // import source was the import directory
-                        if (GameFileImportPath.StartsWith(Config.LibraryConfiguration.LibraryImportDirectory))
-                        {
-                            Logging.Log(Logging.LogType.Warning, "Import Game", "  " + GameFileImportPath + " already in database - moving to " + Config.LibraryConfiguration.LibraryImportDuplicatesDirectory);
-
-                            string targetPathWithFileName = GameFileImportPath.Replace(Config.LibraryConfiguration.LibraryImportDirectory, Config.LibraryConfiguration.LibraryImportDuplicatesDirectory);
-                            string targetPath = Path.GetDirectoryName(targetPathWithFileName);
-
-                            if (!Directory.Exists(targetPath))
-                            {
-                                Directory.CreateDirectory(targetPath);
-                            }
-                            File.Move(GameFileImportPath, targetPathWithFileName, true);
-                        }
-
-                        // import source was the upload directory
-                        if (GameFileImportPath.StartsWith(Config.LibraryConfiguration.LibraryUploadDirectory))
-                        {
-                            Logging.Log(Logging.LogType.Warning, "Import Game", "  " + GameFileImportPath + " already in database - skipping import");
-                        }
-
-                        RetVal.Add("status", "duplicate");
-                    }
-                    else
-                    {
-                        Logging.Log(Logging.LogType.Information, "Import Game", "  " + GameFileImportPath + " not in database - processing");
-
-                        FileSignature fileSignature = new FileSignature();
-                        gaseous_server.Models.Signatures_Games discoveredSignature = fileSignature.GetFileSignature(GameLibrary.GetDefaultLibrary, hash, fi, GameFileImportPath);
-
-                        // get discovered platform
-                        IGDB.Models.Platform? determinedPlatform = null;
-                        if (OverridePlatform == null)
-                        {
-                            determinedPlatform = Metadata.Platforms.GetPlatform(discoveredSignature.Flags.IGDBPlatformId);
-                            if (determinedPlatform == null)
-                            {
-                                determinedPlatform = new IGDB.Models.Platform();
-                            }
-                        }
-                        else
-                        {
-                            determinedPlatform = OverridePlatform;
-                            discoveredSignature.Flags.IGDBPlatformId = (long)determinedPlatform.Id;
-                            discoveredSignature.Flags.IGDBPlatformName = determinedPlatform.Name;
-                        }
-
-                        IGDB.Models.Game determinedGame = SearchForGame(discoveredSignature, discoveredSignature.Flags.IGDBPlatformId, true);
-
-                        // add to database
-                        long RomId = StoreROM(GameLibrary.GetDefaultLibrary, hash, determinedGame, determinedPlatform, discoveredSignature, GameFileImportPath, 0, true);
-
-                        // build return value
-                        RetVal.Add("romid", RomId);
-                        RetVal.Add("platform", determinedPlatform);
-                        RetVal.Add("game", determinedGame);
-                        RetVal.Add("signature", discoveredSignature);
-                        RetVal.Add("status", "imported");
-                    }
+                    _ImportGameFile(GameFileImportPath, hash, ref RetVal, OverridePlatform);
                 }
                 else
                 {
                     // file is a bios
-                    RetVal.Add("type", "bios");
-                    RetVal.Add("status", "notimported");
-
-                    foreach (Classes.Bios.BiosItem biosItem in Classes.Bios.GetBios())
-                    {
-                        if (biosItem.Available == false)
-                        {
-                            if (biosItem.hash == hash.md5hash)
-                            {
-                                string biosPath = Path.Combine(Config.LibraryConfiguration.LibraryFirmwareDirectory, biosItem.hash + ".bios");
-                                Logging.Log(Logging.LogType.Information, "Import Game", "  " + GameFileImportPath + " is a BIOS file - moving to " + biosPath);
-
-                                File.Move(GameFileImportPath, biosItem.biosPath, true);
-
-                                RetVal.Add("name", biosItem.filename);
-                                RetVal.Add("platform", Platforms.GetPlatform(biosItem.platformid, false, false));
-                                RetVal["status"] = "imported";
-
-                                return RetVal;
-                            }
-                        }
-                        else
-                        {
-                            if (biosItem.hash == hash.md5hash)
-                            {
-                                RetVal["status"] = "duplicate";
-                                return RetVal;
-                            }
-                        }
-                    }
+                    Bios.ImportBiosFile(GameFileImportPath, hash, ref RetVal);
                 }
             }
 
             return RetVal;
         }
 
-        public static IGDB.Models.Game SearchForGame(gaseous_server.Models.Signatures_Games Signature, long PlatformId, bool FullDownload)
+        /// <summary>
+        /// Import a single game file
+        /// </summary>
+        /// <param name="FilePath">
+        /// The path to the game file to import
+        /// </param>
+        /// <param name="Hash">
+        /// The hash of the game file
+        /// </param>
+        /// <param name="GameFileInfo">
+        /// A dictionary to store the results of the import
+        /// </param>
+        /// <param name="OverridePlatform">
+        /// The platform to use for the game file
+        /// </param>
+        private static void _ImportGameFile(string FilePath, Common.hashObject Hash, ref Dictionary<string, object> GameFileInfo, Platform? OverridePlatform)
+        {
+            GameFileInfo.Add("type", "rom");
+
+            // check to make sure we don't already have this file imported
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+
+            sql = "SELECT COUNT(Id) AS count FROM view_Games_Roms WHERE MD5=@md5 AND SHA1=@sha1";
+            dbDict.Add("md5", Hash.md5hash);
+            dbDict.Add("sha1", Hash.sha1hash);
+            DataTable importDB = db.ExecuteCMD(sql, dbDict);
+            if ((Int64)importDB.Rows[0]["count"] > 0)
+            {
+                // import source was the import directory
+                if (FilePath.StartsWith(Config.LibraryConfiguration.LibraryImportDirectory))
+                {
+                    Logging.Log(Logging.LogType.Warning, "Import Game", "  " + FilePath + " already in database - moving to " + Config.LibraryConfiguration.LibraryImportDuplicatesDirectory);
+
+                    string targetPathWithFileName = FilePath.Replace(Config.LibraryConfiguration.LibraryImportDirectory, Config.LibraryConfiguration.LibraryImportDuplicatesDirectory);
+                    string targetPath = Path.GetDirectoryName(targetPathWithFileName);
+
+                    if (!Directory.Exists(targetPath))
+                    {
+                        Directory.CreateDirectory(targetPath);
+                    }
+                    File.Move(FilePath, targetPathWithFileName, true);
+                }
+
+                // import source was the upload directory
+                if (FilePath.StartsWith(Config.LibraryConfiguration.LibraryUploadDirectory))
+                {
+                    Logging.Log(Logging.LogType.Warning, "Import Game", "  " + FilePath + " already in database - skipping import");
+                }
+
+                GameFileInfo.Add("status", "duplicate");
+            }
+            else
+            {
+                Logging.Log(Logging.LogType.Information, "Import Game", "  " + FilePath + " not in database - processing");
+
+                FileInfo fi = new FileInfo(FilePath);
+                FileSignature fileSignature = new FileSignature();
+                gaseous_server.Models.Signatures_Games discoveredSignature = fileSignature.GetFileSignature(GameLibrary.GetDefaultLibrary, Hash, fi, FilePath);
+                if (discoveredSignature.Flags.GameId == 0)
+                {
+                    HasheousClient.Models.Metadata.IGDB.Game? discoveredGame = SearchForGame(discoveredSignature, discoveredSignature.Flags.PlatformId, false);
+                    if (discoveredGame != null && discoveredGame.Id != null)
+                    {
+                        discoveredSignature.MetadataSources.AddGame((long)discoveredGame.Id, discoveredGame.Name, MetadataSources.IGDB);
+                    }
+                }
+
+                // add to database
+                Platform? determinedPlatform = Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId);
+                Models.Game? determinedGame = Metadata.Games.GetGame(discoveredSignature.Flags.GameMetadataSource, discoveredSignature.Flags.GameId);
+                long RomId = StoreGame(GameLibrary.GetDefaultLibrary, Hash, discoveredSignature, determinedPlatform, FilePath, 0, true);
+                Roms.GameRomItem romItem = Roms.GetRom(RomId);
+
+                // build return value
+                GameFileInfo.Add("romid", RomId);
+                GameFileInfo.Add("platform", determinedPlatform);
+                GameFileInfo.Add("game", determinedGame);
+                GameFileInfo.Add("signature", discoveredSignature);
+                GameFileInfo.Add("rom", romItem);
+                GameFileInfo.Add("status", "imported");
+            }
+        }
+
+        /// <summary>
+        /// Store a game in the database and move the file to the library (if required)
+        /// </summary>
+        /// <param name="library">
+        /// The library to store the game in
+        /// </param>
+        /// <param name="hash">
+        /// The hash of the game file
+        /// </param>
+        /// <param name="signature">
+        /// The signature of the game file
+        /// </param>
+        /// <param name="filePath">
+        /// The path to the game file
+        /// </param>
+        /// <param name="romId">
+        /// The ID of the ROM in the database (if it already exists, 0 if it doesn't)
+        /// </param>
+        /// <param name="SourceIsExternal">
+        /// Whether the source of the file is external to the library
+        /// </param>
+        public static long StoreGame(GameLibrary.LibraryItem library, Common.hashObject hash, Signatures_Games signature, Platform platform, string filePath, long romId = 0, bool SourceIsExternal = false)
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
+            string sql = "";
+
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+
+            // add/get the metadata map
+            MetadataMap? map = MetadataManagement.NewMetadataMap((long)platform.Id, signature.Game.Name);
+
+            // add any metadata attributes that may be supplied as part of the signature
+            if (signature.Game.UserManual != null)
+            {
+                if (signature.Game.UserManual.Length > 0)
+                {
+                    MetadataManagement.SetMetadataSupportData((long)map.Id, MetadataManagement.MetadataMapSupportDataTypes.UserManualLink, signature.Game.UserManual);
+                }
+            }
+
+            // populate map with the sources from the signature if they don't already exist
+            foreach (MetadataSources source in Enum.GetValues(typeof(MetadataSources)))
+            {
+                bool sourceExists = false;
+
+                if (source != MetadataSources.None)
+                {
+                    // get the signature that matches this source
+                    Signatures_Games.SourceValues.SourceValueItem? signatureSource = signature.MetadataSources.Games.Find(x => x.Source == source);
+                    if (signatureSource == null)
+                    {
+                        Logging.Log(Logging.LogType.Information, "Import Game", "  No source found for " + source.ToString());
+                        continue;
+                    }
+
+                    // get the metadata map for this source
+                    MetadataMap.MetadataMapItem? mapSource = map.MetadataMapItems.Find(x => x.SourceType == source);
+                    if (mapSource == null)
+                    {
+                        // add the source to the map
+                        bool preferred = false;
+                        if (source == Config.MetadataConfiguration.DefaultMetadataSource)
+                        {
+                            preferred = true;
+                        }
+                        MetadataManagement.AddMetadataMapItem((long)map.Id, source, signatureSource.Id, preferred);
+                    }
+                    else
+                    {
+                        // update the source in the map - do not modify the preferred status
+                        MetadataManagement.UpdateMetadataMapItem((long)map.Id, source, signatureSource.Id, null);
+                    }
+                }
+            }
+
+            // reload the map
+            map = MetadataManagement.GetMetadataMap((long)map.Id);
+
+            // add or update the rom
+            dbDict = new Dictionary<string, object>();
+            if (romId == 0)
+            {
+                sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, RelativePath, MetadataSource, MetadataGameName, MetadataVersion, LibraryId, RomDataVersion, MetadataMapId) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @Attributes, @romtype, @romtypemedia, @medialabel, @path, @metadatasource, @metadatagamename, @metadataversion, @libraryid, @romdataversion, @metadatamapid); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+            }
+            else
+            {
+                sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid, Name=@name, Size=@size, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion, RomDataVersion=@romdataversion, MetadataMapId=@metadatamapid WHERE Id=@id;";
+                dbDict.Add("id", romId);
+            }
+            dbDict.Add("platformid", Common.ReturnValueIfNull(platform.Id, 0));
+            dbDict.Add("gameid", 0); // set to 0 - no longer required as game is mapped using the MetadataMapBridge table
+            dbDict.Add("name", Common.ReturnValueIfNull(signature.Rom.Name, 0));
+            dbDict.Add("size", Common.ReturnValueIfNull(signature.Rom.Size, 0));
+            dbDict.Add("md5", hash.md5hash);
+            dbDict.Add("sha1", hash.sha1hash);
+            dbDict.Add("crc", Common.ReturnValueIfNull(signature.Rom.Crc, ""));
+            dbDict.Add("developmentstatus", Common.ReturnValueIfNull(signature.Rom.DevelopmentStatus, ""));
+            dbDict.Add("metadatasource", signature.Rom.SignatureSource);
+            dbDict.Add("metadatagamename", Common.StripVersionsFromFileName(signature.Game.Name));
+            dbDict.Add("metadataversion", 2);
+            dbDict.Add("libraryid", library.Id);
+            dbDict.Add("romdataversion", 2);
+            dbDict.Add("metadatamapid", map.Id);
+
+            if (signature.Rom.Attributes != null)
+            {
+                if (signature.Rom.Attributes.Count > 0)
+                {
+                    dbDict.Add("attributes", Newtonsoft.Json.JsonConvert.SerializeObject(signature.Rom.Attributes));
+                }
+                else
+                {
+                    dbDict.Add("attributes", "[ ]");
+                }
+            }
+            else
+            {
+                dbDict.Add("attributes", "[ ]");
+            }
+            dbDict.Add("romtype", (int)signature.Rom.RomType);
+            dbDict.Add("romtypemedia", Common.ReturnValueIfNull(signature.Rom.RomTypeMedia, ""));
+            dbDict.Add("medialabel", Common.ReturnValueIfNull(signature.Rom.MediaLabel, ""));
+
+            string libraryRootPath = library.Path;
+            if (libraryRootPath.EndsWith(Path.DirectorySeparatorChar.ToString()) == false)
+            {
+                libraryRootPath += Path.DirectorySeparatorChar;
+            }
+            dbDict.Add("path", filePath.Replace(libraryRootPath, ""));
+
+            DataTable romInsert = db.ExecuteCMD(sql, dbDict);
+            if (romId == 0)
+            {
+                romId = (long)romInsert.Rows[0][0];
+            }
+
+            // move to destination
+            if (library.IsDefaultLibrary == true)
+            {
+                MoveGameFile(romId, SourceIsExternal);
+            }
+
+            return romId;
+        }
+
+        public static gaseous_server.Models.Game SearchForGame(gaseous_server.Models.Signatures_Games Signature, long PlatformId, bool FullDownload)
         {
             if (Signature.Flags != null)
             {
-                if (Signature.Flags.IGDBGameId != null && Signature.Flags.IGDBGameId != 0)
+                if (Signature.Flags.GameId != null && Signature.Flags.GameId != 0)
                 {
                     // game was determined elsewhere - probably a Hasheous server
                     try
                     {
-                        return Games.GetGame(Signature.Flags.IGDBGameId, false, false, FullDownload);
+                        return Games.GetGame(MetadataSources.IGDB, Signature.Flags.GameId);
                     }
                     catch (Exception ex)
                     {
@@ -197,7 +348,7 @@ namespace gaseous_server.Classes
             }
 
             // search discovered game - case insensitive exact match first
-            IGDB.Models.Game determinedGame = new IGDB.Models.Game();
+            gaseous_server.Models.Game determinedGame = new gaseous_server.Models.Game();
 
             string GameName = Signature.Game.Name;
 
@@ -212,30 +363,37 @@ namespace gaseous_server.Classes
                 foreach (Metadata.Games.SearchType searchType in Enum.GetValues(typeof(Metadata.Games.SearchType)))
                 {
                     Logging.Log(Logging.LogType.Information, "Import Game", "  Search type: " + searchType.ToString());
-                    IGDB.Models.Game[] games = Metadata.Games.SearchForGame(SearchCandidate, PlatformId, searchType);
-                    if (games.Length == 1)
+                    gaseous_server.Models.Game[] games = Metadata.Games.SearchForGame(SearchCandidate, PlatformId, searchType);
+                    if (games != null)
                     {
-                        // exact match!
-                        determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false, false);
-                        Logging.Log(Logging.LogType.Information, "Import Game", "  IGDB game: " + determinedGame.Name);
-                        GameFound = true;
-                        break;
-                    }
-                    else if (games.Length > 0)
-                    {
-                        Logging.Log(Logging.LogType.Information, "Import Game", "  " + games.Length + " search results found");
-
-                        // quite likely we've found sequels and alternate types
-                        foreach (Game game in games)
+                        if (games.Length == 1)
                         {
-                            if (game.Name == SearchCandidate)
+                            // exact match!
+                            determinedGame = Metadata.Games.GetGame(MetadataSources.IGDB, (long)games[0].Id);
+                            Logging.Log(Logging.LogType.Information, "Import Game", "  IGDB game: " + determinedGame.Name);
+                            GameFound = true;
+                            break;
+                        }
+                        else if (games.Length > 0)
+                        {
+                            Logging.Log(Logging.LogType.Information, "Import Game", "  " + games.Length + " search results found");
+
+                            // quite likely we've found sequels and alternate types
+                            foreach (gaseous_server.Models.Game game in games)
                             {
-                                // found game title matches the search candidate
-                                determinedGame = Metadata.Games.GetGame((long)games[0].Id, false, false, false);
-                                Logging.Log(Logging.LogType.Information, "Import Game", "Found exact match!");
-                                GameFound = true;
-                                break;
+                                if (game.Name == SearchCandidate)
+                                {
+                                    // found game title matches the search candidate
+                                    determinedGame = Metadata.Games.GetGame(MetadataSources.IGDB, (long)games[0].Id);
+                                    Logging.Log(Logging.LogType.Information, "Import Game", "Found exact match!");
+                                    GameFound = true;
+                                    break;
+                                }
                             }
+                        }
+                        else
+                        {
+                            Logging.Log(Logging.LogType.Information, "Import Game", "  No search results found");
                         }
                     }
                     else
@@ -247,7 +405,7 @@ namespace gaseous_server.Classes
             }
             if (determinedGame == null)
             {
-                determinedGame = new IGDB.Models.Game();
+                determinedGame = new gaseous_server.Models.Game();
             }
 
             string destSlug = "";
@@ -259,9 +417,9 @@ namespace gaseous_server.Classes
             return determinedGame;
         }
 
-        public static List<IGDB.Models.Game> SearchForGame_GetAll(string GameName, long PlatformId)
+        public static List<gaseous_server.Models.Game> SearchForGame_GetAll(string GameName, long PlatformId)
         {
-            List<IGDB.Models.Game> searchResults = new List<IGDB.Models.Game>();
+            List<gaseous_server.Models.Game> searchResults = new List<gaseous_server.Models.Game>();
 
             List<string> SearchCandidates = GetSearchCandidates(GameName);
 
@@ -271,11 +429,11 @@ namespace gaseous_server.Classes
                 {
                     if ((PlatformId == 0 && searchType == SearchType.searchNoPlatform) || (PlatformId != 0 && searchType != SearchType.searchNoPlatform))
                     {
-                        IGDB.Models.Game[] games = Metadata.Games.SearchForGame(SearchCandidate, PlatformId, searchType);
-                        foreach (IGDB.Models.Game foundGame in games)
+                        gaseous_server.Models.Game[] games = Metadata.Games.SearchForGame(SearchCandidate, PlatformId, searchType);
+                        foreach (gaseous_server.Models.Game foundGame in games)
                         {
                             bool gameInResults = false;
-                            foreach (IGDB.Models.Game searchResult in searchResults)
+                            foreach (gaseous_server.Models.Game searchResult in searchResults)
                             {
                                 if (searchResult.Id == foundGame.Id)
                                 {
@@ -299,8 +457,7 @@ namespace gaseous_server.Classes
         private static List<string> GetSearchCandidates(string GameName)
         {
             // remove version numbers from name
-            GameName = Regex.Replace(GameName, @"v(\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
-            GameName = Regex.Replace(GameName, @"Rev (\d+\.)?(\d+\.)?(\*|\d+)$", "").Trim();
+            GameName = Common.StripVersionsFromFileName(GameName);
 
             // assumption: no games have () in their titles so we'll remove them
             int idx = GameName.IndexOf('(');
@@ -326,90 +483,14 @@ namespace gaseous_server.Classes
             return SearchCandidates;
         }
 
-        public static long StoreROM(GameLibrary.LibraryItem library, Common.hashObject hash, IGDB.Models.Game determinedGame, IGDB.Models.Platform determinedPlatform, gaseous_server.Models.Signatures_Games discoveredSignature, string GameFileImportPath, long UpdateId = 0, bool SourceIsExternal = false)
-        {
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-
-            string sql = "";
-
-            Dictionary<string, object> dbDict = new Dictionary<string, object>();
-
-            if (UpdateId == 0)
-            {
-                sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, RelativePath, MetadataSource, MetadataGameName, MetadataVersion, LibraryId, RomDataVersion) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @Attributes, @romtype, @romtypemedia, @medialabel, @path, @metadatasource, @metadatagamename, @metadataversion, @libraryid, @romdataversion); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
-            }
-            else
-            {
-                sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid, Name=@name, Size=@size, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion, RomDataVersion=@romdataversion WHERE Id=@id;";
-                dbDict.Add("id", UpdateId);
-            }
-            dbDict.Add("platformid", Common.ReturnValueIfNull(determinedPlatform.Id, 0));
-            dbDict.Add("gameid", Common.ReturnValueIfNull(determinedGame.Id, 0));
-            dbDict.Add("name", Common.ReturnValueIfNull(discoveredSignature.Rom.Name, 0));
-            dbDict.Add("size", Common.ReturnValueIfNull(discoveredSignature.Rom.Size, 0));
-            dbDict.Add("md5", hash.md5hash);
-            dbDict.Add("sha1", hash.sha1hash);
-            dbDict.Add("crc", Common.ReturnValueIfNull(discoveredSignature.Rom.Crc, ""));
-            dbDict.Add("developmentstatus", Common.ReturnValueIfNull(discoveredSignature.Rom.DevelopmentStatus, ""));
-            dbDict.Add("metadatasource", discoveredSignature.Rom.SignatureSource);
-            dbDict.Add("metadatagamename", discoveredSignature.Game.Name);
-            dbDict.Add("metadataversion", 2);
-            dbDict.Add("libraryid", library.Id);
-            dbDict.Add("romdataversion", 2);
-
-            if (discoveredSignature.Rom.Attributes != null)
-            {
-                if (discoveredSignature.Rom.Attributes.Count > 0)
-                {
-                    dbDict.Add("attributes", Newtonsoft.Json.JsonConvert.SerializeObject(discoveredSignature.Rom.Attributes));
-                }
-                else
-                {
-                    dbDict.Add("attributes", "[ ]");
-                }
-            }
-            else
-            {
-                dbDict.Add("attributes", "[ ]");
-            }
-            dbDict.Add("romtype", (int)discoveredSignature.Rom.RomType);
-            dbDict.Add("romtypemedia", Common.ReturnValueIfNull(discoveredSignature.Rom.RomTypeMedia, ""));
-            dbDict.Add("medialabel", Common.ReturnValueIfNull(discoveredSignature.Rom.MediaLabel, ""));
-
-            string libraryRootPath = library.Path;
-            if (libraryRootPath.EndsWith(Path.DirectorySeparatorChar.ToString()) == false)
-            {
-                libraryRootPath += Path.DirectorySeparatorChar;
-            }
-            dbDict.Add("path", GameFileImportPath.Replace(libraryRootPath, ""));
-
-            DataTable romInsert = db.ExecuteCMD(sql, dbDict);
-            long romId = 0;
-            if (UpdateId == 0)
-            {
-                romId = (long)romInsert.Rows[0][0];
-            }
-            else
-            {
-                romId = UpdateId;
-            }
-
-            // move to destination
-            if (library.IsDefaultLibrary == true)
-            {
-                MoveGameFile(romId, SourceIsExternal);
-            }
-
-            return romId;
-        }
-
         public static string ComputeROMPath(long RomId)
         {
             Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId);
 
             // get metadata
-            IGDB.Models.Platform platform = gaseous_server.Classes.Metadata.Platforms.GetPlatform(rom.PlatformId);
-            IGDB.Models.Game game = gaseous_server.Classes.Metadata.Games.GetGame(rom.GameId, false, false, false);
+            MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(rom.MetadataMapId).PreferredMetadataMapItem;
+            Platform? platform = gaseous_server.Classes.Metadata.Platforms.GetPlatform(rom.PlatformId);
+            gaseous_server.Models.Game? game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
             // build path
             string platformSlug = "Unknown Platform";
@@ -420,9 +501,16 @@ namespace gaseous_server.Classes
             string gameSlug = "Unknown Title";
             if (game != null)
             {
-                gameSlug = game.Slug;
+                if (game.Slug != null)
+                {
+                    gameSlug = game.Slug;
+                }
+                else
+                {
+                    gameSlug = game.Name;
+                }
             }
-            string DestinationPath = Path.Combine(GameLibrary.GetDefaultLibrary.Path, gameSlug, platformSlug);
+            string DestinationPath = Path.Combine(GameLibrary.GetDefaultLibrary.Path, platformSlug, gameSlug);
             if (!Directory.Exists(DestinationPath))
             {
                 Directory.CreateDirectory(DestinationPath);
@@ -539,11 +627,11 @@ namespace gaseous_server.Classes
         public static List<GameLibrary.LibraryItem> LibrariesToScan = new List<GameLibrary.LibraryItem>();
         public void LibraryScan()
         {
-            int maxWorkers = Config.MetadataConfiguration.MaxLibraryScanWorkers;
+            int maxWorkers = 4;
 
             if (LibrariesToScan.Count == 0)
             {
-                LibrariesToScan.AddRange(GameLibrary.GetLibraries);
+                LibrariesToScan.AddRange(GameLibrary.GetLibraries());
             }
 
             // setup background tasks for each library
@@ -577,8 +665,7 @@ namespace gaseous_server.Classes
                         1,
                         new List<ProcessQueue.QueueItemType>
                         {
-                        ProcessQueue.QueueItemType.OrganiseLibrary,
-                        ProcessQueue.QueueItemType.Rematcher
+                        ProcessQueue.QueueItemType.OrganiseLibrary
                         },
                         false,
                         true)
@@ -721,9 +808,9 @@ namespace gaseous_server.Classes
                         {
                             // get discovered platform
                             long PlatformId;
-                            IGDB.Models.Platform determinedPlatform;
+                            Platform determinedPlatform;
 
-                            if (sig.Flags.IGDBPlatformId == null || sig.Flags.IGDBPlatformId == 0)
+                            if (sig.Flags.PlatformId == null || sig.Flags.PlatformId == 0)
                             {
                                 // no platform discovered in the signature
                                 PlatformId = library.DefaultPlatformId;
@@ -731,13 +818,13 @@ namespace gaseous_server.Classes
                             else
                             {
                                 // use the platform discovered in the signature
-                                PlatformId = sig.Flags.IGDBPlatformId;
+                                PlatformId = (long)sig.Flags.PlatformId;
                             }
                             determinedPlatform = Platforms.GetPlatform(PlatformId);
 
-                            IGDB.Models.Game determinedGame = SearchForGame(sig, PlatformId, true);
+                            gaseous_server.Models.Game determinedGame = SearchForGame(sig, PlatformId, true);
 
-                            StoreROM(library, hash, determinedGame, determinedPlatform, sig, LibraryFile);
+                            StoreGame(library, hash, sig, determinedPlatform, LibraryFile, 0, false);
                         }
                         catch (Exception ex)
                         {
@@ -798,86 +885,6 @@ namespace gaseous_server.Classes
             }
 
             Logging.Log(Logging.LogType.Information, "Library Scan", "Library scan completed");
-        }
-
-        public void Rematcher(bool ForceExecute = false)
-        {
-            // rescan all titles with an unknown platform or title and see if we can get a match
-            Logging.Log(Logging.LogType.Information, "Rematch Scan", "Rematch scan starting");
-
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-
-            foreach (GameLibrary.LibraryItem library in GameLibrary.GetLibraries)
-            {
-                Logging.Log(Logging.LogType.Information, "Rematch Scan", "Rematch on library " + library.Name);
-
-                string sql = "";
-                if (ForceExecute == false)
-                {
-                    sql = "SELECT * FROM view_Games_Roms WHERE (PlatformId = 0 AND GameId <> 0) OR (((PlatformId = 0 OR GameId = 0) AND MetadataSource = 0) OR (PlatformId = 0 AND GameId = 0)) AND (LastMatchAttemptDate IS NULL OR LastMatchAttemptDate < @lastmatchattemptdate) AND LibraryId = @libraryid LIMIT 100;";
-                }
-                else
-                {
-                    sql = "SELECT * FROM view_Games_Roms WHERE (PlatformId = 0 AND GameId <> 0) OR (((PlatformId = 0 OR GameId = 0) AND MetadataSource = 0) OR (PlatformId = 0 AND GameId = 0)) AND LibraryId = @libraryid;";
-                }
-                Dictionary<string, object> dbDict = new Dictionary<string, object>();
-                dbDict.Add("lastmatchattemptdate", DateTime.UtcNow.AddDays(-7));
-                dbDict.Add("libraryid", library.Id);
-                DataTable data = db.ExecuteCMD(sql, dbDict);
-                int StatusCount = -0;
-                foreach (DataRow row in data.Rows)
-                {
-                    SetStatus(StatusCount, data.Rows.Count, "Running rematcher");
-
-                    // get rom info
-                    long romId = (long)row["Id"];
-                    string romPath = (string)row["Path"];
-                    Common.hashObject hash = new Common.hashObject
-                    {
-                        md5hash = (string)row["MD5"],
-                        sha1hash = (string)row["SHA1"]
-                    };
-                    FileInfo fi = new FileInfo(romPath);
-
-                    Logging.Log(Logging.LogType.Information, "Rematch Scan", "Running rematch against " + romPath);
-
-                    // determine rom signature
-                    FileSignature fileSignature = new FileSignature();
-                    gaseous_server.Models.Signatures_Games sig = fileSignature.GetFileSignature(library, hash, fi, romPath);
-
-                    // get discovered platform
-                    long PlatformId;
-                    IGDB.Models.Platform determinedPlatform;
-
-                    if (sig.Flags.IGDBPlatformId == null || sig.Flags.IGDBPlatformId == 0)
-                    {
-                        // no platform discovered in the signature
-                        PlatformId = library.DefaultPlatformId;
-                    }
-                    else
-                    {
-                        // use the platform discovered in the signature
-                        PlatformId = sig.Flags.IGDBPlatformId;
-                    }
-                    determinedPlatform = Platforms.GetPlatform(PlatformId);
-
-                    IGDB.Models.Game determinedGame = SearchForGame(sig, PlatformId, true);
-
-                    StoreROM(library, hash, determinedGame, determinedPlatform, sig, romPath, romId);
-
-                    string attemptSql = "UPDATE Games_Roms SET LastMatchAttemptDate=@lastmatchattemptdate WHERE Id=@id;";
-                    Dictionary<string, object> dbLastAttemptDict = new Dictionary<string, object>();
-                    dbLastAttemptDict.Add("id", romId);
-                    dbLastAttemptDict.Add("lastmatchattemptdate", DateTime.UtcNow);
-                    db.ExecuteCMD(attemptSql, dbLastAttemptDict);
-
-                    StatusCount += 1;
-                }
-                ClearStatus();
-
-                Logging.Log(Logging.LogType.Information, "Rematch Scan", "Rematch scan completed");
-                ClearStatus();
-            }
         }
     }
 }

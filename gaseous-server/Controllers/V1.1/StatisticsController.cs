@@ -9,7 +9,7 @@ using Asp.Versioning;
 namespace gaseous_server.Controllers.v1_1
 {
     [Route("api/v{version:apiVersion}/[controller]")]
-    [ApiVersion("1.0")]
+    [ApiVersion("1.0", Deprecated = true)]
     [ApiVersion("1.1")]
     [ApiController]
     public class StatisticsController : ControllerBase

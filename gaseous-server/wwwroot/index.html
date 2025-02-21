@@ -3,7 +3,11 @@
 
 <head>
     <meta charset="utf-8" />
-    <script src="/api/v1.1/System/VersionFile"></script>
+    <script type="text/javascript" src="/scripts/jquery-3.6.0.min.js"></script>
+    <script type="text/javascript" src="/scripts/jquery.lazy.min.js"></script>
+    <script type="text/javascript" src="/scripts/jquery.lazy.plugins.min.js"></script>
+    <script type="text/javascript" src="/scripts/moment-with-locales.min.js"></script>
+    <script type="text/javascript" src="/scripts/select2.min.js"></script>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
@@ -17,21 +21,19 @@
             "/styles/select2.min.css",
             "/styles/stylevars.css",
             "/styles/style.css",
+            "/styles/style-skinny.css",
             "/styles/notifications.css"
         ];
 
         let scriptLinks = [
-            "/scripts/jquery-3.6.0.min.js",
-            "/scripts/jquery.lazy.min.js",
-            "/scripts/jquery.lazy.plugins.min.js",
-            "/scripts/moment-with-locales.min.js",
-            "/scripts/select2.min.js",
-            "/scripts/filterformating.js",
-            "/scripts/gamesformating.js",
+            "/scripts/classifications.js",
+            "/scripts/filtering.js",
+            "/scripts/rendergames.js",
             "/scripts/main.js",
             "/scripts/modals.js",
             "/scripts/preferences.js",
             "/scripts/account.js",
+            "/scripts/database.js",
             "/scripts/libraries.js",
             "/scripts/notifications.js",
             "/scripts/rominfo.js",
@@ -60,30 +62,21 @@
     <div id="content"></div>
 
     <script type="text/javascript">
+        // Gaseous Games - Main Application Script
+
         // start the application
+        let AppVersion = "0.0.0";
+        let DBSchemaVersion = "1000";
+        let FirstRunStatus = "0";
+        let AgeRatingBoardStrings = {};
+        let AgeRatingStrings = {};
+        let AgeRatingGroups = {};
+        let emulatorDebugMode = "false";
+
+        let db = undefined;
+        let filter = undefined;
+
         let backgroundImageHandler = undefined;
-
-        async function loadScriptsAndStyles() {
-            // update script links
-            for (let i = 0; i < scriptLinks.length; i++) {
-                let newScript = document.createElement('script');
-                newScript.src = scriptLinks[i] + '?v=' + AppVersion;
-                newScript.type = "text/javascript";
-                newScript.async = false;
-
-                head.appendChild(newScript);
-            }
-
-            // update stylesheet links
-            for (let i = 0; i < styleSheets.length; i++) {
-                let newLink = document.createElement('link');
-                newLink.rel = "stylesheet";
-                newLink.href = styleSheets[i] + '?v=' + AppVersion;
-                newLink.type = "text/css";
-
-                head.appendChild(newLink);
-            }
-        }
 
         async function LoadPageContent(page, targetDiv) {
             if (targetDiv == undefined || targetDiv == null || targetDiv == '') {
@@ -107,49 +100,137 @@
         }
 
         async function startApp() {
-            await loadScriptsAndStyles();
+            // load /api/v1.1/System/Version
+            await fetch('/api/v1.1/System/Version')
+                .then(async response => {
+                    if (response.ok) {
+                        // get version information
+                        let versionFile = await response.json();
+                        AppVersion = versionFile.AppVersion;
+                        DBSchemaVersion = versionFile.DBSchemaVersion;
+                        FirstRunStatus = versionFile.FirstRunStatus;
+                        AgeRatingBoardStrings = versionFile.AgeRatingBoardStrings;
+                        AgeRatingStrings = versionFile.AgeRatingStrings;
+                        AgeRatingGroups = versionFile.AgeRatingGroups;
+                        emulatorDebugMode = versionFile.emulatorDebugMode;
 
-            console.log("Starting Gaseous Games");
-            console.log("App Version: " + AppVersion);
-            console.log("First Run Status: " + FirstRunStatus);
-            switch (FirstRunStatus) {
-                case 0:
-                case "0":
-                    // first run - load first run wizard
-                    await LoadPageContent('first', 'content');
-                    break;
+                        // load scripts and style files
+                        // update script links
+                        for (let i = 0; i < scriptLinks.length; i++) {
+                            let newScript = document.createElement('script');
+                            newScript.src = scriptLinks[i] + '?v=' + AppVersion;
+                            newScript.type = "text/javascript";
+                            newScript.async = false;
 
-                default:
-                    // first run - load login page or redirect if user already logged in
+                            head.appendChild(newScript);
+                        }
 
-                    await fetch('/api/v1.1/Account/Profile/Basic')
-                        .then(async response => {
-                            if (response.ok) {
-                                // user is signed in - start setting up the application
-                                console.log("User is logged in");
-                                userProfile = await response.json();
+                        // update stylesheet links
+                        for (let i = 0; i < styleSheets.length; i++) {
+                            let newLink = document.createElement('link');
+                            newLink.rel = "stylesheet";
+                            newLink.href = styleSheets[i] + '?v=' + AppVersion;
+                            newLink.type = "text/css";
 
-                                // load page banner
-                                await LoadPageContent('banner', 'banner_target');
+                            head.appendChild(newLink);
+                        }
 
-                                // load page content
-                                let pageSelection = getQueryString('page', 'string');
-
-                                if (!pageSelection) {
-                                    pageSelection = GetPreference("DefaultHomePage", 'home');
-                                }
-                                await LoadPageContent(pageSelection, 'content');
-                            } else {
-                                // user is not signed in - load login page
-                                await LoadPageContent('login');
+                        // wait for all scripts to load
+                        do {
+                            if (typeof getQueryString === "function") {
+                                break;
                             }
-                        })
-                        .catch(async (error) => {
-                            console.log(error);
-                            await LoadPageContent('login');
-                        });
-                    break;
-            }
+                            console.log("Waiting for scripts to load...");
+                            await new Promise(r => setTimeout(r, 100));
+                        } while (typeof getQueryString !== "function");
+
+                        // start the application
+                        console.log("Starting Gaseous");
+                        console.log("App Version: " + AppVersion);
+                        console.log("First Run Status: " + FirstRunStatus);
+                        switch (FirstRunStatus) {
+                            case 0:
+                            case "0":
+                                // first run - load first run wizard
+                                // clear any database data
+                                DeleteAllDatabases();
+
+                                // load first stage of wizard
+                                await LoadPageContent('first', 'content');
+                                break;
+
+                            default:
+                                // first run - load login page or redirect if user already logged in
+
+                                await fetch('/api/v1.1/Account/Profile/Basic')
+                                    .then(async response => {
+                                        if (response.ok) {
+                                            // user is signed in - start setting up the application
+                                            console.log("User is logged in");
+                                            userProfile = await response.json();
+
+                                            switch (FirstRunStatus) {
+                                                case "1":
+                                                    // first run - load second stage of wizard
+
+                                                    DeleteAllDatabases();
+
+                                                    // load first stage of wizard
+                                                    await LoadPageContent('first2', 'content');
+                                                    break;
+
+                                                default:
+                                                    // set up system database
+                                                    db = new Database();
+                                                    filter = new Filtering();
+                                                    await db.Initialize();
+                                                    await db.SyncContent();
+
+                                                    // load page banner
+                                                    await LoadPageContent('banner', 'banner_target');
+
+                                                    // load page content
+                                                    let pageSelection = getQueryString('page', 'string');
+
+                                                    if (!pageSelection) {
+                                                        pageSelection = GetPreference("DefaultHomePage", "home");
+                                                    }
+                                                    console.log("Loading page: " + pageSelection);
+                                                    await LoadPageContent(pageSelection, 'content');
+                                                    break;
+                                            }
+                                        } else {
+                                            // user is not signed in - load login page
+
+                                            // clear any database data
+                                            DeleteAllDatabases();
+
+                                            // load login page
+                                            await LoadPageContent('login');
+                                        }
+                                    })
+                                    .catch(async (error) => {
+                                        console.log(error);
+                                        DeleteAllDatabases();
+                                        await LoadPageContent('login');
+                                    });
+                                break;
+                        }
+                    }
+                })
+                .catch(async (error) => {
+                    console.log(error);
+                });
+        }
+
+        function DeleteAllDatabases() {
+            indexedDB.deleteDatabase('gaseous');
+            indexedDB.deleteDatabase('EmulatorJS-roms');
+            indexedDB.deleteDatabase('EmulatorJS-bios');
+            indexedDB.deleteDatabase('EmulatorJS-core');
+            indexedDB.deleteDatabase('/data/saves');
+
+            localStorage.clear();
         }
 
         window.document.addEventListener('DOMContentLoaded', startApp);

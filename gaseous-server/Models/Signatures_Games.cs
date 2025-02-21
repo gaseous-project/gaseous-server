@@ -1,14 +1,17 @@
 ﻿using System;
 using System.Text.Json.Serialization;
+using gaseous_server.Classes;
+using gaseous_server.Classes.Metadata;
 using gaseous_signature_parser.models.RomSignatureObject;
+using HasheousClient.Models;
 
 namespace gaseous_server.Models
 {
-	public class Signatures_Games : HasheousClient.Models.SignatureModel
-	{
-		public Signatures_Games()
-		{
-		}
+    public class Signatures_Games : HasheousClient.Models.SignatureModel
+    {
+        public Signatures_Games()
+        {
+        }
 
         [JsonIgnore]
         public int Score
@@ -34,13 +37,119 @@ namespace gaseous_server.Models
         public GameItem Game = new GameItem();
         public RomItem Rom = new RomItem();
 
-        public SignatureFlags Flags = new SignatureFlags();
+        public SignatureFlags Flags
+        {
+            get
+            {
+                SignatureFlags _flags = new SignatureFlags();
+
+                foreach (SourceValues.SourceValueItem source in MetadataSources.Platforms)
+                {
+                    if (source.Source == Config.MetadataConfiguration.DefaultMetadataSource)
+                    {
+                        _flags.PlatformId = source.Id;
+                        _flags.PlatformName = source.Name;
+                        _flags.PlatformMetadataSource = source.Source;
+                        break;
+                    }
+                }
+
+                if (_flags.PlatformId == 0)
+                {
+                    // fall back to the IGDB source if present
+                    foreach (SourceValues.SourceValueItem source in MetadataSources.Platforms)
+                    {
+                        if (source.Source == HasheousClient.Models.MetadataSources.IGDB)
+                        {
+                            _flags.PlatformId = source.Id;
+                            _flags.PlatformName = source.Name;
+                            _flags.PlatformMetadataSource = source.Source;
+                            break;
+                        }
+                    }
+                }
+
+                foreach (SourceValues.SourceValueItem source in MetadataSources.Games)
+                {
+                    if (source.Source == Config.MetadataConfiguration.DefaultMetadataSource)
+                    {
+                        _flags.GameId = source.Id;
+                        _flags.GameName = source.Name;
+                        _flags.GameMetadataSource = source.Source;
+                        break;
+                    }
+                }
+
+                if (_flags.GameId == null || _flags.GameId == 0)
+                {
+                    _flags.GameId = 0;
+                    _flags.GameName = "Unknown Game";
+                    _flags.GameMetadataSource = HasheousClient.Models.MetadataSources.None;
+                }
+
+                return _flags;
+            }
+        }
+
+        public SourceValues MetadataSources = new SourceValues();
+
+        public class SourceValues
+        {
+            public List<SourceValueItem> Platforms = new List<SourceValueItem>();
+            public List<SourceValueItem> Games = new List<SourceValueItem>();
+
+            public class SourceValueItem
+            {
+                public long Id { get; set; }
+                public string Name { get; set; }
+                public HasheousClient.Models.MetadataSources Source { get; set; }
+            }
+
+            public void AddPlatform(long Id, string Name, HasheousClient.Models.MetadataSources Source)
+            {
+                // check that the platform doesn't already exist
+                foreach (SourceValueItem item in Platforms)
+                {
+                    if (item.Id == Id)
+                    {
+                        return;
+                    }
+                }
+
+                SourceValueItem newItem = new SourceValueItem();
+                newItem.Id = Id;
+                newItem.Name = Name;
+                newItem.Source = Source;
+                Platforms.Add(newItem);
+            }
+
+            public void AddGame(long Id, string Name, HasheousClient.Models.MetadataSources Source)
+            {
+                // check that the game doesn't already exist
+                foreach (SourceValueItem item in Games)
+                {
+                    if (item.Id == Id)
+                    {
+                        return;
+                    }
+                }
+
+                SourceValueItem newItem = new SourceValueItem();
+                newItem.Id = Id;
+                newItem.Name = Name;
+                newItem.Source = Source;
+                Games.Add(newItem);
+            }
+        }
 
         public class SignatureFlags
         {
-            public long IGDBPlatformId { get; set; }
-            public string IGDBPlatformName { get; set; }
-            public long IGDBGameId { get; set; }
+            public long PlatformId { get; set; }
+            public string PlatformName { get; set; }
+            public long GameId { get; set; }
+            public string GameName { get; set; }
+            public HasheousClient.Models.MetadataSources PlatformMetadataSource { get; set; }
+            public HasheousClient.Models.MetadataSources GameMetadataSource { get; set; }
         }
 
         public class GameItem : HasheousClient.Models.SignatureModel.GameItem
@@ -49,6 +158,8 @@ namespace gaseous_server.Models
             {
 
             }
+
+            public string UserManual { get; set; }
 
             [JsonIgnore]
             public int Score
@@ -211,7 +322,8 @@ namespace gaseous_server.Models
                                             break;
                                     }
                                 }
-                                else {
+                                else
+                                {
                                     switch (inType.ToLower())
                                     {
                                         case "disk":

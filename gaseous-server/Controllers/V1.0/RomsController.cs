@@ -8,23 +8,26 @@ using System.Reflection;
 using System.Threading.Tasks;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
-using IGDB.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Scripting;
 using static gaseous_server.Classes.Metadata.AgeRatings;
 using Asp.Versioning;
+using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Controllers
 {
     [Route("api/v{version:apiVersion}/[controller]")]
-    [ApiVersion("1.0")]
+    [ApiVersion("1.0", Deprecated = true)]
     [ApiVersion("1.1")]
     [Authorize]
     [ApiController]
     public class RomsController : Controller
     {
+        static bool uploadInProgress = false;
+        static DateTime uploadStartTime = DateTime.Now;
+
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpPost]
@@ -62,7 +65,7 @@ namespace gaseous_server.Controllers
                 }
 
                 // get override platform if specified
-                IGDB.Models.Platform? OverridePlatform = null;
+                Platform? OverridePlatform = null;
                 if (OverridePlatformId != null)
                 {
                     OverridePlatform = Platforms.GetPlatform((long)OverridePlatformId);
@@ -70,16 +73,32 @@ namespace gaseous_server.Controllers
 
                 // Process uploaded file
                 Classes.ImportGame uploadImport = new ImportGame();
+                // wait until uploadInProgress is false
+                while (uploadInProgress)
+                {
+                    await Task.Delay(1000);
+
+                    // escape if upload is taking too long
+                    if (DateTime.Now.Subtract(uploadStartTime).TotalSeconds > 60)
+                    {
+                        uploadInProgress = false;
+                        break;
+                    }
+                }
+                uploadInProgress = true;
+                uploadStartTime = DateTime.Now;
+
                 Dictionary<string, object> RetVal = uploadImport.ImportGameFile((string)UploadedFile["fullpath"], OverridePlatform);
+                uploadInProgress = false;
                 switch (RetVal["type"])
                 {
                     case "rom":
                         if (RetVal["status"] == "imported")
                         {
-                            IGDB.Models.Game? game = (IGDB.Models.Game)RetVal["game"];
-                            if (game.Id == null)
+                            gaseous_server.Models.Game? game = (gaseous_server.Models.Game)RetVal["game"];
+                            if (game == null || game.Id == null)
                             {
-                                RetVal["game"] = Games.GetGame(0, false, false, false);
+                                RetVal["game"] = Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, 0);
                             }
                         }
                         break;

@@ -12,11 +12,17 @@ function getBackgroundTaskTimers() {
                     enabledString = 'checked="checked"';
                 }
 
+                // create section
+                let serviceSection = document.createElement('div');
+                serviceSection.className = 'section';
+                serviceSection.id = 'settings_tasktimers_' + value.task;
+                targetTable.appendChild(serviceSection);
+
                 // add heading
                 let serviceHeader = document.createElement('div');
                 serviceHeader.className = 'section-header';
                 serviceHeader.innerHTML = GetTaskFriendlyName(value.task);
-                targetTable.appendChild(serviceHeader);
+                serviceSection.appendChild(serviceHeader);
 
                 // create table for each service
                 let serviceTable = document.createElement('table');
@@ -171,7 +177,7 @@ function getBackgroundTaskTimers() {
                 serviceTable.appendChild(newTableRowBlockedBy);
 
                 // complete row
-                targetTable.appendChild(serviceTable);
+                serviceSection.appendChild(serviceTable);
             }
         }
     );

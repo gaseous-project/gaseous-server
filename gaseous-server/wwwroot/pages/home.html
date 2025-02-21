@@ -1,10 +1,29 @@
 <div id="gamepage">
     <div style="padding-top: 20px;">
-        <div id="gamehome" style="display: inline-block; max-width: 820px; margin-right: 20px; vertical-align: top;">
+        <div id="gamehome"
+            style="display: inline-block; max-width: 820px; margin-right: 20px; vertical-align: top; width: 100%;">
 
         </div>
-        <div id="gameprofile" style="display: inline-block; width: 250px;">
+        <div id="rightcolumn" style="display: inline-block; width: 250px; vertical-align: top;">
+            <div id="gameprofile" style="display: inline-block; width: 250px;">
 
+            </div>
+            <div id="librarylink" class="section" style="margin-top: 20px; display: inline-block; width: 250px;">
+                <div class="section-body section-body-button"
+                    onclick="window.location.href = '/index.html?page=library';">
+                    <table style="width: 100%;">
+                        <tr>
+                            <td>
+                                Go to your library
+                            </td>
+                            <td style="text-align: right; padding-top: 2px;">
+                                <img src="/images/arrow-right.svg" class="banner_button_image" style="width: 20px;"
+                                    alt="Go to your library" />
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 </div>

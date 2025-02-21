@@ -12,7 +12,7 @@ using gaseous_server.Classes.Metadata;
 namespace gaseous_server.Controllers.v1_1
 {
     [Route("api/v{version:apiVersion}/[controller]")]
-    [ApiVersion("1.0")]
+    [ApiVersion("1.0", Deprecated = true)]
     [ApiVersion("1.1")]
     [ApiController]
     public class StateManagerController : ControllerBase
@@ -270,7 +270,7 @@ namespace gaseous_server.Controllers.v1_1
                 else
                 {
                     RomMediaGroup.GameRomMediaGroupItem mediaGroupItem = RomMediaGroup.GetMediaGroup(RomId);
-                    IGDB.Models.Game game = Games.GetGame(mediaGroupItem.GameId, false, false, false);
+                    Models.Game game = Games.GetGame(Communications.MetadataSource, mediaGroupItem.GameId);
                     Classes.Common.hashObject hashObject = new Classes.Common.hashObject(Path.Combine(Config.LibraryConfiguration.LibraryMediaGroupDirectory, mediaGroupItem.Id.ToString() + ".zip"));
                     romName = game.Name;
                     romMd5 = hashObject.md5hash;

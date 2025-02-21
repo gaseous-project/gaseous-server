@@ -174,12 +174,10 @@ namespace gaseous_server.SignatureIngestors.XML
 
                                     List<int> gameCountries = new List<int>();
                                     if (
-                                        gameObject.Country != null &&
-                                        gameObject.Country != "Unknown"
+                                        gameObject.Country != null
                                         )
                                     {
-                                        string[] countries = gameObject.Country.Split(",");
-                                        foreach (string country in countries)
+                                        foreach (string country in gameObject.Country.Keys)
                                         {
                                             int countryId = -1;
                                             countryId = Common.GetLookupByCode(Common.LookupTypes.Country, (string)Common.ReturnValueIfNull(country.Trim(), ""));
@@ -208,12 +206,10 @@ namespace gaseous_server.SignatureIngestors.XML
 
                                     List<int> gameLanguages = new List<int>();
                                     if (
-                                        gameObject.Language != null &&
-                                        gameObject.Language != "nolang"
+                                        gameObject.Language != null
                                         )
                                     {
-                                        string[] languages = gameObject.Language.Split(",");
-                                        foreach (string language in languages)
+                                        foreach (string language in gameObject.Language.Keys)
                                         {
                                             int languageId = -1;
                                             languageId = Common.GetLookupByCode(Common.LookupTypes.Language, (string)Common.ReturnValueIfNull(language.Trim(), ""));
@@ -359,7 +355,7 @@ namespace gaseous_server.SignatureIngestors.XML
                                             dbDict = new Dictionary<string, object>();
                                             dbDict.Add("gameid", gameId);
                                             dbDict.Add("name", Common.ReturnValueIfNull(romObject.Name, ""));
-                                            dbDict.Add("size", Common.ReturnValueIfNull(romObject.Size, ""));
+                                            dbDict.Add("size", Common.ReturnValueIfNull(romObject.Size, "0"));
                                             dbDict.Add("crc", Common.ReturnValueIfNull(romObject.Crc, "").ToString().ToLower());
                                             dbDict.Add("md5", Common.ReturnValueIfNull(romObject.Md5, "").ToString().ToLower());
                                             dbDict.Add("sha1", Common.ReturnValueIfNull(romObject.Sha1, "").ToString().ToLower());

@@ -11,6 +11,7 @@ using Authentication;
 using Microsoft.AspNetCore.Identity;
 using gaseous_server.Classes.Metadata;
 using Asp.Versioning;
+using HasheousClient.Models.Metadata.IGDB;
 
 Logging.WriteToDiskOnly = true;
 Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server " + Assembly.GetExecutingAssembly().GetName().Version);
@@ -52,7 +53,7 @@ Config.UpdateConfig();
 GameLibrary.UpdateDefaultLibraryPath();
 
 // set api metadata source from config
-Communications.MetadataSource = Config.MetadataConfiguration.MetadataSource;
+Communications.MetadataSource = Config.MetadataConfiguration.DefaultMetadataSource;
 
 // set up hasheous client
 HasheousClient.WebApp.HttpHelper.BaseUri = Config.MetadataConfiguration.HasheousHost;
@@ -128,7 +129,7 @@ builder.Services.AddControllers(options =>
 });
 builder.Services.AddApiVersioning(config =>
 {
-    config.DefaultApiVersion = new ApiVersion(1, 0);
+    config.DefaultApiVersion = new ApiVersion(1, 1);
     config.AssumeDefaultVersionWhenUnspecified = true;
     config.ReportApiVersions = true;
     config.ApiVersionReader = ApiVersionReader.Combine(new UrlSegmentApiVersionReader(),
@@ -160,23 +161,23 @@ builder.Services.Configure<FormOptions>(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
     {
-        options.SwaggerDoc("v1", new OpenApiInfo
-        {
-            Version = "v1.0",
-            Title = "Gaseous Server API",
-            Description = "An API for managing the Gaseous Server",
-            TermsOfService = new Uri("https://github.com/gaseous-project/gaseous-server"),
-            Contact = new OpenApiContact
-            {
-                Name = "GitHub Repository",
-                Url = new Uri("https://github.com/gaseous-project/gaseous-server")
-            },
-            License = new OpenApiLicense
-            {
-                Name = "Gaseous Server License",
-                Url = new Uri("https://github.com/gaseous-project/gaseous-server/blob/main/LICENSE")
-            }
-        });
+        // options.SwaggerDoc("v1", new OpenApiInfo
+        // {
+        //     Version = "v1.0",
+        //     Title = "Gaseous Server API",
+        //     Description = "An API for managing the Gaseous Server",
+        //     TermsOfService = new Uri("https://github.com/gaseous-project/gaseous-server"),
+        //     Contact = new OpenApiContact
+        //     {
+        //         Name = "GitHub Repository",
+        //         Url = new Uri("https://github.com/gaseous-project/gaseous-server")
+        //     },
+        //     License = new OpenApiLicense
+        //     {
+        //         Name = "Gaseous Server License",
+        //         Url = new Uri("https://github.com/gaseous-project/gaseous-server/blob/main/LICENSE")
+        //     }
+        // });
 
         options.SwaggerDoc("v1.1", new OpenApiInfo
         {
@@ -199,6 +200,9 @@ builder.Services.AddSwaggerGen(options =>
         // using System.Reflection;
         var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
         options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
+
+        // sort the endpoints
+        options.OrderActionsBy((apiDesc) => $"{apiDesc.RelativePath}_{apiDesc.HttpMethod}");
     }
 );
 builder.Services.AddHostedService<TimedHostedService>();
@@ -263,9 +267,12 @@ app.UseSwaggerUI(options =>
         var descriptions = app.DescribeApiVersions();
         foreach (var description in descriptions)
         {
-            var url = $"/swagger/{description.GroupName}/swagger.json";
-            var name = description.GroupName.ToUpperInvariant();
-            options.SwaggerEndpoint(url, name);
+            if (description.IsDeprecated == false)
+            {
+                var url = $"/swagger/{description.GroupName}/swagger.json";
+                var name = description.GroupName.ToUpperInvariant();
+                options.SwaggerEndpoint(url, name);
+            }
         }
     }
 );
@@ -329,11 +336,10 @@ app.Use(async (context, next) =>
 // setup library directories
 Config.LibraryConfiguration.InitLibrary();
 
-// insert unknown platform and game if not present
-gaseous_server.Classes.Metadata.Games.GetGame(0, false, false, false);
-gaseous_server.Classes.Metadata.Games.AssignAllGamesToPlatformIdZero();
-gaseous_server.Classes.Metadata.Platforms.GetPlatform(0);
-gaseous_server.Classes.Metadata.Platforms.AssignAllPlatformsToGameIdZero();
+// create unknown platform
+Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.None);
+Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.IGDB);
+Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.TheGamesDb);
 
 // extract platform map if not present
 PlatformMapping.ExtractPlatformMap();
@@ -356,9 +362,6 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.LibraryScan)
-    );
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.Rematcher)
     );
 
 // maintenance tasks

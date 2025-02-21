@@ -1,30 +1,41 @@
-﻿<div id="games_filter_scroller">
+﻿<div id="games_filter_panel">
+    <div class="games_filter_controls">
+        <div class="games_library_controlblock">
+            <span class="games_library_label">Filter</span>
+        </div>
+    </div>
+    <div id="games_filter_scroller">
+    </div>
 </div>
-<div id="games_home">
+<div id="games_home" class="games_home">
     <div id="games_home_box">
-        <div id="games_library_controls">
-            <div id="games_library_button_pagedview" class="games_library_button"
+        <div id="games_library_controls" class="games_library_controls">
+            <div id="games_filter_button_column" class="games_library_button" style="float: left;">
+                <img src="/images/column.svg" alt="Toggle Filter" title="Toggle Filter"
+                    class="games_library_button_icon" />
+            </div>
+            <!-- <div id="games_library_button_pagedview" class="games_library_button"
                 onclick="document.getElementById('games_library').innerHTML = ''; SetPreference('LibraryPagination', 'paged', executeFilter1_1(1));">
                 <img src="/images/viewpaged.svg" alt="Paged View" title="Paged View"
                     class="games_library_button_icon" />
-            </div>
-            <div id="games_library_button_infiniteview" class="games_library_button"
+            </div> -->
+            <!-- <div id="games_library_button_infiniteview" class="games_library_button"
                 onclick="document.getElementById('games_library').innerHTML = ''; SetPreference('LibraryPagination', 'infinite', executeFilter1_1(1));">
                 <img src="/images/viewinfinite.svg" alt="Continuous View" title="Continuous View"
                     class="games_library_button_icon" />
-            </div>
+            </div> -->
 
             <!-- list or icon view - true for list view, false for icon view -->
-            <div id="games_library_button_iconview" class="games_library_button"
+            <!-- <div id="games_library_button_iconview" class="games_library_button"
                 onclick="document.getElementById('games_library').innerHTML = ''; SetPreference('LibraryListView', false, executeFilter1_1(1));">
                 <img src="/images/viewicon.svg" alt="Cover View" title="Cover View" class="games_library_button_icon" />
             </div>
             <div id="games_library_button_listview" class="games_library_button"
                 onclick="document.getElementById('games_library').innerHTML = ''; SetPreference('LibraryListView', true, executeFilter1_1(1));">
                 <img src="/images/viewlist.svg" alt="List View" title="List View" class="games_library_button_icon" />
-            </div>
+            </div> -->
 
-            <div class="games_library_controlblock">
+            <!-- <div class="games_library_controlblock">
                 <span class="games_library_label">Page size: </span>
             </div>
             <div id="games_library_pagesize" class="games_library_controlblock" style="text-align: left;">
@@ -40,21 +51,20 @@
                     <option value="90">90</option>
                     <option value="100">100</option>
                 </select>
-            </div>
+            </div> -->
 
             <div class="games_library_controlblock">
                 <span class="games_library_label">Order by: </span>
             </div>
             <div id="games_library_orderby" class="games_library_controlblock" style="text-align: left;">
-                <select id="games_library_orderby_select" data-minimum-results-for-search="Infinity"
-                    onchange="document.getElementById('games_library').innerHTML = ''; SetPreference('LibraryOrderBy', $(this).val(), executeFilter1_1(1));">
+                <select id="games_library_orderby_select" data-minimum-results-for-search="Infinity">
                     <option selected="selected" value="NameThe">Name, The</option>
                     <option value="Name">Name</option>
+                    <option value="ReleaseDate">Release Date</option>
                     <option value="Rating">User Rating</option>
                     <option value="RatingCount">User Rating Count</option>
                 </select>
-                <select id="games_library_orderby_direction_select" data-minimum-results-for-search="Infinity"
-                    onchange="document.getElementById('games_library').innerHTML = ''; SetPreference('LibraryOrderByDirection', $(this).val(), executeFilter1_1(1));">
+                <select id="games_library_orderby_direction_select" data-minimum-results-for-search="Infinity">
                     <option selected="selected" value="Ascending">Ascending</option>
                     <option value="Descending">Descending</option>
                 </select>

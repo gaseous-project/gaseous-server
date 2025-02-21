@@ -9,7 +9,8 @@ function setupBanner() {
 
     let userMenuLogoff = document.getElementById("banner_user_logoff");
     if (userMenuLogoff) {
-        userMenuLogoff.addEventListener('click', () => {
+        userMenuLogoff.addEventListener('click', async () => {
+            await db.DeleteDatabase();
             ajaxCall(
                 '/api/v1.1/Account/LogOff',
                 'POST',
@@ -27,6 +28,21 @@ function setupBanner() {
     if (bannerCog) {
         bannerCog.addEventListener('click', () => {
             window.location.href = '/index.html?page=settings';
+        });
+    }
+
+    let refreshButton = document.getElementById("banner_refresh");
+    if (refreshButton) {
+        refreshButton.addEventListener('click', async () => {
+            await db.SyncContent(true);
+        });
+
+        db.syncStartCallbacks.push(async function () {
+            refreshButton.classList.add('rotating');
+        });
+
+        db.syncFinishCallbacks.push(async function () {
+            refreshButton.classList.remove('rotating');
         });
     }
 

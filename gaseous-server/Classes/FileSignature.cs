@@ -1,8 +1,10 @@
 using System.Collections.Concurrent;
+using System.Configuration;
 using System.IO.Compression;
 using System.Net;
 using gaseous_server.Classes.Metadata;
-using HasheousClient.Models;
+using gaseous_server.Models;
+using HasheousClient.Models.Metadata.IGDB;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NuGet.Common;
 using SevenZip;
@@ -185,6 +187,22 @@ namespace gaseous_server.Classes
                 }
             }
 
+            // get discovered platform
+            Platform? determinedPlatform = null;
+            if (library.DefaultPlatformId == null || library.DefaultPlatformId == 0)
+            {
+                determinedPlatform = Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId);
+                if (determinedPlatform == null)
+                {
+                    determinedPlatform = new Platform();
+                }
+            }
+            else
+            {
+                determinedPlatform = Metadata.Platforms.GetPlatform((long)library.DefaultPlatformId);
+                discoveredSignature.MetadataSources.AddPlatform((long)determinedPlatform.Id, determinedPlatform.Name, HasheousClient.Models.MetadataSources.None);
+            }
+
             return discoveredSignature;
         }
 
@@ -237,7 +255,7 @@ namespace gaseous_server.Classes
             gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, ImageExtension, false);
 
             Logging.Log(Logging.LogType.Information, "Import Game", "  Determined import file as: " + discoveredSignature.Game.Name + " (" + discoveredSignature.Game.Year + ") " + discoveredSignature.Game.System);
-            Logging.Log(Logging.LogType.Information, "Import Game", "  Platform determined to be: " + discoveredSignature.Flags.IGDBPlatformName + " (" + discoveredSignature.Flags.IGDBPlatformId + ")");
+            Logging.Log(Logging.LogType.Information, "Import Game", "  Platform determined to be: " + discoveredSignature.Flags.PlatformName + " (" + discoveredSignature.Flags.PlatformId + ")");
 
             return discoveredSignature;
         }
@@ -291,14 +309,58 @@ namespace gaseous_server.Classes
             {
                 HasheousClient.Hasheous hasheous = new HasheousClient.Hasheous();
                 Console.WriteLine(HasheousClient.WebApp.HttpHelper.BaseUri);
-                LookupItemModel? HasheousResult = null;
+                HasheousClient.Models.LookupItemModel? HasheousResult = null;
                 try
                 {
-                    HasheousResult = hasheous.RetrieveFromHasheous(new HashLookupModel
+                    // check the cache first
+                    if (!Directory.Exists(Config.LibraryConfiguration.LibraryMetadataDirectory_Hasheous()))
                     {
-                        MD5 = hash.md5hash,
-                        SHA1 = hash.sha1hash
-                    });
+                        Directory.CreateDirectory(Config.LibraryConfiguration.LibraryMetadataDirectory_Hasheous());
+                    }
+                    // create file name from hash object
+                    string cacheFileName = hash.md5hash + "_" + hash.sha1hash + ".json";
+                    string cacheFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Hasheous(), cacheFileName);
+                    // use cache file if it exists and is less than 30 days old, otherwise fetch from hasheous. if the fetch from hasheous is successful, save it to the cache, if it fails, use the cache if it exists even if it's old
+                    if (File.Exists(cacheFilePath))
+                    {
+                        FileInfo cacheFile = new FileInfo(cacheFilePath);
+                        if (cacheFile.LastWriteTimeUtc > DateTime.UtcNow.AddDays(-30))
+                        {
+                            Logging.Log(Logging.LogType.Information, "Get Signature", "Using cached signature from Hasheous");
+                            HasheousResult = Newtonsoft.Json.JsonConvert.DeserializeObject<HasheousClient.Models.LookupItemModel>(File.ReadAllText(cacheFilePath));
+                        }
+                    }
+
+                    try
+                    {
+                        if (HasheousResult == null)
+                        {
+                            // fetch from hasheous
+                            HasheousResult = hasheous.RetrieveFromHasheous(new HasheousClient.Models.HashLookupModel
+                            {
+                                MD5 = hash.md5hash,
+                                SHA1 = hash.sha1hash
+                            }, false);
+
+                            if (HasheousResult != null)
+                            {
+                                // save to cache
+                                File.WriteAllText(cacheFilePath, Newtonsoft.Json.JsonConvert.SerializeObject(HasheousResult));
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        if (File.Exists(cacheFilePath))
+                        {
+                            Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous - using cached signature", ex);
+                            HasheousResult = Newtonsoft.Json.JsonConvert.DeserializeObject<HasheousClient.Models.LookupItemModel>(File.ReadAllText(cacheFilePath));
+                        }
+                        else
+                        {
+                            Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous", ex);
+                        }
+                    }
 
                     if (HasheousResult != null)
                     {
@@ -317,13 +379,25 @@ namespace gaseous_server.Classes
                                 {
                                     foreach (HasheousClient.Models.MetadataItem metadataResult in HasheousResult.Platform.metadata)
                                     {
-                                        if (metadataResult.Id.Length > 0)
+                                        // only IGDB metadata is supported
+                                        if (metadataResult.Source == HasheousClient.Models.MetadataSources.IGDB)
                                         {
-                                            switch (metadataResult.Source)
+                                            if (metadataResult.ImmutableId.Length > 0)
                                             {
-                                                case HasheousClient.Models.MetadataSources.IGDB:
-                                                    signature.Flags.IGDBPlatformId = (long)Platforms.GetPlatform(metadataResult.Id, false).Id;
-                                                    break;
+                                                // use immutable id
+                                                Platform hasheousPlatform = Platforms.GetPlatform(long.Parse(metadataResult.ImmutableId));
+                                                signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataResult.Source);
+                                            }
+                                            else if (metadataResult.Id.Length > 0)
+                                            {
+                                                // fall back to id
+                                                Platform hasheousPlatform = Platforms.GetPlatform(metadataResult.Id);
+                                                signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataResult.Source);
+                                            }
+                                            else
+                                            {
+                                                // no id or immutable id - use unknown platform
+                                                signature.MetadataSources.AddPlatform(0, "Unknown Platform", HasheousClient.Models.MetadataSources.None);
                                             }
                                         }
                                     }
@@ -337,14 +411,50 @@ namespace gaseous_server.Classes
                                 {
                                     foreach (HasheousClient.Models.MetadataItem metadataResult in HasheousResult.Metadata)
                                     {
-                                        if (metadataResult.Id.Length > 0)
+                                        if (metadataResult.ImmutableId.Length > 0)
+                                        {
+                                            signature.MetadataSources.AddGame(long.Parse(metadataResult.ImmutableId), HasheousResult.Name, metadataResult.Source);
+                                        }
+                                        else if (metadataResult.Id.Length > 0)
                                         {
                                             switch (metadataResult.Source)
                                             {
                                                 case HasheousClient.Models.MetadataSources.IGDB:
-                                                    signature.Flags.IGDBGameId = (long)Games.GetGame(metadataResult.Id, false, false, false).Id;
+                                                    gaseous_server.Models.Game hasheousGame = Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, metadataResult.Id);
+                                                    signature.MetadataSources.AddGame((long)hasheousGame.Id, hasheousGame.Name, metadataResult.Source);
+                                                    break;
+
+                                                default:
+                                                    if (long.TryParse(metadataResult.Id, out long id) == true)
+                                                    {
+                                                        signature.MetadataSources.AddGame(id, HasheousResult.Name, metadataResult.Source);
+                                                    }
+                                                    else
+                                                    {
+                                                        signature.MetadataSources.AddGame(0, "Unknown Game", HasheousClient.Models.MetadataSources.None);
+                                                    }
                                                     break;
                                             }
+                                        }
+                                        else
+                                        {
+                                            // no id or immutable id - use unknown game
+                                            signature.MetadataSources.AddGame(0, "Unknown Game", HasheousClient.Models.MetadataSources.None);
+                                        }
+                                    }
+                                }
+                            }
+
+                            // check attributes for a user manual link
+                            if (HasheousResult.Attributes != null)
+                            {
+                                if (HasheousResult.Attributes.Count > 0)
+                                {
+                                    foreach (HasheousClient.Models.AttributeItem attribute in HasheousResult.Attributes)
+                                    {
+                                        if (attribute.attributeName == HasheousClient.Models.AttributeItem.AttributeName.VIMMManualId)
+                                        {
+                                            signature.Game.UserManual = attribute.GetType().GetProperty("Link").GetValue(attribute).ToString();
                                         }
                                     }
                                 }
@@ -368,18 +478,20 @@ namespace gaseous_server.Classes
                             else
                             {
                                 Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous", ex);
+                                throw;
                             }
                         }
                         else
                         {
                             Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous", ex);
-
+                            throw;
                         }
                     }
                 }
                 catch (Exception ex)
                 {
                     Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous", ex);
+                    throw;
                 }
             }
 

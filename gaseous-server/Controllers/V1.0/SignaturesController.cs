@@ -17,7 +17,7 @@ namespace gaseous_server.Controllers
 {
     [ApiController]
     [Route("api/v{version:apiVersion}/[controller]/[action]")]
-    [ApiVersion("1.0")]
+    [ApiVersion("1.0", Deprecated = true)]
     [ApiVersion("1.1")]
     [Authorize]
     public class SignaturesController : Controller

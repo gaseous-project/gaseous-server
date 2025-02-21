@@ -109,6 +109,7 @@ class UploadRom {
                 if (xhr.status === 200) {
                     // process the results
                     let response = JSON.parse(xhr.responseText);
+                    console.log(response);
                     switch (response.type) {
                         case 'rom':
                             switch (response.status) {
@@ -121,16 +122,21 @@ class UploadRom {
                                     uploadedItem.platformName = 'Unknown Platform';
                                     uploadedItem.gameId = 0;
                                     uploadedItem.gameName = 'Unknown Game';
+                                    uploadedItem.gameData = response.game;
                                     uploadedItem.romId = response.romid;
 
                                     if (response.game) {
-                                        uploadedItem.gameId = response.game.id;
+                                        // game data was returned
+                                        uploadedItem.gameId = response.rom.metadataMapId;
                                         uploadedItem.gameName = response.game.name;
                                         if (response.game.cover != null) {
-                                            if (response.game.cover.id != null) {
-                                                uploadedItem.coverId = response.game.cover.id;
+                                            if (response.game.cover != null) {
+                                                uploadedItem.coverId = response.game.cover;
                                             }
                                         }
+                                    } else {
+                                        // game has been deemed to be unknown
+                                        uploadedItem.gameId = response.rom.metadataMapId;
                                     }
 
                                     if (response.platform) {
@@ -172,7 +178,7 @@ class UploadRom {
         }
     }
 
-    MaxUploads = 2;
+    MaxUploads = 1;
     UploadCount = 0;
 }
 
@@ -197,12 +203,12 @@ class UploadItem {
         // file name label
         this.filenameLabel = document.createElement('div');
         this.filenameLabel.classList.add('uploadItem-Label');
-        this.filenameLabel.innerHTML = this.Filename;
+        this.filenameLabel.textContent = this.Filename;
 
         // status label
         this.statusLabel = document.createElement('div');
         this.statusLabel.classList.add('uploadItem-Status');
-        this.statusLabel.innerHTML = UploadItem.StatusValues[this.Status];
+        this.statusLabel.textContent = UploadItem.StatusValues[this.Status];
 
         // game name label
         this.gameNameLabel = document.createElement('div');
@@ -273,6 +279,7 @@ class UploadItem {
     platformName = null;
     gameId = null;
     gameName = null;
+    gameData = null;
     coverId = null;
     romId = null;
 
@@ -319,7 +326,7 @@ class UploadItem {
                     case 'rom':
                         this.infoButton.style.display = 'block';
 
-                        if (this.gameId === null || this.gameId === 0) {
+                        if (this.gameId === null || this.gameId === 0 || this.gameData === null) {
                             this.coverArt.src = '/images/unknowngame.png';
                         } else {
                             this.coverArt.src = '/api/v1.1/Games/' + this.gameId + '/cover/' + this.coverId + '/image/cover_big/cover.jpg';
