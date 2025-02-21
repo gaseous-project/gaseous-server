@@ -19,12 +19,15 @@ class GameIcon {
         }
         gameTile.setAttribute('data-alpha', data.alpha);
 
+        let gameTileOuterBox = document.createElement('div');
+        gameTileOuterBox.classList.add('game_tile_outer_box');
+
         let gameTileBox = document.createElement('div');
         gameTileBox.classList.add('game_tile_box');
         gameTileBox.addEventListener('click', () => {
             window.location.href = '/index.html?page=game&id=' + data.metadataMapId;
         });
-        gameTile.appendChild(gameTileBox);
+        gameTileOuterBox.appendChild(gameTileBox);
 
         // cover art
         let gameTileImage = document.createElement('img');
@@ -150,7 +153,7 @@ class GameIcon {
                 gameBoxTitle.classList.add('game_tile_label_small');
             }
             gameBoxTitle.innerHTML = data.name;
-            gameTile.appendChild(gameBoxTitle);
+            gameTileOuterBox.appendChild(gameBoxTitle);
 
             // add game tile subtitle
             if (showSubtitle === true) {
@@ -159,10 +162,12 @@ class GameIcon {
                     gameBoxSubtitle.classList.add('game_tile_label');
                     gameBoxSubtitle.classList.add('game_tile_subtitle');
                     gameBoxSubtitle.innerHTML = new Date(data.firstReleaseDate).getFullYear();
-                    gameTile.appendChild(gameBoxSubtitle);
+                    gameTileOuterBox.appendChild(gameBoxSubtitle);
                 }
             }
         }
+
+        gameTile.appendChild(gameTileOuterBox);
 
         return gameTile;
     }
