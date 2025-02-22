@@ -50,6 +50,14 @@ namespace gaseous_server.Controllers.v1_1
             if (user != null)
             {
                 // apply security profile filtering
+                if (model.GameAgeRating == null)
+                {
+                    model.GameAgeRating = new GameSearchModel.GameAgeRatingItem();
+                }
+                if (model.GameAgeRating.AgeGroupings == null)
+                {
+                    model.GameAgeRating.AgeGroupings = new List<AgeGroups.AgeRestrictionGroupings>();
+                }
                 if (model.GameAgeRating.AgeGroupings.Count == 0)
                 {
                     model.GameAgeRating.AgeGroupings.Add(AgeGroups.AgeRestrictionGroupings.Adult);
@@ -141,16 +149,16 @@ namespace gaseous_server.Controllers.v1_1
         public class GameSearchModel
         {
             public string Name { get; set; }
-            public List<string> Platform { get; set; }
-            public List<string> Genre { get; set; }
-            public List<string> GameMode { get; set; }
-            public List<string> PlayerPerspective { get; set; }
-            public List<string> Theme { get; set; }
+            public List<string>? Platform { get; set; }
+            public List<string>? Genre { get; set; }
+            public List<string>? GameMode { get; set; }
+            public List<string>? PlayerPerspective { get; set; }
+            public List<string>? Theme { get; set; }
             public int MinimumReleaseYear { get; set; } = -1;
             public int MaximumReleaseYear { get; set; } = -1;
-            public GameRatingItem GameRating { get; set; } = new GameRatingItem();
-            public GameAgeRatingItem GameAgeRating { get; set; } = new GameAgeRatingItem();
-            public GameSortingItem Sorting { get; set; } = new GameSortingItem();
+            public GameRatingItem? GameRating { get; set; }
+            public GameAgeRatingItem? GameAgeRating { get; set; }
+            public GameSortingItem Sorting { get; set; }
             public bool HasSavedGame { get; set; }
             public bool IsFavourite { get; set; }
 
@@ -303,90 +311,105 @@ namespace gaseous_server.Controllers.v1_1
             }
 
             string platformWhereClause = "";
-            if (model.Platform.Count > 0)
+            if (model.Platform != null)
             {
-                tempVal = " AND view_Games_Roms.PlatformId IN (";
-                for (int i = 0; i < model.Platform.Count; i++)
+                if (model.Platform.Count > 0)
                 {
-                    if (i > 0)
+                    tempVal = " AND view_Games_Roms.PlatformId IN (";
+                    for (int i = 0; i < model.Platform.Count; i++)
                     {
-                        tempVal += ", ";
+                        if (i > 0)
+                        {
+                            tempVal += ", ";
+                        }
+                        string platformLabel = "@Platform" + i;
+                        tempVal += platformLabel;
+                        whereParams.Add(platformLabel, model.Platform[i]);
                     }
-                    string platformLabel = "@Platform" + i;
-                    tempVal += platformLabel;
-                    whereParams.Add(platformLabel, model.Platform[i]);
+                    tempVal += ")";
+                    //whereClauses.Add(tempVal);
+                    platformWhereClause = tempVal;
                 }
-                tempVal += ")";
-                //whereClauses.Add(tempVal);
-                platformWhereClause = tempVal;
             }
 
-            if (model.Genre.Count > 0)
+            if (model.Genre != null)
             {
-                tempVal = "Relation_Game_Genres.GenresId IN (";
-                for (int i = 0; i < model.Genre.Count; i++)
+                if (model.Genre.Count > 0)
                 {
-                    if (i > 0)
+                    tempVal = "Relation_Game_Genres.GenresId IN (";
+                    for (int i = 0; i < model.Genre.Count; i++)
                     {
-                        tempVal += " AND ";
+                        if (i > 0)
+                        {
+                            tempVal += " AND ";
+                        }
+                        string genreLabel = "@Genre" + i;
+                        tempVal += genreLabel;
+                        whereParams.Add(genreLabel, model.Genre[i]);
                     }
-                    string genreLabel = "@Genre" + i;
-                    tempVal += genreLabel;
-                    whereParams.Add(genreLabel, model.Genre[i]);
+                    tempVal += ")";
+                    whereClauses.Add(tempVal);
                 }
-                tempVal += ")";
-                whereClauses.Add(tempVal);
             }
 
-            if (model.GameMode.Count > 0)
+            if (model.GameMode != null)
             {
-                tempVal = "Relation_Game_GameModes.GameModesId IN (";
-                for (int i = 0; i < model.GameMode.Count; i++)
+                if (model.GameMode.Count > 0)
                 {
-                    if (i > 0)
+                    tempVal = "Relation_Game_GameModes.GameModesId IN (";
+                    for (int i = 0; i < model.GameMode.Count; i++)
                     {
-                        tempVal += " AND ";
+                        if (i > 0)
+                        {
+                            tempVal += " AND ";
+                        }
+                        string gameModeLabel = "@GameMode" + i;
+                        tempVal += gameModeLabel;
+                        whereParams.Add(gameModeLabel, model.GameMode[i]);
                     }
-                    string gameModeLabel = "@GameMode" + i;
-                    tempVal += gameModeLabel;
-                    whereParams.Add(gameModeLabel, model.GameMode[i]);
+                    tempVal += ")";
+                    whereClauses.Add(tempVal);
                 }
-                tempVal += ")";
-                whereClauses.Add(tempVal);
             }
 
-            if (model.PlayerPerspective.Count > 0)
+            if (model.PlayerPerspective != null)
             {
-                tempVal = "Relation_Game_PlayerPerspectives.PlayerPerspectivesId IN (";
-                for (int i = 0; i < model.PlayerPerspective.Count; i++)
+                if (model.PlayerPerspective.Count > 0)
                 {
-                    if (i > 0)
+                    tempVal = "Relation_Game_PlayerPerspectives.PlayerPerspectivesId IN (";
+                    for (int i = 0; i < model.PlayerPerspective.Count; i++)
                     {
-                        tempVal += " AND ";
+                        if (i > 0)
+                        {
+                            tempVal += " AND ";
+                        }
+                        string playerPerspectiveLabel = "@PlayerPerspective" + i;
+                        tempVal += playerPerspectiveLabel;
+                        whereParams.Add(playerPerspectiveLabel, model.PlayerPerspective[i]);
                     }
-                    string playerPerspectiveLabel = "@PlayerPerspective" + i;
-                    tempVal += playerPerspectiveLabel;
-                    whereParams.Add(playerPerspectiveLabel, model.PlayerPerspective[i]);
+                    tempVal += ")";
+                    whereClauses.Add(tempVal);
                 }
-                tempVal += ")";
-                whereClauses.Add(tempVal);
             }
 
-            if (model.Theme.Count > 0)
+            if (model.Theme != null)
             {
-                tempVal = "Relation_Game_Themes.ThemesId IN (";
-                for (int i = 0; i < model.Theme.Count; i++)
+                if (model.Theme.Count > 0)
                 {
-                    if (i > 0)
+                    tempVal = "Relation_Game_Themes.ThemesId IN (";
+                    for (int i = 0; i < model.Theme.Count; i++)
                     {
-                        tempVal += " AND ";
+                        if (i > 0)
+                        {
+                            tempVal += " AND ";
+                        }
+                        string themeLabel = "@Theme" + i;
+                        tempVal += themeLabel;
+                        whereParams.Add(themeLabel, model.Theme[i]);
                     }
-                    string themeLabel = "@Theme" + i;
-                    tempVal += themeLabel;
-                    whereParams.Add(themeLabel, model.Theme[i]);
+                    tempVal += ")";
+                    whereClauses.Add(tempVal);
                 }
-                tempVal += ")";
-                whereClauses.Add(tempVal);
             }
 
             if (model.GameAgeRating != null)

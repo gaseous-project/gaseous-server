@@ -174,7 +174,9 @@ class Database {
     // this method also provides a callback
     // this method also provides a method to handle errors
     async GetGames(callback, error) {
-        let filterModel = { "Name": "", "HasSavedGame": false, "isFavourite": false, "Platform": [], "Genre": [], "GameMode": [], "PlayerPerspective": [], "Theme": [], "MinimumReleaseYear": -1, "MaximumReleaseYear": -1, "GameRating": { "MinimumRating": -1, "MinimumRatingCount": -1, "MaximumRating": -1, "MaximumRatingCount": -1, "IncludeUnrated": false }, "GameAgeRating": { "AgeGroupings": [], "IncludeUnrated": false }, "Sorting": { "SortBy": "NameThe", "SortAscending": true } };
+        // let filterModel = { "Name": "", "HasSavedGame": false, "isFavourite": false, "Platform": [], "Genre": [], "GameMode": [], "PlayerPerspective": [], "Theme": [], "MinimumReleaseYear": -1, "MaximumReleaseYear": -1, "GameRating": { "MinimumRating": -1, "MinimumRatingCount": -1, "MaximumRating": -1, "MaximumRatingCount": -1, "IncludeUnrated": false }, "GameAgeRating": { "AgeGroupings": [], "IncludeUnrated": false }, "Sorting": { "SortBy": "NameThe", "SortAscending": true } };
+
+        let filterModel = { "Name": "", "HasSavedGame": false, "isFavourite": false, "MinimumReleaseYear": -1, "MaximumReleaseYear": -1, "Sorting": { "SortBy": "NameThe", "SortAscending": true } };
 
         let dbLoadComplete = false;
         let pageNumber = 1;
