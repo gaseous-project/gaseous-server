@@ -143,6 +143,7 @@ CREATE TABLE `MetadataMapBridge` (
     ),
     INDEX `idx_parentmapidpreferred` (`ParentMapId`, `Preferred`),
     INDEX `idx_MetadataSourceType` (`MetadataSourceType`),
+    INDEX `idx_MetadataPreferredSource` (`MetadataSourceId`, `Preferred`),
     CONSTRAINT `MetadataMapBridge_MetadataMap` FOREIGN KEY (`ParentMapId`) REFERENCES `MetadataMap` (`Id`) ON DELETE CASCADE
 );
 
