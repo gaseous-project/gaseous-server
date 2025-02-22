@@ -141,6 +141,8 @@ CREATE TABLE `MetadataMapBridge` (
         `MetadataSourceType`,
         `MetadataSourceId`
     ),
+    INDEX `idx_parentmapidpreferred` (`ParentMapId`, `Preferred`),
+    INDEX `idx_MetadataSourceType` (`MetadataSourceType`),
     CONSTRAINT `MetadataMapBridge_MetadataMap` FOREIGN KEY (`ParentMapId`) REFERENCES `MetadataMap` (`Id`) ON DELETE CASCADE
 );
 
@@ -219,7 +221,8 @@ CHANGE `Id` `Id` bigint(20) NOT NULL AUTO_INCREMENT,
 ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
 DROP INDEX IF EXISTS `Id_UNIQUE`,
 DROP INDEX IF EXISTS `PRIMARY`,
-ADD PRIMARY KEY (`Id`, `SourceId`);
+ADD PRIMARY KEY (`Id`, `SourceId`),
+ADD INDEX `idx_game_sourceid` (`SourceId` ASC) VISIBLE;
 
 ALTER TABLE `GameMode`
 ADD COLUMN `SourceId` INT NOT NULL DEFAULT 1 AFTER `Id`,
@@ -409,17 +412,22 @@ SELECT DISTINCT
     `Game`.`Videos` AS `Videos`,
     `Game`.`Websites` AS `Websites`,
     `Game`.`dateAdded` AS `dateAdded`,
-    `Game`.`lastUpdated` AS `lastUpdated`
+    `Game`.`lastUpdated` AS `lastUpdated`,
+    COUNT(`Games_Roms`.`Id`) AS RomCount
 FROM (
-        `Games_Roms`
-        JOIN `view_MetadataMap` ON (
-            `view_MetadataMap`.`Id` = `Games_Roms`.`MetadataMapId`
+        (
+            `Games_Roms`
+            JOIN `view_MetadataMap` ON (
+                `view_MetadataMap`.`Id` = `Games_Roms`.`MetadataMapId`
+            )
         )
         LEFT JOIN `Game` ON (
             `Game`.`SourceId` = `view_MetadataMap`.`MetadataSourceType`
             AND `Game`.`Id` = `view_MetadataMap`.`MetadataSourceId`
         )
-    );
+    )
+GROUP BY
+    `view_MetadataMap`.`Id`
 
 CREATE OR REPLACE VIEW `view_Games` AS
 SELECT

@@ -517,15 +517,13 @@ FROM
     (SELECT DISTINCT
         Game.*,
             view_Games_Roms.PlatformId,
-            AgeGroup.AgeGroupId,
-            COUNT(view_Games_Roms.Id) AS RomCount
+            AgeGroup.AgeGroupId
     FROM
         view_GamesWithRoms AS Game
     LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId
     LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId" + platformWhereClause + @"
     LEFT JOIN AlternativeName ON Game.Id = AlternativeName.Game " + nameWhereClause + @"
-    GROUP BY Game.Id
-    HAVING RomCount > 0) Game
+    WHERE Game.RomCount > 0) Game
         LEFT JOIN
     (SELECT 
         view_Games_Roms.GameId, COUNT(GameState.Id) AS RomSaveCount
