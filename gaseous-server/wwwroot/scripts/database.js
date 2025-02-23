@@ -102,13 +102,17 @@ class Database {
     syncFinishCallbacks = [];
 
     async SyncContent(force, error, onupdatenotrequired) {
+        startSync = force;
+
         if (force === true) {
             console.log('Forcing database refresh');
+            startSync = true;
         } else {
             // get the last attempted fetch - if last fetch is null or more than 5 minutes ago, fetch the games library
             let lastFetch = await this.GetData('settings', 'lastFetch', null);
             if (lastFetch === undefined || lastFetch.value === null || (new Date() - new Date(lastFetch.value)) >= 60000) {
                 console.log('Last fetch was more than a minutes ago. Update forced.');
+                startSync = true;
             } else {
                 console.log('Last fetch was less than a minute ago. Update not required.');
 
@@ -118,20 +122,22 @@ class Database {
             }
         }
 
-        if (this.syncStartCallbacks.length > 0) {
-            for (let callback of this.syncStartCallbacks) {
-                callback();
+        if (startSync === true) {
+            if (this.syncStartCallbacks.length > 0) {
+                for (let callback of this.syncStartCallbacks) {
+                    callback();
+                }
             }
-        }
 
-        this.SetData('settings', 'lastFetch', new Date());
-        await this.GetPlatforms();
-        await this.GetGames();
-        await this.GetGamesFilter();
+            this.SetData('settings', 'lastFetch', new Date());
+            await this.GetPlatforms();
+            await this.GetGames();
+            await this.GetGamesFilter();
 
-        if (this.syncFinishCallbacks.length > 0) {
-            for (let callback of this.syncFinishCallbacks) {
-                callback();
+            if (this.syncFinishCallbacks.length > 0) {
+                for (let callback of this.syncFinishCallbacks) {
+                    callback();
+                }
             }
         }
     }
