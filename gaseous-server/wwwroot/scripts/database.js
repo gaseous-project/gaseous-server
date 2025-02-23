@@ -102,7 +102,7 @@ class Database {
     syncFinishCallbacks = [];
 
     async SyncContent(force, error, onupdatenotrequired) {
-        startSync = force;
+        let startSync = force;
 
         if (force === true) {
             console.log('Forcing database refresh');
