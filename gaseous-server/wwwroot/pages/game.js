@@ -30,7 +30,7 @@ function SetupPage() {
             case "IGDB":
                 attributionSection.style.display = 'block';
 
-                attributionIcon.setAttribute('src', '/images/IGDB_Logo.svg');
+                attributionIcon.setAttribute('src', '/images/IGDB_logo.svg');
                 attributionIcon.style.display = 'block';
 
                 attributionText.innerHTML = 'This game\'s metadata is provided by IGDB. <a href="https://www.igdb.com/games/' + gameData.slug + '" class="romlink" target="_blank" rel="noopener noreferrer">Source Page</a>';

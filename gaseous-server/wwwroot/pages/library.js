@@ -70,7 +70,7 @@ async function SetupPage() {
                     }
                 }
 
-                backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true);
+                // backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true);
 
                 // get all elemens in the node gamesElement and sort by the data-index attribute
                 gameTiles = Array.from(gamesElement.children);

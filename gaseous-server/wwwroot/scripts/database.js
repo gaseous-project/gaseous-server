@@ -131,8 +131,7 @@ class Database {
 
             this.SetData('settings', 'lastFetch', new Date());
             await this.GetPlatforms();
-            await this.GetGames();
-            await this.GetGamesFilter();
+            this.GetGames();
 
             if (this.syncFinishCallbacks.length > 0) {
                 for (let callback of this.syncFinishCallbacks) {
@@ -253,6 +252,8 @@ class Database {
             }
             pageNumber += 1;
         }
+
+        await this.GetGamesFilter();
     }
 
     #InsertFilters(tableName, source) {
