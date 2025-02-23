@@ -186,7 +186,7 @@ class Database {
 
         let dbLoadComplete = false;
         let pageNumber = 1;
-        let pageSize = 500;
+        let pageSize = 1000;
         let maxPages = 1000;
 
         // clear the games library
