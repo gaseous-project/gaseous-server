@@ -428,7 +428,7 @@ FROM (
         )
     )
 GROUP BY
-    `view_MetadataMap`.`Id`
+    `view_MetadataMap`.`Id`;
 
 CREATE OR REPLACE VIEW `view_Games` AS
 SELECT
