@@ -43,47 +43,81 @@ namespace gaseous_server.Models
             {
                 SignatureFlags _flags = new SignatureFlags();
 
-                foreach (SourceValues.SourceValueItem source in MetadataSources.Platforms)
+                // get default values for the platform
+                var defaultPlatform = MetadataSources.Platforms.Find(x => x.Source == Config.MetadataConfiguration.DefaultMetadataSource);
+                if (defaultPlatform != null)
                 {
-                    if (source.Source == Config.MetadataConfiguration.DefaultMetadataSource)
-                    {
-                        _flags.PlatformId = source.Id;
-                        _flags.PlatformName = source.Name;
-                        _flags.PlatformMetadataSource = source.Source;
-                        break;
-                    }
+                    _flags.PlatformId = defaultPlatform.Id;
+                    _flags.PlatformName = defaultPlatform.Name;
+                    _flags.PlatformMetadataSource = defaultPlatform.Source;
                 }
 
                 if (_flags.PlatformId == 0)
                 {
                     // fall back to the IGDB source if present
-                    foreach (SourceValues.SourceValueItem source in MetadataSources.Platforms)
+                    var igdbPlatform = MetadataSources.Platforms.Find(x => x.Source == HasheousClient.Models.MetadataSources.IGDB);
+                    if (igdbPlatform != null)
                     {
-                        if (source.Source == HasheousClient.Models.MetadataSources.IGDB)
+                        _flags.PlatformId = igdbPlatform.Id;
+                        _flags.PlatformName = igdbPlatform.Name;
+                        _flags.PlatformMetadataSource = igdbPlatform.Source;
+                    }
+                    else
+                    {
+                        // fall back to none source if present
+                        var nonePlatform = MetadataSources.Platforms.Find(x => x.Source == HasheousClient.Models.MetadataSources.None);
+                        if (nonePlatform != null)
                         {
-                            _flags.PlatformId = source.Id;
-                            _flags.PlatformName = source.Name;
-                            _flags.PlatformMetadataSource = source.Source;
-                            break;
+                            _flags.PlatformId = nonePlatform.Id;
+                            _flags.PlatformName = nonePlatform.Name;
+                            _flags.PlatformMetadataSource = nonePlatform.Source;
                         }
                     }
                 }
 
-                foreach (SourceValues.SourceValueItem source in MetadataSources.Games)
+                // get default values for the game
+                var defaultGame = MetadataSources.Games.Find(x => x.Source == Config.MetadataConfiguration.DefaultMetadataSource);
+                if (defaultGame != null)
                 {
-                    if (source.Source == Config.MetadataConfiguration.DefaultMetadataSource)
+                    _flags.GameId = defaultGame.Id;
+                    _flags.GameName = defaultGame.Name;
+                    _flags.GameMetadataSource = defaultGame.Source;
+                }
+
+                if (_flags.GameId == 0)
+                {
+                    // fall back to the IGDB source if present
+                    var igdbGame = MetadataSources.Games.Find(x => x.Source == HasheousClient.Models.MetadataSources.IGDB);
+                    if (igdbGame != null)
                     {
-                        _flags.GameId = source.Id;
-                        _flags.GameName = source.Name;
-                        _flags.GameMetadataSource = source.Source;
-                        break;
+                        _flags.GameId = igdbGame.Id;
+                        _flags.GameName = igdbGame.Name;
+                        _flags.GameMetadataSource = igdbGame.Source;
+                    }
+                    else
+                    {
+                        // fall back to none source if present
+                        var noneGame = MetadataSources.Games.Find(x => x.Source == HasheousClient.Models.MetadataSources.None);
+                        if (noneGame != null)
+                        {
+                            _flags.GameId = noneGame.Id;
+                            _flags.GameName = noneGame.Name;
+                            _flags.GameMetadataSource = noneGame.Source;
+                        }
                     }
                 }
 
                 if (_flags.GameId == null || _flags.GameId == 0)
                 {
                     _flags.GameId = 0;
-                    _flags.GameName = "Unknown Game";
+                    if (this.Game.Name != null && this.Game.Name.Length > 0)
+                    {
+                        _flags.GameName = this.Game.Name;
+                    }
+                    else
+                    {
+                        _flags.GameName = "Unknown Game";
+                    }
                     _flags.GameMetadataSource = HasheousClient.Models.MetadataSources.None;
                 }
 

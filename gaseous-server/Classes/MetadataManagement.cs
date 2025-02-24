@@ -467,6 +467,14 @@ namespace gaseous_server.Classes
 
 						// update the signature in the database
 						Platform? signaturePlatform = Metadata.Platforms.GetPlatform((long)signature.Flags.PlatformId);
+						if (signature.Flags.GameId == 0)
+						{
+							HasheousClient.Models.Metadata.IGDB.Game? discoveredGame = ImportGame.SearchForGame(signature, signature.Flags.PlatformId, false);
+							if (discoveredGame != null && discoveredGame.Id != null)
+							{
+								signature.MetadataSources.AddGame((long)discoveredGame.Id, discoveredGame.Name, MetadataSources.IGDB);
+							}
+						}
 						ImportGame.StoreGame(library, hash, signature, signaturePlatform, fi.FullName, (long)dr["Id"], false);
 					}
 					catch (Exception ex)
