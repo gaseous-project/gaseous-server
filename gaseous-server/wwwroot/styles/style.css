@@ -3194,3 +3194,46 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     -webkit-animation: rotating 2s linear infinite;
     animation: rotating 2s linear infinite;
 }
+
+.sizelabel {
+    position: relative;
+    margin-top: 15px;
+    background-color: var(--section-header-background-solid);
+    color: var(--section-header-text);
+    padding: 10px;
+    width: 150px;
+    text-align: center;
+    border-radius: var(--standard-radius);
+    border-style: solid;
+    border-width: 1px;
+    border-color: var(--modal-border-color);
+}
+
+.sizelabel:before {
+    content: " ";
+    position: absolute;
+    background-color: var(--section-header-background-solid);
+    transform: rotate(45deg);
+    width: 15px;
+    height: 15px;
+    top: -9px;
+    z-index: +1;
+    border-left-style: solid;
+    border-left-width: 1px;
+    border-left-color: var(--modal-border-color);
+    border-top-style: solid;
+    border-top-width: 1px;
+    border-top-color: var(--modal-border-color);
+}
+
+.sizelabel_left:before {
+    left: 10px;
+}
+
+.sizelabel_right:before {
+    right: 10px;
+}
+
+.sizelabel_center:before {
+    left: calc(50% - 7.5px);
+}

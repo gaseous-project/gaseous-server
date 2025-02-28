@@ -572,15 +572,18 @@ function getParameterCaseInsensitive(object, key) {
 }
 
 function BuildSpaceBar(LibrarySize, OtherSize, TotalSize) {
+    let containerDiv = document.createElement('div');
+    containerDiv.setAttribute('style', 'width: 100%;');
+
     let newTable = document.createElement('table');
     newTable.setAttribute('cellspacing', 0);
     newTable.setAttribute('style', 'width: 100%; height: 10px;');
 
     let newRow = document.createElement('tr');
 
-    let LibrarySizePercent = Math.floor(LibrarySize / TotalSize * 100);
-    let OtherSizePercent = Math.floor(OtherSize / TotalSize * 100);
-    let FreeSizePercent = Math.floor((LibrarySize + OtherSize) / TotalSize * 100);
+    let LibrarySizePercent = Math.floor(Number(LibrarySize) / Number(TotalSize) * 100);
+    let OtherSizePercent = Math.floor(Number(OtherSize) / Number(TotalSize) * 100);
+    let FreeSizePercent = Math.floor((Number(LibrarySize) + Number(OtherSize)) / Number(TotalSize) * 100);
 
     let LibraryCell = document.createElement('td');
     LibraryCell.setAttribute('style', 'width: ' + LibrarySizePercent + '%; background-color: green;');
@@ -597,7 +600,42 @@ function BuildSpaceBar(LibrarySize, OtherSize, TotalSize) {
 
     newTable.appendChild(newRow);
 
-    return newTable;
+    containerDiv.appendChild(newTable);
+
+    let sizeBox = document.createElement('div');
+    sizeBox.setAttribute('style', 'width: 100%; height: 55px; position: relative;');
+
+    let librarySizeSpan = document.createElement('span');
+    librarySizeSpan.style.position = 'absolute';
+    librarySizeSpan.classList.add('sizelabel');
+    librarySizeSpan.classList.add('sizelabel_left');
+    if (LibrarySizePercent > 10) {
+        librarySizeSpan.style.left = 'calc(' + LibrarySizePercent + '% - 75px)';
+    } else {
+        librarySizeSpan.style.left = '0px';
+    }
+    librarySizeSpan.innerHTML = 'Library: ' + formatBytes(LibrarySize) + ' (' + LibrarySizePercent + '%)';
+    sizeBox.appendChild(librarySizeSpan);
+
+    let otherSizeSpan = document.createElement('span');
+    otherSizeSpan.style.position = 'absolute';
+    otherSizeSpan.style.left = 'calc(' + OtherSizePercent + '% - 75px)';
+    otherSizeSpan.classList.add('sizelabel');
+    otherSizeSpan.classList.add('sizelabel_center');
+    otherSizeSpan.innerHTML = 'Other: ' + formatBytes(OtherSize) + ' (' + OtherSizePercent + '%)';
+    sizeBox.appendChild(otherSizeSpan);
+
+    let freeSizeSpan = document.createElement('span');
+    freeSizeSpan.style.position = 'absolute';
+    freeSizeSpan.style.right = '0px';
+    freeSizeSpan.classList.add('sizelabel');
+    freeSizeSpan.classList.add('sizelabel_right');
+    freeSizeSpan.innerHTML = 'Free: ' + formatBytes(TotalSize - (Number(LibrarySize) + Number(OtherSize))) + ' (' + FreeSizePercent + '%)';
+    sizeBox.appendChild(freeSizeSpan);
+
+    containerDiv.appendChild(sizeBox);
+
+    return containerDiv;
 }
 
 class BackgroundImageRotator {
