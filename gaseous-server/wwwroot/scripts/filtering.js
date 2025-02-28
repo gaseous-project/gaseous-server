@@ -225,6 +225,13 @@ class Filtering {
         let gameIndex = 0;
 
         let loopDone = false;
+
+        if (filter['limit']) {
+            pageNumber = 1;
+            pageSize = filter['limit'];
+            loopDone = true;
+        }
+
         do {
             console.log('Filter page: ' + pageNumber);
             await fetch('/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize + '&returnSummary=' + returnSummary + '&returnGames=true', {
