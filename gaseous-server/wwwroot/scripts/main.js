@@ -446,52 +446,46 @@ function getKeyByValue(object, value) {
 }
 
 function GetPreference(Setting, DefaultValue) {
+    // check local storage first
+    let localValue = localStorage.getItem(Setting);
+    if (localValue !== undefined && localValue !== null) {
+        let localValueParsed = JSON.parse(localValue);
+        return localValueParsed;
+    }
+
+    // check user profile
     if (userProfile.userPreferences) {
-        for (var i = 0; i < userProfile.userPreferences.length; i++) {
-            if (userProfile.userPreferences[i].setting == Setting) {
-                // console.log("Get Preference: " + Setting + " : " + userProfile.userPreferences[i].value.toString());
-                return userProfile.userPreferences[i].value.toString();
+        for (let preference of userProfile.userPreferences) {
+            if (preference.setting == Setting) {
+                let remoteValueParsed = JSON.parse(preference.value);
+                return remoteValueParsed;
             }
         }
     }
 
+    // return the default value
     SetPreference(Setting, DefaultValue);
-
-    console.log("Get Preference: " + Setting + " : " + DefaultValue);
     return DefaultValue;
 }
 
-function SetPreference(Setting, Value, callbackSuccess, callbackError) {
-    console.log("Set Preference: " + Setting + " : " + Value.toString());
-    var model = [
+async function SetPreference(Setting, Value, callbackSuccess, callbackError) {
+    let model = [
         {
             "setting": Setting,
-            "value": Value.toString()
+            "value": JSON.stringify(Value)
         }
     ];
 
-    ajaxCall(
-        '/api/v1.1/Account/Preferences',
-        'POST',
-        function (result) {
-            SetPreference_Local(Setting, Value);
-
-            if (callbackSuccess) {
-                callbackSuccess();
-            }
-        },
-        function (error) {
-            SetPreference_Local(Setting, Value);
-
-            if (callbackError) {
-                callbackError();
-            }
-        },
-        JSON.stringify(model)
-    );
+    await SetPreference_Batch(model, callbackSuccess, callbackError);
 }
 
 async function SetPreference_Batch(model, callbackSuccess, callbackError) {
+    // set local storage, and create a model for the server
+    for (let item of model) {
+        localStorage.setItem(item.setting, item.value);
+    }
+
+    // send to server
     await fetch('/api/v1.1/Account/Preferences', {
         method: 'POST',
         headers: {
@@ -500,13 +494,7 @@ async function SetPreference_Batch(model, callbackSuccess, callbackError) {
         body: JSON.stringify(model)
     })
         .then(response => {
-            for (let i = 0; i < model.length; i++) {
-                SetPreference_Local(model[i].setting, model[i].value.toString());
-            }
-        })
-        .then(response => {
             if (response.ok) {
-                console.log("SetPreference_Batch: Success");
                 if (callbackSuccess) {
                     callbackSuccess();
                 }
@@ -518,32 +506,11 @@ async function SetPreference_Batch(model, callbackSuccess, callbackError) {
             }
         })
         .catch(error => {
-            for (let i = 0; i < model.length; i++) {
-                SetPreference_Local(model[i].setting, model[i].value.toString());
-            }
-
             console.log("SetPreference_Batch: Error: " + error);
             if (callbackError) {
                 callbackError();
             }
         });
-}
-
-function SetPreference_Local(Setting, Value) {
-    if (userProfile.userPreferences) {
-        var prefFound = false;
-        for (var i = 0; i < userProfile.userPreferences.length; i++) {
-            if (userProfile.userPreferences[i].setting == Setting) {
-                userProfile.userPreferences[i].value = Value;
-                prefFound = true;
-                break;
-            }
-        }
-
-        if (prefFound == false) {
-            userProfile.userPreferences.push(model);
-        }
-    }
 }
 
 function Uint8ToString(u8a) {
@@ -578,7 +545,7 @@ function loadAvatar(AvatarId) {
 }
 
 function GetRatingsBoards() {
-    let ratingsBoards = JSON.parse(GetPreference("LibraryGameClassificationDisplayOrder", JSON.stringify(["ESRB"])));
+    let ratingsBoards = GetPreference("Library.GameClassificationDisplayOrder", ["ESRB"]);
 
     // add fallback ratings boards
     if (!ratingsBoards.includes("ESRB")) { ratingsBoards.push("ESRB"); }

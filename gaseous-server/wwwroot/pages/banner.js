@@ -31,20 +31,21 @@ function setupBanner() {
         });
     }
 
-    let refreshButton = document.getElementById("banner_refresh");
-    if (refreshButton) {
-        refreshButton.addEventListener('click', async () => {
-            await db.SyncContent(true);
-        });
+    // let refreshButton = document.getElementById("banner_refresh");
+    // let refreshButtonImage = document.getElementById("banner_refresh_image");
+    // if (refreshButton) {
+    //     refreshButton.addEventListener('click', async () => {
+    //         await db.SyncContent(true);
+    //     });
 
-        db.syncStartCallbacks.push(async function () {
-            refreshButton.classList.add('rotating');
-        });
+    //     db.syncStartCallbacks.push(async function () {
+    //         refreshButtonImage.classList.add('rotating');
+    //     });
 
-        db.syncFinishCallbacks.push(async function () {
-            refreshButton.classList.remove('rotating');
-        });
-    }
+    //     db.syncFinishCallbacks.push(async function () {
+    //         refreshButtonImage.classList.remove('rotating');
+    //     });
+    // }
 
     let bannerUpload = document.getElementById("banner_upload");
     if (bannerUpload) {

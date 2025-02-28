@@ -20,8 +20,8 @@ class HomePageGameRow {
 
     async populate() {
         // get preferences
-        let showRatings = GetPreference("LibraryShowGameRating", true);
-        let showClassification = GetPreference("LibraryShowGameClassification", true);
+        let showRatings = GetPreference("Library.ShowGameRating", true);
+        let showClassification = GetPreference("Library.ShowGameClassification", true);
         let classificationDisplayOrder = GetRatingsBoards();
         if (showRatings == "true") { showRatings = true; } else { showRatings = false; }
         if (showClassification == "true") { showClassification = true; } else { showClassification = false; }

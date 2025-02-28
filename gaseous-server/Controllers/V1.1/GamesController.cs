@@ -216,8 +216,8 @@ namespace gaseous_server.Controllers.v1_1
                 // tempVal = "`Name` LIKE @Name";
                 // whereParams.Add("@Name", "%" + model.Name + "%");
                 // havingClauses.Add(tempVal);
-                nameWhereClause = "WHERE (MATCH(Game.`Name`) AGAINST (@Name IN BOOLEAN MODE) OR MATCH(AlternativeName.`Name`) AGAINST (@Name IN BOOLEAN MODE))";
-                whereParams.Add("@Name", "(*" + model.Name + "*) (" + model.Name + ") ");
+                nameWhereClause = "(MATCH(Game.`Name`) AGAINST (@GameName IN BOOLEAN MODE) OR MATCH(AlternativeName.`Name`) AGAINST (@GameName IN BOOLEAN MODE)) AND ";
+                whereParams.Add("@GameName", "(*" + model.Name + "*) (" + model.Name + ") ");
             }
 
             if (model.HasSavedGame == true)
@@ -336,7 +336,7 @@ namespace gaseous_server.Controllers.v1_1
             {
                 if (model.Genre.Count > 0)
                 {
-                    tempVal = "Relation_Game_Genres.GenresId IN (";
+                    tempVal = "Genre.`Name` IN (";
                     for (int i = 0; i < model.Genre.Count; i++)
                     {
                         if (i > 0)
@@ -356,7 +356,7 @@ namespace gaseous_server.Controllers.v1_1
             {
                 if (model.GameMode.Count > 0)
                 {
-                    tempVal = "Relation_Game_GameModes.GameModesId IN (";
+                    tempVal = "GameMode.`Name` IN (";
                     for (int i = 0; i < model.GameMode.Count; i++)
                     {
                         if (i > 0)
@@ -376,7 +376,7 @@ namespace gaseous_server.Controllers.v1_1
             {
                 if (model.PlayerPerspective.Count > 0)
                 {
-                    tempVal = "Relation_Game_PlayerPerspectives.PlayerPerspectivesId IN (";
+                    tempVal = "PlayerPerspective.`Name` IN (";
                     for (int i = 0; i < model.PlayerPerspective.Count; i++)
                     {
                         if (i > 0)
@@ -396,7 +396,7 @@ namespace gaseous_server.Controllers.v1_1
             {
                 if (model.Theme.Count > 0)
                 {
-                    tempVal = "Relation_Game_Themes.ThemesId IN (";
+                    tempVal = "Theme.`Name` IN (";
                     for (int i = 0; i < model.Theme.Count; i++)
                     {
                         if (i > 0)
@@ -544,9 +544,9 @@ FROM
     FROM
         view_GamesWithRoms AS Game
     LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId
-    LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId" + platformWhereClause + @"
-    LEFT JOIN AlternativeName ON Game.Id = AlternativeName.Game " + nameWhereClause + @"
-    WHERE Game.RomCount > 0) Game
+    JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId" + platformWhereClause + @"
+    LEFT JOIN AlternativeName ON Game.Id = AlternativeName.Game WHERE " + nameWhereClause + @"
+    Game.RomCount > 0) Game
         LEFT JOIN
     (SELECT 
         view_Games_Roms.GameId, COUNT(GameState.Id) AS RomSaveCount
@@ -571,16 +571,24 @@ FROM
 	MetadataMapBridge ON Game.Id = MetadataMapBridge.MetadataSourceId AND MetadataMapBridge.Preferred = 1
 		JOIN
 	MetadataMap ON MetadataMapBridge.ParentMapId = MetadataMap.Id
-        LEFT JOIN
+LEFT JOIN
     Relation_Game_Genres ON Game.Id = Relation_Game_Genres.GameId AND Relation_Game_Genres.GameSourceId = Game.GameIdType
+		JOIN
+	Genre ON Relation_Game_Genres.GenresId = Genre.Id AND Relation_Game_Genres.GameSourceId = Genre.SourceId
         LEFT JOIN
     Relation_Game_GameModes ON Game.Id = Relation_Game_GameModes.GameId AND Relation_Game_GameModes.GameSourceId = Game.GameIdType
+		LEFT JOIN
+	GameMode ON Relation_Game_GameModes.GameModesId = GameMode.Id AND Relation_Game_GameModes.GameSourceId = GameMode.SourceId
         LEFT JOIN
     Relation_Game_PlayerPerspectives ON Game.Id = Relation_Game_PlayerPerspectives.GameId AND Relation_Game_PlayerPerspectives.GameSourceId = Game.GameIdType
+		LEFT JOIN
+	PlayerPerspective ON Relation_Game_PlayerPerspectives.PlayerPerspectivesId = PlayerPerspective.Id AND Relation_Game_PlayerPerspectives.GameSourceId = PlayerPerspective.SourceId
         LEFT JOIN
     Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId AND Relation_Game_Themes.GameSourceId = Game.GameIdType
+		LEFT JOIN
+	Theme ON Relation_Game_Themes.ThemesId = Theme.Id AND Relation_Game_Themes.GameSourceId = Theme.SourceId
         LEFT JOIN
-    Favourites ON Game.MetadataMapId = Favourites.GameId AND Favourites.UserId = @userid " + whereClause + " " + havingClause + " GROUP BY Game.Id " + orderByClause;
+    Favourites ON Game.MetadataMapId = Favourites.GameId AND Favourites.UserId = @userid " + whereClause + " GROUP BY Game.Id " + havingClause + " " + orderByClause;
 
             if (returnGames == true)
             {
@@ -588,6 +596,8 @@ FROM
                 whereParams.Add("pageOffset", pageSize * (pageNumber - 1));
                 whereParams.Add("pageSize", pageSize);
             }
+
+            Console.WriteLine(sql);
 
             DataTable dbResponse = db.ExecuteCMD(sql, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
 

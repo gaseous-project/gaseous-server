@@ -1069,6 +1069,8 @@ input[name='filter_panel_range_max'] {
 
 .game_tile_outer_box {
     max-width: 150px;
+    display: inline-block;
+    text-align: center;
 }
 
 .game_tile_box>.favourite-filled,

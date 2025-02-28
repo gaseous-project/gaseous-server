@@ -107,9 +107,9 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
     }
 
     // setup preferences
-    let showTitle = GetPreference("LibraryShowGameTitle", true);
-    let showRatings = GetPreference("LibraryShowGameRating", true);
-    let showClassification = GetPreference("LibraryShowGameClassification", true);
+    let showTitle = GetPreference("Library.ShowGameTitle", true);
+    let showRatings = GetPreference("Library.ShowGameRating", true);
+    let showClassification = GetPreference("Library.ShowGameClassification", true);
     let classificationDisplayOrder = GetRatingsBoards();
     if (showTitle == "true") { showTitle = true; } else { showTitle = false; }
     if (showRatings == "true") { showRatings = true; } else { showRatings = false; }

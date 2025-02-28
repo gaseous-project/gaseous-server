@@ -4,27 +4,25 @@ async function SetupPage() {
         FilterDisplayToggle();
     });
 
-    FilterDisplayToggle(GetPreference("LibraryShowFilter", true), false);
+    let displayFilter = GetPreference("Library.ShowFilter", true);
+    FilterDisplayToggle(displayFilter, true);
 
-    let showTitle = GetPreference("LibraryShowGameTitle", true);
-    let showRatings = GetPreference("LibraryShowGameRating", true);
-    let showClassification = GetPreference("LibraryShowGameClassification", true);
+    let showTitle = GetPreference("Library.ShowGameTitle", true);
+    let showRatings = GetPreference("Library.ShowGameRating", true);
+    let showClassification = GetPreference("Library.ShowGameClassification", true);
     let classificationDisplayOrder = GetRatingsBoards();
-    if (showTitle == "true") { showTitle = true; } else { showTitle = false; }
-    if (showRatings == "true") { showRatings = true; } else { showRatings = false; }
-    if (showClassification == "true") { showClassification = true; } else { showClassification = false; }
 
     // setup filter panel
     let scrollerElement = document.getElementById('games_filter_scroller');
-    if (db) {
-        db.FilterCallbacks.push(async function (result) {
-            await filter.LoadFilterSettings();
+    if (filter) {
+        filter.FilterCallbacks.push(async (result) => {
+            filter.LoadFilterSettings();
 
             scrollerElement.innerHTML = '';
             scrollerElement.appendChild(filter.BuildFilterTable(result));
 
             // setup filter panel events
-            filter.applyCallback = async function (games) {
+            filter.applyCallback = async (games) => {
                 // render games
                 let gameCountElement = document.getElementById('games_library_recordcount');
                 if (games.length == 1) {
@@ -33,31 +31,12 @@ async function SetupPage() {
                     gameCountElement.innerText = games.length + ' games';
                 }
 
-                // clear game tiles not in the dom element
-                let gameTiles = document.getElementsByClassName('game_tile');
-                for (let x = 0; x < 2; x++) {
-                    for (let i = 0; i < gameTiles.length; i++) {
-                        if (games.find(x => x.metadataMapId == gameTiles[i].getAttribute('data-id')) == null) {
-                            gameTiles[i].remove();
-                            i = 0;
-                        }
-                    }
-                }
-
-
                 // render new games
                 let gamesElement = document.getElementById('games_library');
+                gamesElement.innerHTML = '';
 
                 coverURLList = [];
                 for (const game of games) {
-                    // if the game tile already exists, skip it
-                    let existingGameTile = document.getElementById('game_tile_' + game.metadataMapId);
-                    if (existingGameTile) {
-                        existingGameTile.setAttribute('data-index', game.resultIndex);
-                        continue;
-                    }
-
-                    // insert the game tile in the same order as the games array
                     let gameObj = new GameIcon(game);
                     let gameTile = await gameObj.Render(showTitle, showRatings, showClassification, classificationDisplayOrder);
                     gamesElement.appendChild(gameTile);
@@ -72,47 +51,8 @@ async function SetupPage() {
 
                 // backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true);
 
-                // get all elemens in the node gamesElement and sort by the data-index attribute
-                gameTiles = Array.from(gamesElement.children);
-                gameTiles.sort((a, b) => {
-                    return a.getAttribute('data-index') - b.getAttribute('data-index');
-                });
-
-                // remove all children from the gamesElement
-                gamesElement.innerHTML = '';
-
-                // add the sorted children back to the gamesElement, and update the alpha pager
-                let alphaPager = document.getElementById('games_library_alpha_pager');
-                alphaPager.innerHTML = '';
-                let alphaAdded = [];
-                for (const gameTile of gameTiles) {
-                    gamesElement.appendChild(gameTile);
-
-                    if (gameTile.getAttribute('data-alpha') != null) {
-                        let alpha = gameTile.getAttribute('data-alpha');
-                        if (alphaAdded.includes(alpha)) {
-                            continue;
-                        }
-                        let alphaButton = document.createElement('span');
-                        alphaButton.classList.add('games_library_alpha_pager_letter');
-                        alphaButton.innerText = alpha;
-                        alphaButton.addEventListener('click', function () {
-                            // scroll to the first game with the alpha
-                            let gameTiles = Array.from(document.getElementsByClassName('game_tile'));
-                            let gameTile = gameTiles.find(x => x.getAttribute('data-alpha') == alpha);
-                            if (gameTile) {
-                                // gameTile.scrollIntoView();
-                                // scroll to the game tile with the alpha - 100px
-                                window.scrollTo(0, gameTile.offsetTop - 100);
-                            }
-                        });
-                        alphaPager.appendChild(alphaButton);
-                        alphaAdded.push(alpha);
-                    }
-                }
-
                 // restore the scroll position
-                let scrollPosition = localStorage.getItem('scrollPosition');
+                let scrollPosition = localStorage.getItem('Library.ScrollPosition');
                 if (scrollPosition) {
                     console.log('restoring scroll position: ' + scrollPosition);
                     window.scrollTo(0, scrollPosition);
@@ -143,13 +83,13 @@ async function SetupPage() {
             filter.ApplyFilter();
         });
 
-        await db.GetGamesFilter();
+        await filter.GetGamesFilter();
     }
 
     // setup scroll position
     window.addEventListener('scroll', (pos) => {
         // save the scroll position to localStorage
-        localStorage.setItem('scrollPosition', window.scrollY);
+        localStorage.setItem('Library.ScrollPosition', window.scrollY);
     });
 }
 
@@ -158,18 +98,20 @@ function FilterDisplayToggle(display, storePreference = true) {
     let libraryControls = document.getElementById('games_library_controls');
     let gamesHome = document.getElementById('games_home');
 
-    if (filterPanel.style.display == 'none' || display === "true") {
+    if (filterPanel.style.display == 'none' || display === true) {
         filterPanel.style.display = 'block';
         libraryControls.classList.remove('games_library_controls_expanded');
         gamesHome.classList.remove('games_home_expanded');
-        if (storePreference === true) { SetPreference("LibraryShowFilter", true); }
+        if (storePreference === true) { SetPreference("Library.ShowFilter", true); }
     } else {
         filterPanel.style.display = 'none';
         libraryControls.classList.add('games_library_controls_expanded');
         gamesHome.classList.add('games_home_expanded');
-        if (storePreference === true) { SetPreference("LibraryShowFilter", false); }
+        if (storePreference === true) { SetPreference("Library.ShowFilter", false); }
     }
 }
+
+let filter = new Filtering();
 
 let coverURLList = [];
 
