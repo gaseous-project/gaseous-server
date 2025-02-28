@@ -32,7 +32,7 @@ class PreferencesWindow {
                                 }
                                 break;
                             case "SELECT":
-                                settingElement.value = value.value;
+                                settingElement.value = JSON.parse(value.value);
                                 $(settingElement).select2();
                                 break;
                         }
@@ -101,7 +101,7 @@ class PreferencesWindow {
                         }
                         break;
                     case "SELECT":
-                        pref.value = preference.value.toString();
+                        pref.value = JSON.stringify(preference.value.toString());
                         break;
                 }
                 preferences.push(pref);

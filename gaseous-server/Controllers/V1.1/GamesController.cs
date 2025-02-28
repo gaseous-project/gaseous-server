@@ -597,8 +597,6 @@ LEFT JOIN
                 whereParams.Add("pageSize", pageSize);
             }
 
-            Console.WriteLine(sql);
-
             DataTable dbResponse = db.ExecuteCMD(sql, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
 
             // get count
