@@ -30,7 +30,8 @@ class HomePageGameRow {
         showClassification = false;
 
         let gameFilter = new Filtering();
-        gameFilter.applyCallback = async (games) => {
+        gameFilter.executeCallback = async (games) => {
+            console.log(games);
             this.games.innerHTML = "";
 
             if (games.length === 0) {
@@ -59,7 +60,7 @@ class HomePageGameRow {
 
                 this.games.appendChild(scroller);
 
-                backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true);
+                backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true, false);
             }
         }
         gameFilter.ApplyFilter(this.searchModel);

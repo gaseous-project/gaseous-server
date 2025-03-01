@@ -1,6 +1,8 @@
 class Filtering {
-    constructor(applyCallback, orderBySelector, orderDirectionSelector) {
+    constructor(applyCallback, orderBySelector, orderDirectionSelector, pageSizeSelector, executeCallback) {
         this.applyCallback = applyCallback;
+        this.executeCallback = executeCallback;
+        this.pageSizeSelector = pageSizeSelector;
         this.orderBySelector = orderBySelector;
         this.orderDirectionSelector = orderDirectionSelector;
 
@@ -10,6 +12,10 @@ class Filtering {
 
         if (this.orderDirectionSelector) {
             this.OrderDirectionSelector(this.orderDirectionSelector);
+        }
+
+        if (this.pageSizeSelector) {
+            this.PageSizeSelector(this.pageSizeSelector);
         }
     }
 
@@ -39,7 +45,24 @@ class Filtering {
         this.ApplyFilter();
     }
 
+    PageSizeSelector(selector) {
+        this.pageSizeSelector = selector;
+        this.pageSizeSelector.addEventListener('change', () => {
+            this.filterSelections['pageSize'] = this.pageSizeSelector.value;
+            this.ApplyFilter();
+        });
+    }
+
+    SetPageSize(value) {
+        this.filterSelections['pageSize'] = value;
+        this.ApplyFilter();
+    }
+
     filterSelections = {
+
+    }
+
+    #computedFilterModel = {
 
     }
 
@@ -204,6 +227,10 @@ class Filtering {
                 filterModel.sorting.sortAscending = false;
             }
         }
+        let pageSize = 20;
+        if (filter['pageSize']) {
+            pageSize = filter['pageSize'];
+        }
         if (filter["settings"]) {
             if (filter["settings"]['hasSavedGame']) {
                 filterModel.HasSavedGame = filter["settings"]['hasSavedGame'];
@@ -213,63 +240,71 @@ class Filtering {
             }
         }
 
-        console.log(filter);
-        console.log(filterModel);
+        // store the filter model in memory
+        this.#computedFilterModel = filterModel;
 
         // request the games from the server
         let pageNumber = 1;
-        let pageSize = 1000;
-        let returnSummary = "true";
-
-        let results = [];
-        let gameIndex = 0;
-
-        let loopDone = false;
 
         if (filter['limit']) {
             pageNumber = 1;
             pageSize = filter['limit'];
-            loopDone = true;
         }
 
-        do {
-            console.log('Filter page: ' + pageNumber);
-            await fetch('/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize + '&returnSummary=' + returnSummary + '&returnGames=true', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(filterModel)
-            }).then(response => {
-                if (response.ok) {
-                    return response.json();
-                }
-                throw new Error('Failed to load games');
-            }).then(data => {
-                if (data.games.length === 0) {
-                    loopDone = true;
-                }
-
-                // add all of data.games to results
-                for (const game of data.games) {
-                    game["resultIndex"] = gameIndex;
-                    gameIndex++;
-                    results.push(game);
-                }
-            }).catch(error => {
-                console.error(error);
-            });
-
-            pageNumber++;
-            returnSummary = "false";
-        } while (loopDone === false);
-
-        console.log('Filter finish time: ' + new Date().toLocaleTimeString());
-        // console.log(results);
+        this.GameCount = 0;
+        this.AlphaList = [];
 
         if (this.applyCallback) {
-            this.applyCallback(results);
+            this.applyCallback();
         }
+
+        this.ExecuteFilter(pageNumber, pageSize);
+    }
+
+    GameCount = 0;
+    AlphaList = [];
+
+    async ExecuteFilter(pageNumber, pageSize) {
+        if (!pageNumber) {
+            pageNumber = 1;
+        }
+        if (!pageSize) {
+            pageSize = this.filterSelections['pageSize'];
+        }
+
+        console.log('Filter page: ' + pageNumber + ' Page size: ' + pageSize);
+
+        let returnSummary = "false";
+        if (this.AlphaList.length === 0) {
+            returnSummary = "true";
+        }
+
+        console.log('Executing filter for page: ' + pageNumber + ' Page size: ' + pageSize);
+        await fetch('/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize + '&returnSummary=' + returnSummary + '&returnGames=true', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(this.#computedFilterModel)
+        }).then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Failed to load games');
+        }).then(data => {
+            if (data.count) {
+                this.GameCount = data.count;
+            }
+            if (data.alphaList) {
+                this.AlphaList = data.alphaList;
+            }
+
+            if (this.executeCallback) {
+                this.executeCallback(data.games);
+            }
+        }).catch(error => {
+            console.error(error);
+        });
     }
 
     async GetGamesFilter() {

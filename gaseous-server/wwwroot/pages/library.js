@@ -21,35 +21,87 @@ async function SetupPage() {
             scrollerElement.innerHTML = '';
             scrollerElement.appendChild(filter.BuildFilterTable(result));
 
-            // setup filter panel events
-            filter.applyCallback = async (games) => {
-                // render games
+            let gamesElement = document.getElementById('games_library');
+            gamesElement.innerHTML = '';
+
+            let freshLoad = true;
+
+            filter.applyCallback = async () => {
+                freshLoad = true;
+                gamesElement.innerHTML = '';
+            }
+
+            filter.executeCallback = async (games) => {
+                // render game chrome objects
                 let gameCountElement = document.getElementById('games_library_recordcount');
-                if (games.length == 1) {
+                if (filter.GameCount == 1) {
                     gameCountElement.innerText = '1 game';
                 } else {
-                    gameCountElement.innerText = games.length + ' games';
+                    gameCountElement.innerText = filter.GameCount + ' games';
                 }
 
-                // render new games
-                let gamesElement = document.getElementById('games_library');
-                gamesElement.innerHTML = '';
+                if (freshLoad === true) {
+                    // add placeholder game tiles
+                    let maxPages = Math.ceil(filter.GameCount / filter.filterSelections["pageSize"]);
+                    // generate page spans
+                    for (let i = 1; i <= maxPages; i++) {
+                        let pageSpan = document.createElement('span');
+                        pageSpan.classList.add('pageAnchor');
+                        pageSpan.setAttribute('data-page', i);
+                        pageSpan.setAttribute('data-loaded', '0');
+                        gamesElement.appendChild(pageSpan);
+                    }
+                    // generate placeholder game tiles
+                    let pageNumber = 1;
+                    let tilesPerPage = 0;
+                    for (let i = 0; i < filter.GameCount; i++) {
+                        tilesPerPage++;
+                        if (tilesPerPage > filter.filterSelections["pageSize"]) {
+                            pageNumber++;
+                            tilesPerPage = 1;
+                        }
+                        let targetElement = document.querySelector('span[data-page="' + pageNumber + '"]');
+                        if (targetElement) {
+                            let gameTile = document.createElement('div');
+                            gameTile.classList.add('game_tile_placeholder');
+                            gameTile.setAttribute('name', 'GamePlaceholder');
+                            gameTile.setAttribute('data-index', i);
+                            gameTile.setAttribute('data-page', pageNumber);
+                            targetElement.appendChild(gameTile);
+                        }
+                    }
+                    freshLoad = false;
+                }
 
+                // render game tiles
                 coverURLList = [];
                 for (const game of games) {
-                    let gameObj = new GameIcon(game);
-                    let gameTile = await gameObj.Render(showTitle, showRatings, showClassification, classificationDisplayOrder);
-                    gamesElement.appendChild(gameTile);
+                    let tileContainer = document.querySelector('div[data-index="' + game.index + '"]');
 
-                    if (game.cover) {
-                        let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg?sourceType=' + game.metadataSource;
-                        if (!coverURLList.includes(coverUrl)) {
-                            coverURLList.push(coverUrl);
+                    if (tileContainer) {
+                        tileContainer.classList.remove('game_tile_placeholder');
+                        tileContainer.classList.add('game_tile_wrapper_icon');
+
+                        // set data-loaded=1 on the pageAnchor span to prevent re-rendering
+                        let pageAnchor = document.querySelector('span[data-page="' + tileContainer.getAttribute('data-page') + '"]');
+                        if (pageAnchor) {
+                            pageAnchor.setAttribute('data-loaded', '1');
+                        }
+
+                        let gameObj = new GameIcon(game);
+                        let gameTile = await gameObj.Render(showTitle, showRatings, showClassification, classificationDisplayOrder);
+                        tileContainer.appendChild(gameTile);
+
+                        if (game.cover) {
+                            let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg?sourceType=' + game.metadataSource;
+                            if (!coverURLList.includes(coverUrl)) {
+                                coverURLList.push(coverUrl);
+                            }
                         }
                     }
                 }
 
-                // backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true);
+                backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true, false);
 
                 // restore the scroll position
                 let scrollPosition = localStorage.getItem('Library.ScrollPosition');
@@ -61,6 +113,16 @@ async function SetupPage() {
 
             filter.OrderBySelector(document.getElementById('games_library_orderby_select'));
             filter.OrderDirectionSelector(document.getElementById('games_library_orderby_direction_select'));
+            filter.PageSizeSelector(document.getElementById('games_library_pagesize_select'));
+
+            let pageSizeSelect = $('#games_library_pagesize_select');
+            pageSizeSelect.select2();
+            if (filter.filterSelections['pageSize']) {
+                pageSizeSelect.val(filter.filterSelections['pageSize']).trigger('change');
+            }
+            pageSizeSelect.on('change', function (e) {
+                filter.SetPageSize(pageSizeSelect.val());
+            });
 
             let orderBySelect = $('#games_library_orderby_select');
             orderBySelect.select2();
@@ -90,8 +152,30 @@ async function SetupPage() {
     window.addEventListener('scroll', (pos) => {
         // save the scroll position to localStorage
         localStorage.setItem('Library.ScrollPosition', window.scrollY);
+
+        let anchors = document.getElementsByClassName('pageAnchor');
+        for (const anchor of anchors) {
+            if (elementIsVisibleInViewport(anchor, true)) {
+                if (anchor.getAttribute('data-loaded') === "0") {
+                    anchor.setAttribute('data-loaded', "1");
+                    let pageToLoad = Number(anchor.getAttribute('data-page'));
+                    console.log('Loading page: ' + pageToLoad);
+                    filter.ExecuteFilter(pageToLoad);
+                }
+            }
+        }
     });
 }
+
+const elementIsVisibleInViewport = (el, partiallyVisible = false) => {
+    const { top, left, bottom, right } = el.getBoundingClientRect();
+    const { innerHeight, innerWidth } = window;
+    return partiallyVisible
+        ? ((top > 0 && top < innerHeight) ||
+            (bottom > 0 && bottom < innerHeight)) &&
+        ((left > 0 && left < innerWidth) || (right > 0 && right < innerWidth))
+        : top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
+};
 
 function FilterDisplayToggle(display, storePreference = true) {
     let filterPanel = document.getElementById('games_filter_panel');

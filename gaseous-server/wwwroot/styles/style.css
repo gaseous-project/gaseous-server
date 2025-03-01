@@ -960,6 +960,10 @@ input[name='filter_panel_range_max'] {
     background-color: blue;
 }
 
+.pageAnchor {
+    display: inline;
+}
+
 .game_tile_wrapper_icon {
     display: inline-block;
 }

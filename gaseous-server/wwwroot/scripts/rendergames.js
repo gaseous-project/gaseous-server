@@ -18,6 +18,7 @@ class GameIcon {
             gameTile.setAttribute('data-index', data.resultIndex);
         }
         gameTile.setAttribute('data-alpha', data.alpha);
+        gameTile.setAttribute('data-index', data.index);
 
         let gameTileOuterBox = document.createElement('div');
         gameTileOuterBox.classList.add('game_tile_outer_box');

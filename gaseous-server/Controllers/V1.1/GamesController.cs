@@ -590,20 +590,27 @@ LEFT JOIN
         LEFT JOIN
     Favourites ON Game.MetadataMapId = Favourites.GameId AND Favourites.UserId = @userid " + whereClause + " GROUP BY Game.Id " + havingClause + " " + orderByClause;
 
+            string limiter = "";
             if (returnGames == true)
             {
-                sql += " LIMIT @pageOffset, @pageSize";
+                limiter += " LIMIT @pageOffset, @pageSize";
                 whereParams.Add("pageOffset", pageSize * (pageNumber - 1));
                 whereParams.Add("pageSize", pageSize);
             }
 
-            DataTable dbResponse = db.ExecuteCMD(sql, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
+            DataTable dbResponse = db.ExecuteCMD(sql + limiter, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
 
             // get count
             int? RecordCount = null;
             if (returnSummary == true)
             {
                 RecordCount = dbResponse.Rows.Count;
+            }
+
+            int indexInPage = 0;
+            if (pageNumber > 1)
+            {
+                indexInPage = pageSize * (pageNumber - 1);
             }
 
             // compile data for return
@@ -618,7 +625,8 @@ LEFT JOIN
                     retGame.MetadataSource = (HasheousClient.Models.MetadataSources)dbResponse.Rows[i]["GameIdType"];
 
                     Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
-                    retMinGame.Index = i;
+                    retMinGame.Index = indexInPage;
+                    indexInPage += 1;
                     if (dbResponse.Rows[i]["RomSaveCount"] != DBNull.Value || dbResponse.Rows[i]["MediaGroupSaveCount"] != DBNull.Value)
                     {
                         retMinGame.HasSavedGame = true;
@@ -640,10 +648,14 @@ LEFT JOIN
                 }
             }
 
-            Dictionary<string, int>? AlphaList = null;
+            Dictionary<string, GameReturnPackage.AlphaListItem>? AlphaList = null;
             if (returnSummary == true)
             {
-                AlphaList = new Dictionary<string, int>();
+                dbResponse = db.ExecuteCMD(sql, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
+
+                RecordCount = dbResponse.Rows.Count;
+
+                AlphaList = new Dictionary<string, GameReturnPackage.AlphaListItem>();
 
                 // build alpha list
                 if (orderByField == "NameThe" || orderByField == "Name")
@@ -674,14 +686,22 @@ LEFT JOIN
                         {
                             if (!AlphaList.ContainsKey(firstChar))
                             {
-                                AlphaList.Add(firstChar, CurrentPage);
+                                AlphaList.Add(firstChar, new GameReturnPackage.AlphaListItem
+                                {
+                                    Index = i,
+                                    Page = CurrentPage
+                                });
                             }
                         }
                         else
                         {
                             if (!AlphaList.ContainsKey("#"))
                             {
-                                AlphaList.Add("#", 1);
+                                AlphaList.Add("#", new GameReturnPackage.AlphaListItem
+                                {
+                                    Index = i,
+                                    Page = 1
+                                });
                             }
                         }
                     }
@@ -720,7 +740,12 @@ LEFT JOIN
 
             public int? Count { get; set; }
             public List<Games.MinimalGameItem>? Games { get; set; } = new List<Games.MinimalGameItem>();
-            public Dictionary<string, int>? AlphaList { get; set; }
+            public Dictionary<string, AlphaListItem>? AlphaList { get; set; }
+            public class AlphaListItem
+            {
+                public int Index { get; set; }
+                public int Page { get; set; }
+            }
         }
     }
 }
