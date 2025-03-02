@@ -1,7 +1,10 @@
 class Filtering {
-    constructor(applyCallback, orderBySelector, orderDirectionSelector, pageSizeSelector, executeCallback) {
+    constructor(applyCallback, orderBySelector, orderDirectionSelector, pageSizeSelector, executeCallback, executeErrorCallback, executeBeginCallback, executeCompleteCallback) {
         this.applyCallback = applyCallback;
         this.executeCallback = executeCallback;
+        this.executeErrorCallback = executeErrorCallback;
+        this.executeBeginCallback = executeBeginCallback;
+        this.executeCompleteCallback = executeCompleteCallback;
         this.pageSizeSelector = pageSizeSelector;
         this.orderBySelector = orderBySelector;
         this.orderDirectionSelector = orderDirectionSelector;
@@ -272,14 +275,15 @@ class Filtering {
             pageSize = this.filterSelections['pageSize'];
         }
 
-        console.log('Filter page: ' + pageNumber + ' Page size: ' + pageSize);
-
         let returnSummary = "false";
         if (this.AlphaList.length === 0) {
             returnSummary = "true";
         }
 
-        console.log('Executing filter for page: ' + pageNumber + ' Page size: ' + pageSize);
+        if (this.executeBeginCallback) {
+            this.executeBeginCallback();
+        }
+
         await fetch('/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize + '&returnSummary=' + returnSummary + '&returnGames=true', {
             method: 'POST',
             headers: {
@@ -299,11 +303,23 @@ class Filtering {
                 this.AlphaList = data.alphaList;
             }
 
+            if (this.executeCompleteCallback) {
+                this.executeCompleteCallback();
+            }
+
             if (this.executeCallback) {
                 this.executeCallback(data.games);
             }
         }).catch(error => {
             console.error(error);
+
+            if (this.executeCompleteCallback) {
+                this.executeCompleteCallback();
+            }
+
+            if (this.executeErrorCallback) {
+                this.executeErrorCallback(error);
+            }
         });
     }
 

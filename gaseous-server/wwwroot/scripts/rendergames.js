@@ -36,7 +36,6 @@ class GameIcon {
         if (useSmallCover == true) {
             gameTileImage.classList.add('game_tile_image_small');
         }
-        gameTileImage.classList.add('lazy');
         gameTileImage.setAttribute('loading', 'lazy');
         if (data.cover) {
             gameTileImage.setAttribute('src', '/api/v1.1/Games/' + data.metadataMapId + '/cover/' + data.cover + '/image/original/' + data.cover + '.jpg?sourceType=' + data.metadataSource);

@@ -29,18 +29,35 @@ async function SetupPage() {
             filter.applyCallback = async () => {
                 freshLoad = true;
                 gamesElement.innerHTML = '';
+
+                coverURLList = [];
             }
 
             filter.executeCallback = async (games) => {
-                // render game chrome objects
-                let gameCountElement = document.getElementById('games_library_recordcount');
-                if (filter.GameCount == 1) {
-                    gameCountElement.innerText = '1 game';
-                } else {
-                    gameCountElement.innerText = filter.GameCount + ' games';
-                }
-
                 if (freshLoad === true) {
+                    // render game chrome objects
+                    let gameCountElement = document.getElementById('games_library_recordcount');
+                    if (filter.GameCount == 1) {
+                        gameCountElement.innerText = '1 game';
+                    } else {
+                        gameCountElement.innerText = filter.GameCount + ' games';
+                    }
+
+                    // build alphabet pager
+                    let alphaPager = document.getElementById('games_library_alpha_pager');
+                    alphaPager.innerHTML = '';
+                    for (const [key, value] of Object.entries(filter.AlphaList)) {
+                        let alphaSpan = document.createElement('span');
+                        alphaSpan.innerText = key;
+                        alphaSpan.classList.add('games_library_alpha_pager_letter');
+                        alphaSpan.setAttribute('data-letter', key);
+                        alphaPager.appendChild(alphaSpan);
+
+                        alphaSpan.addEventListener('click', function () {
+                            document.querySelector('div[data-index="' + value.index + '"]').scrollIntoView({ block: "start", behavior: 'smooth' });
+                        });
+                    }
+
                     // add placeholder game tiles
                     let maxPages = Math.ceil(filter.GameCount / filter.filterSelections["pageSize"]);
                     // generate page spans
@@ -74,12 +91,11 @@ async function SetupPage() {
                 }
 
                 // render game tiles
-                coverURLList = [];
                 for (const game of games) {
                     let tileContainer = document.querySelector('div[data-index="' + game.index + '"]');
 
                     if (tileContainer) {
-                        tileContainer.classList.remove('game_tile_placeholder');
+                        // tileContainer.classList.remove('game_tile_placeholder');
                         tileContainer.classList.add('game_tile_wrapper_icon');
 
                         // set data-loaded=1 on the pageAnchor span to prevent re-rendering
@@ -110,6 +126,30 @@ async function SetupPage() {
                     window.scrollTo(0, scrollPosition);
                 }
             };
+
+            filter.executeBeginCallback = async () => {
+                if (freshLoad === true) {
+                    let loadingElement = document.createElement('div');
+                    loadingElement.id = 'games_library_loading';
+                    loadingElement.classList.add('loadingElement');
+                    let charCount = 0;
+                    setInterval(() => {
+                        charCount++;
+                        if (charCount > 3) {
+                            charCount = 0;
+                        }
+                        loadingElement.innerHTML = 'Loading' + '.'.repeat(charCount) + '&nbsp;'.repeat(3 - charCount);
+                    }, 1000);
+                    gamesElement.appendChild(loadingElement);
+                }
+            }
+
+            filter.executeCompleteCallback = async () => {
+                let loadingElement = document.getElementById('games_library_loading');
+                if (loadingElement) {
+                    loadingElement.remove();
+                }
+            }
 
             filter.OrderBySelector(document.getElementById('games_library_orderby_select'));
             filter.OrderDirectionSelector(document.getElementById('games_library_orderby_direction_select'));
