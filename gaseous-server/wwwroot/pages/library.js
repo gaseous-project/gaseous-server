@@ -87,7 +87,6 @@ async function SetupPage() {
                             targetElement.appendChild(gameTile);
                         }
                     }
-                    freshLoad = false;
                 }
 
                 // render game tiles
@@ -117,7 +116,10 @@ async function SetupPage() {
                     }
                 }
 
-                backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true, false);
+                if (freshLoad === true) {
+                    backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true, false);
+                    freshLoad = false;
+                }
 
                 // restore the scroll position
                 let scrollPosition = localStorage.getItem('Library.ScrollPosition');
