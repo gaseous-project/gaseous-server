@@ -58,13 +58,16 @@ namespace gaseous_server.Controllers.v1_1
                 {
                     model.GameAgeRating.AgeGroupings = new List<AgeGroups.AgeRestrictionGroupings>();
                 }
-                if (model.GameAgeRating.AgeGroupings.Count == 0)
+                if (model.GameAgeRating.IncludeUnrated == false)
                 {
-                    model.GameAgeRating.AgeGroupings.Add(AgeGroups.AgeRestrictionGroupings.Adult);
-                    model.GameAgeRating.AgeGroupings.Add(AgeGroups.AgeRestrictionGroupings.Mature);
-                    model.GameAgeRating.AgeGroupings.Add(AgeGroups.AgeRestrictionGroupings.Teen);
-                    model.GameAgeRating.AgeGroupings.Add(AgeGroups.AgeRestrictionGroupings.Child);
-                    model.GameAgeRating.IncludeUnrated = true;
+                    if (model.GameAgeRating.AgeGroupings.Count == 0)
+                    {
+                        model.GameAgeRating.AgeGroupings.Add(AgeGroups.AgeRestrictionGroupings.Adult);
+                        model.GameAgeRating.AgeGroupings.Add(AgeGroups.AgeRestrictionGroupings.Mature);
+                        model.GameAgeRating.AgeGroupings.Add(AgeGroups.AgeRestrictionGroupings.Teen);
+                        model.GameAgeRating.AgeGroupings.Add(AgeGroups.AgeRestrictionGroupings.Child);
+                        model.GameAgeRating.IncludeUnrated = true;
+                    }
                 }
                 List<AgeGroups.AgeRestrictionGroupings> RemoveAgeGroups = new List<AgeGroups.AgeRestrictionGroupings>();
                 switch (user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction)
@@ -216,14 +219,14 @@ namespace gaseous_server.Controllers.v1_1
                 // tempVal = "`Name` LIKE @Name";
                 // whereParams.Add("@Name", "%" + model.Name + "%");
                 // havingClauses.Add(tempVal);
-                nameWhereClause = "(MATCH(Game.`Name`) AGAINST (@GameName IN BOOLEAN MODE) OR MATCH(AlternativeName.`Name`) AGAINST (@GameName IN BOOLEAN MODE)) AND ";
+                whereClauses.Add("(MATCH(`Game`.`Name`) AGAINST (@GameName IN BOOLEAN MODE) OR MATCH(`AlternativeName`.`Name`) AGAINST (@GameName IN BOOLEAN MODE))");
                 whereParams.Add("@GameName", "(*" + model.Name + "*) (" + model.Name + ") ");
             }
 
             if (model.HasSavedGame == true)
             {
-                string hasSavesTemp = "(RomSavedStates.RomSaveCount IS NOT NULL OR RomGroupSavedStates.MediaGroupSaveCount IS NOT NULL)";
-                whereClauses.Add(hasSavesTemp);
+                string hasSavesTemp = "(RomSavedStates = 1 OR RomGroupSavedStates = 1)";
+                havingClauses.Add(hasSavesTemp);
             }
 
             if (model.IsFavourite == true)
@@ -310,12 +313,11 @@ namespace gaseous_server.Controllers.v1_1
                 }
             }
 
-            string platformWhereClause = "";
             if (model.Platform != null)
             {
                 if (model.Platform.Count > 0)
                 {
-                    tempVal = " AND view_Games_Roms.PlatformId IN (";
+                    tempVal = "`MetadataMap`.`PlatformId` IN (";
                     for (int i = 0; i < model.Platform.Count; i++)
                     {
                         if (i > 0)
@@ -327,8 +329,7 @@ namespace gaseous_server.Controllers.v1_1
                         whereParams.Add(platformLabel, model.Platform[i]);
                     }
                     tempVal += ")";
-                    //whereClauses.Add(tempVal);
-                    platformWhereClause = tempVal;
+                    whereClauses.Add(tempVal);
                 }
             }
 
@@ -412,11 +413,12 @@ namespace gaseous_server.Controllers.v1_1
                 }
             }
 
+            string gameAgeRatingString = "(";
             if (model.GameAgeRating != null)
             {
                 if (model.GameAgeRating.AgeGroupings.Count > 0)
                 {
-                    tempVal = "(Game.AgeGroupId IN (";
+                    tempVal = "AgeGroup.AgeGroupId IN (";
                     for (int i = 0; i < model.GameAgeRating.AgeGroupings.Count; i++)
                     {
                         if (i > 0)
@@ -428,15 +430,18 @@ namespace gaseous_server.Controllers.v1_1
                         whereParams.Add(themeLabel, model.GameAgeRating.AgeGroupings[i]);
                     }
                     tempVal += ")";
-
-                    if (model.GameAgeRating.IncludeUnrated == true)
-                    {
-                        tempVal += " OR Game.AgeGroupId IS NULL";
-                    }
-                    tempVal += ")";
-
-                    whereClauses.Add(tempVal);
                 }
+
+                if (model.GameAgeRating.IncludeUnrated == true)
+                {
+                    if (tempVal.Length > 0)
+                    {
+                        tempVal += " OR ";
+                    }
+                    tempVal += "AgeGroup.AgeGroupId IS NULL";
+                }
+                gameAgeRatingString += tempVal + ")";
+                whereClauses.Add(gameAgeRatingString);
             }
 
             // build where clause
@@ -505,90 +510,121 @@ namespace gaseous_server.Controllers.v1_1
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
             string sql = @"
-SET SESSION sql_mode=(SELECT REPLACE(@@sql_mode,'ONLY_FULL_GROUP_BY',''));
-SELECT
-    Game.Id,
-    Game.MetadataMapId,
-    Game.GameIdType,
-    Game.`Name`,
-    Game.NameThe,
-    Game.Slug,
-    Game.Summary,
-    Game.PlatformId,
-    Game.TotalRating,
-    Game.TotalRatingCount,
-    Game.Cover,
-    Game.Artworks,
-    Game.FirstReleaseDate,
-    Game.Category,
-    Game.ParentGame,
-    Game.AgeRatings,
-    Game.AgeGroupId,
-    Game.Genres,
-    Game.GameModes,
-    Game.PlayerPerspectives,
-    Game.Themes,
-    CONCAT('[', GROUP_CONCAT(DISTINCT MetadataMap.PlatformId ORDER BY MetadataMap.PlatformId SEPARATOR ','), ']') AS Platforms,
-    Game.RomCount,
-    RomSavedStates.RomSaveCount,
-    RomGroupSavedStates.MediaGroupSaveCount,
+                SELECT 
+	`MetadataMapBridge`.`MetadataSourceId` AS `Id`,
+    `MetadataMap`.`Id` AS `MetadataMapId`,
+    `MetadataMapBridge`.`MetadataSourceType` AS `GameIdType`,
+    `MetadataMap`.`SignatureGameName`,
+    CONCAT('[',
+            GROUP_CONCAT(DISTINCT `MetadataMap`.`PlatformId`
+                ORDER BY `MetadataMap`.`PlatformId`
+                SEPARATOR ','),
+            ']') AS `Platforms`,
+    COUNT(`Games_Roms`.`Id`) AS `RomCount`,
     CASE
-        WHEN Favourites.UserId IS NULL THEN 0
+        WHEN `RomMediaGroup`.`Id` IS NULL THEN 0
         ELSE 1
-    END AS Favourite
+    END AS `MediaGroups`,
+    CASE
+        WHEN `Favourites`.`UserId` IS NULL THEN 0
+        ELSE 1
+    END AS `Favourite`,
+    CASE
+        WHEN `RomSavedState`.`UserId` IS NULL THEN 0
+        ELSE 1
+    END AS `RomSavedStates`,
+    CASE
+        WHEN `RomGroupSavedState`.`UserId` IS NULL THEN 0
+        ELSE 1
+    END AS `RomGroupSavedStates`,
+    `AgeGroup`.`AgeGroupId`,
+    CASE
+        WHEN `Game`.`Name` IS NULL THEN `MetadataMap`.`SignatureGameName`
+        ELSE `Game`.`Name`
+    END AS `Name`,
+    CASE
+        WHEN
+            `Game`.`Name` IS NULL
+        THEN
+            CASE
+                WHEN
+                    `MetadataMap`.`SignatureGameName` LIKE 'The %'
+                THEN
+                    CONCAT(TRIM(SUBSTR(`MetadataMap`.`SignatureGameName`,
+                                    4)),
+                            ', The')
+                ELSE `MetadataMap`.`SignatureGameName`
+            END
+        WHEN `Game`.`Name` LIKE 'The %' THEN CONCAT(TRIM(SUBSTR(`Game`.`Name`, 4)), ', The')
+        ELSE `Game`.`Name`
+    END AS `NameThe`,
+    `Game`.`Slug`,
+    `Game`.`Summary`,
+    `Game`.`TotalRating`,
+    `Game`.`TotalRatingCount`,
+    `Game`.`Cover`,
+    `Game`.`Artworks`,
+    `Game`.`FirstReleaseDate`,
+    `Game`.`Category`,
+    `Game`.`ParentGame`,
+    `Game`.`AgeRatings`,
+    `Game`.`Genres`,
+    `Game`.`GameModes`,
+    `Game`.`PlayerPerspectives`,
+    `Game`.`Themes`
 FROM
-    (SELECT DISTINCT
-        Game.*,
-            view_Games_Roms.PlatformId,
-            AgeGroup.AgeGroupId
-    FROM
-        view_GamesWithRoms AS Game
-    LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId
-    JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId" + platformWhereClause + @"
-    LEFT JOIN AlternativeName ON Game.Id = AlternativeName.Game WHERE " + nameWhereClause + @"
-    Game.RomCount > 0) Game
+    `MetadataMap`
         LEFT JOIN
-    (SELECT 
-        view_Games_Roms.GameId, COUNT(GameState.Id) AS RomSaveCount
-    FROM
-        GameState
-    JOIN view_Games_Roms ON GameState.RomId = view_Games_Roms.Id
-    WHERE
-        GameState.IsMediaGroup = 0
-            AND GameState.UserId = @userid
-    GROUP BY view_Games_Roms.GameId) RomSavedStates ON Game.Id = RomSavedStates.GameId
-        LEFT JOIN
-    (SELECT 
-        RomMediaGroup.GameId,
-            COUNT(RomMediaGroup.GameId) AS MediaGroupSaveCount
-    FROM
-        RomMediaGroup
-    JOIN GameState ON RomMediaGroup.Id = GameState.RomId
-        AND GameState.IsMediaGroup = 1
-        AND GameState.UserId = @userid
-    GROUP BY RomMediaGroup.GameId) RomGroupSavedStates ON Game.MetadataMapId = RomGroupSavedStates.GameId
+    `MetadataMapBridge` ON (`MetadataMap`.`Id` = `MetadataMapBridge`.`ParentMapId`
+        AND `MetadataMapBridge`.`Preferred` = 1)
         JOIN
-	MetadataMapBridge ON Game.Id = MetadataMapBridge.MetadataSourceId AND MetadataMapBridge.Preferred = 1
-		JOIN
-	MetadataMap ON MetadataMapBridge.ParentMapId = MetadataMap.Id
-LEFT JOIN
-    Relation_Game_Genres ON Game.Id = Relation_Game_Genres.GameId AND Relation_Game_Genres.GameSourceId = Game.GameIdType
-		JOIN
-	Genre ON Relation_Game_Genres.GenresId = Genre.Id AND Relation_Game_Genres.GameSourceId = Genre.SourceId
+    `Games_Roms` ON `MetadataMap`.`Id` = `Games_Roms`.`MetadataMapId`
         LEFT JOIN
-    Relation_Game_GameModes ON Game.Id = Relation_Game_GameModes.GameId AND Relation_Game_GameModes.GameSourceId = Game.GameIdType
+    `Favourites` ON `MetadataMapBridge`.`ParentMapId` = `Favourites`.`GameId`
+        AND `Favourites`.`UserId` = @userid
+        LEFT JOIN
+    `GameState` AS `RomSavedState` ON `Games_Roms`.`Id` = `RomSavedState`.`RomId`
+        AND `RomSavedState`.`IsMediaGroup` = 0
+        AND `RomSavedState`.`UserId` = @userid
+        LEFT JOIN
+    `RomMediaGroup` ON `MetadataMap`.`Id` = `RomMediaGroup`.`GameId`
+        AND `MetadataMap`.`PlatformId` = `RomMediaGroup`.`PlatformId`
+        LEFT JOIN
+    `GameState` AS `RomGroupSavedState` ON `RomMediaGroup`.`Id` = `RomGroupSavedState`.`RomId`
+        AND `RomGroupSavedState`.`IsMediaGroup` = 1
+        AND `RomGroupSavedState`.`UserId` = @userid
+        LEFT JOIN
+    `Game` ON `MetadataMapBridge`.`MetadataSourceType` = `Game`.`SourceId`
+        AND `MetadataMapBridge`.`MetadataSourceId` = `Game`.`Id`
+        LEFT JOIN
+	`AgeGroup` ON `Game`.`Id` = `AgeGroup`.`GameId` AND `Game`.`SourceId` = `AgeGroup`.`SourceId`
+        LEFT JOIN
+    `AlternativeName` ON `Game`.`Id` = `AlternativeName`.`Game` AND `Game`.`SourceId` = `AlternativeName`.`SourceId`
 		LEFT JOIN
-	GameMode ON Relation_Game_GameModes.GameModesId = GameMode.Id AND Relation_Game_GameModes.GameSourceId = GameMode.SourceId
+    `Relation_Game_Genres` ON `Game`.`Id` = `Relation_Game_Genres`.`GameId`
+        AND `Relation_Game_Genres`.`GameSourceId` = `Game`.`SourceId`
         LEFT JOIN
-    Relation_Game_PlayerPerspectives ON Game.Id = Relation_Game_PlayerPerspectives.GameId AND Relation_Game_PlayerPerspectives.GameSourceId = Game.GameIdType
-		LEFT JOIN
-	PlayerPerspective ON Relation_Game_PlayerPerspectives.PlayerPerspectivesId = PlayerPerspective.Id AND Relation_Game_PlayerPerspectives.GameSourceId = PlayerPerspective.SourceId
+    `Genre` ON `Relation_Game_Genres`.`GenresId` = `Genre`.`Id`
+        AND `Relation_Game_Genres`.`GameSourceId` = `Genre`.`SourceId`
         LEFT JOIN
-    Relation_Game_Themes ON Game.Id = Relation_Game_Themes.GameId AND Relation_Game_Themes.GameSourceId = Game.GameIdType
-		LEFT JOIN
-	Theme ON Relation_Game_Themes.ThemesId = Theme.Id AND Relation_Game_Themes.GameSourceId = Theme.SourceId
+    `Relation_Game_GameModes` ON `Game`.`Id` = `Relation_Game_GameModes`.`GameId`
+        AND `Relation_Game_GameModes`.`GameSourceId` = `Game`.`SourceId`
         LEFT JOIN
-    Favourites ON Game.MetadataMapId = Favourites.GameId AND Favourites.UserId = @userid " + whereClause + " GROUP BY Game.Id " + havingClause + " " + orderByClause;
+    `GameMode` ON `Relation_Game_GameModes`.`GameModesId` = `GameMode`.`Id`
+        AND `Relation_Game_GameModes`.`GameSourceId` = `GameMode`.`SourceId`
+        LEFT JOIN
+    `Relation_Game_PlayerPerspectives` ON `Game`.`Id` = `Relation_Game_PlayerPerspectives`.`GameId`
+        AND `Relation_Game_PlayerPerspectives`.`GameSourceId` = `Game`.`SourceId`
+        LEFT JOIN
+    `PlayerPerspective` ON `Relation_Game_PlayerPerspectives`.`PlayerPerspectivesId` = `PlayerPerspective`.`Id`
+        AND `Relation_Game_PlayerPerspectives`.`GameSourceId` = `PlayerPerspective`.`SourceId`
+        LEFT JOIN
+    `Relation_Game_Themes` ON `Game`.`Id` = `Relation_Game_Themes`.`GameId`
+        AND `Relation_Game_Themes`.`GameSourceId` = `Game`.`SourceId`
+        LEFT JOIN
+    `Theme` ON `Relation_Game_Themes`.`ThemesId` = `Theme`.`Id`
+        AND `Relation_Game_Themes`.`GameSourceId` = `Theme`.`SourceId`
+" + whereClause + " GROUP BY `MetadataMapBridge`.`MetadataSourceId` " + havingClause + " " + orderByClause;
 
             string limiter = "";
             if (returnGames == true)
@@ -627,14 +663,18 @@ LEFT JOIN
                     Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
                     retMinGame.Index = indexInPage;
                     indexInPage += 1;
-                    if (dbResponse.Rows[i]["RomSaveCount"] != DBNull.Value || dbResponse.Rows[i]["MediaGroupSaveCount"] != DBNull.Value)
+                    if (dbResponse.Rows[i]["RomSavedStates"] != DBNull.Value || dbResponse.Rows[i]["RomGroupSavedStates"] != DBNull.Value)
                     {
-                        retMinGame.HasSavedGame = true;
+                        if ((int)dbResponse.Rows[i]["RomSavedStates"] == 1 || (int)dbResponse.Rows[i]["RomGroupSavedStates"] == 1)
+                        {
+                            retMinGame.HasSavedGame = true;
+                        }
+                        else
+                        {
+                            retMinGame.HasSavedGame = false;
+                        }
                     }
-                    else
-                    {
-                        retMinGame.HasSavedGame = false;
-                    }
+
                     if ((int)dbResponse.Rows[i]["Favourite"] == 0)
                     {
                         retMinGame.IsFavourite = false;

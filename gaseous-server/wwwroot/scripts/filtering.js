@@ -140,7 +140,7 @@ class Filtering {
             "gameAgeRating": {
                 "ageGroupings": [
                 ],
-                "includeUnrated": true
+                "includeUnrated": false
             },
             "sorting": {
                 "sortBy": "Name",
