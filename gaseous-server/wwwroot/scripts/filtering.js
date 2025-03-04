@@ -537,12 +537,12 @@ class Filtering {
         if (this.filterSelections[fieldName] !== undefined) {
             input.value = this.filterSelections[fieldName];
         }
-        input.addEventListener('keyup', (event) => {
-            // input.addEventListener('keypress', (event) => {
-            // if (event.key === 'Enter') {
-            this.filterSelections[fieldName] = input.value;
-            this.ApplyFilter();
-            // }
+        // input.addEventListener('keyup', (event) => {
+        input.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                this.filterSelections[fieldName] = input.value;
+                this.ApplyFilter();
+            }
         });
 
         content.appendChild(input);

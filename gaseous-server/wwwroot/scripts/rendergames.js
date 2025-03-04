@@ -167,13 +167,17 @@ class GameIcon {
 
         // add game tile title
         if (showTitle === true) {
+            let gameBoxTitleBox = document.createElement('div');
+            gameBoxTitleBox.classList.add('game_tile_label_box');
+
             let gameBoxTitle = document.createElement('div');
             gameBoxTitle.classList.add('game_tile_label');
             if (useSmallCover === true) {
+                gameBoxTitleBox.classList.add('game_tile_label_box_small');
                 gameBoxTitle.classList.add('game_tile_label_small');
             }
             gameBoxTitle.innerHTML = data.name;
-            gameTileOuterBox.appendChild(gameBoxTitle);
+            gameBoxTitleBox.appendChild(gameBoxTitle);
 
             // add game tile subtitle
             if (showSubtitle === true) {
@@ -182,9 +186,10 @@ class GameIcon {
                     gameBoxSubtitle.classList.add('game_tile_label');
                     gameBoxSubtitle.classList.add('game_tile_subtitle');
                     gameBoxSubtitle.innerHTML = new Date(data.firstReleaseDate).getFullYear();
-                    gameTileOuterBox.appendChild(gameBoxSubtitle);
+                    gameBoxTitleBox.appendChild(gameBoxSubtitle);
                 }
             }
+            gameTileOuterBox.appendChild(gameBoxTitleBox);
         }
 
         gameTile.appendChild(gameTileOuterBox);

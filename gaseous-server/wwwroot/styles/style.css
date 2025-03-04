@@ -1080,6 +1080,7 @@ input[name='filter_panel_range_max'] {
     /* max-width: 150px; */
     display: inline-block;
     text-align: center;
+    position: relative;
 }
 
 .game_tile_box>.favourite-filled,
@@ -1130,6 +1131,18 @@ input[name='filter_panel_range_max'] {
     width: 20%;
     line-height: 80px;
     background-color: transparent;
+}
+
+.game_tile_label_box {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+}
+
+.game_tile_label_box_small {
+    position: unset;
+    left: 0px;
+    right: 0px;
 }
 
 .game_tile_label {
