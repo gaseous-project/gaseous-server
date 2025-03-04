@@ -6,6 +6,22 @@ class GameIcon {
     async Render(showTitle, showRatings, showClassification, classificationDisplayOrder, showSubtitle = true, useSmallCover = false) {
         let data = this.data;
 
+        if (data === undefined) {
+            data = {
+                metadataMapId: -1,
+                name: 'Unknown Game',
+                cover: null,
+                totalRating: null,
+                totalRatingCount: null,
+                ageRatings: [],
+                firstReleaseDate: null,
+                isFavourite: false,
+                hasSavedGame: false,
+                alpha: 0,
+                index: 0
+            }
+        }
+
         let gameTile = document.createElement('div');
         gameTile.id = 'game_tile_' + data.metadataMapId;
         gameTile.classList.add('game_tile');
@@ -25,9 +41,11 @@ class GameIcon {
 
         let gameTileBox = document.createElement('div');
         gameTileBox.classList.add('game_tile_box');
-        gameTileBox.addEventListener('click', () => {
-            window.location.href = '/index.html?page=game&id=' + data.metadataMapId;
-        });
+        if (data.metadataMapId !== -1) {
+            gameTileBox.addEventListener('click', () => {
+                window.location.href = '/index.html?page=game&id=' + data.metadataMapId;
+            });
+        }
         gameTileOuterBox.appendChild(gameTileBox);
 
         // cover art
@@ -64,56 +82,58 @@ class GameIcon {
             }
         }
 
-        // add save game icon
-        if (data.hasSavedGame === true) {
-            let gameSaveIcon = document.createElement('img');
-            gameSaveIcon.src = '/images/SaveStates.png';
-            gameSaveIcon.classList.add('game_tile_box_savedgame');
-            gameSaveIcon.classList.add('savedstateicon');
-            gameTileBox.appendChild(gameSaveIcon);
-        }
-
-        // add favourite game icon
-        let gameFavIconBox = document.createElement('div');
-        gameFavIconBox.classList.add('game_tile_box_favouritegame');
-
-        let gameFavIcon = document.createElement('img');
-        gameFavIcon.classList.add('favouriteicon');
-        if (data.isFavourite === true) {
-            gameFavIcon.src = '/images/favourite-filled.svg';
-            gameFavIconBox.classList.add('favourite-filled');
-        } else {
-            gameFavIcon.src = '/images/favourite-empty.svg';
-            gameFavIconBox.classList.add('favourite-empty');
-        }
-        gameFavIconBox.appendChild(gameFavIcon);
-
-        gameFavIconBox.addEventListener('click', (e) => {
-            e.stopPropagation();
-
-            if (gameFavIconBox.classList.contains('favourite-filled')) {
-                gameFavIcon.src = '/images/favourite-empty.svg';
-                gameFavIconBox.classList.remove('favourite-filled');
-                gameFavIconBox.classList.add('favourite-empty');
-                data.isFavourite = false;
-            } else {
-                gameFavIcon.src = '/images/favourite-filled.svg';
-                gameFavIconBox.classList.remove('favourite-empty');
-                gameFavIconBox.classList.add('favourite-filled');
-                data.isFavourite = true;
+        if (data.metadataMapId !== -1) {
+            // add save game icon
+            if (data.hasSavedGame === true) {
+                let gameSaveIcon = document.createElement('img');
+                gameSaveIcon.src = '/images/SaveStates.png';
+                gameSaveIcon.classList.add('game_tile_box_savedgame');
+                gameSaveIcon.classList.add('savedstateicon');
+                gameTileBox.appendChild(gameSaveIcon);
             }
 
-            fetch('/api/v1.1/Games/' + data.metadataMapId + '/favourite?favourite=' + data.isFavourite, {
-                method: 'POST'
-            }).then(response => {
-                if (response.ok) {
-                    // console.log('Favourite status updated');
+            // add favourite game icon
+            let gameFavIconBox = document.createElement('div');
+            gameFavIconBox.classList.add('game_tile_box_favouritegame');
+
+            let gameFavIcon = document.createElement('img');
+            gameFavIcon.classList.add('favouriteicon');
+            if (data.isFavourite === true) {
+                gameFavIcon.src = '/images/favourite-filled.svg';
+                gameFavIconBox.classList.add('favourite-filled');
+            } else {
+                gameFavIcon.src = '/images/favourite-empty.svg';
+                gameFavIconBox.classList.add('favourite-empty');
+            }
+            gameFavIconBox.appendChild(gameFavIcon);
+
+            gameFavIconBox.addEventListener('click', (e) => {
+                e.stopPropagation();
+
+                if (gameFavIconBox.classList.contains('favourite-filled')) {
+                    gameFavIcon.src = '/images/favourite-empty.svg';
+                    gameFavIconBox.classList.remove('favourite-filled');
+                    gameFavIconBox.classList.add('favourite-empty');
+                    data.isFavourite = false;
                 } else {
-                    // console.log('Failed to update favourite status');
+                    gameFavIcon.src = '/images/favourite-filled.svg';
+                    gameFavIconBox.classList.remove('favourite-empty');
+                    gameFavIconBox.classList.add('favourite-filled');
+                    data.isFavourite = true;
                 }
+
+                fetch('/api/v1.1/Games/' + data.metadataMapId + '/favourite?favourite=' + data.isFavourite, {
+                    method: 'POST'
+                }).then(response => {
+                    if (response.ok) {
+                        // console.log('Favourite status updated');
+                    } else {
+                        // console.log('Failed to update favourite status');
+                    }
+                });
             });
-        });
-        gameTileBox.appendChild(gameFavIconBox);
+            gameTileBox.appendChild(gameFavIconBox);
+        }
 
         // add ratings banner
         if (data.totalRating || displayClassification === true) {

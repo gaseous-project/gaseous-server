@@ -976,10 +976,11 @@ input[name='filter_panel_range_max'] {
 }
 
 .game_tile_placeholder {
-    /* display: inline-block; */
-    min-height: 243px;
+    display: inline-block;
+    content: "";
+    height: 243px;
     width: 232px;
-    margin-bottom: 10px;
+    margin-bottom: 40px;
     scroll-margin-top: 90px;
 }
 

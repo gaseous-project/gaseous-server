@@ -54,7 +54,14 @@ async function SetupPage() {
                         alphaPager.appendChild(alphaSpan);
 
                         alphaSpan.addEventListener('click', function () {
-                            document.querySelector('div[data-index="' + value.index + '"]').scrollIntoView({ block: "start", behavior: 'smooth' });
+                            // document.querySelector('div[data-index="' + value.index + '"]').scrollIntoView({ block: "start", behavior: 'smooth' });
+                            document.querySelector('div[data-index="' + value.index + '"]').scrollIntoView({ block: "start" });
+
+                            // load the target page
+                            let pageAnchor = document.querySelector('span[data-page="' + value.page + '"]');
+                            if (pageAnchor) {
+                                ScrollLoadPage(pageAnchor);
+                            }
                         });
                     }
 
@@ -84,6 +91,8 @@ async function SetupPage() {
                             gameTile.setAttribute('name', 'GamePlaceholder');
                             gameTile.setAttribute('data-index', i);
                             gameTile.setAttribute('data-page', pageNumber);
+                            let placeholderIcon = new GameIcon();
+                            gameTile.appendChild(await placeholderIcon.Render(false, false, false, [], false, false));
                             targetElement.appendChild(gameTile);
                         }
                     }
@@ -94,7 +103,6 @@ async function SetupPage() {
                     let tileContainer = document.querySelector('div[data-index="' + game.index + '"]');
 
                     if (tileContainer) {
-                        // tileContainer.classList.remove('game_tile_placeholder');
                         tileContainer.classList.add('game_tile_wrapper_icon');
 
                         // set data-loaded=1 on the pageAnchor span to prevent re-rendering
@@ -103,6 +111,7 @@ async function SetupPage() {
                             pageAnchor.setAttribute('data-loaded', '1');
                         }
 
+                        tileContainer.innerHTML = '';
                         let gameObj = new GameIcon(game);
                         let gameTile = await gameObj.Render(showTitle, showRatings, showClassification, classificationDisplayOrder);
                         tileContainer.appendChild(gameTile);
@@ -126,6 +135,14 @@ async function SetupPage() {
                 if (scrollPosition) {
                     console.log('restoring scroll position: ' + scrollPosition);
                     window.scrollTo(0, scrollPosition);
+                }
+
+                // load any visible pages
+                let anchors = document.querySelectorAll('span[class="pageAnchor"]');
+                for (const anchor of anchors) {
+                    if (elementIsVisibleInViewport(anchor, true)) {
+                        ScrollLoadPage(anchor);
+                    }
                 }
             };
 
@@ -195,18 +212,55 @@ async function SetupPage() {
         // save the scroll position to localStorage
         localStorage.setItem('Library.ScrollPosition', window.scrollY);
 
+        let pageToLoad;
         let anchors = document.getElementsByClassName('pageAnchor');
         for (const anchor of anchors) {
             if (elementIsVisibleInViewport(anchor, true)) {
-                if (anchor.getAttribute('data-loaded') === "0") {
-                    anchor.setAttribute('data-loaded', "1");
-                    let pageToLoad = Number(anchor.getAttribute('data-page'));
-                    console.log('Loading page: ' + pageToLoad);
-                    filter.ExecuteFilter(pageToLoad);
+                pageToLoad = ScrollLoadPage(anchor);
+            }
+        }
+
+        // anticipate scroll direction
+        if (pageToLoad !== undefined) {
+            let st = document.documentElement.scrollTop;
+            if (st > lastScrollTop) {
+                // pre-load the next page
+                let nextPageAnchor = document.querySelector('span[data-page="' + (pageToLoad + 1) + '"]');
+                if (nextPageAnchor) {
+                    ScrollLoadPage(nextPageAnchor, true);
+                }
+                let nextPageAnchor2 = document.querySelector('span[data-page="' + (pageToLoad + 2) + '"]');
+                if (nextPageAnchor2) {
+                    ScrollLoadPage(nextPageAnchor2, true);
+                }
+            } else {
+                // pre-load the previous page
+                let prevPageAnchor = document.querySelector('span[data-page="' + (pageToLoad - 1) + '"]');
+                if (prevPageAnchor) {
+                    ScrollLoadPage(prevPageAnchor, true);
+                }
+                let prevPageAnchor2 = document.querySelector('span[data-page="' + (pageToLoad - 2) + '"]');
+                if (prevPageAnchor2) {
+                    ScrollLoadPage(prevPageAnchor2, true);
                 }
             }
         }
     });
+}
+
+function ScrollLoadPage(ScrolledObject, Anticipate) {
+    if (ScrolledObject.getAttribute('data-loaded') === "0") {
+        ScrolledObject.setAttribute('data-loaded', "1");
+        let pageToLoad = Number(ScrolledObject.getAttribute('data-page'));
+        if (Anticipate === true) {
+            console.log('Loading page via pre-fetch: ' + pageToLoad);
+        } else {
+            console.log('Loading page: ' + pageToLoad);
+        }
+        filter.ExecuteFilter(pageToLoad);
+
+        return pageToLoad;
+    }
 }
 
 const elementIsVisibleInViewport = (el, partiallyVisible = false) => {
@@ -240,5 +294,7 @@ function FilterDisplayToggle(display, storePreference = true) {
 let filter = new Filtering();
 
 let coverURLList = [];
+
+let lastScrollTop = localStorage.getItem('Library.ScrollPosition') || 0;
 
 SetupPage();

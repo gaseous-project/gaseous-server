@@ -50,6 +50,18 @@ class Filtering {
 
     PageSizeSelector(selector) {
         this.pageSizeSelector = selector;
+
+        this.pageSizeSelector.innerHTML = '';
+        for (let i = 1; i <= 10; i++) {
+            let option = document.createElement('option');
+            option.value = i * 10;
+            option.innerText = i * 10;
+            if (i === 2) {
+                option.selected = true
+            }
+            this.pageSizeSelector.appendChild(option);
+        }
+
         this.pageSizeSelector.addEventListener('change', () => {
             this.filterSelections['pageSize'] = this.pageSizeSelector.value;
             this.ApplyFilter();
