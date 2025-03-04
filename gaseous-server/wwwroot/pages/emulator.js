@@ -7,6 +7,7 @@ var IsMediaGroup = false;
 var StateUrl = undefined;
 
 var gameData;
+var contentSource;
 var artworks = null;
 var artworksPosition = 0;
 
@@ -27,9 +28,10 @@ function SetupPage() {
 
     ajaxCall('/api/v1.1/Games/' + gameId, 'GET', function (result) {
         gameData = result;
+        contentSource = gameData.metadataSource;
 
         if (result.cover) {
-            emuBackground = '/api/v1.1/Games/' + gameId + '/cover/' + result.cover + '/image/original/' + result.cover + '.jpg';
+            emuBackground = '/api/v1.1/Games/' + gameId + '/' + contentSource + '/cover/' + result.cover + '/image/original/' + result.cover + '.jpg';
         }
 
         emuGameTitle = gameData.name;
@@ -63,7 +65,7 @@ function rotateBackground() {
             artworksPosition = 0;
         }
         var bg = document.getElementById('bgImage');
-        bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/artwork/' + artworks[artworksPosition] + '/image/original/' + artworks[artworksPosition] + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+        bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/' + contentSource + '/artwork/' + artworks[artworksPosition] + '/image/original/' + artworks[artworksPosition] + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
     }
 }
 

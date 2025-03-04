@@ -56,7 +56,7 @@ class GameIcon {
         }
         gameTileImage.setAttribute('loading', 'lazy');
         if (data.cover) {
-            gameTileImage.setAttribute('src', '/api/v1.1/Games/' + data.metadataMapId + '/cover/' + data.cover + '/image/original/' + data.cover + '.jpg?sourceType=' + data.metadataSource);
+            gameTileImage.setAttribute('src', '/api/v1.1/Games/' + data.metadataMapId + '/' + data.metadataSource + '/cover/' + data.cover + '/image/original/' + data.cover + '.jpg');
         } else {
             gameTileImage.setAttribute('src', '/images/unknowngame.png');
         }
