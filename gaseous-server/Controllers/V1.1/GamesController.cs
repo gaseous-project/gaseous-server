@@ -224,7 +224,7 @@ namespace gaseous_server.Controllers.v1_1
 
             if (model.HasSavedGame == true)
             {
-                string hasSavesTemp = "(RomSavedStates = 1 OR RomGroupSavedStates = 1)";
+                string hasSavesTemp = "(RomSavedStates > 0 OR RomGroupSavedStates > 0)";
                 havingClauses.Add(hasSavesTemp);
             }
 
@@ -537,7 +537,7 @@ namespace gaseous_server.Controllers.v1_1
         ELSE 1
     END AS `Favourite`,
     COUNT(`RomSavedState`.`Id`) AS `RomSavedStates`,
-    COUNT(`RomGroupSavedState`.`Id`) AS `RomGroupSavedState`,
+    COUNT(`RomGroupSavedState`.`Id`) AS `RomGroupSavedStates`,
     `AgeGroup`.`AgeGroupId`,
     CASE
         WHEN `Game`.`Name` IS NULL THEN `MetadataMap`.`SignatureGameName`
@@ -642,7 +642,7 @@ FROM
                     indexInPage += 1;
                     if (dbResponse.Rows[i]["RomSavedStates"] != DBNull.Value || dbResponse.Rows[i]["RomGroupSavedStates"] != DBNull.Value)
                     {
-                        if ((int)dbResponse.Rows[i]["RomSavedStates"] == 1 || (int)dbResponse.Rows[i]["RomGroupSavedStates"] == 1)
+                        if ((long)dbResponse.Rows[i]["RomSavedStates"] >= 1 || (long)dbResponse.Rows[i]["RomGroupSavedStates"] >= 1)
                         {
                             retMinGame.HasSavedGame = true;
                         }
