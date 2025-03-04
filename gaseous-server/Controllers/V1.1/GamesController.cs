@@ -721,19 +721,8 @@ FROM
                             CurrentPage += 1;
                         }
 
-                        string firstChar = dbResponse.Rows[i][alphaSearchField].ToString().Substring(0, 1).ToUpperInvariant();
-                        if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(firstChar))
-                        {
-                            if (!AlphaList.ContainsKey(firstChar))
-                            {
-                                AlphaList.Add(firstChar, new GameReturnPackage.AlphaListItem
-                                {
-                                    Index = i,
-                                    Page = CurrentPage
-                                });
-                            }
-                        }
-                        else
+                        string gameName = dbResponse.Rows[i][alphaSearchField].ToString();
+                        if (gameName.Length == 0)
                         {
                             if (!AlphaList.ContainsKey("#"))
                             {
@@ -742,6 +731,32 @@ FROM
                                     Index = i,
                                     Page = 1
                                 });
+                            }
+                        }
+                        else
+                        {
+                            string firstChar = gameName.Substring(0, 1).ToUpperInvariant();
+                            if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(firstChar))
+                            {
+                                if (!AlphaList.ContainsKey(firstChar))
+                                {
+                                    AlphaList.Add(firstChar, new GameReturnPackage.AlphaListItem
+                                    {
+                                        Index = i,
+                                        Page = CurrentPage
+                                    });
+                                }
+                            }
+                            else
+                            {
+                                if (!AlphaList.ContainsKey("#"))
+                                {
+                                    AlphaList.Add("#", new GameReturnPackage.AlphaListItem
+                                    {
+                                        Index = i,
+                                        Page = 1
+                                    });
+                                }
                             }
                         }
                     }
