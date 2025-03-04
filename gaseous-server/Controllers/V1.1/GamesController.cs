@@ -208,6 +208,8 @@ namespace gaseous_server.Controllers.v1_1
             Dictionary<string, object> whereParams = new Dictionary<string, object>();
             whereParams.Add("userid", userid);
 
+            List<string> joinClauses = new List<string>();
+            string joinClauseTemplate = "LEFT JOIN `Relation_Game_<Datatype>s` ON `Game`.`Id` = `Relation_Game_<Datatype>s`.`GameId` AND `Relation_Game_<Datatype>s`.`GameSourceId` = `Game`.`SourceId` LEFT JOIN `<Datatype>` ON `Relation_Game_<Datatype>s`.`<Datatype>sId` = `<Datatype>`.`Id`  AND `Relation_Game_<Datatype>s`.`GameSourceId` = `<Datatype>`.`SourceId`";
             List<string> whereClauses = new List<string>();
             List<string> havingClauses = new List<string>();
 
@@ -216,9 +218,6 @@ namespace gaseous_server.Controllers.v1_1
             string nameWhereClause = "";
             if (model.Name.Length > 0)
             {
-                // tempVal = "`Name` LIKE @Name";
-                // whereParams.Add("@Name", "%" + model.Name + "%");
-                // havingClauses.Add(tempVal);
                 whereClauses.Add("(MATCH(`Game`.`Name`) AGAINST (@GameName IN BOOLEAN MODE) OR MATCH(`AlternativeName`.`Name`) AGAINST (@GameName IN BOOLEAN MODE))");
                 whereParams.Add("@GameName", "(*" + model.Name + "*) (" + model.Name + ") ");
             }
@@ -350,6 +349,8 @@ namespace gaseous_server.Controllers.v1_1
                     }
                     tempVal += ")";
                     whereClauses.Add(tempVal);
+
+                    joinClauses.Add(joinClauseTemplate.Replace("<Datatype>", "Genre"));
                 }
             }
 
@@ -370,6 +371,8 @@ namespace gaseous_server.Controllers.v1_1
                     }
                     tempVal += ")";
                     whereClauses.Add(tempVal);
+
+                    joinClauses.Add(joinClauseTemplate.Replace("<Datatype>", "GameMode"));
                 }
             }
 
@@ -390,6 +393,8 @@ namespace gaseous_server.Controllers.v1_1
                     }
                     tempVal += ")";
                     whereClauses.Add(tempVal);
+
+                    joinClauses.Add(joinClauseTemplate.Replace("<Datatype>", "PlayerPerspective"));
                 }
             }
 
@@ -410,6 +415,8 @@ namespace gaseous_server.Controllers.v1_1
                     }
                     tempVal += ")";
                     whereClauses.Add(tempVal);
+
+                    joinClauses.Add(joinClauseTemplate.Replace("<Datatype>", "Theme"));
                 }
             }
 
@@ -600,31 +607,7 @@ FROM
 	`AgeGroup` ON `Game`.`Id` = `AgeGroup`.`GameId` AND `Game`.`SourceId` = `AgeGroup`.`SourceId`
         LEFT JOIN
     `AlternativeName` ON `Game`.`Id` = `AlternativeName`.`Game` AND `Game`.`SourceId` = `AlternativeName`.`SourceId`
-		LEFT JOIN
-    `Relation_Game_Genres` ON `Game`.`Id` = `Relation_Game_Genres`.`GameId`
-        AND `Relation_Game_Genres`.`GameSourceId` = `Game`.`SourceId`
-        LEFT JOIN
-    `Genre` ON `Relation_Game_Genres`.`GenresId` = `Genre`.`Id`
-        AND `Relation_Game_Genres`.`GameSourceId` = `Genre`.`SourceId`
-        LEFT JOIN
-    `Relation_Game_GameModes` ON `Game`.`Id` = `Relation_Game_GameModes`.`GameId`
-        AND `Relation_Game_GameModes`.`GameSourceId` = `Game`.`SourceId`
-        LEFT JOIN
-    `GameMode` ON `Relation_Game_GameModes`.`GameModesId` = `GameMode`.`Id`
-        AND `Relation_Game_GameModes`.`GameSourceId` = `GameMode`.`SourceId`
-        LEFT JOIN
-    `Relation_Game_PlayerPerspectives` ON `Game`.`Id` = `Relation_Game_PlayerPerspectives`.`GameId`
-        AND `Relation_Game_PlayerPerspectives`.`GameSourceId` = `Game`.`SourceId`
-        LEFT JOIN
-    `PlayerPerspective` ON `Relation_Game_PlayerPerspectives`.`PlayerPerspectivesId` = `PlayerPerspective`.`Id`
-        AND `Relation_Game_PlayerPerspectives`.`GameSourceId` = `PlayerPerspective`.`SourceId`
-        LEFT JOIN
-    `Relation_Game_Themes` ON `Game`.`Id` = `Relation_Game_Themes`.`GameId`
-        AND `Relation_Game_Themes`.`GameSourceId` = `Game`.`SourceId`
-        LEFT JOIN
-    `Theme` ON `Relation_Game_Themes`.`ThemesId` = `Theme`.`Id`
-        AND `Relation_Game_Themes`.`GameSourceId` = `Theme`.`SourceId`
-" + whereClause + " GROUP BY `MetadataMapBridge`.`MetadataSourceId` " + havingClause + " " + orderByClause;
+" + String.Join(" ", joinClauses) + " " + whereClause + " GROUP BY `MetadataMapBridge`.`MetadataSourceId` " + havingClause + " " + orderByClause;
 
             string limiter = "";
             if (returnGames == true)
