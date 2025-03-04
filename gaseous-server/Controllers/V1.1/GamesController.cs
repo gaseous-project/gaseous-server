@@ -536,14 +536,8 @@ namespace gaseous_server.Controllers.v1_1
         WHEN `Favourites`.`UserId` IS NULL THEN 0
         ELSE 1
     END AS `Favourite`,
-    CASE
-        WHEN `RomSavedState`.`UserId` IS NULL THEN 0
-        ELSE 1
-    END AS `RomSavedStates`,
-    CASE
-        WHEN `RomGroupSavedState`.`UserId` IS NULL THEN 0
-        ELSE 1
-    END AS `RomGroupSavedStates`,
+    COUNT(`RomSavedState`.`Id`) AS `RomSavedStates`,
+    COUNT(`RomGroupSavedState`.`Id`) AS `RomGroupSavedState`,
     `AgeGroup`.`AgeGroupId`,
     CASE
         WHEN `Game`.`Name` IS NULL THEN `MetadataMap`.`SignatureGameName`
