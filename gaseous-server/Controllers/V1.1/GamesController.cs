@@ -196,7 +196,8 @@ namespace gaseous_server.Controllers.v1_1
                     Name,
                     NameThe,
                     Rating,
-                    RatingCount
+                    RatingCount,
+                    DateAdded
                 }
             }
         }
@@ -498,6 +499,9 @@ namespace gaseous_server.Controllers.v1_1
                     case GameSearchModel.GameSortingItem.SortField.RatingCount:
                         orderByField = "TotalRatingCount";
                         break;
+                    case GameSearchModel.GameSortingItem.SortField.DateAdded:
+                        orderByField = "DateAdded";
+                        break;
                     default:
                         orderByField = "NameThe";
                         break;
@@ -572,7 +576,9 @@ namespace gaseous_server.Controllers.v1_1
     `Game`.`Genres`,
     `Game`.`GameModes`,
     `Game`.`PlayerPerspectives`,
-    `Game`.`Themes`
+    `Game`.`Themes`,
+    MIN(`Games_Roms`.`DateCreated`) AS `DateAdded`,
+    MAX(`Games_Roms`.`DateUpdated`) AS `DateUpdated`
 FROM
     `MetadataMap`
         LEFT JOIN

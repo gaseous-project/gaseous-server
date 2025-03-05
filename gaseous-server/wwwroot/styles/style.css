@@ -3184,6 +3184,8 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     display: flex;
     overflow-x: auto;
     overflow-y: hidden;
+    margin: 0;
+    padding-right: 40px;
 }
 
 .homegame-item {

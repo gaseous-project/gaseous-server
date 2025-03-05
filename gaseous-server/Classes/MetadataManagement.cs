@@ -423,8 +423,13 @@ namespace gaseous_server.Classes
 			if (Config.MetadataConfiguration.SignatureSource == MetadataModel.SignatureSources.Hasheous)
 			{
 				// get all ROMs in the database
-				sql = "SELECT * FROM view_Games_Roms;";
-				dt = db.ExecuteCMD(sql);
+				sql = "SELECT * FROM view_Games_Roms WHERE DateUpdated < @LastUpdateThreshold;";
+				// set @LastUpdateThreshold to a random date between 14 and 30 days in the past
+				Dictionary<string, object> dbDict = new Dictionary<string, object>()
+				{
+					{ "@LastUpdateThreshold", DateTime.UtcNow.AddDays(-new Random().Next(14, 30)) }
+				};
+				dt = db.ExecuteCMD(sql, dbDict);
 
 				StatusCounter = 1;
 				foreach (DataRow dr in dt.Rows)

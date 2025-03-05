@@ -128,6 +128,7 @@ class UploadRom {
                                     if (response.game) {
                                         // game data was returned
                                         uploadedItem.gameId = response.rom.metadataMapId;
+                                        uploadedItem.metadataSource = response.rom.metadataSource;
                                         uploadedItem.gameName = response.game.name;
                                         if (response.game.cover != null) {
                                             if (response.game.cover != null) {
@@ -278,6 +279,7 @@ class UploadItem {
     platformId = null;
     platformName = null;
     gameId = null;
+    metadataSource = null;
     gameName = null;
     gameData = null;
     coverId = null;
@@ -329,7 +331,7 @@ class UploadItem {
                         if (this.gameId === null || this.gameId === 0 || this.gameData === null) {
                             this.coverArt.src = '/images/unknowngame.png';
                         } else {
-                            this.coverArt.src = '/api/v1.1/Games/' + this.gameId + '/cover/' + this.coverId + '/image/cover_big/cover.jpg';
+                            this.coverArt.src = '/api/v1.1/Games/' + this.gameId + '/' + this.metadataSource + '/cover/' + this.coverId + '/image/cover_big/cover.jpg';
                         }
 
                         this.gamePlatformLabel.innerHTML = this.platformName;

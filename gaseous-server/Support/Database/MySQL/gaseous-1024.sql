@@ -90,14 +90,6 @@ CHANGE `Path` `RelativePath` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_gene
 ALTER TABLE `Games_Roms`
 ADD CONSTRAINT Games_Roms_LibraryId FOREIGN KEY (`LibraryId`) REFERENCES `GameLibraries` (`Id`) ON DELETE CASCADE;
 
-CREATE VIEW view_Games_Roms AS
-SELECT `Games_Roms`.*, CONCAT(
-        `GameLibraries`.`Path`, '/', `Games_Roms`.`RelativePath`
-    ) AS `Path`, `GameLibraries`.`Name` AS `LibraryName`
-FROM
-    `Games_Roms`
-    JOIN `GameLibraries` ON `Games_Roms`.`LibraryId` = `GameLibraries`.`Id`;
-
 CREATE VIEW view_UserTimeTracking AS
 SELECT *, DATE_ADD(
         SessionTime, INTERVAL SessionLength MINUTE
@@ -290,6 +282,12 @@ ALTER TABLE `ReleaseDate`
 CHANGE `m` `Month` int(11) DEFAULT NULL,
 CHANGE `y` `Year` int(11) DEFAULT NULL;
 
+ALTER TABLE `Games_Roms`
+ADD COLUMN `DateCreated` DATETIME DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN `DateUpdated` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+ADD INDEX (`DateCreated`),
+ADD INDEX (`DateUpdated`);
+
 CREATE OR REPLACE VIEW `view_Games_Roms` AS
 SELECT
     `Games_Roms`.`Id` AS `Id`,
@@ -315,6 +313,8 @@ SELECT
     `Games_Roms`.`MetadataVersion` AS `MetadataVersion`,
     `Games_Roms`.`LibraryId` AS `LibraryId`,
     `Games_Roms`.`LastMatchAttemptDate` AS `LastMatchAttemptDate`,
+    `Games_Roms`.`DateCreated` AS `DateCreated`,
+    `Games_Roms`.`DateUpdated` AS `DateUpdated`,
     `Games_Roms`.`RomDataVersion` AS `RomDataVersion`,
     CONCAT(
         `GameLibraries`.`Path`,

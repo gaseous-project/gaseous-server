@@ -13,7 +13,7 @@ class HomePageGameRow {
         this.row.appendChild(titleHeader);
 
         this.games = document.createElement("div");
-        this.games.classList.add("section-body");
+        // this.games.classList.add("section-body");
         this.games.innerHTML = "<p>Loading...</p>";
         this.row.appendChild(this.games);
     }
@@ -51,16 +51,24 @@ class HomePageGameRow {
                     scroller.appendChild(gameItem);
 
                     if (game.cover) {
-                        let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg?sourceType=' + game.metadataSource;
-                        if (!coverURLList.includes(coverUrl)) {
-                            coverURLList.push(coverUrl);
+                        let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg?sourceType=' + game.metadataSource;
+                        if (backgroundImageHandler === undefined || backgroundImageHandler.URLList.length === 1) {
+                            let urls = [];
+                            urls.push(coverUrl);
+                            if (backgroundImageHandler !== undefined) {
+                                urls.push(backgroundImageHandler.URLList[0]);
+                            }
+                            console.log("Creating new BackgroundImageRotator");
+                            backgroundImageHandler = new BackgroundImageRotator(urls, null, true, true);
+                        } else {
+                            if (!backgroundImageHandler.URLList.includes(coverUrl)) {
+                                backgroundImageHandler.URLList.push(coverUrl);
+                            }
                         }
                     }
                 }
 
                 this.games.appendChild(scroller);
-
-                backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true, false);
             }
         }
         gameFilter.ApplyFilter(this.searchModel);
@@ -70,6 +78,8 @@ class HomePageGameRow {
 let targetDiv = document.getElementById("gamehome");
 
 let gameRows = [];
+
+backgroundImageHandler = undefined;
 
 gameRows.push(new HomePageGameRow("Favourites",
     {
@@ -89,6 +99,14 @@ gameRows.push(new HomePageGameRow("Saved Games",
         "settings": {
             "hasSavedGame": true
         },
+        "limit": 10
+    }
+));
+
+gameRows.push(new HomePageGameRow("Recently Added Games",
+    {
+        "orderBy": "DateAdded",
+        "orderDirection": "Descending",
         "limit": 10
     }
 ));
