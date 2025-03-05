@@ -910,7 +910,7 @@ class RomManagement {
                                 saveStatesButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstateicon" />';
                             }
 
-                            launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + mediaGroup.platformId + '&gameid=' + this.Platform.metadataMapId + '&romid=' + mediaGroup.id + '&mediagroup=1&rompath=' + romPath + '" class="romstart">Launch with ' + this.Platform.emulatorConfiguration.core + '</a>';
+                            launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + mediaGroup.platformId + '&gameid=' + this.Platform.metadataMapId + '&romid=' + mediaGroup.id + '&mediagroup=1&rompath=' + romPath + '" class="romstart">Launch</a>';
                         }
                     }
 
@@ -1189,7 +1189,7 @@ class RomManagement {
                                         });
                                         saveStatesButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstateicon" />';
                                     }
-                                    launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + gameRomItems[i].platformId + '&gameid=' + this.Platform.metadataMapId + '&romid=' + gameRomItems[i].id + '&mediagroup=0&rompath=' + romPath + '" class="romstart">Launch with ' + this.Platform.emulatorConfiguration.core + '</a>';
+                                    launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + gameRomItems[i].platformId + '&gameid=' + this.Platform.metadataMapId + '&romid=' + gameRomItems[i].id + '&mediagroup=0&rompath=' + romPath + '" class="romstart">Launch</a>';
                                 }
                             }
                         }
