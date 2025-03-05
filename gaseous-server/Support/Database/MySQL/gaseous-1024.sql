@@ -54,7 +54,11 @@ CREATE TABLE `User_PlatformMap` (
 ALTER TABLE `UserTimeTracking`
 ADD COLUMN `PlatformId` BIGINT,
 ADD COLUMN `IsMediaGroup` BOOLEAN DEFAULT FALSE,
-ADD COLUMN `RomId` BIGINT;
+ADD COLUMN `RomId` BIGINT,
+ADD INDEX `idx_UserTimeTracking_GameId` (`GameId`),
+ADD INDEX `idx_UserTimeTracking_UserId` (`UserId`),
+ADD INDEX `idx_UserTimeTracking_PlatformId` (`PlatformId`),
+ADD INDEX `idx_UserTimeTracking_GameId_UserId_PlatformId` (`GameId`, `UserId`, `PlatformId`);
 
 CREATE TABLE `User_RecentPlayedRoms` (
     `UserId` varchar(128) NOT NULL,

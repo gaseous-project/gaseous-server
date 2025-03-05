@@ -198,6 +198,14 @@ class Filtering {
                 filterModel.maximumReleaseYear = filter['releaseyear'].max;
             }
         }
+        if (filter['playTime']) {
+            if (filter['playTime'].min) {
+                filterModel.minPlayTime = filter['playTime'].min;
+            }
+            if (filter['playTime'].max) {
+                filterModel.maxPlayTime = filter['playTime'].max;
+            }
+        }
         if (filter['userrating']) {
             if (filter['userrating'].min) {
                 filterModel.gameRating.minimumRating = filter['userrating'].min;

@@ -103,6 +103,15 @@ gameRows.push(new HomePageGameRow("Saved Games",
     }
 ));
 
+gameRows.push(new HomePageGameRow("Recently Played Games",
+    {
+        "playTime": { "min": 1, "max": null },
+        "orderBy": "LastPlayed",
+        "orderDirection": "Descending",
+        "limit": 10
+    }
+));
+
 gameRows.push(new HomePageGameRow("Recently Added Games",
     {
         "orderBy": "DateAdded",

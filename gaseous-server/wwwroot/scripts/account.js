@@ -410,7 +410,7 @@ class ProfileCard {
         let callingObject = this;
         setInterval(function () {
             callingObject.#FetchProfile(callingObject);
-        }, 30000);
+        }, 15000);
 
         return this.Card;
     }
@@ -458,7 +458,7 @@ class ProfileCard {
                         callingObject.ProfileNowPlayingLabel.innerHTML = "Now Playing";
                         let cardImage = '';
                         if (profile.nowPlaying.game.cover) {
-                            cardImage = "/api/v1.1/Games/" + profile.nowPlaying.game.metadataMapId + "/cover/" + profile.nowPlaying.game.cover + "/image/cover_big/" + profile.nowPlaying.game.cover + ".jpg";
+                            cardImage = "/api/v1.1/Games/" + profile.nowPlaying.game.metadataMapId + '/' + profile.nowPlaying.game.metadataSource + "/cover/" + profile.nowPlaying.game.cover + "/image/cover_big/" + profile.nowPlaying.game.cover + ".jpg";
                         } else {
                             cardImage = "/images/unknowngame.png";
                         }

@@ -73,15 +73,15 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{MetadataMapId}/alternativename")]
+        [Route("{MetadataMapId}/{MetadataSource}/alternativename")]
         [ProducesResponseType(typeof(List<AlternativeName>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameAlternativeNames(long MetadataMapId)
+        public async Task<ActionResult> GameAlternativeNames(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource)
         {
             try
             {
-                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
                 gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 if (game.AlternativeNames != null)

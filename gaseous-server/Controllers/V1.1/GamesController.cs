@@ -164,6 +164,8 @@ namespace gaseous_server.Controllers.v1_1
             public GameSortingItem Sorting { get; set; }
             public bool HasSavedGame { get; set; }
             public bool IsFavourite { get; set; }
+            public int MinPlayTime { get; set; } = -1;
+            public int MaxPlayTime { get; set; } = -1;
 
 
             public class GameRatingItem
@@ -197,7 +199,9 @@ namespace gaseous_server.Controllers.v1_1
                     NameThe,
                     Rating,
                     RatingCount,
-                    DateAdded
+                    DateAdded,
+                    LastPlayed,
+                    TimePlayed
                 }
             }
         }
@@ -247,6 +251,20 @@ namespace gaseous_server.Controllers.v1_1
                 string releaseTempMaxVal = "FirstReleaseDate <= @maxreleasedate";
                 whereParams.Add("maxreleasedate", new DateTime(model.MaximumReleaseYear, 12, 31, 23, 59, 59));
                 havingClauses.Add(releaseTempMaxVal);
+            }
+
+            if (model.MinPlayTime != -1)
+            {
+                string playTimeTempMinVal = "TimePlayed >= @minplaytime";
+                whereParams.Add("minplaytime", model.MinPlayTime);
+                havingClauses.Add(playTimeTempMinVal);
+            }
+
+            if (model.MaxPlayTime != -1)
+            {
+                string playTimeTempMaxVal = "TimePlayed <= @maxplaytime";
+                whereParams.Add("maxplaytime", model.MaxPlayTime);
+                havingClauses.Add(playTimeTempMaxVal);
             }
 
             if (model.GameRating != null)
@@ -502,6 +520,12 @@ namespace gaseous_server.Controllers.v1_1
                     case GameSearchModel.GameSortingItem.SortField.DateAdded:
                         orderByField = "DateAdded";
                         break;
+                    case GameSearchModel.GameSortingItem.SortField.LastPlayed:
+                        orderByField = "LastPlayed";
+                        break;
+                    case GameSearchModel.GameSortingItem.SortField.TimePlayed:
+                        orderByField = "TimePlayed";
+                        break;
                     default:
                         orderByField = "NameThe";
                         break;
@@ -578,7 +602,9 @@ namespace gaseous_server.Controllers.v1_1
     `Game`.`PlayerPerspectives`,
     `Game`.`Themes`,
     MIN(`Games_Roms`.`DateCreated`) AS `DateAdded`,
-    MAX(`Games_Roms`.`DateUpdated`) AS `DateUpdated`
+    MAX(`Games_Roms`.`DateUpdated`) AS `DateUpdated`,
+    SUM(`UserTimeTracking`.`SessionLength`) AS `TimePlayed`,
+    MAX(`UserTimeTracking`.`SessionTime`) AS `LastPlayed`
 FROM
     `MetadataMap`
         LEFT JOIN
@@ -586,6 +612,10 @@ FROM
         AND `MetadataMapBridge`.`Preferred` = 1)
         JOIN
     `Games_Roms` ON `MetadataMap`.`Id` = `Games_Roms`.`MetadataMapId`
+        LEFT JOIN
+    `UserTimeTracking` ON `MetadataMap`.`Id` = `UserTimeTracking`.`GameId`
+        AND `MetadataMap`.`PlatformId` = `UserTimeTracking`.`PlatformId`
+        AND `UserTimeTracking`.`UserId` = @userid
         LEFT JOIN
     `Favourites` ON `MetadataMapBridge`.`ParentMapId` = `Favourites`.`GameId`
         AND `Favourites`.`UserId` = @userid
