@@ -365,7 +365,7 @@ class Filtering {
     FilterCallbacks = [];
 
     async #LoadFilterSettings() {
-        let data = GetPreference('Library.Filter', {});
+        let data = GetPreference('Library.Filter');
 
         if (data) {
             this.filterSelections = data;
@@ -373,7 +373,7 @@ class Filtering {
     }
 
     async #LoadFilterCollapsedStatus() {
-        let data = GetPreference('Library.FilterCollapsed', { "Title Search": false, "Platforms": false });
+        let data = GetPreference('Library.FilterCollapsed');
 
         if (data) {
             this.filterCollapsed = data;
