@@ -1,6 +1,11 @@
 class Filtering {
-    constructor(applyCallback, orderBySelector, orderDirectionSelector) {
+    constructor(applyCallback, orderBySelector, orderDirectionSelector, pageSizeSelector, executeCallback, executeErrorCallback, executeBeginCallback, executeCompleteCallback) {
         this.applyCallback = applyCallback;
+        this.executeCallback = executeCallback;
+        this.executeErrorCallback = executeErrorCallback;
+        this.executeBeginCallback = executeBeginCallback;
+        this.executeCompleteCallback = executeCompleteCallback;
+        this.pageSizeSelector = pageSizeSelector;
         this.orderBySelector = orderBySelector;
         this.orderDirectionSelector = orderDirectionSelector;
 
@@ -10,6 +15,10 @@ class Filtering {
 
         if (this.orderDirectionSelector) {
             this.OrderDirectionSelector(this.orderDirectionSelector);
+        }
+
+        if (this.pageSizeSelector) {
+            this.PageSizeSelector(this.pageSizeSelector);
         }
     }
 
@@ -39,7 +48,36 @@ class Filtering {
         this.ApplyFilter();
     }
 
+    PageSizeSelector(selector) {
+        this.pageSizeSelector = selector;
+
+        this.pageSizeSelector.innerHTML = '';
+        for (let i = 1; i <= 10; i++) {
+            let option = document.createElement('option');
+            option.value = i * 10;
+            option.innerText = i * 10;
+            if (i === 2) {
+                option.selected = true
+            }
+            this.pageSizeSelector.appendChild(option);
+        }
+
+        this.pageSizeSelector.addEventListener('change', () => {
+            this.filterSelections['pageSize'] = this.pageSizeSelector.value;
+            this.ApplyFilter();
+        });
+    }
+
+    SetPageSize(value) {
+        this.filterSelections['pageSize'] = value;
+        this.ApplyFilter();
+    }
+
     filterSelections = {
+
+    }
+
+    #computedFilterModel = {
 
     }
 
@@ -48,15 +86,17 @@ class Filtering {
     }
 
     async LoadFilterSettings() {
-        await this.#LoadFilterSettings();
-        await this.#LoadFilterCollapsedStatus();
+        this.#LoadFilterSettings();
+        this.#LoadFilterCollapsedStatus();
     }
 
-    ApplyFilter(filterOverride) {
+    async ApplyFilter(filterOverride) {
         let filter = this.filterSelections;
         if (filterOverride) {
             filter = filterOverride;
         }
+
+        console.log('Filter start time: ' + new Date().toLocaleTimeString());
 
         // delete entries from filterSelections that are false or empty
         for (let key in filter) {
@@ -84,286 +124,266 @@ class Filtering {
 
         if (!filterOverride) {
             // store the filter selections in local storage
-            db.SetData('settings', 'libraryFilter', filter);
+            SetPreference('Library.Filter', filter);
         }
 
-        let results = [];
+        // build the filter model
+        let filterModel = {
+            "name": "",
+            "platform": [
+            ],
+            "genre": [
+            ],
+            "gameMode": [
+            ],
+            "playerPerspective": [
+            ],
+            "theme": [
+            ],
+            "minimumReleaseYear": -1,
+            "maximumReleaseYear": -1,
+            "gameRating": {
+                "minimumRating": -1,
+                "minimumRatingCount": -1,
+                "maximumRating": -1,
+                "maximumRatingCount": -1,
+                "includeUnrated": true
+            },
+            "gameAgeRating": {
+                "ageGroupings": [
+                ],
+                "includeUnrated": false
+            },
+            "sorting": {
+                "sortBy": "Name",
+                "sortAscending": true
+            },
+            "HasSavedGame": false,
+            "IsFavourite": false
+        }
 
-        // return a list of ids that match the filter
-        let transaction = db.db.transaction('games', 'readonly');
-        let store = transaction.objectStore('games');
-
-        let request = store.openCursor();
-        request.onsuccess = async () => {
-            let cursor = request.result;
-            if (cursor) {
-                let game = cursor.value;
-                let textMatch = true;
-                let settingsMatch = true;
-                let platformsMatch = true;
-                let genresMatch = true;
-                let themesMatch = true;
-                let releaseYearMatch = true;
-                let playersMatch = true;
-                let perspectivesMatch = true;
-                let ageGroupsMatch = true;
-                let userRatingMatch = true;
-                let userVoteCountMatch = true;
-
-                // check each filter
-                for (let key in filter) {
-                    switch (key.toLowerCase()) {
-                        case 'search':
-                            if (game.name.toLowerCase().includes(filter[key].toLowerCase()) === false) {
-                                textMatch = false;
-                            }
-                            break;
-
-                        case 'settings':
-                            for (let setting in filter[key]) {
-                                if (game[setting] !== filter[key][setting]) {
-                                    settingsMatch = false;
-                                }
-                            }
-                            break;
-
-                        case 'platforms':
-                            for (let platform in filter[key]) {
-                                if (game.platformIds.includes(Number(platform)) === false) {
-                                    platformsMatch = false;
-                                }
-                            }
-                            break;
-
-                        case 'genres':
-                            for (let genre in filter[key]) {
-                                if (game.genres.includes(genre) === false) {
-                                    genresMatch = false;
-                                }
-                            }
-                            break;
-
-                        case 'themes':
-                            for (let theme in filter[key]) {
-                                if (game.themes.includes(theme) === false) {
-                                    themesMatch = false;
-                                }
-                            }
-                            break;
-
-                        case 'releaseyear':
-                            // convert release year to a date
-                            let releaseDate = new Date(game.firstReleaseDate);
-
-                            // get release year from date
-                            let releaseYear = releaseDate.getFullYear();
-
-                            if (filter[key].min) {
-                                if (releaseYear < filter[key].min) {
-                                    releaseYearMatch = false;
-                                }
-                            }
-                            if (filter[key].max) {
-                                if (releaseYear > filter[key].max) {
-                                    releaseYearMatch = false;
-                                }
-                            }
-                            break;
-
-                        case 'players':
-                            for (let player in filter[key]) {
-                                if (game.players.includes(player) === false) {
-                                    playersMatch = false;
-                                }
-                            }
-                            break;
-
-                        case 'perspectives':
-                            for (let perspective in filter[key]) {
-                                if (game.perspectives.includes(perspective) === false) {
-                                    perspectivesMatch = false;
-                                }
-                            }
-                            break;
-
-                        case 'agegroups':
-                            if (filter[key][game.ageGroup] === undefined) {
-                                ageGroupsMatch = false;
-                            }
-                            break;
-
-                        case 'userrating':
-                            if (game.totalRating) {
-                                if (filter[key].min) {
-                                    if (game.totalRating < Number(filter[key].min)) {
-                                        userRatingMatch = false;
-                                    }
-                                }
-                                if (filter[key].max) {
-                                    if (game.totalRating > Number(filter[key].max)) {
-                                        userRatingMatch = false;
-                                    }
-                                }
-                            } else {
-                                userRatingMatch = false;
-                            }
-                            break;
-
-                        case 'uservotecount':
-                            if (game.totalRatingCount) {
-                                if (filter[key].min) {
-                                    if (game.totalRatingCount < Number(filter[key].min)) {
-                                        userVoteCountMatch = false;
-                                    }
-                                }
-                                if (filter[key].max) {
-                                    if (game.totalRatingCount > Number(filter[key].max)) {
-                                        userVoteCountMatch = false;
-                                    }
-                                }
-                            } else {
-                                userVoteCountMatch = false;
-                            }
-                            break;
-
-                        default:
-                            break;
+        if (filter['search']) {
+            filterModel.name = filter['search'];
+        }
+        if (filter['Platforms']) {
+            for (let key in filter['Platforms']) {
+                filterModel.platform.push(key);
+            }
+        }
+        if (filter['Genres']) {
+            for (let key in filter['Genres']) {
+                filterModel.genre.push(key);
+            }
+        }
+        if (filter['Players']) {
+            for (let key in filter['Players']) {
+                filterModel.gameMode.push(key);
+            }
+        }
+        if (filter['perspectives']) {
+            for (let key in filter['perspectives']) {
+                filterModel.playerPerspective.push(key);
+            }
+        }
+        if (filter['Themes']) {
+            for (let key in filter['Themes']) {
+                filterModel.theme.push(key);
+            }
+        }
+        if (filter['releaseyear']) {
+            if (filter['releaseyear'].min) {
+                filterModel.minimumReleaseYear = filter['releaseyear'].min;
+            }
+            if (filter['releaseyear'].max) {
+                filterModel.maximumReleaseYear = filter['releaseyear'].max;
+            }
+        }
+        if (filter['playTime']) {
+            if (filter['playTime'].min) {
+                filterModel.minPlayTime = filter['playTime'].min;
+            }
+            if (filter['playTime'].max) {
+                filterModel.maxPlayTime = filter['playTime'].max;
+            }
+        }
+        if (filter['userrating']) {
+            if (filter['userrating'].min) {
+                filterModel.gameRating.minimumRating = filter['userrating'].min;
+                filterModel.gameRating.includeUnrated = false;
+            }
+            if (filter['userrating'].max) {
+                filterModel.gameRating.maximumRating = filter['userrating'].max;
+                filterModel.gameRating.includeUnrated = false;
+            }
+        }
+        if (filter['uservotecount']) {
+            if (filter['uservotecount'].min) {
+                filterModel.gameRating.minimumRatingCount = filter['uservotecount'].min;
+                filterModel.gameRating.includeUnrated = false;
+            }
+            if (filter['uservotecount'].max) {
+                filterModel.gameRating.maximumRatingCount = filter['uservotecount'].max;
+                filterModel.gameRating.includeUnrated = false;
+            }
+        }
+        if (filter['ageGroups']) {
+            if (Object.keys(filter['ageGroups']).length > 0) {
+                filterModel.gameAgeRating.includeUnrated = false;
+                for (let key in filter['ageGroups']) {
+                    if (key === 'Unclassified') {
+                        filterModel.gameAgeRating.includeUnrated = filter['ageGroups'][key];
+                    } else {
+                        filterModel.gameAgeRating.ageGroupings.push(key);
                     }
                 }
-
-                if (
-                    textMatch === true &&
-                    settingsMatch === true &&
-                    platformsMatch === true &&
-                    genresMatch === true &&
-                    themesMatch === true &&
-                    releaseYearMatch === true &&
-                    playersMatch === true &&
-                    perspectivesMatch === true &&
-                    ageGroupsMatch === true &&
-                    userRatingMatch === true &&
-                    userVoteCountMatch === true
-                ) {
-                    results.push(game);
-                }
-
-                cursor.continue();
+            } else {
+                filterModel.gameAgeRating.includeUnrated = true;
             }
-        };
-
-        transaction.oncomplete = () => {
-            // sort the results
-            if (filter['orderBy'] === undefined) {
-                filter['orderBy'] = 'Name';
+        }
+        if (filter['orderBy']) {
+            filterModel.sorting.sortBy = filter['orderBy'];
+        }
+        if (filter['orderDirection']) {
+            if (filter['orderDirection'] === 'Ascending') {
+                filterModel.sorting.sortAscending = true;
+            } else {
+                filterModel.sorting.sortAscending = false;
             }
-            switch (filter['orderBy']) {
-                case 'Name':
-                    results.sort((a, b) => {
-                        return a.name.localeCompare(b.name);
-                    });
-                    break;
-
-                case 'NameThe':
-                    results.sort((a, b) => {
-                        return a.nameThe.localeCompare(b.nameThe);
-                    });
-                    break;
-
-                case 'Rating':
-                    results.sort((a, b) => {
-                        if (a.totalRating === undefined) {
-                            a.totalRating = 0;
-                        }
-                        if (b.totalRating === undefined) {
-                            b.totalRating = 0;
-                        }
-                        return Number(a.totalRating) - Number(b.totalRating);
-                    });
-                    break;
-
-                case 'RatingCount':
-                    results.sort((a, b) => {
-                        if (a.totalRatingCount === undefined) {
-                            a.totalRatingCount = 0;
-                        }
-                        if (b.totalRatingCount === undefined) {
-                            b.totalRatingCount = 0;
-                        }
-                        return Number(a.totalRatingCount) - Number(b.totalRatingCount);
-                    });
-                    break;
-
-                case 'ReleaseDate':
-                    results.sort((a, b) => {
-                        let aDate;
-                        let bDate;
-
-                        if (a.firstReleaseDate === undefined) {
-                            aDate = "0000-01-01";
-                        } else {
-                            aDate = a.firstReleaseDate.split('T')[0];
-                        }
-
-                        if (b.firstReleaseDate === undefined) {
-                            bDate = "0000-01-01";
-                        } else {
-                            bDate = b.firstReleaseDate.split('T')[0];
-                        }
-
-                        if (aDate > bDate) {
-                            return 1;
-                        } else if (aDate < bDate) {
-                            return -1;
-                        } else {
-                            return 0;
-                        }
-                    });
-                    break;
+        }
+        let pageSize = 20;
+        if (filter['pageSize']) {
+            pageSize = filter['pageSize'];
+        }
+        if (filter["settings"]) {
+            if (filter["settings"]['hasSavedGame']) {
+                filterModel.HasSavedGame = filter["settings"]['hasSavedGame'];
             }
+            if (filter["settings"]['isFavourite']) {
+                filterModel.IsFavourite = filter["settings"]['isFavourite'];
+            }
+        }
 
-            if (filter['orderDirection'] === undefined) {
-                filter['orderDirection'] = 'Ascending';
-            }
-            if (filter['orderDirection'] === 'Descending') {
-                results.reverse();
-            }
+        // store the filter model in memory
+        this.#computedFilterModel = filterModel;
 
-            // add a result index to each result
-            for (let i = 0; i < results.length; i++) {
-                results[i]['resultIndex'] = i;
-            }
+        // request the games from the server
+        let pageNumber = 1;
 
-            // remove all entries after filter['limit']
-            if (filter['limit']) {
-                results = results.slice(0, filter['limit']);
-            }
+        if (filter['limit']) {
+            pageNumber = 1;
+            pageSize = filter['limit'];
+        }
 
-            if (this.applyCallback) {
-                this.applyCallback(results);
-            }
-        };
+        this.GameCount = 0;
+        this.AlphaList = [];
+
+        if (this.applyCallback) {
+            this.applyCallback();
+        }
+
+        this.ExecuteFilter(pageNumber, pageSize);
     }
 
+    GameCount = 0;
+    AlphaList = [];
+
+    async ExecuteFilter(pageNumber, pageSize) {
+        if (!pageNumber) {
+            pageNumber = 1;
+        }
+        if (!pageSize) {
+            pageSize = this.filterSelections['pageSize'];
+        }
+
+        let returnSummary = "false";
+        if (this.AlphaList.length === 0) {
+            returnSummary = "true";
+        }
+
+        if (this.executeBeginCallback) {
+            this.executeBeginCallback();
+        }
+
+        await fetch('/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize + '&returnSummary=' + returnSummary + '&returnGames=true', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(this.#computedFilterModel)
+        }).then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Failed to load games');
+        }).then(data => {
+            if (data.count) {
+                this.GameCount = data.count;
+            }
+            if (data.alphaList) {
+                this.AlphaList = data.alphaList;
+            }
+
+            if (this.executeCompleteCallback) {
+                this.executeCompleteCallback();
+            }
+
+            if (this.executeCallback) {
+                this.executeCallback(data.games);
+            }
+        }).catch(error => {
+            console.error(error);
+
+            if (this.executeCompleteCallback) {
+                this.executeCompleteCallback();
+            }
+
+            if (this.executeErrorCallback) {
+                this.executeErrorCallback(error);
+            }
+        });
+    }
+
+    async GetGamesFilter() {
+        await fetch('/api/v1.1/Filter', {
+            method: 'GET'
+        }).then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            throw new Error('Failed to load filter content');
+        }).then(data => {
+            if (this.FilterCallbacks.length > 0) {
+                for (const callback of this.FilterCallbacks) {
+                    callback(data);
+                }
+            }
+        }).catch(error => {
+            console.error(error);
+        });
+    }
+
+    FilterCallbacks = [];
+
     async #LoadFilterSettings() {
-        let data = await db.GetData('settings', 'libraryFilter');
+        let data = GetPreference('Library.Filter', {});
 
         if (data) {
-            this.filterSelections = data.value;
+            this.filterSelections = data;
         }
     }
 
     async #LoadFilterCollapsedStatus() {
-        let data = await db.GetData('settings', 'libraryFilterCollapsed');
+        let data = GetPreference('Library.FilterCollapsed', { "Title Search": false, "Platforms": false });
 
         if (data) {
-            this.filterCollapsed = data.value;
+            this.filterCollapsed = data;
         }
     }
 
     async #StoreFilterCollapsedStatus(section, collapsed) {
         this.filterCollapsed[section] = collapsed;
 
-        db.SetData('settings', 'libraryFilterCollapsed', this.filterCollapsed);
+        SetPreference('Library.FilterCollapsed', this.filterCollapsed);
     }
 
     BuildFilterTable(filter) {
@@ -431,21 +451,21 @@ class Filtering {
         if (this.filterCollapsed['Players'] !== undefined) {
             playersCollapsed = this.filterCollapsed['Players'];
         }
-        panel.appendChild(this.#BuildBasicPanel('Players', true, playersCollapsed, this.#BuildCheckList("Players", filter["players"], true), null));
+        panel.appendChild(this.#BuildBasicPanel('Players', true, playersCollapsed, this.#BuildCheckList("Players", filter["gamemodes"], true), null));
 
         // player perspectives filter
         let perspectivesCollapsed = true;
         if (this.filterCollapsed['Player Perspectives'] !== undefined) {
             perspectivesCollapsed = this.filterCollapsed['Player Perspectives'];
         }
-        panel.appendChild(this.#BuildBasicPanel('Player Perspectives', true, perspectivesCollapsed, this.#BuildCheckList("perspectives", filter["perspectives"], true), null));
+        panel.appendChild(this.#BuildBasicPanel('Player Perspectives', true, perspectivesCollapsed, this.#BuildCheckList("perspectives", filter["playerperspectives"], true), null));
 
         // age groups filter
         let ageGroupsCollapsed = true;
         if (this.filterCollapsed['Age Groups'] !== undefined) {
             ageGroupsCollapsed = this.filterCollapsed['Age Groups'];
         }
-        panel.appendChild(this.#BuildBasicPanel('Age Groups', true, ageGroupsCollapsed, this.#BuildCheckList("ageGroups", filter["ageGroups"], true), null));
+        panel.appendChild(this.#BuildBasicPanel('Age Groups', true, ageGroupsCollapsed, this.#BuildCheckList("ageGroups", filter["agegroupings"], true), null));
 
         // user rating filter
         let userRatingCollapsed = true;
@@ -525,12 +545,12 @@ class Filtering {
         if (this.filterSelections[fieldName] !== undefined) {
             input.value = this.filterSelections[fieldName];
         }
-        input.addEventListener('keyup', (event) => {
-            // input.addEventListener('keypress', (event) => {
-            // if (event.key === 'Enter') {
-            this.filterSelections[fieldName] = input.value;
-            this.ApplyFilter();
-            // }
+        // input.addEventListener('keyup', (event) => {
+        input.addEventListener('keypress', (event) => {
+            if (event.key === 'Enter') {
+                this.filterSelections[fieldName] = input.value;
+                this.ApplyFilter();
+            }
         });
 
         content.appendChild(input);
@@ -541,8 +561,7 @@ class Filtering {
     #BuildCheckList(fieldName, checkList, showTags) {
         let content = document.createElement('div');
 
-        for (let i = 0; i < checkList.length; i++) {
-            let checkItem = checkList[i];
+        for (let checkItem of checkList) {
 
             let id = checkItem.name;
             if (checkItem.id) {
@@ -578,7 +597,7 @@ class Filtering {
             input.classList.add('filter_panel_item_checkbox');
             input.id = fieldName + '_' + id;
             input.name = fieldName;
-            // input.value = checkItem;
+
             if (this.filterSelections[fieldName] !== undefined) {
                 if (this.filterSelections[fieldName][id] !== undefined) {
                     input.checked = this.filterSelections[fieldName];

@@ -710,21 +710,6 @@ namespace gaseous_server.Classes
                     }
                 }
 
-                private static bool _MetadataUseHasheousProxy
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("metadatausehasheousproxy")))
-                        {
-                            return bool.Parse(Environment.GetEnvironmentVariable("metadatausehasheousproxy"));
-                        }
-                        else
-                        {
-                            return true;
-                        }
-                    }
-                }
-
                 private static HasheousClient.Models.MetadataModel.SignatureSources _SignatureSource
                 {
                     get

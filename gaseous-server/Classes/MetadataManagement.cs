@@ -423,8 +423,13 @@ namespace gaseous_server.Classes
 			if (Config.MetadataConfiguration.SignatureSource == MetadataModel.SignatureSources.Hasheous)
 			{
 				// get all ROMs in the database
-				sql = "SELECT * FROM view_Games_Roms;";
-				dt = db.ExecuteCMD(sql);
+				sql = "SELECT * FROM view_Games_Roms WHERE DateUpdated < @LastUpdateThreshold;";
+				// set @LastUpdateThreshold to a random date between 14 and 30 days in the past
+				Dictionary<string, object> dbDict = new Dictionary<string, object>()
+				{
+					{ "@LastUpdateThreshold", DateTime.UtcNow.AddDays(-new Random().Next(14, 30)) }
+				};
+				dt = db.ExecuteCMD(sql, dbDict);
 
 				StatusCounter = 1;
 				foreach (DataRow dr in dt.Rows)
@@ -467,6 +472,14 @@ namespace gaseous_server.Classes
 
 						// update the signature in the database
 						Platform? signaturePlatform = Metadata.Platforms.GetPlatform((long)signature.Flags.PlatformId);
+						if (signature.Flags.GameId == 0)
+						{
+							HasheousClient.Models.Metadata.IGDB.Game? discoveredGame = ImportGame.SearchForGame(signature, signature.Flags.PlatformId, false);
+							if (discoveredGame != null && discoveredGame.Id != null)
+							{
+								signature.MetadataSources.AddGame((long)discoveredGame.Id, discoveredGame.Name, MetadataSources.IGDB);
+							}
+						}
 						ImportGame.StoreGame(library, hash, signature, signaturePlatform, fi.FullName, (long)dr["Id"], false);
 					}
 					catch (Exception ex)

@@ -4,123 +4,184 @@ async function SetupPage() {
         FilterDisplayToggle();
     });
 
-    FilterDisplayToggle(GetPreference("LibraryShowFilter", true), false);
+    let displayFilter = GetPreference("Library.ShowFilter", true);
+    FilterDisplayToggle(displayFilter, true);
 
-    let showTitle = GetPreference("LibraryShowGameTitle", true);
-    let showRatings = GetPreference("LibraryShowGameRating", true);
-    let showClassification = GetPreference("LibraryShowGameClassification", true);
+    let showTitle = GetPreference("Library.ShowGameTitle", true);
+    let showRatings = GetPreference("Library.ShowGameRating", true);
+    let showClassification = GetPreference("Library.ShowGameClassification", true);
     let classificationDisplayOrder = GetRatingsBoards();
-    if (showTitle == "true") { showTitle = true; } else { showTitle = false; }
-    if (showRatings == "true") { showRatings = true; } else { showRatings = false; }
-    if (showClassification == "true") { showClassification = true; } else { showClassification = false; }
 
     // setup filter panel
     let scrollerElement = document.getElementById('games_filter_scroller');
-    if (db) {
-        db.FilterCallbacks.push(async function (result) {
-            await filter.LoadFilterSettings();
+    if (filter) {
+        filter.FilterCallbacks.push(async (result) => {
+            filter.LoadFilterSettings();
 
             scrollerElement.innerHTML = '';
             scrollerElement.appendChild(filter.BuildFilterTable(result));
 
-            // setup filter panel events
-            filter.applyCallback = async function (games) {
-                // render games
-                let gameCountElement = document.getElementById('games_library_recordcount');
-                if (games.length == 1) {
-                    gameCountElement.innerText = '1 game';
-                } else {
-                    gameCountElement.innerText = games.length + ' games';
-                }
+            let gamesElement = document.getElementById('games_library');
+            gamesElement.innerHTML = '';
 
-                // clear game tiles not in the dom element
-                let gameTiles = document.getElementsByClassName('game_tile');
-                for (let x = 0; x < 2; x++) {
-                    for (let i = 0; i < gameTiles.length; i++) {
-                        if (games.find(x => x.metadataMapId == gameTiles[i].getAttribute('data-id')) == null) {
-                            gameTiles[i].remove();
-                            i = 0;
-                        }
-                    }
-                }
+            let freshLoad = true;
 
-
-                // render new games
-                let gamesElement = document.getElementById('games_library');
-
-                coverURLList = [];
-                for (const game of games) {
-                    // if the game tile already exists, skip it
-                    let existingGameTile = document.getElementById('game_tile_' + game.metadataMapId);
-                    if (existingGameTile) {
-                        existingGameTile.setAttribute('data-index', game.resultIndex);
-                        continue;
-                    }
-
-                    // insert the game tile in the same order as the games array
-                    let gameObj = new GameIcon(game);
-                    let gameTile = await gameObj.Render(showTitle, showRatings, showClassification, classificationDisplayOrder);
-                    gamesElement.appendChild(gameTile);
-
-                    if (game.cover) {
-                        let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg?sourceType=' + game.metadataSource;
-                        if (!coverURLList.includes(coverUrl)) {
-                            coverURLList.push(coverUrl);
-                        }
-                    }
-                }
-
-                backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true);
-
-                // get all elemens in the node gamesElement and sort by the data-index attribute
-                gameTiles = Array.from(gamesElement.children);
-                gameTiles.sort((a, b) => {
-                    return a.getAttribute('data-index') - b.getAttribute('data-index');
-                });
-
-                // remove all children from the gamesElement
+            filter.applyCallback = async () => {
+                freshLoad = true;
                 gamesElement.innerHTML = '';
 
-                // add the sorted children back to the gamesElement, and update the alpha pager
-                let alphaPager = document.getElementById('games_library_alpha_pager');
-                alphaPager.innerHTML = '';
-                let alphaAdded = [];
-                for (const gameTile of gameTiles) {
-                    gamesElement.appendChild(gameTile);
+                coverURLList = [];
+            }
 
-                    if (gameTile.getAttribute('data-alpha') != null) {
-                        let alpha = gameTile.getAttribute('data-alpha');
-                        if (alphaAdded.includes(alpha)) {
-                            continue;
-                        }
-                        let alphaButton = document.createElement('span');
-                        alphaButton.classList.add('games_library_alpha_pager_letter');
-                        alphaButton.innerText = alpha;
-                        alphaButton.addEventListener('click', function () {
-                            // scroll to the first game with the alpha
-                            let gameTiles = Array.from(document.getElementsByClassName('game_tile'));
-                            let gameTile = gameTiles.find(x => x.getAttribute('data-alpha') == alpha);
-                            if (gameTile) {
-                                // gameTile.scrollIntoView();
-                                // scroll to the game tile with the alpha - 100px
-                                window.scrollTo(0, gameTile.offsetTop - 100);
+            filter.executeCallback = async (games) => {
+                if (freshLoad === true) {
+                    // render game chrome objects
+                    let gameCountElement = document.getElementById('games_library_recordcount');
+                    if (filter.GameCount == 1) {
+                        gameCountElement.innerText = '1 game';
+                    } else {
+                        gameCountElement.innerText = filter.GameCount + ' games';
+                    }
+
+                    // build alphabet pager
+                    let alphaPager = document.getElementById('games_library_alpha_pager');
+                    alphaPager.innerHTML = '';
+                    for (const [key, value] of Object.entries(filter.AlphaList)) {
+                        let alphaSpan = document.createElement('span');
+                        alphaSpan.innerText = key;
+                        alphaSpan.classList.add('games_library_alpha_pager_letter');
+                        alphaSpan.setAttribute('data-letter', key);
+                        alphaPager.appendChild(alphaSpan);
+
+                        alphaSpan.addEventListener('click', function () {
+                            // document.querySelector('div[data-index="' + value.index + '"]').scrollIntoView({ block: "start", behavior: 'smooth' });
+                            document.querySelector('div[data-index="' + value.index + '"]').scrollIntoView({ block: "start" });
+
+                            // load the target page
+                            let pageAnchor = document.querySelector('span[data-page="' + value.page + '"]');
+                            if (pageAnchor) {
+                                ScrollLoadPage(pageAnchor);
                             }
                         });
-                        alphaPager.appendChild(alphaButton);
-                        alphaAdded.push(alpha);
                     }
+
+                    // add placeholder game tiles
+                    let maxPages = Math.ceil(filter.GameCount / filter.filterSelections["pageSize"]);
+                    // generate page spans
+                    for (let i = 1; i <= maxPages; i++) {
+                        let pageSpan = document.createElement('span');
+                        pageSpan.classList.add('pageAnchor');
+                        pageSpan.setAttribute('data-page', i);
+                        pageSpan.setAttribute('data-loaded', '0');
+                        gamesElement.appendChild(pageSpan);
+                    }
+                    // generate placeholder game tiles
+                    let pageNumber = 1;
+                    let tilesPerPage = 0;
+                    for (let i = 0; i < filter.GameCount; i++) {
+                        tilesPerPage++;
+                        if (tilesPerPage > filter.filterSelections["pageSize"]) {
+                            pageNumber++;
+                            tilesPerPage = 1;
+                        }
+                        let targetElement = document.querySelector('span[data-page="' + pageNumber + '"]');
+                        if (targetElement) {
+                            let gameTile = document.createElement('div');
+                            gameTile.classList.add('game_tile_placeholder');
+                            gameTile.setAttribute('name', 'GamePlaceholder');
+                            gameTile.setAttribute('data-index', i);
+                            gameTile.setAttribute('data-page', pageNumber);
+                            let placeholderIcon = new GameIcon();
+                            gameTile.appendChild(await placeholderIcon.Render(false, false, false, [], false, false));
+                            targetElement.appendChild(gameTile);
+                        }
+                    }
+                }
+
+                // render game tiles
+                for (const game of games) {
+                    let tileContainer = document.querySelector('div[data-index="' + game.index + '"]');
+
+                    if (tileContainer) {
+                        tileContainer.classList.add('game_tile_wrapper_icon');
+
+                        // set data-loaded=1 on the pageAnchor span to prevent re-rendering
+                        let pageAnchor = document.querySelector('span[data-page="' + tileContainer.getAttribute('data-page') + '"]');
+                        if (pageAnchor) {
+                            pageAnchor.setAttribute('data-loaded', '1');
+                        }
+
+                        tileContainer.innerHTML = '';
+                        let gameObj = new GameIcon(game);
+                        let gameTile = await gameObj.Render(showTitle, showRatings, showClassification, classificationDisplayOrder);
+                        tileContainer.appendChild(gameTile);
+
+                        if (game.cover) {
+                            let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg?sourceType=' + game.metadataSource;
+                            if (!coverURLList.includes(coverUrl)) {
+                                coverURLList.push(coverUrl);
+                            }
+                        }
+                    }
+                }
+
+                if (freshLoad === true) {
+                    backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true, false);
+                    freshLoad = false;
                 }
 
                 // restore the scroll position
-                let scrollPosition = localStorage.getItem('scrollPosition');
+                let scrollPosition = localStorage.getItem('Library.ScrollPosition');
                 if (scrollPosition) {
                     console.log('restoring scroll position: ' + scrollPosition);
                     window.scrollTo(0, scrollPosition);
                 }
+
+                // load any visible pages
+                let anchors = document.querySelectorAll('span[class="pageAnchor"]');
+                for (const anchor of anchors) {
+                    if (elementIsVisibleInViewport(anchor, true)) {
+                        ScrollLoadPage(anchor);
+                    }
+                }
             };
+
+            filter.executeBeginCallback = async () => {
+                if (freshLoad === true) {
+                    let loadingElement = document.createElement('div');
+                    loadingElement.id = 'games_library_loading';
+                    loadingElement.classList.add('loadingElement');
+                    let charCount = 0;
+                    setInterval(() => {
+                        charCount++;
+                        if (charCount > 3) {
+                            charCount = 0;
+                        }
+                        loadingElement.innerHTML = 'Loading' + '.'.repeat(charCount) + '&nbsp;'.repeat(3 - charCount);
+                    }, 1000);
+                    gamesElement.appendChild(loadingElement);
+                }
+            }
+
+            filter.executeCompleteCallback = async () => {
+                let loadingElement = document.getElementById('games_library_loading');
+                if (loadingElement) {
+                    loadingElement.remove();
+                }
+            }
 
             filter.OrderBySelector(document.getElementById('games_library_orderby_select'));
             filter.OrderDirectionSelector(document.getElementById('games_library_orderby_direction_select'));
+            filter.PageSizeSelector(document.getElementById('games_library_pagesize_select'));
+
+            let pageSizeSelect = $('#games_library_pagesize_select');
+            pageSizeSelect.select2();
+            if (filter.filterSelections['pageSize']) {
+                pageSizeSelect.val(filter.filterSelections['pageSize']).trigger('change');
+            }
+            pageSizeSelect.on('change', function (e) {
+                filter.SetPageSize(pageSizeSelect.val());
+            });
 
             let orderBySelect = $('#games_library_orderby_select');
             orderBySelect.select2();
@@ -143,34 +204,97 @@ async function SetupPage() {
             filter.ApplyFilter();
         });
 
-        await db.GetGamesFilter();
+        await filter.GetGamesFilter();
     }
 
     // setup scroll position
     window.addEventListener('scroll', (pos) => {
         // save the scroll position to localStorage
-        localStorage.setItem('scrollPosition', window.scrollY);
+        localStorage.setItem('Library.ScrollPosition', window.scrollY);
+
+        let pageToLoad;
+        let anchors = document.getElementsByClassName('pageAnchor');
+        for (const anchor of anchors) {
+            if (elementIsVisibleInViewport(anchor, true)) {
+                pageToLoad = ScrollLoadPage(anchor);
+            }
+        }
+
+        // anticipate scroll direction
+        if (pageToLoad !== undefined) {
+            let st = document.documentElement.scrollTop;
+            if (st > lastScrollTop) {
+                // pre-load the next page
+                let nextPageAnchor = document.querySelector('span[data-page="' + (pageToLoad + 1) + '"]');
+                if (nextPageAnchor) {
+                    ScrollLoadPage(nextPageAnchor, true);
+                }
+                let nextPageAnchor2 = document.querySelector('span[data-page="' + (pageToLoad + 2) + '"]');
+                if (nextPageAnchor2) {
+                    ScrollLoadPage(nextPageAnchor2, true);
+                }
+            } else {
+                // pre-load the previous page
+                let prevPageAnchor = document.querySelector('span[data-page="' + (pageToLoad - 1) + '"]');
+                if (prevPageAnchor) {
+                    ScrollLoadPage(prevPageAnchor, true);
+                }
+                let prevPageAnchor2 = document.querySelector('span[data-page="' + (pageToLoad - 2) + '"]');
+                if (prevPageAnchor2) {
+                    ScrollLoadPage(prevPageAnchor2, true);
+                }
+            }
+        }
     });
 }
+
+function ScrollLoadPage(ScrolledObject, Anticipate) {
+    if (ScrolledObject.getAttribute('data-loaded') === "0") {
+        ScrolledObject.setAttribute('data-loaded', "1");
+        let pageToLoad = Number(ScrolledObject.getAttribute('data-page'));
+        if (Anticipate === true) {
+            console.log('Loading page via pre-fetch: ' + pageToLoad);
+        } else {
+            console.log('Loading page: ' + pageToLoad);
+        }
+        filter.ExecuteFilter(pageToLoad);
+
+        return pageToLoad;
+    }
+}
+
+const elementIsVisibleInViewport = (el, partiallyVisible = false) => {
+    const { top, left, bottom, right } = el.getBoundingClientRect();
+    const { innerHeight, innerWidth } = window;
+    return partiallyVisible
+        ? ((top > 0 && top < innerHeight) ||
+            (bottom > 0 && bottom < innerHeight)) &&
+        ((left > 0 && left < innerWidth) || (right > 0 && right < innerWidth))
+        : top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
+};
 
 function FilterDisplayToggle(display, storePreference = true) {
     let filterPanel = document.getElementById('games_filter_panel');
     let libraryControls = document.getElementById('games_library_controls');
     let gamesHome = document.getElementById('games_home');
 
-    if (filterPanel.style.display == 'none' || display === "true") {
+    if (filterPanel.style.display == 'none' || display === true) {
         filterPanel.style.display = 'block';
         libraryControls.classList.remove('games_library_controls_expanded');
         gamesHome.classList.remove('games_home_expanded');
-        if (storePreference === true) { SetPreference("LibraryShowFilter", true); }
+        if (storePreference === true) { SetPreference("Library.ShowFilter", true); }
     } else {
         filterPanel.style.display = 'none';
         libraryControls.classList.add('games_library_controls_expanded');
         gamesHome.classList.add('games_home_expanded');
-        if (storePreference === true) { SetPreference("LibraryShowFilter", false); }
+        if (storePreference === true) { SetPreference("Library.ShowFilter", false); }
     }
 }
 
+let filter = new Filtering();
+
 let coverURLList = [];
+
+let lastScrollTop = localStorage.getItem('Library.ScrollPosition') || 0;
 
 SetupPage();

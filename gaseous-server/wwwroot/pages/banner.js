@@ -31,21 +31,6 @@ function setupBanner() {
         });
     }
 
-    let refreshButton = document.getElementById("banner_refresh");
-    if (refreshButton) {
-        refreshButton.addEventListener('click', async () => {
-            await db.SyncContent(true);
-        });
-
-        db.syncStartCallbacks.push(async function () {
-            refreshButton.classList.add('rotating');
-        });
-
-        db.syncFinishCallbacks.push(async function () {
-            refreshButton.classList.remove('rotating');
-        });
-    }
-
     let bannerUpload = document.getElementById("banner_upload");
     if (bannerUpload) {
         bannerUpload.addEventListener('click', () => {

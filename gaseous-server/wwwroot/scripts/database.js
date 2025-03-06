@@ -102,13 +102,17 @@ class Database {
     syncFinishCallbacks = [];
 
     async SyncContent(force, error, onupdatenotrequired) {
+        let startSync = force;
+
         if (force === true) {
             console.log('Forcing database refresh');
+            startSync = true;
         } else {
             // get the last attempted fetch - if last fetch is null or more than 5 minutes ago, fetch the games library
             let lastFetch = await this.GetData('settings', 'lastFetch', null);
             if (lastFetch === undefined || lastFetch.value === null || (new Date() - new Date(lastFetch.value)) >= 60000) {
                 console.log('Last fetch was more than a minutes ago. Update forced.');
+                startSync = true;
             } else {
                 console.log('Last fetch was less than a minute ago. Update not required.');
 
@@ -118,20 +122,21 @@ class Database {
             }
         }
 
-        if (this.syncStartCallbacks.length > 0) {
-            for (let callback of this.syncStartCallbacks) {
-                callback();
+        if (startSync === true) {
+            if (this.syncStartCallbacks.length > 0) {
+                for (let callback of this.syncStartCallbacks) {
+                    callback();
+                }
             }
-        }
 
-        this.SetData('settings', 'lastFetch', new Date());
-        await this.GetPlatforms();
-        await this.GetGames();
-        await this.GetGamesFilter();
+            this.SetData('settings', 'lastFetch', new Date());
+            await this.GetPlatforms();
+            this.GetGames();
 
-        if (this.syncFinishCallbacks.length > 0) {
-            for (let callback of this.syncFinishCallbacks) {
-                callback();
+            if (this.syncFinishCallbacks.length > 0) {
+                for (let callback of this.syncFinishCallbacks) {
+                    callback();
+                }
             }
         }
     }
@@ -174,11 +179,13 @@ class Database {
     // this method also provides a callback
     // this method also provides a method to handle errors
     async GetGames(callback, error) {
-        let filterModel = { "Name": "", "HasSavedGame": false, "isFavourite": false, "Platform": [], "Genre": [], "GameMode": [], "PlayerPerspective": [], "Theme": [], "MinimumReleaseYear": -1, "MaximumReleaseYear": -1, "GameRating": { "MinimumRating": -1, "MinimumRatingCount": -1, "MaximumRating": -1, "MaximumRatingCount": -1, "IncludeUnrated": false }, "GameAgeRating": { "AgeGroupings": [], "IncludeUnrated": false }, "Sorting": { "SortBy": "NameThe", "SortAscending": true } };
+        // let filterModel = { "Name": "", "HasSavedGame": false, "isFavourite": false, "Platform": [], "Genre": [], "GameMode": [], "PlayerPerspective": [], "Theme": [], "MinimumReleaseYear": -1, "MaximumReleaseYear": -1, "GameRating": { "MinimumRating": -1, "MinimumRatingCount": -1, "MaximumRating": -1, "MaximumRatingCount": -1, "IncludeUnrated": false }, "GameAgeRating": { "AgeGroupings": [], "IncludeUnrated": false }, "Sorting": { "SortBy": "NameThe", "SortAscending": true } };
+
+        let filterModel = { "Name": "", "HasSavedGame": false, "isFavourite": false, "MinimumReleaseYear": -1, "MaximumReleaseYear": -1, "Sorting": { "SortBy": "NameThe", "SortAscending": true } };
 
         let dbLoadComplete = false;
         let pageNumber = 1;
-        let pageSize = 500;
+        let pageSize = 1000;
         let maxPages = 1000;
 
         // clear the games library
@@ -245,6 +252,8 @@ class Database {
             }
             pageNumber += 1;
         }
+
+        await this.GetGamesFilter();
     }
 
     #InsertFilters(tableName, source) {

@@ -32,7 +32,7 @@ class PreferencesWindow {
                                 }
                                 break;
                             case "SELECT":
-                                settingElement.value = value.value;
+                                settingElement.value = JSON.parse(value.value);
                                 $(settingElement).select2();
                                 break;
                         }
@@ -101,7 +101,7 @@ class PreferencesWindow {
                         }
                         break;
                     case "SELECT":
-                        pref.value = preference.value.toString();
+                        pref.value = JSON.stringify(preference.value.toString());
                         break;
                 }
                 preferences.push(pref);
@@ -112,7 +112,7 @@ class PreferencesWindow {
             for (let i = 0; i < callingObject.classificationSelector.children.length; i++) {
                 classificationOrder.push(callingObject.classificationSelector.children[i].getAttribute("data-classification"));
             }
-            preferences.push({ setting: "LibraryGameClassificationDisplayOrder", value: JSON.stringify(classificationOrder) });
+            preferences.push({ setting: "Library.GameClassificationDisplayOrder", value: JSON.stringify(classificationOrder) });
 
             SetPreference_Batch(preferences, function () { window.location.reload(); }, function () { window.location.reload(); });
         });
@@ -189,14 +189,9 @@ class PreferencesWindow {
                 }
 
                 let iconIdList = ageGroupValueLower[key.toLowerCase()];
-                console.log(key.toLowerCase());
-                if (key == 'clasS_IND' || key == 'CLASS_IND') {
-                    console.log("here");
-                }
                 // loop the age rating icons
                 if (iconIdList) {
                     for (const [i, value] of Object.entries(iconIdList)) {
-                        console.log("  " + iconIdList[i]);
                         let icon = document.createElement('img');
 
                         // get age rating strings

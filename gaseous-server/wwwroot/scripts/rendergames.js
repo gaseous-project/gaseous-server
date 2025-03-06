@@ -6,6 +6,22 @@ class GameIcon {
     async Render(showTitle, showRatings, showClassification, classificationDisplayOrder, showSubtitle = true, useSmallCover = false) {
         let data = this.data;
 
+        if (data === undefined) {
+            data = {
+                metadataMapId: -1,
+                name: 'Unknown Game',
+                cover: null,
+                totalRating: null,
+                totalRatingCount: null,
+                ageRatings: [],
+                firstReleaseDate: null,
+                isFavourite: false,
+                hasSavedGame: false,
+                alpha: 0,
+                index: 0
+            }
+        }
+
         let gameTile = document.createElement('div');
         gameTile.id = 'game_tile_' + data.metadataMapId;
         gameTile.classList.add('game_tile');
@@ -18,15 +34,18 @@ class GameIcon {
             gameTile.setAttribute('data-index', data.resultIndex);
         }
         gameTile.setAttribute('data-alpha', data.alpha);
+        gameTile.setAttribute('data-index', data.index);
 
         let gameTileOuterBox = document.createElement('div');
         gameTileOuterBox.classList.add('game_tile_outer_box');
 
         let gameTileBox = document.createElement('div');
         gameTileBox.classList.add('game_tile_box');
-        gameTileBox.addEventListener('click', () => {
-            window.location.href = '/index.html?page=game&id=' + data.metadataMapId;
-        });
+        if (data.metadataMapId !== -1) {
+            gameTileBox.addEventListener('click', () => {
+                window.location.href = '/index.html?page=game&id=' + data.metadataMapId;
+            });
+        }
         gameTileOuterBox.appendChild(gameTileBox);
 
         // cover art
@@ -35,10 +54,9 @@ class GameIcon {
         if (useSmallCover == true) {
             gameTileImage.classList.add('game_tile_image_small');
         }
-        gameTileImage.classList.add('lazy');
         gameTileImage.setAttribute('loading', 'lazy');
         if (data.cover) {
-            gameTileImage.setAttribute('src', '/api/v1.1/Games/' + data.metadataMapId + '/cover/' + data.cover + '/image/original/' + data.cover + '.jpg?sourceType=' + data.metadataSource);
+            gameTileImage.setAttribute('src', '/api/v1.1/Games/' + data.metadataMapId + '/' + data.metadataSource + '/cover/' + data.cover + '/image/original/' + data.cover + '.jpg');
         } else {
             gameTileImage.setAttribute('src', '/images/unknowngame.png');
         }
@@ -64,56 +82,58 @@ class GameIcon {
             }
         }
 
-        // add save game icon
-        if (data.hasSavedGame === true) {
-            let gameSaveIcon = document.createElement('img');
-            gameSaveIcon.src = '/images/SaveStates.png';
-            gameSaveIcon.classList.add('game_tile_box_savedgame');
-            gameSaveIcon.classList.add('savedstateicon');
-            gameTileBox.appendChild(gameSaveIcon);
-        }
-
-        // add favourite game icon
-        let gameFavIconBox = document.createElement('div');
-        gameFavIconBox.classList.add('game_tile_box_favouritegame');
-
-        let gameFavIcon = document.createElement('img');
-        gameFavIcon.classList.add('favouriteicon');
-        if (data.isFavourite === true) {
-            gameFavIcon.src = '/images/favourite-filled.svg';
-            gameFavIconBox.classList.add('favourite-filled');
-        } else {
-            gameFavIcon.src = '/images/favourite-empty.svg';
-            gameFavIconBox.classList.add('favourite-empty');
-        }
-        gameFavIconBox.appendChild(gameFavIcon);
-
-        gameFavIconBox.addEventListener('click', (e) => {
-            e.stopPropagation();
-
-            if (gameFavIconBox.classList.contains('favourite-filled')) {
-                gameFavIcon.src = '/images/favourite-empty.svg';
-                gameFavIconBox.classList.remove('favourite-filled');
-                gameFavIconBox.classList.add('favourite-empty');
-                data.isFavourite = false;
-            } else {
-                gameFavIcon.src = '/images/favourite-filled.svg';
-                gameFavIconBox.classList.remove('favourite-empty');
-                gameFavIconBox.classList.add('favourite-filled');
-                data.isFavourite = true;
+        if (data.metadataMapId !== -1) {
+            // add save game icon
+            if (data.hasSavedGame === true) {
+                let gameSaveIcon = document.createElement('img');
+                gameSaveIcon.src = '/images/SaveStates.png';
+                gameSaveIcon.classList.add('game_tile_box_savedgame');
+                gameSaveIcon.classList.add('savedstateicon');
+                gameTileBox.appendChild(gameSaveIcon);
             }
 
-            fetch('/api/v1.1/Games/' + data.metadataMapId + '/favourite?favourite=' + data.isFavourite, {
-                method: 'POST'
-            }).then(response => {
-                if (response.ok) {
-                    // console.log('Favourite status updated');
+            // add favourite game icon
+            let gameFavIconBox = document.createElement('div');
+            gameFavIconBox.classList.add('game_tile_box_favouritegame');
+
+            let gameFavIcon = document.createElement('img');
+            gameFavIcon.classList.add('favouriteicon');
+            if (data.isFavourite === true) {
+                gameFavIcon.src = '/images/favourite-filled.svg';
+                gameFavIconBox.classList.add('favourite-filled');
+            } else {
+                gameFavIcon.src = '/images/favourite-empty.svg';
+                gameFavIconBox.classList.add('favourite-empty');
+            }
+            gameFavIconBox.appendChild(gameFavIcon);
+
+            gameFavIconBox.addEventListener('click', (e) => {
+                e.stopPropagation();
+
+                if (gameFavIconBox.classList.contains('favourite-filled')) {
+                    gameFavIcon.src = '/images/favourite-empty.svg';
+                    gameFavIconBox.classList.remove('favourite-filled');
+                    gameFavIconBox.classList.add('favourite-empty');
+                    data.isFavourite = false;
                 } else {
-                    // console.log('Failed to update favourite status');
+                    gameFavIcon.src = '/images/favourite-filled.svg';
+                    gameFavIconBox.classList.remove('favourite-empty');
+                    gameFavIconBox.classList.add('favourite-filled');
+                    data.isFavourite = true;
                 }
+
+                fetch('/api/v1.1/Games/' + data.metadataMapId + '/favourite?favourite=' + data.isFavourite, {
+                    method: 'POST'
+                }).then(response => {
+                    if (response.ok) {
+                        // console.log('Favourite status updated');
+                    } else {
+                        // console.log('Failed to update favourite status');
+                    }
+                });
             });
-        });
-        gameTileBox.appendChild(gameFavIconBox);
+            gameTileBox.appendChild(gameFavIconBox);
+        }
 
         // add ratings banner
         if (data.totalRating || displayClassification === true) {
@@ -147,13 +167,17 @@ class GameIcon {
 
         // add game tile title
         if (showTitle === true) {
+            let gameBoxTitleBox = document.createElement('div');
+            gameBoxTitleBox.classList.add('game_tile_label_box');
+
             let gameBoxTitle = document.createElement('div');
             gameBoxTitle.classList.add('game_tile_label');
             if (useSmallCover === true) {
+                gameBoxTitleBox.classList.add('game_tile_label_box_small');
                 gameBoxTitle.classList.add('game_tile_label_small');
             }
             gameBoxTitle.innerHTML = data.name;
-            gameTileOuterBox.appendChild(gameBoxTitle);
+            gameBoxTitleBox.appendChild(gameBoxTitle);
 
             // add game tile subtitle
             if (showSubtitle === true) {
@@ -162,9 +186,10 @@ class GameIcon {
                     gameBoxSubtitle.classList.add('game_tile_label');
                     gameBoxSubtitle.classList.add('game_tile_subtitle');
                     gameBoxSubtitle.innerHTML = new Date(data.firstReleaseDate).getFullYear();
-                    gameTileOuterBox.appendChild(gameBoxSubtitle);
+                    gameBoxTitleBox.appendChild(gameBoxSubtitle);
                 }
             }
+            gameTileOuterBox.appendChild(gameBoxTitleBox);
         }
 
         gameTile.appendChild(gameTileOuterBox);

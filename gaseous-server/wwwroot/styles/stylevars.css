@@ -96,6 +96,7 @@
     /* ------------------------------------------- */
     /* secion header */
     --section-header-background: rgba(43, 43, 43, 0.5);
+    --section-header-background-solid: rgb(43, 43, 43);
     --section-header-background-hover: rgba(0, 0, 0, 0.5);
     /* section body */
     --section-body-background: rgba(56, 56, 56, 0.3);

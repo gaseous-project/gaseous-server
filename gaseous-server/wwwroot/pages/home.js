@@ -14,14 +14,13 @@ class HomePageGameRow {
 
         this.games = document.createElement("div");
         this.games.classList.add("section-body");
-        this.games.innerHTML = "<p>Loading...</p>";
         this.row.appendChild(this.games);
     }
 
     async populate() {
         // get preferences
-        let showRatings = GetPreference("LibraryShowGameRating", true);
-        let showClassification = GetPreference("LibraryShowGameClassification", true);
+        let showRatings = GetPreference("Library.ShowGameRating", true);
+        let showClassification = GetPreference("Library.ShowGameClassification", true);
         let classificationDisplayOrder = GetRatingsBoards();
         if (showRatings == "true") { showRatings = true; } else { showRatings = false; }
         if (showClassification == "true") { showClassification = true; } else { showClassification = false; }
@@ -29,13 +28,25 @@ class HomePageGameRow {
         showRatings = false;
         showClassification = false;
 
+        // start loading indicator
+        let charCount = 0;
+        this.loadingInterval = setInterval(() => {
+            charCount++;
+            if (charCount > 3) {
+                charCount = 0;
+            }
+            this.games.innerHTML = '<p>Loading' + '.'.repeat(charCount) + '&nbsp;'.repeat(3 - charCount) + '</p>';
+        }, 1000);
+
         let gameFilter = new Filtering();
-        gameFilter.applyCallback = async (games) => {
+        gameFilter.executeCallback = async (games) => {
+            clearInterval(this.loadingInterval);
             this.games.innerHTML = "";
 
             if (games.length === 0) {
                 this.games.innerHTML = "<p>No games found.</p>";
             } else {
+                this.games.classList.remove("section-body");
                 let scroller = document.createElement("ul");
                 scroller.classList.add("homegame-scroller");
 
@@ -50,16 +61,24 @@ class HomePageGameRow {
                     scroller.appendChild(gameItem);
 
                     if (game.cover) {
-                        let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg?sourceType=' + game.metadataSource;
-                        if (!coverURLList.includes(coverUrl)) {
-                            coverURLList.push(coverUrl);
+                        let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg?sourceType=' + game.metadataSource;
+                        if (backgroundImageHandler === undefined || backgroundImageHandler.URLList.length === 1) {
+                            let urls = [];
+                            urls.push(coverUrl);
+                            if (backgroundImageHandler !== undefined) {
+                                urls.push(backgroundImageHandler.URLList[0]);
+                            }
+                            console.log("Creating new BackgroundImageRotator");
+                            backgroundImageHandler = new BackgroundImageRotator(urls, null, true, true);
+                        } else {
+                            if (!backgroundImageHandler.URLList.includes(coverUrl)) {
+                                backgroundImageHandler.URLList.push(coverUrl);
+                            }
                         }
                     }
                 }
 
                 this.games.appendChild(scroller);
-
-                backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true);
             }
         }
         gameFilter.ApplyFilter(this.searchModel);
@@ -69,6 +88,8 @@ class HomePageGameRow {
 let targetDiv = document.getElementById("gamehome");
 
 let gameRows = [];
+
+backgroundImageHandler = undefined;
 
 gameRows.push(new HomePageGameRow("Favourites",
     {
@@ -88,6 +109,23 @@ gameRows.push(new HomePageGameRow("Saved Games",
         "settings": {
             "hasSavedGame": true
         },
+        "limit": 10
+    }
+));
+
+gameRows.push(new HomePageGameRow("Recently Played Games",
+    {
+        "playTime": { "min": 1, "max": null },
+        "orderBy": "LastPlayed",
+        "orderDirection": "Descending",
+        "limit": 10
+    }
+));
+
+gameRows.push(new HomePageGameRow("Recently Added Games",
+    {
+        "orderBy": "DateAdded",
+        "orderDirection": "Descending",
         "limit": 10
     }
 ));

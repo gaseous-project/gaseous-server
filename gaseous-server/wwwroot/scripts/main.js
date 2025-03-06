@@ -446,52 +446,46 @@ function getKeyByValue(object, value) {
 }
 
 function GetPreference(Setting, DefaultValue) {
+    // check local storage first
+    let localValue = localStorage.getItem(Setting);
+    if (localValue !== undefined && localValue !== null) {
+        let localValueParsed = JSON.parse(localValue);
+        return localValueParsed;
+    }
+
+    // check user profile
     if (userProfile.userPreferences) {
-        for (var i = 0; i < userProfile.userPreferences.length; i++) {
-            if (userProfile.userPreferences[i].setting == Setting) {
-                // console.log("Get Preference: " + Setting + " : " + userProfile.userPreferences[i].value.toString());
-                return userProfile.userPreferences[i].value.toString();
+        for (let preference of userProfile.userPreferences) {
+            if (preference.setting == Setting) {
+                let remoteValueParsed = JSON.parse(preference.value);
+                return remoteValueParsed;
             }
         }
     }
 
+    // return the default value
     SetPreference(Setting, DefaultValue);
-
-    console.log("Get Preference: " + Setting + " : " + DefaultValue);
     return DefaultValue;
 }
 
-function SetPreference(Setting, Value, callbackSuccess, callbackError) {
-    console.log("Set Preference: " + Setting + " : " + Value.toString());
-    var model = [
+async function SetPreference(Setting, Value, callbackSuccess, callbackError) {
+    let model = [
         {
             "setting": Setting,
-            "value": Value.toString()
+            "value": JSON.stringify(Value)
         }
     ];
 
-    ajaxCall(
-        '/api/v1.1/Account/Preferences',
-        'POST',
-        function (result) {
-            SetPreference_Local(Setting, Value);
-
-            if (callbackSuccess) {
-                callbackSuccess();
-            }
-        },
-        function (error) {
-            SetPreference_Local(Setting, Value);
-
-            if (callbackError) {
-                callbackError();
-            }
-        },
-        JSON.stringify(model)
-    );
+    await SetPreference_Batch(model, callbackSuccess, callbackError);
 }
 
 async function SetPreference_Batch(model, callbackSuccess, callbackError) {
+    // set local storage, and create a model for the server
+    for (let item of model) {
+        localStorage.setItem(item.setting, item.value);
+    }
+
+    // send to server
     await fetch('/api/v1.1/Account/Preferences', {
         method: 'POST',
         headers: {
@@ -500,13 +494,7 @@ async function SetPreference_Batch(model, callbackSuccess, callbackError) {
         body: JSON.stringify(model)
     })
         .then(response => {
-            for (let i = 0; i < model.length; i++) {
-                SetPreference_Local(model[i].setting, model[i].value.toString());
-            }
-        })
-        .then(response => {
             if (response.ok) {
-                console.log("SetPreference_Batch: Success");
                 if (callbackSuccess) {
                     callbackSuccess();
                 }
@@ -518,32 +506,11 @@ async function SetPreference_Batch(model, callbackSuccess, callbackError) {
             }
         })
         .catch(error => {
-            for (let i = 0; i < model.length; i++) {
-                SetPreference_Local(model[i].setting, model[i].value.toString());
-            }
-
             console.log("SetPreference_Batch: Error: " + error);
             if (callbackError) {
                 callbackError();
             }
         });
-}
-
-function SetPreference_Local(Setting, Value) {
-    if (userProfile.userPreferences) {
-        var prefFound = false;
-        for (var i = 0; i < userProfile.userPreferences.length; i++) {
-            if (userProfile.userPreferences[i].setting == Setting) {
-                userProfile.userPreferences[i].value = Value;
-                prefFound = true;
-                break;
-            }
-        }
-
-        if (prefFound == false) {
-            userProfile.userPreferences.push(model);
-        }
-    }
 }
 
 function Uint8ToString(u8a) {
@@ -578,7 +545,7 @@ function loadAvatar(AvatarId) {
 }
 
 function GetRatingsBoards() {
-    let ratingsBoards = JSON.parse(GetPreference("LibraryGameClassificationDisplayOrder", JSON.stringify(["ESRB"])));
+    let ratingsBoards = GetPreference("Library.GameClassificationDisplayOrder", ["ESRB"]);
 
     // add fallback ratings boards
     if (!ratingsBoards.includes("ESRB")) { ratingsBoards.push("ESRB"); }
@@ -605,15 +572,18 @@ function getParameterCaseInsensitive(object, key) {
 }
 
 function BuildSpaceBar(LibrarySize, OtherSize, TotalSize) {
+    let containerDiv = document.createElement('div');
+    containerDiv.setAttribute('style', 'width: 100%;');
+
     let newTable = document.createElement('table');
     newTable.setAttribute('cellspacing', 0);
     newTable.setAttribute('style', 'width: 100%; height: 10px;');
 
     let newRow = document.createElement('tr');
 
-    let LibrarySizePercent = Math.floor(LibrarySize / TotalSize * 100);
-    let OtherSizePercent = Math.floor(OtherSize / TotalSize * 100);
-    let FreeSizePercent = Math.floor((LibrarySize + OtherSize) / TotalSize * 100);
+    let LibrarySizePercent = Math.floor(Number(LibrarySize) / Number(TotalSize) * 100);
+    let OtherSizePercent = Math.floor(Number(OtherSize) / Number(TotalSize) * 100);
+    let FreeSizePercent = Math.floor((Number(LibrarySize) + Number(OtherSize)) / Number(TotalSize) * 100);
 
     let LibraryCell = document.createElement('td');
     LibraryCell.setAttribute('style', 'width: ' + LibrarySizePercent + '%; background-color: green;');
@@ -630,11 +600,46 @@ function BuildSpaceBar(LibrarySize, OtherSize, TotalSize) {
 
     newTable.appendChild(newRow);
 
-    return newTable;
+    containerDiv.appendChild(newTable);
+
+    let sizeBox = document.createElement('div');
+    sizeBox.setAttribute('style', 'width: 100%; height: 55px; position: relative;');
+
+    let librarySizeSpan = document.createElement('span');
+    librarySizeSpan.style.position = 'absolute';
+    librarySizeSpan.classList.add('sizelabel');
+    librarySizeSpan.classList.add('sizelabel_left');
+    if (LibrarySizePercent > 10) {
+        librarySizeSpan.style.left = 'calc(' + LibrarySizePercent + '% - 75px)';
+    } else {
+        librarySizeSpan.style.left = '0px';
+    }
+    librarySizeSpan.innerHTML = 'Library: ' + formatBytes(LibrarySize) + ' (' + LibrarySizePercent + '%)';
+    sizeBox.appendChild(librarySizeSpan);
+
+    let otherSizeSpan = document.createElement('span');
+    otherSizeSpan.style.position = 'absolute';
+    otherSizeSpan.style.left = 'calc(' + OtherSizePercent + '% - 75px)';
+    otherSizeSpan.classList.add('sizelabel');
+    otherSizeSpan.classList.add('sizelabel_center');
+    otherSizeSpan.innerHTML = 'Other: ' + formatBytes(OtherSize) + ' (' + OtherSizePercent + '%)';
+    sizeBox.appendChild(otherSizeSpan);
+
+    let freeSizeSpan = document.createElement('span');
+    freeSizeSpan.style.position = 'absolute';
+    freeSizeSpan.style.right = '0px';
+    freeSizeSpan.classList.add('sizelabel');
+    freeSizeSpan.classList.add('sizelabel_right');
+    freeSizeSpan.innerHTML = 'Free: ' + formatBytes(TotalSize - (Number(LibrarySize) + Number(OtherSize))) + ' (' + FreeSizePercent + '%)';
+    sizeBox.appendChild(freeSizeSpan);
+
+    containerDiv.appendChild(sizeBox);
+
+    return containerDiv;
 }
 
 class BackgroundImageRotator {
-    constructor(URLList, CustomClass, Randomise) {
+    constructor(URLList, CustomClass, Randomise, Rotate = true) {
         this.URLList = URLList;
         if (Randomise == true) {
             this.CurrentIndex = randomIntFromInterval(0, this.URLList.length - 1);
@@ -665,7 +670,9 @@ class BackgroundImageRotator {
                 this.bgImages.appendChild(bgImage);
 
                 // start the rotation
-                this.StartRotation();
+                if (Rotate === true) {
+                    this.StartRotation();
+                }
             } else if (this.URLList.length == 1) {
                 // handle only a single supplied image
                 this.CurrentIndex = 0;

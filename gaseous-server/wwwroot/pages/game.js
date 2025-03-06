@@ -30,7 +30,7 @@ function SetupPage() {
             case "IGDB":
                 attributionSection.style.display = 'block';
 
-                attributionIcon.setAttribute('src', '/images/IGDB_Logo.svg');
+                attributionIcon.setAttribute('src', '/images/IGDB_logo.svg');
                 attributionIcon.style.display = 'block';
 
                 attributionText.innerHTML = 'This game\'s metadata is provided by IGDB. <a href="https://www.igdb.com/games/' + gameData.slug + '" class="romlink" target="_blank" rel="noopener noreferrer">Source Page</a>';
@@ -66,7 +66,7 @@ function SetupPage() {
         // get alt name
         var gameTitleAltLabel = document.getElementById('gametitle_alts');
         if (result.alternative_names) {
-            ajaxCall('/api/v1.1/Games/' + gameId + '/alternativename?sourceType=' + contentSource, 'GET', function (result) {
+            ajaxCall('/api/v1.1/Games/' + gameId + '/' + contentSource + '/alternativename', 'GET', function (result) {
                 var altNames = '';
                 for (var i = 0; i < result.length; i++) {
                     if (altNames.length > 0) {
@@ -108,9 +108,9 @@ function SetupPage() {
         var gameImage = document.createElement('img');
         gameImage.className = 'game_cover_image';
         if (result.cover) {
-            ajaxCall('/api/v1.1/Games/' + gameId + '/cover', 'GET', function (coverResult) {
+            ajaxCall('/api/v1.1/Games/' + gameId + '/' + contentSource + '/cover', 'GET', function (coverResult) {
                 if (coverResult) {
-                    gameImage.src = '/api/v1.1/Games/' + gameId + '/cover/' + coverResult.id + '/image/original/' + coverResult.id + '.jpg?sourceType=' + contentSource;
+                    gameImage.src = '/api/v1.1/Games/' + gameId + '/' + contentSource + '/cover/' + coverResult.id + '/image/original/' + coverResult.id + '.jpg';
 
                     loadArtwork(result, coverResult);
                 } else {
@@ -137,7 +137,7 @@ function SetupPage() {
         let gameDeveloperLoaded = false;
         let gamePublisherLoaded = false;
         if (result.involved_companies) {
-            ajaxCall('/api/v1.1/Games/' + gameId + '/companies?sourceType=' + contentSource, 'GET', function (result) {
+            ajaxCall('/api/v1.1/Games/' + gameId + '/' + contentSource + '/companies', 'GET', function (result) {
                 var lstDevelopers = [];
                 var lstPublishers = [];
 
@@ -185,7 +185,7 @@ function SetupPage() {
         }
 
         // load statistics
-        ajaxCall('/api/v1.1/Statistics/Games/' + gameId + '?sourceType=' + contentSource, 'GET', function (result) {
+        ajaxCall('/api/v1.1/Statistics/Games/' + gameId, 'GET', function (result) {
             var gameStat_lastPlayed = document.getElementById('gamestatistics_lastplayed_value');
             var gameStat_timePlayed = document.getElementById('gamestatistics_timeplayed_value');
             if (result) {
@@ -209,7 +209,7 @@ function SetupPage() {
         });
 
         // load favourites
-        ajaxCall('/api/v1.1/Games/' + gameId + '/favourite?sourceType=' + contentSource, 'GET', function (result) {
+        ajaxCall('/api/v1.1/Games/' + gameId + '/' + contentSource + '/favourite', 'GET', function (result) {
             var gameFavButton = document.getElementById('gamestatistics_favourite_button');
             var gameFavIcon = document.createElement('img');
             gameFavIcon.id = "gamestatistics_favourite";
@@ -244,7 +244,7 @@ function SetupPage() {
         let gameSummaryRatings = document.getElementById('gamesummary_ratings');
         let gameSummaryRatingsContent = document.getElementById('gamesummary_ratings_content');
         if (result.age_ratings) {
-            ajaxCall('/api/v1.1/Games/' + gameId + '/agerating?sourceType=' + contentSource, 'GET', function (result) {
+            ajaxCall('/api/v1.1/Games/' + gameId + '/' + contentSource + '/agerating', 'GET', function (result) {
                 let classTable = document.createElement('table');
 
                 let SpotlightClassifications = GetRatingsBoards();
@@ -297,7 +297,7 @@ function SetupPage() {
         var gameSummaryGenres = document.getElementById('gamesumarry_genres');
         var gameSummaryGenresContent = document.getElementById('gamesumarry_genres_content');
         if (result.genres) {
-            ajaxCall('/api/v1.1/Games/' + gameId + '/genre?sourceType=' + contentSource, 'GET', function (result) {
+            ajaxCall('/api/v1.1/Games/' + gameId + '/' + contentSource + '/genre', 'GET', function (result) {
                 for (var i = 0; i < result.length; i++) {
                     var genreLabel = document.createElement('span');
                     genreLabel.className = 'gamegenrelabel';
@@ -341,13 +341,13 @@ function SetupPage() {
                 imageIndex = result.videos.length;
             }
             if (result.screenshots && result.screenshots.length > 0) {
-                ajaxCall('/api/v1.1/Games/' + gameId + '/screenshots?sourceType=' + contentSource, 'GET', function (screenshotsItem) {
+                ajaxCall('/api/v1.1/Games/' + gameId + '/' + contentSource + '/screenshots', 'GET', function (screenshotsItem) {
                     for (var i = 0; i < screenshotsItem.length; i++) {
                         var screenshotItem = document.createElement('li');
                         screenshotItem.id = 'gamescreenshots_gallery_' + imageIndex;
                         screenshotItem.setAttribute('name', 'gamescreenshots_gallery_item');
-                        screenshotItem.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/screenshots/' + screenshotsItem[i].id + '/image/screenshot_thumb/' + screenshotsItem[i].imageId + '.jpg?sourceType=' + contentSource + '"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
-                        screenshotItem.setAttribute('data-url', '/api/v1.1/Games/' + gameId + '/screenshots/' + screenshotsItem[i].id + '/image/screenshot_thumb/' + screenshotsItem[i].imageId + '.jpg?sourceType=' + contentSource);
+                        screenshotItem.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/' + contentSource + '/screenshots/' + screenshotsItem[i].id + '/image/screenshot_thumb/' + screenshotsItem[i].imageId + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: contain;)');
+                        screenshotItem.setAttribute('data-url', '/api/v1.1/Games/' + gameId + '/' + contentSource + '/screenshots/' + screenshotsItem[i].id + '/image/screenshot_thumb/' + screenshotsItem[i].imageId + '.jpg');
                         screenshotItem.setAttribute('imageid', imageIndex);
                         screenshotItem.setAttribute('imagetype', 0);
                         screenshotItem.className = 'gamescreenshots_gallery_item';
@@ -362,7 +362,7 @@ function SetupPage() {
 
             // load videos
             if (result.videos && result.videos.length > 0) {
-                ajaxCall('/api/v1.1/Games/' + gameId + '/videos?sourceType=' + contentSource, 'GET', function (result) {
+                ajaxCall('/api/v1.1/Games/' + gameId + '/' + contentSource + '/videos', 'GET', function (result) {
                     var gameScreenshots_vGallery = document.getElementById('gamescreenshots_gallery_panel');
                     for (var i = 0; i < result.length; i++) {
                         var vScreenshotItem = document.createElement('li');
@@ -439,7 +439,7 @@ function SetupPage() {
 
 function LoadGamePlatforms() {
     // get platforms
-    ajaxCall('/api/v1.1/Games/' + gameId + '/platforms?sourceType=' + contentSource, 'GET', async function (result) {
+    ajaxCall('/api/v1.1/Games/' + gameId + '/' + contentSource + '/platforms', 'GET', async function (result) {
         let platformContainer = document.getElementById('gamesummaryplatformscontent');
         platformContainer.innerHTML = '';
         for (let i = 0; i < result.length; i++) {
@@ -910,7 +910,7 @@ class RomManagement {
                                 saveStatesButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstateicon" />';
                             }
 
-                            launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + mediaGroup.platformId + '&gameid=' + this.Platform.metadataMapId + '&romid=' + mediaGroup.id + '&mediagroup=1&rompath=' + romPath + '" class="romstart">Launch with ' + this.Platform.emulatorConfiguration.core + '</a>';
+                            launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + mediaGroup.platformId + '&gameid=' + this.Platform.metadataMapId + '&romid=' + mediaGroup.id + '&mediagroup=1&rompath=' + romPath + '" class="romstart">Launch</a>';
                         }
                     }
 
@@ -1189,7 +1189,7 @@ class RomManagement {
                                         });
                                         saveStatesButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstateicon" />';
                                     }
-                                    launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + gameRomItems[i].platformId + '&gameid=' + this.Platform.metadataMapId + '&romid=' + gameRomItems[i].id + '&mediagroup=0&rompath=' + romPath + '" class="romstart">Launch with ' + this.Platform.emulatorConfiguration.core + '</a>';
+                                    launchButton = '<a href="/index.html?page=emulator&engine=' + this.Platform.emulatorConfiguration.emulatorType + '&core=' + this.Platform.emulatorConfiguration.core + '&platformid=' + gameRomItems[i].platformId + '&gameid=' + this.Platform.metadataMapId + '&romid=' + gameRomItems[i].id + '&mediagroup=0&rompath=' + romPath + '" class="romstart">Launch</a>';
                                 }
                             }
                         }
@@ -1648,11 +1648,11 @@ function loadArtwork(game, cover) {
     // default background should be the artworks
     if (game.artworks) {
         for (let i = 0; i < game.artworks.length; i++) {
-            URLList.push("/api/v1.1/Games/" + gameId + "/artwork/" + game.artworks[i] + "/image/original/" + game.artworks[i] + ".jpg?sourceType=" + contentSource);
+            URLList.push("/api/v1.1/Games/" + gameId + "/" + contentSource + "/artwork/" + game.artworks[i] + "/image/original/" + game.artworks[i] + ".jpg");
         }
     } else if (game.cover) {
         // backup background is the cover artwork
-        URLList.push("/api/v1.1/Games/" + gameId + "/cover/" + cover.id + "/image/original/" + cover.id + ".jpg?sourceType=" + contentSource);
+        URLList.push("/api/v1.1/Games/" + gameId + "/" + contentSource + "/cover/" + cover.id + "/image/original/" + cover.id + ".jpg");
     } else {
         // backup background is a random image
         var randomInt = randomIntFromInterval(1, 3);

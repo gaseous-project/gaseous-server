@@ -203,6 +203,12 @@ namespace gaseous_server.Classes
                 discoveredSignature.MetadataSources.AddPlatform((long)determinedPlatform.Id, determinedPlatform.Name, HasheousClient.Models.MetadataSources.None);
             }
 
+            // get discovered game
+            if (discoveredSignature.Flags.GameId == 0)
+            {
+                discoveredSignature.MetadataSources.AddGame(0, discoveredSignature.Game.Name, HasheousClient.Models.MetadataSources.None);
+            }
+
             return discoveredSignature;
         }
 
