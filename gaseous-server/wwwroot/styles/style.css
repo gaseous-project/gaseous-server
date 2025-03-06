@@ -2840,14 +2840,15 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .profile-card-avatar {
     position: absolute;
     left: 10px;
-    top: 20px;
+    top: 70px;
     aspect-ratio: 1/1;
 }
 
 .profile-card-background-image {
     width: 100%;
     /* height: 60px; */
-    aspect-ratio: 4.17/1;
+    /* aspect-ratio: 4.17/1; */
+    aspect-ratio: 16/7;
     background-size: cover;
     background-position: center;
     background-color: var(--profile-card-background-image);

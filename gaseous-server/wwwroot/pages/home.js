@@ -13,8 +13,7 @@ class HomePageGameRow {
         this.row.appendChild(titleHeader);
 
         this.games = document.createElement("div");
-        // this.games.classList.add("section-body");
-        this.games.innerHTML = "<p>Loading...</p>";
+        this.games.classList.add("section-body");
         this.row.appendChild(this.games);
     }
 
@@ -29,14 +28,25 @@ class HomePageGameRow {
         showRatings = false;
         showClassification = false;
 
+        // start loading indicator
+        let charCount = 0;
+        this.loadingInterval = setInterval(() => {
+            charCount++;
+            if (charCount > 3) {
+                charCount = 0;
+            }
+            this.games.innerHTML = '<p>Loading' + '.'.repeat(charCount) + '&nbsp;'.repeat(3 - charCount) + '</p>';
+        }, 1000);
+
         let gameFilter = new Filtering();
         gameFilter.executeCallback = async (games) => {
-            console.log(games);
+            clearInterval(this.loadingInterval);
             this.games.innerHTML = "";
 
             if (games.length === 0) {
                 this.games.innerHTML = "<p>No games found.</p>";
             } else {
+                this.games.classList.remove("section-body");
                 let scroller = document.createElement("ul");
                 scroller.classList.add("homegame-scroller");
 
