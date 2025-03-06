@@ -4,12 +4,12 @@ async function SetupPage() {
         FilterDisplayToggle();
     });
 
-    let displayFilter = GetPreference("Library.ShowFilter", true);
+    let displayFilter = GetPreference("Library.ShowFilter");
     FilterDisplayToggle(displayFilter, true);
 
-    let showTitle = GetPreference("Library.ShowGameTitle", true);
-    let showRatings = GetPreference("Library.ShowGameRating", true);
-    let showClassification = GetPreference("Library.ShowGameClassification", true);
+    let showTitle = GetPreference("Library.ShowGameTitle");
+    let showRatings = GetPreference("Library.ShowGameRating");
+    let showClassification = GetPreference("Library.ShowGameClassification");
     let classificationDisplayOrder = GetRatingsBoards();
 
     // setup filter panel
@@ -117,7 +117,7 @@ async function SetupPage() {
                         tileContainer.appendChild(gameTile);
 
                         if (game.cover) {
-                            let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg?sourceType=' + game.metadataSource;
+                            let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg';
                             if (!coverURLList.includes(coverUrl)) {
                                 coverURLList.push(coverUrl);
                             }
@@ -204,7 +204,7 @@ async function SetupPage() {
             filter.ApplyFilter();
         });
 
-        await filter.GetGamesFilter();
+        filter.GetGamesFilter();
     }
 
     // setup scroll position
