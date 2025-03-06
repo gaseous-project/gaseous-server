@@ -432,7 +432,7 @@ class ProfileCard {
                     // update avatar if different
                     if (callingObject.ProfileData.avatar !== profile.avatar || stillUpdateAnyway === true) {
                         callingObject.Avatar.innerHTML = "";
-                        callingObject.Avatar.appendChild(new Avatar(callingObject.ProfileId, 50, 50));
+                        callingObject.Avatar.appendChild(new Avatar(callingObject.ProfileId, 60, 60));
                     }
 
                     // update profile background if different
