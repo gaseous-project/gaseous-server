@@ -126,7 +126,7 @@
     /* ------------------------------------------- */
     --profile-card-border: rgba(173, 216, 230, 0.3);
     --profile-card-background-image: rgb(0, 0, 130);
-    --profile-card-body-background: rgb(133, 156, 163);
+    --profile-card-body-background: rgb(62, 72, 75);
     --profile-card-display-name-text-color: rgb(255, 255, 255);
     --profile-card-quip-text-color: var(--profile-card-display-name-text-color);
     --profile-card-now-playing-background-color: rgba(0, 0, 0, 0.7);

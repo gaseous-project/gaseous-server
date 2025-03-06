@@ -379,7 +379,7 @@ h3 {
 .user_list_icon {
     width: 35px;
     height: 35px;
-    margin-bottom: -5px;
+    /* margin-bottom: -5px; */
     border-radius: 50%;
 }
 
@@ -2826,7 +2826,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     max-width: 250px;
     border-radius: var(--standard-radius);
     border-style: solid;
-    border-width: 1px;
+    border-width: 0px;
     border-color: var(--profile-card-border);
     overflow: hidden;
     position: relative;
@@ -2856,7 +2856,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
 .profile-card-body {
     /* min-height: 40px; */
-    padding-top: 25px;
+    padding-top: 35px;
     padding-left: 10px;
     padding-right: 10px;
     padding-bottom: 20px;
