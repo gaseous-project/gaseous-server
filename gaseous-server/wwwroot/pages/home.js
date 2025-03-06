@@ -19,8 +19,8 @@ class HomePageGameRow {
 
     async populate() {
         // get preferences
-        let showRatings = GetPreference("Library.ShowGameRating", true);
-        let showClassification = GetPreference("Library.ShowGameClassification", true);
+        let showRatings = GetPreference("Library.ShowGameRating");
+        let showClassification = GetPreference("Library.ShowGameClassification");
         let classificationDisplayOrder = GetRatingsBoards();
         if (showRatings == "true") { showRatings = true; } else { showRatings = false; }
         if (showClassification == "true") { showClassification = true; } else { showClassification = false; }
@@ -61,7 +61,7 @@ class HomePageGameRow {
                     scroller.appendChild(gameItem);
 
                     if (game.cover) {
-                        let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg?sourceType=' + game.metadataSource;
+                        let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg';
                         if (backgroundImageHandler === undefined || backgroundImageHandler.URLList.length === 1) {
                             let urls = [];
                             urls.push(coverUrl);
@@ -147,7 +147,7 @@ async function populateRows() {
 
     for (let row of gameRows) {
         targetDiv.appendChild(row.row);
-        await row.populate();
+        row.populate();
     }
 }
 

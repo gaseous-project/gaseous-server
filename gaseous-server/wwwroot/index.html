@@ -183,7 +183,7 @@
                                                     let pageSelection = getQueryString('page', 'string');
 
                                                     if (!pageSelection) {
-                                                        pageSelection = GetPreference("Library.DefaultHomePage", "home");
+                                                        pageSelection = GetPreference("Library.DefaultHomePage");
                                                     }
                                                     console.log("Loading page: " + pageSelection);
                                                     await LoadPageContent(pageSelection, 'content');

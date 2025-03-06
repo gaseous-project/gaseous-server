@@ -445,7 +445,18 @@ function getKeyByValue(object, value) {
     return Object.keys(object).find(key => object[key] === value);
 }
 
-function GetPreference(Setting, DefaultValue) {
+let PreferenceDefaults = {
+    "Library.DefaultHomePage": { default: "home", server: true },
+    "Library.ShowFilter": { default: true, server: false },
+    "Library.ShowGameTitle": { default: true, server: true },
+    "Library.ShowGameRating": { default: true, server: true },
+    "Library.ShowGameClassification": { default: true, server: true },
+    "Library.GameClassificationDisplayOrder": { default: ["ESRB"], server: true },
+    "Library.Filter": { default: { "pageSize": "20", "orderBy": "NameThe" }, server: false },
+    "Library.FilterCollapsed": { default: { "Title Search": false, "Platforms": false }, server: false }
+}
+
+function GetPreference(Setting) {
     // check local storage first
     let localValue = localStorage.getItem(Setting);
     if (localValue !== undefined && localValue !== null) {
@@ -453,19 +464,28 @@ function GetPreference(Setting, DefaultValue) {
         return localValueParsed;
     }
 
-    // check user profile
-    if (userProfile.userPreferences) {
-        for (let preference of userProfile.userPreferences) {
-            if (preference.setting == Setting) {
-                let remoteValueParsed = JSON.parse(preference.value);
-                return remoteValueParsed;
+    if (PreferenceDefaults[Setting]) {
+        if (PreferenceDefaults[Setting].server) {
+            // check user profile
+            if (userProfile.userPreferences) {
+                for (let preference of userProfile.userPreferences) {
+                    if (preference.setting == Setting) {
+                        let remoteValueParsed = JSON.parse(preference.value);
+                        return remoteValueParsed;
+                    }
+                }
             }
+
+            // return the default value
+            SetPreference(Setting, PreferenceDefaults[Setting].default);
         }
+
+        // return the default value
+        return PreferenceDefaults[Setting].default;
     }
 
-    // return the default value
-    SetPreference(Setting, DefaultValue);
-    return DefaultValue;
+    // no default value found - return null
+    return null;
 }
 
 async function SetPreference(Setting, Value, callbackSuccess, callbackError) {
@@ -481,36 +501,42 @@ async function SetPreference(Setting, Value, callbackSuccess, callbackError) {
 
 async function SetPreference_Batch(model, callbackSuccess, callbackError) {
     // set local storage, and create a model for the server
+    let serverModel = [];
     for (let item of model) {
         localStorage.setItem(item.setting, item.value);
+        if (PreferenceDefaults[item.setting].server) {
+            serverModel.push(item);
+        }
     }
 
     // send to server
-    await fetch('/api/v1.1/Account/Preferences', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(model)
-    })
-        .then(response => {
-            if (response.ok) {
-                if (callbackSuccess) {
-                    callbackSuccess();
+    if (serverModel.length > 0) {
+        await fetch('/api/v1.1/Account/Preferences', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(serverModel)
+        })
+            .then(response => {
+                if (response.ok) {
+                    if (callbackSuccess) {
+                        callbackSuccess();
+                    }
+                } else {
+                    console.log("SetPreference_Batch: Error: " + response.statusText);
+                    if (callbackError) {
+                        callbackError();
+                    }
                 }
-            } else {
-                console.log("SetPreference_Batch: Error: " + response.statusText);
+            })
+            .catch(error => {
+                console.log("SetPreference_Batch: Error: " + error);
                 if (callbackError) {
                     callbackError();
                 }
-            }
-        })
-        .catch(error => {
-            console.log("SetPreference_Batch: Error: " + error);
-            if (callbackError) {
-                callbackError();
-            }
-        });
+            });
+    }
 }
 
 function Uint8ToString(u8a) {
@@ -545,7 +571,7 @@ function loadAvatar(AvatarId) {
 }
 
 function GetRatingsBoards() {
-    let ratingsBoards = GetPreference("Library.GameClassificationDisplayOrder", ["ESRB"]);
+    let ratingsBoards = GetPreference("Library.GameClassificationDisplayOrder");
 
     // add fallback ratings boards
     if (!ratingsBoards.includes("ESRB")) { ratingsBoards.push("ESRB"); }

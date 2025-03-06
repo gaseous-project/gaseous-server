@@ -413,27 +413,27 @@ function SetupPage() {
             gamescreenshots.setAttribute('style', 'display: none;');
         }
 
-        // load similar
-        var gameSummarySimilar = document.getElementById('gamesummarysimilar');
-        ajaxCall('/api/v1.1/Games/' + gameId + '/Related?sourceType=' + contentSource, 'GET', function (result) {
-            if (result.games.length > 0) {
-                gameSummarySimilar.removeAttribute('style');
+        // // load similar
+        // var gameSummarySimilar = document.getElementById('gamesummarysimilar');
+        // ajaxCall('/api/v1.1/Games/' + gameId + '/Related?sourceType=' + contentSource, 'GET', function (result) {
+        //     if (result.games.length > 0) {
+        //         gameSummarySimilar.removeAttribute('style');
 
-                var gameSummarySimilarContent = document.getElementById('gamesummarysimilarcontent');
-                for (var i = 0; i < result.games.length; i++) {
-                    var similarObject = renderGameIcon(result.games[i], true, true, true, GetRatingsBoards(), false, true, false);
-                    gameSummarySimilarContent.appendChild(similarObject);
-                }
+        //         var gameSummarySimilarContent = document.getElementById('gamesummarysimilarcontent');
+        //         for (var i = 0; i < result.games.length; i++) {
+        //             var similarObject = renderGameIcon(result.games[i], true, true, true, GetRatingsBoards(), false, true, false);
+        //             gameSummarySimilarContent.appendChild(similarObject);
+        //         }
 
-                $('.lazy').Lazy({
-                    scrollDirection: 'vertical',
-                    effect: 'fadeIn',
-                    visibleOnly: true
-                });
-            } else {
-                gameSummarySimilar.setAttribute('style', 'display: none;');
-            }
-        });
+        //         $('.lazy').Lazy({
+        //             scrollDirection: 'vertical',
+        //             effect: 'fadeIn',
+        //             visibleOnly: true
+        //         });
+        //     } else {
+        //         gameSummarySimilar.setAttribute('style', 'display: none;');
+        //     }
+        // });
     });
 };
 
