@@ -99,7 +99,7 @@ namespace gaseous_server.Controllers.v1_1
                     model.GameAgeRating.IncludeUnrated = false;
                 }
 
-                return Ok(GetGames(model, user.Id, pageNumber, pageSize, returnSummary, returnGames));
+                return Ok(GetGames(model, user, pageNumber, pageSize, returnSummary, returnGames));
             }
             else
             {
@@ -206,12 +206,12 @@ namespace gaseous_server.Controllers.v1_1
             }
         }
 
-        public static GameReturnPackage GetGames(GameSearchModel model, string userid, int pageNumber = 0, int pageSize = 0, bool returnSummary = true, bool returnGames = true)
+        public static GameReturnPackage GetGames(GameSearchModel model, ApplicationUser? user, int pageNumber = 0, int pageSize = 0, bool returnSummary = true, bool returnGames = true)
         {
             string whereClause = "";
             string havingClause = "";
             Dictionary<string, object> whereParams = new Dictionary<string, object>();
-            whereParams.Add("userid", userid);
+            whereParams.Add("userid", user.Id);
 
             List<string> joinClauses = new List<string>();
             string joinClauseTemplate = "LEFT JOIN `Relation_Game_<Datatype>s` ON `Game`.`Id` = `Relation_Game_<Datatype>s`.`GameId` AND `Relation_Game_<Datatype>s`.`GameSourceId` = `Game`.`SourceId` LEFT JOIN `<Datatype>` ON `Relation_Game_<Datatype>s`.`<Datatype>sId` = `<Datatype>`.`Id`  AND `Relation_Game_<Datatype>s`.`GameSourceId` = `<Datatype>`.`SourceId`";
@@ -568,13 +568,13 @@ namespace gaseous_server.Controllers.v1_1
     COUNT(`RomGroupSavedState`.`Id`) AS `RomGroupSavedStates`,
     `AgeGroup`.`AgeGroupId`,
     CASE
+        WHEN `LocalizedNames`.`LocalizedName` IS NOT NULL THEN `LocalizedNames`.`LocalizedName`
         WHEN `Game`.`Name` IS NULL THEN `MetadataMap`.`SignatureGameName`
         ELSE `Game`.`Name`
     END AS `Name`,
     CASE
-        WHEN
-            `Game`.`Name` IS NULL
-        THEN
+		WHEN `LocalizedNames`.`LocalizedNameThe` IS NOT NULL THEN `LocalizedNames`.`LocalizedNameThe`
+        WHEN `Game`.`Name` IS NULL THEN
             CASE
                 WHEN
                     `MetadataMap`.`SignatureGameName` LIKE 'The %'
@@ -591,7 +591,11 @@ namespace gaseous_server.Controllers.v1_1
     `Game`.`Summary`,
     `Game`.`TotalRating`,
     `Game`.`TotalRatingCount`,
-    `Game`.`Cover`,
+    CASE
+        WHEN `LocalizedNames`.`LocalizedCover` IS NULL THEN `Game`.`Cover`
+        WHEN `LocalizedNames`.`LocalizedCover` = 0 THEN `Game`.`Cover`
+        ELSE `LocalizedNames`.`LocalizedCover`
+    END AS `Cover`,
     `Game`.`Artworks`,
     `Game`.`FirstReleaseDate`,
     `Game`.`Category`,
@@ -637,6 +641,24 @@ FROM
 	`AgeGroup` ON `Game`.`Id` = `AgeGroup`.`GameId` AND `Game`.`SourceId` = `AgeGroup`.`SourceId`
         LEFT JOIN
     `AlternativeName` ON `Game`.`Id` = `AlternativeName`.`Game` AND `Game`.`SourceId` = `AlternativeName`.`SourceId`
+        LEFT JOIN
+    (SELECT 
+        `GameLocalization`.`Game`,
+            `GameLocalization`.`SourceId`,
+            `GameLocalization`.`Name` AS `LocalizedName`,
+            CASE
+                WHEN `GameLocalization`.`Name` LIKE 'The %' THEN CONCAT(TRIM(SUBSTR(`GameLocalization`.`Name`, 4)), ', The')
+                ELSE `GameLocalization`.`Name`
+            END AS `LocalizedNameThe`,
+            `GameLocalization`.`Cover` AS `LocalizedCover`,
+            `Region`.`Identifier`
+    FROM
+        `GameLocalization`
+    JOIN `Region` ON `GameLocalization`.`Region` = `Region`.`Id`
+        AND `GameLocalization`.`SourceId` = `Region`.`SourceId`
+    WHERE
+        `Region`.`Identifier` = @lang) `LocalizedNames` ON `Game`.`Id` = `LocalizedNames`.`Game`
+        AND `Game`.`SourceId` = `LocalizedNames`.`SourceId`
 " + String.Join(" ", joinClauses) + " " + whereClause + " GROUP BY `MetadataMapBridge`.`MetadataSourceId` " + havingClause + " " + orderByClause;
 
             string limiter = "";
@@ -645,6 +667,16 @@ FROM
                 limiter += " LIMIT @pageOffset, @pageSize";
                 whereParams.Add("pageOffset", pageSize * (pageNumber - 1));
                 whereParams.Add("pageSize", pageSize);
+            }
+
+            string? userLocale = user.UserPreferences?.Find(x => x.Setting == "User.Locale")?.Value;
+            if (userLocale != null)
+            {
+                whereParams["lang"] = userLocale;
+            }
+            else
+            {
+                whereParams["lang"] = "";
             }
 
             DataTable dbResponse = db.ExecuteCMD(sql + limiter, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));

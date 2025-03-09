@@ -218,10 +218,11 @@ namespace gaseous_server.Classes
             // get age ratings for specified user
             List<AgeGroups.AgeRestrictionGroupings> UserAgeGroupings = new List<AgeGroups.AgeRestrictionGroupings>();
             bool UserAgeGroupIncludeUnrated = true;
+            ApplicationUser? user = null;
             if (userid != "")
             {
                 Authentication.UserTable<Authentication.ApplicationUser> userTable = new UserTable<ApplicationUser>(db);
-                var user = userTable.GetUserById(userid);
+                user = userTable.GetUserById(userid);
 
                 if (user.SecurityProfile.AgeRestrictionPolicy.IncludeUnrated == false)
                 {
@@ -328,7 +329,7 @@ namespace gaseous_server.Classes
                             IncludeUnrated = UserAgeGroupIncludeUnrated
                         }
                     };
-                    games = Controllers.v1_1.GamesController.GetGames(searchModel, userid);
+                    games = Controllers.v1_1.GamesController.GetGames(searchModel, user);
 
                 }
 

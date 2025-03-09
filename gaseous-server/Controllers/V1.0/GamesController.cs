@@ -55,6 +55,50 @@ namespace gaseous_server.Controllers
                 MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
                 gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
+                // apply user specific localisation
+                if (game.GameLocalizations != null && game.GameLocalizations.Count > 0)
+                {
+                    var user = await _userManager.GetUserAsync(User);
+                    if (user != null)
+                    {
+                        string? userLocale = user.UserPreferences?.Find(x => x.Setting == "User.Locale")?.Value;
+                        if (userLocale != null)
+                        {
+                            GameLocalization? gameLocalization = null;
+                            Region? gameRegion = null;
+                            foreach (long locId in game.GameLocalizations)
+                            {
+                                GameLocalization? loc = GameLocalizations.GetGame_Locatization(game.MetadataSource, locId);
+                                if (loc != null)
+                                {
+                                    Region? region = Regions.GetGame_Region(game.MetadataSource, loc.Region);
+                                    if (region != null)
+                                    {
+                                        if (region.Identifier == userLocale)
+                                        {
+                                            gameLocalization = loc;
+                                            gameRegion = region;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+
+                            if (gameLocalization != null && gameRegion != null)
+                            {
+                                if (gameLocalization.Name != null && gameLocalization.Name != "")
+                                {
+                                    game.Name = gameLocalization.Name;
+                                }
+                                if (gameLocalization.Cover != null && gameLocalization.Cover != 0)
+                                {
+                                    game.Cover = gameLocalization.Cover;
+                                }
+                            }
+                        }
+                    }
+                }
+
                 if (game != null)
                 {
                     return Ok(game);
@@ -265,7 +309,8 @@ namespace gaseous_server.Controllers
                     case MetadataImageType.cover:
                         if (game.Cover != null)
                         {
-                            Cover cover = Classes.Metadata.Covers.GetCover(game.MetadataSource, (long?)game.Cover);
+                            // Cover cover = Classes.Metadata.Covers.GetCover(game.MetadataSource, (long?)game.Cover);
+                            Cover cover = Classes.Metadata.Covers.GetCover(game.MetadataSource, (long?)ImageId);
                             imageId = cover.ImageId;
                             imageTypePath = "Covers";
                         }
