@@ -497,3 +497,32 @@ FROM (
         LEFT JOIN `AgeGroup` `b` ON (`b`.`GameId` = `a`.`Id`)
     )
 ORDER BY `a`.`NameThe`;
+
+CREATE TABLE `GameLocalization` (
+    `Checksum` longtext DEFAULT NULL,
+    `Cover` BIGINT DEFAULT NULL,
+    `CreatedAt` DATETIME DEFAULT NULL,
+    `Game` BIGINT DEFAULT NULL,
+    `Id` BIGINT NOT NULL,
+    `SourceId` INT NOT NULL DEFAULT 1,
+    `Name` longtext DEFAULT NULL,
+    `Region` BIGINT DEFAULT NULL,
+    `UpdatedAt` DATETIME DEFAULT NULL,
+    `dateAdded` datetime DEFAULT NULL,
+    `lastUpdated` datetime DEFAULT NULL,
+    PRIMARY KEY (`Id`)
+);
+
+CREATE TABLE `Region` (
+    `Category` longtext DEFAULT NULL,
+    `Checksum` longtext DEFAULT NULL,
+    `CreatedAt` DATETIME DEFAULT NULL,
+    `Id` BIGINT NOT NULL,
+    `SourceId` INT NOT NULL DEFAULT 1,
+    `Identifier` longtext DEFAULT NULL,
+    `Name` longtext DEFAULT NULL,
+    `UpdatedAt` DATETIME DEFAULT NULL,
+    `dateAdded` datetime DEFAULT NULL,
+    `lastUpdated` datetime DEFAULT NULL,
+    PRIMARY KEY (`Id`)
+);

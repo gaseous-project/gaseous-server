@@ -197,6 +197,7 @@ namespace gaseous_server.Classes.Metadata
             ExternalGame,
             Franchise,
             GameMode,
+            GameLocalization,
             Game,
             GameVideo,
             Genre,
@@ -207,6 +208,7 @@ namespace gaseous_server.Classes.Metadata
             PlatformVersion,
             PlayerPerspective,
             ReleaseDate,
+            Region,
             Search,
             Screenshot,
             Theme
@@ -403,6 +405,11 @@ namespace gaseous_server.Classes.Metadata
                                 EndpointString = IGDBClient.Endpoints.GameModes;
                                 break;
 
+                            case MetadataEndpoint.GameLocalization:
+                                fieldList = GameLocalizations.fieldList;
+                                EndpointString = "game_localizations";
+                                break;
+
                             case MetadataEndpoint.Game:
                                 fieldList = Games.fieldList;
                                 EndpointString = IGDBClient.Endpoints.Games;
@@ -451,6 +458,11 @@ namespace gaseous_server.Classes.Metadata
                             case MetadataEndpoint.ReleaseDate:
                                 fieldList = ReleaseDates.fieldList;
                                 EndpointString = IGDBClient.Endpoints.ReleaseDates;
+                                break;
+
+                            case MetadataEndpoint.Region:
+                                fieldList = Regions.fieldList;
+                                EndpointString = "regions";
                                 break;
 
                             case MetadataEndpoint.Screenshot:
@@ -914,6 +926,12 @@ namespace gaseous_server.Classes.Metadata
                             releaseDateResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.ReleaseDate>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(releaseDateResult) };
+
+                        case "region":
+                            HasheousClient.Models.Metadata.IGDB.Region regionResult = new HasheousClient.Models.Metadata.IGDB.Region();
+                            regionResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Region>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                            return new T[] { ConvertToIGDBModel<T>(regionResult) };
 
                         case "screenshot":
                             HasheousClient.Models.Metadata.IGDB.Screenshot screenshotResult = new HasheousClient.Models.Metadata.IGDB.Screenshot();
