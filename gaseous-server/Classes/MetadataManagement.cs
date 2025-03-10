@@ -574,6 +574,26 @@ namespace gaseous_server.Classes
 									Metadata.Genres.GetGenres(metadataSource, genreId);
 								}
 							}
+							if (game.GameLocalizations != null)
+							{
+								foreach (long gameLocalizationId in game.GameLocalizations)
+								{
+									GameLocalization gameLocalization = Metadata.GameLocalizations.GetGame_Locatization(metadataSource, gameLocalizationId);
+
+									if (gameLocalization != null)
+									{
+										if (gameLocalization.Cover != null)
+										{
+											Metadata.Covers.GetCover(metadataSource, (long)gameLocalization.Cover);
+										}
+
+										if (gameLocalization.Region != null)
+										{
+											Metadata.Regions.GetGame_Region(metadataSource, (long)gameLocalization.Region);
+										}
+									}
+								}
+							}
 							if (game.Videos != null)
 							{
 								foreach (long gameVideoId in game.Videos)

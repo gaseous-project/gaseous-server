@@ -84,6 +84,28 @@
 
 <div id="tab2" name="modalTab" data-tabname="Localisation">
     <div class="section">
+        <div class="section-header">Preferred Title and Cover Art Region</div>
+        <div class="section-body">
+            <table style="width: 100%;">
+                <tr>
+                    <td style="width: 25%;">
+                        Region:
+                    </td>
+                    <td>
+                        <select id="profile_pref_LibraryGameRegion" data-pref="User.Locale"
+                            data-minimum-results-for-search="Infinity">
+                            <option selected="selected" value="default">US (Default)</option>
+                            <option value="EU">Europe</option>
+                            <option value="ja-JP">Japan</option>
+                            <option value="ko-KR">Korea</option>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
+    <div class="section">
         <div class="section-header">Age Classification</div>
         <div class="section-body">
             <table id="profile_pref_LibraryClassificationBadgeSelect" style="width: 100%;">

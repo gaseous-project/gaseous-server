@@ -108,18 +108,9 @@ function SetupPage() {
         var gameImage = document.createElement('img');
         gameImage.className = 'game_cover_image';
         if (result.cover) {
-            ajaxCall('/api/v1.1/Games/' + gameId + '/' + contentSource + '/cover', 'GET', function (coverResult) {
-                if (coverResult) {
-                    gameImage.src = '/api/v1.1/Games/' + gameId + '/' + contentSource + '/cover/' + coverResult.id + '/image/original/' + coverResult.id + '.jpg';
+            gameImage.src = '/api/v1.1/Games/' + gameId + '/' + contentSource + '/cover/' + result.cover + '/image/original/' + result.cover + '.jpg';
 
-                    loadArtwork(result, coverResult);
-                } else {
-                    gameImage.src = '/images/unknowngame.png';
-                    gameImage.className = 'game_cover_image unknown';
-
-                    loadArtwork(result);
-                }
-            });
+            loadArtwork(result);
         } else {
             gameImage.src = '/images/unknowngame.png';
             gameImage.className = 'game_cover_image unknown';
@@ -995,13 +986,13 @@ class RomManagement {
 
                     let deleteButton = document.createElement('a');
                     deleteButton.href = '#';
-                    deleteButton.addEventListener('click', function () {
-                        // showSubDialog('mediagroupdelete', mediaGroup.id);
-                        const deleteWindow = new MessageBox("Delete Selected Media Group", "Are you sure you want to delete this media group and all associated saved states?");
 
-                        let deleteButton = new ModalButton("Delete", 2, deleteWindow, function (callingObject) {
+                    deleteButton.addEventListener('click', () => {
+                        let deleteWindow = new MessageBox("Delete Selected Media Group", "Are you sure you want to delete this media group and all associated saved states?");
+
+                        let deleteButton = new ModalButton("Delete", 2, deleteWindow, function (deleteWindow) {
                             ajaxCall(
-                                '/api/v1.1/Games/' + this.Platform.metadataMapId + '/romgroup/' + mediaGroup.id,
+                                '/api/v1.1/Games/' + thisObject.Platform.metadataMapId + '/romgroup/' + mediaGroup.id,
                                 'DELETE',
                                 function (result) {
                                     thisObject.#loadRoms();
@@ -1012,12 +1003,12 @@ class RomManagement {
                                     thisObject.#loadMediaGroups();
                                 }
                             );
-                            callingObject.msgDialog.close();
+                            deleteWindow.msgDialog.close();
                         });
                         deleteWindow.addButton(deleteButton);
 
-                        let cancelButton = new ModalButton("Cancel", 0, deleteWindow, function (callingObject) {
-                            callingObject.msgDialog.close();
+                        let cancelButton = new ModalButton("Cancel", 0, deleteWindow, function (deleteWindow) {
+                            deleteWindow.msgDialog.close();
                         });
                         deleteWindow.addButton(cancelButton);
 
@@ -1642,7 +1633,7 @@ class RomManagement {
     }
 }
 
-function loadArtwork(game, cover) {
+function loadArtwork(game) {
     let URLList = [];
 
     // default background should be the artworks
@@ -1652,7 +1643,7 @@ function loadArtwork(game, cover) {
         }
     } else if (game.cover) {
         // backup background is the cover artwork
-        URLList.push("/api/v1.1/Games/" + gameId + "/" + contentSource + "/cover/" + cover.id + "/image/original/" + cover.id + ".jpg");
+        URLList.push("/api/v1.1/Games/" + gameId + "/" + contentSource + "/cover/" + game.cover + "/image/original/" + game.cover + ".jpg");
     } else {
         // backup background is a random image
         var randomInt = randomIntFromInterval(1, 3);

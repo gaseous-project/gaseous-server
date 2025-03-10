@@ -453,7 +453,8 @@ let PreferenceDefaults = {
     "Library.ShowGameClassification": { default: true, server: true },
     "Library.GameClassificationDisplayOrder": { default: ["ESRB"], server: true },
     "Library.Filter": { default: { "pageSize": "20", "orderBy": "NameThe" }, server: false },
-    "Library.FilterCollapsed": { default: { "Title Search": false, "Platforms": false }, server: false }
+    "Library.FilterCollapsed": { default: { "Title Search": false, "Platforms": false }, server: false },
+    "User.Locale": { default: "default", server: true }
 }
 
 function GetPreference(Setting) {
@@ -486,6 +487,14 @@ function GetPreference(Setting) {
 
     // no default value found - return null
     return null;
+}
+
+function GetPreferences() {
+    let preferences = {};
+    for (let key in PreferenceDefaults) {
+        preferences[key] = GetPreference(key);
+    }
+    return preferences;
 }
 
 async function SetPreference(Setting, Value, callbackSuccess, callbackError) {

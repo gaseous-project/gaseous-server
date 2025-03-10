@@ -934,7 +934,7 @@ input[name='filter_panel_range_max'] {
     top: 120px;
     bottom: 0px;
     width: 50px;
-    overflow-x: auto;
+    overflow-x: hidden;
     overflow-y: auto;
     /* display: flex; */
     justify-content: center;
@@ -954,13 +954,13 @@ input[name='filter_panel_range_max'] {
     text-align: center;
     padding-top: 7px;
     padding-bottom: 7px;
-    transition: transform 0.3s ease-in-out;
+    transition: transform 0.2s ease-in-out;
 }
 
 .games_library_alpha_pager_letter:hover {
     cursor: pointer;
     /* background-color: blue; */
-    transform: scale(2);
+    transform: scale(1.8);
 }
 
 .pageAnchor {
@@ -1290,7 +1290,10 @@ input[name='filter_panel_range_max'] {
 }
 
 .game_tile_box {
-    transition: transform 0.3s ease-in-out;
+    transition: transform 0.2s ease-in-out;
+    box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.44);
+    -webkit-box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.44);
+    -moz-box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.44);
 }
 
 .game_tile_box:hover {
