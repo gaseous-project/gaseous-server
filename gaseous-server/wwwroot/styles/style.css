@@ -1291,6 +1291,9 @@ input[name='filter_panel_range_max'] {
 
 .game_tile_box {
     transition: transform 0.2s ease-in-out;
+    box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.44);
+    -webkit-box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.44);
+    -moz-box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.44);
 }
 
 .game_tile_box:hover {

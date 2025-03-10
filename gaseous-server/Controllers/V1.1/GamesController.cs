@@ -672,6 +672,8 @@ FROM
             string? userLocale = user.UserPreferences?.Find(x => x.Setting == "User.Locale")?.Value;
             if (userLocale != null)
             {
+                // userLocale is in a serliazed format, so we need to deserialize it - but since it's the only thing, we can simply remove the quotes
+                userLocale = userLocale.Replace("\"", "");
                 whereParams["lang"] = userLocale;
             }
             else

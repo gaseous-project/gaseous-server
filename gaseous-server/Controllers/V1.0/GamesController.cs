@@ -64,6 +64,9 @@ namespace gaseous_server.Controllers
                         string? userLocale = user.UserPreferences?.Find(x => x.Setting == "User.Locale")?.Value;
                         if (userLocale != null)
                         {
+                            // userLocale is in a serliazed format, so we need to deserialize it - but since it's the only thing, we can simply remove the quotes
+                            userLocale = userLocale.Replace("\"", "");
+
                             GameLocalization? gameLocalization = null;
                             Region? gameRegion = null;
                             foreach (long locId in game.GameLocalizations)
@@ -128,19 +131,53 @@ namespace gaseous_server.Controllers
                 MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
                 gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
+                List<AlternativeName> altNames = new List<AlternativeName>();
+
+                // add default game name
+                AlternativeName defaultName = new AlternativeName();
+                defaultName.Name = game.Name;
+                defaultName.Comment = "Default";
+                altNames.Add(defaultName);
+
                 if (game.AlternativeNames != null)
                 {
-                    List<AlternativeName> altNames = new List<AlternativeName>();
                     foreach (long altNameId in game.AlternativeNames)
                     {
-                        altNames.Add(AlternativeNames.GetAlternativeNames(game.MetadataSource, altNameId));
+                        AlternativeName altName = AlternativeNames.GetAlternativeNames(game.MetadataSource, altNameId);
+
+                        // make sure the name is not already in the list of alternative names
+                        if (altNames.FirstOrDefault(x => x.Name == altName.Name) == null)
+                        {
+                            altNames.Add(altName);
+                        }
                     }
-                    return Ok(altNames);
+
+                    // add localized names
+                    if (game.GameLocalizations != null)
+                    {
+                        foreach (long locId in game.GameLocalizations)
+                        {
+                            GameLocalization loc = GameLocalizations.GetGame_Locatization(game.MetadataSource, locId);
+                            if (loc != null)
+                            {
+                                // make sure loc.Name is not already in the list of alternative names
+                                if (altNames.FirstOrDefault(x => x.Name == loc.Name) == null)
+                                {
+                                    // get localisation region
+                                    Region region = Regions.GetGame_Region(game.MetadataSource, loc.Region);
+
+                                    // add the localized name to the list of alternative names
+                                    AlternativeName locAltName = new AlternativeName();
+                                    locAltName.Name = loc.Name;
+                                    locAltName.Comment = region.Name;
+                                    altNames.Add(locAltName);
+                                }
+                            }
+                        }
+                    }
                 }
-                else
-                {
-                    return NotFound();
-                }
+
+                return Ok(altNames);
             }
             catch
             {

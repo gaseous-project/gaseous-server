@@ -12,18 +12,18 @@ class PreferencesWindow {
         this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Preferences";
 
         // set initial preference states
-        let preferences = userProfile.userPreferences;
+        let preferences = GetPreferences();
         for (const [key, value] of Object.entries(preferences)) {
-            switch (value.setting) {
+            switch (key) {
                 default:
-                    let settingElementSelector = '[data-pref="' + value.setting + '"]';
+                    let settingElementSelector = '[data-pref="' + key + '"]';
                     let settingElement = this.dialog.modalElement.querySelector(settingElementSelector);
                     if (settingElement) {
                         switch (settingElement.tagName) {
                             case "INPUT":
                                 switch (settingElement.type) {
                                     case "checkbox":
-                                        if (value.value == "true") {
+                                        if (value === "true" || value === true) {
                                             settingElement.checked = true;
                                         } else {
                                             settingElement.checked = false;
@@ -32,7 +32,7 @@ class PreferencesWindow {
                                 }
                                 break;
                             case "SELECT":
-                                settingElement.value = JSON.parse(value.value);
+                                settingElement.value = value;
                                 $(settingElement).select2();
                                 break;
                         }
