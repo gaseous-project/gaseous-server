@@ -21,7 +21,7 @@
     <PackageReference Include="gaseous-signature-parser" Version="2.3.8" />
     <PackageReference Include="gaseous.IGDB" Version="1.0.2" />
     <PackageReference Include="hasheous-client" Version="1.2.5.3" />
-    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="13.8.0" />
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.5.0" />
     <PackageReference Include="sharpcompress" Version="0.37.2" />
     <PackageReference Include="Squid-Box.SevenZipSharp" Version="1.6.2.24" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="7.3.1" />
