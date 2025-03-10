@@ -200,7 +200,7 @@ function SetupPage() {
         });
 
         // load favourites
-        ajaxCall('/api/v1.1/Games/' + gameId + '/' + contentSource + '/favourite', 'GET', function (result) {
+        ajaxCall('/api/v1.1/Games/' + gameId + '/favourite', 'GET', function (result) {
             var gameFavButton = document.getElementById('gamestatistics_favourite_button');
             var gameFavIcon = document.createElement('img');
             gameFavIcon.id = "gamestatistics_favourite";
