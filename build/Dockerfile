@@ -53,6 +53,9 @@ COPY ../build/standard/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN mkdir -p /var/run/supervisord
 RUN mkdir -p /var/log/supervisord
 
+# Install curl
+RUN apt-get install -y curl
+
 # clean up apt-get
 RUN apt-get clean && rm -rf /var/lib/apt/lists
 
@@ -62,6 +65,9 @@ RUN chmod +x /usr/sbin/entrypoint.sh
 
 # volumes
 VOLUME /home/gaseous/.gaseous-server
+
+# Configure healthcheck
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 CMD curl --fail http://localhost:80/api/v1.1/HealthCheck || exit 1
 
 # start services
 ENTRYPOINT [ "/usr/sbin/entrypoint.sh" ]
