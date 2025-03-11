@@ -40,7 +40,11 @@
 
     EJS_gameName = emuGameTitle;
 
-    EJS_threads = false;
+    if (typeof SharedArrayBuffer !== 'undefined') {
+        if (getQueryString('core', 'string') === "ppsspp") {
+            EJS_threads = true;
+        }
+    }
 
     EJS_Buttons = {
         exitEmulation: false
