@@ -465,17 +465,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
-        [Route("{MetadataMapId}/{MetadataSource}/favourite")]
+        [Route("{MetadataMapId}/favourite")]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameGetFavouriteAsync(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource)
+        public async Task<ActionResult> GameGetFavouriteAsync(long MetadataMapId)
         {
             try
             {
-                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
 
-                if (game != null)
+                if (metadataMap != null)
                 {
                     var user = await _userManager.GetUserAsync(User);
 
@@ -503,17 +502,16 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpPost]
-        [Route("{MetadataMapId}/{MetadataSource}/favourite")]
+        [Route("{MetadataMapId}/favourite")]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameSetFavouriteAsync(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource, bool favourite)
+        public async Task<ActionResult> GameSetFavouriteAsync(long MetadataMapId, bool favourite)
         {
             try
             {
-                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
 
-                if (game != null)
+                if (metadataMap != null)
                 {
                     var user = await _userManager.GetUserAsync(User);
 
