@@ -41,6 +41,9 @@ class GameIcon {
 
         let gameTileBox = document.createElement('div');
         gameTileBox.classList.add('game_tile_box');
+        if (useSmallCover === true) {
+            gameTileBox.classList.add('game_tile_box_small');
+        }
         if (data.metadataMapId !== -1) {
             gameTileBox.addEventListener('click', () => {
                 window.location.href = '/index.html?page=game&id=' + data.metadataMapId;
@@ -50,13 +53,15 @@ class GameIcon {
 
         // cover art
         let gameTileImage = document.createElement('img');
+        let gameTileImageSize = 'cover_big';
         gameTileImage.classList.add('game_tile_image');
         if (useSmallCover == true) {
             gameTileImage.classList.add('game_tile_image_small');
+            gameTileImageSize = 'cover_small';
         }
         gameTileImage.setAttribute('loading', 'lazy');
         if (data.cover) {
-            gameTileImage.setAttribute('src', '/api/v1.1/Games/' + data.metadataMapId + '/' + data.metadataSource + '/cover/' + data.cover + '/image/original/' + data.cover + '.jpg');
+            gameTileImage.setAttribute('src', '/api/v1.1/Games/' + data.metadataMapId + '/' + data.metadataSource + '/cover/' + data.cover + '/image/' + gameTileImageSize + '/' + data.cover + '.jpg');
         } else {
             gameTileImage.setAttribute('src', '/images/unknowngame.png');
         }

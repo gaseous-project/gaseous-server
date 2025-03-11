@@ -440,7 +440,13 @@ class ProfileCard {
                         if (profile.profileBackground) {
                             callingObject.BackgroundImage.style = "background-image: url('/api/v1.1/UserProfile/" + callingObject.ProfileId + "/Background');";
                         } else {
-                            callingObject.BackgroundImage.style = "";
+                            // callingObject.BackgroundImage.style = "";
+                            // set a random background image
+                            let backgroundsList = [
+                                '/images/CollectionsWallpaper.jpg'
+                            ]
+                            let randomBackground = Math.floor(Math.random() * backgroundsList.length);
+                            callingObject.BackgroundImage.style = "background-image: url('" + backgroundsList[randomBackground] + "');";
                         }
                     }
 
@@ -458,7 +464,7 @@ class ProfileCard {
                         callingObject.ProfileNowPlayingLabel.innerHTML = "Now Playing";
                         let cardImage = '';
                         if (profile.nowPlaying.game.cover) {
-                            cardImage = "/api/v1.1/Games/" + profile.nowPlaying.game.metadataMapId + '/' + profile.nowPlaying.game.metadataSource + "/cover/" + profile.nowPlaying.game.cover + "/image/cover_big/" + profile.nowPlaying.game.cover + ".jpg";
+                            cardImage = "/api/v1.1/Games/" + profile.nowPlaying.game.metadataMapId + '/' + profile.nowPlaying.game.metadataSource + "/cover/" + profile.nowPlaying.game.cover + "/image/cover_small/" + profile.nowPlaying.game.cover + ".jpg";
                         } else {
                             cardImage = "/images/unknowngame.png";
                         }

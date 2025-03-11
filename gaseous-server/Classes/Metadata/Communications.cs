@@ -1262,7 +1262,7 @@ namespace gaseous_server.Classes.Metadata
                 // get the original image
                 using (var image = new ImageMagick.MagickImage(originalFilePath))
                 {
-                    image.Resize(resolution.X, resolution.Y);
+                    image.Resize((uint)resolution.X, (uint)resolution.Y);
                     image.Strip();
                     image.Write(requestedFilePath);
                 }
