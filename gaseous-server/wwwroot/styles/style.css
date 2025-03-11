@@ -1007,8 +1007,8 @@ input[name='filter_panel_range_max'] {
     min-height: 50px;
     /* min-width: 50px; */
     width: 80px;
-    padding-left: 10px;
-    padding-right: 10px;
+    margin-left: 10px;
+    margin-right: 10px;
 }
 
 .game_tile:hover {
@@ -1064,6 +1064,13 @@ input[name='filter_panel_range_max'] {
     /* border-style: solid; */
     /* border-color: transparent; */
     overflow: hidden;
+}
+
+.game_tile_box_small {
+    max-width: 75px;
+    max-height: 100px;
+    padding: 0px;
+    margin: 0px;
 }
 
 /* .game_tile:hover .game_tile_box { */
