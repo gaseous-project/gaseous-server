@@ -4,6 +4,7 @@ namespace gaseous_server.Models
     {
         public byte[] content { get; set; }
         public string mimeType { get; set; }
+        public string fileName { get; set; }
         public string extension { get; set; }
     }
 }

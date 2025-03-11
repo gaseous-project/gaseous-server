@@ -18,6 +18,7 @@ namespace gaseous_server.Models
         public class ProfileImageItem
         {
             public string MimeType { get; set; }
+            public string FileName { get; set; }
             public string Extension { get; set; }
         }
     }

@@ -20,7 +20,7 @@ namespace gaseous_server.Classes
         {
             // build the user profile object
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT Id, UserId, DisplayName, Quip, AvatarExtension, ProfileBackgroundExtension, UnstructuredData FROM UserProfiles WHERE Id = @userid;";
+            string sql = "SELECT Id, UserId, DisplayName, Quip, AvatarHash, AvatarExtension, ProfileBackgroundHash, ProfileBackgroundExtension, UnstructuredData FROM UserProfiles WHERE Id = @userid;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>{
                 { "userid", UserId }
             };
@@ -38,6 +38,7 @@ namespace gaseous_server.Classes
                 Avatar = new Models.UserProfile.ProfileImageItem
                 {
                     MimeType = supportedImages[data.Rows[0]["AvatarExtension"].ToString()],
+                    FileName = data.Rows[0]["AvatarHash"].ToString(),
                     Extension = data.Rows[0]["AvatarExtension"].ToString()
                 };
             }
@@ -48,13 +49,14 @@ namespace gaseous_server.Classes
                 ProfileBackground = new Models.UserProfile.ProfileImageItem
                 {
                     MimeType = supportedImages[data.Rows[0]["ProfileBackgroundExtension"].ToString()],
+                    FileName = data.Rows[0]["ProfileBackgroundHash"].ToString(),
                     Extension = data.Rows[0]["ProfileBackgroundExtension"].ToString()
                 };
             }
 
             // get now playing game - if available
             Models.UserProfile.NowPlayingItem? NowPlaying = null;
-            sql = "SELECT * FROM `view_UserTimeTracking` WHERE UserId = @userid AND UTC_TIMESTAMP() BETWEEN SessionTime AND DATE_ADD(SessionEnd, INTERVAL 2 MINUTE) ORDER BY SessionEnd DESC LIMIT 1;";
+            sql = "SELECT * FROM `view_UserTimeTracking` WHERE UserId = @userid AND UTC_TIMESTAMP() BETWEEN SessionTime AND DATE_ADD(SessionEnd, INTERVAL 1 MINUTE) ORDER BY SessionEnd DESC LIMIT 1;";
             dbDict = new Dictionary<string, object>{
                 { "userid", data.Rows[0]["UserId"].ToString() }
             };
@@ -120,25 +122,31 @@ namespace gaseous_server.Classes
             }
 
             string ByteFieldName;
+            string FileNameFieldName;
             string ExtensionFieldName;
             switch (imageType)
             {
                 case ImageType.Avatar:
                     ByteFieldName = "Avatar";
+                    FileNameFieldName = "AvatarHash";
                     ExtensionFieldName = "AvatarExtension";
                     break;
                 case ImageType.Background:
                     ByteFieldName = "ProfileBackground";
+                    FileNameFieldName = "ProfileBackgroundHash";
                     ExtensionFieldName = "ProfileBackgroundExtension";
                     break;
                 default:
                     throw new Exception("Invalid image type");
             }
 
+            string fileHash = BitConverter.ToString(System.Security.Cryptography.SHA256.HashData(bytes)).Replace("-", "").ToLower();
+
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = String.Format("UPDATE UserProfiles SET {0} = @content, {1} = @extension WHERE Id = @userid AND UserId = @internaluserid;", ByteFieldName, ExtensionFieldName);
+            string sql = String.Format("UPDATE UserProfiles SET {0} = @content, {1} = @filehash, {2} = @extension WHERE Id = @userid AND UserId = @internaluserid;", ByteFieldName, FileNameFieldName, ExtensionFieldName);
             Dictionary<string, object> dbDict = new Dictionary<string, object>{
                 { "content", bytes },
+                { "filehash", fileHash },
                 { "extension", Path.GetExtension(Filename) },
                 { "userid", UserId },
                 { "internaluserid", InternalUserId }
@@ -150,15 +158,18 @@ namespace gaseous_server.Classes
         public Models.ImageItem? GetImage(ImageType imageType, string UserId)
         {
             string ByteFieldName;
+            string FileNameFieldName;
             string ExtensionFieldName;
             switch (imageType)
             {
                 case ImageType.Avatar:
                     ByteFieldName = "Avatar";
+                    FileNameFieldName = "AvatarHash";
                     ExtensionFieldName = "AvatarExtension";
                     break;
                 case ImageType.Background:
                     ByteFieldName = "ProfileBackground";
+                    FileNameFieldName = "ProfileBackgroundHash";
                     ExtensionFieldName = "ProfileBackgroundExtension";
                     break;
                 default:
@@ -166,7 +177,7 @@ namespace gaseous_server.Classes
             }
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = String.Format("SELECT {0}, {1} FROM UserProfiles WHERE Id = @userid;", ByteFieldName, ExtensionFieldName);
+            string sql = String.Format("SELECT {0}, {1}, {2} FROM UserProfiles WHERE Id = @userid;", ByteFieldName, FileNameFieldName, ExtensionFieldName);
             Dictionary<string, object> dbDict = new Dictionary<string, object>{
                 { "userid", UserId }
             };
@@ -182,6 +193,7 @@ namespace gaseous_server.Classes
             {
                 content = data.Rows[0][ByteFieldName] as byte[],
                 mimeType = supportedImages[data.Rows[0][ExtensionFieldName] as string],
+                fileName = data.Rows[0][FileNameFieldName] as string,
                 extension = data.Rows[0][ExtensionFieldName] as string
             };
 
@@ -191,15 +203,18 @@ namespace gaseous_server.Classes
         public void DeleteImage(ImageType imageType, string UserId)
         {
             string ByteFieldName;
+            string FileNameFieldName;
             string ExtensionFieldName;
             switch (imageType)
             {
                 case ImageType.Avatar:
                     ByteFieldName = "Avatar";
+                    FileNameFieldName = "AvatarHash";
                     ExtensionFieldName = "AvatarExtension";
                     break;
                 case ImageType.Background:
                     ByteFieldName = "ProfileBackground";
+                    FileNameFieldName = "ProfileBackgroundHash";
                     ExtensionFieldName = "ProfileBackgroundExtension";
                     break;
                 default:
@@ -207,7 +222,7 @@ namespace gaseous_server.Classes
             }
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = String.Format("UPDATE UserProfiles SET {0} = NULL, {1} = NULL WHERE UserId = @userid;", ByteFieldName, ExtensionFieldName);
+            string sql = String.Format("UPDATE UserProfiles SET {0} = NULL, {1} = NULL, {2} = NULL WHERE UserId = @userid;", ByteFieldName, FileNameFieldName, ExtensionFieldName);
             Dictionary<string, object> dbDict = new Dictionary<string, object>{
                 { "userid", UserId }
             };

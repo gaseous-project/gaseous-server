@@ -33,8 +33,10 @@ CREATE TABLE UserProfiles (
     `Quip` VARCHAR(255) NOT NULL,
     `Avatar` LONGBLOB,
     `AvatarExtension` CHAR(6),
+    `AvatarHash` VARCHAR(128),
     `ProfileBackground` LONGBLOB,
     `ProfileBackgroundExtension` CHAR(6),
+    `ProfileBackgroundHash` VARCHAR(128),
     `UnstructuredData` LONGTEXT NOT NULL,
     PRIMARY KEY (`Id`, `UserId`)
 );

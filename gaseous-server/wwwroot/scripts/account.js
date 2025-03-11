@@ -96,7 +96,7 @@ class AccountWindow {
                     this.AvatarPreview.style.backgroundImage = "";
                     this.AvatarPreview.style.backgroundColor = "#" + avatarBackgroundColor;
                     if (profile.avatar) {
-                        this.AvatarPreview.style.backgroundImage = "url('/api/v1.1/UserProfile/" + userProfile.profileId + "/Avatar')";
+                        this.AvatarPreview.style.backgroundImage = "url('/api/v1.1/UserProfile/" + userProfile.profileId + "/Avatar/" + profile.avatar.fileName + profile.avatar.extension + "')";
                     } else {
                         this.AvatarPreview.innerHTML = profile.displayName[0].toUpperCase();
                     }
@@ -105,7 +105,7 @@ class AccountWindow {
                     this.BackgroundPreview.innerHTML = "";
                     this.BackgroundPreview.style.backgroundImage = "";
                     if (profile.profileBackground) {
-                        this.BackgroundPreview.style.backgroundImage = "url('/api/v1.1/UserProfile/" + userProfile.profileId + "/Background')";
+                        this.BackgroundPreview.style.backgroundImage = "url('/api/v1.1/UserProfile/" + userProfile.profileId + "/Background/" + profile.profileBackground.fileName + profile.profileBackground.extension + "')";
                     }
 
                     // display name preview
@@ -332,7 +332,7 @@ class Avatar {
                     let newAvatarImg;
                     newAvatarImg = document.createElement('div');
                     if (profile.avatar) {
-                        newAvatarImg.style = "background-image: url('/api/v1.1/UserProfile/" + callingObject.ProfileId + "/Avatar'); background-size: cover; background-position: center; border-radius: 50%; pointer-events: none; height: " + callingObject.ElementHeight + "px; width: " + callingObject.ElementWidth + "px;";
+                        newAvatarImg.style = "background-image: url('/api/v1.1/UserProfile/" + callingObject.ProfileId + "/Avatar/" + profile.avatar.fileName + profile.avatar.extension + "'); background-size: cover; background-position: center; border-radius: 50%; pointer-events: none; height: " + callingObject.ElementHeight + "px; width: " + callingObject.ElementWidth + "px;";
                     } else {
                         newAvatarImg.innerHTML = profile.displayName[0].toUpperCase();
                         let backgroundColor = intToRGB(hashCode(profile.displayName));
@@ -438,7 +438,7 @@ class ProfileCard {
                     // update profile background if different
                     if (callingObject.ProfileData.profileBackground !== profile.profileBackground || stillUpdateAnyway === true) {
                         if (profile.profileBackground) {
-                            callingObject.BackgroundImage.style = "background-image: url('/api/v1.1/UserProfile/" + callingObject.ProfileId + "/Background');";
+                            callingObject.BackgroundImage.style = "background-image: url('/api/v1.1/UserProfile/" + callingObject.ProfileId + "/Background/" + profile.profileBackground.fileName + profile.profileBackground.extension + "');";
                         } else {
                             // callingObject.BackgroundImage.style = "";
                             // set a random background image
