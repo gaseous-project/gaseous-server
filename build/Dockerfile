@@ -17,13 +17,13 @@ RUN dotnet restore "gaseous-server/gaseous-server.csproj" -a $TARGETARCH
 RUN dotnet publish "gaseous-server/gaseous-server.csproj" --use-current-runtime --self-contained true -c Release -o out -a $TARGETARCH
 
 # update apt-get
-RUN apt-get update
+RUN apt-get update && apt upgrade -y
 
 # download and unzip EmulatorJS from CDN
 RUN apt-get install -y p7zip-full
 RUN mkdir -p out/wwwroot/emulators/EmulatorJS
-RUN wget https://cdn.emulatorjs.org/releases/4.1.1.7z
-RUN 7z x -y -oout/wwwroot/emulators/EmulatorJS 4.1.1.7z
+RUN wget https://cdn.emulatorjs.org/releases/4.2.1.7z
+RUN 7z x -y -oout/wwwroot/emulators/EmulatorJS 4.2.1.7z
 
 # clean up apt-get
 RUN apt-get clean && rm -rf /var/lib/apt/lists
