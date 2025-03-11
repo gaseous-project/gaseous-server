@@ -94,6 +94,14 @@ namespace gaseous_server.Models
             }
         }
 
+        /// <summary>
+        /// Gets the list of supported file extensions.
+        /// </summary>
+        public static List<string> SupportedFileExtensions { get; } = new List<string>();
+
+        /// <summary>
+        /// Gets the platform map from the database.
+        /// </summary>
         public static List<PlatformMapItem> PlatformMap
         {
             get
@@ -103,12 +111,20 @@ namespace gaseous_server.Models
                 DataTable data = db.ExecuteCMD(sql);
 
                 List<PlatformMapItem> platformMaps = new List<PlatformMapItem>();
+                List<string> _SupportedFileExtensions = new List<string>
+                {
+                    ".zip",
+                    ".7z",
+                    ".rar"
+                };
                 foreach (DataRow row in data.Rows)
                 {
+                    PlatformMapItem mapItem;
+
                     long mapId = (long)row["Id"];
                     if (PlatformMapCache.ContainsKey(mapId.ToString()))
                     {
-                        PlatformMapItem mapItem = PlatformMapCache[mapId.ToString()];
+                        mapItem = PlatformMapCache[mapId.ToString()];
                         if (mapItem != null)
                         {
                             platformMaps.Add(mapItem);
@@ -116,13 +132,28 @@ namespace gaseous_server.Models
                     }
                     else
                     {
-                        PlatformMapItem mapItem = BuildPlatformMapItem(row);
+                        mapItem = BuildPlatformMapItem(row);
                         if (mapItem != null)
                         {
                             platformMaps.Add(mapItem);
                         }
                     }
+
+                    // update known file types list
+                    if (mapItem != null && mapItem.Extensions != null)
+                    {
+                        foreach (string ext in mapItem.Extensions.SupportedFileExtensions)
+                        {
+                            if (!_SupportedFileExtensions.Contains(ext.ToLower()))
+                            {
+                                _SupportedFileExtensions.Add(ext.ToLower());
+                            }
+                        }
+                    }
                 }
+
+                SupportedFileExtensions.Clear();
+                SupportedFileExtensions.AddRange(_SupportedFileExtensions);
 
                 platformMaps.Sort((x, y) => x.IGDBName.CompareTo(y.IGDBName));
 
@@ -130,6 +161,11 @@ namespace gaseous_server.Models
             }
         }
 
+        /// <summary>
+        /// Gets the platform map item by its ID.
+        /// </summary>
+        /// <param name="Id">The ID of the platform map item.</param>
+        /// <returns>The platform map item.</returns>
         public static PlatformMapItem GetPlatformMap(long Id)
         {
             if (PlatformMapCache.ContainsKey(Id.ToString()))
