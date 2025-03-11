@@ -73,7 +73,10 @@ namespace gaseous_server.Classes
             Dictionary<string, object> RetVal = new Dictionary<string, object>();
             RetVal.Add("path", Path.GetFileName(GameFileImportPath));
 
-            if (Common.SkippableFiles.Contains<string>(Path.GetFileName(GameFileImportPath), StringComparer.OrdinalIgnoreCase))
+            if (
+                Common.SkippableFiles.Contains<string>(Path.GetFileName(GameFileImportPath), StringComparer.OrdinalIgnoreCase) ||
+                !PlatformMapping.SupportedFileExtensions.Contains(Path.GetExtension(GameFileImportPath), StringComparer.OrdinalIgnoreCase)
+            )
             {
                 Logging.Log(Logging.LogType.Debug, "Import Game", "Skipping item " + GameFileImportPath);
             }
@@ -774,7 +777,10 @@ namespace gaseous_server.Classes
             foreach (string LibraryFile in LibraryFiles)
             {
                 SetStatus(StatusCount, LibraryFiles.Length, "Processing file " + LibraryFile);
-                if (!Common.SkippableFiles.Contains<string>(Path.GetFileName(LibraryFile), StringComparer.OrdinalIgnoreCase))
+                if (
+                    !Common.SkippableFiles.Contains<string>(Path.GetFileName(LibraryFile), StringComparer.OrdinalIgnoreCase) &&
+                    PlatformMapping.SupportedFileExtensions.Contains(Path.GetExtension(LibraryFile), StringComparer.OrdinalIgnoreCase)
+                    )
                 {
                     Common.hashObject LibraryFileHash = new Common.hashObject(LibraryFile);
 
@@ -853,7 +859,11 @@ namespace gaseous_server.Classes
                     SetStatus(StatusCount, dtRoms.Rows.Count, "Processing file " + romPath);
                     Logging.Log(Logging.LogType.Information, "Library Scan", "Processing ROM at path " + romPath);
 
-                    if (File.Exists(romPath))
+                    if (
+                        File.Exists(romPath) &&
+                        !Common.SkippableFiles.Contains<string>(Path.GetFileName(romPath), StringComparer.OrdinalIgnoreCase) &&
+                        PlatformMapping.SupportedFileExtensions.Contains(Path.GetExtension(romPath), StringComparer.OrdinalIgnoreCase)
+                    )
                     {
                         if (library.IsDefaultLibrary == true)
                         {

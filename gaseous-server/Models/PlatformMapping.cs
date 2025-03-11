@@ -115,38 +115,70 @@ namespace gaseous_server.Models
             return platform;
         }
 
+        // <summary>
+        /// Gets the list of supported file extensions.
+        /// </summary>
+        public static List<string> SupportedFileExtensions { get; } = new List<string>();
+
+        /// <summary>
+        /// Gets the platform map from the database.
+        /// </summary>
         public static List<PlatformMapItem> PlatformMap
         {
             get
             {
-                // if (Database.DatabaseMemoryCache.GetCacheObject("PlatformMap") != null)
-                // {
-                //     return (List<PlatformMapItem>)Database.DatabaseMemoryCache.GetCacheObject("PlatformMap");
-                // }
                 Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
                 string sql = "SELECT * FROM PlatformMap";
-                DataTable data = db.ExecuteCMD(sql); //, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromSeconds(5).Ticks));
+                DataTable data = db.ExecuteCMD(sql);
 
                 List<PlatformMapItem> platformMaps = new List<PlatformMapItem>();
+
+                List<string> _SupportedFileExtensions = new List<string>
+                {
+                    ".zip",
+                    ".7z",
+                    ".rar"
+                };
+
                 foreach (DataRow row in data.Rows)
                 {
+                    PlatformMapItem mapItem;
+
                     long mapId = (long)row["Id"];
 
-                    PlatformMapItem mapItem = BuildPlatformMapItem(row);
+                    mapItem = BuildPlatformMapItem(row);
                     if (mapItem != null)
                     {
                         platformMaps.Add(mapItem);
                     }
+
+                    // update known file types list
+                    if (mapItem != null && mapItem.Extensions != null)
+                    {
+                        foreach (string ext in mapItem.Extensions.SupportedFileExtensions)
+                        {
+                            if (!_SupportedFileExtensions.Contains(ext.ToLower()))
+                            {
+                                _SupportedFileExtensions.Add(ext.ToLower());
+                            }
+                        }
+                    }
                 }
 
-                platformMaps.Sort((x, y) => x.IGDBName.CompareTo(y.IGDBName));
+                SupportedFileExtensions.Clear();
+                SupportedFileExtensions.AddRange(_SupportedFileExtensions);
 
-                //Database.DatabaseMemoryCache.SetCacheObject("PlatformMap", platformMaps, 600);
+                platformMaps.Sort((x, y) => x.IGDBName.CompareTo(y.IGDBName));
 
                 return platformMaps;
             }
         }
 
+        /// <summary>
+        /// Gets the platform map item by its ID.
+        /// </summary>
+        /// <param name="Id">The ID of the platform map item.</param>
+        /// <returns>The platform map item.</returns>
         public static PlatformMapItem GetPlatformMap(long Id)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
