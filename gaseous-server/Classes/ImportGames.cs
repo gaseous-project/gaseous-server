@@ -53,7 +53,10 @@ namespace gaseous_server.Classes
             string sql = "";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
 
-            if (Common.SkippableFiles.Contains<string>(Path.GetFileName(GameFileImportPath), StringComparer.OrdinalIgnoreCase))
+            if (
+                Common.SkippableFiles.Contains<string>(Path.GetFileName(GameFileImportPath), StringComparer.OrdinalIgnoreCase) ||
+                !PlatformMapping.SupportedFileExtensions.Contains(Path.GetExtension(GameFileImportPath), StringComparer.OrdinalIgnoreCase)
+            )
             {
                 Logging.Log(Logging.LogType.Debug, "Import Game", "Skipping item " + GameFileImportPath);
             }
@@ -132,7 +135,7 @@ namespace gaseous_server.Classes
                     {
                         foreach (Classes.Bios.BiosItem biosItem in Classes.Bios.GetBios())
                         {
-                            if (biosItem.Available == false && biosItem.hash == hash.md5hash)
+                            if (!biosItem.Available && biosItem.hash == hash.md5hash)
                             {
                                 string biosPath = biosItem.biosPath.Replace(biosItem.filename, "");
                                 if (!Directory.Exists(biosPath))
@@ -221,7 +224,7 @@ namespace gaseous_server.Classes
                         Logging.Log(Logging.LogType.Information, "Import Game", "  No search results found");
                     }
                 }
-                if (GameFound == true) { break; }
+                if (GameFound) { break; }
             }
             if (determinedGame == null)
             {
@@ -267,7 +270,7 @@ namespace gaseous_server.Classes
                                 }
                             }
 
-                            if (gameInResults == false)
+                            if (!gameInResults)
                             {
                                 searchResults.Add(foundGame);
                             }
@@ -372,7 +375,7 @@ namespace gaseous_server.Classes
             }
 
             // move to destination
-            if (library.IsDefaultLibrary == true)
+            if (library.IsDefaultLibrary)
             {
                 MoveGameFile(romId);
             }
@@ -553,7 +556,7 @@ namespace gaseous_server.Classes
                         allowContinue = false;
                         Thread.Sleep(60000);
                     }
-                } while (allowContinue == false);
+                } while (!allowContinue);
             }
 
             bool WorkersStillWorking;
@@ -571,7 +574,7 @@ namespace gaseous_server.Classes
                         Thread.Sleep(30000);
                     }
                 }
-            } while (WorkersStillWorking == true);
+            } while (WorkersStillWorking);
 
             Logging.Log(Logging.LogType.Information, "Library Scan", "Library scan complete. All workers stopped");
         }
@@ -624,7 +627,10 @@ namespace gaseous_server.Classes
             foreach (string LibraryFile in LibraryFiles)
             {
                 SetStatus(StatusCount, LibraryFiles.Length, "Processing file " + LibraryFile);
-                if (!Common.SkippableFiles.Contains<string>(Path.GetFileName(LibraryFile), StringComparer.OrdinalIgnoreCase))
+                if (
+                    !Common.SkippableFiles.Contains<string>(Path.GetFileName(LibraryFile), StringComparer.OrdinalIgnoreCase) &&
+                    PlatformMapping.SupportedFileExtensions.Contains(Path.GetExtension(LibraryFile), StringComparer.OrdinalIgnoreCase)
+                    )
                 {
                     Common.hashObject LibraryFileHash = new Common.hashObject(LibraryFile);
 
@@ -643,7 +649,7 @@ namespace gaseous_server.Classes
                         }
                     }
 
-                    if (romFound == false)
+                    if (!romFound)
                     {
                         // file is not in database - process it
                         Logging.Log(Logging.LogType.Information, "Library Scan", "Orphaned file found in library: " + LibraryFile);
@@ -703,9 +709,13 @@ namespace gaseous_server.Classes
                     SetStatus(StatusCount, dtRoms.Rows.Count, "Processing file " + romPath);
                     Logging.Log(Logging.LogType.Information, "Library Scan", "Processing ROM at path " + romPath);
 
-                    if (File.Exists(romPath))
+                    if (
+                        File.Exists(romPath) &&
+                        !Common.SkippableFiles.Contains<string>(Path.GetFileName(romPath), StringComparer.OrdinalIgnoreCase) &&
+                        PlatformMapping.SupportedFileExtensions.Contains(Path.GetExtension(romPath), StringComparer.OrdinalIgnoreCase)
+                    )
                     {
-                        if (library.IsDefaultLibrary == true)
+                        if (library.IsDefaultLibrary)
                         {
                             if (romPath != ComputeROMPath(romId))
                             {
@@ -749,7 +759,7 @@ namespace gaseous_server.Classes
                 Logging.Log(Logging.LogType.Information, "Rematch Scan", "Rematch on library " + library.Name);
 
                 string sql = "";
-                if (ForceExecute == false)
+                if (!ForceExecute)
                 {
                     sql = "SELECT * FROM Games_Roms WHERE (PlatformId = 0 AND GameId <> 0) OR (((PlatformId = 0 OR GameId = 0) AND MetadataSource = 0) OR (PlatformId = 0 AND GameId = 0)) AND (LastMatchAttemptDate IS NULL OR LastMatchAttemptDate < @lastmatchattemptdate) AND LibraryId = @libraryid LIMIT 100;";
                 }
