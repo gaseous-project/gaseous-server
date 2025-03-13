@@ -20,6 +20,9 @@ namespace gaseous_server.Classes
     {
         public void ProcessDirectory(string ImportPath)
         {
+            // ensure platform map is loaded
+            List<PlatformMapping.PlatformMapItem> platformMap = PlatformMapping.PlatformMap;
+
             if (Directory.Exists(ImportPath))
             {
                 string[] importContents = Directory.GetFiles(ImportPath, "*.*", SearchOption.AllDirectories);
@@ -506,6 +509,9 @@ namespace gaseous_server.Classes
         public void LibraryScan(GameLibrary.LibraryItem? singleLibrary = null)
         {
             int maxWorkers = Config.MetadataConfiguration.MaxLibraryScanWorkers;
+
+            // ensure that the platform map is loaded
+            List<PlatformMapping.PlatformMapItem> platformMap = PlatformMapping.PlatformMap;
 
             List<GameLibrary.LibraryItem> libraries = new List<GameLibrary.LibraryItem>();
             if (singleLibrary == null)
