@@ -28,7 +28,7 @@
     --selected-item: rgba(0, 0, 170, 0.5);
     --selected-item-hover: rgb(0, 0, 255);
     --hover-selectable: rgb(255, 255, 0);
-    --standard-radius: 7px;
+    --standard-radius: 8px;
 
     /* scroll bar */
     --scrollbar-track: rgb(56, 56, 56);
