@@ -121,6 +121,7 @@ CREATE TABLE `MetadataMap` (
     `PlatformId` bigint(20) NOT NULL,
     `SignatureGameName` varchar(255) NOT NULL,
     `UserManualLink` varchar(255) DEFAULT NULL,
+    `RomCount` int(11) UNSIGNED NOT NULL DEFAULT 0,
     PRIMARY KEY (`id`),
     INDEX `idx_gamename` (
         `SignatureGameName`,
@@ -142,6 +143,7 @@ CREATE TABLE `MetadataMapBridge` (
     INDEX `idx_parentmapidpreferred` (`ParentMapId`, `Preferred`),
     INDEX `idx_MetadataSourceType` (`MetadataSourceType`),
     INDEX `idx_MetadataPreferredSource` (`MetadataSourceId`, `Preferred`),
+    INDEX `idx_MetadataMapBridge_MetadataSourceType_MetadataSourceId` (`MetadataSourceType`, `MetadataSourceId`),
     CONSTRAINT `MetadataMapBridge_MetadataMap` FOREIGN KEY (`ParentMapId`) REFERENCES `MetadataMap` (`Id`) ON DELETE CASCADE
 );
 
@@ -530,3 +532,17 @@ CREATE TABLE `Region` (
     `lastUpdated` datetime DEFAULT NULL,
     PRIMARY KEY (`Id`)
 );
+
+CREATE INDEX `idx_GameState_RomId_IsMediaGroup_UserId` ON `GameState` (`RomId`, `IsMediaGroup`, `UserId`);
+CREATE INDEX `idx_RomMediaGroup_GameId_PlatformId` ON `RomMediaGroup` (`GameId`, `PlatformId`);
+CREATE INDEX `idx_AlternativeName_Game_SourceId` ON `AlternativeName` (`Game`, `SourceId`);
+CREATE INDEX `idx_GameLocalization_Game_SourceId` ON `GameLocalization` (`Game`, `SourceId`);
+CREATE INDEX `idx_Relation_Game_Genres_GameId_GameSourceId` ON `Relation_Game_Genres` (`GameId`, `GameSourceId`);
+CREATE INDEX `idx_Relation_Game_GameModes_GameId_GameSourceId` ON `Relation_Game_GameModes` (`GameId`, `GameSourceId`);
+CREATE INDEX `idx_Relation_Game_PlayerPerspectives_GameId_GameSourceId` ON `Relation_Game_PlayerPerspectives` (`GameId`, `GameSourceId`);
+CREATE INDEX `idx_Relation_Game_Themes_GameId_GameSourceId` ON `Relation_Game_Themes` (`GameId`, `GameSourceId`);
+CREATE INDEX `idx_AgeGroup_GameId_AgeGroupId` ON `AgeGroup` (`GameId`, `AgeGroupId`);
+CREATE INDEX `idx_genre_id_name` ON `Genre` (`Id`, `Name`);
+CREATE INDEX `idx_theme_id_name` ON `Theme` (`Id`, `Name`);
+CREATE INDEX `idx_gamemode_id_name` ON `GameMode` (`Id`, `Name`);
+CREATE INDEX `idx_playerperspective_id_name` ON `PlayerPerspective` (`Id`, `Name`);
