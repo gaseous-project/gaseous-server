@@ -360,6 +360,8 @@ class ProfileCard {
         }
         this.BackgroundImage = document.createElement('div');
         this.BackgroundImage.classList.add('profile-card-background-image');
+        this.BackgroundImageGradient = document.createElement('div');
+        this.BackgroundImageGradient.classList.add('profile-card-background-image-gradient');
         this.DisplayName = document.createElement('div');
         this.DisplayName.classList.add('profile-card-display-name');
         this.Quip = document.createElement('div');
@@ -398,6 +400,7 @@ class ProfileCard {
         this.ProfileNowPlaying.appendChild(this.ProfileNowPlayingDuration);
 
         // assemble card
+        this.BackgroundImage.appendChild(this.BackgroundImageGradient);
         this.Card.appendChild(this.BackgroundImage);
         this.Card.appendChild(this.ProfileBody);
         this.Card.appendChild(this.ProfileNowPlayingBg);

@@ -492,6 +492,8 @@ namespace gaseous_server.Classes
 				ClearStatus();
 			}
 
+			// update the rom counts
+			UpdateRomCounts();
 
 			// update game metadata
 			if (forceRefresh == true)
@@ -647,6 +649,27 @@ namespace gaseous_server.Classes
 				StatusCounter += 1;
 			}
 			ClearStatus();
+		}
+
+		/// <summary>
+		/// Updates the ROM counts for each metadata map in the database.
+		/// </summary>
+		public static void UpdateRomCounts()
+		{
+			string sql = @"
+UPDATE `MetadataMap`
+        INNER JOIN
+    (SELECT 
+        `MetadataMap`.`Id`, COUNT(`Games_Roms`.`Id`) AS `RomCount`
+    FROM
+        `MetadataMap`
+    LEFT JOIN `Games_Roms` ON `MetadataMap`.`Id` = `Games_Roms`.`MetadataMapId`
+    GROUP BY `MetadataMap`.`Id`
+    ORDER BY `MetadataMap`.`SignatureGameName`) AS `RomCounter` ON `MetadataMap`.`Id` = `RomCounter`.`Id` 
+SET 
+    `MetadataMap`.`RomCount` = `RomCounter`.`RomCount`;";
+			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+			db.ExecuteNonQuery(sql);
 		}
 	}
 }

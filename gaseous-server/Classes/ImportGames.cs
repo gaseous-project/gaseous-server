@@ -637,6 +637,9 @@ namespace gaseous_server.Classes
                 LibrariesToScan.AddRange(GameLibrary.GetLibraries());
             }
 
+            // preload the platform map to ensure the exclusion list is loaded
+            List<PlatformMapping.PlatformMapItem> platformMap = PlatformMapping.PlatformMap;
+
             // setup background tasks for each library
             do
             {

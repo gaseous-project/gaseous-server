@@ -4,8 +4,6 @@ class Modal {
         this.buttons = buttons;
         this.modalBackground = null;
         this.buttons = [];
-
-        return;
     }
 
     async BuildModal() {
