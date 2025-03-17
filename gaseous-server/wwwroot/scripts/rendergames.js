@@ -46,7 +46,8 @@ class GameIcon {
         }
         if (data.metadataMapId !== -1) {
             gameTileBox.addEventListener('click', () => {
-                window.location.href = '/index.html?page=game&id=' + data.metadataMapId;
+                let gameCard = new GameCard(data.metadataMapId);
+                gameCard.ShowCard();
             });
         }
         gameTileOuterBox.appendChild(gameTileBox);
