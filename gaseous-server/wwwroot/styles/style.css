@@ -3468,7 +3468,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     padding-left: 10%;
     padding-right: 10%;
     padding-top: 20px;
-    padding-bottom: 500px;
+    padding-bottom: 50px;
 }
 
 .card-info-block {
@@ -3528,3 +3528,15 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 #card-summary {}
+
+#card-summary:hover {
+    cursor: pointer;
+}
+
+#card-summary-full {
+    margin-top: 20px;
+}
+
+#card-summary:hover+#card-summary-full {
+    text-decoration: underline;
+}

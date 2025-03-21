@@ -90,6 +90,8 @@ class Card {
         });
     }
 
+    PostOpenCallbacks = [];
+
     async Open() {
         // hide the scroll bar for the page
         document.body.style.overflow = "hidden";
@@ -102,6 +104,11 @@ class Card {
 
         // show the modal
         $(this.modalBackground).fadeIn(200);
+
+        // run any post open callbacks
+        this.PostOpenCallbacks.forEach(callback => {
+            callback();
+        });
     }
 
     SetHeader(Title, AlwaysVisible) {
@@ -416,6 +423,7 @@ class GameCard {
 
         // display the screenshots
         let screenshots = this.card.cardBody.querySelector('#card-screenshots');
+        let screenshotsSection = this.card.cardBody.querySelector('#card-screenshots-section');
         if (screenshots) {
             if (gameData.screenshots) {
                 gameData.screenshots.forEach(screenshot => {
@@ -429,25 +437,44 @@ class GameCard {
                     screenshotItem.appendChild(screenshotImg);
                     screenshots.appendChild(screenshotItem);
                 });
-                screenshots.style.display = '';
+                screenshotsSection.style.display = '';
             }
         }
 
         // set the game summary
         let gameSummary = this.card.cardBody.querySelector('#card-summary');
         let gameSummarySection = this.card.cardBody.querySelector('#card-summary-section');
-        if (gameSummary) {
-            gameSummary.innerHTML = gameData.summary;
+        if (gameData.summary || gameData.storyline) {
+            if (gameData.summary) {
+                gameSummary.innerHTML = gameData.summary.replaceAll("\n", "<br />");
+            } else {
+                gameSummary.innerHTML = gameData.storyLine.replaceAll("\n", "<br />");
+            }
             gameSummarySection.style.display = '';
 
-            if (gameSummary.offsetHeight < gameSummary.scrollHeight ||
-                gameSummary.offsetWidth < gameSummary.scrollWidth) {
-                // your element has overflow and truncated
-                // show read more / read less button
-                document.querySelector('#card-summary-full').setAttribute('style', '');
-            } else {
-                // your element doesn't overflow (not truncated)
-            }
+            this.card.PostOpenCallbacks.push(() => {
+                if (gameSummary.offsetHeight < gameSummary.scrollHeight ||
+                    gameSummary.offsetWidth < gameSummary.scrollWidth) {
+                    // your element has overflow and truncated
+                    // show read more / read less button
+                    let readMoreLink = this.card.cardBody.querySelector('#card-summary-full');
+                    readMoreLink.style.display = 'block';
+                    [gameSummary, readMoreLink].forEach(element => {
+                        element.addEventListener('click', () => {
+                            if (gameSummary.classList.contains('line-clamp-4')) {
+                                gameSummary.classList.remove('line-clamp-4');
+                                readMoreLink.innerHTML = 'Read less';
+                            } else {
+                                gameSummary.classList.add('line-clamp-4');
+                                readMoreLink.innerHTML = 'Read more';
+                            }
+                        });
+                    });
+                } else {
+                    // your element doesn't overflow (not truncated)
+                    this.card.cardBody.querySelector('#card-summary-full').style.display = 'none';
+                }
+            });
         }
 
 
