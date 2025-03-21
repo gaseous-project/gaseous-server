@@ -615,6 +615,45 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
+        [Route("{MetadataMapId}/{MetadataSource}/themes")]
+        [ProducesResponseType(typeof(List<Theme>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
+        public async Task<ActionResult> GameThemes(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource)
+        {
+            try
+            {
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                if (game != null)
+                {
+                    List<Theme> themeObjects = new List<Theme>();
+                    if (game.Themes != null)
+                    {
+                        foreach (long themeId in game.Themes)
+                        {
+                            themeObjects.Add(Classes.Metadata.Themes.GetGame_Themes(game.MetadataSource, themeId));
+                        }
+                    }
+
+                    List<Theme> sortedThemeObjects = themeObjects.OrderBy(o => o.Name).ToList();
+
+                    return Ok(sortedThemeObjects);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpGet]
         [Route("{MetadataMapId}/{MetadataSource}/companies")]
         [ProducesResponseType(typeof(List<Dictionary<string, object>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]

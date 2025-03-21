@@ -1,11 +1,40 @@
 <div id="card-image">
-    <img id="card-cover" src="/images/unknowngame.png" class="game_cover_image" style="display: none;" alt="Coverart" />
+    <div id="card-cover-info-block">
+        <img id="card-cover" src="/images/unknowngame.png" class="game_cover_image" style="display: none;"
+            alt="Coverart" />
+        <div id="card-title-info">
+            <span id="card-title" style="display: none;"></span>
+            <span id="card-releasedate" class="card-info-block" style="display: none;"></span>
+            <span id="card-developers" class="card-info-block" style="display: none;"></span>
+            <span id="card-genres" class="card-info-block" style="display: none;"></span>
+            <span id="card-themes" class="card-info-block" style="display: none;"></span>
+            <div id="card-userratings" class="card-info-block" style="display: none;">
+                <div id="card-userrating-igdb" style="display: none;">
+                    <img id="card-userrating-igdb-logo" src="/images/IGDB_logo.svg" class="card-info-rating-icon" alt="IGDB" />
+                    <span id="card-userrating-igdb-value"></span>
+                </div>
+            </div>
+        </div>
+        <div id="card-rating" style="display: none;">
+
+        </div>
+    </div>
 </div>
 
 <div id="card-info">
-    <span id="card-title" class="card-info-block" style="display: none;"></span>
-    <span id="card-publisher-release" class="card-info-block" style="display: none;"></span>
-    <ul id="card-screenshots" class="card-info-block" style="display: none;">
-    </ul>
-    <span id="card-summary" class="line-clamp-4 card-info-block" style="display: none;"></span>
+    <div class="section">
+        <div class="section-body">
+            <ul id="card-screenshots" class="card-info-block" style="display: none;">
+            </ul>
+        </div>
+    </div>
+    <div id="card-summary-section" class="section" style="display: none;">
+        <div class=" section-header">
+            Summary
+        </div>
+        <div class="section-body">
+            <span id="card-summary" class="line-clamp-4"></span>
+            <span id="card-summary-full" class="romlink" style="display: none;">Show more...</span>
+        </div>
+    </div>
 </div>

@@ -2740,6 +2740,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     margin-bottom: 20px;
     border-radius: var(--standard-radius);
     overflow: hidden;
+    color: var(--page-font-colour);
 }
 
 .section-header {
@@ -3343,7 +3344,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     bottom: 0px;
     overflow-y: auto;
     overflow-x: hidden;
-    scrollbar-width: none;
+    /* scrollbar-width: none; */
 }
 
 .card-header {
@@ -3361,7 +3362,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     -webkit-backdrop-filter: blur(16px);
 
     background-color: var(--section-header-background);
-
+    color: var(--page-font-colour);
     padding: 15px;
 }
 
@@ -3380,6 +3381,8 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     right: 0px;
     width: 100%;
     display: block;
+    filter: blur(8px);
+    -webkit-filter: blur(8px);
 }
 
 .card-background {
@@ -3440,45 +3443,78 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 #card-image {
-    width: 100%;
     height: 450px;
     display: block;
+    padding-left: 10%;
+    padding-right: 10%;
     position: relative;
 }
 
 #card-cover {
+    max-width: 225px;
+    display: inline-block;
+    margin-right: 20px;
+}
+
+#card-cover-info-block {
     position: absolute;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    bottom: 10px;
+    left: 10%;
+    right: 10%;
 }
 
 #card-info {
     display: block;
-    position: absolute;
-    left: 0px;
-    right: 0px;
     padding-left: 10%;
     padding-right: 10%;
+    padding-top: 20px;
+    padding-bottom: 500px;
 }
 
 .card-info-block {
     display: block;
     width: 100%;
-    margin-top: 10px;
+}
+
+#card-title-info {
+    position: absolute;
+    bottom: 10px;
+    left: 250px;
+    right: 64px;
 }
 
 #card-title {
     font-size: 24px;
     font-weight: bold;
-    text-align: center;
+}
+
+#card-rating {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+}
+
+.card-rating-icon {
+    width: 50px;
+    height: 50px;
+}
+
+.card-info-rating-icon {
+    filter: invert(100%);
+    height: 10px;
+    margin-right: 5px;
+    padding-top: 4px;
+}
+
+.card-info-rating-icon-black {
+    filter: invert(0%);
 }
 
 #card-screenshots {
     overflow: auto;
     white-space: nowrap;
     padding: 0px;
-    scrollbar-width: none;
+    /* scrollbar-width: none; */
 }
 
 .card-screenshot-item {
@@ -3488,7 +3524,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
 .card-screenshot-item>img {
     max-width: 200px;
-    max-height: 200px;
+    max-height: 125px;
 }
 
 #card-summary {}

@@ -168,6 +168,9 @@ async function SetupPage() {
                 if (loadingElement) {
                     loadingElement.remove();
                 }
+
+                let gameCard = new GameCard(15);
+                gameCard.ShowCard();
             }
 
             filter.OrderBySelector(document.getElementById('games_library_orderby_select'));
