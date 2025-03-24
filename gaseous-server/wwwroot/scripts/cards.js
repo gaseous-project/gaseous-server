@@ -42,6 +42,14 @@ class Card {
         this.cardBackgroundContainer.classList.add("card-background-container");
         this.cardContent.appendChild(this.cardBackgroundContainer);
 
+        // set up fancy scrolling
+        this.cardScroller.addEventListener("scroll", () => {
+            let currentScrollPosition = this.cardScroller.scrollTop;
+            let computedScrollPosition = Math.floor(Number((currentScrollPosition / 6) * -1)) + "px";
+
+            this.cardBackgroundContainer.style.top = computedScrollPosition;
+        });
+
         // add the background image placeholder
         this.cardBackground = document.createElement("img");
         this.cardBackground.classList.add("card-background");
@@ -247,24 +255,69 @@ class GameCard {
             }
         }
 
+        // set the card title info container classes
+        let cardTitleInfo = this.card.cardBody.querySelector('#card-title-info');
+        cardTitleInfo.classList.add('card-title-info');
+
+        // set the card attribution
+        let cardAttribution = this.card.cardBody.querySelector('#card-metadataattribution');
+        cardAttribution.innerHTML = `Data provided by ${gameData.metadataSource}`;
+        cardAttribution.style.display = '';
+
         // set the cover art
-        let coverImg = this.card.cardBody.querySelector('#card-cover');
-        if (coverImg) {
-            if (gameData.cover) {
-                coverImg.src = `/api/v1.1/Games/${gameData.metadataMapId}/${gameData.metadataSource}/cover/${gameData.cover}/image/cover_big/${gameData.cover}.jpg`;
-            } else {
-                coverImg.src = '/images/unknowngame.png';
+        let logoProviders = ["ScreenScraper", "TheGamesDb"];
+        let clearLogoValid = false;
+        if (gameData.clearLogo) {
+            for (const provider of logoProviders) {
+                if (gameData.clearLogo[provider] !== undefined) {
+                    clearLogoValid = true;
+                    break;
+                }
             }
-            coverImg.alt = gameData.name;
-            coverImg.title = gameData.name;
-            coverImg.style.display = '';
+        }
+        let usingClearLogo = false;
+        if (clearLogoValid && GetPreference('Library.ShowClearLogo') === true) {
+            let clearLogoImg = this.card.cardBody.querySelector('#card-clearlogo');
+            if (clearLogoImg) {
+                for (const provider of logoProviders) {
+                    if (gameData.clearLogo[provider] !== undefined) {
+                        let providerId = gameData.clearLogo[provider];
+                        clearLogoImg.src = `/api/v1.1/Games/${gameData.metadataMapId}/${provider}/clearlogo/${providerId}/image/original/${providerId}.png`;
+                        clearLogoImg.alt = gameData.name;
+                        clearLogoImg.title = gameData.name;
+                        clearLogoImg.style.display = '';
+                        usingClearLogo = true;
+
+                        cardTitleInfo.classList.add('card-title-info-clearlogo');
+
+                        let logoAttribution = this.card.cardBody.querySelector('#card-logoattribution');
+                        logoAttribution.innerHTML = `Logo provided by ${provider}`;
+                        logoAttribution.style.display = '';
+                        break;
+                    }
+                }
+            }
+        } else {
+            let coverImg = this.card.cardBody.querySelector('#card-cover');
+            if (coverImg) {
+                if (gameData.cover) {
+                    coverImg.src = `/api/v1.1/Games/${gameData.metadataMapId}/${gameData.metadataSource}/cover/${gameData.cover}/image/cover_big/${gameData.cover}.jpg`;
+                } else {
+                    coverImg.src = '/images/unknowngame.png';
+                }
+                coverImg.alt = gameData.name;
+                coverImg.title = gameData.name;
+                coverImg.style.display = '';
+            }
         }
 
         // set the game name
-        let gameName = this.card.cardBody.querySelector('#card-title');
-        if (gameName) {
-            gameName.innerHTML = gameData.name;
-            gameName.style.display = '';
+        if (!usingClearLogo) {
+            let gameName = this.card.cardBody.querySelector('#card-title');
+            if (gameName) {
+                gameName.innerHTML = gameData.name;
+                gameName.style.display = '';
+            }
         }
 
         // set the game rating
@@ -277,13 +330,13 @@ class GameCard {
                 }
             }).then(response => response.json()).then(data => {
                 if (data) {
+                    console.log(data);
                     let userRatingOrder = GetPreference('Library.GameClassificationDisplayOrder');
                     let abortLoop = false;
                     userRatingOrder.forEach(ratingElement => {
                         if (abortLoop === false) {
                             data.forEach(dataElement => {
                                 if (ratingElement.toLowerCase() === dataElement.ratingBoard.toLowerCase()) {
-                                    console.log(dataElement);
                                     let rating = document.createElement('div');
                                     rating.classList.add('card-rating');
 
@@ -477,6 +530,58 @@ class GameCard {
             });
         }
 
+        // get the game statistics
+        fetch(`/api/v1.1/Statistics/Games/${gameData.metadataMapId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json()).then(data => {
+            if (data) {
+                let gameStat_lastPlayed = document.getElementById('gamestatistics_lastplayed_value');
+                let gameStat_timePlayed = document.getElementById('gamestatistics_timeplayed_value');
+
+                const dateOptions = {
+                    //weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                };
+                gameStat_lastPlayed.innerHTML = new Date(data.sessionEnd).toLocaleDateString(undefined, dateOptions);
+                if (data.sessionLength >= 60) {
+                    gameStat_timePlayed.innerHTML = Number(data.sessionLength / 60).toFixed(2) + " hours";
+                } else {
+                    gameStat_timePlayed.innerHTML = Number(data.sessionLength) + " minutes";
+                }
+            }
+        });
+
+        // get the game favourite status
+        fetch(`/api/v1.1/Games/${gameData.metadataMapId}/favourite`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json()).then(data => {
+            let favouriteButton = this.card.cardBody.querySelector('#gamestatistics_favourite_button');
+            let gameFavIcon = document.createElement('img');
+            gameFavIcon.id = "gamestatistics_favourite";
+            gameFavIcon.className = "favouriteicon";
+            gameFavIcon.title = "Favourite";
+            gameFavIcon.alt = "Favourite";
+
+            if (data === true) {
+                gameFavIcon.setAttribute("src", '/images/favourite-filled.svg');
+                gameFavIcon.setAttribute('onclick', "SetGameFavourite(false);");
+            } else {
+                gameFavIcon.setAttribute("src", '/images/favourite-empty.svg');
+                gameFavIcon.setAttribute('onclick', "SetGameFavourite(true);");
+            }
+
+            favouriteButton.innerHTML = '';
+            favouriteButton.appendChild(gameFavIcon);
+            favouriteButton.style.display = '';
+        });
 
 
         // show the card

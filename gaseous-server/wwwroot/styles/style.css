@@ -1687,6 +1687,7 @@ iframe {
 }
 
 #gamestatistics_favourite {
+    margin-top: 3px;
     float: right;
 }
 
@@ -3344,7 +3345,11 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     bottom: 0px;
     overflow-y: auto;
     overflow-x: hidden;
-    /* scrollbar-width: none; */
+    scrollbar-width: none;
+}
+
+.card-scroller:hover {
+    scrollbar-width: auto;
 }
 
 .card-header {
@@ -3423,6 +3428,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     width: 20px;
     height: 20px;
     font-size: 24px;
+    color: white;
     background-color: var(--button-background);
     border-radius: 50%;
     border-width: 0px;
@@ -3456,6 +3462,17 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     margin-right: 20px;
 }
 
+#card-clearlogo {
+    display: block;
+    text-align: center;
+    width: 100%;
+    max-height: 150px;
+    padding-left: 20px;
+    padding-right: 20px;
+    margin-bottom: 20px;
+    object-fit: contain;
+}
+
 #card-cover-info-block {
     position: absolute;
     bottom: 10px;
@@ -3468,7 +3485,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     padding-left: 10%;
     padding-right: 10%;
     padding-top: 20px;
-    padding-bottom: 50px;
+    padding-bottom: 20px;
 }
 
 .card-info-block {
@@ -3476,11 +3493,18 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     width: 100%;
 }
 
-#card-title-info {
+.card-title-info {
     position: absolute;
     bottom: 10px;
     left: 250px;
     right: 64px;
+}
+
+.card-title-info-clearlogo {
+    display: block;
+    position: unset;
+    padding-left: 10px;
+    padding-right: 60px;
 }
 
 #card-title {
@@ -3514,7 +3538,11 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     overflow: auto;
     white-space: nowrap;
     padding: 0px;
-    /* scrollbar-width: none; */
+    scrollbar-width: none;
+}
+
+#card-screenshots:hover {
+    scrollbar-width: auto;
 }
 
 .card-screenshot-item {
@@ -3539,4 +3567,31 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
 #card-summary:hover+#card-summary-full {
     text-decoration: underline;
+}
+
+#card-stats {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    gap: 10px;
+}
+
+#card-statssection {
+    display: inline-block;
+    flex-grow: 1;
+}
+
+#card-launchgame {
+    display: inline-block;
+    width: 100px;
+    height: 65px;
+
+    background-color: var(--button-background);
+    border-radius: var(--standard-radius);
+    border-width: 1px;
+    border-color: var(--button-background);
+    border-style: solid;
+    text-align: center;
+    cursor: pointer;
+    padding: 10px;
 }

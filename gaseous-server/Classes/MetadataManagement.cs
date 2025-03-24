@@ -361,6 +361,36 @@ namespace gaseous_server.Classes
 			return null;
 		}
 
+		/// <summary>
+		/// Get metadata map ids associated with the provided metadata map id
+		/// </summary>
+		/// <param name="metadataMapId"></param>
+		/// <returns></returns>
+		public static List<long> GetAssociatedMetadataMapIds(long metadataMapId)
+		{
+			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+			string sql = "";
+			Dictionary<string, object> dbDict = new Dictionary<string, object>()
+			{
+				{ "@metadataMapId", metadataMapId }
+			};
+
+			sql = "SELECT `M1`.`Id` AS `Id` FROM `view_MetadataMap` `M` JOIN `view_MetadataMap` `M1` ON `M`.`MetadataSourceId` = `M1`.`MetadataSourceId` WHERE `M`.`Id` = @metadataMapId; ";
+			DataTable dt = db.ExecuteCMD(sql, dbDict);
+
+			List<long> metadataMapIds = new List<long>();
+			foreach (DataRow dr in dt.Rows)
+			{
+				long associatedMetadataMapId = (long)dr["Id"];
+				if (!metadataMapIds.Contains(associatedMetadataMapId))
+				{
+					metadataMapIds.Add(associatedMetadataMapId);
+				}
+			}
+
+			return metadataMapIds;
+		}
+
 		public void RefreshMetadata(bool forceRefresh = false)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -525,11 +555,30 @@ namespace gaseous_server.Classes
 						metadataSource = (MetadataSources)Enum.Parse(typeof(MetadataSources), dr["GameIdType"].ToString());
 
 						Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ") using source " + metadataSource.ToString());
-						HasheousClient.Models.Metadata.IGDB.Game game = Metadata.Games.GetGame(metadataSource, (long)dr["id"]);
+						Models.Game game = Metadata.Games.GetGame(metadataSource, (long)dr["id"]);
 
 						// get supporting metadata
 						if (game != null)
 						{
+							if (metadataSource != MetadataSources.TheGamesDb)
+							{
+								// pull TheGamesDb metadata anyway
+								long? metadataMapId = game.MetadataMapId;
+								if (metadataMapId != null)
+								{
+									MetadataMap? metadataMapItem = GetMetadataMap((long)metadataMapId);
+									if (metadataMapItem != null)
+									{
+										// get the TheGamesDb metadata map item
+										MetadataMap.MetadataMapItem? metadataMapItemItem = metadataMapItem.MetadataMapItems.Find(x => x.SourceType == MetadataSources.TheGamesDb);
+										if (metadataMapItemItem != null)
+										{
+											Models.Game? tgdbGameItem = Metadata.Games.GetGame(MetadataSources.TheGamesDb, metadataMapItemItem.SourceId);
+										}
+									}
+								}
+							}
+
 							if (game.AgeRatings != null)
 							{
 								foreach (long ageRatingId in game.AgeRatings)

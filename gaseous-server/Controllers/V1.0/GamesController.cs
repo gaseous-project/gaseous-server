@@ -391,6 +391,34 @@ namespace gaseous_server.Controllers
                         }
                         break;
 
+                    case MetadataImageType.clearlogo:
+                        if (game.ClearLogo != null)
+                        {
+                            if (game.ClearLogo.ContainsKey(MetadataSource))
+                            {
+                                if (game.ClearLogo[MetadataSource].Contains(ImageId))
+                                {
+                                    ClearLogo imageObject = ClearLogos.GetClearLogo(game.MetadataSource, ImageId);
+
+                                    imageId = imageObject.ImageId;
+                                    imageTypePath = "ClearLogo";
+                                }
+                                else
+                                {
+                                    return NotFound();
+                                }
+                            }
+                            else
+                            {
+                                return NotFound();
+                            }
+                        }
+                        else
+                        {
+                            return NotFound();
+                        }
+                        break;
+
                     default:
                         return NotFound();
                 }
@@ -458,7 +486,8 @@ namespace gaseous_server.Controllers
         {
             cover,
             screenshots,
-            artwork
+            artwork,
+            clearlogo
         }
 
 
@@ -472,7 +501,9 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                MetadataMap? metadata = MetadataManagement.GetMetadataMap(MetadataMapId);
+                MetadataMap.MetadataMapItem? metadataMap = metadata?.PreferredMetadataMapItem;
+                List<long> associatedMetadataMapIds = MetadataManagement.GetAssociatedMetadataMapIds(MetadataMapId);
 
                 if (metadataMap != null)
                 {
@@ -481,7 +512,17 @@ namespace gaseous_server.Controllers
                     if (user != null)
                     {
                         Favourites favourites = new Favourites();
-                        return Ok(favourites.GetFavourite(user.Id, MetadataMapId));
+
+                        foreach (long associatedMetadataMapId in associatedMetadataMapIds)
+                        {
+                            bool favourite = favourites.GetFavourite(user.Id, associatedMetadataMapId);
+                            if (favourite)
+                            {
+                                return Ok(favourite);
+                            }
+                        }
+
+                        return Ok(false);
                     }
                     else
                     {
@@ -518,6 +559,17 @@ namespace gaseous_server.Controllers
                     if (user != null)
                     {
                         Favourites favourites = new Favourites();
+
+                        // clear all favourite associated with this metadata id
+                        if (!favourite)
+                        {
+                            List<long> associatedMetadataMapIds = MetadataManagement.GetAssociatedMetadataMapIds(MetadataMapId);
+                            foreach (long associatedMetadataMapId in associatedMetadataMapIds)
+                            {
+                                favourites.SetFavourite(user.Id, associatedMetadataMapId, favourite);
+                            }
+                        }
+
                         return Ok(favourites.SetFavourite(user.Id, MetadataMapId, favourite));
                     }
                     else

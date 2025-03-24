@@ -82,6 +82,26 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
 
+            // get the available clear logs
+            result.ClearLogo = new Dictionary<HasheousClient.Models.MetadataSources, List<long>>();
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT ClearLogo.SourceId, ClearLogo.Id FROM MetadataMapBridge JOIN ClearLogo ON MetadataMapBridge.MetadataSourceType = ClearLogo.SourceId AND MetadataMapBridge.MetadataSourceId = ClearLogo.Game WHERE MetadataMapBridge.ParentMapId = @gameid;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "gameid", result.MetadataMapId }
+            };
+            DataTable data = db.ExecuteCMD(sql, dbDict);
+            foreach (DataRow row in data.Rows)
+            {
+                HasheousClient.Models.MetadataSources sourceId = (HasheousClient.Models.MetadataSources)(int)row["SourceId"];
+
+                if (result.ClearLogo.ContainsKey(sourceId) == false)
+                {
+                    result.ClearLogo.Add(sourceId, new List<long>());
+                }
+                result.ClearLogo[sourceId].Add((long)row["Id"]);
+            }
+
             // populate age group data
             if (result.MetadataSource == HasheousClient.Models.MetadataSources.IGDB)
             {

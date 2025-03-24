@@ -2,6 +2,7 @@
     <div id="card-cover-info-block">
         <img id="card-cover" src="/images/unknowngame.png" class="game_cover_image" style="display: none;"
             alt="Coverart" />
+        <img id="card-clearlogo" src="/images/unknowngame.png" style="display: none;" alt="Logo" />
         <div id="card-title-info">
             <span id="card-title" style="display: none;"></span>
             <span id="card-releasedate" class="card-info-block" style="display: none;"></span>
@@ -23,6 +24,31 @@
 </div>
 
 <div id="card-info">
+    <div id="card-stats">
+        <div id="card-statssection" class="section">
+            <div class="section-body">
+                <div class="gamestatistics_box">
+                    <span class="gamestatistics_label">Last Played</span>
+                    <span id="gamestatistics_lastplayed_value" class="gamestatistics_value">-</span>
+                </div>
+                <div class="gamestatistics_box">
+                    <span class="gamestatistics_label">Total Play Time</span>
+                    <span id="gamestatistics_timeplayed_value" class="gamestatistics_value">-</span>
+                </div>
+
+                <div id="gamestatistics_favourite" class="gamestatistics_box">
+                    <div id="gamestatistics_favourite_button">
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="card-launchgame">
+            Launch Game
+        </div>
+    </div>
+
     <div id="card-screenshots-section" class="section" style="display: none;">
         <div class="section-body">
             <ul id="card-screenshots" class="card-info-block">
@@ -37,5 +63,10 @@
             <span id="card-summary" class="line-clamp-4"></span>
             <span id="card-summary-full" class="romlink" style="display: none;">Read more</span>
         </div>
+    </div>
+
+    <div id="card-attributions" class="section section-body">
+        <div id="card-metadataattribution"></div>
+        <div id="card-logoattribution" style="display: none;"></div>
     </div>
 </div>
