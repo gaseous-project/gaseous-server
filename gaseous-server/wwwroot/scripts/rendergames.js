@@ -45,9 +45,14 @@ class GameIcon {
             gameTileBox.classList.add('game_tile_box_small');
         }
         if (data.metadataMapId !== -1) {
-            gameTileBox.addEventListener('click', () => {
-                let gameCard = new GameCard(data.metadataMapId);
-                gameCard.ShowCard();
+            ['click', 'touchstart'].forEach(event => {
+                gameTileBox.addEventListener(event, (e) => {
+                    let gameCard = new GameCard(data.metadataMapId);
+                    gameCard.ShowCard();
+
+                    e.stopPropagation();
+                    e.preventDefault();
+                });
             });
         }
         gameTileOuterBox.appendChild(gameTileBox);

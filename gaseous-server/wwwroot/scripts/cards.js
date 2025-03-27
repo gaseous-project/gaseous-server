@@ -45,7 +45,7 @@ class Card {
         // set up fancy scrolling
         this.cardScroller.addEventListener("scroll", () => {
             let currentScrollPosition = this.cardScroller.scrollTop;
-            let computedScrollPosition = Math.floor(Number((currentScrollPosition / 6) * -1)) + "px";
+            let computedScrollPosition = Math.floor(Number((currentScrollPosition / 4) * -1)) + "px";
 
             this.cardBackgroundContainer.style.top = computedScrollPosition;
         });
@@ -152,7 +152,7 @@ class Card {
         }
     }
 
-    SetBackgroundImage(Url, blur = false, callback) {
+    SetBackgroundImage(Url, blur, callback) {
         this.cardBackground.src = Url;
         this.cardBackground.onload = () => {
             // get the average colour of the image
@@ -236,23 +236,21 @@ class GameCard {
                     ratingIgdbLogo.classList.add('card-info-rating-icon-black');
                 }
             });
+        } else if (gameData.cover) {
+            let coverUrl = `/api/v1.1/Games/${gameData.metadataMapId}/${gameData.metadataSource}/cover/${gameData.cover}/image/original/${gameData.cover}.jpg`;
+            this.card.SetBackgroundImage(coverUrl, false, () => {
+                if (this.card.contrastColour !== 'fff') {
+                    let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
+                    ratingIgdbLogo.classList.add('card-info-rating-icon-black');
+                }
+            });
         } else {
-            if (gameData.cover) {
-                let coverUrl = `/api/v1.1/Games/${gameData.metadataMapId}/${gameData.metadataSource}/cover/${gameData.cover}/image/original/${gameData.cover}.jpg`;
-                this.card.SetBackgroundImage(coverUrl, false, () => {
-                    if (this.card.contrastColour !== 'fff') {
-                        let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
-                        ratingIgdbLogo.classList.add('card-info-rating-icon-black');
-                    }
-                });
-            } else {
-                this.card.SetBackgroundImage('/images/SettingsWallpaper.jpg', false, () => {
-                    if (this.card.contrastColour !== 'fff') {
-                        let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
-                        ratingIgdbLogo.classList.add('card-info-rating-icon-black');
-                    }
-                });
-            }
+            this.card.SetBackgroundImage('/images/SettingsWallpaper.jpg', false, () => {
+                if (this.card.contrastColour !== 'fff') {
+                    let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
+                    ratingIgdbLogo.classList.add('card-info-rating-icon-black');
+                }
+            });
         }
 
         // set the card title info container classes
@@ -583,6 +581,53 @@ class GameCard {
             favouriteButton.style.display = '';
         });
 
+        // get the available game platforms
+        fetch(`/api/v1.1/Games/${gameData.metadataMapId}/${gameData.metadataSource}/platforms`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json()).then(data => {
+            if (data) {
+                // sort data by name attribute, then by metadataGameName attribute
+                data.sort((a, b) => {
+                    let nameA = a.name.toUpperCase();
+                    let nameB = b.name.toUpperCase();
+                    let metadataGameNameA = a.metadataGameName.toUpperCase();
+                    let metadataGameNameB = b.metadataGameName.toUpperCase();
+
+                    if (nameA < nameB) {
+                        return -1;
+                    } else if (nameA > nameB) {
+                        return 1;
+                    } else {
+                        if (metadataGameNameA < metadataGameNameB) {
+                            return -1;
+                        } else if (metadataGameNameA > metadataGameNameB) {
+                            return 1;
+                        } else {
+                            return 0;
+                        }
+                    }
+                });
+
+                let platforms = [];
+                data.forEach(element => {
+                    if (!platforms.includes(element.name)) {
+                        platforms.push(element.name);
+                    }
+                });
+
+                if (platforms.length > 0) {
+                    let platformsSection = this.card.cardBody.querySelector('#card-platforms-section');
+                    platformsSection.style.display = '';
+
+                    let platformsLabel = this.card.cardBody.querySelector('#card-platforms');
+                    platformsLabel.innerHTML = platforms.join(', ');
+                    platformsLabel.style.display = '';
+                }
+            }
+        });
 
         // show the card
         this.card.Open();

@@ -42,8 +42,15 @@ namespace gaseous_server.Classes.Metadata
             {
                 foreach (long ContentId in ageRating.ContentDescriptions)
                 {
-                    AgeRatingContentDescription ageRatingContentDescription = AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(SourceType, ContentId);
-                    descriptions.Add(ageRatingContentDescription.Description);
+                    try
+                    {
+                        AgeRatingContentDescription ageRatingContentDescription = AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(SourceType, ContentId);
+                        descriptions.Add(ageRatingContentDescription.Description);
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine(ex.Message);
+                    }
                 }
             }
             gameAgeRating.Descriptions = descriptions.ToArray();

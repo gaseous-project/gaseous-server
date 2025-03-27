@@ -448,6 +448,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
             public bool? FavouriteRomIsMediagroup { get; set; }
             public string? FavouriteRomName { get; set; }
             public string? UserManualLink { get; set; }
+            public DateTime LastPlayed { get; set; }
         }
 
         public enum SearchType

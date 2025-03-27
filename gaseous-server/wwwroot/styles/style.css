@@ -1100,11 +1100,6 @@ input[name='filter_panel_range_max'] {
     visibility: hidden;
 }
 
-.game_tile_box:hover>.favourite-empty,
-.game_tile_box_row:hover>.favourite-empty {
-    visibility: visible;
-}
-
 .game_tile_box_row {
     position: absolute;
     display: inline-block;
@@ -1297,17 +1292,10 @@ input[name='filter_panel_range_max'] {
 }
 
 .game_tile_box {
-    transition: transform 0.2s ease-in-out;
+    /* transition: transform 0.2s ease-in-out; */
     box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.44);
     -webkit-box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.44);
     -moz-box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.44);
-}
-
-.game_tile_box:hover {
-    transform: scale(1.07);
-    box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
-    -webkit-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
-    -moz-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
 }
 
 .game_tile_image_shadow {
@@ -3463,12 +3451,12 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 #card-clearlogo {
-    display: block;
+    display: inline-block;
     text-align: center;
-    width: 100%;
+    width: 95%;
     max-height: 150px;
-    padding-left: 20px;
-    padding-right: 20px;
+    margin-left: 20px;
+    margin-right: 20px;
     margin-bottom: 20px;
     object-fit: contain;
 }
@@ -3488,7 +3476,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     padding-bottom: 20px;
 }
 
-.card-info-block {
+.card-info-block-item {
     display: block;
     width: 100%;
 }
