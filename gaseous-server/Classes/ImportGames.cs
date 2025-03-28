@@ -273,7 +273,7 @@ namespace gaseous_server.Classes
             }
             else
             {
-                sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid, Name=@name, Size=@size, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion, RomDataVersion=@romdataversion, MetadataMapId=@metadatamapid WHERE Id=@id;";
+                sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid, Name=@name, Size=@size, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion, RomDataVersion=@romdataversion, MetadataMapId=@metadatamapid, DateUpdated=@dateupdated WHERE Id=@id;";
                 dbDict.Add("id", romId);
             }
             dbDict.Add("platformid", Common.ReturnValueIfNull(platform.Id, 0));
@@ -290,6 +290,7 @@ namespace gaseous_server.Classes
             dbDict.Add("libraryid", library.Id);
             dbDict.Add("romdataversion", 2);
             dbDict.Add("metadatamapid", map.Id);
+            dbDict.Add("dateupdated", DateTime.UtcNow);
 
             if (signature.Rom.Attributes != null)
             {

@@ -42,12 +42,15 @@ class Card {
         this.cardBackgroundContainer.classList.add("card-background-container");
         this.cardContent.appendChild(this.cardBackgroundContainer);
 
-        // set up fancy scrolling
+        // set up fancy scrolling, and store the scroll position in session storage
         this.cardScroller.addEventListener("scroll", () => {
             let currentScrollPosition = this.cardScroller.scrollTop;
             let computedScrollPosition = Math.floor(Number((currentScrollPosition / 4) * -1)) + "px";
 
             this.cardBackgroundContainer.style.top = computedScrollPosition;
+
+            // store the scroll position in session storage
+            sessionStorage.setItem("Card." + this.cardType + ".scrollPosition", currentScrollPosition);
         });
 
         // add the background image placeholder
@@ -98,17 +101,22 @@ class Card {
         });
     }
 
-    PostOpenCallbacks = [];
+    PostOpenCallbacks = [
+        () => {
+            // restore the scroll position from session storage
+            let scrollPosition = sessionStorage.getItem("Card." + this.cardType + ".scrollPosition");
+            if (scrollPosition) {
+                this.cardScroller.scrollTop = scrollPosition;
+            }
+
+            // set the focus to the card scroller
+            this.cardScroller.focus();
+        }
+    ];
 
     async Open() {
         // hide the scroll bar for the page
         document.body.style.overflow = "hidden";
-
-        // set the header
-        // this.SetHeader("Heading", false);
-
-        // set the background image
-        // this.SetBackgroundImage('/images/SettingsWallpaper.jpg');
 
         // show the modal
         $(this.modalBackground).fadeIn(200);
@@ -187,6 +195,14 @@ class Card {
             if (document.getElementsByClassName('modal-window-body').length === 0) {
                 document.body.style.overflow = 'auto';
             }
+
+            // Remove all keys from session storage that start with "Card." + this.cardType
+            let keys = Object.keys(sessionStorage);
+            keys.forEach(key => {
+                if (key.startsWith("Card." + this.cardType)) {
+                    sessionStorage.removeItem(key);
+                }
+            });
         });
     }
 }
@@ -207,6 +223,9 @@ class GameCard {
     async ShowCard() {
         this.card = new Card('game', this.gameId);
         this.card.BuildCard();
+
+        // store the card object in the session storage
+        sessionStorage.setItem("Card." + this.card.cardType + ".Id", this.gameId);
 
         // fetch the game data
         const response = await fetch("/api/v1.1/Games/" + this.gameId, {
@@ -259,8 +278,19 @@ class GameCard {
 
         // set the card attribution
         let cardAttribution = this.card.cardBody.querySelector('#card-metadataattribution');
-        cardAttribution.innerHTML = `Data provided by ${gameData.metadataSource}`;
-        cardAttribution.style.display = '';
+        switch (gameData.metadataSource) {
+            case "IGDB":
+                cardAttribution.innerHTML = `Data provided by ${gameData.metadataSource}. <a href="https://www.igdb.com/games/${gameData.slug}" class="romlink" target="_blank" rel="noopener noreferrer">Source</a>`;
+                cardAttribution.style.display = '';
+                break;
+
+            case "TheGamesDb":
+                cardAttribution.innerHTML = `Data provided by ${gameData.metadataSource}. <a href="https://thegamesdb.net/game.php?id=${gameData.id}" class="romlink" target="_blank" rel="noopener noreferrer">Source</a>`;
+                cardAttribution.style.display = '';
+                break;
+        }
+
+
 
         // set the cover art
         let logoProviders = ["ScreenScraper", "TheGamesDb"];
@@ -288,9 +318,11 @@ class GameCard {
 
                         cardTitleInfo.classList.add('card-title-info-clearlogo');
 
-                        let logoAttribution = this.card.cardBody.querySelector('#card-logoattribution');
-                        logoAttribution.innerHTML = `Logo provided by ${provider}`;
-                        logoAttribution.style.display = '';
+                        if (provider !== gameData.metadataSource) {
+                            let logoAttribution = this.card.cardBody.querySelector('#card-logoattribution');
+                            logoAttribution.innerHTML = `Logo provided by ${provider}`;
+                            logoAttribution.style.display = '';
+                        }
                         break;
                     }
                 }
@@ -328,7 +360,6 @@ class GameCard {
                 }
             }).then(response => response.json()).then(data => {
                 if (data) {
-                    console.log(data);
                     let userRatingOrder = GetPreference('Library.GameClassificationDisplayOrder');
                     let abortLoop = false;
                     userRatingOrder.forEach(ratingElement => {
@@ -582,7 +613,7 @@ class GameCard {
         });
 
         // get the available game platforms
-        fetch(`/api/v1.1/Games/${gameData.metadataMapId}/${gameData.metadataSource}/platforms`, {
+        await fetch(`/api/v1.1/Games/${gameData.metadataMapId}/${gameData.metadataSource}/platforms`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -611,21 +642,33 @@ class GameCard {
                     }
                 });
 
-                let platforms = [];
+                let platforms = {};
                 data.forEach(element => {
-                    if (!platforms.includes(element.name)) {
-                        platforms.push(element.name);
+                    // check if the platform id is already in the platforms object
+                    if (platforms[element.id] === undefined) {
+                        platforms[element.id] = [element];
+                    } else {
+                        // add the game object to the platform
+                        platforms[element.id].push(element);
                     }
                 });
 
-                if (platforms.length > 0) {
-                    let platformsSection = this.card.cardBody.querySelector('#card-platforms-section');
-                    platformsSection.style.display = '';
+                // create the platform items and add them to the DOM object named 'card-platforms'
+                let cardPlatforms = this.card.cardBody.querySelector('#card-platforms');
 
-                    let platformsLabel = this.card.cardBody.querySelector('#card-platforms');
-                    platformsLabel.innerHTML = platforms.join(', ');
-                    platformsLabel.style.display = '';
+                for (const [key, value] of Object.entries(platforms)) {
+                    let platformItem = new GameCardPlatformItem(value[0].name, key);
+                    value.forEach(element => {
+                        platformItem.Add(element);
+                    });
+
+                    let platformItemElement = platformItem.BuildItem();
+                    cardPlatforms.appendChild(platformItemElement);
                 }
+
+                // show the platform section
+                let platformSection = this.card.cardBody.querySelector('#card-platforms-section');
+                platformSection.style.display = '';
             }
         });
 
@@ -633,3 +676,134 @@ class GameCard {
         this.card.Open();
     }
 }
+
+class GameCardPlatformItem {
+    constructor(platformName, platformId) {
+        this.platformName = platformName;
+        this.platformId = platformId;
+    }
+
+    gameObjects = [];
+
+    Add(gameObject) {
+        this.gameObjects.push(gameObject);
+    }
+
+    BuildItem() {
+        // create the platform item
+        // the platform item is a two column div - the left column contains the platform logo, the right column contains the game list
+        let platformItem = document.createElement('div');
+        platformItem.classList.add('section');
+        platformItem.classList.add('card-platform-section');
+
+        // create the platform name
+        let platformName = document.createElement('div');
+        platformName.classList.add('section-header');
+        platformName.classList.add('card-platform-name');
+        platformName.innerHTML = this.platformName;
+        platformItem.appendChild(platformName);
+
+        // create the platform items container
+        let platformItemsContainer = document.createElement('div');
+        platformItemsContainer.classList.add('card-platform-item');
+        platformItem.appendChild(platformItemsContainer);
+
+        // create the platform logo container
+        let platformLogoContainer = document.createElement('div');
+        platformLogoContainer.classList.add('card_image_container');
+        platformLogoContainer.classList.add('platform_image_container');
+        platformItemsContainer.appendChild(platformLogoContainer);
+
+        // create the platform logo
+        let platformLogo = document.createElement('img');
+        platformLogo.src = `/api/v1.1/Platforms/${this.platformId}/platformlogo/original/logo.png`;
+        platformLogo.alt = this.platformName;
+        platformLogo.title = this.platformName;
+        platformLogo.classList.add('platform_image');
+        platformLogoContainer.appendChild(platformLogo);
+
+        // create the game list
+        let gameList = document.createElement('div');
+        gameList.classList.add('card-platform-gamelist');
+        platformItemsContainer.appendChild(gameList);
+
+        // add the game objects to the game list
+        this.gameObjects.forEach(element => {
+            let gameItem = document.createElement('div');
+            gameItem.classList.add('card-platform-gameitem');
+
+            // create the game item name
+            let gameItemName = document.createElement('div');
+            gameItemName.classList.add('card-platform-gamename');
+            gameItemName.innerHTML = element.metadataGameName;
+            gameItem.appendChild(gameItemName);
+
+            // create the game item user manual button
+            if (element.userManualLink !== undefined && element.userManualLink !== null) {
+                let userManualButton = document.createElement('div');
+                userManualButton.className = 'platform_edit_button';
+                userManualButton.innerHTML = '<img src="/images/manual.svg" class="banner_button_image" />';
+                userManualButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    let guideUrl = window.open(element.userManualLink, '_blank');
+                    guideUrl.opener = null;
+                });
+                gameItem.appendChild(userManualButton);
+            }
+
+            // create platform state manager button
+            if (element.lastPlayedRomId !== undefined && element.lastPlayedRomId !== null) {
+                let platformStateManagerButton = document.createElement('div');
+                platformStateManagerButton.className = 'platform_edit_button platform_statemanager_button';
+                platformStateManagerButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstatemanagericon" />';
+                platformStateManagerButton.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    let isMediaGroup = false;
+                    if (element.lastPlayedRomIsMediagroup === true || element.favouriteRomIsMediagroup === true) {
+                        isMediaGroup = true;
+                    }
+                    console.log('RomID: ' + element.lastPlayedRomId + ' isMediaGroup: ' + isMediaGroup);
+                    let stateManager = new EmulatorStateManager(element.lastPlayedRomId, isMediaGroup, element.emulatorConfiguration.emulatorType, element.emulatorConfiguration.core, element.id, element.metadataMapId, element.lastPlayedRomName);
+                    stateManager.open();
+                });
+                gameItem.appendChild(platformStateManagerButton);
+            }
+
+            // create edit button
+            let expandButton = document.createElement('div');
+            expandButton.classList.add('platform_edit_button');
+            expandButton.innerHTML = '<img src="/images/edit.svg" class="banner_button_image" />';
+            expandButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                let romList = new GameCardRomList(element.id, element.metadataMapId);
+                romList.ShowRomList();
+            });
+            gameItem.appendChild(expandButton);
+
+            // create the game item play button
+            if (element.lastPlayedRomId !== undefined && element.lastPlayedRomId !== null) {
+                let playButton = document.createElement('div');
+                playButton.classList.add('platform_edit_button');
+                playButton.classList.add('platform_item_green');
+                playButton.innerHTML = '<img src="/images/play.svg" class="banner_button_image" />';
+                playButton.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    let launchLink = await BuildGameLaunchLink(element);
+                    if (launchLink === null) {
+                        console.log('Error: Unable to validate launch link');
+                        console.log(element);
+                    } else {
+                        // launch the game
+                        window.location.href = launchLink;
+                    }
+                });
+                gameItem.appendChild(playButton);
+            }
+
+            gameList.appendChild(gameItem);
+        });
+
+        return platformItem;
+    }
+}
+

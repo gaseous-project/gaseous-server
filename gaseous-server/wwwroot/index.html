@@ -168,7 +168,7 @@
                                             userProfile = await response.json();
 
                                             switch (FirstRunStatus) {
-                                                case "1":
+                                                case "1": {
                                                     // first run - load second stage of wizard
 
                                                     DeleteAllDatabases();
@@ -176,8 +176,9 @@
                                                     // load first stage of wizard
                                                     await LoadPageContent('first2', 'content');
                                                     break;
+                                                }
 
-                                                default:
+                                                default: {
                                                     // load page banner
                                                     await LoadPageContent('banner', 'banner_target');
 
@@ -189,7 +190,20 @@
                                                     }
                                                     console.log("Loading page: " + pageSelection);
                                                     await LoadPageContent(pageSelection, 'content');
+
+                                                    // restore any open game cards
+                                                    if (['home', 'library'].includes(pageSelection)) {
+                                                        let gameCard = sessionStorage.getItem('Card.game.Id');
+                                                        if (gameCard) {
+                                                            console.log("Restoring game card: " + gameCard);
+
+                                                            let gameCardInstance = new GameCard(gameCard);
+                                                            gameCardInstance.ShowCard();
+                                                        }
+                                                    }
+
                                                     break;
+                                                }
                                             }
                                         } else {
                                             // user is not signed in - load login page

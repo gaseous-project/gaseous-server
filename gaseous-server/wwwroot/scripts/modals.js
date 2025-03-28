@@ -500,7 +500,9 @@ class EmulatorStateManager {
 
                         let stateControlsLaunch = document.createElement('span');
                         stateControlsLaunch.id = 'stateControlsLaunch_' + result[i].id;
-                        stateControlsLaunch.className = 'romstart';
+                        stateControlsLaunch.classList.add('platform_edit_button');
+                        stateControlsLaunch.classList.add('platform_item_green');
+                        // stateControlsLaunch.classList.add('romstart');
                         let emulatorTarget;
                         let mediagroupint = 0;
                         if (thisObject.IsMediaGroup == true) {
@@ -513,7 +515,7 @@ class EmulatorStateManager {
                                     window.location.replace(emulatorTarget);
                                 });
                                 break;
-                            case 'game':
+                            default:
                                 emulatorTarget = await BuildLaunchLink(thisObject.engine, thisObject.core, thisObject.platformid, thisObject.gameid, thisObject.RomId, mediagroupint, thisObject.rompath, result[i].id) + '&stateid=' + result[i].id;
                                 stateControlsLaunch.addEventListener('click', () => {
                                     window.location.href = emulatorTarget;
@@ -521,20 +523,22 @@ class EmulatorStateManager {
                                 break;
                         }
 
-                        stateControlsLaunch.innerHTML = 'Launch';
+                        stateControlsLaunch.innerHTML = '<img src="/images/play.svg" class="banner_button_image" alt="Play" title="Play" />';
                         stateControlsLaunch.style.float = 'right';
                         stateControls.appendChild(stateControlsLaunch);
 
                         let stateControlsDownload = document.createElement('a');
                         stateControlsDownload.id = 'stateControlsDownload_' + result[i].id;
-                        stateControlsDownload.className = 'saved_state_buttonlink';
+                        stateControlsDownload.classList.add('platform_edit_button');
+                        stateControlsDownload.classList.add('saved_state_buttonlink');
                         stateControlsDownload.href = '/api/v1.1/StateManager/' + thisObject.RomId + '/' + result[i].id + '/State/savestate.state?IsMediaGroup=' + thisObject.IsMediaGroup;
                         stateControlsDownload.innerHTML = '<img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" />';
                         stateControls.appendChild(stateControlsDownload);
 
                         let stateControlsDelete = document.createElement('span');
                         stateControlsDelete.id = 'stateControlsDelete_' + result[i].id;
-                        stateControlsDelete.className = 'saved_state_buttonlink';
+                        stateControlsDelete.classList.add('platform_edit_button');
+                        stateControlsDelete.classList.add('saved_state_buttonlink');
                         stateControlsDelete.addEventListener('click', async () => {
                             await thisObject.#DeleteStateSave(result[i].id, thisObject.IsMediaGroup);
                         });

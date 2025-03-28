@@ -153,4 +153,26 @@
         margin-left: 0px;
         margin-right: 0px;
     }
+
+    .card-platform-name {
+        display: block;
+    }
+
+    .card_image_container.platform_image_container {
+        display: none;
+    }
+
+    .card-platform-gameitem {
+        flex-wrap: wrap;
+        height: 70px;
+        justify-content: end;
+    }
+
+    .card-platform-gamename {
+        width: 100%;
+        margin-bottom: 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
 }
