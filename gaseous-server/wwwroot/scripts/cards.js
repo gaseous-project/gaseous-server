@@ -807,3 +807,17 @@ class GameCardPlatformItem {
     }
 }
 
+class GameCardRomList {
+    constructor(platformId, metadataMapId) {
+        this.platformId = platformId;
+        this.metadataMapId = metadataMapId;
+    }
+
+    async ShowRomList() {
+        // create the rom list div
+        let romList = document.createElement('div');
+        romList.classList.add('card-romlist');
+
+        return romList;
+    }
+}

@@ -36,9 +36,27 @@
         display: none;
     }
 
+    #modal-header-text:after {
+        content: "";
+        /* Needed to render the pseudo */
+        background-image: linear-gradient(to right, transparent, var(--modal-window-header-background-color) 80%);
+        position: absolute;
+        inset-inline-end: 0;
+        width: 100px;
+        height: 30px;
+        /* Logical property equivalent to `right: 0` */
+    }
+
+    .modal-tabs-container-hide {
+        display: none;
+    }
+
     .game_tile {
+        min-height: 50px;
+        /* min-width: 50px; */
         width: 80px;
-        min-height: 130px;
+        margin-left: 10px;
+        margin-right: 10px;
     }
 
     .game_tile_image {
@@ -49,6 +67,13 @@
 
     .game_tile_box_ratingbanner {
         display: none;
+    }
+
+    .game_tile_box {
+        max-width: 75px;
+        max-height: 100px;
+        padding: 0px;
+        margin: 0px;
     }
 
     .game_tile_label {
@@ -81,6 +106,40 @@
 @media screen and (max-width: 749px) {
 
     /* applies when the viewport is < 750px */
+
+    #games_library {
+        margin-right: 20px;
+    }
+
+    .game_tile_placeholder {
+        width: 110px;
+        height: 180px;
+        margin-bottom: 10px;
+        justify-content: center;
+    }
+
+    .modal-window {
+        min-width: unset;
+        width: 98%;
+        height: 80%;
+    }
+
+    .modal-window-inner-content {
+        flex-direction: column;
+    }
+
+    .modal-window-popup-container,
+    .modal-window-popup {
+        display: block;
+    }
+
+    .modal-window-tabs {
+        display: none;
+    }
+
+    .account-modal-tab1 {
+        flex-direction: column;
+    }
 
     .card-window {
         top: 25px;
@@ -131,6 +190,13 @@
         text-align: center;
         padding-left: 0px;
         padding-right: 0px;
+    }
+
+    #card-info {
+        display: block;
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-bottom: 50px;
     }
 
     .card-info-block-item {

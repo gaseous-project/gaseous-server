@@ -208,6 +208,10 @@ h3 {
     border-right-style: solid;
 }
 
+.modal-window-popup-container {
+    display: none;
+}
+
 .modal-tab-button {
     display: block;
     padding: 10px;
@@ -266,17 +270,6 @@ h3 {
     top: 10px;
     left: 10px;
     right: 40px;
-}
-
-#modal-header-text:after {
-    content: "";
-    /* Needed to render the pseudo */
-    background-image: linear-gradient(to right, transparent, var(--modal-window-header-background-color) 80%);
-    position: absolute;
-    inset-inline-end: 0;
-    width: 100px;
-    height: 30px;
-    /* Logical property equivalent to `right: 0` */
 }
 
 .modal-window-content {
@@ -2821,6 +2814,11 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     -webkit-filter: drop-shadow(1px 1px 3px #000);
 }
 
+.account-modal-tab1 {
+    display: flex;
+    gap: 10px;
+}
+
 .profile-card {
     width: 250px;
     max-width: 250px;
@@ -3102,7 +3100,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 .platform_item_green {
-    background: linear-gradient(90deg, rgba(66, 200, 77, 0.747) 0%, rgb(66, 133, 77) 50%);
+    background: linear-gradient(120deg, rgba(66, 200, 77, 0.747) 0%, rgb(66, 133, 77) 100%);
 }
 
 .platform_item_background:hover {}
@@ -3639,7 +3637,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     align-items: center;
     margin-left: 10px;
     margin-right: 10px;
-    background: linear-gradient(90deg, rgba(200, 200, 200, 0.7469362745098039) 0%, rgba(133, 133, 133, 1) 50%);
+    background: linear-gradient(190deg, rgba(200, 200, 200, 0.7469362745098039) 0%, rgba(133, 133, 133, 1) 50%);
     border-radius: var(--standard-radius);
 }
 

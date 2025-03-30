@@ -31,6 +31,7 @@ class Modal {
         // Generate tabs
         const tabcontainer = this.modalElement.querySelector('#modal-tabs');
         const tabs = this.modalElement.querySelectorAll('[name="modalTab"]');
+        const popup = this.modalElement.querySelector('#modal-popup');
         if (tabs.length > 0) {
             let firstTab = true;
             tabs.forEach((tab) => {
@@ -53,10 +54,20 @@ class Modal {
                 if (firstTab) {
                     newTab.classList.add('model-tab-button-selected');
                     tab.style.display = 'block';
-                    firstTab = false;
                 } else {
                     tab.style.display = 'none';
                 }
+
+                let newPopupOption = document.createElement('option');
+                newPopupOption.value = tab.id;
+                newPopupOption.innerHTML = tab.getAttribute('data-tabname');
+                popup.appendChild(newPopupOption);
+
+                if (firstTab) {
+                    newPopupOption.selected = true;
+                }
+
+                firstTab = false;
                 tabcontainer.appendChild(newTab);
             });
         } else {
@@ -115,6 +126,25 @@ class Modal {
         // show the modal
         $(this.modalBackground).fadeIn(200);
         // this.modalBackground.style.display = 'block';
+
+        // make the popup a select2 element
+        const tabcontainer = this.modalElement.querySelector('#modal-tabs');
+        const tabs = this.modalElement.querySelectorAll('[name="modalTab"]');
+        const popup = this.modalElement.querySelector('#modal-popup');
+        $(popup).select2();
+        // add a change event to the popup
+        $(popup).on('select2:select', (e) => {
+            const popupValue = e.target.value;
+            tabs.forEach((tab) => {
+                if (tab.getAttribute('id') !== popupValue) {
+                    tab.style.display = 'none';
+                    tabcontainer.querySelector('[data-tabid="' + tab.id + '"]').classList.remove('model-tab-button-selected');
+                } else {
+                    tab.style.display = 'block';
+                    tabcontainer.querySelector('[data-tabid="' + tab.id + '"]').classList.add('model-tab-button-selected');
+                }
+            });
+        });
 
         return;
     }
