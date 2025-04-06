@@ -198,8 +198,8 @@
 
     #card-info {
         display: block;
-        padding-left: 20px;
-        padding-right: 20px;
+        padding-left: 10px;
+        padding-right: 10px;
         padding-bottom: 50px;
     }
 
@@ -257,6 +257,7 @@
 
     #card-stats {
         flex-direction: column-reverse;
+        gap: 20px;
     }
 
     #card-launchgame {

@@ -168,7 +168,7 @@ class Card {
             this.card.style.backgroundColor = 'rgb(' + rgbAverage.r + ', ' + rgbAverage.g + ', ' + rgbAverage.b + ')';
             this.cardGradient.style.background = 'linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(' + rgbAverage.r + ', ' + rgbAverage.g + ', ' + rgbAverage.b + ', 1) 100%)';
             if (blur === true) {
-                this.cardBackground.classList.add('card-background-blurred');
+                this.cardBackgroundContainer.classList.add('card-background-blurred');
             }
 
             // set the font colour to a contrasting colour
@@ -251,7 +251,7 @@ class GameCard {
             // let artwork = gameData.artworks[randomIndex];
             let artwork = gameData.artworks[0];
             let artworkUrl = `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/artwork/${artwork}/image/original/${artwork}.jpg`;
-            this.card.SetBackgroundImage(artworkUrl, false, () => {
+            this.card.SetBackgroundImage(artworkUrl, true, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
                     ratingIgdbLogo.classList.add('card-info-rating-icon-black');
@@ -259,14 +259,14 @@ class GameCard {
             });
         } else if (gameData.cover) {
             let coverUrl = `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/cover/${gameData.cover}/image/original/${gameData.cover}.jpg`;
-            this.card.SetBackgroundImage(coverUrl, false, () => {
+            this.card.SetBackgroundImage(coverUrl, true, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
                     ratingIgdbLogo.classList.add('card-info-rating-icon-black');
                 }
             });
         } else {
-            this.card.SetBackgroundImage('/images/SettingsWallpaper.jpg', false, () => {
+            this.card.SetBackgroundImage('/images/SettingsWallpaper.jpg', true, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
                     ratingIgdbLogo.classList.add('card-info-rating-icon-black');
@@ -848,7 +848,10 @@ class GameCardPlatformItem {
             gameItem.appendChild(expandButton);
 
             // create the game item play button
-            if (element.lastPlayedRomId !== undefined && element.lastPlayedRomId !== null) {
+            if (
+                (element.lastPlayedRomId !== undefined && element.lastPlayedRomId !== null) ||
+                (element.favouriteRomId !== undefined && element.favouriteRomId !== null)
+            ) {
                 let playButton = document.createElement('div');
                 playButton.classList.add('platform_edit_button');
                 playButton.classList.add('platform_item_green');
@@ -985,9 +988,43 @@ class GameCardRomList {
                     let romItem = document.createElement('div');
                     romItem.classList.add('card-romlist-item');
 
+                    // create the rom favourite/last used button
+                    let romFavButton = document.createElement('div');
+                    romFavButton.classList.add('platform_edit_button');
+                    romFavButton.setAttribute('name', 'rom_favourite');
+                    romFavButton.setAttribute('data-metadataMapId', element.metadataMapId);
+                    if (element.romUserFavourite === false) {
+                        romFavButton.innerHTML = '<img src="/images/favourite-empty.svg" class="banner_button_image" />';
+                    } else {
+                        romFavButton.innerHTML = '<img src="/images/favourite-filled.svg" class="banner_button_image" />';
+                    }
+                    romFavButton.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        fetch(`/api/v1.1/Games/${element.metadataMapId}/roms/${element.id}/${element.platformId}/favourite?favourite=true&isMediaGroup=false`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        }).then(response => response.json());
+                        romFavButton.innerHTML = '<img src="/images/favourite-filled.svg" class="banner_button_image" />';
+
+                        // set all other roms to not favourite
+                        let romFavButtons = document.querySelectorAll('[name="' + romFavButton.getAttribute('name') + '"][data-metadataMapId="' + romFavButton.getAttribute('data-metadataMapId') + '"]');
+                        romFavButtons.forEach(button => {
+                            if (button !== romFavButton) {
+                                button.innerHTML = '<img src="/images/favourite-empty.svg" class="banner_button_image" />';
+                            }
+                        });
+                    });
+                    romItem.appendChild(romFavButton);
+
+                    // create the name of the rom
                     let romName = document.createElement('div');
                     romName.classList.add('card-romlist-name');
-                    romName.innerHTML = element.name;
+                    romName.innerHTML = element.name + '<br />Size: ' + formatBytes(element.size);
+                    if (element.romTypeMedia) {
+                        romName.innerHTML += '<br />Media: ' + element.romTypeMedia;
+                    }
                     romItem.appendChild(romName);
 
                     // create the info button

@@ -3376,8 +3376,8 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     right: 0px;
     width: 100%;
     display: block;
-    filter: blur(8px);
-    -webkit-filter: blur(8px);
+    /* filter: blur(8px);
+    -webkit-filter: blur(8px); */
 }
 
 .card-background {
@@ -3390,8 +3390,8 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 .card-background-blurred {
-    filter: blur(16px);
-    -webkit-filter: blur(16px);
+    filter: blur(8px);
+    -webkit-filter: blur(8px);
 }
 
 .card-gradient {
@@ -3653,11 +3653,13 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
 .card-romlist {
     display: block;
-    width: 100%;
+    /* width: 100%; */
     border-radius: var(--standard-radius);
-    background-color: var(--section-header-background);
+    border-color: var(--section-header-background);
     border-width: 1px;
+    border-style: solid;
     margin-top: 10px;
+    padding: 10px;
     max-height: 400px;
     overflow: auto;
 }
@@ -3674,7 +3676,13 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .card-romlist-item {
     display: flex;
     flex-direction: row;
-    align-items: center;
+    align-items: top;
+    margin-bottom: 10px;
+}
+
+.platform_edit_button[name="rom_favourite"] {
+    margin-left: unset;
+    margin-right: 10px;
 }
 
 .card-romlist-name {
@@ -3690,4 +3698,9 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .banner_button_text {
     display: block;
     color: white;
+}
+
+.card-romlist-management {
+    padding-top: 10px;
+    text-align: right;
 }
