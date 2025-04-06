@@ -185,15 +185,17 @@ class Card {
     Close() {
         // hide the modal
         $(this.modalBackground).fadeOut(200, () => {
+            // Show the scroll bar for the page
+            if (document.getElementsByClassName('modal-background').length === 1) {
+                if (document.getElementsByClassName('modal-window-body').length === 0) {
+                    document.body.style.overflow = 'auto';
+                }
+            }
+
             // Remove the modal element from the document body
             if (this.modalBackground) {
                 this.modalBackground.remove();
                 this.modalBackground = null;
-            }
-
-            // Show the scroll bar for the page
-            if (document.getElementsByClassName('modal-window-body').length === 0) {
-                document.body.style.overflow = 'auto';
             }
 
             // Remove all keys from session storage that start with "Card." + this.cardType
@@ -667,14 +669,15 @@ class GameCard {
                         platforms[element.id].push(element);
                     }
 
-                    if (mostRecentPlatform === null) {
-                        mostRecentPlatform = element;
-                    } else if (element.lastPlayed > mostRecentPlatform.lastPlayed) {
-                        mostRecentPlatform = element;
+                    // set mostRecentPlatform to element only if element.lastPlayed has a value and is a more recent date than mostRecentPlatform
+                    if (element.lastPlayed) {
+                        if (mostRecentPlatform === null || new Date(element.lastPlayed) > new Date(mostRecentPlatform.lastPlayed)) {
+                            mostRecentPlatform = element;
+                        }
                     }
                 });
 
-                if (mostRecentPlatform.lastPlayed) {
+                if (mostRecentPlatform && mostRecentPlatform.lastPlayed) {
                     // set the most recent platform
                     let mostRecentPlatformName = this.card.cardBody.querySelector('#card-launchgame');
                     mostRecentPlatformName.classList.add('platform_edit_button');
@@ -683,7 +686,7 @@ class GameCard {
 
                     // set the button name
                     let mostRecentPlatformButton = this.card.cardBody.querySelector('#card-launchgame-text');
-                    mostRecentPlatformButton.innerHTML = mostRecentPlatform.name;
+                    mostRecentPlatformButton.innerHTML = mostRecentPlatform.metadataGameName + '<br />' + mostRecentPlatform.name;
 
                     mostRecentPlatformName.addEventListener('click', async (e) => {
                         e.stopPropagation();

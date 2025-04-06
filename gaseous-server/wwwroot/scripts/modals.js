@@ -156,16 +156,15 @@ class Modal {
     close() {
         // Hide the modal
         $(this.modalBackground).fadeOut(200, () => {
+            // Show the scroll bar for the page
+            if (document.getElementsByClassName('modal-background').length === 1) {
+                document.body.style.overflow = 'auto';
+            }
 
             // Remove the modal element from the document body
             if (this.modalBackground) {
                 this.modalBackground.remove();
                 this.modalBackground = null;
-            }
-
-            // Show the scroll bar for the page
-            if (document.getElementsByClassName('modal-window-body').length === 0) {
-                document.body.style.overflow = 'auto';
             }
         });
     }
