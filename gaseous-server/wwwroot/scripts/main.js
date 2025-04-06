@@ -1005,7 +1005,9 @@ async function BuildGameLaunchLink(gamePlatformObject) {
         isMediaGroup = gamePlatformObject.lastPlayedRomIsMediagroup;
         filename = gamePlatformObject.lastPlayedRomName;
     } else {
-        return null;
+        romId = gamePlatformObject.romId;
+        isMediaGroup = gamePlatformObject.isMediaGroup;
+        filename = gamePlatformObject.romName;
     }
 
     console.log(gamePlatformObject);

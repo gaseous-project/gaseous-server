@@ -3629,18 +3629,63 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     width: 100%;
 }
 
-.card-platform-gameitem {
-    display: flex;
-    flex-direction: row;
-    height: 40px;
-    padding: 10px 10px 10px 20px;
-    align-items: center;
+.card-platform-gameitem-container {
+    padding: 10px 10px 10px 10px;
     margin-left: 10px;
     margin-right: 10px;
     background: linear-gradient(190deg, rgba(200, 200, 200, 0.7469362745098039) 0%, rgba(133, 133, 133, 1) 50%);
     border-radius: var(--standard-radius);
 }
 
+.card-platform-gameitem {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    min-height: 40px;
+}
+
 .card-platform-gamename {
     flex-grow: 1;
+    padding-left: 10px;
+}
+
+.card-romlist {
+    display: block;
+    width: 100%;
+    border-radius: var(--standard-radius);
+    background-color: var(--section-header-background);
+    border-width: 1px;
+    margin-top: 10px;
+    max-height: 400px;
+    overflow: auto;
+}
+
+.modal-metadataconfiguration {
+    width: 600px;
+    height: 400px;
+    min-width: unset;
+    min-height: 400px;
+    max-width: unset;
+    max-height: 400px;
+}
+
+.card-romlist-item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.card-romlist-name {
+    flex-grow: 1;
+}
+
+#card-launchgame-icon {
+    width: 100%;
+    justify-content: center;
+}
+
+#card-launchgame-icon,
+.banner_button_text {
+    display: block;
+    color: white;
 }

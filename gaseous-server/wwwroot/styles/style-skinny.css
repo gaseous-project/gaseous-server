@@ -154,6 +154,10 @@
         min-height: unset;
     }
 
+    .card-background {
+        height: 400px;
+    }
+
     .card-content {
         padding: 5px;
     }
@@ -240,5 +244,25 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+    }
+
+    .modal-metadataconfiguration {
+        width: 100%;
+        height: 400px;
+        min-width: unset;
+        min-height: 400px;
+        max-width: unset;
+        max-height: 400px;
+    }
+
+    #card-stats {
+        flex-direction: column-reverse;
+    }
+
+    #card-launchgame {
+        flex-grow: 1;
+        margin-left: 0px;
+        height: unset;
+        width: fit-content;
     }
 }

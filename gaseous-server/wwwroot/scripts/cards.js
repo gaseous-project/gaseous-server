@@ -248,7 +248,7 @@ class GameCard {
             // let randomIndex = Math.floor(Math.random() * gameData.artworks.length);
             // let artwork = gameData.artworks[randomIndex];
             let artwork = gameData.artworks[0];
-            let artworkUrl = `/api/v1.1/Games/${gameData.metadataMapId}/${gameData.metadataSource}/artwork/${artwork}/image/original/${artwork}.jpg`;
+            let artworkUrl = `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/artwork/${artwork}/image/original/${artwork}.jpg`;
             this.card.SetBackgroundImage(artworkUrl, false, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
@@ -256,7 +256,7 @@ class GameCard {
                 }
             });
         } else if (gameData.cover) {
-            let coverUrl = `/api/v1.1/Games/${gameData.metadataMapId}/${gameData.metadataSource}/cover/${gameData.cover}/image/original/${gameData.cover}.jpg`;
+            let coverUrl = `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/cover/${gameData.cover}/image/original/${gameData.cover}.jpg`;
             this.card.SetBackgroundImage(coverUrl, false, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
@@ -290,8 +290,6 @@ class GameCard {
                 break;
         }
 
-
-
         // set the cover art
         let logoProviders = ["ScreenScraper", "TheGamesDb"];
         let clearLogoValid = false;
@@ -310,7 +308,7 @@ class GameCard {
                 for (const provider of logoProviders) {
                     if (gameData.clearLogo[provider] !== undefined) {
                         let providerId = gameData.clearLogo[provider];
-                        clearLogoImg.src = `/api/v1.1/Games/${gameData.metadataMapId}/${provider}/clearlogo/${providerId}/image/original/${providerId}.png`;
+                        clearLogoImg.src = `/api/v1.1/Games/${this.gameId}/${provider}/clearlogo/${providerId}/image/original/${providerId}.png`;
                         clearLogoImg.alt = gameData.name;
                         clearLogoImg.title = gameData.name;
                         clearLogoImg.style.display = '';
@@ -331,7 +329,7 @@ class GameCard {
             let coverImg = this.card.cardBody.querySelector('#card-cover');
             if (coverImg) {
                 if (gameData.cover) {
-                    coverImg.src = `/api/v1.1/Games/${gameData.metadataMapId}/${gameData.metadataSource}/cover/${gameData.cover}/image/cover_big/${gameData.cover}.jpg`;
+                    coverImg.src = `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/cover/${gameData.cover}/image/cover_big/${gameData.cover}.jpg`;
                 } else {
                     coverImg.src = '/images/unknowngame.png';
                 }
@@ -353,7 +351,7 @@ class GameCard {
         // set the game rating
         let ageRating = this.card.cardBody.querySelector('#card-rating');
         if (gameData.age_ratings) {
-            fetch(`/api/v1.1/Games/${gameData.metadataMapId}/${gameData.metadataSource}/agerating`, {
+            fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/agerating`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json"
@@ -415,7 +413,7 @@ class GameCard {
 
         // set the developers
         if (gameData.involved_companies) {
-            fetch(`/api/v1.1/Games/${gameData.metadataMapId}/${gameData.metadataSource}/companies`, {
+            fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/companies`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -442,7 +440,7 @@ class GameCard {
 
         // set the genres
         if (gameData.genres) {
-            fetch(`/api/v1.1/Games/${gameData.metadataMapId}/${gameData.metadataSource}/genre`, {
+            fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/genre`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -467,7 +465,7 @@ class GameCard {
 
         // set the themes
         if (gameData.themes) {
-            fetch(`/api/v1.1/Games/${gameData.metadataMapId}/${gameData.metadataSource}/themes`, {
+            fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/themes`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -513,7 +511,7 @@ class GameCard {
                     screenshotItem.classList.add('card-screenshot-item');
 
                     let screenshotImg = document.createElement('img');
-                    screenshotImg.src = `/api/v1.1/Games/${gameData.metadataMapId}/${gameData.metadataSource}/screenshots/${screenshot}/image/screenshot_med/${screenshot}.jpg`;
+                    screenshotImg.src = `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/screenshots/${screenshot}/image/screenshot_med/${screenshot}.jpg`;
                     screenshotImg.alt = gameData.name;
                     screenshotImg.title = gameData.name;
                     screenshotItem.appendChild(screenshotImg);
@@ -560,7 +558,7 @@ class GameCard {
         }
 
         // get the game statistics
-        fetch(`/api/v1.1/Statistics/Games/${gameData.metadataMapId}`, {
+        fetch(`/api/v1.1/Statistics/Games/${this.gameId}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -586,7 +584,7 @@ class GameCard {
         });
 
         // get the game favourite status
-        fetch(`/api/v1.1/Games/${gameData.metadataMapId}/favourite`, {
+        fetch(`/api/v1.1/Games/${this.gameId}/favourite`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -601,11 +599,26 @@ class GameCard {
 
             if (data === true) {
                 gameFavIcon.setAttribute("src", '/images/favourite-filled.svg');
-                gameFavIcon.setAttribute('onclick', "SetGameFavourite(false);");
             } else {
                 gameFavIcon.setAttribute("src", '/images/favourite-empty.svg');
-                gameFavIcon.setAttribute('onclick', "SetGameFavourite(true);");
             }
+
+            favouriteButton.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                let favouriteStatus = await fetch(`/api/v1.1/Games/${this.gameId}/favourite?favourite=` + !data, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => response.json());
+
+                if (favouriteStatus === true) {
+                    gameFavIcon.setAttribute("src", '/images/favourite-filled.svg');
+                } else {
+                    gameFavIcon.setAttribute("src", '/images/favourite-empty.svg');
+                }
+                data = favouriteStatus;
+            });
 
             favouriteButton.innerHTML = '';
             favouriteButton.appendChild(gameFavIcon);
@@ -613,13 +626,14 @@ class GameCard {
         });
 
         // get the available game platforms
-        await fetch(`/api/v1.1/Games/${gameData.metadataMapId}/${gameData.metadataSource}/platforms`, {
+        await fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/platforms`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             }
         }).then(response => response.json()).then(data => {
             if (data) {
+                console.log(data);
                 // sort data by name attribute, then by metadataGameName attribute
                 data.sort((a, b) => {
                     let nameA = a.name.toUpperCase();
@@ -643,6 +657,7 @@ class GameCard {
                 });
 
                 let platforms = {};
+                let mostRecentPlatform = null;
                 data.forEach(element => {
                     // check if the platform id is already in the platforms object
                     if (platforms[element.id] === undefined) {
@@ -651,7 +666,37 @@ class GameCard {
                         // add the game object to the platform
                         platforms[element.id].push(element);
                     }
+
+                    if (mostRecentPlatform === null) {
+                        mostRecentPlatform = element;
+                    } else if (element.lastPlayed > mostRecentPlatform.lastPlayed) {
+                        mostRecentPlatform = element;
+                    }
                 });
+
+                if (mostRecentPlatform.lastPlayed) {
+                    // set the most recent platform
+                    let mostRecentPlatformName = this.card.cardBody.querySelector('#card-launchgame');
+                    mostRecentPlatformName.classList.add('platform_edit_button');
+                    mostRecentPlatformName.classList.add('platform_item_green');
+                    mostRecentPlatformName.style.display = '';
+
+                    // set the button name
+                    let mostRecentPlatformButton = this.card.cardBody.querySelector('#card-launchgame-text');
+                    mostRecentPlatformButton.innerHTML = mostRecentPlatform.name;
+
+                    mostRecentPlatformName.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        let launchLink = await BuildGameLaunchLink(mostRecentPlatform);
+                        if (launchLink === null) {
+                            console.log('Error: Unable to validate launch link');
+                            console.log(mostRecentPlatform);
+                        } else {
+                            // launch the game
+                            window.location.href = launchLink;
+                        }
+                    });
+                }
 
                 // create the platform items and add them to the DOM object named 'card-platforms'
                 let cardPlatforms = this.card.cardBody.querySelector('#card-platforms');
@@ -729,6 +774,11 @@ class GameCardPlatformItem {
 
         // add the game objects to the game list
         this.gameObjects.forEach(element => {
+            let romItem = null;
+
+            let outerGameItem = document.createElement('div');
+            outerGameItem.classList.add('card-platform-gameitem-container');
+
             let gameItem = document.createElement('div');
             gameItem.classList.add('card-platform-gameitem');
 
@@ -773,10 +823,24 @@ class GameCardPlatformItem {
             let expandButton = document.createElement('div');
             expandButton.classList.add('platform_edit_button');
             expandButton.innerHTML = '<img src="/images/edit.svg" class="banner_button_image" />';
-            expandButton.addEventListener('click', (e) => {
+            expandButton.addEventListener('click', async (e) => {
                 e.stopPropagation();
-                let romList = new GameCardRomList(element.id, element.metadataMapId);
-                romList.ShowRomList();
+                if (!romItem) {
+                    romItem = new GameCardRomList(element);
+                    romItem.BuildRomList();
+                    outerGameItem.append(romItem.Body);
+                    romItem.Body.style.display = 'block';
+                    expandButton.classList.add('platform_edit_button_active');
+                } else {
+                    // toggle the visibility of the rom list
+                    if (romItem.Body.style.display === 'none') {
+                        romItem.Body.style.display = 'block';
+                        expandButton.classList.add('platform_edit_button_active');
+                    } else {
+                        romItem.Body.style.display = 'none';
+                        expandButton.classList.remove('platform_edit_button_active');
+                    }
+                }
             });
             gameItem.appendChild(expandButton);
 
@@ -800,7 +864,8 @@ class GameCardPlatformItem {
                 gameItem.appendChild(playButton);
             }
 
-            gameList.appendChild(gameItem);
+            outerGameItem.appendChild(gameItem);
+            gameList.appendChild(outerGameItem);
         });
 
         return platformItem;
@@ -808,16 +873,385 @@ class GameCardPlatformItem {
 }
 
 class GameCardRomList {
-    constructor(platformId, metadataMapId) {
-        this.platformId = platformId;
-        this.metadataMapId = metadataMapId;
+    constructor(gamePlatformObject) {
+        this.gamePlatformObject = gamePlatformObject;
+        console.log(this.gamePlatformObject);
     }
 
-    async ShowRomList() {
+    BuildRomList() {
         // create the rom list div
-        let romList = document.createElement('div');
-        romList.classList.add('card-romlist');
+        this.Body = document.createElement('div');
+        this.Body.classList.add('card-romlist');
 
-        return romList;
+        // create the media group container
+        this.mediaGroupContainer = document.createElement('div');
+        this.mediaGroupContainer.classList.add('card-romlist-group');
+        this.mediaGroupContainer.classList.add('card-romlist-group-header');
+        this.Body.appendChild(this.mediaGroupContainer);
+        this.Body.style.display = 'none';
+        this.LoadMediaGroups();
+
+        // create the rom list container
+        this.romListContainer = document.createElement('div');
+        this.romListContainer.classList.add('card-romlist-group');
+        this.romListContainer.classList.add('card-romlist-group-header');
+        this.Body.appendChild(this.romListContainer);
+        this.LoadRoms();
+
+        // create the mangement buttons
+        this.managementButtons = document.createElement('div');
+        this.managementButtons.classList.add('card-romlist-management');
+        this.Body.appendChild(this.managementButtons);
+
+        // create the metadata mapping button
+        if (userProfile.roles.includes("Admin")) {
+            let metadataMappingButton = document.createElement('button');
+            metadataMappingButton.classList.add('modal-button');
+            metadataMappingButton.classList.add('card-romlist-management-button');
+            metadataMappingButton.innerHTML = 'Metadata';
+            metadataMappingButton.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                this.ShowMetadataMappingModal();
+            });
+            this.managementButtons.appendChild(metadataMappingButton);
+        }
+
+        // create the configure emulator button
+        let configureEmulatorButton = document.createElement('button');
+        configureEmulatorButton.classList.add('modal-button');
+        configureEmulatorButton.classList.add('card-romlist-management-button');
+        configureEmulatorButton.innerHTML = 'Emulator';
+        configureEmulatorButton.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            this.ShowEmulatorConfigureModal();
+        });
+        this.managementButtons.appendChild(configureEmulatorButton);
+    }
+
+    LoadMediaGroups() {
+        fetch(`/api/v1.1/Games/${this.gamePlatformObject.metadataMapId}/romgroup`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json()).then(data => {
+            if (data) {
+                data.forEach(element => {
+                    let mediaGroupItem = document.createElement('div');
+                    mediaGroupItem.classList.add('card-romlist-item');
+                    mediaGroupItem.classList.add('card-romlist-item-media');
+
+                    let mediaGroupName = document.createElement('div');
+                    mediaGroupName.classList.add('card-romlist-name');
+                    mediaGroupName.innerHTML = element.name;
+                    mediaGroupItem.appendChild(mediaGroupName);
+
+                    let playButton = document.createElement('div');
+                    playButton.classList.add('platform_edit_button');
+                    playButton.classList.add('platform_item_green');
+                    playButton.innerHTML = '<img src="/images/play.svg" class="banner_button_image" />';
+                    playButton.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        let launchLink = await BuildGameLaunchLink(element);
+                        if (launchLink === null) {
+                            console.log('Error: Unable to validate launch link');
+                            console.log(element);
+                        } else {
+                            // launch the game
+                            window.location.href = launchLink;
+                        }
+                    });
+                    mediaGroupItem.appendChild(playButton);
+
+                    this.mediaGroupContainer.appendChild(mediaGroupItem);
+                });
+            }
+        });
+    }
+
+    LoadRoms() {
+        fetch(`/api/v1.1/Games/${this.gamePlatformObject.metadataMapId}/roms?platformId=${this.gamePlatformObject.id}&pageNumber=0&pageSize=0`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json()).then(data => {
+            if (data.gameRomItems) {
+                data.gameRomItems.forEach(element => {
+                    console.log(element);
+                    let romItem = document.createElement('div');
+                    romItem.classList.add('card-romlist-item');
+
+                    let romName = document.createElement('div');
+                    romName.classList.add('card-romlist-name');
+                    romName.innerHTML = element.name;
+                    romItem.appendChild(romName);
+
+                    // create the info button
+                    let infoButton = document.createElement('div');
+                    infoButton.classList.add('platform_edit_button');
+                    infoButton.innerHTML = '<img src="/images/info.svg" class="banner_button_image" />';
+                    infoButton.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        const romInfoDialog = new rominfodialog(element.metadataMapId, element.id);
+                        romInfoDialog.open();
+                    });
+                    romItem.appendChild(infoButton);
+
+                    // create the play button
+                    let playButton = document.createElement('div');
+                    playButton.classList.add('platform_edit_button');
+                    playButton.classList.add('platform_item_green');
+                    playButton.innerHTML = '<img src="/images/play.svg" class="banner_button_image" />';
+                    playButton.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+
+                        // create launch object
+                        let launchObject = {
+                            "emulatorConfiguration": this.gamePlatformObject.emulatorConfiguration,
+                            "id": this.gamePlatformObject.id,
+                            "metadataMapId": this.gamePlatformObject.metadataMapId,
+                            "romId": element.id,
+                            "romName": element.name,
+                            "isMediaGroup": false
+                        };
+                        console.log(launchObject);
+
+                        let launchLink = await BuildGameLaunchLink(launchObject);
+                        if (launchLink === null) {
+                            console.log('Error: Unable to validate launch link');
+                            console.log(element);
+                        } else {
+                            // launch the game
+                            window.location.href = launchLink;
+                        }
+                    });
+                    romItem.appendChild(playButton);
+
+                    this.romListContainer.appendChild(romItem);
+                });
+            }
+        });
+    }
+
+    Refresh() {
+        this.mediaGroupContainer.innerHTML = '';
+        this.romListContainer.innerHTML = '';
+        this.LoadMediaGroups();
+        this.LoadRoms();
+    }
+
+    async ShowMetadataMappingModal() {
+        console.log(this.gamePlatformObject);
+        let metadataModal = await new Modal('messagebox');
+        await metadataModal.BuildModal();
+
+        // override the dialog size
+        // metadataModal.modalElement.style = 'width: 600px; height: 400px; min-width: unset; min-height: 400px; max-width: unset; max-height: 400px;';
+        metadataModal.modalElement.classList.add('modal-metadataconfiguration');
+
+        // set the title
+        metadataModal.modalElement.querySelector('#modal-header-text').innerHTML = this.gamePlatformObject.name + ' Metadata Mapping';
+
+        // set the content
+        let metadataContent = metadataModal.modalElement.querySelector('#modal-body');
+
+        // fetch the metadata map
+        let metadataMap = await fetch('/api/v1.1/Games/' + this.gamePlatformObject.metadataMapId + '/metadata', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json());
+        console.log(metadataMap);
+
+        metadataMap.metadataMapItems.forEach(element => {
+            let itemSection = document.createElement('div');
+            itemSection.className = 'section';
+
+            // header
+            let itemSectionHeader = document.createElement('div');
+            itemSectionHeader.className = 'section-header';
+
+            let itemSectionHeaderRadio = document.createElement('input');
+            itemSectionHeaderRadio.id = 'platformMappingSource_' + element.sourceType;
+            itemSectionHeaderRadio.type = 'radio';
+            itemSectionHeaderRadio.name = 'platformMappingSource';
+            itemSectionHeaderRadio.value = element.sourceType;
+            itemSectionHeaderRadio.style.margin = '0px';
+            itemSectionHeaderRadio.style.height = 'unset';
+            itemSectionHeaderRadio.addEventListener('change', () => {
+                metadataMap.metadataMapItems.forEach(element => {
+                    element.preferred = false;
+                });
+
+                element.preferred = true;
+                console.log('Selected: ' + element.sourceType);
+                console.log(metadataMap);
+            });
+            if (element.preferred == true) {
+                itemSectionHeaderRadio.checked = true;
+            }
+            itemSectionHeader.appendChild(itemSectionHeaderRadio);
+
+            let itemSectionHeaderLabel = document.createElement('label');
+            itemSectionHeaderLabel.htmlFor = 'platformMappingSource_' + element.sourceType;
+            itemSectionHeaderLabel.style.marginLeft = '10px';
+            itemSectionHeaderLabel.innerHTML = element.sourceType;
+            itemSectionHeader.appendChild(itemSectionHeaderLabel);
+
+            itemSection.appendChild(itemSectionHeader);
+
+            // content
+            let itemSectionContent = document.createElement('div');
+            itemSectionContent.className = 'section-body';
+            switch (element.sourceType) {
+                case 'None':
+                    let noneContent = document.createElement('div');
+                    noneContent.className = 'section-body-content';
+
+                    let noneContentLabel = document.createElement('label');
+                    noneContentLabel.innerHTML = 'No Metadata Source';
+                    noneContent.appendChild(noneContentLabel);
+
+                    itemSectionContent.appendChild(noneContent);
+                    break;
+
+                default:
+                    let contentLabel2 = document.createElement('div');
+                    contentLabel2.innerHTML = 'ID: ' + element.sourceId;
+                    itemSectionContent.appendChild(contentLabel2);
+
+                    let contentLabel3 = document.createElement('div');
+                    contentLabel3.innerHTML = 'Slug: ' + element.sourceSlug;
+                    itemSectionContent.appendChild(contentLabel3);
+
+                    if (element.link) {
+                        if (element.link.length > 0) {
+                            let contentLabel4 = document.createElement('div');
+                            contentLabel4.innerHTML = 'Link: <a href="' + element.link + '" target="_blank" rel="noopener noreferrer" class="romlink">' + element.link + '</a>';
+                            itemSectionContent.appendChild(contentLabel4);
+                        }
+                    }
+                    break;
+
+            }
+            itemSection.appendChild(itemSectionContent);
+
+            metadataContent.appendChild(itemSection);
+        });
+
+
+        // setup the buttons
+        let okButton = new ModalButton('OK', 1, this.gamePlatformObject, async function (callingObject) {
+            let model = metadataMap.metadataMapItems;
+
+            await fetch('/api/v1.1/Games/' + callingObject.metadataMapId + '/metadata', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(model)
+            }).then(response => response.json()).then(result => {
+                location.reload(true);
+            });
+        });
+        metadataModal.addButton(okButton);
+
+        let cancelButton = new ModalButton('Cancel', 0, metadataModal, async function (callingObject) {
+            metadataModal.close();
+        });
+        metadataModal.addButton(cancelButton);
+
+        // show the dialog
+        await metadataModal.open();
+    }
+
+    async ShowEmulatorConfigureModal() {
+        let mappingModal = await new Modal('messagebox');
+        await mappingModal.BuildModal();
+
+        // override the dialog size
+        mappingModal.modalElement.style = 'width: 600px; height: 80%; min-width: unset; min-height: 400px; max-width: unset; max-height: 80%;';
+
+        // get the platform map
+        let platformMap = await fetch('/api/v1.1/PlatformMaps/' + this.gamePlatformObject.id, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json());
+        let defaultPlatformMap = platformMap;
+
+        // get the user emulation configuration
+        let userEmuConfig = await fetch('/api/v1.1/Games/' + this.gamePlatformObject.metadataMapId + '/emulatorconfiguration/' + this.gamePlatformObject.id, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json());
+        if (userEmuConfig) {
+            if (userEmuConfig.emulatorType || userEmuConfig.core) {
+                platformMap.webEmulator.type = userEmuConfig.emulatorType;
+                platformMap.webEmulator.core = userEmuConfig.core;
+            }
+            if (userEmuConfig.enableBIOSFiles) {
+                platformMap.enabledBIOSHashes = userEmuConfig.enableBIOSFiles;
+            }
+        }
+
+        // set the title
+        mappingModal.modalElement.querySelector('#modal-header-text').innerHTML = this.gamePlatformObject.name + ' Emulation Settings';
+
+        // set the content
+        let mappingContent = mappingModal.modalElement.querySelector('#modal-body');
+        mappingContent.innerHTML = '';
+        let emuConfig = await new WebEmulatorConfiguration(platformMap)
+        emuConfig.open();
+        mappingContent.appendChild(emuConfig.panel);
+
+        // setup the buttons
+        let resetButton = new ModalButton('Reset to Default', 0, this, async function (callingObject) {
+            await fetch('/api/v1.1/Games/' + callingObject.gamePlatformObject.metadataMapId + '/emulatorconfiguration/' + callingObject.gamePlatformObject.id, {
+                method: 'DELETE'
+            });
+            callingObject.gamePlatformObject.emulatorConfiguration.emulatorType = defaultPlatformMap.webEmulator.type;
+            callingObject.gamePlatformObject.emulatorConfiguration.core = defaultPlatformMap.webEmulator.core;
+            callingObject.gamePlatformObject.emulatorConfiguration.enabledBIOSHashes = defaultPlatformMap.enabledBIOSHashes;
+            callingObject.Refresh();
+            mappingModal.close();
+        });
+        mappingModal.addButton(resetButton);
+
+        let okButton = new ModalButton('OK', 1, this, async function (callingObject) {
+            let model = {
+                EmulatorType: emuConfig.PlatformMap.webEmulator.type,
+                Core: emuConfig.PlatformMap.webEmulator.core,
+                EnableBIOSFiles: emuConfig.PlatformMap.enabledBIOSHashes
+            }
+
+            await fetch('/api/v1.1/Games/' + callingObject.gamePlatformObject.metadataMapId + '/emulatorconfiguration/' + callingObject.gamePlatformObject.id, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(model)
+            });
+            callingObject.gamePlatformObject.emulatorConfiguration.emulatorType = emuConfig.PlatformMap.webEmulator.type;
+            callingObject.gamePlatformObject.emulatorConfiguration.core = emuConfig.PlatformMap.webEmulator.core;
+            callingObject.gamePlatformObject.emulatorConfiguration.enabledBIOSHashes = emuConfig.PlatformMap.enabledBIOSHashes;
+
+            callingObject.Refresh();
+            mappingModal.close();
+        });
+        mappingModal.addButton(okButton);
+
+        let cancelButton = new ModalButton('Cancel', 0, mappingModal, async function (callingObject) {
+            mappingModal.close();
+        });
+        mappingModal.addButton(cancelButton);
+
+        // show the dialog
+        await mappingModal.open();
     }
 }

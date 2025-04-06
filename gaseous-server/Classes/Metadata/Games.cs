@@ -285,7 +285,15 @@ SELECT DISTINCT
         WHEN 1 THEN view_Games_Roms.`MetadataGameName`
         ELSE NULL
     END AS `FavouriteRomName`,
-    User_GameFavouriteRoms.IsMediaGroup AS FavouriteRomIsMediaGroup
+    User_GameFavouriteRoms.IsMediaGroup AS FavouriteRomIsMediaGroup,
+    (SELECT 
+            MAX(SessionTime)
+        FROM
+            UserTimeTracking
+        WHERE
+            UserId = @userid
+                AND PlatformId = view_Games_Roms.PlatformId
+                AND GameId = view_Games_Roms.MetadataMapId) AS SessionTime
 FROM
     view_Games_Roms
         LEFT JOIN
@@ -383,6 +391,12 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                     UserManualLink = string.IsNullOrEmpty((string?)row["UserManualLink"]) ? "" : (string)row["UserManualLink"];
                 }
 
+                DateTime? LastPlayed = null;
+                if (row["SessionTime"] != DBNull.Value)
+                {
+                    LastPlayed = row["SessionTime"] as DateTime?;
+                }
+
                 AvailablePlatformItem valuePair = new AvailablePlatformItem
                 {
                     Id = platform.Id,
@@ -397,7 +411,8 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                     FavouriteRomId = FavouriteRomId,
                     FavouriteRomIsMediagroup = FavouriteRomIsMediagroup,
                     FavouriteRomName = FavouriteRomName,
-                    UserManualLink = UserManualLink
+                    UserManualLink = UserManualLink,
+                    LastPlayed = LastPlayed
                 };
                 platforms.Add(valuePair);
             }
@@ -448,7 +463,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
             public bool? FavouriteRomIsMediagroup { get; set; }
             public string? FavouriteRomName { get; set; }
             public string? UserManualLink { get; set; }
-            public DateTime LastPlayed { get; set; }
+            public DateTime? LastPlayed { get; set; }
         }
 
         public enum SearchType
