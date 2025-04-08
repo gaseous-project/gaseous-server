@@ -314,6 +314,23 @@ namespace gaseous_server.Classes
             if (Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous)
             {
                 HasheousClient.Hasheous hasheous = new HasheousClient.Hasheous();
+                if (HasheousClient.WebApp.HttpHelper.Headers.ContainsKey("CacheControl"))
+                {
+                    HasheousClient.WebApp.HttpHelper.Headers["CacheControl"] = "no-cache";
+                }
+                else
+                {
+                    HasheousClient.WebApp.HttpHelper.Headers.Add("CacheControl", "no-cache");
+                }
+                if (HasheousClient.WebApp.HttpHelper.Headers.ContainsKey("Pragma"))
+                {
+                    HasheousClient.WebApp.HttpHelper.Headers["Pragma"] = "no-cache";
+                }
+                else
+                {
+                    HasheousClient.WebApp.HttpHelper.Headers.Add("Pragma", "no-cache");
+                }
+
                 Console.WriteLine(HasheousClient.WebApp.HttpHelper.BaseUri);
                 HasheousClient.Models.LookupItemModel? HasheousResult = null;
                 try

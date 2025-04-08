@@ -776,6 +776,7 @@ class GameCardPlatformItem {
         platformItemsContainer.appendChild(gameList);
 
         // add the game objects to the game list
+        let firstGameItem = true;
         this.gameObjects.forEach(element => {
             let romItem = null;
 
@@ -784,6 +785,40 @@ class GameCardPlatformItem {
 
             let gameItem = document.createElement('div');
             gameItem.classList.add('card-platform-gameitem');
+
+            // create expand button
+            let expandButton = document.createElement('div');
+            expandButton.classList.add('platform_edit_button');
+            expandButton.classList.add('platform_edit_button_expand');
+            let expandButtonImage = document.createElement('img');
+            expandButtonImage.classList.add('banner_button_image');
+            expandButtonImage.src = '/images/arrow-right.svg';
+            expandButtonImage.alt = 'Expand';
+            expandButtonImage.title = 'Expand';
+            expandButton.appendChild(expandButtonImage);
+            expandButton.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (!romItem) {
+                    romItem = new GameCardRomList(element);
+                    romItem.BuildRomList();
+                    outerGameItem.append(romItem.Body);
+                    romItem.Body.style.display = 'block';
+                    expandButton.classList.add('platform_edit_button_active');
+                    expandButtonImage.classList.add('banner_button_image_rotated');
+                } else {
+                    // toggle the visibility of the rom list
+                    if (romItem.Body.style.display === 'none') {
+                        romItem.Body.style.display = 'block';
+                        expandButton.classList.add('platform_edit_button_active');
+                        expandButtonImage.classList.add('banner_button_image_rotated');
+                    } else {
+                        romItem.Body.style.display = 'none';
+                        expandButton.classList.remove('platform_edit_button_active');
+                        expandButtonImage.classList.remove('banner_button_image_rotated');
+                    }
+                }
+            });
+            gameItem.appendChild(expandButton);
 
             // create the game item name
             let gameItemName = document.createElement('div');
@@ -822,30 +857,9 @@ class GameCardPlatformItem {
                 gameItem.appendChild(platformStateManagerButton);
             }
 
-            // create edit button
-            let expandButton = document.createElement('div');
-            expandButton.classList.add('platform_edit_button');
-            expandButton.innerHTML = '<img src="/images/edit.svg" class="banner_button_image" />';
-            expandButton.addEventListener('click', async (e) => {
-                e.stopPropagation();
-                if (!romItem) {
-                    romItem = new GameCardRomList(element);
-                    romItem.BuildRomList();
-                    outerGameItem.append(romItem.Body);
-                    romItem.Body.style.display = 'block';
-                    expandButton.classList.add('platform_edit_button_active');
-                } else {
-                    // toggle the visibility of the rom list
-                    if (romItem.Body.style.display === 'none') {
-                        romItem.Body.style.display = 'block';
-                        expandButton.classList.add('platform_edit_button_active');
-                    } else {
-                        romItem.Body.style.display = 'none';
-                        expandButton.classList.remove('platform_edit_button_active');
-                    }
-                }
-            });
-            gameItem.appendChild(expandButton);
+
+
+            outerGameItem.appendChild(gameItem);
 
             // create the game item play button
             if (
@@ -868,9 +882,14 @@ class GameCardPlatformItem {
                     }
                 });
                 gameItem.appendChild(playButton);
+            } else if (firstGameItem) {
+                // expand the edit button by default if there is no global play button visible
+                if (document.getElementById('card-launchgame').style.display !== '') {
+                    expandButton.click();
+                }
             }
+            firstGameItem = false;
 
-            outerGameItem.appendChild(gameItem);
             gameList.appendChild(outerGameItem);
         });
 
@@ -1018,14 +1037,42 @@ class GameCardRomList {
                     });
                     romItem.appendChild(romFavButton);
 
-                    // create the name of the rom
+                    // create the label container
                     let romName = document.createElement('div');
-                    romName.classList.add('card-romlist-name');
-                    romName.innerHTML = element.name + '<br />Size: ' + formatBytes(element.size);
-                    if (element.romTypeMedia) {
-                        romName.innerHTML += '<br />Media: ' + element.romTypeMedia;
-                    }
+                    romName.classList.add('card-romlist-labels');
                     romItem.appendChild(romName);
+                    // romName.innerHTML = element.name + '<br />Size: ' + formatBytes(element.size);
+                    // if (element.romTypeMedia) {
+                    //     romName.innerHTML += '<br />Media: ' + element.romTypeMedia;
+                    // }
+
+                    // create the rom name
+                    let romNameLabel = document.createElement('div');
+                    romNameLabel.classList.add('card-romlist-name');
+                    romNameLabel.innerHTML = element.name;
+                    romName.appendChild(romNameLabel);
+
+                    // create the rom size
+                    let romSizeLabel = document.createElement('div');
+                    romSizeLabel.classList.add('card-romlist-size');
+                    romSizeLabel.innerHTML = 'Size: ' + formatBytes(element.size);
+                    romName.appendChild(romSizeLabel);
+
+                    // create the rom type
+                    if (element.romTypeMedia) {
+                        let romTypeLabel = document.createElement('div');
+                        romTypeLabel.classList.add('card-romlist-type');
+                        romTypeLabel.innerHTML = 'Media: ' + element.romTypeMedia;
+                        romName.appendChild(romTypeLabel);
+                    }
+
+                    // create last used label
+                    if (element.romUserLastUsed) {
+                        let lastUsedLabel = document.createElement('div');
+                        lastUsedLabel.classList.add('card-romlist-lastused');
+                        lastUsedLabel.innerHTML = 'Most recently used ROM';
+                        romName.appendChild(lastUsedLabel);
+                    }
 
                     // create the info button
                     let infoButton = document.createElement('div');

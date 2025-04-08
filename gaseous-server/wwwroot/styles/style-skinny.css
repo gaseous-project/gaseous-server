@@ -234,12 +234,15 @@
 
     .card-platform-gameitem {
         flex-wrap: wrap;
-        height: 70px;
+        /* height: 90px; */
+        height: auto;
         justify-content: end;
     }
 
     .card-platform-gamename {
-        width: 100%;
+        width: 82%;
+        padding-left: unset;
+        margin-top: 10px;
         margin-bottom: 10px;
         white-space: nowrap;
         overflow: hidden;

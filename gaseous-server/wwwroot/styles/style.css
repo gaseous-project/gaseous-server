@@ -369,6 +369,10 @@ h3 {
     filter: invert(100%);
 }
 
+.banner_button_image_rotated {
+    transform: rotate(90deg);
+}
+
 .user_list_icon {
     width: 35px;
     height: 35px;
@@ -3390,8 +3394,8 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 .card-background-blurred {
-    filter: blur(8px);
-    -webkit-filter: blur(8px);
+    filter: blur(4px);
+    -webkit-filter: blur(4px);
 }
 
 .card-gradient {
@@ -3680,13 +3684,22 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     margin-bottom: 10px;
 }
 
-.platform_edit_button[name="rom_favourite"] {
+.platform_edit_button[name="rom_favourite"],
+.platform_edit_button_expand {
     margin-left: unset;
     margin-right: 10px;
 }
 
-.card-romlist-name {
+.platform_edit_button_expand {
+    flex-direction: column-reverse;
+}
+
+.card-romlist-labels {
     flex-grow: 1;
+}
+
+.card-romlist-name {
+    margin-bottom: 10px;
 }
 
 #card-launchgame-icon {
