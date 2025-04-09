@@ -374,14 +374,26 @@ namespace gaseous_server.Classes
                     }
                     catch (Exception ex)
                     {
-                        if (File.Exists(cacheFilePath))
+                        if (ex.Message.Contains("404"))
                         {
-                            Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous - using cached signature", ex);
-                            HasheousResult = Newtonsoft.Json.JsonConvert.DeserializeObject<HasheousClient.Models.LookupItemModel>(File.ReadAllText(cacheFilePath));
+                            Logging.Log(Logging.LogType.Information, "Get Signature", "No signature found in Hasheous");
+                        }
+                        else if (ex.Message.Contains("403"))
+                        {
+                            Logging.Log(Logging.LogType.Warning, "Get Signature", "Hasheous API key is invalid or expired - using cached signature");
                         }
                         else
                         {
-                            Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous", ex);
+
+                            if (File.Exists(cacheFilePath))
+                            {
+                                Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous - using cached signature", ex);
+                                HasheousResult = Newtonsoft.Json.JsonConvert.DeserializeObject<HasheousClient.Models.LookupItemModel>(File.ReadAllText(cacheFilePath));
+                            }
+                            else
+                            {
+                                Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous", ex);
+                            }
                         }
                     }
 

@@ -31,10 +31,16 @@ namespace gaseous_server.Classes.Metadata
                 Game? RetVal = Metadata.GetMetadata<Game>(SourceType, (long)Id, false);
                 RetVal.MetadataSource = SourceType;
                 long? metadataMap = MetadataManagement.GetMetadataMapIdFromSourceId(SourceType, (long)Id);
+                if (metadataMap == null)
+                {
+                    metadataMap = MetadataManagement.GetMetadataMapIdFromSourceId(SourceType, (long)Id, false);
+                }
+
                 if (metadataMap != null)
                 {
                     RetVal.MetadataMapId = (long)metadataMap;
                 }
+
                 RetVal = MassageResult(RetVal);
                 return RetVal;
             }
@@ -82,24 +88,56 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
 
-            // get the available clear logs
-            result.ClearLogo = new Dictionary<HasheousClient.Models.MetadataSources, List<long>>();
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT ClearLogo.SourceId, ClearLogo.Id FROM MetadataMapBridge JOIN ClearLogo ON MetadataMapBridge.MetadataSourceType = ClearLogo.SourceId AND MetadataMapBridge.MetadataSourceId = ClearLogo.Game WHERE MetadataMapBridge.ParentMapId = @gameid;";
-            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            // get associated metadataMapIds
+            List<long> metadataMapIds = MetadataManagement.GetAssociatedMetadataMapIds(result.MetadataMapId);
+            List<MetadataMap> metadataMaps = new List<MetadataMap>();
+            foreach (long metadataMapId in metadataMapIds)
             {
-                { "gameid", result.MetadataMapId }
-            };
-            DataTable data = db.ExecuteCMD(sql, dbDict);
-            foreach (DataRow row in data.Rows)
-            {
-                HasheousClient.Models.MetadataSources sourceId = (HasheousClient.Models.MetadataSources)(int)row["SourceId"];
-
-                if (result.ClearLogo.ContainsKey(sourceId) == false)
+                MetadataMap? metadataMap = MetadataManagement.GetMetadataMap(metadataMapId);
+                if (metadataMap != null)
                 {
-                    result.ClearLogo.Add(sourceId, new List<long>());
+                    metadataMaps.Add(metadataMap);
                 }
-                result.ClearLogo[sourceId].Add((long)row["Id"]);
+            }
+
+            // search metadataMaps for a valid clear logo data source - sources are in order: ScreenScaper, TheGamesDB
+            List<HasheousClient.Models.MetadataSources> clearLogoSources = new List<HasheousClient.Models.MetadataSources>{
+                HasheousClient.Models.MetadataSources.TheGamesDb
+            };
+            long ClearLogoMetadataMapId = result.MetadataMapId;
+            foreach (HasheousClient.Models.MetadataSources source in clearLogoSources)
+            {
+                foreach (MetadataMap metadataMap in metadataMaps)
+                {
+                    if (metadataMap.MetadataMapItems.Any(x => x.SourceType == source))
+                    {
+                        ClearLogoMetadataMapId = metadataMap.Id;
+                        break;
+                    }
+                }
+            }
+
+            // get the available clear logos
+            if (ClearLogoMetadataMapId != 0)
+            {
+                result.ClearLogo = new Dictionary<HasheousClient.Models.MetadataSources, List<long>>();
+                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                string sql = "SELECT MetadataMapBridge.ParentMapId, ClearLogo.SourceId, ClearLogo.Id FROM MetadataMapBridge JOIN ClearLogo ON MetadataMapBridge.MetadataSourceType = ClearLogo.SourceId AND MetadataMapBridge.MetadataSourceId = ClearLogo.Game WHERE MetadataMapBridge.ParentMapId = @gameid;";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "gameid", ClearLogoMetadataMapId }
+            };
+                DataTable data = db.ExecuteCMD(sql, dbDict);
+                foreach (DataRow row in data.Rows)
+                {
+                    HasheousClient.Models.MetadataSources sourceId = (HasheousClient.Models.MetadataSources)(int)row["SourceId"];
+
+                    if (result.ClearLogo.ContainsKey(sourceId) == false)
+                    {
+                        result.ClearLogo.Add(sourceId, new List<long>());
+                    }
+                    result.ClearLogo[sourceId].Add((long)row["Id"]);
+                }
             }
 
             // populate age group data

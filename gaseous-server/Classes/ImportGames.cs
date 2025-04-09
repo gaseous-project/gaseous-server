@@ -243,6 +243,7 @@ namespace gaseous_server.Classes
                     }
 
                     // get the metadata map for this source
+                    map = MetadataManagement.NewMetadataMap((long)platform.Id, signature.Game.Name);
                     MetadataMap.MetadataMapItem? mapSource = map.MetadataMapItems.Find(x => x.SourceType == source);
                     if (mapSource == null)
                     {

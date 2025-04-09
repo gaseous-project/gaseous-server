@@ -309,7 +309,15 @@ class GameCard {
             if (clearLogoImg) {
                 for (const provider of logoProviders) {
                     if (gameData.clearLogo[provider] !== undefined) {
-                        let providerId = gameData.clearLogo[provider];
+                        let providerIds = gameData.clearLogo[provider];
+                        let providerId = null;
+                        // check if providerIds is an array
+                        if (Array.isArray(providerIds)) {
+                            providerId = providerIds[0];
+                        } else {
+                            providerId = providerIds;
+                        }
+
                         clearLogoImg.src = `/api/v1.1/Games/${this.gameId}/${provider}/clearlogo/${providerId}/image/original/${providerId}.png`;
                         clearLogoImg.alt = gameData.name;
                         clearLogoImg.title = gameData.name;

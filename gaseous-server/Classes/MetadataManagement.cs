@@ -339,18 +339,21 @@ namespace gaseous_server.Classes
 		/// <returns>
 		/// The ID of the MetadataMap, or null if it does not exist.
 		/// </returns>
-		public static long? GetMetadataMapIdFromSourceId(HasheousClient.Models.MetadataSources sourceType, long sourceId)
+		public static long? GetMetadataMapIdFromSourceId(HasheousClient.Models.MetadataSources sourceType, long sourceId, bool preferred = true)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>()
 			{
 				{ "@sourceType", sourceType },
-				{ "@sourceId", sourceId }
+				{ "@sourceId", sourceId },
+				{ "@preferred", true }
 			};
 			DataTable dt = new DataTable();
 
-			sql = "SELECT * FROM MetadataMapBridge WHERE MetadataSourceType = @sourceType AND MetadataSourceId = @sourceId;";
+			string preferredSql = preferred ? "AND Preferred = @preferred" : "";
+
+			sql = "SELECT * FROM MetadataMapBridge WHERE MetadataSourceType = @sourceType AND MetadataSourceId = @sourceId " + preferredSql + ";";
 			dt = db.ExecuteCMD(sql, dbDict);
 
 			if (dt.Rows.Count > 0)
