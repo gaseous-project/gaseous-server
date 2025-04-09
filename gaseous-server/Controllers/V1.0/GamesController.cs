@@ -396,10 +396,10 @@ namespace gaseous_server.Controllers
                         {
                             if (game.ClearLogo.ContainsKey(MetadataSource))
                             {
-                                if (game.ClearLogo[MetadataSource].Contains(ImageId))
-                                {
-                                    ClearLogo imageObject = ClearLogos.GetClearLogo(game.MetadataSource, ImageId);
+                                ClearLogo? imageObject = ClearLogos.GetClearLogo(game.MetadataSource, ImageId);
 
+                                if (imageObject != null)
+                                {
                                     imageId = imageObject.ImageId;
                                     imageTypePath = "ClearLogo";
                                 }
