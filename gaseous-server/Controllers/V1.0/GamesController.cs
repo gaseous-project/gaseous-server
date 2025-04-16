@@ -1410,13 +1410,18 @@ namespace gaseous_server.Controllers
         [Route("{MetadataMapId}/romgroup")]
         [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> NewGameRomGroup(long MetadataMapId, long PlatformId, [FromBody] List<long> RomIds)
+        public async Task<ActionResult> NewGameRomGroup(long MetadataMapId, [FromBody] List<long> RomIds)
         {
             try
             {
                 try
                 {
-                    Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.CreateMediaGroup(MetadataMapId, PlatformId, RomIds);
+                    MetadataMap? metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId);
+                    if (metadataMap == null)
+                    {
+                        return NotFound();
+                    }
+                    Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.CreateMediaGroup(MetadataMapId, metadataMap.PlatformId, RomIds);
                     return Ok(rom);
                 }
                 catch

@@ -3722,3 +3722,8 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     padding-top: 10px;
     text-align: right;
 }
+
+.card-romlist-checkbox {
+    margin-right: 20px;
+    margin-left: 20px;
+}

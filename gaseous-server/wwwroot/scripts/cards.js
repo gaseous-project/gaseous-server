@@ -643,7 +643,6 @@ class GameCard {
             }
         }).then(response => response.json()).then(data => {
             if (data) {
-                console.log(data);
                 // sort data by name attribute, then by metadataGameName attribute
                 data.sort((a, b) => {
                     let nameA = a.name.toUpperCase();
@@ -908,7 +907,6 @@ class GameCardPlatformItem {
 class GameCardRomList {
     constructor(gamePlatformObject) {
         this.gamePlatformObject = gamePlatformObject;
-        console.log(this.gamePlatformObject);
     }
 
     BuildRomList() {
@@ -936,29 +934,172 @@ class GameCardRomList {
         this.managementButtons.classList.add('card-romlist-management');
         this.Body.appendChild(this.managementButtons);
 
+        // create the edit button
+        if (userProfile.roles.includes("Admin")) {
+            this.createMediaGroupButton = document.createElement('button');
+            this.createMediaGroupButton.classList.add('modal-button');
+            this.createMediaGroupButton.classList.add('card-romlist-management-button');
+            this.createMediaGroupButton.innerHTML = 'Create Media Group';
+            this.createMediaGroupButton.style.display = 'none';
+            this.createMediaGroupButton.disabled = true;
+            this.createMediaGroupButton.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                let checkboxes = this.Body.querySelectorAll('[name="rom_item"][data-metadatamapid="' + this.gamePlatformObject.metadataMapId + '"]');
+                let romIds = [];
+                checkboxes.forEach(checkbox => {
+                    if (checkbox.checked) {
+                        if (checkbox.getAttribute('name') === 'rom_item') {
+                            romIds.push(checkbox.getAttribute('data-romid'));
+                        }
+                    }
+                });
+
+                // create the media group
+                fetch(`/api/v1.1/Games/${this.gamePlatformObject.metadataMapId}/romgroup`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(romIds)
+                }).then(response => response.json()).then(data => {
+                    if (data) {
+                        console.log('Media group created');
+                        this.SetEditMode(true);
+                        this.Refresh();
+                    } else {
+                        console.log('Error creating media group');
+                    }
+                });
+            });
+            this.managementButtons.appendChild(this.createMediaGroupButton);
+
+            this.deleteButton = document.createElement('button');
+            this.deleteButton.classList.add('modal-button');
+            this.deleteButton.classList.add('card-romlist-management-button');
+            this.deleteButton.innerHTML = 'Delete';
+            this.deleteButton.style.display = 'none';
+            this.deleteButton.disabled = true;
+            this.deleteButton.addEventListener('click', async (e) => {
+                e.stopPropagation();
+
+                let checkboxes = this.Body.querySelectorAll('[name="rom_item"][data-metadatamapid="' + this.gamePlatformObject.metadataMapId + '"]');
+
+                // create a delete dialog
+                let deleteDialog = new MessageBox('Delete Selected ROMs and Media Groups', 'Are you sure you want to delete the selected ROMs and Media Groups?');
+                let deleteDialogDeleteButton = new ModalButton('Delete', 2, this, async (e) => {
+                    checkboxes.forEach(checkbox => {
+                        if (checkbox.checked) {
+                            let deleteUrl = '';
+                            if (checkbox.getAttribute('data-ismediagroup') === '0') {
+                                deleteUrl = `/api/v1.1/Games/${this.gamePlatformObject.metadataMapId}/roms/${checkbox.getAttribute('data-romid')}`;
+                            } else {
+                                deleteUrl = `/api/v1.1/Games/${this.gamePlatformObject.metadataMapId}/romgroup/${checkbox.getAttribute('data-romid')}`;
+                            }
+                            fetch(deleteUrl, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            }).then(response => response.json()).then(data => {
+                                if (data) {
+                                    console.log('Deleted');
+
+                                    this.SetEditMode(true);
+                                    this.Refresh();
+                                } else {
+                                    console.log('Error deleting');
+                                }
+                            });
+                        }
+                    });
+
+                    deleteDialog.msgDialog.close();
+                });
+                deleteDialog.addButton(deleteDialogDeleteButton);
+
+                let deleteDialogCancelButton = new ModalButton('Cancel', 0, this, async (e) => {
+                    deleteDialog.msgDialog.close();
+                });
+                deleteDialog.addButton(deleteDialogCancelButton);
+
+                deleteDialog.open();
+            });
+            this.managementButtons.appendChild(this.deleteButton);
+
+            this.editButton = document.createElement('button');
+            this.editButton.classList.add('modal-button');
+            this.editButton.classList.add('card-romlist-management-button');
+            this.editButton.innerHTML = 'Edit';
+            this.editButton.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                this.SetEditMode();
+            });
+            this.managementButtons.appendChild(this.editButton);
+        }
+
         // create the metadata mapping button
         if (userProfile.roles.includes("Admin")) {
-            let metadataMappingButton = document.createElement('button');
-            metadataMappingButton.classList.add('modal-button');
-            metadataMappingButton.classList.add('card-romlist-management-button');
-            metadataMappingButton.innerHTML = 'Metadata';
-            metadataMappingButton.addEventListener('click', async (e) => {
+            this.metadataMappingButton = document.createElement('button');
+            this.metadataMappingButton.classList.add('modal-button');
+            this.metadataMappingButton.classList.add('card-romlist-management-button');
+            this.metadataMappingButton.innerHTML = 'Metadata';
+            this.metadataMappingButton.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 this.ShowMetadataMappingModal();
             });
-            this.managementButtons.appendChild(metadataMappingButton);
+            this.managementButtons.appendChild(this.metadataMappingButton);
         }
 
         // create the configure emulator button
-        let configureEmulatorButton = document.createElement('button');
-        configureEmulatorButton.classList.add('modal-button');
-        configureEmulatorButton.classList.add('card-romlist-management-button');
-        configureEmulatorButton.innerHTML = 'Emulator';
-        configureEmulatorButton.addEventListener('click', async (e) => {
+        this.configureEmulatorButton = document.createElement('button');
+        this.configureEmulatorButton.classList.add('modal-button');
+        this.configureEmulatorButton.classList.add('card-romlist-management-button');
+        this.configureEmulatorButton.innerHTML = 'Emulator';
+        this.configureEmulatorButton.addEventListener('click', async (e) => {
             e.stopPropagation();
             this.ShowEmulatorConfigureModal();
         });
-        this.managementButtons.appendChild(configureEmulatorButton);
+        this.managementButtons.appendChild(this.configureEmulatorButton);
+    }
+
+    SetEditMode(mode) {
+        if (mode !== undefined) {
+            this.editMode = mode;
+        }
+
+        let favIconDisplay;
+        let checkboxDisplay;
+        if (this.editMode === false || this.editMode === undefined) {
+            this.editMode = true;
+            favIconDisplay = 'none';
+            checkboxDisplay = 'block';
+            this.createMediaGroupButton.style.display = '';
+            this.deleteButton.style.display = '';
+            this.metadataMappingButton.style.display = 'none';
+            this.configureEmulatorButton.style.display = 'none';
+            this.editButton.innerHTML = 'Done';
+        } else {
+            this.editMode = false;
+            favIconDisplay = 'block';
+            checkboxDisplay = 'none';
+            this.createMediaGroupButton.style.display = 'none';
+            this.deleteButton.style.display = 'none';
+            this.metadataMappingButton.style.display = '';
+            this.configureEmulatorButton.style.display = '';
+            this.editButton.innerHTML = 'Edit';
+        }
+
+        // hide all favourite buttons for this rom list
+        let romFavButtons = document.querySelectorAll('[name="rom_favourite"][data-metadatamapid="' + this.gamePlatformObject.metadataMapId + '"]');
+        romFavButtons.forEach(button => {
+            button.style.display = favIconDisplay;
+        });
+        // show the selection checkboxes
+        let romItemCheckboxes = document.querySelectorAll('[name="rom_item"][data-metadatamapid="' + this.gamePlatformObject.metadataMapId + '"]');
+        romItemCheckboxes.forEach(checkbox => {
+            checkbox.checked = false;
+            checkbox.style.display = checkboxDisplay;
+        });
     }
 
     LoadMediaGroups() {
@@ -969,23 +1110,152 @@ class GameCardRomList {
             }
         }).then(response => response.json()).then(data => {
             if (data) {
+                console.log(data);
+
                 data.forEach(element => {
                     let mediaGroupItem = document.createElement('div');
                     mediaGroupItem.classList.add('card-romlist-item');
                     mediaGroupItem.classList.add('card-romlist-item-media');
 
-                    let mediaGroupName = document.createElement('div');
-                    mediaGroupName.classList.add('card-romlist-name');
-                    mediaGroupName.innerHTML = element.name;
-                    mediaGroupItem.appendChild(mediaGroupName);
+                    // create the item selection checkbox
+                    let romItemCheckbox = document.createElement('input');
+                    romItemCheckbox.type = 'checkbox';
+                    romItemCheckbox.id = 'rommg_item_check_' + element.id;
+                    romItemCheckbox.classList.add('card-romlist-checkbox');
+                    romItemCheckbox.setAttribute('name', 'rom_item');
+                    romItemCheckbox.setAttribute('data-metadataMapId', this.gamePlatformObject.metadataMapId);
+                    romItemCheckbox.setAttribute('data-platformId', element.platformId);
+                    romItemCheckbox.setAttribute('data-romid', element.id);
+                    romItemCheckbox.setAttribute('data-ismediagroup', '1');
+                    romItemCheckbox.style.display = 'none';
+                    romItemCheckbox.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        let checkboxes = this.Body.querySelectorAll('[name="rom_item"][data-metadatamapid="' + this.gamePlatformObject.metadataMapId + '"]');
+                        this.deleteButton.disabled = true;
+                        this.deleteButton.classList.remove('redbutton');
+                        this.createMediaGroupButton.disabled = true;
+                        let checkedMediaGroupCount = 0;
+                        let checkedRomCount = 0;
+                        checkboxes.forEach(checkbox => {
+                            if (checkbox.checked === true) {
+                                this.deleteButton.disabled = false;
+                                this.deleteButton.classList.add('redbutton');
 
+                                if (checkbox.getAttribute('data-ismediagroup') === '1') {
+                                    checkedMediaGroupCount++;
+                                } else if (checkbox.getAttribute('data-ismediagroup') === '0') {
+                                    checkedRomCount++;
+                                }
+                            }
+                        });
+                        if (checkedMediaGroupCount > 0) {
+                            this.createMediaGroupButton.disabled = true;
+                        } else if (checkedRomCount >= 2) {
+                            this.createMediaGroupButton.disabled = false;
+                        } else {
+                            this.createMediaGroupButton.disabled = true;
+                        }
+                    });
+                    mediaGroupItem.appendChild(romItemCheckbox);
+
+                    // create the rom favourite/last used button
+                    let romFavButton = document.createElement('div');
+                    romFavButton.classList.add('platform_edit_button');
+                    romFavButton.setAttribute('name', 'rom_favourite');
+                    romFavButton.setAttribute('data-metadataMapId', this.gamePlatformObject.metadataMapId);
+                    if (element.romUserFavourite === false) {
+                        romFavButton.innerHTML = '<img src="/images/favourite-empty.svg" class="banner_button_image" />';
+                    } else {
+                        romFavButton.innerHTML = '<img src="/images/favourite-filled.svg" class="banner_button_image" />';
+                    }
+                    romFavButton.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        fetch(`/api/v1.1/Games/${this.gamePlatformObject.metadataMapId}/roms/${element.id}/${element.platformId}/favourite?favourite=true&isMediaGroup=true`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            }
+                        }).then(response => response.json());
+                        romFavButton.innerHTML = '<img src="/images/favourite-filled.svg" class="banner_button_image" />';
+
+                        // set all other roms to not favourite
+                        let romFavButtons = document.querySelectorAll('[name="' + romFavButton.getAttribute('name') + '"][data-metadataMapId="' + romFavButton.getAttribute('data-metadataMapId') + '"]');
+                        romFavButtons.forEach(button => {
+                            if (button !== romFavButton) {
+                                button.innerHTML = '<img src="/images/favourite-empty.svg" class="banner_button_image" />';
+                            }
+                        });
+                    });
+                    mediaGroupItem.appendChild(romFavButton);
+
+                    // create the label container
+                    let romName = document.createElement('label');
+                    romName.setAttribute('for', 'rommg_item_check_' + element.id);
+                    romName.classList.add('card-romlist-labels');
+                    mediaGroupItem.appendChild(romName);
+
+                    // create the label
+                    let romLabel = document.createElement('div');
+                    romLabel.classList.add('card-romlist-name');
+                    romName.appendChild(romLabel);
+
+                    if (element.status != "Completed" && element.status != "Error") {
+                        romLabel.innerHTML = element.status;
+
+                        // create a timeout to reload the media group list
+                        setTimeout(() => {
+                            this.Refresh();
+                        }, 5000);
+                    } else {
+                        let labelText = '';
+                        element.roms.forEach(rom => {
+                            if (labelText.length > 0) {
+                                labelText += '<br />';
+                            }
+                            labelText += rom.name;
+                        });
+                        romLabel.innerHTML = labelText;
+                    }
+
+                    // create the size label
+                    let romSize = document.createElement('div');
+                    romSize.classList.add('card-romlist-size');
+                    if (element.size !== undefined && element.size !== null) {
+                        romSize.innerHTML = formatBytes(element.size);
+                        romName.appendChild(romSize);
+                    }
+
+                    // create the save state manager button
+                    let platformStateManagerButton = document.createElement('div');
+                    platformStateManagerButton.className = 'platform_edit_button platform_statemanager_button';
+                    platformStateManagerButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstatemanagericon" />';
+                    platformStateManagerButton.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        console.log('RomID: ' + element.id + ' isMediaGroup: ' + true);
+                        let stateManager = new EmulatorStateManager(element.id, true, this.gamePlatformObject.emulatorConfiguration.emulatorType, this.gamePlatformObject.emulatorConfiguration.core, element.platformId, element.metadataMapId, element.name);
+                        stateManager.open();
+                    });
+                    mediaGroupItem.appendChild(platformStateManagerButton);
+
+                    // create the play button
                     let playButton = document.createElement('div');
                     playButton.classList.add('platform_edit_button');
                     playButton.classList.add('platform_item_green');
                     playButton.innerHTML = '<img src="/images/play.svg" class="banner_button_image" />';
                     playButton.addEventListener('click', async (e) => {
                         e.stopPropagation();
-                        let launchLink = await BuildGameLaunchLink(element);
+
+                        // create launch object
+                        let launchObject = {
+                            "emulatorConfiguration": this.gamePlatformObject.emulatorConfiguration,
+                            "id": this.gamePlatformObject.id,
+                            "metadataMapId": this.gamePlatformObject.metadataMapId,
+                            "romId": element.id,
+                            "romName": this.gamePlatformObject.name,
+                            "isMediaGroup": true
+                        };
+
+                        let launchLink = await BuildGameLaunchLink(launchObject);
                         if (launchLink === null) {
                             console.log('Error: Unable to validate launch link');
                             console.log(element);
@@ -1009,11 +1279,57 @@ class GameCardRomList {
                 'Content-Type': 'application/json'
             }
         }).then(response => response.json()).then(data => {
+            console.log(data);
             if (data.gameRomItems) {
                 data.gameRomItems.forEach(element => {
-                    console.log(element);
                     let romItem = document.createElement('div');
+                    romItem.id = 'rom_item_' + element.id;
                     romItem.classList.add('card-romlist-item');
+                    romItem.setAttribute('data-metadataMapId', element.metadataMapId);
+                    romItem.setAttribute('data-platformId', element.platformId);
+                    romItem.setAttribute('data-romid', element.id);
+                    romItem.setAttribute('data-ismediagroup', '0');
+
+                    // create the item selection checkbox
+                    let romItemCheckbox = document.createElement('input');
+                    romItemCheckbox.type = 'checkbox';
+                    romItemCheckbox.id = 'rom_item_check_' + element.id;
+                    romItemCheckbox.classList.add('card-romlist-checkbox');
+                    romItemCheckbox.setAttribute('name', 'rom_item');
+                    romItemCheckbox.setAttribute('data-metadataMapId', element.metadataMapId);
+                    romItemCheckbox.setAttribute('data-platformId', element.platformId);
+                    romItemCheckbox.setAttribute('data-romid', element.id);
+                    romItemCheckbox.setAttribute('data-ismediagroup', '0');
+                    romItemCheckbox.style.display = 'none';
+                    romItemCheckbox.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        let checkboxes = this.Body.querySelectorAll('[name="rom_item"][data-metadatamapid="' + element.metadataMapId + '"]');
+                        this.deleteButton.disabled = true;
+                        this.deleteButton.classList.remove('redbutton');
+                        this.createMediaGroupButton.disabled = true;
+                        let checkedMediaGroupCount = 0;
+                        let checkedRomCount = 0;
+                        checkboxes.forEach(checkbox => {
+                            if (checkbox.checked === true) {
+                                this.deleteButton.disabled = false;
+                                this.deleteButton.classList.add('redbutton');
+
+                                if (checkbox.getAttribute('data-ismediagroup') === '1') {
+                                    checkedMediaGroupCount++;
+                                } else if (checkbox.getAttribute('data-ismediagroup') === '0') {
+                                    checkedRomCount++;
+                                }
+                            }
+                        });
+                        if (checkedMediaGroupCount > 0) {
+                            this.createMediaGroupButton.disabled = true;
+                        } else if (checkedRomCount >= 2) {
+                            this.createMediaGroupButton.disabled = false;
+                        } else {
+                            this.createMediaGroupButton.disabled = true;
+                        }
+                    });
+                    romItem.appendChild(romItemCheckbox);
 
                     // create the rom favourite/last used button
                     let romFavButton = document.createElement('div');
@@ -1046,13 +1362,10 @@ class GameCardRomList {
                     romItem.appendChild(romFavButton);
 
                     // create the label container
-                    let romName = document.createElement('div');
+                    let romName = document.createElement('label');
+                    romName.setAttribute('for', 'rom_item_check_' + element.id);
                     romName.classList.add('card-romlist-labels');
                     romItem.appendChild(romName);
-                    // romName.innerHTML = element.name + '<br />Size: ' + formatBytes(element.size);
-                    // if (element.romTypeMedia) {
-                    //     romName.innerHTML += '<br />Media: ' + element.romTypeMedia;
-                    // }
 
                     // create the rom name
                     let romNameLabel = document.createElement('div');
@@ -1093,6 +1406,18 @@ class GameCardRomList {
                     });
                     romItem.appendChild(infoButton);
 
+                    // create the save state manager button
+                    let platformStateManagerButton = document.createElement('div');
+                    platformStateManagerButton.className = 'platform_edit_button platform_statemanager_button';
+                    platformStateManagerButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstatemanagericon" />';
+                    platformStateManagerButton.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        console.log('RomID: ' + element.id + ' isMediaGroup: ' + false);
+                        let stateManager = new EmulatorStateManager(element.id, false, this.gamePlatformObject.emulatorConfiguration.emulatorType, this.gamePlatformObject.emulatorConfiguration.core, element.platformId, element.metadataMapId, element.name);
+                        stateManager.open();
+                    });
+                    romItem.appendChild(platformStateManagerButton);
+
                     // create the play button
                     let playButton = document.createElement('div');
                     playButton.classList.add('platform_edit_button');
@@ -1110,7 +1435,6 @@ class GameCardRomList {
                             "romName": element.name,
                             "isMediaGroup": false
                         };
-                        console.log(launchObject);
 
                         let launchLink = await BuildGameLaunchLink(launchObject);
                         if (launchLink === null) {
@@ -1137,7 +1461,6 @@ class GameCardRomList {
     }
 
     async ShowMetadataMappingModal() {
-        console.log(this.gamePlatformObject);
         let metadataModal = await new Modal('messagebox');
         await metadataModal.BuildModal();
 
@@ -1158,7 +1481,6 @@ class GameCardRomList {
                 'Content-Type': 'application/json'
             }
         }).then(response => response.json());
-        console.log(metadataMap);
 
         metadataMap.metadataMapItems.forEach(element => {
             let itemSection = document.createElement('div');
