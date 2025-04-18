@@ -420,6 +420,39 @@ namespace gaseous_server.Classes.Metadata
                                 }
                             }
 
+                            // generate clearlogo object
+                            List<HasheousClient.Models.Metadata.IGDB.ClearLogo> igdbClearLogo = new List<HasheousClient.Models.Metadata.IGDB.ClearLogo>();
+                            foreach (HasheousClient.Models.Metadata.TheGamesDb.GameImage image in imageDict)
+                            {
+                                if (image.type == "clearlogo")
+                                {
+                                    HasheousClient.Models.Metadata.IGDB.ClearLogo igdbClearWorkItem = new HasheousClient.Models.Metadata.IGDB.ClearLogo
+                                    {
+                                        Id = image.id,
+                                        ImageId = image.filename,
+                                        Url = new Uri(theGamesDbGameResult[0].include.boxart.base_url.original + image.filename).ToString(),
+                                        AlphaChannel = false,
+                                        Animated = false,
+                                        Game = theGamesDbGame.id
+                                    };
+
+                                    // update cache
+                                    Storage.CacheStatus clearLogoStatus = Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.TheGamesDb, "ClearLogo", (long)igdbClearWorkItem.Id);
+                                    switch (clearLogoStatus)
+                                    {
+                                        case Storage.CacheStatus.NotPresent:
+                                            Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbClearWorkItem, false);
+                                            break;
+
+                                        case Storage.CacheStatus.Expired:
+                                            Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbClearWorkItem, true);
+                                            break;
+                                    }
+
+                                    igdbClearLogo.Add(igdbClearWorkItem);
+                                }
+                            }
+
                             // generate screenshot object
                             List<HasheousClient.Models.Metadata.IGDB.Screenshot> igdbScreenshot = new List<HasheousClient.Models.Metadata.IGDB.Screenshot>();
                             foreach (HasheousClient.Models.Metadata.TheGamesDb.GameImage image in imageDict)
@@ -476,6 +509,22 @@ namespace gaseous_server.Classes.Metadata
                             if (igdbCover != null)
                             {
                                 igdbGame.Cover = (long)igdbCover.Id;
+                            }
+
+                            if (igdbClearLogo != null)
+                            {
+                                igdbGame.ClearLogo = new Dictionary<HasheousClient.Models.MetadataSources, List<long>>();
+                                foreach (HasheousClient.Models.Metadata.IGDB.ClearLogo clearLogo in igdbClearLogo)
+                                {
+                                    if (!igdbGame.ClearLogo.ContainsKey(HasheousClient.Models.MetadataSources.TheGamesDb))
+                                    {
+                                        igdbGame.ClearLogo.Add(HasheousClient.Models.MetadataSources.TheGamesDb, new List<long> { (long)clearLogo.Id });
+                                    }
+                                    else
+                                    {
+                                        igdbGame.ClearLogo[HasheousClient.Models.MetadataSources.TheGamesDb].Add((long)clearLogo.Id);
+                                    }
+                                }
                             }
 
                             if (igdbVideo != null)

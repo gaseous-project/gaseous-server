@@ -1,5 +1,18 @@
 <div id="tab1" name="modalTab" data-tabname="Profile">
-    <div style=" display: flex; gap: 10px;">
+    <div class="account-modal-tab1">
+        <div style="flex-grow:1">
+            <div class="section">
+                <div class="section-header">Name</div>
+                <div class="section-body">
+                    <div>Display Name</div>
+                    <input type="text" id="display-name" name="name" style="width: 90%;"
+                        class="inputWithVerticalLabel" />
+                    <div>Quip</div>
+                    <textarea id="quip" class="inputWithVerticalLabel" name="quip" style="width: 90%;"></textarea>
+                </div>
+            </div>
+        </div>
+
         <div style="flex-grow:1">
             <div class="section">
                 <div class="section-header">Avatar</div>
@@ -23,18 +36,6 @@
                 </div>
             </div>
         </div>
-        <div style="flex-grow:1">
-            <div class="section">
-                <div class="section-header">Name</div>
-                <div class="section-body">
-                    <div>Display Name</div>
-                    <input type="text" id="display-name" name="name" style="width: 90%;"
-                        class="inputWithVerticalLabel" />
-                    <div>Quip</div>
-                    <textarea id="quip" class="inputWithVerticalLabel" name="quip" style="width: 90%;"></textarea>
-                </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -42,7 +43,7 @@
     <div class="section">
         <div class="section-header">Change Password</div>
         <div class="section-body">
-            <div style="display: flex; gap: 10px;">
+            <div class="account-modal-tab1">
                 <div style="flex-grow:1">
                     <div>Current Password</div>
                     <input type="password" id="current-password" name="current-password" style="width: 95%;"

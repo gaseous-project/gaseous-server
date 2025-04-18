@@ -21,7 +21,7 @@ namespace gaseous_server.Controllers.v1_1
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.1")]
     [ApiController]
-    public class RatingsController: ControllerBase
+    public class RatingsController : ControllerBase
     {
         [MapToApiVersion("1.1")]
         [HttpGet]
@@ -39,26 +39,36 @@ namespace gaseous_server.Controllers.v1_1
             string[] resources = assembly.GetManifestResourceNames();
             if (resources.Contains(resourceName))
             {
-                using (Stream stream = assembly.GetManifestResourceStream(resourceName))
-                using (StreamReader reader = new StreamReader(stream))
-                {
-                    byte[] filedata = new byte[stream.Length];
-                    stream.Read(filedata, 0, filedata.Length);
-
-                    string filename = RatingBoard + "-" + RatingTitle.ToString() + ".svg";
-                    string contentType = "image/svg+xml";
-
-                    var cd = new System.Net.Mime.ContentDisposition
+                using (Stream? stream = assembly.GetManifestResourceStream(resourceName))
+                    if (stream != null)
                     {
-                        FileName = filename,
-                        Inline = true,
-                    };
+                        // Read the stream
+                        // and convert it to a byte array
+                        // and return it as a file
+                        using (StreamReader reader = new StreamReader(stream))
+                        {
+                            byte[] filedata = new byte[stream.Length];
+                            int bytesRead = stream.Read(filedata, 0, filedata.Length);
+                            if (bytesRead != filedata.Length)
+                            {
+                                return StatusCode(StatusCodes.Status500InternalServerError, "Error reading the file data.");
+                            }
 
-                    Response.Headers.Add("Content-Disposition", cd.ToString());
-                    Response.Headers.Add("Cache-Control", "public, max-age=604800");
+                            string filename = RatingBoard + "-" + RatingTitle.ToString() + ".svg";
+                            string contentType = "image/svg+xml";
 
-                    return File(filedata, contentType);
-                }
+                            var cd = new System.Net.Mime.ContentDisposition
+                            {
+                                FileName = filename,
+                                Inline = true,
+                            };
+
+                            Response.Headers.Add("Content-Disposition", cd.ToString());
+                            Response.Headers.Add("Cache-Control", "public, max-age=604800");
+
+                            return File(filedata, contentType);
+                        }
+                    }
             }
             return NotFound();
         }

@@ -391,6 +391,34 @@ namespace gaseous_server.Controllers
                         }
                         break;
 
+                    case MetadataImageType.clearlogo:
+                        if (game.ClearLogo != null)
+                        {
+                            if (game.ClearLogo.ContainsKey(MetadataSource))
+                            {
+                                ClearLogo? imageObject = ClearLogos.GetClearLogo(game.MetadataSource, ImageId);
+
+                                if (imageObject != null)
+                                {
+                                    imageId = imageObject.ImageId;
+                                    imageTypePath = "ClearLogo";
+                                }
+                                else
+                                {
+                                    return NotFound();
+                                }
+                            }
+                            else
+                            {
+                                return NotFound();
+                            }
+                        }
+                        else
+                        {
+                            return NotFound();
+                        }
+                        break;
+
                     default:
                         return NotFound();
                 }
@@ -458,7 +486,8 @@ namespace gaseous_server.Controllers
         {
             cover,
             screenshots,
-            artwork
+            artwork,
+            clearlogo
         }
 
 
@@ -472,7 +501,9 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
+                MetadataMap? metadata = MetadataManagement.GetMetadataMap(MetadataMapId);
+                MetadataMap.MetadataMapItem? metadataMap = metadata?.PreferredMetadataMapItem;
+                List<long> associatedMetadataMapIds = MetadataManagement.GetAssociatedMetadataMapIds(MetadataMapId);
 
                 if (metadataMap != null)
                 {
@@ -481,7 +512,17 @@ namespace gaseous_server.Controllers
                     if (user != null)
                     {
                         Favourites favourites = new Favourites();
-                        return Ok(favourites.GetFavourite(user.Id, MetadataMapId));
+
+                        foreach (long associatedMetadataMapId in associatedMetadataMapIds)
+                        {
+                            bool favourite = favourites.GetFavourite(user.Id, associatedMetadataMapId);
+                            if (favourite)
+                            {
+                                return Ok(favourite);
+                            }
+                        }
+
+                        return Ok(false);
                     }
                     else
                     {
@@ -518,6 +559,17 @@ namespace gaseous_server.Controllers
                     if (user != null)
                     {
                         Favourites favourites = new Favourites();
+
+                        // clear all favourite associated with this metadata id
+                        if (!favourite)
+                        {
+                            List<long> associatedMetadataMapIds = MetadataManagement.GetAssociatedMetadataMapIds(MetadataMapId);
+                            foreach (long associatedMetadataMapId in associatedMetadataMapIds)
+                            {
+                                favourites.SetFavourite(user.Id, associatedMetadataMapId, favourite);
+                            }
+                        }
+
                         return Ok(favourites.SetFavourite(user.Id, MetadataMapId, favourite));
                     }
                     else
@@ -600,6 +652,45 @@ namespace gaseous_server.Controllers
                     List<Genre> sortedGenreObjects = genreObjects.OrderBy(o => o.Name).ToList();
 
                     return Ok(sortedGenreObjects);
+                }
+                else
+                {
+                    return NotFound();
+                }
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpGet]
+        [Route("{MetadataMapId}/{MetadataSource}/themes")]
+        [ProducesResponseType(typeof(List<Theme>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
+        public async Task<ActionResult> GameThemes(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource)
+        {
+            try
+            {
+                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
+                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                if (game != null)
+                {
+                    List<Theme> themeObjects = new List<Theme>();
+                    if (game.Themes != null)
+                    {
+                        foreach (long themeId in game.Themes)
+                        {
+                            themeObjects.Add(Classes.Metadata.Themes.GetGame_Themes(game.MetadataSource, themeId));
+                        }
+                    }
+
+                    List<Theme> sortedThemeObjects = themeObjects.OrderBy(o => o.Name).ToList();
+
+                    return Ok(sortedThemeObjects);
                 }
                 else
                 {
@@ -1319,13 +1410,18 @@ namespace gaseous_server.Controllers
         [Route("{MetadataMapId}/romgroup")]
         [ProducesResponseType(typeof(Classes.RomMediaGroup.GameRomMediaGroupItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> NewGameRomGroup(long MetadataMapId, long PlatformId, [FromBody] List<long> RomIds)
+        public async Task<ActionResult> NewGameRomGroup(long MetadataMapId, [FromBody] List<long> RomIds)
         {
             try
             {
                 try
                 {
-                    Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.CreateMediaGroup(MetadataMapId, PlatformId, RomIds);
+                    MetadataMap? metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId);
+                    if (metadataMap == null)
+                    {
+                        return NotFound();
+                    }
+                    Classes.RomMediaGroup.GameRomMediaGroupItem rom = Classes.RomMediaGroup.CreateMediaGroup(MetadataMapId, metadataMap.PlatformId, RomIds);
                     return Ok(rom);
                 }
                 catch

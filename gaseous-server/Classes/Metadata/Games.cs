@@ -31,10 +31,16 @@ namespace gaseous_server.Classes.Metadata
                 Game? RetVal = Metadata.GetMetadata<Game>(SourceType, (long)Id, false);
                 RetVal.MetadataSource = SourceType;
                 long? metadataMap = MetadataManagement.GetMetadataMapIdFromSourceId(SourceType, (long)Id);
+                if (metadataMap == null)
+                {
+                    metadataMap = MetadataManagement.GetMetadataMapIdFromSourceId(SourceType, (long)Id, false);
+                }
+
                 if (metadataMap != null)
                 {
                     RetVal.MetadataMapId = (long)metadataMap;
                 }
+
                 RetVal = MassageResult(RetVal);
                 return RetVal;
             }
@@ -79,6 +85,58 @@ namespace gaseous_server.Classes.Metadata
                         Logging.Log(Logging.LogType.Information, "Game Metadata", "Game has no summary, fetching summary from parent game");
                         result.Summary = parentGame.Summary;
                     }
+                }
+            }
+
+            // get associated metadataMapIds
+            List<long> metadataMapIds = MetadataManagement.GetAssociatedMetadataMapIds(result.MetadataMapId);
+            List<MetadataMap> metadataMaps = new List<MetadataMap>();
+            foreach (long metadataMapId in metadataMapIds)
+            {
+                MetadataMap? metadataMap = MetadataManagement.GetMetadataMap(metadataMapId);
+                if (metadataMap != null)
+                {
+                    metadataMaps.Add(metadataMap);
+                }
+            }
+
+            // search metadataMaps for a valid clear logo data source - sources are in order: ScreenScaper, TheGamesDB
+            List<HasheousClient.Models.MetadataSources> clearLogoSources = new List<HasheousClient.Models.MetadataSources>{
+                HasheousClient.Models.MetadataSources.TheGamesDb
+            };
+            long ClearLogoMetadataMapId = result.MetadataMapId;
+            foreach (HasheousClient.Models.MetadataSources source in clearLogoSources)
+            {
+                foreach (MetadataMap metadataMap in metadataMaps)
+                {
+                    if (metadataMap.MetadataMapItems.Any(x => x.SourceType == source))
+                    {
+                        ClearLogoMetadataMapId = metadataMap.Id;
+                        break;
+                    }
+                }
+            }
+
+            // get the available clear logos
+            if (ClearLogoMetadataMapId != 0)
+            {
+                result.ClearLogo = new Dictionary<HasheousClient.Models.MetadataSources, List<long>>();
+                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                string sql = "SELECT MetadataMapBridge.ParentMapId, ClearLogo.SourceId, ClearLogo.Id FROM MetadataMapBridge JOIN ClearLogo ON MetadataMapBridge.MetadataSourceType = ClearLogo.SourceId AND MetadataMapBridge.MetadataSourceId = ClearLogo.Game WHERE MetadataMapBridge.ParentMapId = @gameid;";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "gameid", ClearLogoMetadataMapId }
+            };
+                DataTable data = db.ExecuteCMD(sql, dbDict);
+                foreach (DataRow row in data.Rows)
+                {
+                    HasheousClient.Models.MetadataSources sourceId = (HasheousClient.Models.MetadataSources)(int)row["SourceId"];
+
+                    if (result.ClearLogo.ContainsKey(sourceId) == false)
+                    {
+                        result.ClearLogo.Add(sourceId, new List<long>());
+                    }
+                    result.ClearLogo[sourceId].Add((long)row["Id"]);
                 }
             }
 
@@ -265,7 +323,15 @@ SELECT DISTINCT
         WHEN 1 THEN view_Games_Roms.`MetadataGameName`
         ELSE NULL
     END AS `FavouriteRomName`,
-    User_GameFavouriteRoms.IsMediaGroup AS FavouriteRomIsMediaGroup
+    User_GameFavouriteRoms.IsMediaGroup AS FavouriteRomIsMediaGroup,
+    (SELECT 
+            MAX(SessionTime)
+        FROM
+            UserTimeTracking
+        WHERE
+            UserId = @userid
+                AND PlatformId = view_Games_Roms.PlatformId
+                AND GameId = view_Games_Roms.MetadataMapId) AS SessionTime
 FROM
     view_Games_Roms
         LEFT JOIN
@@ -363,6 +429,12 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                     UserManualLink = string.IsNullOrEmpty((string?)row["UserManualLink"]) ? "" : (string)row["UserManualLink"];
                 }
 
+                DateTime? LastPlayed = null;
+                if (row["SessionTime"] != DBNull.Value)
+                {
+                    LastPlayed = row["SessionTime"] as DateTime?;
+                }
+
                 AvailablePlatformItem valuePair = new AvailablePlatformItem
                 {
                     Id = platform.Id,
@@ -377,7 +449,8 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                     FavouriteRomId = FavouriteRomId,
                     FavouriteRomIsMediagroup = FavouriteRomIsMediagroup,
                     FavouriteRomName = FavouriteRomName,
-                    UserManualLink = UserManualLink
+                    UserManualLink = UserManualLink,
+                    LastPlayed = LastPlayed
                 };
                 platforms.Add(valuePair);
             }
@@ -428,6 +501,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
             public bool? FavouriteRomIsMediagroup { get; set; }
             public string? FavouriteRomName { get; set; }
             public string? UserManualLink { get; set; }
+            public DateTime? LastPlayed { get; set; }
         }
 
         public enum SearchType

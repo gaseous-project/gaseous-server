@@ -1,3 +1,22 @@
+/* apply only on non-touch displays */
+@media screen and (hover: hover) {
+    .game_tile_box {
+        transition: transform 0.2s ease-in-out;
+    }
+
+    .game_tile_box:hover {
+        transform: scale(1.07);
+        box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+        -webkit-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+        -moz-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+    }
+
+    .game_tile_box:hover>.favourite-empty,
+    .game_tile_box_row:hover>.favourite-empty {
+        visibility: visible;
+    }
+}
+
 @media screen and (max-width: 1200px) {
 
     /* applies when the viewport is < 1201px */
@@ -17,9 +36,27 @@
         display: none;
     }
 
+    #modal-header-text:after {
+        content: "";
+        /* Needed to render the pseudo */
+        background-image: linear-gradient(to right, transparent, var(--modal-window-header-background-color) 80%);
+        position: absolute;
+        inset-inline-end: 0;
+        width: 100px;
+        height: 30px;
+        /* Logical property equivalent to `right: 0` */
+    }
+
+    .modal-tabs-container-hide {
+        display: none;
+    }
+
     .game_tile {
+        min-height: 50px;
+        /* min-width: 50px; */
         width: 80px;
-        min-height: 130px;
+        margin-left: 10px;
+        margin-right: 10px;
     }
 
     .game_tile_image {
@@ -30,6 +67,13 @@
 
     .game_tile_box_ratingbanner {
         display: none;
+    }
+
+    .game_tile_box {
+        max-width: 75px;
+        max-height: 100px;
+        padding: 0px;
+        margin: 0px;
     }
 
     .game_tile_label {
@@ -62,4 +106,175 @@
 @media screen and (max-width: 749px) {
 
     /* applies when the viewport is < 750px */
+
+    #games_library {
+        margin-right: 20px;
+    }
+
+    .game_tile_placeholder {
+        width: 110px;
+        height: 180px;
+        margin-bottom: 10px;
+        justify-content: center;
+    }
+
+    .modal-window {
+        min-width: unset;
+        width: 98%;
+        height: 80%;
+    }
+
+    .modal-window-inner-content {
+        flex-direction: column;
+    }
+
+    .modal-window-popup-container,
+    .modal-window-popup {
+        display: block;
+    }
+
+    .modal-window-tabs {
+        display: none;
+    }
+
+    .account-modal-tab1 {
+        flex-direction: column;
+    }
+
+    .card-window {
+        top: 25px;
+        left: 0px;
+        right: 0px;
+        bottom: 0px;
+        transform: unset;
+        margin: 0px;
+        width: 100%;
+        height: 100%;
+        min-width: unset;
+        min-height: unset;
+    }
+
+    .card-background {
+        height: 400px;
+    }
+
+    .card-content {
+        padding: 5px;
+    }
+
+    .card-body {
+        padding: 5px;
+    }
+
+    #card-image {
+        height: 550px;
+        min-height: 550px;
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+
+    #card-title-info {
+        display: block;
+        position: unset;
+        margin-left: 0px;
+        margin-right: 0px;
+        width: 100%;
+    }
+
+    #card-title {
+        display: block;
+        padding-bottom: 20px;
+    }
+
+    .card-title-info-clearlogo {
+        text-align: left;
+    }
+
+    #card-cover-info-block {
+        text-align: center;
+        padding-left: 0px;
+        padding-right: 0px;
+    }
+
+    #card-info {
+        display: block;
+        padding-left: 10px;
+        padding-right: 10px;
+        padding-bottom: 50px;
+    }
+
+    .card-info-block-item {
+        text-align: left;
+        padding-right: 64px;
+        display: block;
+    }
+
+    #card-cover {
+        display: inline-block;
+        text-align: center;
+        margin-bottom: 20px;
+        margin-top: 50px;
+        margin-right: unset;
+    }
+
+    #card-clearlogo {
+        padding-left: 0px;
+        padding-right: 0px;
+        margin-left: 0px;
+        margin-right: 0px;
+    }
+
+    .card-platform-name {
+        display: block;
+    }
+
+    .card_image_container.platform_image_container {
+        display: none;
+    }
+
+    .card-platform-gameitem {
+        flex-wrap: wrap;
+        /* height: 90px; */
+        height: auto;
+        justify-content: end;
+    }
+
+    .card-platform-gamename {
+        width: 80%;
+        padding-left: unset;
+        margin-top: 10px;
+        margin-bottom: 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .modal-metadataconfiguration {
+        width: 100%;
+        height: 400px;
+        min-width: unset;
+        min-height: 400px;
+        max-width: unset;
+        max-height: 400px;
+    }
+
+    #card-stats {
+        flex-direction: column-reverse;
+        gap: 20px;
+    }
+
+    #card-launchgame {
+        flex-grow: 1;
+        margin-left: 0px;
+        height: unset;
+        width: fit-content;
+    }
+
+    .card-romlist-item {
+        flex-wrap: wrap;
+    }
+
+    .card-romlist-labels {
+        flex: 2;
+    }
 }
