@@ -1174,6 +1174,11 @@ class GameCardRomList {
                         mediaGroupItem.classList.add('card-romlist-item');
                         mediaGroupItem.classList.add('card-romlist-item-media');
 
+                        // create the left div
+                        let leftDiv = document.createElement('div');
+                        leftDiv.classList.add('card-romlist-item-left');
+                        mediaGroupItem.appendChild(leftDiv);
+
                         // create the item selection checkbox
                         let romItemCheckbox = document.createElement('input');
                         romItemCheckbox.type = 'checkbox';
@@ -1213,7 +1218,7 @@ class GameCardRomList {
                                 this.createMediaGroupButton.disabled = true;
                             }
                         });
-                        mediaGroupItem.appendChild(romItemCheckbox);
+                        leftDiv.appendChild(romItemCheckbox);
 
                         // create the rom favourite/last used button
                         let romFavButton = document.createElement('div');
@@ -1243,13 +1248,13 @@ class GameCardRomList {
                                 }
                             });
                         });
-                        mediaGroupItem.appendChild(romFavButton);
+                        leftDiv.appendChild(romFavButton);
 
                         // create the label container
                         let romName = document.createElement('label');
                         romName.setAttribute('for', 'rommg_item_check_' + element.id);
                         romName.classList.add('card-romlist-labels');
-                        mediaGroupItem.appendChild(romName);
+                        leftDiv.appendChild(romName);
 
                         // create the label
                         let romLabel = document.createElement('div');
@@ -1282,7 +1287,29 @@ class GameCardRomList {
                             romName.appendChild(romSize);
                         }
 
+                        // create the right div
+                        let rightDiv = document.createElement('div');
+                        rightDiv.classList.add('card-romlist-item-right');
+                        mediaGroupItem.appendChild(rightDiv);
+
                         if (element.status === "Completed") {
+                            // create the download button
+                            let downloadButton = document.createElement('div');
+                            downloadButton.classList.add('platform_edit_button');
+                            downloadButton.innerHTML = '<img src="/images/download.svg" class="banner_button_image" />';
+                            downloadButton.addEventListener('click', async (e) => {
+                                e.stopPropagation();
+                                let downloadLink = `/api/v1.1/Games/${this.gamePlatformObject.metadataMapId}/romgroup/${element.id}/${element.roms[0].game}.zip`;
+                                if (downloadLink === null) {
+                                    console.log('Error: Unable to validate download link');
+                                    console.log(element);
+                                } else {
+                                    // launch the game
+                                }
+                                window.location.href = downloadLink;
+                            });
+                            rightDiv.appendChild(downloadButton);
+
                             // create the save state manager button
                             let platformStateManagerButton = document.createElement('div');
                             platformStateManagerButton.className = 'platform_edit_button platform_statemanager_button';
@@ -1293,7 +1320,7 @@ class GameCardRomList {
                                 let stateManager = new EmulatorStateManager(element.id, true, this.gamePlatformObject.emulatorConfiguration.emulatorType, this.gamePlatformObject.emulatorConfiguration.core, element.platformId, element.metadataMapId, element.name);
                                 stateManager.open();
                             });
-                            mediaGroupItem.appendChild(platformStateManagerButton);
+                            rightDiv.appendChild(platformStateManagerButton);
 
                             // create the play button
                             let playButton = document.createElement('div');
@@ -1322,7 +1349,7 @@ class GameCardRomList {
                                     window.location.href = launchLink;
                                 }
                             });
-                            mediaGroupItem.appendChild(playButton);
+                            rightDiv.appendChild(playButton);
                         }
 
                         this.mediaGroupContainer.appendChild(mediaGroupItem);
@@ -1354,6 +1381,11 @@ class GameCardRomList {
                     romItem.setAttribute('data-platformId', element.platformId);
                     romItem.setAttribute('data-romid', element.id);
                     romItem.setAttribute('data-ismediagroup', '0');
+
+                    // create the left div
+                    let leftDiv = document.createElement('div');
+                    leftDiv.classList.add('card-romlist-item-left');
+                    romItem.appendChild(leftDiv);
 
                     // create the item selection checkbox
                     let romItemCheckbox = document.createElement('input');
@@ -1394,7 +1426,7 @@ class GameCardRomList {
                             this.createMediaGroupButton.disabled = true;
                         }
                     });
-                    romItem.appendChild(romItemCheckbox);
+                    leftDiv.appendChild(romItemCheckbox);
 
                     // create the rom favourite/last used button
                     let romFavButton = document.createElement('div');
@@ -1424,13 +1456,13 @@ class GameCardRomList {
                             }
                         });
                     });
-                    romItem.appendChild(romFavButton);
+                    leftDiv.appendChild(romFavButton);
 
                     // create the label container
                     let romName = document.createElement('label');
                     romName.setAttribute('for', 'rom_item_check_' + element.id);
                     romName.classList.add('card-romlist-labels');
-                    romItem.appendChild(romName);
+                    leftDiv.appendChild(romName);
 
                     // create the rom name
                     let romNameLabel = document.createElement('div');
@@ -1460,6 +1492,11 @@ class GameCardRomList {
                         romName.appendChild(lastUsedLabel);
                     }
 
+                    // create the right div
+                    let rightDiv = document.createElement('div');
+                    rightDiv.classList.add('card-romlist-item-right');
+                    romItem.appendChild(rightDiv);
+
                     // create the info button
                     let infoButton = document.createElement('div');
                     infoButton.classList.add('platform_edit_button');
@@ -1469,7 +1506,25 @@ class GameCardRomList {
                         const romInfoDialog = new rominfodialog(element.metadataMapId, element.id);
                         romInfoDialog.open();
                     });
-                    romItem.appendChild(infoButton);
+                    rightDiv.appendChild(infoButton);
+
+                    // create the download button
+                    let downloadButton = document.createElement('div');
+                    downloadButton.classList.add('platform_edit_button');
+                    downloadButton.innerHTML = '<img src="/images/download.svg" class="banner_button_image" />';
+                    downloadButton.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        let downloadLink = `/api/v1.1/Games/${this.gamePlatformObject.metadataMapId}/roms/${element.id}/${element.name}`;
+                        if (downloadLink === null) {
+                            console.log('Error: Unable to validate download link');
+                            console.log(element);
+                        }
+                        else {
+                            // launch the game
+                            window.location.href = downloadLink;
+                        }
+                    });
+                    rightDiv.appendChild(downloadButton);
 
                     // create the save state manager button
                     let platformStateManagerButton = document.createElement('div');
@@ -1481,7 +1536,7 @@ class GameCardRomList {
                         let stateManager = new EmulatorStateManager(element.id, false, this.gamePlatformObject.emulatorConfiguration.emulatorType, this.gamePlatformObject.emulatorConfiguration.core, element.platformId, element.metadataMapId, element.name);
                         stateManager.open();
                     });
-                    romItem.appendChild(platformStateManagerButton);
+                    rightDiv.appendChild(platformStateManagerButton);
 
                     // create the play button
                     let playButton = document.createElement('div');
@@ -1510,7 +1565,7 @@ class GameCardRomList {
                             window.location.href = launchLink;
                         }
                     });
-                    romItem.appendChild(playButton);
+                    rightDiv.appendChild(playButton);
 
                     this.romListContainer.appendChild(romItem);
                 });

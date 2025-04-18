@@ -3687,6 +3687,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     border-bottom-color: var(--section-header-background);
     border-collapse: collapse;
     padding-bottom: 10px;
+    gap: 10px;
 }
 
 .platform_edit_button[name="rom_favourite"],
@@ -3699,12 +3700,28 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     flex-direction: column-reverse;
 }
 
+.card-romlist-item-left {
+    display: flex;
+}
+
+.card-romlist-item-left>.platform_edit_button {
+    display: inline-block;
+}
+
+.card-romlist-item-right {
+    /* width: 260px; */
+    text-align: right;
+    flex-grow: 2;
+    white-space: nowrap;
+}
+
 .card-romlist-labels {
-    flex-grow: 1;
+    display: inline-block;
 }
 
 .card-romlist-name {
     margin-bottom: 10px;
+    word-wrap: break-word;
 }
 
 #card-launchgame-icon {

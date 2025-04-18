@@ -269,4 +269,12 @@
         height: unset;
         width: fit-content;
     }
+
+    .card-romlist-item {
+        flex-wrap: wrap;
+    }
+
+    .card-romlist-labels {
+        flex: 2;
+    }
 }
