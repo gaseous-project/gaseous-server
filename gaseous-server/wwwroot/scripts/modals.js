@@ -31,6 +31,7 @@ class Modal {
         // Generate tabs
         const tabcontainer = this.modalElement.querySelector('#modal-tabs');
         const tabs = this.modalElement.querySelectorAll('[name="modalTab"]');
+        const popup = this.modalElement.querySelector('#modal-popup');
         if (tabs.length > 0) {
             let firstTab = true;
             tabs.forEach((tab) => {
@@ -53,14 +54,25 @@ class Modal {
                 if (firstTab) {
                     newTab.classList.add('model-tab-button-selected');
                     tab.style.display = 'block';
-                    firstTab = false;
                 } else {
                     tab.style.display = 'none';
                 }
+
+                let newPopupOption = document.createElement('option');
+                newPopupOption.value = tab.id;
+                newPopupOption.innerHTML = tab.getAttribute('data-tabname');
+                popup.appendChild(newPopupOption);
+
+                if (firstTab) {
+                    newPopupOption.selected = true;
+                }
+
+                firstTab = false;
                 tabcontainer.appendChild(newTab);
             });
         } else {
             tabcontainer.style.display = 'none';
+            popup.style.display = 'none';
         }
 
         // add the window to the modal background
@@ -116,22 +128,43 @@ class Modal {
         $(this.modalBackground).fadeIn(200);
         // this.modalBackground.style.display = 'block';
 
+        // make the popup a select2 element
+        const tabcontainer = this.modalElement.querySelector('#modal-tabs');
+        const tabs = this.modalElement.querySelectorAll('[name="modalTab"]');
+        const popup = this.modalElement.querySelector('#modal-popup');
+        // if popup has children, then apply select2
+        if (popup.children.length > 0) {
+            $(popup).select2();
+            // add a change event to the popup
+            $(popup).on('select2:select', (e) => {
+                const popupValue = e.target.value;
+                tabs.forEach((tab) => {
+                    if (tab.getAttribute('id') !== popupValue) {
+                        tab.style.display = 'none';
+                        tabcontainer.querySelector('[data-tabid="' + tab.id + '"]').classList.remove('model-tab-button-selected');
+                    } else {
+                        tab.style.display = 'block';
+                        tabcontainer.querySelector('[data-tabid="' + tab.id + '"]').classList.add('model-tab-button-selected');
+                    }
+                });
+            });
+        }
+
         return;
     }
 
     close() {
         // Hide the modal
         $(this.modalBackground).fadeOut(200, () => {
+            // Show the scroll bar for the page
+            if (document.getElementsByClassName('modal-background').length === 1) {
+                document.body.style.overflow = 'auto';
+            }
 
             // Remove the modal element from the document body
             if (this.modalBackground) {
                 this.modalBackground.remove();
                 this.modalBackground = null;
-            }
-
-            // Show the scroll bar for the page
-            if (document.getElementsByClassName('modal-window-body').length === 0) {
-                document.body.style.overflow = 'auto';
             }
         });
     }
@@ -500,7 +533,9 @@ class EmulatorStateManager {
 
                         let stateControlsLaunch = document.createElement('span');
                         stateControlsLaunch.id = 'stateControlsLaunch_' + result[i].id;
-                        stateControlsLaunch.className = 'romstart';
+                        stateControlsLaunch.classList.add('platform_edit_button');
+                        stateControlsLaunch.classList.add('platform_item_green');
+                        // stateControlsLaunch.classList.add('romstart');
                         let emulatorTarget;
                         let mediagroupint = 0;
                         if (thisObject.IsMediaGroup == true) {
@@ -513,7 +548,7 @@ class EmulatorStateManager {
                                     window.location.replace(emulatorTarget);
                                 });
                                 break;
-                            case 'game':
+                            default:
                                 emulatorTarget = await BuildLaunchLink(thisObject.engine, thisObject.core, thisObject.platformid, thisObject.gameid, thisObject.RomId, mediagroupint, thisObject.rompath, result[i].id) + '&stateid=' + result[i].id;
                                 stateControlsLaunch.addEventListener('click', () => {
                                     window.location.href = emulatorTarget;
@@ -521,20 +556,22 @@ class EmulatorStateManager {
                                 break;
                         }
 
-                        stateControlsLaunch.innerHTML = 'Launch';
+                        stateControlsLaunch.innerHTML = '<img src="/images/play.svg" class="banner_button_image" alt="Play" title="Play" />';
                         stateControlsLaunch.style.float = 'right';
                         stateControls.appendChild(stateControlsLaunch);
 
                         let stateControlsDownload = document.createElement('a');
                         stateControlsDownload.id = 'stateControlsDownload_' + result[i].id;
-                        stateControlsDownload.className = 'saved_state_buttonlink';
+                        stateControlsDownload.classList.add('platform_edit_button');
+                        stateControlsDownload.classList.add('saved_state_buttonlink');
                         stateControlsDownload.href = '/api/v1.1/StateManager/' + thisObject.RomId + '/' + result[i].id + '/State/savestate.state?IsMediaGroup=' + thisObject.IsMediaGroup;
                         stateControlsDownload.innerHTML = '<img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" />';
                         stateControls.appendChild(stateControlsDownload);
 
                         let stateControlsDelete = document.createElement('span');
                         stateControlsDelete.id = 'stateControlsDelete_' + result[i].id;
-                        stateControlsDelete.className = 'saved_state_buttonlink';
+                        stateControlsDelete.classList.add('platform_edit_button');
+                        stateControlsDelete.classList.add('saved_state_buttonlink');
                         stateControlsDelete.addEventListener('click', async () => {
                             await thisObject.#DeleteStateSave(result[i].id, thisObject.IsMediaGroup);
                         });

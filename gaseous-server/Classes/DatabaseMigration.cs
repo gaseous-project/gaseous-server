@@ -59,6 +59,14 @@ namespace gaseous_server.Classes
                                 }
                             }
                             break;
+
+                        case 1025:
+                            Logging.Log(Logging.LogType.Information, "Database", "Running pre-upgrade for schema version " + TargetSchemaVersion);
+                            // create the basic relation tables
+                            // this is a blocking task
+                            Storage.CreateRelationsTables<IGDB.Models.Game>();
+                            Storage.CreateRelationsTables<IGDB.Models.Platform>();
+                            break;
                     }
                     break;
             }

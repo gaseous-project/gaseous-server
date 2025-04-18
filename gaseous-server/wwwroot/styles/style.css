@@ -208,6 +208,10 @@ h3 {
     border-right-style: solid;
 }
 
+.modal-window-popup-container {
+    display: none;
+}
+
 .modal-tab-button {
     display: block;
     padding: 10px;
@@ -266,17 +270,6 @@ h3 {
     top: 10px;
     left: 10px;
     right: 40px;
-}
-
-#modal-header-text:after {
-    content: "";
-    /* Needed to render the pseudo */
-    background-image: linear-gradient(to right, transparent, var(--modal-window-header-background-color) 80%);
-    position: absolute;
-    inset-inline-end: 0;
-    width: 100px;
-    height: 30px;
-    /* Logical property equivalent to `right: 0` */
 }
 
 .modal-window-content {
@@ -374,6 +367,10 @@ h3 {
     width: 20px;
     /* margin-right: 5px; */
     filter: invert(100%);
+}
+
+.banner_button_image_rotated {
+    transform: rotate(90deg);
 }
 
 .user_list_icon {
@@ -1100,11 +1097,6 @@ input[name='filter_panel_range_max'] {
     visibility: hidden;
 }
 
-.game_tile_box:hover>.favourite-empty,
-.game_tile_box_row:hover>.favourite-empty {
-    visibility: visible;
-}
-
 .game_tile_box_row {
     position: absolute;
     display: inline-block;
@@ -1297,17 +1289,10 @@ input[name='filter_panel_range_max'] {
 }
 
 .game_tile_box {
-    transition: transform 0.2s ease-in-out;
+    /* transition: transform 0.2s ease-in-out; */
     box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.44);
     -webkit-box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.44);
     -moz-box-shadow: 3px 3px 5px 0px rgba(0, 0, 0, 0.44);
-}
-
-.game_tile_box:hover {
-    transform: scale(1.07);
-    box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
-    -webkit-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
-    -moz-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
 }
 
 .game_tile_image_shadow {
@@ -1687,6 +1672,7 @@ iframe {
 }
 
 #gamestatistics_favourite {
+    margin-top: 3px;
     float: right;
 }
 
@@ -2740,6 +2726,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     margin-bottom: 20px;
     border-radius: var(--standard-radius);
     overflow: hidden;
+    color: var(--page-font-colour);
 }
 
 .section-header {
@@ -2829,6 +2816,11 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     border-style: solid;
     filter: drop-shadow(1px 1px 3px #000);
     -webkit-filter: drop-shadow(1px 1px 3px #000);
+}
+
+.account-modal-tab1 {
+    display: flex;
+    gap: 10px;
 }
 
 .profile-card {
@@ -3112,7 +3104,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 .platform_item_green {
-    background: linear-gradient(90deg, rgba(66, 200, 77, 0.747) 0%, rgb(66, 133, 77) 50%);
+    background: linear-gradient(120deg, rgba(66, 200, 77, 0.747) 0%, rgb(66, 133, 77) 100%);
 }
 
 .platform_item_background:hover {}
@@ -3140,8 +3132,12 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 .platform_image {
+    display: block;
     max-width: 90px;
     max-height: 60px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
 }
 
 .platform_name_container {
@@ -3309,4 +3305,451 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     font-size: 24px;
 
     z-index: +1;
+}
+
+.card-window {
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    top: 50%;
+    left: 50%;
+    margin-right: -50%;
+    transform: translateX(-50%) translateY(calc(-50% - .5px));
+    min-width: 700px;
+    max-width: 1000px;
+    width: 60%;
+    min-height: 388px;
+    height: 90%;
+    border-radius: 20px;
+    border-style: solid;
+    border-width: 0px;
+    border-color: var(--modal-border-color);
+    overflow: hidden;
+    box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+    -webkit-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+    -moz-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+    background-color: var(--modal-background-color);
+}
+
+.card-scroller {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+}
+
+.card-scroller:hover {
+    scrollbar-width: auto;
+}
+
+.card-header {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    height: 15px;
+
+    text-align: center;
+    vertical-align: middle;
+    font-weight: bold;
+
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+
+    background-color: var(--section-header-background);
+    color: var(--page-font-colour);
+    padding: 15px;
+}
+
+.card-content {
+    position: relative;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    padding: 20px;
+}
+
+.card-background-container {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    width: 100%;
+    display: block;
+    /* filter: blur(8px);
+    -webkit-filter: blur(8px); */
+}
+
+.card-background {
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    width: 100%;
+    max-height: 600px;
+    object-fit: cover;
+}
+
+.card-background-blurred {
+    filter: blur(4px);
+    -webkit-filter: blur(4px);
+}
+
+.card-gradient {
+    position: absolute;
+    bottom: 0px;
+    left: 0px;
+    right: 0px;
+    height: 75%;
+}
+
+.card-body {
+    position: absolute;
+    left: 0px;
+    right: 0px;
+    top: 0px;
+    bottom: 0px;
+    padding: 20px;
+}
+
+.card-close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 20px;
+    height: 20px;
+    font-size: 24px;
+    color: white;
+    background-color: var(--button-background);
+    border-radius: 50%;
+    border-width: 0px;
+    border-color: transparent;
+    border-style: solid;
+    overflow: hidden;
+    cursor: pointer;
+    text-align: center;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
+    line-height: 16px;
+}
+
+.card-close-button:hover {
+    background-color: var(--button-background-hover);
+}
+
+#card-image {
+    height: 450px;
+    display: block;
+    padding-left: 10%;
+    padding-right: 10%;
+    position: relative;
+}
+
+#card-cover {
+    max-width: 225px;
+    display: inline-block;
+    margin-right: 20px;
+}
+
+#card-clearlogo {
+    display: inline-block;
+    text-align: center;
+    width: 95%;
+    max-height: 150px;
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-bottom: 20px;
+    object-fit: contain;
+}
+
+#card-cover-info-block {
+    position: absolute;
+    bottom: 10px;
+    left: 10%;
+    right: 10%;
+}
+
+#card-info {
+    display: block;
+    padding-left: 10%;
+    padding-right: 10%;
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.card-info-block-item {
+    display: block;
+    width: 100%;
+}
+
+.card-title-info {
+    position: absolute;
+    bottom: 10px;
+    left: 250px;
+    right: 64px;
+}
+
+.card-title-info-clearlogo {
+    display: block;
+    position: unset;
+    padding-left: 10px;
+    padding-right: 60px;
+}
+
+#card-title {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+#card-rating {
+    position: absolute;
+    bottom: 0px;
+    right: 0px;
+}
+
+.card-rating-icon {
+    width: 50px;
+    height: 50px;
+}
+
+.card-info-rating-icon {
+    filter: invert(100%);
+    height: 10px;
+    margin-right: 5px;
+    padding-top: 4px;
+}
+
+.card-info-rating-icon-black {
+    filter: invert(0%);
+}
+
+#card-screenshots {
+    overflow: auto;
+    white-space: nowrap;
+    padding: 0px;
+    scrollbar-width: none;
+}
+
+#card-screenshots:hover {
+    scrollbar-width: auto;
+}
+
+.card-screenshot-item {
+    display: inline-block;
+    margin-right: 10px;
+}
+
+.card-screenshot-item>img {
+    max-width: 200px;
+    max-height: 125px;
+}
+
+#card-summary {}
+
+#card-summary:hover {
+    cursor: pointer;
+}
+
+#card-summary-full {
+    margin-top: 20px;
+}
+
+#card-summary:hover+#card-summary-full {
+    text-decoration: underline;
+}
+
+#card-stats {
+    display: flex;
+    flex-wrap: wrap;
+    flex-direction: row;
+    gap: 10px;
+}
+
+#card-statssection {
+    display: inline-block;
+    flex-grow: 1;
+}
+
+#card-launchgame {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 150px;
+    height: 65px;
+
+    background-color: var(--button-background);
+    border-radius: var(--standard-radius);
+    border-width: 1px;
+    border-color: var(--button-background);
+    border-style: solid;
+    text-align: center;
+    cursor: pointer;
+    padding: 10px;
+}
+
+#card-platforms {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    margin-bottom: unset;
+}
+
+.card-platform-section {
+    margin-bottom: unset;
+}
+
+.card-platform-item {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    min-height: 80px;
+}
+
+.card-platform-name {
+    display: none;
+}
+
+.card_image_container.platform_image_container {
+    height: unset;
+    flex-grow: 0;
+    width: 70px;
+    min-width: 70px;
+    max-width: 70px;
+    align-items: unset;
+    background: rgb(255, 255, 255);
+    background: linear-gradient(0deg, rgba(204, 204, 204, 1) 0%, rgba(255, 255, 255, 1) 90%, rgba(255, 255, 255, 1) 100%);
+    margin-right: unset;
+}
+
+.card-platform-gamelist {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    width: 100%;
+}
+
+.card-platform-gameitem-container {
+    padding: 10px 10px 10px 10px;
+    margin-left: 10px;
+    margin-right: 10px;
+    background: linear-gradient(190deg, rgba(200, 200, 200, 0.7469362745098039) 0%, rgba(133, 133, 133, 1) 50%);
+    border-radius: var(--standard-radius);
+}
+
+.card-platform-gameitem {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    min-height: 40px;
+}
+
+.card-platform-gamename {
+    flex-grow: 1;
+    padding-left: 10px;
+}
+
+.card-romlist {
+    display: block;
+    /* width: 100%; */
+    border-radius: var(--standard-radius);
+    border-color: var(--section-header-background);
+    border-width: 1px;
+    border-style: solid;
+    margin-top: 10px;
+    padding: 10px;
+    max-height: 400px;
+    overflow: auto;
+}
+
+.modal-metadataconfiguration {
+    width: 600px;
+    height: 400px;
+    min-width: unset;
+    min-height: 400px;
+    max-width: unset;
+    max-height: 400px;
+}
+
+.modal-emulatorconfiguration {
+    width: 600px;
+    height: 80%;
+    min-width: unset;
+    min-height: 400px;
+    max-width: unset;
+    max-height: 80%;
+}
+
+.card-romlist-item {
+    display: flex;
+    flex-direction: row;
+    align-items: top;
+    margin-bottom: 10px;
+    border-bottom-width: 1px;
+    border-bottom-style: solid;
+    border-bottom-color: var(--section-header-background);
+    border-collapse: collapse;
+    padding-bottom: 10px;
+    gap: 10px;
+}
+
+.platform_edit_button[name="rom_favourite"],
+.platform_edit_button_expand {
+    margin-left: unset;
+    margin-right: 10px;
+}
+
+.platform_edit_button_expand {
+    flex-direction: column-reverse;
+}
+
+.card-romlist-item-left {
+    display: flex;
+}
+
+.card-romlist-item-left>.platform_edit_button {
+    display: inline-block;
+}
+
+.card-romlist-item-right {
+    /* width: 260px; */
+    text-align: right;
+    flex-grow: 2;
+    white-space: nowrap;
+}
+
+.card-romlist-labels {
+    display: inline-block;
+}
+
+.card-romlist-name {
+    margin-bottom: 10px;
+    word-wrap: break-word;
+}
+
+#card-launchgame-icon {
+    width: 100%;
+    justify-content: center;
+}
+
+#card-launchgame-icon,
+.banner_button_text {
+    display: block;
+    color: white;
+}
+
+.card-romlist-management {
+    padding-top: 10px;
+    text-align: right;
+}
+
+.card-romlist-checkbox {
+    margin-right: 20px;
+    margin-left: 20px;
 }

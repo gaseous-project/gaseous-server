@@ -111,8 +111,8 @@
     /* ------------------------------------------- */
     --modal-background-color: rgba(0, 0, 0, 0.4);
     --modal-border-color: rgba(255, 255, 255, 0.414);
-    --modal-tabs-background-color: rgb(100, 100, 100);
-    --modal-window-background-color: rgb(79, 79, 79);
+    --modal-tabs-background-color: rgba(100, 100, 100, 0.7);
+    --modal-window-background-color: rgba(79, 79, 79, 0.9);
     --modal-window-header-text-color: rgb(255, 255, 255);
     --modal-window-header-background-color: rgb(56, 56, 56);
 
