@@ -1709,7 +1709,7 @@ class GameCardRomList {
         await mappingModal.BuildModal();
 
         // override the dialog size
-        mappingModal.modalElement.style = 'width: 600px; height: 80%; min-width: unset; min-height: 400px; max-width: unset; max-height: 80%;';
+        mappingModal.modalElement.classList.add('modal-emulatorconfiguration');
 
         // get the platform map
         let platformMap = await fetch('/api/v1.1/PlatformMaps/' + this.gamePlatformObject.id, {
