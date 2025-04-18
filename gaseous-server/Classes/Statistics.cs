@@ -1,4 +1,5 @@
 using System.Data;
+using System.Text;
 using gaseous_server.Models;
 
 namespace gaseous_server.Classes
@@ -79,11 +80,38 @@ namespace gaseous_server.Classes
         public StatisticsModel? GetSession(long GameId, string UserId)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT SUM(SessionLength) AS TotalLength FROM UserTimeTracking WHERE GameId = @gameid AND UserId = @userid;";
-            Dictionary<string, object> dbDict = new Dictionary<string, object>{
+            string sql = "";
+            Dictionary<string, object> dbDict;
+
+            // get all the metadatamapids with the same game mapping
+            sql = "SELECT MetadataSourceId FROM view_MetadataMap WHERE Id = @gameid;";
+            DataTable dtGameIds = db.ExecuteCMD(sql, new Dictionary<string, object> { { "gameid", GameId } });
+
+            sql = "SELECT Id FROM view_MetadataMap WHERE MetadataSourceId = @metadatasourceid;";
+            dtGameIds = db.ExecuteCMD(sql, new Dictionary<string, object> { { "metadatasourceid", dtGameIds.Rows[0]["MetadataSourceId"] } });
+
+            dbDict = new Dictionary<string, object>{
                 { "gameid", GameId },
                 { "userid", UserId }
             };
+
+            int inCounter = 0;
+            StringBuilder inStatement = new StringBuilder();
+            foreach (DataRow row in dtGameIds.Rows)
+            {
+                if (inCounter == 0)
+                {
+                    inStatement.Append("@metadatasourceid" + inCounter);
+                }
+                else
+                {
+                    inStatement.Append(", @metadatasourceid" + inCounter);
+                }
+                dbDict.Add("metadatasourceid" + inCounter, row["Id"]);
+                inCounter++;
+            }
+
+            sql = "SELECT SUM(SessionLength) AS TotalLength FROM UserTimeTracking WHERE GameId IN (" + inStatement + ") AND UserId = @userid;";
 
             DataTable data = db.ExecuteCMD(sql, dbDict);
 
@@ -101,7 +129,7 @@ namespace gaseous_server.Classes
                 {
                     int TotalTime = int.Parse(data.Rows[0]["TotalLength"].ToString());
 
-                    sql = "SELECT * FROM UserTimeTracking WHERE GameId = @gameid AND UserId = @userid ORDER BY SessionTime DESC LIMIT 1;";
+                    sql = "SELECT * FROM UserTimeTracking WHERE GameId IN (" + inStatement + ") AND UserId = @userid ORDER BY SessionTime DESC LIMIT 1;";
                     data = db.ExecuteCMD(sql, dbDict);
 
                     return new StatisticsModel
