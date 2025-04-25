@@ -13,11 +13,195 @@ using static gaseous_server.Classes.Metadata.Games;
 using static gaseous_server.Classes.FileSignature;
 using HasheousClient.Models;
 using HasheousClient.Models.Metadata.IGDB;
+using Mono.TextTemplating;
 
 namespace gaseous_server.Classes
 {
     public class ImportGame : QueueItemStatus
     {
+        /// <summary>
+        /// List of import states
+        /// </summary>
+        private static readonly List<ImportStateItem> _importStates = new List<ImportStateItem>();
+
+        /// <summary>
+        /// Gets a read-only list of import state items.
+        /// </summary>
+        public static IReadOnlyList<ImportStateItem> ImportStates => _importStates.AsReadOnly();
+
+        /// <summary>
+        /// Add an import state to the list
+        /// </summary>
+        /// <param name="SessionId">
+        /// The session ID of the import
+        /// </param>
+        /// <param name="FileName">
+        /// The name of the file being imported
+        /// </param>
+        /// <param name="Method">
+        /// The method of import (ImportDirectory or WebUpload)
+        /// </param>
+        /// <param name="PlatformOverride">
+        /// The platform override for the import
+        /// </param>
+        public static void AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, long? PlatformOverride = null)
+        {
+            _AddImportState(SessionId, FileName, Method, string.Empty, PlatformOverride);
+        }
+
+        /// <summary>
+        /// Add an import state to the list
+        /// </summary>
+        /// <param name="SessionId">
+        /// The session ID of the import
+        /// </param>
+        /// <param name="FileName">
+        /// The name of the file being imported
+        /// </param>
+        /// <param name="Method">
+        /// The method of import (ImportDirectory or WebUpload)
+        /// </param>
+        /// <param name="UserId">
+        /// The user ID of the person importing the file, if the import is from the web
+        /// </param>
+        /// <param name="PlatformOverride">
+        /// The platform override for the import
+        /// </param>
+        public static void AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, string UserId, long? PlatformOverride = null)
+        {
+            _AddImportState(SessionId, FileName, Method, UserId, PlatformOverride);
+        }
+
+        private static void _AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, string UserId = "", long? PlatformOverride = null)
+        {
+            // check if an import state for this session id or file exists
+            ImportStateItem? existingImportState = _importStates.Find(x => x.SessionId == SessionId || x.FileName == FileName);
+            if (existingImportState != null)
+            {
+                // update the existing import state
+                existingImportState.FileName = FileName;
+                existingImportState.Method = Method;
+                existingImportState.UserId = UserId;
+                existingImportState.PlatformOverride = PlatformOverride;
+                existingImportState.LastUpdated = DateTime.UtcNow;
+            }
+            else
+            {
+                // create a new import state
+                ImportStateItem importState = new ImportStateItem
+                {
+                    FileName = FileName,
+                    Method = Method,
+                    UserId = UserId,
+                    PlatformOverride = PlatformOverride,
+                    SessionId = SessionId
+                };
+                _importStates.Add(importState);
+
+                Logging.Log(Logging.LogType.Information, "Import Game", String.Format("File {0} added to import queue via {1} by user {2}", FileName, Method.ToString(), UserId));
+
+                // check if there is an ImportQueueProcessor running
+                ProcessQueue.QueueItem? queueItem = ProcessQueue.QueueItems.Find(x => x.ItemType == ProcessQueue.QueueItemType.ImportQueueProcessor);
+                if (queueItem == null)
+                {
+                    // start the import queue processor
+                    ProcessQueue.QueueItem queueItemImport = new ProcessQueue.QueueItem(
+                        ProcessQueue.QueueItemType.ImportQueueProcessor, 1, false, true);
+                    ProcessQueue.QueueItems.Add(queueItemImport);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Update the import state
+        /// </summary>
+        /// <param name="SessionId">
+        /// The session ID of the import
+        /// </param>
+        /// <param name="State">
+        /// The state of the import (Pending, Processing, Completed, Failed)
+        /// </param>
+        /// <param name="Type">
+        /// The type of import (Unknown, Rom, BIOS)
+        /// </param>
+        /// <param name="ProcessData">
+        /// A dictionary of process data to be added to the import state
+        /// </param>
+        public static void UpdateImportState(Guid SessionId, ImportStateItem.ImportState State, ImportStateItem.ImportType Type, Dictionary<string, object>? ProcessData = null)
+        {
+            ImportStateItem? importState = _importStates.Find(x => x.SessionId == SessionId);
+            if (importState != null)
+            {
+                importState.State = State;
+                importState.Type = Type;
+                importState.LastUpdated = DateTime.UtcNow;
+                if (ProcessData != null)
+                {
+                    foreach (KeyValuePair<string, object> kvp in ProcessData)
+                    {
+                        importState.ProcessData[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get the import state for a session ID
+        /// </summary>
+        /// <param name="SessionId">
+        /// The session ID of the import
+        /// </param>
+        /// <returns>
+        /// The import state item for the session ID
+        /// </returns>
+        public static ImportStateItem? GetImportState(Guid SessionId)
+        {
+            ImportStateItem? importState = _importStates.Find(x => x.SessionId == SessionId);
+            if (importState != null)
+            {
+                return importState;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Remove an import state from the list
+        /// </summary>
+        /// <param name="SessionId">
+        /// The session ID of the import
+        /// </param>
+        public static void RemoveImportState(Guid SessionId)
+        {
+            ImportStateItem? importState = _importStates.Find(x => x.SessionId == SessionId);
+            if (importState != null)
+            {
+                _importStates.Remove(importState);
+            }
+        }
+
+        /// <summary>
+        /// Remove old import states from the list
+        /// </summary>
+        /// <remarks>
+        /// This method removes import states that are older than 60 minutes and have a state of Completed or Failed.
+        /// </remarks>
+        public static void RemoveOldImportStates()
+        {
+            DateTime now = DateTime.UtcNow;
+            TimeSpan timeSpan = new TimeSpan(0, 0, 60);
+            DateTime cutoff = now.Subtract(timeSpan);
+
+            // remove completed import states older than 60 minutes
+            _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Completed && x.LastUpdated < cutoff);
+            // remove failed import states older than 60 minutes
+            _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Failed && x.LastUpdated < cutoff);
+            // remove pending import states that don't have a file on disk
+            _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Pending && !File.Exists(x.FileName));
+        }
+
         /// <summary>
         /// Scan the import directory for games and process them
         /// </summary>
@@ -73,29 +257,28 @@ namespace gaseous_server.Classes
             Dictionary<string, object> RetVal = new Dictionary<string, object>();
             RetVal.Add("path", Path.GetFileName(GameFileImportPath));
 
-            if (
-                Common.SkippableFiles.Contains<string>(Path.GetFileName(GameFileImportPath), StringComparer.OrdinalIgnoreCase) ||
-                !PlatformMapping.SupportedFileExtensions.Contains(Path.GetExtension(GameFileImportPath), StringComparer.OrdinalIgnoreCase)
-            )
+            // get the hash of the file
+            Common.hashObject hash = new Common.hashObject(GameFileImportPath);
+
+            // check if the file is a bios file first
+            Models.PlatformMapping.PlatformMapItem? IsBios = Classes.Bios.BiosHashSignatureLookup(hash.md5hash);
+
+            if (IsBios != null)
+            {
+                // file is a bios
+                Bios.ImportBiosFile(GameFileImportPath, hash, ref RetVal);
+            }
+            else if (
+                    Common.SkippableFiles.Contains<string>(Path.GetFileName(GameFileImportPath), StringComparer.OrdinalIgnoreCase) ||
+                    !PlatformMapping.SupportedFileExtensions.Contains(Path.GetExtension(GameFileImportPath), StringComparer.OrdinalIgnoreCase)
+                )
             {
                 Logging.Log(Logging.LogType.Debug, "Import Game", "Skipping item " + GameFileImportPath);
             }
             else
             {
-                Common.hashObject hash = new Common.hashObject(GameFileImportPath);
-
-                Models.PlatformMapping.PlatformMapItem? IsBios = Classes.Bios.BiosHashSignatureLookup(hash.md5hash);
-
-                if (IsBios == null)
-                {
-                    // file is a rom
-                    _ImportGameFile(GameFileImportPath, hash, ref RetVal, OverridePlatform);
-                }
-                else
-                {
-                    // file is a bios
-                    Bios.ImportBiosFile(GameFileImportPath, hash, ref RetVal);
-                }
+                // file is a rom
+                ImportGameFile(GameFileImportPath, hash, ref RetVal, OverridePlatform);
             }
 
             return RetVal;
@@ -116,7 +299,7 @@ namespace gaseous_server.Classes
         /// <param name="OverridePlatform">
         /// The platform to use for the game file
         /// </param>
-        private static void _ImportGameFile(string FilePath, Common.hashObject Hash, ref Dictionary<string, object> GameFileInfo, Platform? OverridePlatform)
+        public static void ImportGameFile(string FilePath, Common.hashObject Hash, ref Dictionary<string, object> GameFileInfo, Platform? OverridePlatform)
         {
             GameFileInfo.Add("type", "rom");
 
@@ -903,4 +1086,3 @@ namespace gaseous_server.Classes
         }
     }
 }
-

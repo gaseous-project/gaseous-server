@@ -108,71 +108,9 @@ class UploadRom {
 
                 if (xhr.status === 200) {
                     // process the results
-                    let response = JSON.parse(xhr.responseText);
-                    console.log(response);
-                    switch (response.type) {
-                        case 'rom':
-                            switch (response.status) {
-                                case 'duplicate':
-                                    uploadedItem.SetStatus(response.type, 5, null, 'Duplicate ROM');
-                                    break;
+                    console.log(xhr.responseText);
 
-                                default:
-                                    uploadedItem.platformId = 0;
-                                    uploadedItem.platformName = 'Unknown Platform';
-                                    uploadedItem.gameId = 0;
-                                    uploadedItem.gameName = 'Unknown Game';
-                                    uploadedItem.gameData = response.game;
-                                    uploadedItem.romId = response.romid;
-
-                                    if (response.game) {
-                                        // game data was returned
-                                        uploadedItem.gameId = response.rom.metadataMapId;
-                                        uploadedItem.metadataSource = response.rom.metadataSource;
-                                        uploadedItem.gameName = response.game.name;
-                                        if (response.game.cover != null) {
-                                            if (response.game.cover != null) {
-                                                uploadedItem.coverId = response.game.cover;
-                                            }
-                                        }
-                                    } else {
-                                        // game has been deemed to be unknown
-                                        uploadedItem.gameId = response.rom.metadataMapId;
-                                    }
-
-                                    if (response.platform) {
-                                        uploadedItem.platformId = response.platform.id;
-                                        uploadedItem.platformName = response.platform.name;
-                                    }
-
-                                    uploadedItem.SetStatus(response.type, 2, null);
-                                    break;
-                            }
-                            break;
-
-                        case 'bios':
-                            switch (response.status) {
-                                case 'duplicate':
-                                    uploadedItem.SetStatus(response.type, 5, null, 'Duplicate BIOS');
-                                    break;
-
-                                default:
-                                    uploadedItem.platformId = 0;
-                                    uploadedItem.platformName = 'Unknown Platform';
-
-                                    if (response.platform) {
-                                        uploadedItem.platformId = response.platform.id;
-                                        uploadedItem.platformName = response.platform.name;
-                                    }
-
-                                    uploadedItem.gameName = response.name;
-
-                                    uploadedItem.SetStatus(response.type, 2, null);
-                                    break;
-                            }
-
-                            break;
-                    }
+                    uploadedItem.SetStatus('rom', 2, null, 'Queued for processing');
                 }
             });
             xhr.send(formData);
@@ -196,11 +134,6 @@ class UploadItem {
         this.Item.classList.add('uploaditem');
         this.Item.classList.add('romrow');
 
-        // rom cover art
-        this.coverArt = document.createElement('img');
-        this.coverArt.classList.add('uploadItem-CoverArt');
-        this.coverArt.src = '';
-
         // file name label
         this.filenameLabel = document.createElement('div');
         this.filenameLabel.classList.add('uploadItem-Label');
@@ -211,40 +144,6 @@ class UploadItem {
         this.statusLabel.classList.add('uploadItem-Status');
         this.statusLabel.textContent = UploadItem.StatusValues[this.Status];
 
-        // game name label
-        this.gameNameLabel = document.createElement('div');
-        this.gameNameLabel.classList.add('uploadItem-Status');
-        this.gameNameLabel.innerHTML = '';
-        this.gameNameLabel.style.display = 'none';
-
-        // game platform label
-        this.gamePlatformLabel = document.createElement('div');
-        this.gamePlatformLabel.classList.add('uploadItem-Status');
-        this.gamePlatformLabel.innerHTML = '';
-        this.gamePlatformLabel.style.display = 'none';
-
-        // rom info button
-        this.infoButton = document.createElement('div');
-        this.infoButton.classList.add('properties_button');
-        this.infoButton.style.float = 'right';
-        this.infoButton.style.display = 'none';
-        this.infoButton.innerHTML = 'i';
-        this.infoButton.addEventListener('click', () => {
-            const romInfoDialog = new rominfodialog(this.gameId, this.romId);
-            romInfoDialog.CallbackOk = (rom) => {
-                this.platformId = rom.platformId;
-                this.platformName = rom.platform;
-                this.gameId = rom.gameId;
-                this.gameName = rom.game;
-                this.#RenderStatus();
-            };
-            romInfoDialog.CallbackDelete = () => {
-                this.Item.remove();
-                this.Item = null;
-            };
-            romInfoDialog.open();
-        });
-
         // flex box
         let flexBox = document.createElement('div');
         flexBox.classList.add('uploadItem-FlexBox');
@@ -253,16 +152,12 @@ class UploadItem {
         // add the elements to the item
         let leftColumn = document.createElement('div');
         leftColumn.classList.add('uploadItem-LeftColumn');
-        leftColumn.appendChild(this.coverArt);
+        leftColumn.appendChild(this.filenameLabel);
         flexBox.appendChild(leftColumn);
 
         let rightColumn = document.createElement('div');
         rightColumn.classList.add('uploadItem-RightColumn');
-        rightColumn.appendChild(this.infoButton);
-        rightColumn.appendChild(this.filenameLabel);
         rightColumn.appendChild(this.statusLabel);
-        rightColumn.appendChild(this.gameNameLabel);
-        rightColumn.appendChild(this.gamePlatformLabel);
         flexBox.appendChild(rightColumn);
 
         // progress bar
@@ -272,18 +167,7 @@ class UploadItem {
 
         // render the item
         this.#RenderStatus();
-
-        return this;
     }
-
-    platformId = null;
-    platformName = null;
-    gameId = null;
-    metadataSource = null;
-    gameName = null;
-    gameData = null;
-    coverId = null;
-    romId = null;
 
     SetStatus(Type, Status, Progress, Message = null) {
         this.Type = Type;
@@ -300,76 +184,32 @@ class UploadItem {
         this.progressBar.classList.remove('uploaditemprogressincomplete');
         this.progressBar.classList.remove('uploaditemprogresswarning');
         this.progressBar.classList.remove('uploaditemprogressfailed');
-        this.coverArt.classList.remove('svginvert');
         switch (this.Status) {
             case 0: // Pending
+            case 4: // Processing
                 this.progressBar.removeAttribute('value');
                 this.progressBar.removeAttribute('max');
                 this.progressBar.classList.add('uploaditemprogressinprogress');
-                this.coverArt.classList.add('svginvert');
-                this.coverArt.src = '/images/pending.svg';
                 break;
             case 1: // Uploading
                 this.progressBar.value = this.Progress;
                 this.progressBar.max = 100;
                 this.progressBar.classList.add('uploaditemprogressinprogress');
-                this.coverArt.classList.add('svginvert');
-                this.coverArt.src = '/images/upload.svg';
                 break;
             case 2: // Complete
                 this.progressBar.value = 100;
                 this.progressBar.max = 100;
                 this.progressBar.classList.add('uploaditemprogressincomplete');
-                this.statusLabel.style.display = 'none';
-                this.gameNameLabel.style.display = 'block';
-                this.gamePlatformLabel.style.display = 'block';
-
-                switch (this.Type) {
-                    case 'rom':
-                        this.infoButton.style.display = 'block';
-
-                        if (this.gameId === null || this.gameId === 0 || this.gameData === null) {
-                            this.coverArt.src = '/images/unknowngame.png';
-                        } else {
-                            this.coverArt.src = '/api/v1.1/Games/' + this.gameId + '/' + this.metadataSource + '/cover/' + this.coverId + '/image/cover_big/cover.jpg';
-                        }
-
-                        this.gamePlatformLabel.innerHTML = this.platformName;
-                        break;
-
-                    case 'bios':
-                        this.coverArt.src = '/images/bios.svg';
-
-                        this.gamePlatformLabel.innerHTML = "BIOS for platform: " + this.platformName;
-                        break;
-
-                    case 'unknown':
-                        this.coverArt.src = '/images/unknowngame.png';
-                        break;
-                }
-
-                this.gameNameLabel.innerHTML = this.gameName;
                 break;
             case 3: // Failed
                 this.progressBar.value = 100;
                 this.progressBar.max = 100;
                 this.progressBar.classList.add('uploaditemprogressfailed');
-                this.coverArt.classList.add('svginvert');
-                this.coverArt.src = '/images/Critical.svg';
-                break;
-            case 4: // Processing
-                this.progressBar.removeAttribute('value');
-                this.progressBar.removeAttribute('max');
-                this.progressBar.classList.add('uploaditemprogressinprogress');
-                this.coverArt.classList.add('svginvert');
-                this.coverArt.src = '/images/processing.svg';
                 break;
             case 5: // Error
                 this.progressBar.value = 100;
                 this.progressBar.max = 100;
                 this.progressBar.classList.add('uploaditemprogresswarning');
-                this.coverArt.classList.add('svginvert');
-                this.coverArt.src = '/images/Warning.svg';
                 break;
         }
     }

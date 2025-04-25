@@ -15,6 +15,8 @@ using Microsoft.CodeAnalysis.Scripting;
 using static gaseous_server.Classes.Metadata.AgeRatings;
 using Asp.Versioning;
 using HasheousClient.Models.Metadata.IGDB;
+using Microsoft.AspNetCore.Identity;
+using Authentication;
 
 namespace gaseous_server.Controllers
 {
@@ -25,8 +27,19 @@ namespace gaseous_server.Controllers
     [ApiController]
     public class RomsController : Controller
     {
-        static bool uploadInProgress = false;
-        static DateTime uploadStartTime = DateTime.Now;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly SignInManager<ApplicationUser> _signInManager;
+
+        public RomsController(
+            UserManager<ApplicationUser> userManager,
+            SignInManager<ApplicationUser> signInManager
+        )
+        {
+            _userManager = userManager;
+            _signInManager = signInManager;
+        }
+
+
 
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
@@ -36,11 +49,34 @@ namespace gaseous_server.Controllers
         [RequestSizeLimit(long.MaxValue)]
         [Consumes("multipart/form-data")]
         [DisableRequestSizeLimit, RequestFormLimits(MultipartBodyLengthLimit = long.MaxValue, ValueLengthLimit = int.MaxValue)]
-        public async Task<IActionResult> UploadRom(IFormFile file, long? OverridePlatformId = null)
+        /// <summary>
+        /// Uploads a ROM file to the server.
+        /// </summary>
+        /// <param name="file">The ROM file to upload.</param>
+        /// <param name="OverridePlatformId">Optional platform ID to override the default platform.</param>
+        /// <param name="SessionId">Optional session ID for tracking the upload.</param>
+        /// <returns>A session ID for tracking the upload.</returns>
+        /// <remarks>
+        /// This endpoint allows users to upload ROM files to the server. The uploaded file is saved in a temporary directory, and the platform override can be specified if needed.
+        /// </remarks>
+        /// <response code="200">File uploaded successfully.</response>
+        /// <response code="400">Bad request if the file is empty.</response>
+        /// <response code="500">Internal server error if the file upload fails.</response>
+        public async Task<IActionResult> UploadRom(IFormFile file, long? OverridePlatformId = null, string SessionId = null)
         {
             Guid sessionid = Guid.NewGuid();
-
+            if (SessionId != null)
+            {
+                sessionid = Guid.Parse(SessionId);
+            }
+            // Create a unique directory for the uploaded file
             string workPath = Path.Combine(Config.LibraryConfiguration.LibraryUploadDirectory, sessionid.ToString());
+
+            // Check if the file is not empty
+            if (file == null || file.Length == 0)
+            {
+                return BadRequest("File is empty.");
+            }
 
             if (file.Length > 0)
             {
@@ -64,56 +100,60 @@ namespace gaseous_server.Controllers
                     UploadedFile.Add("fullpath", filePath);
                 }
 
-                // get override platform if specified
-                Platform? OverridePlatform = null;
+                // store the platform override if provided
                 if (OverridePlatformId != null)
                 {
-                    OverridePlatform = Platforms.GetPlatform((long)OverridePlatformId);
+                    await System.IO.File.WriteAllTextAsync(Path.Combine(workPath, ".platformoverride"), OverridePlatformId.ToString());
                 }
 
-                // Process uploaded file
-                Classes.ImportGame uploadImport = new ImportGame();
-                // wait until uploadInProgress is false
-                while (uploadInProgress)
-                {
-                    await Task.Delay(1000);
+                // get the user id
+                var user = await _userManager.GetUserAsync(User);
 
-                    // escape if upload is taking too long
-                    if (DateTime.Now.Subtract(uploadStartTime).TotalSeconds > 60)
-                    {
-                        uploadInProgress = false;
-                        break;
-                    }
-                }
-                uploadInProgress = true;
-                uploadStartTime = DateTime.Now;
+                // create an import state item
+                ImportGame.AddImportState(sessionid, filePath, Models.ImportStateItem.ImportMethod.WebUpload, user.Id, OverridePlatformId);
 
-                Dictionary<string, object> RetVal = uploadImport.ImportGameFile((string)UploadedFile["fullpath"], OverridePlatform);
-                uploadInProgress = false;
-                switch (RetVal["type"])
-                {
-                    case "rom":
-                        if (RetVal["status"] == "imported")
-                        {
-                            gaseous_server.Models.Game? game = (gaseous_server.Models.Game)RetVal["game"];
-                            if (game == null || game.Id == null)
-                            {
-                                RetVal["game"] = Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, 0);
-                            }
-                        }
-                        break;
-
-                }
-
-                if (Directory.Exists(workPath))
-                {
-                    Directory.Delete(workPath, true);
-                }
-
-                return Ok(RetVal);
+                return Ok(sessionid.ToString());
             }
 
-            return Ok();
+            return Ok(sessionid.ToString());
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpGet]
+        [Route("imports")]
+        [ProducesResponseType(typeof(List<Models.ImportStateItem>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        /// <summary>
+        /// Gets the import state for the current user.
+        /// </summary>
+        /// <returns>A list of import state items for the current user.</returns>
+        /// <remarks>
+        /// This endpoint retrieves the import state for the current user. It returns a list of import state items, including their status and other relevant information.
+        /// </remarks>
+        /// <response code="200">Import state retrieved successfully.</response>
+        /// <response code="404">Not found if no import state items are found.</response>
+        /// <response code="500">Internal server error if the import state retrieval fails.</response>
+        public async Task<IActionResult> GetImportState()
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return NotFound();
+            }
+
+            List<Models.ImportStateItem> importState = ImportGame.ImportStates
+                .Where(x => x.UserId == user.Id)
+                .ToList();
+
+            if (importState == null || importState.Count == 0)
+            {
+                return Ok(new List<Models.ImportStateItem>());
+            }
+
+            return Ok(importState);
         }
     }
 }
