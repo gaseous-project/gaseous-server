@@ -372,6 +372,10 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.TitleIngestor)
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
+    ProcessQueue.QueueItemType.ImportQueueProcessor,
+    false
+));
+ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.MetadataRefresh)
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(

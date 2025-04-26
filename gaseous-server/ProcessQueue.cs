@@ -1,12 +1,15 @@
 ﻿using System;
 using System.ComponentModel.Design.Serialization;
 using System.Data;
+using System.Text.Json.Serialization;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
 using gaseous_server.Models;
 using HasheousClient.Models.Metadata.IGDB;
 using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Newtonsoft.Json;
 using NuGet.Common;
 using NuGet.Packaging;
 
@@ -78,12 +81,35 @@ namespace gaseous_server
             }
 
             private QueueItemType _ItemType = QueueItemType.NotConfigured;
-            public List<SubTask> SubTasks = new List<SubTask>();
-            public void AddSubTask(SubTask.TaskTypes TaskType, string TaskName, object Settings)
+            [Newtonsoft.Json.JsonIgnore]
+            [System.Text.Json.Serialization.JsonIgnore]
+            public List<SubTask> SubTasks { get; set; } = new List<SubTask>();
+            public void AddSubTask(SubTask.TaskTypes TaskType, string TaskName, object Settings, bool RemoveWhenCompleted)
             {
                 SubTask subTask = new SubTask(this, TaskType, TaskName, Settings);
+                subTask.RemoveWhenStopped = RemoveWhenCompleted;
                 SubTasks.Add(subTask);
             }
+            public List<SubTask> ChildTasks
+            {
+                get
+                {
+                    // return only the first 10 tasks
+                    List<SubTask> childTasks = new List<SubTask>();
+                    int maxTasks = 10;
+                    foreach (SubTask task in SubTasks)
+                    {
+                        if (childTasks.Count >= maxTasks)
+                        {
+                            break;
+                        }
+                        childTasks.Add(task);
+                    }
+                    return childTasks;
+                }
+            }
+            [Newtonsoft.Json.JsonIgnore]
+            [System.Text.Json.Serialization.JsonIgnore]
             Dictionary<string, Thread> BackgroundThreads = null;
             public class SubTask
             {
@@ -140,6 +166,8 @@ namespace gaseous_server
                 }
                 private object _Settings = new object();
                 public bool RemoveWhenStopped { get; set; } = false;
+                [Newtonsoft.Json.JsonIgnore]
+                [System.Text.Json.Serialization.JsonIgnore]
                 public object? ParentObject
                 {
                     get
@@ -154,6 +182,7 @@ namespace gaseous_server
                     _TaskType = TaskType;
                     _TaskName = TaskName;
                     _Settings = Settings;
+                    ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Queued, ImportStateItem.ImportType.Unknown, null);
                 }
                 public void Execute()
                 {
@@ -209,6 +238,22 @@ namespace gaseous_server
                                         }
                                         ImportGame.ImportGameFile(importState.FileName, hash, ref ProcessData, platformOverride);
 
+                                        ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Processing, ImportStateItem.ImportType.Rom, ProcessData);
+
+                                        // refresh the metadata for the game - this is a task that can run in the background
+                                        _AllowConcurrentExecution = true;
+                                        if (ProcessData.ContainsKey("game"))
+                                        {
+                                            Models.Game? game = (Models.Game)ProcessData["game"];
+                                            if (game != null)
+                                            {
+                                                long gameId = game.MetadataMapId;
+
+                                                MetadataManagement metadataManagement = new MetadataManagement();
+                                                metadataManagement.RefreshSpecificGame(gameId);
+                                            }
+
+                                        }
                                         ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Completed, ImportStateItem.ImportType.Rom, ProcessData);
                                     }
                                 }
@@ -452,23 +497,44 @@ namespace gaseous_server
                                         // get all pending imports
                                         List<ImportStateItem> pendingImports = ImportGame.ImportStates.Where(x => x.State == ImportStateItem.ImportState.Pending).ToList();
 
-                                        // process each import
-                                        foreach (ImportStateItem importState in pendingImports)
+                                        // loop through the import queue until all items are processed, or the queue is empty as new items may be added
+                                        do
                                         {
-                                            // check the subtask list for any tasks with the same session id
-                                            SubTask? subTask = SubTasks.FirstOrDefault(x => x.Settings is Guid && (Guid)x.Settings == importState.SessionId);
-                                            if (subTask != null)
+                                            // process each import
+                                            foreach (ImportStateItem importState in pendingImports)
                                             {
-                                                // this import is already being processed
-                                                Logging.Log(Logging.LogType.Debug, "Import Queue Processor", "Import " + importState.FileName + " is already being processed by " + subTask.TaskName);
+                                                // check the subtask list for any tasks with the same session id
+                                                SubTask? subTask = SubTasks.FirstOrDefault(x => x.Settings is Guid && (Guid)x.Settings == importState.SessionId);
+                                                if (subTask == null)
+                                                {
+                                                    // process the import
+                                                    Logging.Log(Logging.LogType.Information, "Import Queue Processor", "Processing import " + importState.FileName);
+                                                    AddSubTask(SubTask.TaskTypes.ImportQueueProcessor, Path.GetFileName(importState.FileName), importState.SessionId, true);
+                                                }
                                             }
-                                            else
+
+                                            // wait for 5 seconds before checking again
+                                            Thread.Sleep(5000);
+
+                                            // remove any completed threads
+                                            if (BackgroundThreads != null)
                                             {
-                                                // process the import
-                                                Logging.Log(Logging.LogType.Information, "Import Queue Processor", "Processing import " + importState.FileName);
-                                                AddSubTask(SubTask.TaskTypes.ImportQueueProcessor, importState.FileName, importState.SessionId);
+                                                List<string> completedThreads = new List<string>();
+                                                foreach (KeyValuePair<string, Thread> thread in BackgroundThreads)
+                                                {
+                                                    if (thread.Value.ThreadState == ThreadState.Stopped)
+                                                    {
+                                                        completedThreads.Add(thread.Key);
+                                                    }
+                                                }
+                                                foreach (string threadKey in completedThreads)
+                                                {
+                                                    BackgroundThreads.Remove(threadKey);
+                                                }
                                             }
-                                        }
+
+                                            pendingImports = ImportGame.ImportStates.Where(x => x.State == ImportStateItem.ImportState.Pending).ToList();
+                                        } while (pendingImports.Count > 0);
                                     }
 
                                     // clean up
@@ -661,6 +727,9 @@ namespace gaseous_server
                                     {
                                         break;
                                     }
+
+                                    // set counters
+
                                 } while (SubTasks.Count > 0);
                             }
                         }

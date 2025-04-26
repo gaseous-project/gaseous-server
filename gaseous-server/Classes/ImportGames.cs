@@ -102,12 +102,9 @@ namespace gaseous_server.Classes
 
                 // check if there is an ImportQueueProcessor running
                 ProcessQueue.QueueItem? queueItem = ProcessQueue.QueueItems.Find(x => x.ItemType == ProcessQueue.QueueItemType.ImportQueueProcessor);
-                if (queueItem == null)
+                if (queueItem != null)
                 {
-                    // start the import queue processor
-                    ProcessQueue.QueueItem queueItemImport = new ProcessQueue.QueueItem(
-                        ProcessQueue.QueueItemType.ImportQueueProcessor, 1, false, true);
-                    ProcessQueue.QueueItems.Add(queueItemImport);
+                    queueItem.ForceExecute();
                 }
             }
         }

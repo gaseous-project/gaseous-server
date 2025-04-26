@@ -12,6 +12,7 @@ namespace gaseous_server.Models
         public enum ImportState
         {
             Pending,
+            Queued,
             Processing,
             Completed,
             Skipped,

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using gaseous_server.Classes.Metadata;
+using gaseous_server.Controllers;
 using gaseous_server.Models;
 using HasheousClient.Models;
 using HasheousClient.Models.Metadata.IGDB;
@@ -394,18 +395,33 @@ namespace gaseous_server.Classes
 			return metadataMapIds;
 		}
 
+		Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 		public void RefreshMetadata(bool forceRefresh = false)
 		{
-			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
 			DataTable dt = new DataTable();
 
 			// disabling forceRefresh
 			forceRefresh = false;
 
+			// refresh platforms
+			RefreshPlatforms(forceRefresh);
+
+			// refresh signatures
+			RefreshSignatures(forceRefresh);
+
+			// update the rom counts
+			UpdateRomCounts();
+
+			// refresh games
+			RefreshGames(forceRefresh);
+		}
+
+		public void RefreshPlatforms(bool forceRefresh = false)
+		{
 			// update platform metadata
-			sql = "SELECT Id, `Name` FROM Platform;";
-			dt = db.ExecuteCMD(sql);
+			string sql = "SELECT Id, `Name` FROM Platform;";
+			DataTable dt = db.ExecuteCMD(sql);
 
 			int StatusCounter = 1;
 			foreach (DataRow dr in dt.Rows)
@@ -451,20 +467,23 @@ namespace gaseous_server.Classes
 				StatusCounter += 1;
 			}
 			ClearStatus();
+		}
 
+		public void RefreshSignatures(bool forceRefresh = false)
+		{
 			// update rom signatures - only valid if Haseheous is enabled
 			if (Config.MetadataConfiguration.SignatureSource == MetadataModel.SignatureSources.Hasheous)
 			{
 				// get all ROMs in the database
-				sql = "SELECT * FROM view_Games_Roms WHERE DateUpdated < @LastUpdateThreshold;";
+				string sql = "SELECT * FROM view_Games_Roms WHERE DateUpdated < @LastUpdateThreshold;";
 				// set @LastUpdateThreshold to a random date between 14 and 30 days in the past
 				Dictionary<string, object> dbDict = new Dictionary<string, object>()
 				{
 					{ "@LastUpdateThreshold", DateTime.UtcNow.AddDays(-new Random().Next(14, 30)) }
 				};
-				dt = db.ExecuteCMD(sql, dbDict);
+				DataTable dt = db.ExecuteCMD(sql, dbDict);
 
-				StatusCounter = 1;
+				int StatusCounter = 1;
 				foreach (DataRow dr in dt.Rows)
 				{
 					SetStatus(StatusCounter, dt.Rows.Count, "Refreshing signature for ROM " + dr["Name"]);
@@ -524,9 +543,11 @@ namespace gaseous_server.Classes
 				}
 				ClearStatus();
 			}
+		}
 
-			// update the rom counts
-			UpdateRomCounts();
+		public void RefreshGames(bool forceRefresh = false)
+		{
+			string sql = "";
 
 			// update game metadata
 			if (forceRefresh == true)
@@ -539,168 +560,249 @@ namespace gaseous_server.Classes
 				// when run normally, update all games (since this will honour cache timeouts)
 				sql = "SELECT DISTINCT MetadataSourceId AS `Id`, MetadataSourceType AS `GameIdType`, SignatureGameName AS `Name` FROM gaseous.view_MetadataMap;";
 			}
-			dt = db.ExecuteCMD(sql);
+			DataTable dt = db.ExecuteCMD(sql);
 
-			StatusCounter = 1;
+			int StatusCounter = 1;
 			foreach (DataRow dr in dt.Rows)
 			{
 				SetStatus(StatusCounter, dt.Rows.Count, "Refreshing metadata for game " + dr["name"]);
 
-				try
-				{
-					MetadataSources metadataSource;
-					if (dr["GameIdType"] == DBNull.Value)
-					{
-						Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Unable to refresh metadata for game " + dr["name"] + " (" + dr["id"] + ") - no source type specified");
-					}
-					else
-					{
-						metadataSource = (MetadataSources)Enum.Parse(typeof(MetadataSources), dr["GameIdType"].ToString());
-
-						Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ") using source " + metadataSource.ToString());
-						Models.Game game = Metadata.Games.GetGame(metadataSource, (long)dr["id"]);
-
-						// get supporting metadata
-						if (game != null)
-						{
-							if (metadataSource != MetadataSources.TheGamesDb)
-							{
-								// pull TheGamesDb metadata anyway
-								long? metadataMapId = game.MetadataMapId;
-								if (metadataMapId != null)
-								{
-									MetadataMap? metadataMapItem = GetMetadataMap((long)metadataMapId);
-									if (metadataMapItem != null)
-									{
-										// get the TheGamesDb metadata map item
-										MetadataMap.MetadataMapItem? metadataMapItemItem = metadataMapItem.MetadataMapItems.Find(x => x.SourceType == MetadataSources.TheGamesDb);
-										if (metadataMapItemItem != null)
-										{
-											Models.Game? tgdbGameItem = Metadata.Games.GetGame(MetadataSources.TheGamesDb, metadataMapItemItem.SourceId);
-										}
-									}
-								}
-							}
-
-							if (game.AgeRatings != null)
-							{
-								foreach (long ageRatingId in game.AgeRatings)
-								{
-									AgeRating ageRating = Metadata.AgeRatings.GetAgeRating(metadataSource, ageRatingId);
-									if (ageRating.ContentDescriptions != null)
-									{
-										foreach (long ageRatingContentDescriptionId in ageRating.ContentDescriptions)
-										{
-											Metadata.AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(metadataSource, ageRatingContentDescriptionId);
-										}
-									}
-								}
-							}
-							if (game.AlternativeNames != null)
-							{
-								foreach (long alternateNameId in game.AlternativeNames)
-								{
-									Metadata.AlternativeNames.GetAlternativeNames(metadataSource, alternateNameId);
-								}
-							}
-							if (game.Artworks != null)
-							{
-								foreach (long artworkId in game.Artworks)
-								{
-									Metadata.Artworks.GetArtwork(metadataSource, artworkId);
-								}
-							}
-							if (game.Cover != null)
-							{
-								Metadata.Covers.GetCover(metadataSource, (long?)game.Cover);
-							}
-							if (game.GameModes != null)
-							{
-								foreach (long gameModeId in game.GameModes)
-								{
-									Metadata.GameModes.GetGame_Modes(metadataSource, gameModeId);
-								}
-							}
-							if (game.Genres != null)
-							{
-								foreach (long genreId in game.Genres)
-								{
-									Metadata.Genres.GetGenres(metadataSource, genreId);
-								}
-							}
-							if (game.GameLocalizations != null)
-							{
-								foreach (long gameLocalizationId in game.GameLocalizations)
-								{
-									GameLocalization gameLocalization = Metadata.GameLocalizations.GetGame_Locatization(metadataSource, gameLocalizationId);
-
-									if (gameLocalization != null)
-									{
-										if (gameLocalization.Cover != null)
-										{
-											Metadata.Covers.GetCover(metadataSource, (long)gameLocalization.Cover);
-										}
-
-										if (gameLocalization.Region != null)
-										{
-											Metadata.Regions.GetGame_Region(metadataSource, (long)gameLocalization.Region);
-										}
-									}
-								}
-							}
-							if (game.Videos != null)
-							{
-								foreach (long gameVideoId in game.Videos)
-								{
-									Metadata.GamesVideos.GetGame_Videos(metadataSource, gameVideoId);
-								}
-							}
-							if (game.MultiplayerModes != null)
-							{
-								foreach (long multiplayerModeId in game.MultiplayerModes)
-								{
-									Metadata.MultiplayerModes.GetGame_MultiplayerModes(metadataSource, multiplayerModeId);
-								}
-							}
-							if (game.PlayerPerspectives != null)
-							{
-								foreach (long playerPerspectiveId in game.PlayerPerspectives)
-								{
-									Metadata.PlayerPerspectives.GetGame_PlayerPerspectives(metadataSource, playerPerspectiveId);
-								}
-							}
-							if (game.ReleaseDates != null)
-							{
-								foreach (long releaseDateId in game.ReleaseDates)
-								{
-									Metadata.ReleaseDates.GetReleaseDates(metadataSource, releaseDateId);
-								}
-							}
-							if (game.Screenshots != null)
-							{
-								foreach (long screenshotId in game.Screenshots)
-								{
-									Metadata.Screenshots.GetScreenshot(metadataSource, screenshotId);
-								}
-							}
-							if (game.Themes != null)
-							{
-								foreach (long themeId in game.Themes)
-								{
-									Metadata.Themes.GetGame_Themes(metadataSource, themeId);
-								}
-							}
-						}
-					}
-				}
-				catch (Exception ex)
-				{
-					Logging.Log(Logging.LogType.Critical, "Metadata Refresh", "An error occurred while refreshing metadata for " + dr["name"], ex);
-				}
+				_RefreshSpecificGame(dr);
 
 				StatusCounter += 1;
 			}
 			ClearStatus();
+		}
+
+		static List<Dictionary<string, object>> inProgressRefreshes = new List<Dictionary<string, object>>();
+		public void RefreshSpecificGame(long metadataMapId)
+		{
+			// get the metadata map for the game
+			string sql = @"
+			SELECT DISTINCT
+				`MetadataMapBridge`.`MetadataSourceId` AS `Id`,
+				`MetadataMapBridge`.`MetadataSourceType` AS `GameIdType`,
+				`MetadataMap`.`SignatureGameName` AS `Name`
+			FROM
+				`MetadataMapBridge`
+					JOIN
+				`MetadataMap` ON `MetadataMap`.`Id` = `MetadataMapBridge`.`ParentMapId`
+			WHERE `MetadataMapBridge`.`ParentMapId` = @metadataMapId AND `MetadataMapBridge`.`MetadataSourceType` <> 0
+			ORDER BY `MetadataMap`.`SignatureGameName`, `MetadataMapBridge`.`MetadataSourceType`;
+			";
+			Dictionary<string, object> dbDict = new Dictionary<string, object>()
+			{
+				{ "@metadataMapId", metadataMapId }
+			};
+			DataTable dt = db.ExecuteCMD(sql, dbDict);
+
+			foreach (DataRow dr in dt.Rows)
+			{
+				// check if the game is already in progress
+				if (inProgressRefreshes.Any(x => x["Id"].ToString() == dr["Id"].ToString()))
+				{
+					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Skipping metadata refresh for game " + dr["name"] + " (" + dr["id"] + ") - already in progress");
+					continue;
+				}
+
+				// add the game to the in progress list
+				inProgressRefreshes.Add(new Dictionary<string, object>()
+				{
+					{ "Id", dr["Id"] },
+					{ "GameIdType", dr["GameIdType"] },
+					{ "Name", dr["Name"] }
+				});
+
+				// refresh the game metadata
+				_RefreshSpecificGame(dr);
+
+				// remove the game from the in progress list
+				inProgressRefreshes.RemoveAll(x => x["Id"].ToString() == dr["Id"].ToString());
+			}
+		}
+
+		void _RefreshSpecificGame(DataRow dr)
+		{
+			try
+			{
+				MetadataSources metadataSource;
+				if (dr["GameIdType"] == DBNull.Value)
+				{
+					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Unable to refresh metadata for game " + dr["name"] + " (" + dr["id"] + ") - no source type specified");
+				}
+				else
+				{
+					metadataSource = (MetadataSources)Enum.Parse(typeof(MetadataSources), dr["GameIdType"].ToString());
+
+					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ") using source " + metadataSource.ToString());
+					Models.Game game = Metadata.Games.GetGame(metadataSource, (long)dr["id"]);
+
+					// get supporting metadata
+					if (game != null)
+					{
+						if (metadataSource != MetadataSources.TheGamesDb)
+						{
+							// pull TheGamesDb metadata anyway
+							long? metadataMapId = game.MetadataMapId;
+							if (metadataMapId != null)
+							{
+								MetadataMap? metadataMapItem = GetMetadataMap((long)metadataMapId);
+								if (metadataMapItem != null)
+								{
+									// get the TheGamesDb metadata map item
+									MetadataMap.MetadataMapItem? metadataMapItemItem = metadataMapItem.MetadataMapItems.Find(x => x.SourceType == MetadataSources.TheGamesDb);
+									if (metadataMapItemItem != null)
+									{
+										Models.Game? tgdbGameItem = Metadata.Games.GetGame(MetadataSources.TheGamesDb, metadataMapItemItem.SourceId);
+
+										// get images
+										if (tgdbGameItem != null)
+										{
+											if (tgdbGameItem.Cover != null)
+											{
+												Metadata.Covers.GetCover(MetadataSources.TheGamesDb, (long)tgdbGameItem.Cover);
+												ImageHandling.GameImage((long)metadataMapId, MetadataSources.TheGamesDb, ImageHandling.MetadataImageType.cover, tgdbGameItem.Cover, Communications.IGDBAPI_ImageSize.original);
+											}
+											if (tgdbGameItem.Artworks != null)
+											{
+												foreach (long artworkId in tgdbGameItem.Artworks)
+												{
+													Metadata.Artworks.GetArtwork(MetadataSources.TheGamesDb, artworkId);
+													ImageHandling.GameImage((long)metadataMapId, MetadataSources.TheGamesDb, ImageHandling.MetadataImageType.artwork, artworkId, Communications.IGDBAPI_ImageSize.original);
+												}
+											}
+											if (tgdbGameItem.Screenshots != null)
+											{
+												foreach (long screenshotId in tgdbGameItem.Screenshots)
+												{
+													Metadata.Screenshots.GetScreenshot(MetadataSources.TheGamesDb, screenshotId);
+													ImageHandling.GameImage((long)metadataMapId, MetadataSources.TheGamesDb, ImageHandling.MetadataImageType.screenshots, screenshotId, Communications.IGDBAPI_ImageSize.original);
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+
+						if (game.AgeRatings != null)
+						{
+							foreach (long ageRatingId in game.AgeRatings)
+							{
+								AgeRating ageRating = Metadata.AgeRatings.GetAgeRating(metadataSource, ageRatingId);
+								if (ageRating.ContentDescriptions != null)
+								{
+									foreach (long ageRatingContentDescriptionId in ageRating.ContentDescriptions)
+									{
+										Metadata.AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(metadataSource, ageRatingContentDescriptionId);
+									}
+								}
+							}
+						}
+						if (game.AlternativeNames != null)
+						{
+							foreach (long alternateNameId in game.AlternativeNames)
+							{
+								Metadata.AlternativeNames.GetAlternativeNames(metadataSource, alternateNameId);
+							}
+						}
+						if (game.Artworks != null)
+						{
+							foreach (long artworkId in game.Artworks)
+							{
+								Metadata.Artworks.GetArtwork(metadataSource, artworkId);
+								ImageHandling.GameImage((long)game.MetadataMapId, metadataSource, ImageHandling.MetadataImageType.artwork, artworkId, Communications.IGDBAPI_ImageSize.original);
+							}
+						}
+						if (game.Cover != null)
+						{
+							Metadata.Covers.GetCover(metadataSource, (long?)game.Cover);
+							ImageHandling.GameImage((long)game.MetadataMapId, metadataSource, ImageHandling.MetadataImageType.cover, game.Cover, Communications.IGDBAPI_ImageSize.original);
+						}
+						if (game.GameModes != null)
+						{
+							foreach (long gameModeId in game.GameModes)
+							{
+								Metadata.GameModes.GetGame_Modes(metadataSource, gameModeId);
+							}
+						}
+						if (game.Genres != null)
+						{
+							foreach (long genreId in game.Genres)
+							{
+								Metadata.Genres.GetGenres(metadataSource, genreId);
+							}
+						}
+						if (game.GameLocalizations != null)
+						{
+							foreach (long gameLocalizationId in game.GameLocalizations)
+							{
+								GameLocalization gameLocalization = Metadata.GameLocalizations.GetGame_Locatization(metadataSource, gameLocalizationId);
+
+								if (gameLocalization != null)
+								{
+									if (gameLocalization.Cover != null)
+									{
+										Metadata.Covers.GetCover(metadataSource, (long)gameLocalization.Cover);
+									}
+
+									if (gameLocalization.Region != null)
+									{
+										Metadata.Regions.GetGame_Region(metadataSource, (long)gameLocalization.Region);
+									}
+								}
+							}
+						}
+						if (game.Videos != null)
+						{
+							foreach (long gameVideoId in game.Videos)
+							{
+								Metadata.GamesVideos.GetGame_Videos(metadataSource, gameVideoId);
+							}
+						}
+						if (game.MultiplayerModes != null)
+						{
+							foreach (long multiplayerModeId in game.MultiplayerModes)
+							{
+								Metadata.MultiplayerModes.GetGame_MultiplayerModes(metadataSource, multiplayerModeId);
+							}
+						}
+						if (game.PlayerPerspectives != null)
+						{
+							foreach (long playerPerspectiveId in game.PlayerPerspectives)
+							{
+								Metadata.PlayerPerspectives.GetGame_PlayerPerspectives(metadataSource, playerPerspectiveId);
+							}
+						}
+						if (game.ReleaseDates != null)
+						{
+							foreach (long releaseDateId in game.ReleaseDates)
+							{
+								Metadata.ReleaseDates.GetReleaseDates(metadataSource, releaseDateId);
+							}
+						}
+						if (game.Screenshots != null)
+						{
+							foreach (long screenshotId in game.Screenshots)
+							{
+								Metadata.Screenshots.GetScreenshot(metadataSource, screenshotId);
+								ImageHandling.GameImage((long)game.MetadataMapId, metadataSource, ImageHandling.MetadataImageType.screenshots, screenshotId, Communications.IGDBAPI_ImageSize.original);
+							}
+						}
+						if (game.Themes != null)
+						{
+							foreach (long themeId in game.Themes)
+							{
+								Metadata.Themes.GetGame_Themes(metadataSource, themeId);
+							}
+						}
+					}
+				}
+			}
+			catch (Exception ex)
+			{
+				Logging.Log(Logging.LogType.Critical, "Metadata Refresh", "An error occurred while refreshing metadata for " + dr["name"], ex);
+			}
 		}
 
 		/// <summary>
