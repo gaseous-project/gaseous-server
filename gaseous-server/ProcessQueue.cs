@@ -110,6 +110,9 @@ namespace gaseous_server
             }
             [Newtonsoft.Json.JsonIgnore]
             [System.Text.Json.Serialization.JsonIgnore]
+            Thread SubTaskThread = null;
+            [Newtonsoft.Json.JsonIgnore]
+            [System.Text.Json.Serialization.JsonIgnore]
             Dictionary<string, Thread> BackgroundThreads = null;
             public class SubTask
             {
@@ -242,17 +245,14 @@ namespace gaseous_server
 
                                         // refresh the metadata for the game - this is a task that can run in the background
                                         _AllowConcurrentExecution = true;
-                                        if (ProcessData.ContainsKey("game"))
+                                        if (ProcessData.ContainsKey("metadatamapid"))
                                         {
-                                            Models.Game? game = (Models.Game)ProcessData["game"];
-                                            if (game != null)
+                                            long? metadataMapId = (long?)ProcessData["metadatamapid"];
+                                            if (metadataMapId != null)
                                             {
-                                                long gameId = game.MetadataMapId;
-
                                                 MetadataManagement metadataManagement = new MetadataManagement();
-                                                metadataManagement.RefreshSpecificGame(gameId);
+                                                metadataManagement.RefreshSpecificGame((long)metadataMapId);
                                             }
-
                                         }
                                         ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Completed, ImportStateItem.ImportType.Rom, ProcessData);
                                     }
@@ -332,7 +332,25 @@ namespace gaseous_server
             public int AllowedEndHours { get; set; } = 23;
             public int AllowedEndMinutes { get; set; } = 59;
             public QueueItemType ItemType => _ItemType;
-            public QueueItemState ItemState => _ItemState;
+            public QueueItemState ItemState
+            {
+                get
+                {
+                    // if any subtasks are running or never started, set the state to running
+                    if (SubTasks != null)
+                    {
+                        foreach (SubTask task in SubTasks)
+                        {
+                            if (task.State == QueueItemState.Running || task.State == QueueItemState.NeverStarted)
+                            {
+                                return QueueItemState.Running;
+                            }
+                        }
+                    }
+
+                    return _ItemState;
+                }
+            }
             public DateTime LastRunTime => _LastRunTime;
             public DateTime LastFinishTime => _LastFinishTime;
             public double LastRunDuration => _LastRunDuration;
@@ -539,6 +557,10 @@ namespace gaseous_server
 
                                     // clean up
                                     Classes.ImportGame.DeleteOrphanedDirectories(Config.LibraryConfiguration.LibraryImportDirectory);
+                                    Classes.ImportGame.RemoveOldImportStates();
+
+                                    // force execute this task again so the user doesn't have to wait for imports to be processed
+                                    _LastRunTime = DateTime.UtcNow.AddMinutes(-_Interval);
 
                                     break;
 
@@ -656,82 +678,40 @@ namespace gaseous_server
 
                             }
 
-                            // execute any subtasks
+                            // start subtask thread
                             if (SubTasks != null)
                             {
-                                if (BackgroundThreads == null)
+                                if (SubTaskThread == null)
                                 {
-                                    BackgroundThreads = new Dictionary<string, Thread>();
+                                    SubTaskThread = new Thread(new ThreadStart(SubTaskExecute));
+                                    SubTaskThread.Name = "SubTaskThread";
+                                    SubTaskThread.Start();
                                 }
-
-                                // execute all subtasks in order, only move to the next one is the previous one is complete, or if the task is allowed to run concurrently
-                                do
+                                else
                                 {
-                                    // get the next eligible task
-                                    SubTask? nextTask = SubTasks.FirstOrDefault(x => x.State == QueueItemState.NeverStarted);
-
-                                    int maxThreads = 4;
-
-                                    // if we have too many threads running, wait for one to finish
-                                    while (BackgroundThreads.Count >= maxThreads)
+                                    // wait for the thread to finish
+                                    while (SubTaskThread.IsAlive)
                                     {
-                                        // remove any completed threads
-                                        List<string> completedThreads = new List<string>();
-                                        foreach (KeyValuePair<string, Thread> thread in BackgroundThreads)
-                                        {
-                                            if (thread.Value.ThreadState == ThreadState.Stopped)
-                                            {
-                                                completedThreads.Add(thread.Key);
-                                            }
-                                        }
-                                        foreach (string threadKey in completedThreads)
-                                        {
-                                            BackgroundThreads.Remove(threadKey);
-                                        }
-
-                                        // jobs can only be added to the thread pool if there is space
-                                        if (BackgroundThreads.Count < maxThreads)
+                                        // check if the thread is still running
+                                        if (SubTaskThread.ThreadState == ThreadState.Stopped)
                                         {
                                             break;
                                         }
-
-                                        // wait for a second
-                                        Thread.Sleep(1000);
-                                    }
-
-                                    // add the next task to the thread pool
-                                    if (nextTask != null)
-                                    {
-                                        // execute the task
-                                        Thread thread = new Thread(new ThreadStart(nextTask.Execute));
-                                        thread.Name = nextTask.TaskName;
-                                        thread.Start();
-                                        BackgroundThreads.Add(nextTask.TaskName, thread);
-
-                                        // wait for the thread to finish
-                                        while (thread.IsAlive)
+                                        else
                                         {
-                                            // check if the thread is still running
-                                            if (thread.ThreadState == ThreadState.Stopped || nextTask.AllowConcurrentExecution == true)
-                                            {
-                                                break;
-                                            }
-                                            else
-                                            {
-                                                // wait for a second
-                                                Thread.Sleep(1000);
-                                            }
+                                            // wait for a second
+                                            Thread.Sleep(1000);
                                         }
                                     }
-                                    else
-                                    {
-                                        break;
-                                    }
+                                }
 
-                                    // set counters
-
-                                } while (SubTasks.Count > 0);
+                                // remove the subtask thread
+                                if (SubTaskThread.ThreadState == ThreadState.Stopped)
+                                {
+                                    SubTaskThread = null;
+                                }
                             }
+
                         }
                         catch (Exception ex)
                         {
@@ -753,6 +733,114 @@ namespace gaseous_server
                         _LastRunDuration = Math.Round((DateTime.UtcNow - _LastRunTime).TotalSeconds, 2);
 
                         Logging.Log(Logging.LogType.Information, "Timered Event", "Total " + _ItemType + " run time = " + _LastRunDuration);
+                    }
+                }
+            }
+
+            void SubTaskExecute()
+            {
+                // execute any subtasks
+                if (SubTasks != null)
+                {
+                    if (BackgroundThreads == null)
+                    {
+                        BackgroundThreads = new Dictionary<string, Thread>();
+                    }
+
+                    // execute all subtasks in order, only move to the next one is the previous one is complete, or if the task is allowed to run concurrently
+                    do
+                    {
+                        // get the next eligible task
+                        SubTask? nextTask = SubTasks.FirstOrDefault(x => x.State == QueueItemState.NeverStarted);
+
+                        int maxThreads = 4;
+
+                        // if we have too many threads running, wait for one to finish
+                        while (BackgroundThreads.Count >= maxThreads)
+                        {
+                            // remove any completed threads
+                            List<string> completedThreads = new List<string>();
+                            foreach (KeyValuePair<string, Thread> thread in BackgroundThreads)
+                            {
+                                if (thread.Value.ThreadState == ThreadState.Stopped)
+                                {
+                                    completedThreads.Add(thread.Key);
+                                }
+                            }
+                            foreach (string threadKey in completedThreads)
+                            {
+                                BackgroundThreads.Remove(threadKey);
+                            }
+
+                            // jobs can only be added to the thread pool if there is space
+                            if (BackgroundThreads.Count < maxThreads)
+                            {
+                                break;
+                            }
+
+                            // wait for a second
+                            Thread.Sleep(1000);
+                        }
+
+                        // add the next task to the thread pool
+                        if (nextTask != null)
+                        {
+                            // execute the task
+                            Thread thread = new Thread(new ThreadStart(nextTask.Execute));
+                            thread.Name = nextTask.TaskName;
+                            thread.Start();
+                            BackgroundThreads.Add(nextTask.TaskName, thread);
+
+                            // wait for the thread to finish
+                            while (thread.IsAlive)
+                            {
+                                // check if the thread is still running
+                                if (thread.ThreadState == ThreadState.Stopped || (nextTask.AllowConcurrentExecution == true && SubTasks.Count == 1))
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    // wait for a second
+                                    Thread.Sleep(1000);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
+
+                    } while (SubTasks.Count > 0);
+
+                    // wait for all threads to finish
+                    bool stillRunning = true;
+                    while (stillRunning)
+                    {
+                        // remove any completed threads
+                        List<string> completedThreads = new List<string>();
+                        foreach (KeyValuePair<string, Thread> thread in BackgroundThreads)
+                        {
+                            if (thread.Value.ThreadState == ThreadState.Stopped)
+                            {
+                                completedThreads.Add(thread.Key);
+                            }
+                        }
+                        foreach (string threadKey in completedThreads)
+                        {
+                            BackgroundThreads.Remove(threadKey);
+                        }
+
+                        // check if all threads are complete
+                        if (BackgroundThreads.Count == 0)
+                        {
+                            stillRunning = false;
+                        }
+                        else
+                        {
+                            // wait for a second
+                            Thread.Sleep(1000);
+                        }
                     }
                 }
             }

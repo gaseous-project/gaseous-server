@@ -373,6 +373,7 @@ ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     );
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.ImportQueueProcessor,
+    1,
     false
 ));
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(

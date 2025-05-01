@@ -120,22 +120,38 @@ namespace gaseous_server.Controllers
 
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
-        [HttpGet]
-        [Route("imports")]
+        [HttpPost]
+        [Authorize]
+        [Route("Imports")]
         [ProducesResponseType(typeof(List<Models.ImportStateItem>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         /// <summary>
         /// Gets the import state for the current user.
         /// </summary>
+        /// <param name="itemStatuses">Optional list of import state items to filter by.</param>
         /// <returns>A list of import state items for the current user.</returns>
         /// <remarks>
         /// This endpoint retrieves the import state for the current user. It returns a list of import state items, including their status and other relevant information.
         /// </remarks>
         /// <response code="200">Import state retrieved successfully.</response>
+        /// <response code="400">Bad request if the user is not authenticated.</response>
+        /// <response code="401">Unauthorized if the user is not authenticated.</response>
         /// <response code="404">Not found if no import state items are found.</response>
         /// <response code="500">Internal server error if the import state retrieval fails.</response>
-        public async Task<IActionResult> GetImportState()
+        /// <example>
+        /// {
+        ///  "itemStatuses": [
+        ///   "Pending",
+        ///  "Queued",
+        ///  "Processing",
+        ///  "Completed",
+        ///  "Skipped",
+        ///  "Failed"
+        ///  ]
+        /// }
+        /// </example>
+        public async Task<IActionResult> GetImportState(List<Models.ImportStateItem.ImportState>? itemStatuses)
         {
             var user = await _userManager.GetUserAsync(User);
 
@@ -145,8 +161,16 @@ namespace gaseous_server.Controllers
             }
 
             List<Models.ImportStateItem> importState = ImportGame.ImportStates
-                .Where(x => x.UserId == user.Id)
-                .ToList();
+                    .Where(x => x.UserId == user.Id)
+                    .ToList();
+
+            if (itemStatuses != null && itemStatuses.Count > 0)
+            {
+                // filter out any import states that are not in the itemStatuses list
+                importState = ImportGame.ImportStates
+                    .Where(x => itemStatuses.Contains(x.State))
+                    .ToList();
+            }
 
             if (importState == null || importState.Count == 0)
             {

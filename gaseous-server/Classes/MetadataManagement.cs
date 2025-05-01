@@ -621,18 +621,34 @@ namespace gaseous_server.Classes
 			}
 		}
 
-		void _RefreshSpecificGame(DataRow dr)
+		void _RefreshSpecificGame(DataRow dataRow)
 		{
+			// convert dataRow to dictionary
+			Dictionary<string, object?> dr = new Dictionary<string, object?>();
+			foreach (DataColumn dc in dataRow.Table.Columns)
+			{
+				// check if column is dbnull
+				if (dataRow[dc] == DBNull.Value)
+				{
+					dr.Add(dc.ColumnName.ToLower(), null);
+				}
+				else
+				{
+					dr.Add(dc.ColumnName.ToLower(), dataRow[dc]);
+				}
+			}
+
+			MetadataSources metadataSource;
+
 			try
 			{
-				MetadataSources metadataSource;
-				if (dr["GameIdType"] == DBNull.Value)
+				if (dr["gameidtype"] == null)
 				{
 					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Unable to refresh metadata for game " + dr["name"] + " (" + dr["id"] + ") - no source type specified");
 				}
 				else
 				{
-					metadataSource = (MetadataSources)Enum.Parse(typeof(MetadataSources), dr["GameIdType"].ToString());
+					metadataSource = (MetadataSources)Enum.Parse(typeof(MetadataSources), dr["gameidtype"].ToString());
 
 					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ") using source " + metadataSource.ToString());
 					Models.Game game = Metadata.Games.GetGame(metadataSource, (long)dr["id"]);
@@ -801,7 +817,15 @@ namespace gaseous_server.Classes
 			}
 			catch (Exception ex)
 			{
-				Logging.Log(Logging.LogType.Critical, "Metadata Refresh", "An error occurred while refreshing metadata for " + dr["name"], ex);
+				if (dr["gameidtype"] == null)
+				{
+					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Unable to refresh metadata for game " + dr["name"] + " (" + dr["id"] + ") - no source type specified");
+				}
+				else
+				{
+					metadataSource = (MetadataSources)Enum.Parse(typeof(MetadataSources), dr["gameidtype"].ToString());
+					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "An error occurred while refreshing metadata for " + dr["name"] + " from source " + metadataSource, ex);
+				}
 			}
 		}
 

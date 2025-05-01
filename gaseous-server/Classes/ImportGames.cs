@@ -353,11 +353,13 @@ namespace gaseous_server.Classes
                 // add to database
                 Platform? determinedPlatform = Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId);
                 Models.Game? determinedGame = Metadata.Games.GetGame(discoveredSignature.Flags.GameMetadataSource, discoveredSignature.Flags.GameId);
+                MetadataMap? map = MetadataManagement.NewMetadataMap((long)determinedPlatform.Id, discoveredSignature.Game.Name);
                 long RomId = StoreGame(GameLibrary.GetDefaultLibrary, Hash, discoveredSignature, determinedPlatform, FilePath, 0, true);
                 Roms.GameRomItem romItem = Roms.GetRom(RomId);
 
                 // build return value
                 GameFileInfo.Add("romid", RomId);
+                GameFileInfo.Add("metadatamapid", map.Id);
                 GameFileInfo.Add("platform", determinedPlatform);
                 GameFileInfo.Add("game", determinedGame);
                 GameFileInfo.Add("signature", discoveredSignature);

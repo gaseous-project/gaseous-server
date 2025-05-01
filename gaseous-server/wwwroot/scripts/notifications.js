@@ -1,7 +1,7 @@
 function displayNotification(heading, message, image, link) {
-    var noteId = Math.random().toString(36).substr(2, 9);
+    let noteId = Math.random().toString(36).slice(2, 11);
     
-    var noteBox = document.createElement('div');
+    let noteBox = document.createElement('div');
     noteBox.id = noteId;
     noteBox.className = 'notification';
     noteBox.style.display = 'none;'
@@ -13,10 +13,10 @@ function displayNotification(heading, message, image, link) {
     }
 
     if (image) {
-        var noteImageBox = document.createElement('div');
+        let noteImageBox = document.createElement('div');
         noteImageBox.className = 'notification_imagebox';
 
-        var noteImage = document.createElement('img');
+        let noteImage = document.createElement('img');
         noteImage.className = 'notification_image';
         noteImage.src = image;
         noteImageBox.appendChild(noteImage);
@@ -24,17 +24,17 @@ function displayNotification(heading, message, image, link) {
         noteBox.appendChild(noteImageBox);
     }
 
-    var noteMessageBox = document.createElement('div');
+    let noteMessageBox = document.createElement('div');
     noteMessageBox.className = 'notification_messagebox';
 
     if (heading) {
-        var noteMessageHeading = document.createElement('div');
+        let noteMessageHeading = document.createElement('div');
         noteMessageHeading.className = 'notification_title';
         noteMessageHeading.innerHTML = heading;
         noteMessageBox.appendChild(noteMessageHeading);
     }
 
-    var noteMessageBody = document.createElement('div');
+    let noteMessageBody = document.createElement('div');
     noteMessageBody.className = 'notification_message';
     noteMessageBody.innerHTML = message;
     noteMessageBox.appendChild(noteMessageBody);
@@ -51,7 +51,7 @@ function displayNotification(heading, message, image, link) {
 }
 
 function closeNotification(id) {
-    var notificationObj = document.getElementById(id);
+    let notificationObj = document.getElementById(id);
     $(notificationObj).fadeOut(1000, function() {
         notificationObj.parentElement.removeChild(notificationObj);
     });

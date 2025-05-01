@@ -153,7 +153,7 @@ namespace gaseous_server.Classes.Metadata
                     }
                     catch (Exception e)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Fetch Metadata", "Failed to fetch metadata from source: " + SourceType + " for id: " + Id + " of type: " + type + ". Error: " + e.Message);
+                        Logging.Log(Logging.LogType.Information, "Fetch Metadata", "Failed to fetch metadata from source: " + SourceType + " for id: " + Id + " of type: " + type + ". Error: " + e.Message);
                         metadata = null;
                     }
                     break;
@@ -173,7 +173,7 @@ namespace gaseous_server.Classes.Metadata
                     }
                     catch (Exception e)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Fetch Metadata", "Failed to fetch metadata from source: " + SourceType + " for id: " + Id + " of type: " + type + ". Error: " + e.Message);
+                        Logging.Log(Logging.LogType.Information, "Fetch Metadata", "Failed to fetch metadata from source: " + SourceType + " for id: " + Id + " of type: " + type + ". Error: " + e.Message);
                         metadata = null;
                     }
                     break;
