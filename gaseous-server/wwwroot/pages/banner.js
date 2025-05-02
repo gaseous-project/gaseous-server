@@ -60,6 +60,91 @@ function setupBanner() {
         });
     }
 
+    // set notifications
+    notificationLoadEndCallbacks.push(function (data) {
+        let notificationState = 0;
+
+        if (data) {
+            if (data['importQueue']) {
+                if (data['importQueue']['Pending'] || data['importQueue']['Processing']) {
+                    notificationState = 1;
+                } else if (data['importQueue']['Completed']) {
+                    // check localStorage for the notification. If there is a record with the same id, do not retrigger the notification
+                    let importQueueNotificationData = data['importQueue']['Completed'];
+
+                    // check if there are any notifications in the importQueue
+                    let notificationsTracker = localStorage.getItem('NotificationsTracker');
+                    if (!notificationsTracker) {
+                        localStorage.setItem('NotificationsTracker', JSON.stringify(importQueueNotificationData));
+                        notificationState = 2;
+                    } else {
+                        notificationsTracker = JSON.parse(notificationsTracker);
+                        let found = false;
+
+                        // check if the notification is already in the localStorage
+                        // find if notification.sessionid is in the array importQueueNotificationData
+                        for (const notification of importQueueNotificationData) {
+                            found = false;
+                            for (const notificationTracker of notificationsTracker) {
+                                if (notification.sessionid === notificationTracker.sessionid) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found) {
+                                // add the notification to the localStorage, and set the notification state to 2 as this is a new notification
+                                notification.read = false;
+                                notificationsTracker.push(notification);
+                                localStorage.setItem('NotificationsTracker', JSON.stringify(notificationsTracker));
+                                notificationState = 2;
+                            }
+                        }
+
+                        // check if there are any unread notifications in the notificationTracker
+                        for (const notification of notificationsTracker) {
+                            // check if the notification is read
+                            if (!notification.read) {
+                                notificationState = 2;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        setNotificationIconState(notificationState);
+
+        // remove notifications older than 70 minutes from the localStorage
+        let notificationsTracker = localStorage.getItem('NotificationsTracker');
+        if (notificationsTracker) {
+            notificationsTracker = JSON.parse(notificationsTracker);
+            let currentTime = new Date();
+            let newNotificationsTracker = [];
+            for (const notification of notificationsTracker) {
+                if (new Date(notification.expiration) > currentTime) {
+                    newNotificationsTracker.push(notification);
+                }
+            }
+            localStorage.setItem('NotificationsTracker', JSON.stringify(newNotificationsTracker));
+        }
+    });
+    document.getElementById('banner_notif').addEventListener('click', () => {
+        // mark all notifications as read
+        let notificationsTracker = localStorage.getItem('NotificationsTracker');
+        if (notificationsTracker) {
+            notificationsTracker = JSON.parse(notificationsTracker);
+            for (const notification of notificationsTracker) {
+                // mark the notification as read
+                notification.read = true;
+            }
+            localStorage.setItem('NotificationsTracker', JSON.stringify(notificationsTracker));
+        }
+
+        // clear the notification icon
+        setNotificationIconState(0);
+    });
+
     // set avatar
     let avatarBox = document.getElementById('banner_user_image_box');
     let avatar = new Avatar(userProfile.profileId, 30, 30);
@@ -99,6 +184,32 @@ function setupBanner() {
     document.getElementById('dropdown-menu-account').addEventListener('click', function () {
         const accountDialog = new AccountWindow(); accountDialog.open();
     });
+}
+
+// notificationIconState can have 3 values:
+// 0 = no notifications
+// 1 = notifications has pending or processing items
+// 2 = notifications are active
+function setNotificationIconState(state) {
+    let notificationIcon = document.getElementById("banner_notifications_image");
+
+    switch (state) {
+        case 0:
+            notificationIcon.src = '/images/notifications.svg';
+            notificationIcon.classList.remove('rotating');
+            notificationIcon.classList.remove('throbbing');
+            break;
+        case 1:
+            notificationIcon.src = '/images/refresh2.svg';
+            notificationIcon.classList.add('rotating');
+            notificationIcon.classList.remove('throbbing');
+            break;
+        case 2:
+            notificationIcon.src = '/images/notifications-active.svg';
+            notificationIcon.classList.remove('rotating');
+            notificationIcon.classList.add('throbbing');
+            break;
+    }
 }
 
 setupBanner();

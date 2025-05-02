@@ -12,9 +12,6 @@ namespace gaseous_server.Controllers
     [Authorize(Roles = "Admin,Gamer,Player")]
     public class NotificationController : Controller
     {
-        private const string PendingKey = "pending";
-        private const string ProcessingKey = "processing";
-
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
@@ -24,52 +21,52 @@ namespace gaseous_server.Controllers
             Dictionary<string, object> notifications = new Dictionary<string, object>();
 
             // get import queue status
-            Dictionary<string, object> importQueueStatus = new Dictionary<string, object>();
+            Dictionary<Models.ImportStateItem.ImportState, object> importQueueStatus = new Dictionary<Models.ImportStateItem.ImportState, object>();
             foreach (var item in ImportGame.ImportStates)
             {
                 switch (item.State)
                 {
                     case Models.ImportStateItem.ImportState.Pending:
-                        if (importQueueStatus.ContainsKey(PendingKey))
+                        if (importQueueStatus.ContainsKey(Models.ImportStateItem.ImportState.Pending))
                         {
-                            importQueueStatus[PendingKey] = (int)importQueueStatus[PendingKey] + 1;
+                            importQueueStatus[Models.ImportStateItem.ImportState.Pending] = (int)importQueueStatus[Models.ImportStateItem.ImportState.Pending] + 1;
                         }
                         else
                         {
-                            importQueueStatus.Add(PendingKey, 1);
+                            importQueueStatus.Add(Models.ImportStateItem.ImportState.Pending, 1);
                         }
                         break;
 
                     case Models.ImportStateItem.ImportState.Processing:
+                    case Models.ImportStateItem.ImportState.Completed:
                         Dictionary<string, object> processingItem = new Dictionary<string, object>
                         {
                             { "sessionid", item.SessionId },
                             { "state", item.State.ToString() },
-                            { "filename", item.FileName },
-                            { "type", item.Type }
+                            { "filename", Path.GetFileName(item.FileName) },
+                            { "type", item.Type },
+                            { "created", item.Created },
+                            { "lastupdated", item.LastUpdated },
+                            { "expiration", item.LastUpdated.AddMinutes(70) },
+                            { "method", item.Method.ToString() }
                         };
 
-                        if (item.ProcessData != null)
+                        if (!importQueueStatus.ContainsKey(item.State))
                         {
-
+                            importQueueStatus.Add(item.State, new List<Dictionary<string, object>>());
                         }
 
-                        if (!importQueueStatus.ContainsKey(ProcessingKey))
-                        {
-                            importQueueStatus.Add(ProcessingKey, new List<Dictionary<string, object>>());
-                        }
-
-                        ((List<Dictionary<string, object>>)importQueueStatus[ProcessingKey]).Add(processingItem);
+                        ((List<Dictionary<string, object>>)importQueueStatus[item.State]).Add(processingItem);
 
                         break;
                 }
             }
-            if (ImportGame.ImportStates.Count > 0)
+            if (importQueueStatus.Count > 0)
             {
-                importQueueStatus.Add("ImportQueue", importQueueStatus);
+                notifications.Add("importQueue", importQueueStatus);
             }
 
-            return Ok();
+            return Ok(notifications);
         }
     }
 }

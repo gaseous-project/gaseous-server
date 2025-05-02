@@ -188,7 +188,7 @@ namespace gaseous_server.Classes
         public static void RemoveOldImportStates()
         {
             DateTime now = DateTime.UtcNow;
-            TimeSpan timeSpan = new TimeSpan(0, 0, 60);
+            TimeSpan timeSpan = new TimeSpan(0, 60, 0);
             DateTime cutoff = now.Subtract(timeSpan);
 
             // remove completed import states older than 60 minutes

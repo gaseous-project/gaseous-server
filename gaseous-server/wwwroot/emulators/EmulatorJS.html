@@ -65,7 +65,10 @@
                 console.log("Upload complete");
                 console.log(result);
 
-                displayNotification('State Saved', 'Game state has been saved.', '/api/v1.1/StateManager/' + romId + '/' + result.value.id + '/Screenshot/image.png?IsMediaGroup=' + IsMediaGroup);
+                const notification = new Notification('State Saved', 'Game state has been saved.', '/api/v1.1/StateManager/' + romId + '/' + result.value.id + '/Screenshot/image.png?IsMediaGroup=' + IsMediaGroup);
+                notification.Show();
+
+                // displayNotification('State Saved', 'Game state has been saved.', '/api/v1.1/StateManager/' + romId + '/' + result.value.id + '/Screenshot/image.png?IsMediaGroup=' + IsMediaGroup);
             },
             function (error) {
                 console.log("An error occurred");
