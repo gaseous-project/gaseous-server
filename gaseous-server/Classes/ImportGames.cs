@@ -220,13 +220,10 @@ namespace gaseous_server.Classes
                 int importCount = 1;
                 foreach (string importContent in importContents)
                 {
-                    SetStatus(importCount, importContents.Length, "Importing file: " + importContent);
-
-                    ImportGameFile(importContent, null);
+                    AddImportState(Guid.NewGuid(), importContent, ImportStateItem.ImportMethod.ImportDirectory);
 
                     importCount += 1;
                 }
-                ClearStatus();
 
                 DeleteOrphanedDirectories(ImportPath);
             }
@@ -235,50 +232,6 @@ namespace gaseous_server.Classes
                 Logging.Log(Logging.LogType.Critical, "Import Games", "The import directory " + ImportPath + " does not exist.");
                 throw new DirectoryNotFoundException("Invalid path: " + ImportPath);
             }
-        }
-
-        /// <summary>
-        /// Import a single game file
-        /// </summary>
-        /// <param name="GameFileImportPath">
-        /// The path to the game file to import
-        /// </param>
-        /// <param name="OverridePlatform">
-        /// The platform to use for the game file
-        /// </param>
-        /// <returns>
-        /// A dictionary containing the results of the import
-        /// </returns>
-        public Dictionary<string, object> ImportGameFile(string GameFileImportPath, Platform? OverridePlatform)
-        {
-            Dictionary<string, object> RetVal = new Dictionary<string, object>();
-            RetVal.Add("path", Path.GetFileName(GameFileImportPath));
-
-            // get the hash of the file
-            Common.hashObject hash = new Common.hashObject(GameFileImportPath);
-
-            // check if the file is a bios file first
-            Models.PlatformMapping.PlatformMapItem? IsBios = Classes.Bios.BiosHashSignatureLookup(hash.md5hash);
-
-            if (IsBios != null)
-            {
-                // file is a bios
-                Bios.ImportBiosFile(GameFileImportPath, hash, ref RetVal);
-            }
-            else if (
-                    Common.SkippableFiles.Contains<string>(Path.GetFileName(GameFileImportPath), StringComparer.OrdinalIgnoreCase) ||
-                    !PlatformMapping.SupportedFileExtensions.Contains(Path.GetExtension(GameFileImportPath), StringComparer.OrdinalIgnoreCase)
-                )
-            {
-                Logging.Log(Logging.LogType.Debug, "Import Game", "Skipping item " + GameFileImportPath);
-            }
-            else
-            {
-                // file is a rom
-                ImportGameFile(GameFileImportPath, hash, ref RetVal, OverridePlatform);
-            }
-
-            return RetVal;
         }
 
         /// <summary>
