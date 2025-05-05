@@ -27,6 +27,7 @@ namespace gaseous_server.Controllers
                 switch (item.State)
                 {
                     case Models.ImportStateItem.ImportState.Pending:
+                    case Models.ImportStateItem.ImportState.Queued:
                         if (importQueueStatus.ContainsKey(Models.ImportStateItem.ImportState.Pending))
                         {
                             importQueueStatus[Models.ImportStateItem.ImportState.Pending] = (int)importQueueStatus[Models.ImportStateItem.ImportState.Pending] + 1;

@@ -3,7 +3,13 @@ function setupBanner() {
     let userMenu = document.getElementById("banner_user");
     if (userMenu) {
         userMenu.addEventListener('click', () => {
-            document.getElementById("myDropdown").classList.toggle("show");
+            let profileMenu = document.getElementById("myDropdown");
+            if (!profileMenu.classList.contains('show')) {
+                hideDropdowns();
+                profileMenu.classList.add('show');
+            } else {
+                profileMenu.classList.remove('show');
+            }
         });
     }
 
@@ -97,6 +103,13 @@ function setupBanner() {
                                 notificationsTracker.push(notification);
                                 localStorage.setItem('NotificationsTracker', JSON.stringify(notificationsTracker));
                                 notificationState = 2;
+
+                                // show the notification
+                                let notificationMsg = new Notification(
+                                    'Game Imported',
+                                    'New games have been imported. Reload the library to see them.'
+                                );
+                                notificationMsg.Show();
                             }
                         }
 
@@ -129,7 +142,8 @@ function setupBanner() {
             localStorage.setItem('NotificationsTracker', JSON.stringify(newNotificationsTracker));
         }
     });
-    document.getElementById('banner_notif').addEventListener('click', () => {
+    const notificationCentre = new NotificationPanel();
+    document.getElementById('banner_notif').addEventListener('click', (e) => {
         // mark all notifications as read
         let notificationsTracker = localStorage.getItem('NotificationsTracker');
         if (notificationsTracker) {
@@ -141,8 +155,19 @@ function setupBanner() {
             localStorage.setItem('NotificationsTracker', JSON.stringify(notificationsTracker));
         }
 
-        // clear the notification icon
-        setNotificationIconState(0);
+        // clear the notification icon only if it's in active state
+        let notificationIcon = document.getElementById("banner_notifications_image");
+        if (notificationIcon.classList.contains('throbbing')) {
+            setNotificationIconState(0);
+        }
+
+        // open the notification center
+        if (!notificationCentre.panel.classList.contains('show')) {
+            hideDropdowns();
+            notificationCentre.Show();
+        } else {
+            notificationCentre.Hide();
+        }
     });
 
     // set avatar
@@ -165,15 +190,7 @@ function setupBanner() {
 
     // Close the dropdown menu if the user clicks outside of it
     window.onclick = function (event) {
-        if (!event.target.matches('.dropbtn')) {
-            let dropdowns = document.getElementsByClassName("dropdown-content");
-            for (let i = 0; i < dropdowns.length; i++) {
-                let openDropdown = dropdowns[i];
-                if (openDropdown.classList.contains('show')) {
-                    openDropdown.classList.remove('show');
-                }
-            }
-        }
+        hideDropdowns(event);
     }
     // event for preferences drop down item
     document.getElementById('dropdown-menu-preferences').addEventListener('click', function () {
@@ -184,6 +201,17 @@ function setupBanner() {
     document.getElementById('dropdown-menu-account').addEventListener('click', function () {
         const accountDialog = new AccountWindow(); accountDialog.open();
     });
+}
+
+function hideDropdowns(event) {
+    if (event === undefined || !event.target.matches('.dropbtn')) {
+        let dropdowns = document.getElementsByClassName("dropdown-content");
+        for (let openDropdown of dropdowns) {
+            if (openDropdown.classList.contains('show')) {
+                openDropdown.classList.remove('show');
+            }
+        }
+    }
 }
 
 // notificationIconState can have 3 values:

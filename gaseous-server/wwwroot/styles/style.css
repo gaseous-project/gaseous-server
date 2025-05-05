@@ -2598,7 +2598,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 /* Dropdown Content (Hidden by Default) */
-.dropdown-content {
+.dropdown-profile {
     display: none;
     position: absolute;
     background-color: var(--dropdown-background);
@@ -2619,8 +2619,8 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 /* Links inside the dropdown */
-.dropdown-content a,
-.dropdown-content span {
+.dropdown-profile a,
+.dropdown-profile span {
     color: var(--dropdown-menu-text-color);
     padding: 12px 16px;
     text-decoration: none;
@@ -2630,18 +2630,18 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     margin-top: 3px;
 }
 
-.dropdown-content span {
+.dropdown-profile span {
     cursor: auto;
 }
 
 /* Change color of dropdown links on hover */
-.dropdown-content a:hover {
+.dropdown-profile a:hover {
     background-color: var(--dropdown-border);
 }
 
 /* Show the dropdown menu (use JS to add this class to the .dropdown-content container when the user clicks on the dropdown button) */
 .show {
-    display: block;
+    display: block !important;
 }
 
 .dropdownroleitem {
@@ -2665,6 +2665,22 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .dropdown-menu-separator {
     border-top: 1px solid var(--modal-border-color);
     margin-top: 3px;
+}
+
+.notification_panel {
+    position: fixed;
+    display: none;
+    background-color: var(--section-body-background);
+    backdrop-filter: blur(16px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    right: 0;
+    top: 40px;
+    bottom: 0px;
+    width: 250px;
+    padding: 10px;
+    cursor: default;
+    z-index: +10;
 }
 
 #saved_states {}
@@ -3763,4 +3779,23 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .card-romlist-checkbox {
     margin-right: 20px;
     margin-left: 20px;
+}
+
+.notification_body {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.notification_item {}
+
+.notification_item_name {
+    word-break: break-all;
+    font-weight: bolder;
+}
+
+.notification_item_date {
+    text-align: right;
+    font-size: smaller;
+    font-weight: lighter;
 }
