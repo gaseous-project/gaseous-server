@@ -526,7 +526,6 @@ namespace gaseous_server.Classes
                 catch (Exception ex)
                 {
                     Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous", ex);
-                    throw;
                 }
             }
 

@@ -6,7 +6,9 @@ class Modal {
         this.buttons = [];
     }
 
-    async BuildModal() {
+    async BuildModal(closeIsHide = false) {
+        this.closeIsHide = closeIsHide;
+
         // Create the modal background
         this.modalBackground = document.createElement('div');
         this.modalBackground.classList.add('modal-background');
@@ -103,7 +105,16 @@ class Modal {
         return;
     }
 
+    #exists = false;
+
     async open() {
+        if (this.#exists) {
+            // already exists, just open it
+            $(this.modalBackground).fadeIn(200);
+            return;
+        }
+        this.#exists = true;
+
         // hide the scroll bar for the page
         document.body.style.overflow = 'hidden';
 
@@ -162,9 +173,11 @@ class Modal {
             }
 
             // Remove the modal element from the document body
-            if (this.modalBackground) {
-                this.modalBackground.remove();
-                this.modalBackground = null;
+            if (this.closeIsHide === false) {
+                if (this.modalBackground) {
+                    this.modalBackground.remove();
+                    this.modalBackground = null;
+                }
             }
         });
     }

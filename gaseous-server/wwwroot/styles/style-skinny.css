@@ -141,6 +141,24 @@
         flex-direction: column;
     }
 
+    .uploadItem-FlexBox {
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+        height: 100%;
+        padding: 10px;
+    }
+
+    .uploadItem-LeftColumn {
+        display: inline-block;
+        width: 100%;
+    }
+
+    .uploadItem-RightColumn {
+        display: inline-block;
+        width: 100%;
+    }
+
     .card-window {
         top: 25px;
         left: 0px;
