@@ -733,6 +733,7 @@ namespace gaseous_server
                     }
 
                     // execute all subtasks in order, only move to the next one is the previous one is complete, or if the task is allowed to run concurrently
+                    int subTaskProgressCount = 0;
                     do
                     {
                         // get the next eligible task
@@ -775,6 +776,17 @@ namespace gaseous_server
                             thread.Name = nextTask.TaskName;
                             thread.Start();
                             BackgroundThreads.Add(nextTask.TaskName, thread);
+
+                            subTaskProgressCount += 1;
+                            CurrentState = "Running " + nextTask.TaskName;
+                            if (nextTask.RemoveWhenStopped == true)
+                            {
+                                CurrentStateProgress = subTaskProgressCount.ToString();
+                            }
+                            else
+                            {
+                                CurrentStateProgress = subTaskProgressCount + " of " + SubTasks.Count;
+                            }
 
                             // wait for the thread to finish
                             while (thread.IsAlive)

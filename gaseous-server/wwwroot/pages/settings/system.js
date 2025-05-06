@@ -118,14 +118,30 @@ function SystemLoadStatus() {
                             let subTable = document.createElement('table');
                             subTable.className = 'romtable';
                             subTable.setAttribute('cellspacing', 0);
-                            subTable.appendChild(createTableRow(true, ['Sub Task', 'Status']));
+                            // subTable.appendChild(createTableRow(true, ['Sub Task', 'Status']));
                             for (const subTask of task.childTasks) {
                                 let subTaskName = subTask.taskName;
                                 let subTaskState = states[subTask.state] || subTask.state;
+                                let subTaskCounter = '';
+                                let subTaskProgress = '<progress value="0" max="100"></progress>';
+
+                                if (subTask.currentStateProgress) {
+                                    if (subTask.currentStateProgress.includes(" of ")) {
+                                        let progressParts = subTask.currentStateProgress.split(" of ");
+                                        subTaskState = `${states[subTask.state] || subTask.state}`;
+                                        subTaskCounter = `${subTask.currentStateProgress}`;
+                                        subTaskProgress = `<progress value="${progressParts[0]}" max="${progressParts[1]}">${subTask.currentStateProgress}</progress>`;
+                                    } else {
+                                        subTaskState = `${states[subTask.state] || subTask.state}`;
+                                        subTaskCounter = `${subTask.currentStateProgress}`;
+                                    }
+                                }
 
                                 let subRow = [
                                     subTaskName,
-                                    subTaskState
+                                    subTaskState,
+                                    subTaskCounter,
+                                    subTaskProgress
                                 ];
                                 let subRowBody = document.createElement('tbody');
                                 subRowBody.className = 'romrow taskrow';
