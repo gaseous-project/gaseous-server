@@ -331,126 +331,16 @@ namespace gaseous_server.Controllers
         [Route("{MetadataMapId}/{MetadataSource}/{ImageType}/{ImageId}/image/{size}/{imagename}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameImage(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource, MetadataImageType imageType, long ImageId, Communications.IGDBAPI_ImageSize size, string imagename = "")
+        public async Task<ActionResult> GameImage(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource, ImageHandling.MetadataImageType imageType, long ImageId, Communications.IGDBAPI_ImageSize size, string imagename = "")
         {
             try
             {
-                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Dictionary<string, string>? imgData = ImageHandling.GameImage(MetadataMapId, MetadataSource, imageType, ImageId, size, imagename);
 
-                string? imageId = null;
-                string? imageTypePath = null;
-
-                switch (imageType)
+                if (System.IO.File.Exists(imgData["imagePath"]))
                 {
-                    case MetadataImageType.cover:
-                        if (game.Cover != null)
-                        {
-                            // Cover cover = Classes.Metadata.Covers.GetCover(game.MetadataSource, (long?)game.Cover);
-                            Cover cover = Classes.Metadata.Covers.GetCover(game.MetadataSource, (long?)ImageId);
-                            imageId = cover.ImageId;
-                            imageTypePath = "Covers";
-                        }
-                        else
-                        {
-                            return NotFound();
-                        }
-                        break;
-
-                    case MetadataImageType.screenshots:
-                        if (game.Screenshots != null)
-                        {
-                            if (game.Screenshots.Contains(ImageId))
-                            {
-                                Screenshot imageObject = Screenshots.GetScreenshot(game.MetadataSource, ImageId);
-
-                                imageId = imageObject.ImageId;
-                                imageTypePath = "Screenshots";
-                            }
-                        }
-                        else
-                        {
-                            return NotFound();
-                        }
-                        break;
-
-                    case MetadataImageType.artwork:
-                        if (game.Artworks != null)
-                        {
-                            if (game.Artworks.Contains(ImageId))
-                            {
-                                Artwork imageObject = Artworks.GetArtwork(game.MetadataSource, ImageId);
-
-                                imageId = imageObject.ImageId;
-                                imageTypePath = "Artwork";
-                            }
-                        }
-                        else
-                        {
-                            return NotFound();
-                        }
-                        break;
-
-                    case MetadataImageType.clearlogo:
-                        if (game.ClearLogo != null)
-                        {
-                            if (game.ClearLogo.ContainsKey(MetadataSource))
-                            {
-                                ClearLogo? imageObject = ClearLogos.GetClearLogo(game.MetadataSource, ImageId);
-
-                                if (imageObject != null)
-                                {
-                                    imageId = imageObject.ImageId;
-                                    imageTypePath = "ClearLogo";
-                                }
-                                else
-                                {
-                                    return NotFound();
-                                }
-                            }
-                            else
-                            {
-                                return NotFound();
-                            }
-                        }
-                        else
-                        {
-                            return NotFound();
-                        }
-                        break;
-
-                    default:
-                        return NotFound();
-                }
-
-                if (imageId == null)
-                {
-                    return NotFound();
-                }
-
-                string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(game), imageTypePath, metadataMap.SourceType.ToString());
-                string imagePath = Path.Combine(basePath, size.ToString(), imageId + ".jpg");
-
-                if (!System.IO.File.Exists(imagePath))
-                {
-                    Communications comms = new Communications();
-                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(game.MetadataSource, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(game), imageTypePath), imageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
-
-                    imagePath = ImgFetch.Result;
-                }
-
-                if (!System.IO.File.Exists(imagePath))
-                {
-                    Communications comms = new Communications();
-                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(game.MetadataSource, basePath, imageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
-
-                    imagePath = ImgFetch.Result;
-                }
-
-                if (System.IO.File.Exists(imagePath))
-                {
-                    string filename = imageId + ".jpg";
-                    string filepath = imagePath;
+                    string filename = imgData["imageId"] + ".jpg";
+                    string filepath = imgData["imagePath"];
                     string contentType = "image/jpg";
 
                     var cd = new System.Net.Mime.ContentDisposition
@@ -481,15 +371,6 @@ namespace gaseous_server.Controllers
                 return NotFound();
             }
         }
-
-        public enum MetadataImageType
-        {
-            cover,
-            screenshots,
-            artwork,
-            clearlogo
-        }
-
 
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]

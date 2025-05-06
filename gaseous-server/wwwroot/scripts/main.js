@@ -483,6 +483,8 @@ function GetTaskFriendlyName(TaskName, options) {
             return "Signature import";
         case 'TitleIngestor':
             return "Title import";
+        case 'ImportQueueProcessor':
+            return "Import Queue Processor";
         case 'MetadataRefresh':
             return "Metadata refresh";
         case 'OrganiseLibrary':

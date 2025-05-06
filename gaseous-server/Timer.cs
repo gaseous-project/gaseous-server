@@ -21,7 +21,7 @@ namespace gaseous_server
             Logging.Log(Logging.LogType.Debug, "Background", "Starting background task monitor");
 
             _timer = new Timer(DoWork, null, TimeSpan.FromSeconds(10),
-                TimeSpan.FromSeconds(30));
+                TimeSpan.FromSeconds(5));
 
             return Task.CompletedTask;
         }
@@ -35,14 +35,18 @@ namespace gaseous_server
 
             List<ProcessQueue.QueueItem> ActiveList = new List<ProcessQueue.QueueItem>();
             ActiveList.AddRange(ProcessQueue.QueueItems);
-            foreach (ProcessQueue.QueueItem qi in ActiveList) {
+            foreach (ProcessQueue.QueueItem qi in ActiveList)
+            {
                 if (qi.ItemState != ProcessQueue.QueueItemState.Disabled)
                 {
-                    if (CheckIfProcessIsBlockedByOthers(qi) == false) {
+                    if (CheckIfProcessIsBlockedByOthers(qi) == false)
+                    {
                         qi.BlockedState(false);
                         if (DateTime.UtcNow > qi.NextRunTime || qi.Force == true)
                         {
+                            // execute queued process
                             qi.Execute();
+
                             if (qi.RemoveWhenStopped == true && qi.ItemState == ProcessQueue.QueueItemState.Stopped)
                             {
                                 ProcessQueue.QueueItems.Remove(qi);
@@ -76,7 +80,8 @@ namespace gaseous_server
         {
             foreach (ProcessQueue.QueueItem qi in ProcessQueue.QueueItems)
             {
-                if (qi.ItemState == ProcessQueue.QueueItemState.Running) {
+                if (qi.ItemState == ProcessQueue.QueueItemState.Running)
+                {
                     // other service is running, check if queueItem is blocked by it
                     if (
                         qi.Blocks.Contains(queueItem.ItemType) ||

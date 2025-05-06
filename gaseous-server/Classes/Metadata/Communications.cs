@@ -672,6 +672,8 @@ namespace gaseous_server.Classes.Metadata
         {
             Logging.Log(Logging.LogType.Debug, "API Connection", "Accessing API for endpoint: " + Endpoint);
 
+            ConfigureHasheousClient(ref hasheous);
+
             if (RateLimitResumeTime > DateTime.UtcNow)
             {
                 Logging.Log(Logging.LogType.Information, "API Connection", "Hasheous rate limit hit. Pausing API communications until " + RateLimitResumeTime.ToString() + ". Attempt " + RetryAttempts + " of " + RetryAttemptsMax + " retries.");

@@ -1,9 +1,15 @@
 ﻿using System;
 using System.ComponentModel.Design.Serialization;
 using System.Data;
+using System.Text.Json.Serialization;
 using gaseous_server.Classes;
+using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
+using gaseous_server.Models;
+using HasheousClient.Models.Metadata.IGDB;
 using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal;
+using Microsoft.AspNetCore.Mvc.ApplicationModels;
+using Newtonsoft.Json;
 using NuGet.Common;
 using NuGet.Packaging;
 
@@ -75,6 +81,268 @@ namespace gaseous_server
             }
 
             private QueueItemType _ItemType = QueueItemType.NotConfigured;
+            [Newtonsoft.Json.JsonIgnore]
+            [System.Text.Json.Serialization.JsonIgnore]
+            public List<SubTask> SubTasks { get; set; } = new List<SubTask>();
+            public Guid AddSubTask(SubTask.TaskTypes TaskType, string TaskName, object Settings, bool RemoveWhenCompleted)
+            {
+                // check if the task already exists
+                SubTask? existingTask = SubTasks.FirstOrDefault(x => x.TaskType == TaskType && x.TaskName == TaskName);
+                if (existingTask == null)
+                {
+                    // generate a new correlation id
+                    Guid correlationId = Guid.NewGuid();
+
+                    // add the task to the list
+                    SubTask subTask = new SubTask(this, TaskType, TaskName, Settings, correlationId);
+                    subTask.RemoveWhenStopped = RemoveWhenCompleted;
+                    SubTasks.Add(subTask);
+
+                    return correlationId;
+                }
+                else
+                {
+                    return Guid.Parse(existingTask.CorrelationId);
+                }
+            }
+            public List<SubTask> ChildTasks
+            {
+                get
+                {
+                    // return only the first 10 tasks
+                    List<SubTask> childTasks = new List<SubTask>();
+                    int maxTasks = 10;
+                    foreach (SubTask task in SubTasks)
+                    {
+                        if (childTasks.Count >= maxTasks)
+                        {
+                            break;
+                        }
+                        childTasks.Add(task);
+                    }
+                    return childTasks;
+                }
+            }
+
+            [Newtonsoft.Json.JsonIgnore]
+            [System.Text.Json.Serialization.JsonIgnore]
+            Dictionary<string, Thread> BackgroundThreads = null;
+            public class SubTask
+            {
+                public TaskTypes TaskType
+                {
+                    get
+                    {
+                        return _TaskType;
+                    }
+                }
+                private TaskTypes _TaskType;
+                public enum TaskTypes
+                {
+                    ImportQueueProcessor,
+                    MetadataRefresh_Platform,
+                    MetadataRefresh_Signatures,
+                    MetadataRefresh_Game,
+                    LibraryScanWorker
+                }
+                private string _CorrelationId;
+                public string CorrelationId
+                {
+                    get
+                    {
+                        return _CorrelationId;
+                    }
+                }
+                public QueueItemState State
+                {
+                    get
+                    {
+                        return _State;
+                    }
+                }
+                private QueueItemState _State = QueueItemState.NeverStarted;
+                public bool AllowConcurrentExecution
+                {
+                    get
+                    {
+                        return _AllowConcurrentExecution;
+                    }
+                }
+                private bool _AllowConcurrentExecution = false;
+                public string Status
+                {
+                    get
+                    {
+                        return _Status;
+                    }
+                }
+                private string _Status = "";
+                public string TaskName
+                {
+                    get
+                    {
+                        return _TaskName;
+                    }
+                }
+                private string _TaskName = "";
+                public object Settings
+                {
+                    get
+                    {
+                        return _Settings;
+                    }
+                }
+                private object _Settings = new object();
+                public bool RemoveWhenStopped { get; set; } = false;
+                public string CurrentState { get; set; } = "";
+                public string CurrentStateProgress { get; set; } = "";
+                [Newtonsoft.Json.JsonIgnore]
+                [System.Text.Json.Serialization.JsonIgnore]
+                public object? ParentObject
+                {
+                    get
+                    {
+                        return _ParentObject;
+                    }
+                }
+                private object? _ParentObject = null;
+                public SubTask(object? ParentObject, TaskTypes TaskType, string TaskName, object Settings, Guid CorrelationId = default)
+                {
+                    _ParentObject = ParentObject;
+                    _TaskType = TaskType;
+                    _TaskName = TaskName;
+                    _Settings = Settings;
+
+                    _CorrelationId = CorrelationId.ToString();
+
+                    switch (TaskType)
+                    {
+                        case TaskTypes.ImportQueueProcessor:
+                            ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Queued, ImportStateItem.ImportType.Unknown, null);
+                            break;
+                    }
+                }
+                public void Execute()
+                {
+                    CallContext.SetData("CorrelationId", _CorrelationId.ToString());
+                    CallContext.SetData("CallingProcess", _TaskType.ToString());
+                    CallContext.SetData("CallingUser", "System");
+
+                    if (_State == QueueItemState.NeverStarted)
+                    {
+                        _State = QueueItemState.Running;
+                        // do some work
+                        switch (_TaskType)
+                        {
+                            case TaskTypes.ImportQueueProcessor:
+                                Logging.Log(Logging.LogType.Information, "Import Queue Processor", "Processing import " + _TaskName);
+
+                                // update the import state
+                                ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Processing, ImportStateItem.ImportType.Unknown, null);
+
+                                ImportStateItem importState = ImportGame.GetImportState((Guid)_Settings);
+                                if (importState != null)
+                                {
+                                    Dictionary<string, object>? ProcessData = new Dictionary<string, object>();
+                                    ProcessData.Add("path", Path.GetFileName(importState.FileName));
+                                    ProcessData.Add("sessionid", importState.SessionId.ToString());
+
+                                    // get the hash of the file
+                                    Common.hashObject hash = new Common.hashObject(importState.FileName);
+                                    ProcessData.Add("md5hash", hash.md5hash);
+                                    ProcessData.Add("sha1hash", hash.sha1hash);
+
+                                    // check if the file is a bios file first
+                                    Models.PlatformMapping.PlatformMapItem? IsBios = Classes.Bios.BiosHashSignatureLookup(hash.md5hash);
+
+                                    if (IsBios != null)
+                                    {
+                                        // file is a bios
+                                        Bios.ImportBiosFile(importState.FileName, hash, ref ProcessData);
+
+                                        ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Completed, ImportStateItem.ImportType.BIOS, ProcessData);
+                                    }
+                                    else if (
+                                        Common.SkippableFiles.Contains<string>(Path.GetFileName(importState.FileName), StringComparer.OrdinalIgnoreCase) ||
+                                        !PlatformMapping.SupportedFileExtensions.Contains(Path.GetExtension(importState.FileName), StringComparer.OrdinalIgnoreCase)
+                                    )
+                                    {
+                                        Logging.Log(Logging.LogType.Debug, "Import Game", "Skipping item " + importState.FileName + " - not a supported file type");
+                                        ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Skipped, ImportStateItem.ImportType.Unknown, ProcessData);
+                                    }
+                                    else
+                                    {
+                                        // file is a rom
+                                        Platform? platformOverride = null;
+                                        if (importState.PlatformOverride != null)
+                                        {
+                                            platformOverride = Platforms.GetPlatform((long)importState.PlatformOverride);
+                                        }
+                                        ImportGame.ImportGameFile(importState.FileName, hash, ref ProcessData, platformOverride);
+
+                                        ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Processing, ImportStateItem.ImportType.Rom, ProcessData);
+
+                                        // refresh the metadata for the game - this is a task that can run in the background
+                                        _AllowConcurrentExecution = true;
+                                        if (ProcessData.ContainsKey("metadatamapid"))
+                                        {
+                                            long? metadataMapId = (long?)ProcessData["metadatamapid"];
+                                            if (metadataMapId != null)
+                                            {
+                                                MetadataManagement metadataManagement = new MetadataManagement();
+                                                metadataManagement.RefreshSpecificGame((long)metadataMapId);
+                                            }
+                                        }
+                                        ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Completed, ImportStateItem.ImportType.Rom, ProcessData);
+                                    }
+                                }
+                                else
+                                {
+                                    Logging.Log(Logging.LogType.Warning, "Import Queue Processor", "Import " + _TaskName + " not found");
+                                }
+
+                                break;
+
+                            case TaskTypes.MetadataRefresh_Platform:
+                                Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing platform metadata for " + _TaskName);
+                                MetadataManagement metadataPlatform = new MetadataManagement(this);
+                                metadataPlatform.RefreshPlatforms(true);
+                                break;
+
+                            case TaskTypes.MetadataRefresh_Signatures:
+                                Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing signature metadata for " + _TaskName);
+                                MetadataManagement metadataSignatures = new MetadataManagement(this);
+                                metadataSignatures.RefreshSignatures(true);
+                                break;
+
+                            case TaskTypes.MetadataRefresh_Game:
+                                Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing game metadata for " + _TaskName);
+                                MetadataManagement metadataGame = new MetadataManagement(this);
+                                metadataGame.UpdateRomCounts();
+                                metadataGame.RefreshGames(true);
+                                break;
+
+                            case TaskTypes.LibraryScanWorker:
+                                CallContext.SetData("CallingProcess", _TaskType.ToString() + " - " + ((GameLibrary.LibraryItem)_Settings).Name);
+                                Logging.Log(Logging.LogType.Information, "Library Scan", "Scanning library " + _TaskName);
+                                ImportGame importLibraryScan = new ImportGame(this);
+                                importLibraryScan.LibrarySpecificScan((GameLibrary.LibraryItem)_Settings);
+                                break;
+                        }
+                        _State = QueueItemState.Stopped;
+                        _Status = "Stopped";
+
+                        if (RemoveWhenStopped == true)
+                        {
+                            // remove the task from the parent object
+                            if (_ParentObject is QueueItem parent)
+                            {
+                                parent.SubTasks.Remove(this);
+                            }
+                        }
+                    }
+                }
+            }
             private QueueItemState _ItemState = QueueItemState.NeverStarted;
             private DateTime _LastRunTime = DateTime.UtcNow;
             private double _LastRunDuration = 0;
@@ -82,14 +350,12 @@ namespace gaseous_server
             {
                 get
                 {
-                    // return DateTime.Parse(Config.ReadSetting("LastRun_" + _ItemType.ToString(), DateTime.UtcNow.ToString("yyyy-MM-ddThh:mm:ssZ")));
                     return Config.ReadSetting<DateTime>("LastRun_" + _ItemType.ToString(), DateTime.UtcNow);
                 }
                 set
                 {
                     if (_SaveLastRunTime == true)
                     {
-                        //Config.SetSetting("LastRun_" + _ItemType.ToString(), value.ToString("yyyy-MM-ddThh:mm:ssZ"));
                         Config.SetSetting<DateTime>("LastRun_" + _ItemType.ToString(), value);
                     }
                 }
@@ -131,7 +397,25 @@ namespace gaseous_server
             public int AllowedEndHours { get; set; } = 23;
             public int AllowedEndMinutes { get; set; } = 59;
             public QueueItemType ItemType => _ItemType;
-            public QueueItemState ItemState => _ItemState;
+            public QueueItemState ItemState
+            {
+                get
+                {
+                    // if any subtasks are running or never started, set the state to running
+                    if (SubTasks != null)
+                    {
+                        foreach (SubTask task in SubTasks)
+                        {
+                            if (task.State == QueueItemState.Running || task.State == QueueItemState.NeverStarted)
+                            {
+                                return QueueItemState.Running;
+                            }
+                        }
+                    }
+
+                    return _ItemState;
+                }
+            }
             public DateTime LastRunTime => _LastRunTime;
             public DateTime LastFinishTime => _LastFinishTime;
             public double LastRunDuration => _LastRunDuration;
@@ -284,20 +568,60 @@ namespace gaseous_server
                                     };
                                     import.ProcessDirectory(Config.LibraryConfiguration.LibraryImportDirectory);
 
+                                    _SaveLastRunTime = true;
+
+                                    break;
+
+                                case QueueItemType.ImportQueueProcessor:
+                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Import Queue Processor");
+
+                                    if (ImportGame.ImportStates != null)
+                                    {
+                                        // get all pending imports
+                                        List<ImportStateItem> pendingImports = ImportGame.ImportStates.Where(x => x.State == ImportStateItem.ImportState.Pending).ToList();
+
+                                        // process each import
+                                        foreach (ImportStateItem importState in pendingImports)
+                                        {
+                                            // check the subtask list for any tasks with the same session id
+                                            SubTask? subTask = SubTasks.FirstOrDefault(x => x.Settings is Guid && (Guid)x.Settings == importState.SessionId);
+                                            if (subTask == null)
+                                            {
+                                                // process the import
+                                                Logging.Log(Logging.LogType.Information, "Import Queue Processor", "Processing import " + importState.FileName);
+                                                AddSubTask(SubTask.TaskTypes.ImportQueueProcessor, Path.GetFileName(importState.FileName), importState.SessionId, true);
+                                                // update the import state
+                                                ImportGame.UpdateImportState(importState.SessionId, ImportStateItem.ImportState.Queued, ImportStateItem.ImportType.Unknown, null);
+                                            }
+                                        }
+                                    }
+
                                     // clean up
                                     Classes.ImportGame.DeleteOrphanedDirectories(Config.LibraryConfiguration.LibraryImportDirectory);
+                                    Classes.ImportGame.RemoveOldImportStates();
 
-                                    _SaveLastRunTime = true;
+                                    // force execute this task again so the user doesn't have to wait for imports to be processed
+                                    _LastRunTime = DateTime.UtcNow.AddMinutes(-_Interval);
 
                                     break;
 
                                 case QueueItemType.MetadataRefresh:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Metadata Refresher");
-                                    Classes.MetadataManagement metadataManagement = new MetadataManagement
+
+                                    // clear the sub tasks
+                                    if (SubTasks != null)
                                     {
-                                        CallingQueueItem = this
-                                    };
-                                    metadataManagement.RefreshMetadata(_ForceExecute);
+                                        SubTasks.Clear();
+                                    }
+                                    else
+                                    {
+                                        SubTasks = new List<SubTask>();
+                                    }
+
+                                    // set up metadata refresh subtasks
+                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Platform, "Platform Metadata", null, false);
+                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Signatures, "Signature Metadata", null, false);
+                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Game, "Game Metadata", null, false);
 
                                     _SaveLastRunTime = true;
 
@@ -321,20 +645,18 @@ namespace gaseous_server
                                     {
                                         CallingQueueItem = this
                                     };
-                                    libScan.LibraryScan();
+
+                                    // get all libraries
+                                    List<GameLibrary.LibraryItem> libraries = GameLibrary.GetLibraries();
+
+                                    // process each library
+                                    foreach (GameLibrary.LibraryItem library in libraries)
+                                    {
+                                        Guid childCorrelationId = AddSubTask(SubTask.TaskTypes.LibraryScanWorker, library.Name, library, true);
+                                        Logging.Log(Logging.LogType.Information, "Library Scan", "Queuing library " + library.Name + " for scanning with correlation id: " + childCorrelationId);
+                                    }
 
                                     _SaveLastRunTime = true;
-
-                                    break;
-
-                                case QueueItemType.LibraryScanWorker:
-                                    GameLibrary.LibraryItem library = (GameLibrary.LibraryItem)Options;
-                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Library Scanner worker for library " + library.Name);
-                                    Classes.ImportGame importLibraryScan = new ImportGame
-                                    {
-                                        CallingQueueItem = this
-                                    };
-                                    importLibraryScan.LibrarySpecificScan(library);
 
                                     break;
 
@@ -404,6 +726,12 @@ namespace gaseous_server
                                     break;
 
                             }
+
+                            // execute sub tasks
+                            if (SubTasks != null)
+                            {
+                                SubTaskExecute();
+                            }
                         }
                         catch (Exception ex)
                         {
@@ -425,6 +753,126 @@ namespace gaseous_server
                         _LastRunDuration = Math.Round((DateTime.UtcNow - _LastRunTime).TotalSeconds, 2);
 
                         Logging.Log(Logging.LogType.Information, "Timered Event", "Total " + _ItemType + " run time = " + _LastRunDuration);
+                    }
+                }
+            }
+
+            void SubTaskExecute()
+            {
+                // execute any subtasks
+                if (SubTasks != null)
+                {
+                    if (BackgroundThreads == null)
+                    {
+                        BackgroundThreads = new Dictionary<string, Thread>();
+                    }
+
+                    // execute all subtasks in order, only move to the next one is the previous one is complete, or if the task is allowed to run concurrently
+                    int subTaskProgressCount = 0;
+                    do
+                    {
+                        // get the next eligible task
+                        SubTask? nextTask = SubTasks.FirstOrDefault(x => x.State == QueueItemState.NeverStarted);
+
+                        int maxThreads = 4;
+
+                        // if we have too many threads running, wait for one to finish
+                        while (BackgroundThreads.Count >= maxThreads)
+                        {
+                            // remove any completed threads
+                            List<string> completedThreads = new List<string>();
+                            foreach (KeyValuePair<string, Thread> thread in BackgroundThreads)
+                            {
+                                if (thread.Value.ThreadState == ThreadState.Stopped)
+                                {
+                                    completedThreads.Add(thread.Key);
+                                }
+                            }
+                            foreach (string threadKey in completedThreads)
+                            {
+                                BackgroundThreads.Remove(threadKey);
+                            }
+
+                            // jobs can only be added to the thread pool if there is space
+                            if (BackgroundThreads.Count < maxThreads)
+                            {
+                                break;
+                            }
+
+                            // wait for a second
+                            Thread.Sleep(1000);
+                        }
+
+                        // add the next task to the thread pool
+                        if (nextTask != null)
+                        {
+                            // execute the task
+                            Thread thread = new Thread(new ThreadStart(nextTask.Execute));
+                            thread.Name = nextTask.TaskName;
+                            thread.Start();
+                            BackgroundThreads.Add(nextTask.TaskName, thread);
+
+                            subTaskProgressCount += 1;
+                            CurrentState = "Running " + nextTask.TaskName;
+                            if (nextTask.RemoveWhenStopped == true)
+                            {
+                                CurrentStateProgress = subTaskProgressCount.ToString();
+                            }
+                            else
+                            {
+                                CurrentStateProgress = subTaskProgressCount + " of " + SubTasks.Count;
+                            }
+
+                            // wait for the thread to finish
+                            while (thread.IsAlive)
+                            {
+                                // check if the thread is still running
+                                if (thread.ThreadState == ThreadState.Stopped || (nextTask.AllowConcurrentExecution == true && SubTasks.Count == 1))
+                                {
+                                    break;
+                                }
+                                else
+                                {
+                                    // wait for a second
+                                    Thread.Sleep(1000);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            break;
+                        }
+
+                    } while (SubTasks.Count > 0);
+
+                    // wait for all threads to finish
+                    bool stillRunning = true;
+                    while (stillRunning)
+                    {
+                        // remove any completed threads
+                        List<string> completedThreads = new List<string>();
+                        foreach (KeyValuePair<string, Thread> thread in BackgroundThreads)
+                        {
+                            if (thread.Value.ThreadState == ThreadState.Stopped)
+                            {
+                                completedThreads.Add(thread.Key);
+                            }
+                        }
+                        foreach (string threadKey in completedThreads)
+                        {
+                            BackgroundThreads.Remove(threadKey);
+                        }
+
+                        // check if all threads are complete
+                        if (BackgroundThreads.Count == 0)
+                        {
+                            stillRunning = false;
+                        }
+                        else
+                        {
+                            // wait for a second
+                            Thread.Sleep(1000);
+                        }
                     }
                 }
             }
@@ -541,6 +989,11 @@ namespace gaseous_server
             /// Imports game files into the database and moves them to the required location on disk
             /// </summary>
             TitleIngestor,
+
+            /// <summary>
+            /// Processes the import queue and imports files into the database
+            /// </summary>
+            ImportQueueProcessor,
 
             /// <summary>
             /// Forces stored metadata to be refreshed
