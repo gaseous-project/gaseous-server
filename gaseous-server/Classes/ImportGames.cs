@@ -19,6 +19,16 @@ namespace gaseous_server.Classes
 {
     public class ImportGame : QueueItemStatus
     {
+        public ImportGame()
+        {
+
+        }
+
+        public ImportGame(object callingQueueItem)
+        {
+            CallingQueueItem = callingQueueItem;
+        }
+
         /// <summary>
         /// List of import states
         /// </summary>
@@ -761,111 +771,6 @@ namespace gaseous_server.Classes
                 {
                     Directory.Delete(directory, false);
                 }
-            }
-        }
-
-        public static List<GameLibrary.LibraryItem> LibrariesToScan = new List<GameLibrary.LibraryItem>();
-        public void LibraryScan()
-        {
-            int maxWorkers = 4;
-
-            if (LibrariesToScan.Count == 0)
-            {
-                LibrariesToScan.AddRange(GameLibrary.GetLibraries());
-            }
-
-            // preload the platform map to ensure the exclusion list is loaded
-            List<PlatformMapping.PlatformMapItem> platformMap = PlatformMapping.PlatformMap;
-
-            // setup background tasks for each library
-            do
-            {
-                Logging.Log(Logging.LogType.Information, "Library Scan", "Library scan queue size: " + LibrariesToScan.Count);
-
-                GameLibrary.LibraryItem library = LibrariesToScan[0];
-                LibrariesToScan.RemoveAt(0);
-
-                // check if library is already being scanned
-                bool libraryAlreadyScanning = false;
-                List<ProcessQueue.QueueItem> ProcessQueueItems = new List<ProcessQueue.QueueItem>();
-                ProcessQueueItems.AddRange(ProcessQueue.QueueItems);
-                foreach (ProcessQueue.QueueItem item in ProcessQueueItems)
-                {
-                    if (item.ItemType == ProcessQueue.QueueItemType.LibraryScanWorker)
-                    {
-                        if (((GameLibrary.LibraryItem)item.Options).Id == library.Id)
-                        {
-                            libraryAlreadyScanning = true;
-                        }
-                    }
-                }
-
-                if (libraryAlreadyScanning == false)
-                {
-                    Logging.Log(Logging.LogType.Information, "Library Scan", "Starting worker process for library " + library.Name);
-                    ProcessQueue.QueueItem queue = new ProcessQueue.QueueItem(
-                        ProcessQueue.QueueItemType.LibraryScanWorker,
-                        1,
-                        new List<ProcessQueue.QueueItemType>
-                        {
-                        ProcessQueue.QueueItemType.OrganiseLibrary
-                        },
-                        false,
-                        true)
-                    {
-                        Options = library
-                    };
-                    queue.ForceExecute();
-
-                    ProcessQueue.QueueItems.Add(queue);
-
-                    // check number of running tasks is less than maxWorkers
-                    bool allowContinue;
-                    do
-                    {
-                        allowContinue = true;
-                        int currentWorkerCount = 0;
-                        List<ProcessQueue.QueueItem> LibraryScan_QueueItems = new List<ProcessQueue.QueueItem>();
-                        LibraryScan_QueueItems.AddRange(ProcessQueue.QueueItems);
-                        foreach (ProcessQueue.QueueItem item in LibraryScan_QueueItems)
-                        {
-                            if (item.ItemType == ProcessQueue.QueueItemType.LibraryScanWorker)
-                            {
-                                currentWorkerCount += 1;
-                            }
-                        }
-                        if (currentWorkerCount >= maxWorkers)
-                        {
-                            allowContinue = false;
-                            Thread.Sleep(60000);
-                        }
-                    } while (allowContinue == false);
-                }
-            } while (LibrariesToScan.Count > 0);
-
-            bool WorkersStillWorking;
-            do
-            {
-                WorkersStillWorking = false;
-                List<ProcessQueue.QueueItem> queueItems = new List<ProcessQueue.QueueItem>();
-                queueItems.AddRange(ProcessQueue.QueueItems);
-                foreach (ProcessQueue.QueueItem item in queueItems)
-                {
-                    if (item.ItemType == ProcessQueue.QueueItemType.LibraryScanWorker)
-                    {
-                        // workers are still running - sleep and keep looping
-                        WorkersStillWorking = true;
-                        Thread.Sleep(30000);
-                    }
-                }
-            } while (WorkersStillWorking == true);
-
-            Logging.Log(Logging.LogType.Information, "Library Scan", "Library scan complete. All workers stopped");
-
-            if (LibrariesToScan.Count > 0)
-            {
-                Logging.Log(Logging.LogType.Information, "Library Scan", "There are still libraries to scan. Restarting scan process");
-                LibraryScan();
             }
         }
 

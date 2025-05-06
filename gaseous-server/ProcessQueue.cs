@@ -86,9 +86,14 @@ namespace gaseous_server
             public List<SubTask> SubTasks { get; set; } = new List<SubTask>();
             public void AddSubTask(SubTask.TaskTypes TaskType, string TaskName, object Settings, bool RemoveWhenCompleted)
             {
-                SubTask subTask = new SubTask(this, TaskType, TaskName, Settings);
-                subTask.RemoveWhenStopped = RemoveWhenCompleted;
-                SubTasks.Add(subTask);
+                // check if the task already exists
+                SubTask? existingTask = SubTasks.FirstOrDefault(x => x.TaskType == TaskType && x.TaskName == TaskName);
+                if (existingTask == null)
+                {
+                    SubTask subTask = new SubTask(this, TaskType, TaskName, Settings);
+                    subTask.RemoveWhenStopped = RemoveWhenCompleted;
+                    SubTasks.Add(subTask);
+                }
             }
             public List<SubTask> ChildTasks
             {
@@ -127,7 +132,8 @@ namespace gaseous_server
                     ImportQueueProcessor,
                     MetadataRefresh_Platform,
                     MetadataRefresh_Signatures,
-                    MetadataRefresh_Game
+                    MetadataRefresh_Game,
+                    LibraryScanWorker
                 }
                 public QueueItemState State
                 {
@@ -290,6 +296,12 @@ namespace gaseous_server
                                 MetadataManagement metadataGame = new MetadataManagement(this);
                                 metadataGame.UpdateRomCounts();
                                 metadataGame.RefreshGames(true);
+                                break;
+
+                            case TaskTypes.LibraryScanWorker:
+                                Logging.Log(Logging.LogType.Information, "Library Scan", "Scanning library " + _TaskName);
+                                ImportGame importLibraryScan = new ImportGame(this);
+                                importLibraryScan.LibrarySpecificScan((GameLibrary.LibraryItem)_Settings);
                                 break;
                         }
                         _State = QueueItemState.Stopped;
@@ -608,20 +620,18 @@ namespace gaseous_server
                                     {
                                         CallingQueueItem = this
                                     };
-                                    libScan.LibraryScan();
+
+                                    // get all libraries
+                                    List<GameLibrary.LibraryItem> libraries = GameLibrary.GetLibraries();
+
+                                    // process each library
+                                    foreach (GameLibrary.LibraryItem library in libraries)
+                                    {
+                                        Logging.Log(Logging.LogType.Information, "Library Scan", "Queuing library " + library.Name + " for scanning");
+                                        AddSubTask(SubTask.TaskTypes.LibraryScanWorker, library.Name, library, true);
+                                    }
 
                                     _SaveLastRunTime = true;
-
-                                    break;
-
-                                case QueueItemType.LibraryScanWorker:
-                                    GameLibrary.LibraryItem library = (GameLibrary.LibraryItem)Options;
-                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Library Scanner worker for library " + library.Name);
-                                    Classes.ImportGame importLibraryScan = new ImportGame
-                                    {
-                                        CallingQueueItem = this
-                                    };
-                                    importLibraryScan.LibrarySpecificScan(library);
 
                                     break;
 

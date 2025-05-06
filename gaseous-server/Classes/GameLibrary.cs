@@ -197,13 +197,13 @@ namespace gaseous_server
         {
             // add the library to scan to the queue
             LibraryItem library = GetLibrary(LibraryId);
-            ImportGame.LibrariesToScan.Add(library);
 
             // start the library scan if it's not already running
             foreach (ProcessQueue.QueueItem item in ProcessQueue.QueueItems)
             {
                 if (item.ItemType == ProcessQueue.QueueItemType.LibraryScan && item.ItemState != ProcessQueue.QueueItemState.Running)
                 {
+                    item.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.LibraryScanWorker, library.Name, library, true);
                     item.ForceExecute();
                 }
             }
