@@ -776,10 +776,12 @@ namespace gaseous_server.Classes
 
         public void LibrarySpecificScan(GameLibrary.LibraryItem library)
         {
-
             Logging.Log(Logging.LogType.Information, "Library Scan", "Starting scan of library: " + library.Name);
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
+            // force load of platform mapping tables
+            List<PlatformMapping.PlatformMapItem> _platformMap = PlatformMapping.PlatformMap;
 
             Logging.Log(Logging.LogType.Information, "Library Scan", "Looking for duplicate library files to clean up");
             string duplicateSql = "DELETE r1 FROM Games_Roms r1 INNER JOIN Games_Roms r2 WHERE r1.Id > r2.Id AND r1.MD5 = r2.MD5 AND r1.LibraryId=@libraryid AND r2.LibraryId=@libraryid;";

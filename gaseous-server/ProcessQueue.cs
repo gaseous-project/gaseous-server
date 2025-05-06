@@ -84,15 +84,25 @@ namespace gaseous_server
             [Newtonsoft.Json.JsonIgnore]
             [System.Text.Json.Serialization.JsonIgnore]
             public List<SubTask> SubTasks { get; set; } = new List<SubTask>();
-            public void AddSubTask(SubTask.TaskTypes TaskType, string TaskName, object Settings, bool RemoveWhenCompleted)
+            public Guid AddSubTask(SubTask.TaskTypes TaskType, string TaskName, object Settings, bool RemoveWhenCompleted)
             {
                 // check if the task already exists
                 SubTask? existingTask = SubTasks.FirstOrDefault(x => x.TaskType == TaskType && x.TaskName == TaskName);
                 if (existingTask == null)
                 {
-                    SubTask subTask = new SubTask(this, TaskType, TaskName, Settings);
+                    // generate a new correlation id
+                    Guid correlationId = Guid.NewGuid();
+
+                    // add the task to the list
+                    SubTask subTask = new SubTask(this, TaskType, TaskName, Settings, correlationId);
                     subTask.RemoveWhenStopped = RemoveWhenCompleted;
                     SubTasks.Add(subTask);
+
+                    return correlationId;
+                }
+                else
+                {
+                    return Guid.Parse(existingTask.CorrelationId);
                 }
             }
             public List<SubTask> ChildTasks
@@ -134,6 +144,14 @@ namespace gaseous_server
                     MetadataRefresh_Signatures,
                     MetadataRefresh_Game,
                     LibraryScanWorker
+                }
+                private string _CorrelationId;
+                public string CorrelationId
+                {
+                    get
+                    {
+                        return _CorrelationId;
+                    }
                 }
                 public QueueItemState State
                 {
@@ -188,12 +206,14 @@ namespace gaseous_server
                     }
                 }
                 private object? _ParentObject = null;
-                public SubTask(object? ParentObject, TaskTypes TaskType, string TaskName, object Settings)
+                public SubTask(object? ParentObject, TaskTypes TaskType, string TaskName, object Settings, Guid CorrelationId = default)
                 {
                     _ParentObject = ParentObject;
                     _TaskType = TaskType;
                     _TaskName = TaskName;
                     _Settings = Settings;
+
+                    _CorrelationId = CorrelationId.ToString();
 
                     switch (TaskType)
                     {
@@ -204,6 +224,10 @@ namespace gaseous_server
                 }
                 public void Execute()
                 {
+                    CallContext.SetData("CorrelationId", _CorrelationId.ToString());
+                    CallContext.SetData("CallingProcess", _TaskType.ToString());
+                    CallContext.SetData("CallingUser", "System");
+
                     if (_State == QueueItemState.NeverStarted)
                     {
                         _State = QueueItemState.Running;
@@ -299,6 +323,7 @@ namespace gaseous_server
                                 break;
 
                             case TaskTypes.LibraryScanWorker:
+                                CallContext.SetData("CallingProcess", _TaskType.ToString() + " - " + ((GameLibrary.LibraryItem)_Settings).Name);
                                 Logging.Log(Logging.LogType.Information, "Library Scan", "Scanning library " + _TaskName);
                                 ImportGame importLibraryScan = new ImportGame(this);
                                 importLibraryScan.LibrarySpecificScan((GameLibrary.LibraryItem)_Settings);
@@ -627,8 +652,8 @@ namespace gaseous_server
                                     // process each library
                                     foreach (GameLibrary.LibraryItem library in libraries)
                                     {
-                                        Logging.Log(Logging.LogType.Information, "Library Scan", "Queuing library " + library.Name + " for scanning");
-                                        AddSubTask(SubTask.TaskTypes.LibraryScanWorker, library.Name, library, true);
+                                        Guid childCorrelationId = AddSubTask(SubTask.TaskTypes.LibraryScanWorker, library.Name, library, true);
+                                        Logging.Log(Logging.LogType.Information, "Library Scan", "Queuing library " + library.Name + " for scanning with correlation id: " + childCorrelationId);
                                     }
 
                                     _SaveLastRunTime = true;
