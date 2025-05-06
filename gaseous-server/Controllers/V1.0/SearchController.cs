@@ -37,8 +37,10 @@ namespace gaseous_server.Controllers
         {
             // search the database for the requested platforms
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string query = "SELECT `Id` FROM Platform WHERE `Name` LIKE '%" + SearchString + "%';";
-            DataTable data = db.ExecuteCMD(query);
+            string query = "SELECT `Id` FROM Platform WHERE `Name` LIKE @SearchString;";
+            Dictionary<string, object> parameters = new Dictionary<string, object>();
+            parameters.Add("SearchString", "%" + SearchString + "%");
+            DataTable data = db.ExecuteCMD(query, parameters);
 
             List<Platform> platforms = new List<Platform>();
             foreach (DataRow row in data.Rows)
