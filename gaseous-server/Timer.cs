@@ -44,7 +44,9 @@ namespace gaseous_server
                         qi.BlockedState(false);
                         if (DateTime.UtcNow > qi.NextRunTime || qi.Force == true)
                         {
+                            // execute queued process
                             qi.Execute();
+
                             if (qi.RemoveWhenStopped == true && qi.ItemState == ProcessQueue.QueueItemState.Stopped)
                             {
                                 ProcessQueue.QueueItems.Remove(qi);

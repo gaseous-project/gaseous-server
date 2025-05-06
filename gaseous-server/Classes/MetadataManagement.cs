@@ -10,6 +10,16 @@ namespace gaseous_server.Classes
 {
 	public class MetadataManagement : QueueItemStatus
 	{
+		public MetadataManagement()
+		{
+
+		}
+
+		public MetadataManagement(object callingQueueItem)
+		{
+			this.CallingQueueItem = callingQueueItem;
+		}
+
 		private static bool Processing = false;
 
 		public static HasheousClient.Models.MetadataSources[] BlockedMetadataSource = new HasheousClient.Models.MetadataSources[]
@@ -553,7 +563,7 @@ namespace gaseous_server.Classes
 			if (forceRefresh == true)
 			{
 				// when forced, only update games with ROMs for
-				sql = "SELECT Id, `Name` FROM view_GamesWithRoms;";
+				sql = "SELECT Id, `Name`, `GameIdType` FROM view_GamesWithRoms;";
 			}
 			else
 			{
@@ -642,7 +652,7 @@ namespace gaseous_server.Classes
 
 			try
 			{
-				if (dr["gameidtype"] == null)
+				if (dr.ContainsKey("gameidtype") == false)
 				{
 					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Unable to refresh metadata for game " + dr["name"] + " (" + dr["id"] + ") - no source type specified");
 				}
@@ -817,7 +827,7 @@ namespace gaseous_server.Classes
 			}
 			catch (Exception ex)
 			{
-				if (dr["gameidtype"] == null)
+				if (dr.ContainsKey("gameidtype") == false)
 				{
 					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Unable to refresh metadata for game " + dr["name"] + " (" + dr["id"] + ") - no source type specified");
 				}
@@ -832,7 +842,7 @@ namespace gaseous_server.Classes
 		/// <summary>
 		/// Updates the ROM counts for each metadata map in the database.
 		/// </summary>
-		public static void UpdateRomCounts()
+		public void UpdateRomCounts()
 		{
 			string sql = @"
 UPDATE `MetadataMap`

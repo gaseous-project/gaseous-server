@@ -2,7 +2,7 @@ namespace gaseous_server.Classes
 {
     public class QueueItemStatus
     {
-        internal ProcessQueue.QueueItem? CallingQueueItem = null;
+        internal object? CallingQueueItem = null;
 
         private int _CurrentItemNumber = 0;
         private int _MaxItemsNumber = 0;
@@ -18,11 +18,7 @@ namespace gaseous_server.Classes
             this._MaxItemsNumber = MaxItemsNumber;
             this._StatusText = StatusText;
 
-            if (CallingQueueItem != null)
-            {
-                CallingQueueItem.CurrentState = _CurrentItemNumber + " of " + _MaxItemsNumber + ": " + _StatusText;
-                CallingQueueItem.CurrentStateProgress = _CurrentItemNumber + " of " + _MaxItemsNumber;
-            }
+            SetCallingItemState(_CurrentItemNumber + " of " + _MaxItemsNumber + ": " + _StatusText, _CurrentItemNumber + " of " + _MaxItemsNumber);
         }
 
         public void ClearStatus()
@@ -31,10 +27,32 @@ namespace gaseous_server.Classes
             this._MaxItemsNumber = 0;
             this._StatusText = "";
 
+            // SetCallingItemState("", "");
+        }
+
+        private void SetCallingItemState(string state, string progress)
+        {
             if (CallingQueueItem != null)
             {
-                CallingQueueItem.CurrentState = "";
-                CallingQueueItem.CurrentStateProgress = "";
+                // get object type of CallingQueueItem
+                string type = CallingQueueItem.GetType().ToString();
+
+                // check if type is QueueItem
+                switch (type)
+                {
+                    case "gaseous_server.ProcessQueue.QueueItem":
+                        // set CallingQueueItem to QueueItem
+                        ProcessQueue.QueueItem callingQueueItem = (ProcessQueue.QueueItem)CallingQueueItem;
+                        callingQueueItem.CurrentState = state;
+                        callingQueueItem.CurrentStateProgress = progress;
+                        break;
+                    case "gaseous_server.ProcessQueue.QueueItem.SubTask":
+                        // set CallingQueueItem to QueueItem.SubTask
+                        ProcessQueue.QueueItem.SubTask callingSubTask = (ProcessQueue.QueueItem.SubTask)CallingQueueItem;
+                        callingSubTask.CurrentState = state;
+                        callingSubTask.CurrentStateProgress = progress;
+                        break;
+                }
             }
         }
     }

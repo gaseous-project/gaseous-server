@@ -108,9 +108,7 @@ namespace gaseous_server
                     return childTasks;
                 }
             }
-            [Newtonsoft.Json.JsonIgnore]
-            [System.Text.Json.Serialization.JsonIgnore]
-            Thread SubTaskThread = null;
+
             [Newtonsoft.Json.JsonIgnore]
             [System.Text.Json.Serialization.JsonIgnore]
             Dictionary<string, Thread> BackgroundThreads = null;
@@ -126,7 +124,10 @@ namespace gaseous_server
                 private TaskTypes _TaskType;
                 public enum TaskTypes
                 {
-                    ImportQueueProcessor
+                    ImportQueueProcessor,
+                    MetadataRefresh_Platform,
+                    MetadataRefresh_Signatures,
+                    MetadataRefresh_Game
                 }
                 public QueueItemState State
                 {
@@ -169,6 +170,8 @@ namespace gaseous_server
                 }
                 private object _Settings = new object();
                 public bool RemoveWhenStopped { get; set; } = false;
+                public string CurrentState { get; set; } = "";
+                public string CurrentStateProgress { get; set; } = "";
                 [Newtonsoft.Json.JsonIgnore]
                 [System.Text.Json.Serialization.JsonIgnore]
                 public object? ParentObject
@@ -185,7 +188,13 @@ namespace gaseous_server
                     _TaskType = TaskType;
                     _TaskName = TaskName;
                     _Settings = Settings;
-                    ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Queued, ImportStateItem.ImportType.Unknown, null);
+
+                    switch (TaskType)
+                    {
+                        case TaskTypes.ImportQueueProcessor:
+                            ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Queued, ImportStateItem.ImportType.Unknown, null);
+                            break;
+                    }
                 }
                 public void Execute()
                 {
@@ -262,6 +271,25 @@ namespace gaseous_server
                                     Logging.Log(Logging.LogType.Warning, "Import Queue Processor", "Import " + _TaskName + " not found");
                                 }
 
+                                break;
+
+                            case TaskTypes.MetadataRefresh_Platform:
+                                Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing platform metadata for " + _TaskName);
+                                MetadataManagement metadataPlatform = new MetadataManagement(this);
+                                metadataPlatform.RefreshPlatforms(true);
+                                break;
+
+                            case TaskTypes.MetadataRefresh_Signatures:
+                                Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing signature metadata for " + _TaskName);
+                                MetadataManagement metadataSignatures = new MetadataManagement(this);
+                                metadataSignatures.RefreshSignatures(true);
+                                break;
+
+                            case TaskTypes.MetadataRefresh_Game:
+                                Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing game metadata for " + _TaskName);
+                                MetadataManagement metadataGame = new MetadataManagement(this);
+                                metadataGame.UpdateRomCounts();
+                                metadataGame.RefreshGames(true);
                                 break;
                         }
                         _State = QueueItemState.Stopped;
@@ -515,44 +543,20 @@ namespace gaseous_server
                                         // get all pending imports
                                         List<ImportStateItem> pendingImports = ImportGame.ImportStates.Where(x => x.State == ImportStateItem.ImportState.Pending).ToList();
 
-                                        // loop through the import queue until all items are processed, or the queue is empty as new items may be added
-                                        do
+                                        // process each import
+                                        foreach (ImportStateItem importState in pendingImports)
                                         {
-                                            // process each import
-                                            foreach (ImportStateItem importState in pendingImports)
+                                            // check the subtask list for any tasks with the same session id
+                                            SubTask? subTask = SubTasks.FirstOrDefault(x => x.Settings is Guid && (Guid)x.Settings == importState.SessionId);
+                                            if (subTask == null)
                                             {
-                                                // check the subtask list for any tasks with the same session id
-                                                SubTask? subTask = SubTasks.FirstOrDefault(x => x.Settings is Guid && (Guid)x.Settings == importState.SessionId);
-                                                if (subTask == null)
-                                                {
-                                                    // process the import
-                                                    Logging.Log(Logging.LogType.Information, "Import Queue Processor", "Processing import " + importState.FileName);
-                                                    AddSubTask(SubTask.TaskTypes.ImportQueueProcessor, Path.GetFileName(importState.FileName), importState.SessionId, true);
-                                                }
+                                                // process the import
+                                                Logging.Log(Logging.LogType.Information, "Import Queue Processor", "Processing import " + importState.FileName);
+                                                AddSubTask(SubTask.TaskTypes.ImportQueueProcessor, Path.GetFileName(importState.FileName), importState.SessionId, true);
+                                                // update the import state
+                                                ImportGame.UpdateImportState(importState.SessionId, ImportStateItem.ImportState.Queued, ImportStateItem.ImportType.Unknown, null);
                                             }
-
-                                            // wait for 5 seconds before checking again
-                                            Thread.Sleep(5000);
-
-                                            // remove any completed threads
-                                            if (BackgroundThreads != null)
-                                            {
-                                                List<string> completedThreads = new List<string>();
-                                                foreach (KeyValuePair<string, Thread> thread in BackgroundThreads)
-                                                {
-                                                    if (thread.Value.ThreadState == ThreadState.Stopped)
-                                                    {
-                                                        completedThreads.Add(thread.Key);
-                                                    }
-                                                }
-                                                foreach (string threadKey in completedThreads)
-                                                {
-                                                    BackgroundThreads.Remove(threadKey);
-                                                }
-                                            }
-
-                                            pendingImports = ImportGame.ImportStates.Where(x => x.State == ImportStateItem.ImportState.Pending).ToList();
-                                        } while (pendingImports.Count > 0);
+                                        }
                                     }
 
                                     // clean up
@@ -566,11 +570,21 @@ namespace gaseous_server
 
                                 case QueueItemType.MetadataRefresh:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Metadata Refresher");
-                                    Classes.MetadataManagement metadataManagement = new MetadataManagement
+
+                                    // clear the sub tasks
+                                    if (SubTasks != null)
                                     {
-                                        CallingQueueItem = this
-                                    };
-                                    metadataManagement.RefreshMetadata(_ForceExecute);
+                                        SubTasks.Clear();
+                                    }
+                                    else
+                                    {
+                                        SubTasks = new List<SubTask>();
+                                    }
+
+                                    // set up metadata refresh subtasks
+                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Platform, "Platform Metadata", null, false);
+                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Signatures, "Signature Metadata", null, false);
+                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Game, "Game Metadata", null, false);
 
                                     _SaveLastRunTime = true;
 
@@ -678,40 +692,11 @@ namespace gaseous_server
 
                             }
 
-                            // start subtask thread
+                            // execute sub tasks
                             if (SubTasks != null)
                             {
-                                if (SubTaskThread == null)
-                                {
-                                    SubTaskThread = new Thread(new ThreadStart(SubTaskExecute));
-                                    SubTaskThread.Name = "SubTaskThread";
-                                    SubTaskThread.Start();
-                                }
-                                else
-                                {
-                                    // wait for the thread to finish
-                                    while (SubTaskThread.IsAlive)
-                                    {
-                                        // check if the thread is still running
-                                        if (SubTaskThread.ThreadState == ThreadState.Stopped)
-                                        {
-                                            break;
-                                        }
-                                        else
-                                        {
-                                            // wait for a second
-                                            Thread.Sleep(1000);
-                                        }
-                                    }
-                                }
-
-                                // remove the subtask thread
-                                if (SubTaskThread.ThreadState == ThreadState.Stopped)
-                                {
-                                    SubTaskThread = null;
-                                }
+                                SubTaskExecute();
                             }
-
                         }
                         catch (Exception ex)
                         {
