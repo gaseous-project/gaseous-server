@@ -40,7 +40,6 @@ function setupBanner() {
     let bannerUpload = document.getElementById("banner_upload");
     if (bannerUpload) {
         bannerUpload.addEventListener('click', () => {
-            const uploadDialog = new UploadRom();
             uploadDialog.open();
         });
     }
@@ -239,5 +238,7 @@ function setNotificationIconState(state) {
             break;
     }
 }
+
+const uploadDialog = new UploadRom();
 
 setupBanner();

@@ -3,10 +3,19 @@ class UploadRom {
 
     }
 
+    #exists = false;
+
     async open() {
+        if (this.#exists) {
+            // already exists, just open it
+            await this.dialog.open();
+            return;
+        }
+        this.#exists = true;
+
         // Create the modal
         this.dialog = await new Modal("uploadrom");
-        await this.dialog.BuildModal();
+        await this.dialog.BuildModal(true);
 
         // setup the dialog
         this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Upload ROM";
