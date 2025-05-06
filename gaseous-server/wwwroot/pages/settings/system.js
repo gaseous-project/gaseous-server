@@ -118,7 +118,6 @@ function SystemLoadStatus() {
                             let subTable = document.createElement('table');
                             subTable.className = 'romtable';
                             subTable.setAttribute('cellspacing', 0);
-                            // subTable.appendChild(createTableRow(true, ['Sub Task', 'Status']));
                             for (const subTask of task.childTasks) {
                                 let subTaskName = subTask.taskName;
                                 let subTaskState = states[subTask.state] || subTask.state;
@@ -135,11 +134,21 @@ function SystemLoadStatus() {
                                         subTaskState = `${states[subTask.state] || subTask.state}`;
                                         subTaskCounter = `${subTask.currentStateProgress}`;
                                     }
+                                } else {
+                                    if (subTask.state === 'Stopped') {
+                                        subTaskProgress = '<progress value="100" max="100"></progress>';
+                                    }
+                                }
+
+                                let subTaskLogLink = '';
+                                if (subTask.correlationId) {
+                                    subTaskLogLink = `<a href="/index.html?page=settings&sub=logs&correlationid=${subTask.correlationId}" class="romlink">Logs</a>`;
                                 }
 
                                 let subRow = [
                                     subTaskName,
                                     subTaskState,
+                                    subTaskLogLink,
                                     subTaskCounter,
                                     subTaskProgress
                                 ];
