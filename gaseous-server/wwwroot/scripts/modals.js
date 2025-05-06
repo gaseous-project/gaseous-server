@@ -41,7 +41,7 @@ class Modal {
                 newTab.id = 'tab-' + tab.id;
                 newTab.classList.add('modal-tab-button');
                 newTab.setAttribute('data-tabid', tab.id);
-                newTab.innerHTML = tab.getAttribute('data-tabname');
+                newTab.textContent = tab.getAttribute('data-tabname');
                 newTab.addEventListener('click', () => {
                     tabs.forEach((tab) => {
                         if (tab.getAttribute('id') !== newTab.getAttribute('data-tabid')) {
@@ -62,7 +62,7 @@ class Modal {
 
                 let newPopupOption = document.createElement('option');
                 newPopupOption.value = tab.id;
-                newPopupOption.innerHTML = tab.getAttribute('data-tabname');
+                newPopupOption.textContent = tab.getAttribute('data-tabname');
                 popup.appendChild(newPopupOption);
 
                 if (firstTab) {
