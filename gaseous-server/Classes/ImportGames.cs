@@ -13,11 +13,202 @@ using static gaseous_server.Classes.Metadata.Games;
 using static gaseous_server.Classes.FileSignature;
 using HasheousClient.Models;
 using HasheousClient.Models.Metadata.IGDB;
+using Mono.TextTemplating;
 
 namespace gaseous_server.Classes
 {
     public class ImportGame : QueueItemStatus
     {
+        public ImportGame()
+        {
+
+        }
+
+        public ImportGame(object callingQueueItem)
+        {
+            CallingQueueItem = callingQueueItem;
+        }
+
+        /// <summary>
+        /// List of import states
+        /// </summary>
+        private static readonly List<ImportStateItem> _importStates = new List<ImportStateItem>();
+
+        /// <summary>
+        /// Gets a read-only list of import state items.
+        /// </summary>
+        public static IReadOnlyList<ImportStateItem> ImportStates => _importStates.AsReadOnly();
+
+        /// <summary>
+        /// Add an import state to the list
+        /// </summary>
+        /// <param name="SessionId">
+        /// The session ID of the import
+        /// </param>
+        /// <param name="FileName">
+        /// The name of the file being imported
+        /// </param>
+        /// <param name="Method">
+        /// The method of import (ImportDirectory or WebUpload)
+        /// </param>
+        /// <param name="PlatformOverride">
+        /// The platform override for the import
+        /// </param>
+        public static void AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, long? PlatformOverride = null)
+        {
+            _AddImportState(SessionId, FileName, Method, string.Empty, PlatformOverride);
+        }
+
+        /// <summary>
+        /// Add an import state to the list
+        /// </summary>
+        /// <param name="SessionId">
+        /// The session ID of the import
+        /// </param>
+        /// <param name="FileName">
+        /// The name of the file being imported
+        /// </param>
+        /// <param name="Method">
+        /// The method of import (ImportDirectory or WebUpload)
+        /// </param>
+        /// <param name="UserId">
+        /// The user ID of the person importing the file, if the import is from the web
+        /// </param>
+        /// <param name="PlatformOverride">
+        /// The platform override for the import
+        /// </param>
+        public static void AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, string UserId, long? PlatformOverride = null)
+        {
+            _AddImportState(SessionId, FileName, Method, UserId, PlatformOverride);
+        }
+
+        private static void _AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, string UserId = "", long? PlatformOverride = null)
+        {
+            // check if an import state for this session id or file exists
+            ImportStateItem? existingImportState = _importStates.Find(x => x.SessionId == SessionId || x.FileName == FileName);
+            if (existingImportState != null)
+            {
+                // update the existing import state
+                existingImportState.FileName = FileName;
+                existingImportState.Method = Method;
+                existingImportState.UserId = UserId;
+                existingImportState.PlatformOverride = PlatformOverride;
+                existingImportState.LastUpdated = DateTime.UtcNow;
+            }
+            else
+            {
+                // create a new import state
+                ImportStateItem importState = new ImportStateItem
+                {
+                    FileName = FileName,
+                    Method = Method,
+                    UserId = UserId,
+                    PlatformOverride = PlatformOverride,
+                    SessionId = SessionId
+                };
+                _importStates.Add(importState);
+
+                Logging.Log(Logging.LogType.Information, "Import Game", String.Format("File {0} added to import queue via {1} by user {2}", FileName, Method.ToString(), UserId));
+
+                // check if there is an ImportQueueProcessor running
+                ProcessQueue.QueueItem? queueItem = ProcessQueue.QueueItems.Find(x => x.ItemType == ProcessQueue.QueueItemType.ImportQueueProcessor);
+                if (queueItem != null)
+                {
+                    queueItem.ForceExecute();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Update the import state
+        /// </summary>
+        /// <param name="SessionId">
+        /// The session ID of the import
+        /// </param>
+        /// <param name="State">
+        /// The state of the import (Pending, Processing, Completed, Failed)
+        /// </param>
+        /// <param name="Type">
+        /// The type of import (Unknown, Rom, BIOS)
+        /// </param>
+        /// <param name="ProcessData">
+        /// A dictionary of process data to be added to the import state
+        /// </param>
+        public static void UpdateImportState(Guid SessionId, ImportStateItem.ImportState State, ImportStateItem.ImportType Type, Dictionary<string, object>? ProcessData = null)
+        {
+            ImportStateItem? importState = _importStates.Find(x => x.SessionId == SessionId);
+            if (importState != null)
+            {
+                importState.State = State;
+                importState.Type = Type;
+                importState.LastUpdated = DateTime.UtcNow;
+                if (ProcessData != null)
+                {
+                    foreach (KeyValuePair<string, object> kvp in ProcessData)
+                    {
+                        importState.ProcessData[kvp.Key] = kvp.Value;
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get the import state for a session ID
+        /// </summary>
+        /// <param name="SessionId">
+        /// The session ID of the import
+        /// </param>
+        /// <returns>
+        /// The import state item for the session ID
+        /// </returns>
+        public static ImportStateItem? GetImportState(Guid SessionId)
+        {
+            ImportStateItem? importState = _importStates.Find(x => x.SessionId == SessionId);
+            if (importState != null)
+            {
+                return importState;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Remove an import state from the list
+        /// </summary>
+        /// <param name="SessionId">
+        /// The session ID of the import
+        /// </param>
+        public static void RemoveImportState(Guid SessionId)
+        {
+            ImportStateItem? importState = _importStates.Find(x => x.SessionId == SessionId);
+            if (importState != null)
+            {
+                _importStates.Remove(importState);
+            }
+        }
+
+        /// <summary>
+        /// Remove old import states from the list
+        /// </summary>
+        /// <remarks>
+        /// This method removes import states that are older than 60 minutes and have a state of Completed or Failed.
+        /// </remarks>
+        public static void RemoveOldImportStates()
+        {
+            DateTime now = DateTime.UtcNow;
+            TimeSpan timeSpan = new TimeSpan(0, 60, 0);
+            DateTime cutoff = now.Subtract(timeSpan);
+
+            // remove completed import states older than 60 minutes
+            _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Completed && x.LastUpdated < cutoff);
+            // remove failed import states older than 60 minutes
+            _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Failed && x.LastUpdated < cutoff);
+            // remove pending import states that don't have a file on disk
+            _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Pending && !File.Exists(x.FileName));
+        }
+
         /// <summary>
         /// Scan the import directory for games and process them
         /// </summary>
@@ -39,13 +230,10 @@ namespace gaseous_server.Classes
                 int importCount = 1;
                 foreach (string importContent in importContents)
                 {
-                    SetStatus(importCount, importContents.Length, "Importing file: " + importContent);
-
-                    ImportGameFile(importContent, null);
+                    AddImportState(Guid.NewGuid(), importContent, ImportStateItem.ImportMethod.ImportDirectory);
 
                     importCount += 1;
                 }
-                ClearStatus();
 
                 DeleteOrphanedDirectories(ImportPath);
             }
@@ -54,51 +242,6 @@ namespace gaseous_server.Classes
                 Logging.Log(Logging.LogType.Critical, "Import Games", "The import directory " + ImportPath + " does not exist.");
                 throw new DirectoryNotFoundException("Invalid path: " + ImportPath);
             }
-        }
-
-        /// <summary>
-        /// Import a single game file
-        /// </summary>
-        /// <param name="GameFileImportPath">
-        /// The path to the game file to import
-        /// </param>
-        /// <param name="OverridePlatform">
-        /// The platform to use for the game file
-        /// </param>
-        /// <returns>
-        /// A dictionary containing the results of the import
-        /// </returns>
-        public Dictionary<string, object> ImportGameFile(string GameFileImportPath, Platform? OverridePlatform)
-        {
-            Dictionary<string, object> RetVal = new Dictionary<string, object>();
-            RetVal.Add("path", Path.GetFileName(GameFileImportPath));
-
-            if (
-                Common.SkippableFiles.Contains<string>(Path.GetFileName(GameFileImportPath), StringComparer.OrdinalIgnoreCase) ||
-                !PlatformMapping.SupportedFileExtensions.Contains(Path.GetExtension(GameFileImportPath), StringComparer.OrdinalIgnoreCase)
-            )
-            {
-                Logging.Log(Logging.LogType.Debug, "Import Game", "Skipping item " + GameFileImportPath);
-            }
-            else
-            {
-                Common.hashObject hash = new Common.hashObject(GameFileImportPath);
-
-                Models.PlatformMapping.PlatformMapItem? IsBios = Classes.Bios.BiosHashSignatureLookup(hash.md5hash);
-
-                if (IsBios == null)
-                {
-                    // file is a rom
-                    _ImportGameFile(GameFileImportPath, hash, ref RetVal, OverridePlatform);
-                }
-                else
-                {
-                    // file is a bios
-                    Bios.ImportBiosFile(GameFileImportPath, hash, ref RetVal);
-                }
-            }
-
-            return RetVal;
         }
 
         /// <summary>
@@ -116,7 +259,7 @@ namespace gaseous_server.Classes
         /// <param name="OverridePlatform">
         /// The platform to use for the game file
         /// </param>
-        private static void _ImportGameFile(string FilePath, Common.hashObject Hash, ref Dictionary<string, object> GameFileInfo, Platform? OverridePlatform)
+        public static void ImportGameFile(string FilePath, Common.hashObject Hash, ref Dictionary<string, object> GameFileInfo, Platform? OverridePlatform)
         {
             GameFileInfo.Add("type", "rom");
 
@@ -173,11 +316,13 @@ namespace gaseous_server.Classes
                 // add to database
                 Platform? determinedPlatform = Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId);
                 Models.Game? determinedGame = Metadata.Games.GetGame(discoveredSignature.Flags.GameMetadataSource, discoveredSignature.Flags.GameId);
+                MetadataMap? map = MetadataManagement.NewMetadataMap((long)determinedPlatform.Id, discoveredSignature.Game.Name);
                 long RomId = StoreGame(GameLibrary.GetDefaultLibrary, Hash, discoveredSignature, determinedPlatform, FilePath, 0, true);
                 Roms.GameRomItem romItem = Roms.GetRom(RomId);
 
                 // build return value
                 GameFileInfo.Add("romid", RomId);
+                GameFileInfo.Add("metadatamapid", map.Id);
                 GameFileInfo.Add("platform", determinedPlatform);
                 GameFileInfo.Add("game", determinedGame);
                 GameFileInfo.Add("signature", discoveredSignature);
@@ -629,117 +774,14 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static List<GameLibrary.LibraryItem> LibrariesToScan = new List<GameLibrary.LibraryItem>();
-        public void LibraryScan()
-        {
-            int maxWorkers = 4;
-
-            if (LibrariesToScan.Count == 0)
-            {
-                LibrariesToScan.AddRange(GameLibrary.GetLibraries());
-            }
-
-            // preload the platform map to ensure the exclusion list is loaded
-            List<PlatformMapping.PlatformMapItem> platformMap = PlatformMapping.PlatformMap;
-
-            // setup background tasks for each library
-            do
-            {
-                Logging.Log(Logging.LogType.Information, "Library Scan", "Library scan queue size: " + LibrariesToScan.Count);
-
-                GameLibrary.LibraryItem library = LibrariesToScan[0];
-                LibrariesToScan.RemoveAt(0);
-
-                // check if library is already being scanned
-                bool libraryAlreadyScanning = false;
-                List<ProcessQueue.QueueItem> ProcessQueueItems = new List<ProcessQueue.QueueItem>();
-                ProcessQueueItems.AddRange(ProcessQueue.QueueItems);
-                foreach (ProcessQueue.QueueItem item in ProcessQueueItems)
-                {
-                    if (item.ItemType == ProcessQueue.QueueItemType.LibraryScanWorker)
-                    {
-                        if (((GameLibrary.LibraryItem)item.Options).Id == library.Id)
-                        {
-                            libraryAlreadyScanning = true;
-                        }
-                    }
-                }
-
-                if (libraryAlreadyScanning == false)
-                {
-                    Logging.Log(Logging.LogType.Information, "Library Scan", "Starting worker process for library " + library.Name);
-                    ProcessQueue.QueueItem queue = new ProcessQueue.QueueItem(
-                        ProcessQueue.QueueItemType.LibraryScanWorker,
-                        1,
-                        new List<ProcessQueue.QueueItemType>
-                        {
-                        ProcessQueue.QueueItemType.OrganiseLibrary
-                        },
-                        false,
-                        true)
-                    {
-                        Options = library
-                    };
-                    queue.ForceExecute();
-
-                    ProcessQueue.QueueItems.Add(queue);
-
-                    // check number of running tasks is less than maxWorkers
-                    bool allowContinue;
-                    do
-                    {
-                        allowContinue = true;
-                        int currentWorkerCount = 0;
-                        List<ProcessQueue.QueueItem> LibraryScan_QueueItems = new List<ProcessQueue.QueueItem>();
-                        LibraryScan_QueueItems.AddRange(ProcessQueue.QueueItems);
-                        foreach (ProcessQueue.QueueItem item in LibraryScan_QueueItems)
-                        {
-                            if (item.ItemType == ProcessQueue.QueueItemType.LibraryScanWorker)
-                            {
-                                currentWorkerCount += 1;
-                            }
-                        }
-                        if (currentWorkerCount >= maxWorkers)
-                        {
-                            allowContinue = false;
-                            Thread.Sleep(60000);
-                        }
-                    } while (allowContinue == false);
-                }
-            } while (LibrariesToScan.Count > 0);
-
-            bool WorkersStillWorking;
-            do
-            {
-                WorkersStillWorking = false;
-                List<ProcessQueue.QueueItem> queueItems = new List<ProcessQueue.QueueItem>();
-                queueItems.AddRange(ProcessQueue.QueueItems);
-                foreach (ProcessQueue.QueueItem item in queueItems)
-                {
-                    if (item.ItemType == ProcessQueue.QueueItemType.LibraryScanWorker)
-                    {
-                        // workers are still running - sleep and keep looping
-                        WorkersStillWorking = true;
-                        Thread.Sleep(30000);
-                    }
-                }
-            } while (WorkersStillWorking == true);
-
-            Logging.Log(Logging.LogType.Information, "Library Scan", "Library scan complete. All workers stopped");
-
-            if (LibrariesToScan.Count > 0)
-            {
-                Logging.Log(Logging.LogType.Information, "Library Scan", "There are still libraries to scan. Restarting scan process");
-                LibraryScan();
-            }
-        }
-
         public void LibrarySpecificScan(GameLibrary.LibraryItem library)
         {
-
             Logging.Log(Logging.LogType.Information, "Library Scan", "Starting scan of library: " + library.Name);
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
+            // force load of platform mapping tables
+            List<PlatformMapping.PlatformMapItem> _platformMap = PlatformMapping.PlatformMap;
 
             Logging.Log(Logging.LogType.Information, "Library Scan", "Looking for duplicate library files to clean up");
             string duplicateSql = "DELETE r1 FROM Games_Roms r1 INNER JOIN Games_Roms r2 WHERE r1.Id > r2.Id AND r1.MD5 = r2.MD5 AND r1.LibraryId=@libraryid AND r2.LibraryId=@libraryid;";
@@ -903,4 +945,3 @@ namespace gaseous_server.Classes
         }
     }
 }
-
