@@ -8,6 +8,12 @@ namespace gaseous_server.Classes.Metadata
     {
         public static Dictionary<string, string>? GameImage(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource, MetadataImageType imageType, long ImageId, Communications.IGDBAPI_ImageSize size, string imagename = "")
         {
+            // validate imagename is not dangerous
+            if (imagename.Contains("..") || imagename.Contains("/") || imagename.Contains("\\"))
+            {
+                imagename = ImageId.ToString();
+            }
+
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
