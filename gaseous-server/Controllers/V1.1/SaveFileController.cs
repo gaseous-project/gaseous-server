@@ -84,6 +84,10 @@ namespace gaseous_server.Controllers.v1_1
 
                 db.ExecuteCMD(sql, parameters);
 
+                // keep only the 20 most recent save files
+                sql = "DELETE FROM GameSaves WHERE UserId = @userid AND RomId = @romid AND IsMediaGroup = @ismediagroup AND CoreName = @core AND Id NOT IN (SELECT Id FROM (SELECT Id FROM GameSaves WHERE UserId = @userid AND RomId = @romid AND IsMediaGroup = @ismediagroup AND CoreName = @core ORDER BY TimeStamp DESC LIMIT 20) AS t);";
+                db.ExecuteNonQuery(sql, parameters);
+
                 return Ok();
             }
         }
