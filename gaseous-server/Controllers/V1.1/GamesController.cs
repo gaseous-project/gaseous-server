@@ -229,7 +229,7 @@ namespace gaseous_server.Controllers.v1_1
 
             if (model.HasSavedGame == true)
             {
-                string hasSavesTemp = "(RomSavedStates > 0 OR RomGroupSavedStates > 0)";
+                string hasSavesTemp = "(RomSavedStates > 0 OR RomGroupSavedStates > 0 OR RomSavedFiles > 0 OR RomGroupSavedFiles > 0)";
                 havingClauses.Add(hasSavesTemp);
             }
 
@@ -566,6 +566,8 @@ namespace gaseous_server.Controllers.v1_1
     END AS `Favourite`,
     COUNT(`RomSavedState`.`Id`) AS `RomSavedStates`,
     COUNT(`RomGroupSavedState`.`Id`) AS `RomGroupSavedStates`,
+    COUNT(`RomSavedFile`.`Id`) AS `RomSavedFiles`,
+    COUNT(`RomGroupSavedFile`.`Id`) AS `RomGroupSavedFiles`,
     `AgeGroup`.`AgeGroupId`,
     CASE
         WHEN `LocalizedNames`.`LocalizedName` IS NOT NULL THEN `LocalizedNames`.`LocalizedName`
@@ -628,12 +630,20 @@ FROM
         AND `RomSavedState`.`IsMediaGroup` = 0
         AND `RomSavedState`.`UserId` = @userid
         LEFT JOIN
+    `GameSaves` AS `RomSavedFile` ON `Games_Roms`.`Id` = `RomSavedFile`.`RomId`
+        AND `RomSavedFile`.`IsMediaGroup` = 0
+        AND `RomSavedFile`.`UserId` = @userid
+        LEFT JOIN
     `RomMediaGroup` ON `MetadataMap`.`Id` = `RomMediaGroup`.`GameId`
         AND `MetadataMap`.`PlatformId` = `RomMediaGroup`.`PlatformId`
         LEFT JOIN
     `GameState` AS `RomGroupSavedState` ON `RomMediaGroup`.`Id` = `RomGroupSavedState`.`RomId`
         AND `RomGroupSavedState`.`IsMediaGroup` = 1
         AND `RomGroupSavedState`.`UserId` = @userid
+        LEFT JOIN
+    `GameSaves` AS `RomGroupSavedFile` ON `RomMediaGroup`.`Id` = `RomGroupSavedFile`.`RomId`
+        AND `RomGroupSavedFile`.`IsMediaGroup` = 1
+        AND `RomGroupSavedFile`.`UserId` = @userid
         LEFT JOIN
     `Game` ON `MetadataMapBridge`.`MetadataSourceType` = `Game`.`SourceId`
         AND `MetadataMapBridge`.`MetadataSourceId` = `Game`.`Id`
@@ -710,9 +720,19 @@ FROM
                     Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
                     retMinGame.Index = indexInPage;
                     indexInPage += 1;
-                    if (dbResponse.Rows[i]["RomSavedStates"] != DBNull.Value || dbResponse.Rows[i]["RomGroupSavedStates"] != DBNull.Value)
+                    if (
+                        dbResponse.Rows[i]["RomSavedStates"] != DBNull.Value ||
+                        dbResponse.Rows[i]["RomGroupSavedStates"] != DBNull.Value ||
+                        dbResponse.Rows[i]["RomSavedFiles"] != DBNull.Value ||
+                        dbResponse.Rows[i]["RomGroupSavedFiles"] != DBNull.Value
+                        )
                     {
-                        if ((long)dbResponse.Rows[i]["RomSavedStates"] >= 1 || (long)dbResponse.Rows[i]["RomGroupSavedStates"] >= 1)
+                        if (
+                            (long)dbResponse.Rows[i]["RomSavedStates"] >= 1 ||
+                            (long)dbResponse.Rows[i]["RomGroupSavedStates"] >= 1 ||
+                            (long)dbResponse.Rows[i]["RomSavedFiles"] >= 1 ||
+                            (long)dbResponse.Rows[i]["RomGroupSavedFiles"] >= 1
+                            )
                         {
                             retMinGame.HasSavedGame = true;
                         }
