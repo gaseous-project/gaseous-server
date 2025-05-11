@@ -59,37 +59,42 @@ namespace gaseous_server.Controllers.v1_1
             string sql;
             Dictionary<string, object> parameters = new Dictionary<string, object>();
 
-            // check if the save file already exists
-            sql = "SELECT `MD5` FROM GameSaves WHERE MD5 = @md5hash";
-            parameters.Add("@md5hash", md5Hash);
+            // check if the save file is different to the last recorded file
+            sql = "SELECT `MD5` FROM GameSaves WHERE UserId = @userid AND RomId = @romid AND IsMediaGroup = @ismediagroup AND CoreName = @core ORDER BY TimeStamp DESC LIMIT 1";
+            parameters.Add("@userid", user.Id);
+            parameters.Add("@romid", romid);
+            parameters.Add("@ismediagroup", ismediagroup);
+            parameters.Add("@core", core);
             DataTable dt = db.ExecuteCMD(sql, parameters);
 
             if (dt.Rows.Count > 0)
             {
-                // if the save file already exists, just return Ok
-                return Ok();
+                string lastMD5 = dt.Rows[0]["MD5"].ToString();
+                if (lastMD5 == md5Hash)
+                {
+                    // if the save file is the same as the last recorded file, just return Ok
+                    return Ok();
+                }
             }
-            else
-            {
-                // if the save file does not exist, insert it into the database
-                sql = "INSERT INTO GameSaves (`UserId`, `RomId`, `IsMediaGroup`, `CoreName`, `MD5`, `TimeStamp`, `File`) VALUES (@userid, @romid, @ismediagroup, @core, @md5hash, @timestamp, @savedata)";
-                parameters.Clear();
-                parameters.Add("@userid", user.Id);
-                parameters.Add("@romid", romid);
-                parameters.Add("@ismediagroup", ismediagroup);
-                parameters.Add("@core", core);
-                parameters.Add("@md5hash", md5Hash);
-                parameters.Add("@timestamp", DateTime.UtcNow);
-                parameters.Add("@savedata", CompressedData);
 
-                db.ExecuteCMD(sql, parameters);
+            // if the save file does not exist, insert it into the database
+            sql = "INSERT INTO GameSaves (`UserId`, `RomId`, `IsMediaGroup`, `CoreName`, `MD5`, `TimeStamp`, `File`) VALUES (@userid, @romid, @ismediagroup, @core, @md5hash, @timestamp, @savedata)";
+            parameters.Clear();
+            parameters.Add("@userid", user.Id);
+            parameters.Add("@romid", romid);
+            parameters.Add("@ismediagroup", ismediagroup);
+            parameters.Add("@core", core);
+            parameters.Add("@md5hash", md5Hash);
+            parameters.Add("@timestamp", DateTime.UtcNow);
+            parameters.Add("@savedata", CompressedData);
 
-                // keep only the 20 most recent save files
-                sql = "DELETE FROM GameSaves WHERE UserId = @userid AND RomId = @romid AND IsMediaGroup = @ismediagroup AND CoreName = @core AND Id NOT IN (SELECT Id FROM (SELECT Id FROM GameSaves WHERE UserId = @userid AND RomId = @romid AND IsMediaGroup = @ismediagroup AND CoreName = @core ORDER BY TimeStamp DESC LIMIT 20) AS t);";
-                db.ExecuteNonQuery(sql, parameters);
+            db.ExecuteCMD(sql, parameters);
 
-                return Ok();
-            }
+            // keep only the 20 most recent save files
+            sql = "DELETE FROM GameSaves WHERE UserId = @userid AND RomId = @romid AND IsMediaGroup = @ismediagroup AND CoreName = @core AND Id NOT IN (SELECT Id FROM (SELECT Id FROM GameSaves WHERE UserId = @userid AND RomId = @romid AND IsMediaGroup = @ismediagroup AND CoreName = @core ORDER BY TimeStamp DESC LIMIT 20) AS t);";
+            db.ExecuteNonQuery(sql, parameters);
+
+            return Ok();
         }
 
         [MapToApiVersion("1.0")]
