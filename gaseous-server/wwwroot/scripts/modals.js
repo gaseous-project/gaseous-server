@@ -428,7 +428,7 @@ class EmulatorStateManager {
         await this.dialog.BuildModal();
 
         // setup the dialog
-        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Save State Manager";
+        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Save Manager";
 
         this.statesBox = this.dialog.modalElement.querySelector('#saved_states');
 
@@ -464,10 +464,89 @@ class EmulatorStateManager {
         });
         this.dialog.addButton(closeButton);
 
+        await this.#LoadSRM();
+
         await this.#LoadStates();
 
         // show the dialog
         this.dialog.open();
+    }
+
+    async #LoadSRM() {
+        // load the srm
+        let thisObject = this;
+        let url = `/api/v1.1/SaveFile/${thisObject.core}/${thisObject.IsMediaGroup}/${thisObject.RomId}`;
+        await fetch(url).then(async response => {
+            if (!response.ok) {
+                this.dialog.modalElement.querySelector('#loadFile').style.display = 'none';
+            } else {
+                let result = await response.json();
+                if (result.length === 0) {
+                    this.dialog.modalElement.querySelector('#loadFile').style.display = 'none';
+                } else {
+                    let srmSelect = this.dialog.modalElement.querySelector('#srmFileSelect');
+                    let srmStart = this.dialog.modalElement.querySelector('#srmStart');
+                    let srmPurge = this.dialog.modalElement.querySelector('#srmPurge');
+
+                    srmSelect.innerHTML = '';
+
+                    // create latest option
+                    let latestOption = document.createElement('option');
+                    latestOption.value = 'latest';
+                    latestOption.innerHTML = 'Latest';
+                    srmSelect.appendChild(latestOption);
+
+                    // create all the options
+                    result.forEach((srm) => {
+                        let option = document.createElement('option');
+                        option.value = srm.id;
+                        option.innerHTML = moment(srm.saveTime).format("YYYY-MM-DD h:mm:ss a");
+                        srmSelect.appendChild(option);
+                    });
+
+                    // make the select2
+                    $(srmSelect).select2({
+                        minimumResultsForSearch: Infinity
+                    });
+
+                    // add the click event to the start button
+                    let selection = srmSelect.value;
+
+                    let emulatorTarget;
+                    let mediagroupint = 0;
+                    if (thisObject.IsMediaGroup == true) {
+                        mediagroupint = 1;
+                    }
+                    switch (getQueryString('page', 'string')) {
+                        case 'emulator':
+                            emulatorTarget = await BuildLaunchLink(getQueryString('engine', 'string'), getQueryString('core', 'string'), getQueryString('platformid', 'string'), getQueryString('gameid', 'string'), getQueryString('romid', 'string'), mediagroupint, thisObject.rompath, selection);
+                            srmStart.addEventListener('click', () => {
+                                window.location.replace(emulatorTarget);
+                            });
+                            break;
+                        default:
+                            emulatorTarget = await BuildLaunchLink(thisObject.engine, thisObject.core, thisObject.platformid, thisObject.gameid, thisObject.RomId, mediagroupint, thisObject.rompath, selection);
+                            srmStart.addEventListener('click', () => {
+                                window.location.href = emulatorTarget;
+                            });
+                            break;
+                    }
+
+                    // add the click event to the purge button
+                    srmPurge.addEventListener('click', async () => {
+                        await fetch('/api/v1.1/SaveFile/' + thisObject.core + '/' + thisObject.IsMediaGroup + '/' + thisObject.RomId, {
+                            method: 'DELETE'
+                        }).then(async response => {
+                            if (!response.ok) {
+                                console.error("Error deleting srm");
+                            } else {
+                                this.dialog.modalElement.querySelector('#loadFile').style.display = 'none';
+                            }
+                        });
+                    });
+                }
+            }
+        });
     }
 
     async #LoadStates() {
@@ -486,23 +565,22 @@ class EmulatorStateManager {
                 if (result.length === 0) {
                     thisObject.statesBox.innerHTML = 'No saved states found.';
                 } else {
-                    console.log(thisObject);
-                    for (let i = 0; i < result.length; i++) {
+                    result.forEach(async (state) => {
                         let stateBox = document.createElement('div');
-                        stateBox.id = 'stateBox_' + result[i].id;
+                        stateBox.id = 'stateBox_' + state.id;
                         stateBox.className = 'saved_state_box romrow';
 
                         // screenshot panel
                         let stateImageBox = document.createElement('div');
-                        stateImageBox.id = 'stateImageBox_' + result[i].id;
+                        stateImageBox.id = 'stateImageBox_' + state.id;
                         stateImageBox.className = 'saved_state_image_box';
 
                         // screenshot image
                         let stateImage = null;
-                        if (result[i].hasScreenshot == true) {
+                        if (state.hasScreenshot == true) {
                             stateImage = document.createElement('img');
                             stateImage.className = 'saved_state_image_image';
-                            stateImage.src = '/api/v1.1/StateManager/' + thisObject.RomId + '/' + result[i].id + '/Screenshot/image.png?IsMediaGroup=' + thisObject.IsMediaGroup;
+                            stateImage.src = '/api/v1.1/StateManager/' + thisObject.RomId + '/' + state.id + '/Screenshot/image.png?IsMediaGroup=' + thisObject.IsMediaGroup;
                         } else {
                             stateImage = document.createElement('div');
                             stateImage.className = 'saved_state_image_image';
@@ -517,38 +595,37 @@ class EmulatorStateManager {
 
                         // main panel
                         let stateMainPanel = document.createElement('div');
-                        stateMainPanel.id = 'stateMainPanel_' + result[i].id;
+                        stateMainPanel.id = 'stateMainPanel_' + state.id;
                         stateMainPanel.className = 'saved_state_main_box';
 
                         let stateName = document.createElement('input');
-                        stateName.id = 'stateName_' + result[i].id;
+                        stateName.id = 'stateName_' + state.id;
                         stateName.type = 'text';
                         stateName.className = 'saved_state_name';
                         stateName.addEventListener('change', async () => {
-                            thisObject.#UpdateStateSave(result[i].id, thisObject.IsMediaGroup);
+                            thisObject.#UpdateStateSave(state.id, thisObject.IsMediaGroup);
                         });
-                        if (result[i].name) {
-                            stateName.value = result[i].name;
+                        if (state.name) {
+                            stateName.value = state.name;
                         } else {
                             stateName.setAttribute('placeholder', "Untitled");
                         }
                         stateMainPanel.appendChild(stateName);
 
                         let stateTime = document.createElement('div');
-                        stateTime.id = 'stateTime_' + result[i].id;
+                        stateTime.id = 'stateTime_' + state.id;
                         stateTime.className = 'saved_state_date';
-                        stateTime.innerHTML = moment(result[i].saveTime).format("YYYY-MM-DD h:mm:ss a");
+                        stateTime.innerHTML = moment(state.saveTime).format("YYYY-MM-DD h:mm:ss a");
                         stateMainPanel.appendChild(stateTime);
 
                         let stateControls = document.createElement('div');
-                        stateControls.id = 'stateControls_' + result[i].id;
+                        stateControls.id = 'stateControls_' + state.id;
                         stateControls.className = 'saved_state_controls';
 
                         let stateControlsLaunch = document.createElement('span');
-                        stateControlsLaunch.id = 'stateControlsLaunch_' + result[i].id;
+                        stateControlsLaunch.id = 'stateControlsLaunch_' + state.id;
                         stateControlsLaunch.classList.add('platform_edit_button');
                         stateControlsLaunch.classList.add('platform_item_green');
-                        // stateControlsLaunch.classList.add('romstart');
                         let emulatorTarget;
                         let mediagroupint = 0;
                         if (thisObject.IsMediaGroup == true) {
@@ -556,13 +633,13 @@ class EmulatorStateManager {
                         }
                         switch (getQueryString('page', 'string')) {
                             case 'emulator':
-                                emulatorTarget = await BuildLaunchLink(getQueryString('engine', 'string'), getQueryString('core', 'string'), getQueryString('platformid', 'string'), getQueryString('gameid', 'string'), getQueryString('romid', 'string'), mediagroupint, thisObject.rompath, result[i].id) + '&stateid=' + result[i].id;
+                                emulatorTarget = await BuildLaunchLink(getQueryString('engine', 'string'), getQueryString('core', 'string'), getQueryString('platformid', 'string'), getQueryString('gameid', 'string'), getQueryString('romid', 'string'), mediagroupint, thisObject.rompath) + '&stateid=' + state.id;
                                 stateControlsLaunch.addEventListener('click', () => {
                                     window.location.replace(emulatorTarget);
                                 });
                                 break;
                             default:
-                                emulatorTarget = await BuildLaunchLink(thisObject.engine, thisObject.core, thisObject.platformid, thisObject.gameid, thisObject.RomId, mediagroupint, thisObject.rompath, result[i].id) + '&stateid=' + result[i].id;
+                                emulatorTarget = await BuildLaunchLink(thisObject.engine, thisObject.core, thisObject.platformid, thisObject.gameid, thisObject.RomId, mediagroupint, thisObject.rompath) + '&stateid=' + state.id;
                                 stateControlsLaunch.addEventListener('click', () => {
                                     window.location.href = emulatorTarget;
                                 });
@@ -574,19 +651,19 @@ class EmulatorStateManager {
                         stateControls.appendChild(stateControlsLaunch);
 
                         let stateControlsDownload = document.createElement('a');
-                        stateControlsDownload.id = 'stateControlsDownload_' + result[i].id;
+                        stateControlsDownload.id = 'stateControlsDownload_' + state.id;
                         stateControlsDownload.classList.add('platform_edit_button');
                         stateControlsDownload.classList.add('saved_state_buttonlink');
-                        stateControlsDownload.href = '/api/v1.1/StateManager/' + thisObject.RomId + '/' + result[i].id + '/State/savestate.state?IsMediaGroup=' + thisObject.IsMediaGroup;
+                        stateControlsDownload.href = '/api/v1.1/StateManager/' + thisObject.RomId + '/' + state.id + '/State/savestate.state?IsMediaGroup=' + thisObject.IsMediaGroup;
                         stateControlsDownload.innerHTML = '<img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" />';
                         stateControls.appendChild(stateControlsDownload);
 
                         let stateControlsDelete = document.createElement('span');
-                        stateControlsDelete.id = 'stateControlsDelete_' + result[i].id;
+                        stateControlsDelete.id = 'stateControlsDelete_' + state.id;
                         stateControlsDelete.classList.add('platform_edit_button');
                         stateControlsDelete.classList.add('saved_state_buttonlink');
                         stateControlsDelete.addEventListener('click', async () => {
-                            await thisObject.#DeleteStateSave(result[i].id, thisObject.IsMediaGroup);
+                            await thisObject.#DeleteStateSave(state.id, thisObject.IsMediaGroup);
                         });
                         stateControlsDelete.innerHTML = '<img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" />';
                         stateControls.appendChild(stateControlsDelete);
@@ -596,7 +673,7 @@ class EmulatorStateManager {
                         stateBox.appendChild(stateMainPanel);
 
                         thisObject.statesBox.appendChild(stateBox);
-                    }
+                    });
                 }
             }
         });
