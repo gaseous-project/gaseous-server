@@ -1,6 +1,30 @@
-<div id="tab1" name="modalTab" data-tabname="Load State">
-    <div id="saved_states">
+<div id="tab1" name="modalTab" data-tabname="Load">
+    <div class="section" id="loadFile">
+        <div class="section-header">SRM File</div>
+        <div class="section-body">
+            <div style="display: flex;">
+                <div style="width: 100%">
+                    <div style="display: flex; flex-direction: column; gap: 10px;">
+                        <select id="srmFileSelect" style="width: 100%;"></select>
+                        <div>
+                            <button id="srmPurge" class="modal-button">Purge SRM</button>
+                        </div>
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div id="srmStart" class="platform_edit_button platform_item_green">
+                        <img src="/images/play.svg" class="banner_button_image">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <div class="section" id="loadState">
+        <div class="section-header">Load State</div>
+        <div class="section-body">
+            <div id="saved_states"> </div>
+        </div>
     </div>
 </div>
 

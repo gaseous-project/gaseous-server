@@ -34,6 +34,11 @@ EJS_fullscreenOnLoaded = false;
 
 EJS_gameName = emuGameTitle;
 
+let srmVersion = getQueryString('srmVersion', 'string');
+if (!srmVersion) {
+    srmVersion = 'latest';
+}
+
 if (typeof SharedArrayBuffer !== 'undefined') {
     if (getQueryString('core', 'string') === "ppsspp") {
         EJS_threads = true;
@@ -41,6 +46,7 @@ if (typeof SharedArrayBuffer !== 'undefined') {
 }
 
 EJS_Buttons = {
+    cacheManager: false,
     exitEmulation: false
 }
 
@@ -83,12 +89,26 @@ EJS_onLoadState = function (e) {
 EJS_onGameStart = async function (e) {
     // check if a save file is available
     let format = 'base64';
-    let url = `/api/v1.1/SaveFile/${getQueryString('core', 'string')}/${IsMediaGroup}/${romId}/latest/data?format=${format}`;
+    let url = `/api/v1.1/SaveFile/${getQueryString('core', 'string')}/${IsMediaGroup}/${romId}/${srmVersion}/data?format=${format}`;
 
     // fetch the save file
     let response = await fetch(url, {
         method: 'GET'
     });
+
+    // set up the save file location
+    let FS = EJS_emulator.gameManager.FS;
+    let path = EJS_emulator.gameManager.getSaveFilePath();
+    let paths = path.split("/");
+    let savePath = "";
+    for (let i = 0; i < paths.length - 1; i++) {
+        if (paths[i] === "") continue;
+        savePath += "/" + paths[i];
+        if (!FS.analyzePath(savePath).exists) FS.mkdir(savePath);
+    }
+
+    // check if the save file exists, and remove it if it does
+    if (FS.analyzePath(path).exists) FS.unlink(path);
 
     if (!response.ok) {
         console.log("No save file found");
@@ -120,21 +140,6 @@ EJS_onGameStart = async function (e) {
 
     // if (binData !== undefined) {
     console.log("Save file found");
-    console.log(binData);
-
-    // set up the save file location
-    let FS = EJS_emulator.gameManager.FS;
-    let path = EJS_emulator.gameManager.getSaveFilePath();
-    let paths = path.split("/");
-    let savePath = "";
-    for (let i = 0; i < paths.length - 1; i++) {
-        if (paths[i] === "") continue;
-        savePath += "/" + paths[i];
-        if (!FS.analyzePath(savePath).exists) FS.mkdir(savePath);
-    }
-
-    // check if the save file exists, and remove it if it does
-    if (FS.analyzePath(path).exists) FS.unlink(path);
 
     // write the save file
     FS.writeFile(path, binData);

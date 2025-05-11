@@ -251,5 +251,36 @@ namespace gaseous_server.Controllers.v1_1
                 return BadRequest("Invalid format");
             }
         }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpDelete]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [Route("{core}/{ismediagroup}/{romid}")]
+        public async Task<IActionResult> DeleteSaveFile(
+            [FromRoute] string core,
+            [FromRoute] bool ismediagroup,
+            [FromRoute] long romid
+        )
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql;
+            Dictionary<string, object> parameters = new Dictionary<string, object>();
+
+            sql = "DELETE FROM GameSaves WHERE UserId = @userid AND RomId = @romid AND IsMediaGroup = @ismediagroup AND CoreName = @core;";
+            parameters.Add("@userid", user.Id);
+            parameters.Add("@romid", romid);
+            parameters.Add("@ismediagroup", ismediagroup);
+            parameters.Add("@core", core);
+
+            db.ExecuteCMD(sql, parameters);
+
+            return Ok();
+        }
     }
 }

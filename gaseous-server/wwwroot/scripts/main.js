@@ -858,8 +858,12 @@ class BackgroundImageRotator {
     }
 }
 
-async function BuildLaunchLink(engine, core, platformId, gameId, romId, isMediaGroup, filename) {
+async function BuildLaunchLink(engine, core, platformId, gameId, romId, isMediaGroup, filename, srmIndex = undefined) {
     let launchLink = '/index.html?page=emulator&engine=<ENGINE>&core=<CORE>&platformid=<PLATFORMID>&gameid=<GAMEID>&romid=<ROMID>&mediagroup=<ISMEDIAGROUP>&rompath=<FILENAME>';
+
+    if (srmIndex) {
+        launchLink = launchLink + '&srmindex=' + srmIndex;
+    }
 
     let isValid = true;
 
