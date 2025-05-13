@@ -268,9 +268,10 @@ namespace gaseous_server.Classes
             string sql = "";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
 
-            sql = "SELECT COUNT(Id) AS count FROM view_Games_Roms WHERE MD5=@md5 AND SHA1=@sha1";
+            sql = "SELECT COUNT(Id) AS count FROM view_Games_Roms WHERE MD5=@md5 AND SHA1=@sha1;";
             dbDict.Add("md5", Hash.md5hash);
             dbDict.Add("sha1", Hash.sha1hash);
+            dbDict.Add("crc", Hash.crc32hash);
             DataTable importDB = db.ExecuteCMD(sql, dbDict);
             if ((Int64)importDB.Rows[0]["count"] > 0)
             {
@@ -419,7 +420,7 @@ namespace gaseous_server.Classes
             }
             else
             {
-                sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid, Name=@name, Size=@size, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion, RomDataVersion=@romdataversion, MetadataMapId=@metadatamapid, DateUpdated=@dateupdated WHERE Id=@id;";
+                sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid, Name=@name, Size=@size, CRC=@crc, MD5=@md5, SHA1=@sha1, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion, RomDataVersion=@romdataversion, MetadataMapId=@metadatamapid, DateUpdated=@dateupdated WHERE Id=@id;";
                 dbDict.Add("id", romId);
             }
             dbDict.Add("platformid", Common.ReturnValueIfNull(platform.Id, 0));
@@ -428,7 +429,7 @@ namespace gaseous_server.Classes
             dbDict.Add("size", Common.ReturnValueIfNull(signature.Rom.Size, 0));
             dbDict.Add("md5", hash.md5hash);
             dbDict.Add("sha1", hash.sha1hash);
-            dbDict.Add("crc", Common.ReturnValueIfNull(signature.Rom.Crc, ""));
+            dbDict.Add("crc", hash.crc32hash);
             dbDict.Add("developmentstatus", Common.ReturnValueIfNull(signature.Rom.DevelopmentStatus, ""));
             dbDict.Add("metadatasource", signature.Rom.SignatureSource);
             dbDict.Add("metadatagamename", Common.StripVersionsFromFileName(signature.Game.Name));

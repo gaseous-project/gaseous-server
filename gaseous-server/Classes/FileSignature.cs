@@ -165,6 +165,7 @@ namespace gaseous_server.Classes
                                     Size = zfi.Length,
                                     MD5 = zhash.md5hash,
                                     SHA1 = zhash.sha1hash,
+                                    CRC = zhash.crc32hash,
                                     isSignatureSelector = signatureSelector
                                 };
                                 archiveFiles.Add(archiveData);
@@ -214,7 +215,7 @@ namespace gaseous_server.Classes
 
         private gaseous_server.Models.Signatures_Games _GetFileSignature(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath, bool IsInZip)
         {
-            Logging.Log(Logging.LogType.Information, "Import Game", "Checking signature for file: " + GameFileImportPath + "\nMD5 hash: " + hash.md5hash + "\nSHA1 hash: " + hash.sha1hash);
+            Logging.Log(Logging.LogType.Information, "Import Game", "Checking signature for file: " + GameFileImportPath + "\nMD5 hash: " + hash.md5hash + "\nSHA1 hash: " + hash.sha1hash + "\nCRC32 hash: " + hash.crc32hash);
 
 
             gaseous_server.Models.Signatures_Games? discoveredSignature = null;
@@ -280,6 +281,13 @@ namespace gaseous_server.Classes
                 // no md5 signature found - try sha1
                 signatures = sc.GetSignature("", hash.sha1hash);
             }
+            if (signatures == null || signatures.Count == 0)
+            {
+                Logging.Log(Logging.LogType.Information, "Get Signature", "Checking local database for CRC32: " + hash.crc32hash);
+
+                // no sha1 signature found - try crc32
+                signatures = sc.GetSignature("", "", hash.crc32hash);
+            }
 
             gaseous_server.Models.Signatures_Games? discoveredSignature = null;
             if (signatures.Count == 1)
@@ -341,7 +349,7 @@ namespace gaseous_server.Classes
                         Directory.CreateDirectory(Config.LibraryConfiguration.LibraryMetadataDirectory_Hasheous());
                     }
                     // create file name from hash object
-                    string cacheFileName = hash.md5hash + "_" + hash.sha1hash + ".json";
+                    string cacheFileName = hash.md5hash + "_" + hash.sha1hash + "_" + hash.crc32hash + ".json";
                     string cacheFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Hasheous(), cacheFileName);
                     // use cache file if it exists and is less than 30 days old, otherwise fetch from hasheous. if the fetch from hasheous is successful, save it to the cache, if it fails, use the cache if it exists even if it's old
                     if (File.Exists(cacheFilePath))
@@ -362,7 +370,8 @@ namespace gaseous_server.Classes
                             HasheousResult = hasheous.RetrieveFromHasheous(new HasheousClient.Models.HashLookupModel
                             {
                                 MD5 = hash.md5hash,
-                                SHA1 = hash.sha1hash
+                                SHA1 = hash.sha1hash,
+                                CRC = hash.crc32hash
                             }, false);
 
                             if (HasheousResult != null)
@@ -586,6 +595,7 @@ namespace gaseous_server.Classes
                 ri.Name = Path.GetFileName(GameFileImportPath);
                 ri.Md5 = hash.md5hash;
                 ri.Sha1 = hash.sha1hash;
+                ri.Crc = hash.crc32hash;
                 ri.Size = ImageSize;
                 ri.SignatureSource = gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.None;
 
@@ -600,6 +610,7 @@ namespace gaseous_server.Classes
             public long Size { get; set; }
             public string MD5 { get; set; }
             public string SHA1 { get; set; }
+            public string CRC { get; set; }
             public bool isSignatureSelector { get; set; } = false;
         }
     }

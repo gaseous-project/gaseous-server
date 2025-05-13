@@ -84,11 +84,15 @@ namespace gaseous_server.Classes
 				string sha1Hash = BitConverter.ToString(sha1HashByte).Replace("-", "").ToLowerInvariant();
 				_sha1hash = sha1Hash;
 
-				xmlStream.Close();
+				// generate a crc32 hash
+				Logging.Log(Logging.LogType.Information, "Hash File", "Generating CRC32 hash for file: " + FileName);
+				uint crc32Hash = CRC32.ComputeFile(FileName);
+				_crc32hash = crc32Hash.ToString("X8").ToLowerInvariant();
 			}
 
 			string _md5hash = "";
 			string _sha1hash = "";
+			string _crc32hash = "";
 
 			public string md5hash
 			{
@@ -111,6 +115,18 @@ namespace gaseous_server.Classes
 				set
 				{
 					_sha1hash = value;
+				}
+			}
+			
+			public string crc32hash
+			{
+				get
+				{
+					return _crc32hash.ToLower();
+				}
+				set
+				{
+					_crc32hash = value;
 				}
 			}
 		}
