@@ -505,14 +505,31 @@ namespace gaseous_server.Classes
 						// get the hash of the ROM from the datarow
 						string? md5 = dr["MD5"] == DBNull.Value ? null : dr["MD5"].ToString();
 						string? sha1 = dr["SHA1"] == DBNull.Value ? null : dr["SHA1"].ToString();
+						string? crc = dr["CRC"] == DBNull.Value ? null : dr["CRC"].ToString();
 						Common.hashObject hash = new Common.hashObject();
-						if (md5 != null)
+						if (
+							md5 != null && md5 != "" &&
+							sha1 != null && sha1 != "" &&
+							crc != null && crc != ""
+						)
 						{
-							hash.md5hash = md5;
+							if (md5 != null)
+							{
+								hash.md5hash = md5;
+							}
+							if (sha1 != null)
+							{
+								hash.sha1hash = sha1;
+							}
+							if (crc != null)
+							{
+								hash.crc32hash = crc;
+							}
 						}
-						if (sha1 != null)
+						else
 						{
-							hash.sha1hash = sha1;
+							Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Missing one or more hashes for " + dr["Name"] + " - recalculating hashes");
+							hash = new Common.hashObject(dr["Path"].ToString());
 						}
 
 						// get the library for the ROM

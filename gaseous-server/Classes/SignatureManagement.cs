@@ -7,15 +7,19 @@ namespace gaseous_server.Classes
 {
     public class SignatureManagement
     {
-        public List<gaseous_server.Models.Signatures_Games> GetSignature(string md5 = "", string sha1 = "")
+        public List<gaseous_server.Models.Signatures_Games> GetSignature(string md5 = "", string sha1 = "", string crc = "")
         {
             if (md5.Length > 0)
             {
                 return _GetSignature("Signatures_Roms.md5 = @searchstring", md5);
             }
-            else
+            else if (sha1.Length > 0)
             {
                 return _GetSignature("Signatures_Roms.sha1 = @searchstring", sha1);
+            }
+            else
+            {
+                return _GetSignature("Signatures_Roms.crc = @searchstring", crc);
             }
         }
 
@@ -34,7 +38,7 @@ namespace gaseous_server.Classes
         private List<gaseous_server.Models.Signatures_Games> _GetSignature(string sqlWhere, string searchString)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT     view_Signatures_Games.*,    Signatures_Roms.Id AS romid,    Signatures_Roms.Name AS romname,    Signatures_Roms.Size,    Signatures_Roms.CRC,    Signatures_Roms.MD5,    Signatures_Roms.SHA1,    Signatures_Roms.DevelopmentStatus,    Signatures_Roms.Attributes,    Signatures_Roms.RomType,    Signatures_Roms.RomTypeMedia,    Signatures_Roms.MediaLabel,    Signatures_Roms.MetadataSource FROM    Signatures_Roms        INNER JOIN    view_Signatures_Games ON Signatures_Roms.GameId = view_Signatures_Games.Id WHERE " + sqlWhere;
+            string sql = "SELECT     view_Signatures_Games.*,    Signatures_Roms.Id AS romid,    Signatures_Roms.Name AS romname,    Signatures_Roms.Size,    Signatures_Roms.CRC,    Signatures_Roms.MD5,    Signatures_Roms.SHA1,    Signatures_Roms.CRC,   Signatures_Roms.DevelopmentStatus,    Signatures_Roms.Attributes,    Signatures_Roms.RomType,    Signatures_Roms.RomTypeMedia,    Signatures_Roms.MediaLabel,    Signatures_Roms.MetadataSource FROM    Signatures_Roms        INNER JOIN    view_Signatures_Games ON Signatures_Roms.GameId = view_Signatures_Games.Id WHERE " + sqlWhere;
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("searchString", searchString);
 
@@ -66,7 +70,7 @@ namespace gaseous_server.Classes
                         Id = (long)(int)sigDbRow["romid"],
                         Name = (string)sigDbRow["romname"],
                         Size = (Int64)sigDbRow["Size"],
-                        Crc = (string)sigDbRow["CRC"],
+                        Crc = ((string)sigDbRow["CRC"]).ToLower(),
                         Md5 = ((string)sigDbRow["MD5"]).ToLower(),
                         Sha1 = ((string)sigDbRow["SHA1"]).ToLower(),
                         DevelopmentStatus = (string)sigDbRow["DevelopmentStatus"],

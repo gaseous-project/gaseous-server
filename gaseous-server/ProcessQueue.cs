@@ -251,6 +251,7 @@ namespace gaseous_server
                                     Common.hashObject hash = new Common.hashObject(importState.FileName);
                                     ProcessData.Add("md5hash", hash.md5hash);
                                     ProcessData.Add("sha1hash", hash.sha1hash);
+                                    ProcessData.Add("crc32hash", hash.crc32hash);
 
                                     // check if the file is a bios file first
                                     Models.PlatformMapping.PlatformMapItem? IsBios = Classes.Bios.BiosHashSignatureLookup(hash.md5hash);
