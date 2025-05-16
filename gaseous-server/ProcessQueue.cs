@@ -648,13 +648,16 @@ namespace gaseous_server
                                     };
 
                                     // get all libraries
-                                    List<GameLibrary.LibraryItem> libraries = GameLibrary.GetLibraries();
-
-                                    // process each library
-                                    foreach (GameLibrary.LibraryItem library in libraries)
+                                    if (SubTasks == null || SubTasks.Count == 0)
                                     {
-                                        Guid childCorrelationId = AddSubTask(SubTask.TaskTypes.LibraryScanWorker, library.Name, library, true);
-                                        Logging.Log(Logging.LogType.Information, "Library Scan", "Queuing library " + library.Name + " for scanning with correlation id: " + childCorrelationId);
+                                        List<GameLibrary.LibraryItem> libraries = GameLibrary.GetLibraries();
+
+                                        // process each library
+                                        foreach (GameLibrary.LibraryItem library in libraries)
+                                        {
+                                            Guid childCorrelationId = AddSubTask(SubTask.TaskTypes.LibraryScanWorker, library.Name, library, true);
+                                            Logging.Log(Logging.LogType.Information, "Library Scan", "Queuing library " + library.Name + " for scanning with correlation id: " + childCorrelationId);
+                                        }
                                     }
 
                                     _SaveLastRunTime = true;
