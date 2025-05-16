@@ -99,7 +99,7 @@ namespace gaseous_server.Controllers.v1_1
                     model.GameAgeRating.IncludeUnrated = false;
                 }
 
-                return Ok(GetGames(model, user, pageNumber, pageSize, returnSummary, returnGames));
+                return Ok(await GetGames(model, user, pageNumber, pageSize, returnSummary, returnGames));
             }
             else
             {
@@ -131,12 +131,12 @@ namespace gaseous_server.Controllers.v1_1
 
                 List<Models.Game> RetVal = new List<Models.Game>();
 
-                DataTable dbResponse = db.ExecuteCMD(sql, dbDict);
+                DataTable dbResponse = await db.ExecuteCMDAsync(sql, dbDict);
 
                 foreach (DataRow dr in dbResponse.Rows)
                 {
-                    MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
-                    RetVal.Add(Classes.Metadata.Games.GetGame(metadataMap.SourceType, (long)dr["SimilarGamesId"]));
+                    MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).PreferredMetadataMapItem;
+                    RetVal.Add(await Classes.Metadata.Games.GetGame(metadataMap.SourceType, (long)dr["SimilarGamesId"]));
                 }
 
                 GameReturnPackage gameReturn = new GameReturnPackage(RetVal.Count, RetVal);
@@ -206,7 +206,7 @@ namespace gaseous_server.Controllers.v1_1
             }
         }
 
-        public static GameReturnPackage GetGames(GameSearchModel model, ApplicationUser? user, int pageNumber = 0, int pageSize = 0, bool returnSummary = true, bool returnGames = true)
+        public static async Task<GameReturnPackage> GetGames(GameSearchModel model, ApplicationUser? user, int pageNumber = 0, int pageSize = 0, bool returnSummary = true, bool returnGames = true)
         {
             string whereClause = "";
             string havingClause = "";
@@ -691,7 +691,7 @@ FROM
                 whereParams["lang"] = "";
             }
 
-            DataTable dbResponse = db.ExecuteCMD(sql + limiter, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
+            DataTable dbResponse = await db.ExecuteCMDAsync(sql + limiter, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
 
             // get count
             int? RecordCount = null;
@@ -758,7 +758,7 @@ FROM
             Dictionary<string, GameReturnPackage.AlphaListItem>? AlphaList = null;
             if (returnSummary == true)
             {
-                dbResponse = db.ExecuteCMD(sql, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
+                dbResponse = await db.ExecuteCMDAsync(sql, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
 
                 RecordCount = dbResponse.Rows.Count;
 

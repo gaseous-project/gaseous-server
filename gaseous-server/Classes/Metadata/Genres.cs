@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using HasheousClient.Models.Metadata.IGDB;
 
 
@@ -14,7 +15,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static Genre? GetGenres(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<Genre?> GetGenres(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -37,7 +38,7 @@ namespace gaseous_server.Classes.Metadata
                 }
 
                 // get genre from metadata
-                Genre? RetVal = Metadata.GetMetadata<Genre>(SourceType, (long)Id, false);
+                Genre? RetVal = await Metadata.GetMetadataAsync<Genre>(SourceType, (long)Id, false);
 
                 if (RetVal != null)
                 {

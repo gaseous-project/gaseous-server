@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Asp.Versioning;
 using Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -31,10 +32,10 @@ namespace gaseous_server.Controllers
         [Route("{UserId}")]
         [ProducesResponseType(typeof(Models.UserProfile), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-        public ActionResult GetUserProfile(string UserId)
+        public async Task<ActionResult> GetUserProfile(string UserId)
         {
             Classes.UserProfile profile = new Classes.UserProfile();
-            Models.UserProfile RetVal = profile.GetUserProfile(UserId);
+            Models.UserProfile RetVal = await profile.GetUserProfile(UserId);
             return Ok(RetVal);
         }
 
@@ -53,7 +54,7 @@ namespace gaseous_server.Controllers
             }
 
             Classes.UserProfile userProfile = new Classes.UserProfile();
-            userProfile.UpdateUserProfile(user.Id, profile);
+            await userProfile.UpdateUserProfile(user.Id, profile);
             return Ok();
         }
 
@@ -78,11 +79,11 @@ namespace gaseous_server.Controllers
             {
                 using (var ms = new MemoryStream())
                 {
-                    file.CopyTo(ms);
+                    await file.CopyToAsync(ms);
                     byte[] fileBytes = ms.ToArray();
 
                     Classes.UserProfile userProfile = new Classes.UserProfile();
-                    userProfile.UpdateImage(ProfileImageType, UserId, user.Id, file.FileName, fileBytes);
+                    await userProfile.UpdateImage(ProfileImageType, UserId, user.Id, file.FileName, fileBytes);
                 }
             }
 
@@ -100,7 +101,7 @@ namespace gaseous_server.Controllers
         {
             Classes.UserProfile userProfile = new Classes.UserProfile();
 
-            Models.ImageItem image = userProfile.GetImage(ProfileImageType, UserId);
+            Models.ImageItem image = await userProfile.GetImage(ProfileImageType, UserId);
 
             if (image == null)
             {
@@ -128,7 +129,7 @@ namespace gaseous_server.Controllers
             }
 
             Classes.UserProfile userProfile = new Classes.UserProfile();
-            userProfile.DeleteImage(ProfileImageType, user.Id);
+            await userProfile.DeleteImage(ProfileImageType, user.Id);
 
             return Ok();
         }

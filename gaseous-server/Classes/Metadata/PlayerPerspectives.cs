@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using HasheousClient.Models.Metadata.IGDB;
 
 
@@ -14,7 +15,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static PlayerPerspective? GetGame_PlayerPerspectives(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<PlayerPerspective?> GetGame_PlayerPerspectives(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -36,7 +37,7 @@ namespace gaseous_server.Classes.Metadata
                     return nPlayerPerspective;
                 }
 
-                PlayerPerspective? RetVal = Metadata.GetMetadata<PlayerPerspective>(SourceType, (long)Id, false);
+                PlayerPerspective? RetVal = await Metadata.GetMetadataAsync<PlayerPerspective>(SourceType, (long)Id, false);
 
                 if (RetVal != null)
                 {

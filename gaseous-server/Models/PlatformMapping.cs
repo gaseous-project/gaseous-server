@@ -4,6 +4,7 @@ using System.Data;
 using System.Linq;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using System.Web;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
@@ -18,7 +19,7 @@ namespace gaseous_server.Models
         /// <summary>
         /// Updates the platform map from the embedded platform map resource
         /// </summary>
-        public static void ExtractPlatformMap(bool ResetToDefault = false)
+        public static async Task ExtractPlatformMap(bool ResetToDefault = false)
         {
             using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("gaseous_server.Support.PlatformMap.json"))
             using (StreamReader reader = new StreamReader(stream))
@@ -37,7 +38,7 @@ namespace gaseous_server.Models
                     try
                     {
                         Logging.Log(Logging.LogType.Information, "Platform Map", "Checking if " + mapItem.IGDBName + " is in database.");
-                        PlatformMapItem item = GetPlatformMap(mapItem.IGDBId);
+                        PlatformMapItem item = await GetPlatformMap(mapItem.IGDBId);
                         // exists
                         if (ResetToDefault == false)
                         {
@@ -64,7 +65,7 @@ namespace gaseous_server.Models
         /// Updates the platform map from the provided file - existing items are overwritten
         /// </summary>
         /// <param name="ImportFile"></param>
-        public static void ExtractPlatformMap(string ImportFile)
+        public static async Task ExtractPlatformMap(string ImportFile)
         {
             string rawJson = File.ReadAllText(ImportFile);
             List<PlatformMapItem> platforms = new List<PlatformMapItem>();
@@ -77,7 +78,7 @@ namespace gaseous_server.Models
 
                 try
                 {
-                    PlatformMapItem item = GetPlatformMap(mapItem.IGDBId);
+                    PlatformMapItem item = await GetPlatformMap(mapItem.IGDBId);
 
                     // still here? we must have found the item we're looking for! overwrite it
                     Logging.Log(Logging.LogType.Information, "Platform Map", "Replacing " + mapItem.IGDBName + " from external JSON file.");
@@ -146,7 +147,7 @@ namespace gaseous_server.Models
 
                     long mapId = (long)row["Id"];
 
-                    mapItem = BuildPlatformMapItem(row);
+                    mapItem = BuildPlatformMapItem(row).Result;
                     if (mapItem != null)
                     {
                         platformMaps.Add(mapItem);
@@ -179,17 +180,17 @@ namespace gaseous_server.Models
         /// </summary>
         /// <param name="Id">The ID of the platform map item.</param>
         /// <returns>The platform map item.</returns>
-        public static PlatformMapItem GetPlatformMap(long Id)
+        public static async Task<PlatformMapItem> GetPlatformMap(long Id)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM PlatformMap WHERE Id = @Id";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("Id", Id);
-            DataTable data = db.ExecuteCMD(sql, dbDict);
+            DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
 
             if (data.Rows.Count > 0)
             {
-                PlatformMapItem platformMap = BuildPlatformMapItem(data.Rows[0]);
+                PlatformMapItem platformMap = await BuildPlatformMapItem(data.Rows[0]);
 
                 return platformMap;
             }
@@ -201,7 +202,7 @@ namespace gaseous_server.Models
             }
         }
 
-        public static void WritePlatformMap(PlatformMapItem item, bool Update, bool AllowAvailableEmulatorOverwrite, bool overwriteBios = false)
+        public static async Task WritePlatformMap(PlatformMapItem item, bool Update, bool AllowAvailableEmulatorOverwrite, bool overwriteBios = false)
         {
             CreateDummyPlatform(item);
 
@@ -239,11 +240,11 @@ namespace gaseous_server.Models
                 dbDict.Add("WebEmulator_Core", "");
                 dbDict.Add("AvailableWebEmulators", "");
             }
-            db.ExecuteCMD(sql, dbDict);
+            await db.ExecuteCMDAsync(sql, dbDict);
 
             // remove existing items so they can be re-inserted
             sql = "DELETE FROM PlatformMap_AlternateNames WHERE Id = @Id; DELETE FROM PlatformMap_Extensions WHERE Id = @Id; DELETE FROM PlatformMap_UniqueExtensions WHERE Id = @Id; DELETE FROM PlatformMap_Bios WHERE Id = @Id;";
-            db.ExecuteCMD(sql, dbDict);
+            await db.ExecuteCMDAsync(sql, dbDict);
 
             // insert alternate names
             if (item.AlternateNames != null)
@@ -256,7 +257,7 @@ namespace gaseous_server.Models
                         dbDict.Clear();
                         dbDict.Add("Id", item.IGDBId);
                         dbDict.Add("Name", HttpUtility.HtmlDecode(alternateName));
-                        db.ExecuteCMD(sql, dbDict);
+                        await db.ExecuteCMDAsync(sql, dbDict);
                     }
                 }
             }
@@ -270,12 +271,12 @@ namespace gaseous_server.Models
                     dbDict.Clear();
                     dbDict.Add("Id", item.IGDBId);
                     dbDict.Add("Extension", extension.Trim().ToUpper());
-                    db.ExecuteCMD(sql, dbDict);
+                    await db.ExecuteCMDAsync(sql, dbDict);
                 }
 
                 // delete duplicates
                 sql = "DELETE FROM PlatformMap_UniqueExtensions; INSERT INTO PlatformMap_UniqueExtensions SELECT * FROM PlatformMap_Extensions WHERE Extension <> '.ZIP' AND Extension IN (SELECT Extension FROM PlatformMap_Extensions GROUP BY Extension HAVING COUNT(Extension) = 1);";
-                db.ExecuteCMD(sql);
+                await db.ExecuteCMDAsync(sql);
             }
 
             // insert bios
@@ -307,7 +308,7 @@ namespace gaseous_server.Models
                     dbDict.Add("Description", biosItem.description);
                     dbDict.Add("Hash", biosItem.hash);
                     dbDict.Add("Enabled", isEnabled);
-                    db.ExecuteCMD(sql, dbDict);
+                    await db.ExecuteCMDAsync(sql, dbDict);
                 }
             }
 
@@ -315,7 +316,7 @@ namespace gaseous_server.Models
             Database.DatabaseMemoryCache.RemoveCacheObject("PlatformMap");
         }
 
-        public static void WriteAvailableEmulators(PlatformMapItem item)
+        public static async Task WriteAvailableEmulators(PlatformMapItem item)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
@@ -336,10 +337,10 @@ namespace gaseous_server.Models
                 dbDict.Add("WebEmulator_Core", "");
                 dbDict.Add("AvailableWebEmulators", "");
             }
-            db.ExecuteCMD(sql, dbDict);
+            await db.ExecuteCMDAsync(sql, dbDict);
         }
 
-        static PlatformMapItem BuildPlatformMapItem(DataRow row)
+        static async Task<PlatformMapItem> BuildPlatformMapItem(DataRow row)
         {
             long IGDBId = (long)row["Id"];
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -355,7 +356,7 @@ namespace gaseous_server.Models
             else
             {
                 // platform = (Platform)Storage.GetCacheValue<Platform>(HasheousClient.Models.MetadataSources.None, new Platform(), "id", IGDBId);
-                platform = Platforms.GetPlatform(IGDBId, HasheousClient.Models.MetadataSources.None);
+                platform = await Platforms.GetPlatform(IGDBId, HasheousClient.Models.MetadataSources.None);
             }
 
             if (platform != null)
@@ -364,7 +365,7 @@ namespace gaseous_server.Models
                 sql = "SELECT * FROM PlatformMap_AlternateNames WHERE Id = @Id ORDER BY Name";
                 dbDict.Clear();
                 dbDict.Add("Id", IGDBId);
-                DataTable altTable = db.ExecuteCMD(sql, dbDict);
+                DataTable altTable = await db.ExecuteCMDAsync(sql, dbDict);
 
                 List<string> alternateNames = new List<string>();
                 foreach (DataRow altRow in altTable.Rows)
@@ -387,7 +388,7 @@ namespace gaseous_server.Models
                 sql = "SELECT * FROM PlatformMap_Extensions WHERE Id = @Id ORDER BY Extension";
                 dbDict.Clear();
                 dbDict.Add("Id", IGDBId);
-                DataTable extTable = db.ExecuteCMD(sql, dbDict);
+                DataTable extTable = await db.ExecuteCMDAsync(sql, dbDict);
 
                 List<string> knownExtensions = new List<string>();
                 foreach (DataRow extRow in extTable.Rows)
@@ -403,7 +404,7 @@ namespace gaseous_server.Models
                 sql = "SELECT * FROM PlatformMap_UniqueExtensions WHERE Id = @Id ORDER BY Extension";
                 dbDict.Clear();
                 dbDict.Add("Id", IGDBId);
-                DataTable uextTable = db.ExecuteCMD(sql, dbDict);
+                DataTable uextTable = await db.ExecuteCMDAsync(sql, dbDict);
 
                 List<string> uniqueExtensions = new List<string>();
                 foreach (DataRow uextRow in uextTable.Rows)
@@ -419,7 +420,7 @@ namespace gaseous_server.Models
                 sql = "SELECT * FROM PlatformMap_Bios WHERE Id = @Id ORDER BY Filename";
                 dbDict.Clear();
                 dbDict.Add("Id", IGDBId);
-                DataTable biosTable = db.ExecuteCMD(sql, dbDict);
+                DataTable biosTable = await db.ExecuteCMDAsync(sql, dbDict);
 
                 List<PlatformMapItem.EmulatorBiosItem> bioss = new List<PlatformMapItem.EmulatorBiosItem>();
                 List<string> enabledBios = new List<string>();
@@ -523,13 +524,13 @@ namespace gaseous_server.Models
             }
         }
 
-        public PlatformMapItem GetUserPlatformMap(string UserId, long PlatformId, long GameId)
+        public async Task<PlatformMapItem> GetUserPlatformMap(string UserId, long PlatformId, long GameId)
         {
             // get the system enabled bios hashes
-            Models.PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(PlatformId);
+            Models.PlatformMapping.PlatformMapItem platformMapItem = await PlatformMapping.GetPlatformMap(PlatformId);
 
             // get the user enabled bios hashes
-            PlatformMapping.UserEmulatorConfiguration userEmulatorConfiguration = GetUserEmulator(UserId, GameId, PlatformId);
+            PlatformMapping.UserEmulatorConfiguration userEmulatorConfiguration = await GetUserEmulator(UserId, GameId, PlatformId);
             if (userEmulatorConfiguration != null)
             {
                 platformMapItem.WebEmulator.Type = userEmulatorConfiguration.EmulatorType;
@@ -540,7 +541,7 @@ namespace gaseous_server.Models
             return platformMapItem;
         }
 
-        public UserEmulatorConfiguration GetUserEmulator(string UserId, long GameId, long PlatformId)
+        public async Task<UserEmulatorConfiguration> GetUserEmulator(string UserId, long GameId, long PlatformId)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT Mapping FROM User_PlatformMap WHERE id = @UserId AND GameId = @GameId AND PlatformId = @PlatformId;";
@@ -550,7 +551,7 @@ namespace gaseous_server.Models
                 { "GameId", GameId },
                 { "PlatformId", PlatformId }
             };
-            DataTable data = db.ExecuteCMD(sql, dbDict);
+            DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
 
             if (data.Rows.Count > 0)
             {
@@ -564,7 +565,7 @@ namespace gaseous_server.Models
             }
         }
 
-        public void SetUserEmulator(string UserId, long GameId, long PlatformId, UserEmulatorConfiguration Mapping)
+        public async Task SetUserEmulator(string UserId, long GameId, long PlatformId, UserEmulatorConfiguration Mapping)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "INSERT INTO User_PlatformMap (id, GameId, PlatformId, Mapping) VALUES (@UserId, @GameId, @PlatformId, @Mapping) ON DUPLICATE KEY UPDATE Mapping = @Mapping;";
@@ -575,10 +576,10 @@ namespace gaseous_server.Models
                 { "PlatformId", PlatformId },
                 { "Mapping", Newtonsoft.Json.JsonConvert.SerializeObject(Mapping) }
             };
-            db.ExecuteCMD(sql, dbDict);
+            await db.ExecuteCMDAsync(sql, dbDict);
         }
 
-        public void DeleteUserEmulator(string UserId, long GameId, long PlatformId)
+        public async Task DeleteUserEmulator(string UserId, long GameId, long PlatformId)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "DELETE FROM User_PlatformMap WHERE id = @UserId AND GameId = @GameId AND PlatformId = @PlatformId;";
@@ -588,7 +589,7 @@ namespace gaseous_server.Models
                 { "GameId", GameId },
                 { "PlatformId", PlatformId }
             };
-            db.ExecuteCMD(sql, dbDict);
+            await db.ExecuteCMDAsync(sql, dbDict);
         }
 
         public class PlatformMapItem

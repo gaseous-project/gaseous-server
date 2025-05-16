@@ -12,7 +12,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static Screenshot? GetScreenshot(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<Screenshot?> GetScreenshotAsync(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -20,7 +20,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Screenshot? RetVal = Metadata.GetMetadata<Screenshot>(SourceType, (long)Id, false);
+                Screenshot? RetVal = await Metadata.GetMetadataAsync<Screenshot>(SourceType, (long)Id, false);
                 return RetVal;
             }
         }

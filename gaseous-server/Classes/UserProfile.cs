@@ -1,4 +1,5 @@
 using System.Data;
+using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
 using HasheousClient.Models;
@@ -16,7 +17,7 @@ namespace gaseous_server.Classes
             { ".svg", "image/svg+xml" }
         };
 
-        public Models.UserProfile? GetUserProfile(string UserId)
+        public async Task<Models.UserProfile?> GetUserProfile(string UserId)
         {
             // build the user profile object
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -25,7 +26,7 @@ namespace gaseous_server.Classes
                 { "userid", UserId }
             };
 
-            DataTable data = db.ExecuteCMD(sql, dbDict);
+            DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
 
             if (data.Rows.Count == 0)
             {
@@ -60,16 +61,16 @@ namespace gaseous_server.Classes
             dbDict = new Dictionary<string, object>{
                 { "userid", data.Rows[0]["UserId"].ToString() }
             };
-            DataTable nowPlayingData = db.ExecuteCMD(sql, dbDict);
+            DataTable nowPlayingData = await db.ExecuteCMDAsync(sql, dbDict);
             if (nowPlayingData.Rows.Count > 0)
             {
                 try
                 {
-                    gaseous_server.Models.MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap((long)nowPlayingData.Rows[0]["GameId"]).PreferredMetadataMapItem;
+                    gaseous_server.Models.MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap((long)nowPlayingData.Rows[0]["GameId"])).PreferredMetadataMapItem;
                     NowPlaying = new Models.UserProfile.NowPlayingItem
                     {
-                        Game = Games.GetGame(metadataMap.SourceType, metadataMap.SourceId),
-                        Platform = Platforms.GetPlatform((long)nowPlayingData.Rows[0]["PlatformId"]),
+                        Game = await Games.GetGame(metadataMap.SourceType, metadataMap.SourceId),
+                        Platform = await Platforms.GetPlatform((long)nowPlayingData.Rows[0]["PlatformId"]),
                         Duration = Convert.ToInt64(nowPlayingData.Rows[0]["SessionLength"])
                     };
                 }
@@ -92,7 +93,7 @@ namespace gaseous_server.Classes
             };
         }
 
-        public void UpdateUserProfile(string InternalUserId, Models.UserProfile profile)
+        public async Task UpdateUserProfile(string InternalUserId, Models.UserProfile profile)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "UPDATE UserProfiles SET DisplayName = @displayname, Quip = @quip, UnstructuredData = @data WHERE UserId = @internalId AND Id = @userid;";
@@ -104,7 +105,7 @@ namespace gaseous_server.Classes
                 { "internalId", InternalUserId }
             };
 
-            db.ExecuteCMD(sql, dbDict);
+            await db.ExecuteCMDAsync(sql, dbDict);
         }
 
         public enum ImageType
@@ -113,7 +114,7 @@ namespace gaseous_server.Classes
             Background
         }
 
-        public void UpdateImage(ImageType imageType, string UserId, string InternalUserId, string Filename, byte[] bytes)
+        public async Task UpdateImage(ImageType imageType, string UserId, string InternalUserId, string Filename, byte[] bytes)
         {
             // check if it's a supported file type
             if (!supportedImages.ContainsKey(Path.GetExtension(Filename).ToLower()))
@@ -152,10 +153,10 @@ namespace gaseous_server.Classes
                 { "internaluserid", InternalUserId }
             };
 
-            db.ExecuteCMD(sql, dbDict);
+            await db.ExecuteCMDAsync(sql, dbDict);
         }
 
-        public Models.ImageItem? GetImage(ImageType imageType, string UserId)
+        public async Task<Models.ImageItem?> GetImage(ImageType imageType, string UserId)
         {
             string ByteFieldName;
             string FileNameFieldName;
@@ -182,7 +183,7 @@ namespace gaseous_server.Classes
                 { "userid", UserId }
             };
 
-            DataTable data = db.ExecuteCMD(sql, dbDict);
+            DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
 
             if (data.Rows.Count == 0)
             {
@@ -200,7 +201,7 @@ namespace gaseous_server.Classes
             return image;
         }
 
-        public void DeleteImage(ImageType imageType, string UserId)
+        public async Task DeleteImage(ImageType imageType, string UserId)
         {
             string ByteFieldName;
             string FileNameFieldName;
@@ -227,7 +228,7 @@ namespace gaseous_server.Classes
                 { "userid", UserId }
             };
 
-            db.ExecuteCMD(sql, dbDict);
+            await db.ExecuteCMDAsync(sql, dbDict);
         }
     }
 }

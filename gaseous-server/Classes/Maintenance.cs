@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using System.Threading.Tasks;
 using gaseous_server.Models;
 using Microsoft.VisualStudio.Web.CodeGeneration;
 
@@ -9,7 +10,7 @@ namespace gaseous_server.Classes
     {
         const int MaxFileAge = 30;
 
-        public void RunDailyMaintenance()
+        public async Task RunDailyMaintenance()
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
@@ -18,7 +19,7 @@ namespace gaseous_server.Classes
             // remove any entries from the library that have an invalid id
             Logging.Log(Logging.LogType.Information, "Maintenance", "Removing any entries from the library that have an invalid id");
             string LibraryWhereClause = "";
-            foreach (GameLibrary.LibraryItem library in GameLibrary.GetLibraries())
+            foreach (GameLibrary.LibraryItem library in await GameLibrary.GetLibraries())
             {
                 if (LibraryWhereClause.Length > 0)
                 {
@@ -30,7 +31,7 @@ namespace gaseous_server.Classes
             if (LibraryWhereClause.Length > 0)
             {
                 sqlLibraryWhereClause = "DELETE FROM Games_Roms WHERE LibraryId NOT IN ( " + LibraryWhereClause + " );";
-                db.ExecuteCMD(sqlLibraryWhereClause);
+                await db.ExecuteCMDAsync(sqlLibraryWhereClause);
             }
 
             // delete old logs
@@ -42,7 +43,7 @@ namespace gaseous_server.Classes
             dbDict.Add("EventRetentionDate", DateTime.UtcNow.AddDays(Config.LoggingConfiguration.LogRetention * -1));
             while (deletedCount > 0)
             {
-                DataTable deletedCountTable = db.ExecuteCMD(sql, dbDict);
+                DataTable deletedCountTable = await db.ExecuteCMDAsync(sql, dbDict);
                 deletedCount = (long)deletedCountTable.Rows[0][0];
                 deletedEventCount += deletedCount;
 
@@ -92,7 +93,7 @@ namespace gaseous_server.Classes
             }
         }
 
-        public void RunWeeklyMaintenance()
+        public async Task RunWeeklyMaintenance()
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
@@ -100,7 +101,7 @@ namespace gaseous_server.Classes
 
             Logging.Log(Logging.LogType.Information, "Maintenance", "Optimising database tables");
             sql = "SHOW FULL TABLES WHERE Table_Type = 'BASE TABLE';";
-            DataTable tables = db.ExecuteCMD(sql);
+            DataTable tables = await db.ExecuteCMDAsync(sql);
 
             int StatusCounter = 1;
             foreach (DataRow row in tables.Rows)
@@ -108,7 +109,7 @@ namespace gaseous_server.Classes
                 SetStatus(StatusCounter, tables.Rows.Count, "Optimising table " + row[0].ToString());
 
                 sql = "OPTIMIZE TABLE " + row[0].ToString();
-                DataTable response = db.ExecuteCMD(sql, new Dictionary<string, object>(), 240);
+                DataTable response = await db.ExecuteCMDAsync(sql, new Dictionary<string, object>(), 240);
                 foreach (DataRow responseRow in response.Rows)
                 {
                     string retVal = "";

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Classes.Metadata
@@ -11,7 +12,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static CompanyLogo? GetCompanyLogo(long? Id, string ImagePath)
+        public static async Task<CompanyLogo?> GetCompanyLogo(long? Id, string ImagePath)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -19,7 +20,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                CompanyLogo? RetVal = Metadata.GetMetadata<CompanyLogo>((long)Id, false);
+                CompanyLogo? RetVal = await Metadata.GetMetadataAsync<CompanyLogo>((long)Id, false);
                 return RetVal;
             }
         }

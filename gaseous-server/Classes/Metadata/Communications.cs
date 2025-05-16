@@ -6,6 +6,7 @@ using System.Drawing;
 using System.Net;
 using System.Reflection;
 using System.Security.Policy;
+using System.Threading.Tasks;
 using HasheousClient.Models.Metadata.IGDB;
 using Humanizer;
 using IGDB;
@@ -1324,7 +1325,7 @@ namespace gaseous_server.Classes.Metadata
         }
 
         static List<HasheousClient.Models.DataObjectItem> hasheousPlatforms = new List<HasheousClient.Models.DataObjectItem>();
-        public static void PopulateHasheousPlatformData(long Id)
+        public static async Task PopulateHasheousPlatformData(long Id)
         {
             // fetch all platforms
             ConfigureHasheousClient(ref hasheous);
@@ -1385,7 +1386,7 @@ namespace gaseous_server.Classes.Metadata
                                             }
 
                                             // update the platform object
-                                            Platform? platform = Platforms.GetPlatform(Id);
+                                            Platform? platform = await Platforms.GetPlatform(Id);
                                             if (platform != null)
                                             {
                                                 platform.Name = hasheousPlatform.Name;

@@ -8,6 +8,7 @@ using SharpCompress.Archives;
 using SharpCompress.Common;
 using gaseous_server.Models;
 using HasheousClient.Models.Metadata.IGDB;
+using System.Threading.Tasks;
 
 namespace gaseous_server.Classes
 {
@@ -19,7 +20,7 @@ namespace gaseous_server.Classes
             { }
         }
 
-        public static GameRomMediaGroupItem CreateMediaGroup(long GameId, long PlatformId, List<long> RomIds)
+        public static async Task<GameRomMediaGroupItem> CreateMediaGroup(long GameId, long PlatformId, List<long> RomIds)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "INSERT INTO RomMediaGroup (Status, PlatformId, GameId) VALUES (@status, @platformid, @gameid); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
@@ -27,20 +28,20 @@ namespace gaseous_server.Classes
             dbDict.Add("status", GameRomMediaGroupItem.GroupBuildStatus.WaitingForBuild);
             dbDict.Add("gameid", GameId);
             dbDict.Add("platformid", PlatformId);
-            DataTable mgInsert = db.ExecuteCMD(sql, dbDict);
+            DataTable mgInsert = await db.ExecuteCMDAsync(sql, dbDict);
             long mgId = (long)mgInsert.Rows[0][0];
             foreach (long RomId in RomIds)
             {
                 try
                 {
-                    Roms.GameRomItem gameRomItem = Roms.GetRom(RomId);
+                    Roms.GameRomItem gameRomItem = await Roms.GetRom(RomId);
                     if (gameRomItem.PlatformId == PlatformId)
                     {
                         sql = "INSERT INTO RomMediaGroup_Members (GroupId, RomId) VALUES (@groupid, @romid);";
                         dbDict.Clear();
                         dbDict.Add("groupid", mgId);
                         dbDict.Add("romid", RomId);
-                        db.ExecuteCMD(sql, dbDict);
+                        await db.ExecuteCMDAsync(sql, dbDict);
                     }
                     else
                     {
@@ -55,10 +56,10 @@ namespace gaseous_server.Classes
 
             StartMediaGroupBuild(mgId);
 
-            return GetMediaGroup(mgId);
+            return await GetMediaGroupAsync(mgId);
         }
 
-        public static GameRomMediaGroupItem GetMediaGroup(long Id, string userid = "")
+        public static async Task<GameRomMediaGroupItem> GetMediaGroupAsync(long Id, string userid = "")
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT DISTINCT RomMediaGroup.*, GameState.RomId AS GameStateRomId FROM gaseous.RomMediaGroup LEFT JOIN GameState ON RomMediaGroup.Id = GameState.RomId AND GameState.IsMediaGroup = 1 AND GameState.UserId = @userid WHERE RomMediaGroup.Id=@id;";
@@ -68,7 +69,7 @@ namespace gaseous_server.Classes
                 { "userid", userid }
             };
 
-            DataTable dataTable = db.ExecuteCMD(sql, dbDict);
+            DataTable dataTable = await db.ExecuteCMDAsync(sql, dbDict);
 
             if (dataTable.Rows.Count == 0)
             {
@@ -76,12 +77,12 @@ namespace gaseous_server.Classes
             }
             else
             {
-                GameRomMediaGroupItem mediaGroupItem = BuildMediaGroupFromRow(dataTable.Rows[0]);
+                GameRomMediaGroupItem mediaGroupItem = await BuildMediaGroupFromRowAsync(dataTable.Rows[0]);
                 return mediaGroupItem;
             }
         }
 
-        public static List<GameRomMediaGroupItem> GetMediaGroupsFromGameId(long GameId, string userid = "", long? PlatformId = null)
+        public static async Task<List<GameRomMediaGroupItem>> GetMediaGroupsFromGameId(long GameId, string userid = "", long? PlatformId = null)
         {
             string PlatformWhereClause = "";
             if (PlatformId != null)
@@ -119,13 +120,13 @@ namespace gaseous_server.Classes
                 { "platformid", PlatformId }
             };
 
-            DataTable dataTable = db.ExecuteCMD(sql, dbDict);
+            DataTable dataTable = await db.ExecuteCMDAsync(sql, dbDict);
 
             List<GameRomMediaGroupItem> mediaGroupItems = new List<GameRomMediaGroupItem>();
 
             foreach (DataRow row in dataTable.Rows)
             {
-                mediaGroupItems.Add(BuildMediaGroupFromRow(row));
+                mediaGroupItems.Add(await BuildMediaGroupFromRowAsync(row));
             }
 
             mediaGroupItems.Sort((x, y) => x.Platform.CompareTo(y.Platform));
@@ -133,9 +134,9 @@ namespace gaseous_server.Classes
             return mediaGroupItems;
         }
 
-        public static GameRomMediaGroupItem EditMediaGroup(long Id, List<long> RomIds)
+        public static async Task<GameRomMediaGroupItem> EditMediaGroupAsync(long Id, List<long> RomIds)
         {
-            GameRomMediaGroupItem mg = GetMediaGroup(Id);
+            GameRomMediaGroupItem mg = await GetMediaGroupAsync(Id);
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
@@ -145,21 +146,21 @@ namespace gaseous_server.Classes
             sql = "DELETE FROM RomMediaGroup_Members WHERE GroupId=@groupid;";
             dbDict.Clear();
             dbDict.Add("groupid", Id);
-            db.ExecuteCMD(sql, dbDict);
+            await db.ExecuteCMDAsync(sql, dbDict);
 
             // add roms to group
             foreach (long RomId in RomIds)
             {
                 try
                 {
-                    Roms.GameRomItem gameRomItem = Roms.GetRom(RomId);
+                    Roms.GameRomItem gameRomItem = await Roms.GetRom(RomId);
                     if (gameRomItem.PlatformId == mg.PlatformId)
                     {
                         sql = "INSERT INTO RomMediaGroup_Members (GroupId, RomId) VALUES (@groupid, @romid);";
                         dbDict.Clear();
                         dbDict.Add("groupid", Id);
                         dbDict.Add("romid", RomId);
-                        db.ExecuteCMD(sql, dbDict);
+                        await db.ExecuteCMDAsync(sql, dbDict);
                     }
                     else
                     {
@@ -176,7 +177,7 @@ namespace gaseous_server.Classes
             sql = "UPDATE RomMediaGroup SET Status=1 WHERE GroupId=@groupid;";
             dbDict.Clear();
             dbDict.Add("groupid", Id);
-            db.ExecuteCMD(sql, dbDict);
+            await db.ExecuteCMDAsync(sql, dbDict);
 
             string MediaGroupZipPath = Path.Combine(Config.LibraryConfiguration.LibraryMediaGroupDirectory, Id + ".zip");
             if (File.Exists(MediaGroupZipPath))
@@ -187,7 +188,7 @@ namespace gaseous_server.Classes
             StartMediaGroupBuild(Id);
 
             // return to caller
-            return GetMediaGroup(Id);
+            return await GetMediaGroupAsync(Id);
         }
 
         public static void DeleteMediaGroup(long Id)
@@ -205,7 +206,7 @@ namespace gaseous_server.Classes
             }
         }
 
-        internal static GameRomMediaGroupItem BuildMediaGroupFromRow(DataRow row)
+        internal static async Task<GameRomMediaGroupItem> BuildMediaGroupFromRowAsync(DataRow row)
         {
             bool hasSaveStates = false;
             if (row.Table.Columns.Contains("GameStateRomId"))
@@ -256,7 +257,7 @@ namespace gaseous_server.Classes
                 mediaGroupItem.RomIds.Add((long)dataRow["RomId"]);
                 try
                 {
-                    mediaGroupItem.Roms.Add(Roms.GetRom((long)dataRow["RomId"]));
+                    mediaGroupItem.Roms.Add(await Roms.GetRom((long)dataRow["RomId"]));
                 }
                 catch (Exception ex)
                 {
@@ -267,9 +268,9 @@ namespace gaseous_server.Classes
             return mediaGroupItem;
         }
 
-        public static void StartMediaGroupBuild(long Id)
+        public static async Task StartMediaGroupBuild(long Id)
         {
-            GameRomMediaGroupItem mediaGroupItem = GetMediaGroup(Id);
+            GameRomMediaGroupItem mediaGroupItem = await GetMediaGroupAsync(Id);
 
             if (mediaGroupItem.Status != GameRomMediaGroupItem.GroupBuildStatus.Building)
             {
@@ -279,7 +280,7 @@ namespace gaseous_server.Classes
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
                 dbDict.Add("id", Id);
                 dbDict.Add("bs", GameRomMediaGroupItem.GroupBuildStatus.WaitingForBuild);
-                db.ExecuteCMD(sql, dbDict);
+                await db.ExecuteCMDAsync(sql, dbDict);
 
                 // start background task
                 ProcessQueue.QueueItem queueItem = new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.MediaGroupCompiler, 1, false, true);
@@ -289,17 +290,17 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static void CompileMediaGroup(long Id)
+        public static async Task CompileMediaGroup(long Id)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
-            GameRomMediaGroupItem mediaGroupItem = GetMediaGroup(Id);
+            GameRomMediaGroupItem mediaGroupItem = await GetMediaGroupAsync(Id);
             if (mediaGroupItem.Status == GameRomMediaGroupItem.GroupBuildStatus.WaitingForBuild)
             {
-                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(mediaGroupItem.GameId).PreferredMetadataMapItem;
-                Models.Game GameObject = Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
-                Platform PlatformObject = Platforms.GetPlatform(mediaGroupItem.PlatformId);
-                PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(mediaGroupItem.PlatformId);
+                MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(mediaGroupItem.GameId)).PreferredMetadataMapItem;
+                Models.Game GameObject = await Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Platform PlatformObject = await Platforms.GetPlatform(mediaGroupItem.PlatformId);
+                PlatformMapping.PlatformMapItem platformMapItem = await PlatformMapping.GetPlatformMap(mediaGroupItem.PlatformId);
 
                 Logging.Log(Logging.LogType.Information, "Media Group", "Beginning build of media group: " + GameObject.Name + " for platform " + PlatformObject.Name);
 
@@ -308,7 +309,7 @@ namespace gaseous_server.Classes
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
                 dbDict.Add("id", mediaGroupItem.Id);
                 dbDict.Add("bs", GameRomMediaGroupItem.GroupBuildStatus.Building);
-                db.ExecuteCMD(sql, dbDict);
+                await db.ExecuteCMDAsync(sql, dbDict);
 
                 string ZipFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMediaGroupDirectory, mediaGroupItem.Id + ".zip");
                 string ZipFileTempPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, mediaGroupItem.Id.ToString());
@@ -333,7 +334,7 @@ namespace gaseous_server.Classes
                     List<string> M3UFileContents = new List<string>();
                     foreach (long RomId in mediaGroupItem.RomIds)
                     {
-                        Roms.GameRomItem rom = Roms.GetRom(RomId);
+                        Roms.GameRomItem rom = await Roms.GetRom(RomId);
                         bool fileNameFound = false;
                         if (File.Exists(rom.Path))
                         {
@@ -523,7 +524,7 @@ namespace gaseous_server.Classes
 
                     // set completed
                     dbDict["bs"] = GameRomMediaGroupItem.GroupBuildStatus.Completed;
-                    db.ExecuteCMD(sql, dbDict);
+                    await db.ExecuteCMDAsync(sql, dbDict);
                 }
                 catch (Exception ex)
                 {
@@ -540,7 +541,7 @@ namespace gaseous_server.Classes
 
                     // set failed
                     dbDict["bs"] = GameRomMediaGroupItem.GroupBuildStatus.Failed;
-                    db.ExecuteCMD(sql, dbDict);
+                    await db.ExecuteCMDAsync(sql, dbDict);
 
                     Logging.Log(Logging.LogType.Critical, "Media Group", "Media Group building has failed", ex);
                 }
@@ -558,7 +559,7 @@ namespace gaseous_server.Classes
                 {
                     try
                     {
-                        return Platforms.GetPlatform(PlatformId).Name;
+                        return Platforms.GetPlatform(PlatformId).Result.Name;
                     }
                     catch
                     {

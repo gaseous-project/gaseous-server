@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Reflection;
+using System.Threading.Tasks;
 using IGDB;
 using IGDB.Models;
 using Microsoft.Extensions.Caching.Memory;
@@ -47,7 +48,27 @@ namespace gaseous_server.Classes.Metadata
         /// </returns>
         public static CacheStatus GetCacheStatus(HasheousClient.Models.MetadataSources SourceType, string Endpoint, string Slug)
         {
-            return _GetCacheStatus(SourceType, Endpoint, "slug", Slug);
+            return _GetCacheStatus(SourceType, Endpoint, "slug", Slug).Result;
+        }
+
+        /// <summary>
+        /// Get the cache status of a record in the database
+        /// </summary>
+        /// <param name="SourceType">
+        /// The source of the metadata (IGDB, RAWG, etc.)
+        /// </param>
+        /// <param name="Endpoint">
+        /// The endpoint of the metadata (games, companies, etc.)
+        /// </param>
+        /// <param name="Slug">
+        /// The slug of the metadata record
+        /// </param>
+        /// <returns>
+        /// The cache status of the record
+        /// </returns>
+        public static async Task<CacheStatus> GetCacheStatusAsync(HasheousClient.Models.MetadataSources SourceType, string Endpoint, string Slug)
+        {
+            return await _GetCacheStatus(SourceType, Endpoint, "slug", Slug);
         }
 
         /// <summary>
@@ -67,7 +88,27 @@ namespace gaseous_server.Classes.Metadata
         /// </returns>
         public static CacheStatus GetCacheStatus(HasheousClient.Models.MetadataSources SourceType, string Endpoint, long Id)
         {
-            return _GetCacheStatus(SourceType, Endpoint, "id", Id);
+            return _GetCacheStatus(SourceType, Endpoint, "id", Id).Result;
+        }
+
+        /// <summary>
+        /// Get the cache status of a record in the database
+        /// </summary>
+        /// <param name="SourceType">
+        /// The source of the metadata (IGDB, RAWG, etc.)
+        /// </param>
+        /// <param name="Endpoint">
+        /// The endpoint of the metadata (games, companies, etc.)
+        /// </param>
+        /// <param name="Id">
+        /// The ID of the metadata record
+        /// </param>
+        /// <returns>
+        /// The cache status of the record
+        /// </returns>
+        public static async Task<CacheStatus> GetCacheStatusAsync(HasheousClient.Models.MetadataSources SourceType, string Endpoint, long Id)
+        {
+            return await _GetCacheStatus(SourceType, Endpoint, "id", Id);
         }
 
         /// <summary>
@@ -102,7 +143,7 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        private static CacheStatus _GetCacheStatus(HasheousClient.Models.MetadataSources SourceType, string Endpoint, string SearchField, object SearchValue)
+        private static async Task<CacheStatus> _GetCacheStatus(HasheousClient.Models.MetadataSources SourceType, string Endpoint, string SearchField, object SearchValue)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
@@ -113,7 +154,7 @@ namespace gaseous_server.Classes.Metadata
             dbDict.Add("Endpoint", Endpoint);
             dbDict.Add(SearchField, SearchValue);
 
-            DataTable dt = db.ExecuteCMD(sql, dbDict);
+            DataTable dt = await db.ExecuteCMDAsync(sql, dbDict);
             if (dt.Rows.Count == 0)
             {
                 // no data stored for this item, or lastUpdated
@@ -145,7 +186,7 @@ namespace gaseous_server.Classes.Metadata
         /// <param name="UpdateRecord">
         /// Whether to update the record if it already exists
         /// </param>
-        public static void NewCacheValue<T>(HasheousClient.Models.MetadataSources SourceType, T ObjectToCache, bool UpdateRecord = false)
+        public static async Task NewCacheValue<T>(HasheousClient.Models.MetadataSources SourceType, T ObjectToCache, bool UpdateRecord = false)
         {
             // get the object type name
             string ObjectTypeName = ObjectToCache.GetType().Name;
@@ -248,7 +289,7 @@ namespace gaseous_server.Classes.Metadata
 
             // execute sql
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            db.ExecuteCMD(sql, objectDict);
+            await db.ExecuteCMDAsync(sql, objectDict);
         }
 
         /// <summary>
@@ -275,7 +316,7 @@ namespace gaseous_server.Classes.Metadata
         /// <exception cref="Exception">
         /// Thrown when no record is found that matches the search criteria
         /// </exception>
-        public static T GetCacheValue<T>(HasheousClient.Models.MetadataSources SourceType, T? EndpointType, string SearchField, object SearchValue)
+        public static async Task<T> GetCacheValue<T>(HasheousClient.Models.MetadataSources SourceType, T? EndpointType, string SearchField, object SearchValue)
         {
             string Endpoint = EndpointType.GetType().Name;
 
@@ -288,7 +329,7 @@ namespace gaseous_server.Classes.Metadata
             dbDict.Add("Endpoint", Endpoint);
             dbDict.Add(SearchField, SearchValue);
 
-            DataTable dt = db.ExecuteCMD(sql, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromHours(8).Ticks));
+            DataTable dt = await db.ExecuteCMDAsync(sql, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromHours(8).Ticks));
             if (dt.Rows.Count == 0)
             {
                 // no data stored for this item
@@ -372,12 +413,12 @@ namespace gaseous_server.Classes.Metadata
             return EndpointType;
         }
 
-        private static void StoreRelations(HasheousClient.Models.MetadataSources SourceType, string PrimaryTable, string SecondaryTable, long ObjectId, string Relations)
+        private static async Task StoreRelations(HasheousClient.Models.MetadataSources SourceType, string PrimaryTable, string SecondaryTable, long ObjectId, string Relations)
         {
             string TableName = "Relation_" + PrimaryTable + "_" + SecondaryTable;
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM information_schema.tables WHERE table_schema = '" + Config.DatabaseConfiguration.DatabaseName + "' AND table_name = '" + TableName + "';";
-            DataTable data = db.ExecuteCMD(sql);
+            DataTable data = await db.ExecuteCMDAsync(sql);
             if (data.Rows.Count == 0)
             {
                 // table doesn't exist, create it
@@ -388,7 +429,7 @@ namespace gaseous_server.Classes.Metadata
                     `" + PrimaryTable + @"Id` BIGINT NOT NULL, 
                     `" + SecondaryTable + @"Id` BIGINT NOT NULL, 
                     PRIMARY KEY (`" + PrimaryTable + "SourceId`, `" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`), INDEX `idx_PrimaryColumn` (`" + PrimaryTable + "Id` ASC) VISIBLE);";
-                db.ExecuteCMD(sql);
+                await db.ExecuteCMDAsync(sql);
             }
             else
             {
@@ -396,7 +437,7 @@ namespace gaseous_server.Classes.Metadata
                 sql = "DELETE FROM " + TableName + " WHERE `" + PrimaryTable + "Id` = @objectid";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
                 dbDict.Add("objectid", ObjectId);
-                db.ExecuteCMD(sql, dbDict);
+                await db.ExecuteCMDAsync(sql, dbDict);
             }
 
             // insert data
@@ -410,11 +451,11 @@ namespace gaseous_server.Classes.Metadata
                     { "objectid", ObjectId },
                     { "relationvalue", RelationValue }
                 };
-                db.ExecuteCMD(sql, dbDict);
+                await db.ExecuteCMDAsync(sql, dbDict);
             }
         }
 
-        public static void CreateRelationsTables<T>()
+        public static async Task CreateRelationsTables<T>()
         {
             string PrimaryTable = typeof(T).Name;
             foreach (PropertyInfo property in typeof(T).GetProperties())
@@ -427,7 +468,7 @@ namespace gaseous_server.Classes.Metadata
                     string TableName = "Relation_" + PrimaryTable + "_" + SecondaryTable;
                     Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
                     string sql = "SELECT * FROM information_schema.tables WHERE table_schema = '" + Config.DatabaseConfiguration.DatabaseName + "' AND table_name = '" + TableName + "';";
-                    DataTable data = db.ExecuteCMD(sql);
+                    DataTable data = await db.ExecuteCMDAsync(sql);
                     if (data.Rows.Count == 0)
                     {
                         // table doesn't exist, create it
@@ -438,7 +479,7 @@ namespace gaseous_server.Classes.Metadata
                             `" + PrimaryTable + @"Id` BIGINT NOT NULL, 
                             `" + SecondaryTable + @"Id` BIGINT NOT NULL, 
                             PRIMARY KEY (`" + PrimaryTable + "SourceId`, `" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`), INDEX `idx_PrimaryColumn` (`" + PrimaryTable + "Id` ASC) VISIBLE);";
-                        db.ExecuteCMD(sql);
+                        await db.ExecuteCMDAsync(sql);
                     }
                 }
             }

@@ -2,6 +2,7 @@
 using System.ComponentModel.Design.Serialization;
 using System.Data;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
@@ -222,7 +223,7 @@ namespace gaseous_server
                             break;
                     }
                 }
-                public void Execute()
+                public async Task Execute()
                 {
                     CallContext.SetData("CorrelationId", _CorrelationId.ToString());
                     CallContext.SetData("CallingProcess", _TaskType.ToString());
@@ -277,7 +278,7 @@ namespace gaseous_server
                                         Platform? platformOverride = null;
                                         if (importState.PlatformOverride != null)
                                         {
-                                            platformOverride = Platforms.GetPlatform((long)importState.PlatformOverride);
+                                            platformOverride = await Platforms.GetPlatform((long)importState.PlatformOverride);
                                         }
                                         ImportGame.ImportGameFile(importState.FileName, hash, ref ProcessData, platformOverride);
 
@@ -497,7 +498,7 @@ namespace gaseous_server
             public string CorrelationId => _CorrelationId;
             public List<QueueItemType> Blocks => _Blocks;
 
-            public void Execute()
+            public async Task Execute()
             {
                 if (_ItemState != QueueItemState.Disabled)
                 {
@@ -650,7 +651,7 @@ namespace gaseous_server
                                     // get all libraries
                                     if (SubTasks == null || SubTasks.Count == 0)
                                     {
-                                        List<GameLibrary.LibraryItem> libraries = GameLibrary.GetLibraries();
+                                        List<GameLibrary.LibraryItem> libraries = await GameLibrary.GetLibraries();
 
                                         // process each library
                                         foreach (GameLibrary.LibraryItem library in libraries)
@@ -706,7 +707,7 @@ namespace gaseous_server
                                 case QueueItemType.TempCleanup:
                                     try
                                     {
-                                        foreach (GameLibrary.LibraryItem libraryItem in GameLibrary.GetLibraries())
+                                        foreach (GameLibrary.LibraryItem libraryItem in await GameLibrary.GetLibraries())
                                         {
                                             string rootPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, libraryItem.Id.ToString());
                                             if (Directory.Exists(rootPath))
@@ -811,7 +812,7 @@ namespace gaseous_server
                         if (nextTask != null)
                         {
                             // execute the task
-                            Thread thread = new Thread(new ThreadStart(nextTask.Execute));
+                            Thread thread = new Thread(() => nextTask.Execute().GetAwaiter().GetResult());
                             thread.Name = nextTask.TaskName;
                             thread.Start();
                             BackgroundThreads.Add(nextTask.TaskName, thread);

@@ -6,6 +6,7 @@ using gaseous_server.Classes.Metadata;
 using static HasheousClient.Models.FixMatchModel;
 using NuGet.Protocol.Core.Types;
 using static gaseous_server.Classes.FileSignature;
+using System.Threading.Tasks;
 
 namespace gaseous_server.Classes
 {
@@ -23,7 +24,7 @@ namespace gaseous_server.Classes
 			{ }
 		}
 
-		public static GameRomObject GetRoms(long GameId, long PlatformId = -1, string NameSearch = "", int pageNumber = 0, int pageSize = 0, string userid = "")
+		public static async Task<GameRomObject> GetRomsAsync(long GameId, long PlatformId = -1, string NameSearch = "", int pageNumber = 0, int pageSize = 0, string userid = "")
 		{
 			GameRomObject GameRoms = new GameRomObject();
 
@@ -110,12 +111,13 @@ namespace gaseous_server.Classes
 				dbDict.Add("platformid", PlatformId);
 				dbDict.Add("platformsource", (int)HasheousClient.Models.MetadataSources.None);
 			}
-			DataTable romDT = db.ExecuteCMD(sql, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks));
+			DataTable romDT = await db.ExecuteCMDAsync(sql, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks));
 
 			if (romDT.Rows.Count > 0)
 			{
 				// set count of roms
-				Dictionary<string, object> rowCount = db.ExecuteCMDDict(sqlCount, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks))[0];
+				var rowCountList = await db.ExecuteCMDDictAsync(sqlCount, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks));
+				Dictionary<string, object> rowCount = rowCountList[0];
 				GameRoms.Count = int.Parse((string)rowCount["RomCount"]);
 
 				int pageOffset = pageSize * (pageNumber - 1);
@@ -123,7 +125,7 @@ namespace gaseous_server.Classes
 				{
 					if ((i >= pageOffset && i < pageOffset + pageSize) || pageSize == 0)
 					{
-						GameRomItem gameRomItem = BuildRom(romDT.Rows[i]);
+						GameRomItem gameRomItem = await BuildRomAsync(romDT.Rows[i]);
 						GameRoms.GameRomItems.Add(gameRomItem);
 					}
 				}
@@ -136,18 +138,18 @@ namespace gaseous_server.Classes
 			}
 		}
 
-		public static GameRomItem GetRom(long RomId)
+		public static async Task<GameRomItem> GetRom(long RomId)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "SELECT DISTINCT view_Games_Roms.*, Platform.`Name` AS platformname, view_GamesWithRoms.`Name` AS gamename FROM view_Games_Roms LEFT JOIN Platform ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN view_GamesWithRoms ON view_Games_Roms.MetadataMapId = view_GamesWithRoms.MetadataMapId WHERE view_Games_Roms.Id = @id";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 			dbDict.Add("id", RomId);
-			DataTable romDT = db.ExecuteCMD(sql, dbDict);
+			DataTable romDT = await db.ExecuteCMDAsync(sql, dbDict);
 
 			if (romDT.Rows.Count > 0)
 			{
 				DataRow romDR = romDT.Rows[0];
-				GameRomItem romItem = BuildRom(romDR);
+				GameRomItem romItem = await BuildRomAsync(romDR);
 				return romItem;
 			}
 			else
@@ -156,18 +158,18 @@ namespace gaseous_server.Classes
 			}
 		}
 
-		public static GameRomItem GetRom(string MD5)
+		public static async Task<GameRomItem> GetRom(string MD5)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "SELECT DISTINCT view_Games_Roms.*, Platform.`Name` AS platformname, view_GamesWithRoms.`Name` AS gamename FROM view_Games_Roms LEFT JOIN Platform ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN view_GamesWithRoms ON view_Games_Roms.MetadataMapId = view_GamesWithRoms.MetadataMapId WHERE view_Games_Roms.MD5 = @id";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 			dbDict.Add("id", MD5);
-			DataTable romDT = db.ExecuteCMD(sql, dbDict);
+			DataTable romDT = await db.ExecuteCMDAsync(sql, dbDict);
 
 			if (romDT.Rows.Count > 0)
 			{
 				DataRow romDR = romDT.Rows[0];
-				GameRomItem romItem = BuildRom(romDR);
+				GameRomItem romItem = await BuildRomAsync(romDR);
 				return romItem;
 			}
 			else
@@ -176,13 +178,13 @@ namespace gaseous_server.Classes
 			}
 		}
 
-		public static GameRomItem UpdateRom(long RomId, long PlatformId, long GameId)
+		public static async Task<GameRomItem> UpdateRomAsync(long RomId, long PlatformId, long GameId)
 		{
 			// ensure metadata for platformid is present
-			HasheousClient.Models.Metadata.IGDB.Platform platform = Classes.Metadata.Platforms.GetPlatform(PlatformId);
+			HasheousClient.Models.Metadata.IGDB.Platform platform = await Classes.Metadata.Platforms.GetPlatform(PlatformId);
 
 			// ensure metadata for gameid is present
-			Models.Game game = Classes.Metadata.Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, GameId);
+			Models.Game game = await Classes.Metadata.Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, GameId);
 
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "UPDATE Games_Roms SET PlatformId=@platformid, MetadataMapId=@gameid WHERE Id = @id";
@@ -190,9 +192,9 @@ namespace gaseous_server.Classes
 			dbDict.Add("id", RomId);
 			dbDict.Add("platformid", PlatformId);
 			dbDict.Add("gameid", GameId);
-			db.ExecuteCMD(sql, dbDict);
+			await db.ExecuteCMDAsync(sql, dbDict);
 
-			GameRomItem rom = GetRom(RomId);
+			GameRomItem rom = await GetRom(RomId);
 
 			// send update to Hasheous if enabled
 			if (PlatformId != 0 && GameId != 0)
@@ -245,9 +247,9 @@ namespace gaseous_server.Classes
 			return rom;
 		}
 
-		public static void DeleteRom(long RomId)
+		public static async void DeleteRom(long RomId)
 		{
-			GameRomItem rom = GetRom(RomId);
+			GameRomItem rom = await GetRom(RomId);
 			if (rom.Library.IsDefaultLibrary == true)
 			{
 				if (File.Exists(rom.Path))
@@ -259,11 +261,11 @@ namespace gaseous_server.Classes
 				string sql = "DELETE FROM Games_Roms WHERE Id = @id; DELETE FROM GameState WHERE RomId = @id; DELETE FROM User_GameFavouriteRoms WHERE RomId = @id AND IsMediaGroup = 0; DELETE FROM User_RecentPlayedRoms WHERE RomId = @id AND IsMediaGroup = 0; UPDATE UserTimeTracking SET PlatformId = NULL, IsMediaGroup = NULL, RomId = NULL WHERE RomId = @id AND IsMediaGroup = 0;";
 				Dictionary<string, object> dbDict = new Dictionary<string, object>();
 				dbDict.Add("id", RomId);
-				db.ExecuteCMD(sql, dbDict);
+				await db.ExecuteCMDAsync(sql, dbDict);
 			}
 		}
 
-		private static GameRomItem BuildRom(DataRow romDR)
+		private static async Task<GameRomItem> BuildRomAsync(DataRow romDR)
 		{
 			bool hasSaveStates = false;
 			if (romDR.Table.Columns.Contains("SavedStateRomId"))
@@ -314,7 +316,7 @@ namespace gaseous_server.Classes
 				SignatureSource = (gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType)(Int32)romDR["metadatasource"],
 				SignatureSourceGameTitle = (string)Common.ReturnValueIfNull(romDR["MetadataGameName"], ""),
 				HasSaveStates = hasSaveStates,
-				Library = GameLibrary.GetLibrary((int)romDR["LibraryId"])
+				Library = await GameLibrary.GetLibrary((int)romDR["LibraryId"])
 			};
 
 			romItem.RomUserLastUsed = false;

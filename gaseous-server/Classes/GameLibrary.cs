@@ -1,5 +1,6 @@
 using System;
 using System.Data;
+using System.Threading.Tasks;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using Microsoft.CodeAnalysis.FlowAnalysis.DataFlow;
@@ -60,7 +61,7 @@ namespace gaseous_server
         }
 
         // update default library path
-        public static void UpdateDefaultLibraryPath()
+        public static async Task UpdateDefaultLibraryPathAsync()
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "UPDATE GameLibraries SET Path=@path WHERE DefaultLibrary=1;";
@@ -68,15 +69,15 @@ namespace gaseous_server
             {
                 { "path", Path.Combine(Config.LibraryConfiguration.LibraryRootDirectory, "Library") }
             };
-            db.ExecuteCMD(sql, dbDict);
+            await db.ExecuteCMDAsync(sql, dbDict);
         }
 
-        public static List<LibraryItem> GetLibraries(bool GetStorageInfo = false)
+        public static async Task<List<LibraryItem>> GetLibraries(bool GetStorageInfo = false)
         {
             List<LibraryItem> libraryItems = new List<LibraryItem>();
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM GameLibraries ORDER BY `Name`;";
-            DataTable data = db.ExecuteCMD(sql);
+            DataTable data = await db.ExecuteCMDAsync(sql);
             foreach (DataRow row in data.Rows)
             {
                 LibraryItem library = new LibraryItem((int)row["Id"], (string)row["Name"], (string)row["Path"], (long)row["DefaultPlatform"], Convert.ToBoolean((int)row["DefaultLibrary"]));
@@ -99,12 +100,12 @@ namespace gaseous_server
             return libraryItems;
         }
 
-        public static LibraryItem AddLibrary(string Name, string Path, long DefaultPlatformId)
+        public static async Task<LibraryItem> AddLibrary(string Name, string Path, long DefaultPlatformId)
         {
             string PathName = Common.NormalizePath(Path);
 
             // check path isn't already in place
-            foreach (LibraryItem item in GetLibraries())
+            foreach (LibraryItem item in await GetLibraries())
             {
                 if (Common.NormalizePath(PathName) == Common.NormalizePath(item.Path))
                 {
@@ -124,20 +125,20 @@ namespace gaseous_server
             dbDict.Add("name", Name);
             dbDict.Add("path", PathName);
             dbDict.Add("defaultplatform", DefaultPlatformId);
-            DataTable data = db.ExecuteCMD(sql, dbDict);
+            DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
 
             int newLibraryId = (int)(long)data.Rows[0][0];
 
             Logging.Log(Logging.LogType.Information, "Library Management", "Created library " + Name + " at directory " + PathName);
 
-            LibraryItem library = GetLibrary(newLibraryId);
+            LibraryItem library = await GetLibrary(newLibraryId);
 
             return library;
         }
 
-        public static void DeleteLibrary(int LibraryId)
+        public static async Task DeleteLibrary(int LibraryId)
         {
-            LibraryItem library = GetLibrary(LibraryId);
+            LibraryItem library = await GetLibrary(LibraryId);
             if (library.IsDefaultLibrary == false)
             {
                 // check for active library scans
@@ -157,7 +158,7 @@ namespace gaseous_server
                 string sql = "DELETE FROM Games_Roms WHERE LibraryId=@id; DELETE FROM GameLibraries WHERE Id=@id;";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
                 dbDict.Add("id", LibraryId);
-                db.ExecuteCMD(sql, dbDict);
+                await db.ExecuteCMDAsync(sql, dbDict);
 
                 Logging.Log(Logging.LogType.Information, "Library Management", "Deleted library " + library.Name + " at path " + library.Path);
             }
@@ -168,13 +169,13 @@ namespace gaseous_server
             }
         }
 
-        public static LibraryItem GetLibrary(int LibraryId, bool GetStorageInfo = false)
+        public static async Task<LibraryItem> GetLibrary(int LibraryId, bool GetStorageInfo = false)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM GameLibraries WHERE Id=@id";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", LibraryId);
-            DataTable data = db.ExecuteCMD(sql, dbDict);
+            DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
             if (data.Rows.Count > 0)
             {
                 DataRow row = data.Rows[0];
@@ -193,10 +194,10 @@ namespace gaseous_server
             }
         }
 
-        public static LibraryItem ScanLibrary(int LibraryId)
+        public static async Task<LibraryItem> ScanLibrary(int LibraryId)
         {
             // add the library to scan to the queue
-            LibraryItem library = GetLibrary(LibraryId);
+            LibraryItem library = await GetLibrary(LibraryId);
 
             // start the library scan if it's not already running
             foreach (ProcessQueue.QueueItem item in ProcessQueue.QueueItems)
@@ -243,7 +244,7 @@ namespace gaseous_server
                 {
                     if (_DefaultPlatformId != 0)
                     {
-                        HasheousClient.Models.Metadata.IGDB.Platform platform = Platforms.GetPlatform(_DefaultPlatformId);
+                        HasheousClient.Models.Metadata.IGDB.Platform platform = Platforms.GetPlatform(_DefaultPlatformId).Result;
                         return platform.Name;
                     }
                     else

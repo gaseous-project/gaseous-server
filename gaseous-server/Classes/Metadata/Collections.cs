@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Classes.Metadata
@@ -11,7 +12,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static Collection? GetCollections(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<Collection?> GetCollections(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -19,7 +20,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Collection? RetVal = Metadata.GetMetadata<Collection>(SourceType, (long)Id, false);
+                Collection? RetVal = await Metadata.GetMetadataAsync<Collection>(SourceType, (long)Id, false);
                 return RetVal;
             }
         }

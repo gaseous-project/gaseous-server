@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using gaseous_server.Models;
 using HasheousClient.Models.Metadata.IGDB;
 using Microsoft.CodeAnalysis.Elfie.Model.Strings;
@@ -6,7 +7,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class ImageHandling
     {
-        public static Dictionary<string, string>? GameImage(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource, MetadataImageType imageType, long ImageId, Communications.IGDBAPI_ImageSize size, string imagename = "")
+        public static async Task<Dictionary<string, string>?> GameImage(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource, MetadataImageType imageType, long ImageId, Communications.IGDBAPI_ImageSize size, string imagename = "")
         {
             // validate imagename is not dangerous
             if (imagename.Contains("..") || imagename.Contains("/") || imagename.Contains("\\"))
@@ -16,8 +17,37 @@ namespace gaseous_server.Classes.Metadata
 
             try
             {
-                MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                MetadataMap.MetadataMapItem metadataMap = null;
+                gaseous_server.Models.Game game = null;
+
+                if (imageType == MetadataImageType.clearlogo)
+                {
+                    // search for the first metadata map item that has a clear logo
+                    List<long> metadataMapItemIds = await Classes.MetadataManagement.GetAssociatedMetadataMapIds(MetadataMapId);
+
+                    foreach (long metadataMapItemId in metadataMapItemIds)
+                    {
+                        metadataMap = (await Classes.MetadataManagement.GetMetadataMap(metadataMapItemId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
+                        if (metadataMap != null)
+                        {
+                            game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                            if (game.ClearLogo != null && game.ClearLogo.ContainsKey(MetadataSource))
+                            {
+                                break;
+                            }
+                        }
+                    }
+
+                    if (metadataMap == null || game == null)
+                    {
+                        return null;
+                    }
+                }
+                else
+                {
+                    metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
+                    game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                }
 
                 string? imageId = null;
                 string? imageTypePath = null;
@@ -28,7 +58,7 @@ namespace gaseous_server.Classes.Metadata
                         if (game.Cover != null)
                         {
                             // Cover cover = Classes.Metadata.Covers.GetCover(game.MetadataSource, (long?)game.Cover);
-                            Cover cover = Classes.Metadata.Covers.GetCover(game.MetadataSource, (long?)ImageId);
+                            Cover cover = await Classes.Metadata.Covers.GetCover(game.MetadataSource, (long?)ImageId);
                             imageId = cover.ImageId;
                             imageTypePath = "Covers";
                         }
@@ -39,7 +69,7 @@ namespace gaseous_server.Classes.Metadata
                         {
                             if (game.Screenshots.Contains(ImageId))
                             {
-                                Screenshot imageObject = Screenshots.GetScreenshot(game.MetadataSource, ImageId);
+                                Screenshot imageObject = await Screenshots.GetScreenshotAsync(game.MetadataSource, ImageId);
 
                                 imageId = imageObject.ImageId;
                                 imageTypePath = "Screenshots";
@@ -52,7 +82,7 @@ namespace gaseous_server.Classes.Metadata
                         {
                             if (game.Artworks.Contains(ImageId))
                             {
-                                Artwork imageObject = Artworks.GetArtwork(game.MetadataSource, ImageId);
+                                Artwork imageObject = await Artworks.GetArtwork(game.MetadataSource, ImageId);
 
                                 imageId = imageObject.ImageId;
                                 imageTypePath = "Artwork";
@@ -65,7 +95,7 @@ namespace gaseous_server.Classes.Metadata
                         {
                             if (game.ClearLogo.ContainsKey(MetadataSource))
                             {
-                                ClearLogo? imageObject = ClearLogos.GetClearLogo(game.MetadataSource, ImageId);
+                                ClearLogo? imageObject = await ClearLogos.GetClearLogo(game.MetadataSource, ImageId);
 
                                 if (imageObject != null)
                                 {
@@ -91,17 +121,13 @@ namespace gaseous_server.Classes.Metadata
                 if (!System.IO.File.Exists(imagePath))
                 {
                     Communications comms = new Communications();
-                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(game.MetadataSource, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(game), imageTypePath), imageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
-
-                    imagePath = ImgFetch.Result;
+                    imagePath = await comms.GetSpecificImageFromServer(game.MetadataSource, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(game), imageTypePath), imageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
                 }
 
                 if (!System.IO.File.Exists(imagePath))
                 {
                     Communications comms = new Communications();
-                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(game.MetadataSource, basePath, imageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
-
-                    imagePath = ImgFetch.Result;
+                    imagePath = await comms.GetSpecificImageFromServer(game.MetadataSource, basePath, imageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
                 }
 
                 return new Dictionary<string, string>

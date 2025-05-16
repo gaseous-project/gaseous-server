@@ -42,7 +42,7 @@ Storage.CreateRelationsTables<IGDB.Models.Game>();
 Storage.CreateRelationsTables<IGDB.Models.Platform>();
 
 // populate db with static data for lookups
-AgeRatings.PopulateAgeMap();
+AgeRatings.PopulateAgeMapAsync();
 
 // load app settings
 Config.InitSettings();
@@ -50,7 +50,7 @@ Config.InitSettings();
 Config.UpdateConfig();
 
 // update default library path
-GameLibrary.UpdateDefaultLibraryPath();
+GameLibrary.UpdateDefaultLibraryPathAsync();
 
 // set api metadata source from config
 Communications.MetadataSource = Config.MetadataConfiguration.DefaultMetadataSource;

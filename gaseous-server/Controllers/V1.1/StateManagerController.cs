@@ -55,7 +55,7 @@ namespace gaseous_server.Controllers.v1_1
                 { "state", CompressedState },
                 { "zipped", true }
             };
-            DataTable data = db.ExecuteCMD(sql, dbDict);
+            DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
 
             if (IsMediaGroup == false)
             {
@@ -87,7 +87,7 @@ namespace gaseous_server.Controllers.v1_1
                 { "userid", user.Id },
                 { "ismediagroup", IsMediaGroup }
             };
-            DataTable data = db.ExecuteCMD(sql, dbDict);
+            DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
 
             List<Models.GameStateItem> gameStates = new List<GameStateItem>();
             foreach (DataRow row in data.Rows)
@@ -117,7 +117,7 @@ namespace gaseous_server.Controllers.v1_1
                 { "userid", user.Id },
                 { "ismediagroup", IsMediaGroup }
             };
-            DataTable data = db.ExecuteCMD(sql, dbDict);
+            DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
 
             if (data.Rows.Count == 0)
             {
@@ -201,7 +201,7 @@ namespace gaseous_server.Controllers.v1_1
                 { "userid", user.Id },
                 { "ismediagroup", IsMediaGroup }
             };
-            DataTable data = db.ExecuteCMD(sql, dbDict);
+            DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
 
             if (data.Rows.Count == 0)
             {
@@ -247,7 +247,7 @@ namespace gaseous_server.Controllers.v1_1
                 { "userid", user.Id },
                 { "ismediagroup", IsMediaGroup }
             };
-            DataTable data = db.ExecuteCMD(sql, dbDict);
+            DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
 
             if (data.Rows.Count == 0)
             {
@@ -262,15 +262,15 @@ namespace gaseous_server.Controllers.v1_1
                 string romSha1 = "";
                 if (IsMediaGroup == false)
                 {
-                    Roms.GameRomItem romItem = Roms.GetRom(RomId);
+                    Roms.GameRomItem romItem = await Roms.GetRom(RomId);
                     romName = romItem.Name;
                     romMd5 = romItem.Md5;
                     romSha1 = romItem.Sha1;
                 }
                 else
                 {
-                    RomMediaGroup.GameRomMediaGroupItem mediaGroupItem = RomMediaGroup.GetMediaGroup(RomId);
-                    Models.Game game = Games.GetGame(Communications.MetadataSource, mediaGroupItem.GameId);
+                    RomMediaGroup.GameRomMediaGroupItem mediaGroupItem = await RomMediaGroup.GetMediaGroupAsync(RomId);
+                    Models.Game game = await Games.GetGame(Communications.MetadataSource, mediaGroupItem.GameId);
                     Classes.Common.hashObject hashObject = new Classes.Common.hashObject(Path.Combine(Config.LibraryConfiguration.LibraryMediaGroupDirectory, mediaGroupItem.Id.ToString() + ".zip"));
                     romName = game.Name;
                     romMd5 = hashObject.md5hash;
@@ -356,7 +356,7 @@ namespace gaseous_server.Controllers.v1_1
                                 using (var zipEntryStream = zipEntry.Open())
                                 {
                                     //Copy the attachment stream to the zip entry stream
-                                    originalFileStream.CopyTo(zipEntryStream);
+                                    await originalFileStream.CopyToAsync(zipEntryStream);
                                 }
                             }
                         }
@@ -397,7 +397,7 @@ namespace gaseous_server.Controllers.v1_1
             if (file.Length > 0)
             {
                 MemoryStream fileContent = new MemoryStream();
-                file.CopyTo(fileContent);
+                await file.CopyToAsync(fileContent);
 
                 // test if file is a zip file
                 try
@@ -411,7 +411,7 @@ namespace gaseous_server.Controllers.v1_1
                                 using (var stream = entry.Open())
                                 using (var reader = new StreamReader(stream))
                                 {
-                                    string RomInfoString = reader.ReadToEnd();
+                                    string RomInfoString = await reader.ReadToEndAsync();
                                     Dictionary<string, object> RomInfo = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(RomInfoString);
 
                                     // get rom data
@@ -419,7 +419,7 @@ namespace gaseous_server.Controllers.v1_1
 
                                     try
                                     {
-                                        romItem = Roms.GetRom((string)RomInfo["MD5"]);
+                                        romItem = await Roms.GetRom((string)RomInfo["MD5"]);
                                     }
                                     catch (Roms.InvalidRomHash)
                                     {
@@ -466,7 +466,7 @@ namespace gaseous_server.Controllers.v1_1
                                          { "state", Common.Compress(StateData) },
                                          { "zipped", true }
                                      };
-                                    DataTable data = db.ExecuteCMD(sql, dbDict);
+                                    DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
 
                                     RomInfo.Add("RomId", romItem.Id);
                                     RomInfo.Add("Management", "Managed");
@@ -488,7 +488,7 @@ namespace gaseous_server.Controllers.v1_1
 
                         try
                         {
-                            romItem = Roms.GetRom(RomId);
+                            romItem = await Roms.GetRom(RomId);
                         }
                         catch (Roms.InvalidRomHash)
                         {
@@ -509,7 +509,7 @@ namespace gaseous_server.Controllers.v1_1
                              { "state", Common.Compress(fileContent.ToArray()) },
                              { "zipped", true }
                          };
-                        DataTable data = db.ExecuteCMD(sql, dbDict);
+                        DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
 
                         return Ok(new Dictionary<string, object>
                          {

@@ -35,9 +35,9 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public List<Classes.Bios.BiosItem> GetBios()
+        public async Task<List<Classes.Bios.BiosItem>> GetBios()
         {
-            return Classes.Bios.GetBios();
+            return await Classes.Bios.GetBios();
         }
 
         [MapToApiVersion("1.0")]
@@ -45,9 +45,9 @@ namespace gaseous_server.Controllers
         [HttpGet]
         [Route("{PlatformId}")]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public List<Classes.Bios.BiosItem> GetBios(long PlatformId, bool AvailableOnly = true)
+        public async Task<List<Classes.Bios.BiosItem>> GetBios(long PlatformId, bool AvailableOnly = true)
         {
-            return Classes.Bios.GetBios(PlatformId, AvailableOnly);
+            return await Classes.Bios.GetBios(PlatformId, AvailableOnly);
         }
 
         [MapToApiVersion("1.0")]
@@ -64,8 +64,8 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                Platform platform = Platforms.GetPlatform(PlatformId);
-                PlatformMapping.PlatformMapItem platformMap = PlatformMapping.GetPlatformMap(PlatformId);
+                Platform platform = await Platforms.GetPlatform(PlatformId);
+                PlatformMapping.PlatformMapItem platformMap = await PlatformMapping.GetPlatformMap(PlatformId);
 
                 List<string> biosHashes = new List<string>();
 
@@ -80,7 +80,7 @@ namespace gaseous_server.Controllers
                     var user = await _userManager.GetUserAsync(User);
 
                     PlatformMapping platformMapping = new PlatformMapping();
-                    PlatformMapping.PlatformMapItem userPlatformMap = platformMapping.GetUserPlatformMap(user.Id, PlatformId, GameId);
+                    PlatformMapping.PlatformMapItem userPlatformMap = await platformMapping.GetUserPlatformMap(user.Id, PlatformId, GameId);
 
                     biosHashes.AddRange(userPlatformMap.EnabledBIOSHashes);
                 }
@@ -127,11 +127,11 @@ namespace gaseous_server.Controllers
         [Route("{PlatformId}/{BiosName}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult BiosFile(long PlatformId, string BiosName)
+        public async Task<ActionResult> BiosFile(long PlatformId, string BiosName)
         {
             try
             {
-                foreach (Classes.Bios.BiosItem biosItem in Classes.Bios.GetBios(PlatformId, true))
+                foreach (Classes.Bios.BiosItem biosItem in await Classes.Bios.GetBios(PlatformId, true))
                 {
                     if (biosItem.filename == BiosName)
                     {

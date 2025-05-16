@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Classes.Metadata
@@ -11,7 +12,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static Franchise? GetFranchises(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<Franchise?> GetFranchises(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -19,7 +20,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Franchise? RetVal = Metadata.GetMetadata<Franchise>(SourceType, (long)Id, false);
+                Franchise? RetVal = await Metadata.GetMetadataAsync<Franchise>(SourceType, (long)Id, false);
                 return RetVal;
             }
         }
