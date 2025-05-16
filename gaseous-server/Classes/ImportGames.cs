@@ -830,22 +830,10 @@ namespace gaseous_server.Classes
                     PlatformMapping.SupportedFileExtensions.Contains(Path.GetExtension(LibraryFile), StringComparer.OrdinalIgnoreCase)
                     )
                 {
-                    Common.hashObject LibraryFileHash = new Common.hashObject(LibraryFile);
-
                     // check if file is in database
-                    bool romFound = false;
-                    for (var i = 0; i < dtRoms.Rows.Count; i++)
-                    {
-                        long romId = (long)dtRoms.Rows[i]["Id"];
-                        string romPath = (string)dtRoms.Rows[i]["Path"];
-                        string romMd5 = (string)dtRoms.Rows[i]["MD5"];
-
-                        if ((LibraryFile == romPath) || (LibraryFileHash.md5hash == romMd5))
-                        {
-                            romFound = true;
-                            break;
-                        }
-                    }
+                    bool romFound = dtRoms.AsEnumerable().Any(row =>
+                        (string)row["Path"] == LibraryFile
+                    );
 
                     if (romFound == false)
                     {
