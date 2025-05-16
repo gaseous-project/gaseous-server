@@ -775,7 +775,7 @@ namespace gaseous_server.Classes
             }
         }
 
-        public void LibrarySpecificScan(GameLibrary.LibraryItem library)
+        public async Task LibrarySpecificScan(GameLibrary.LibraryItem library)
         {
             Logging.Log(Logging.LogType.Information, "Library Scan", "Starting scan of library: " + library.Name);
 
@@ -788,12 +788,12 @@ namespace gaseous_server.Classes
             string duplicateSql = "DELETE r1 FROM Games_Roms r1 INNER JOIN Games_Roms r2 WHERE r1.Id > r2.Id AND r1.MD5 = r2.MD5 AND r1.LibraryId=@libraryid AND r2.LibraryId=@libraryid;";
             Dictionary<string, object> dupDict = new Dictionary<string, object>();
             dupDict.Add("libraryid", library.Id);
-            db.ExecuteCMD(duplicateSql, dupDict);
+            await db.ExecuteCMDAsync(duplicateSql, dupDict);
 
             string sql = "SELECT * FROM view_Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("libraryid", library.Id);
-            DataTable dtRoms = db.ExecuteCMD(sql, dbDict);
+            DataTable dtRoms = await db.ExecuteCMDAsync(sql, dbDict);
 
             // Remove database entries for files not in the correct library directory
             if (dtRoms.Rows.Count > 0)
@@ -812,12 +812,12 @@ namespace gaseous_server.Classes
                         { "id", entry.Id },
                         { "libraryid", library.Id }
                     };
-                    db.ExecuteCMD(deleteSql, deleteDict);
+                    await db.ExecuteCMDAsync(deleteSql, deleteDict);
                 }
             }
 
             sql = "SELECT * FROM view_Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
-            dtRoms = db.ExecuteCMD(sql, dbDict);
+            dtRoms = await db.ExecuteCMDAsync(sql, dbDict);
 
             // search for files in the library that aren't in the database
             Logging.Log(Logging.LogType.Information, "Library Scan", "Looking for orphaned library files to add");
@@ -880,7 +880,7 @@ namespace gaseous_server.Classes
             ClearStatus();
 
             sql = "SELECT * FROM view_Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
-            dtRoms = db.ExecuteCMD(sql, dbDict);
+            dtRoms = await db.ExecuteCMDAsync(sql, dbDict);
 
             // Check all roms to see if their local file still exists
             Logging.Log(Logging.LogType.Information, "Library Scan", "Checking library files exist on disk");
@@ -929,7 +929,7 @@ namespace gaseous_server.Classes
                             { "id", romId },
                             { "libraryid", library.Id }
                         };
-                        db.ExecuteCMD(deleteSql, deleteDict);
+                        await db.ExecuteCMDAsync(deleteSql, deleteDict);
                     }
                 }
             }

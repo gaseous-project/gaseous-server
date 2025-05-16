@@ -171,6 +171,7 @@ namespace gaseous_server.Classes
 			}
 		}
 
+		#region Synchronous Database Access
 		public DataTable ExecuteCMD(string Command)
 		{
 			DatabaseMemoryCacheOptions? CacheOptions = null;
@@ -246,6 +247,86 @@ namespace gaseous_server.Classes
 		{
 			return _ExecuteCMDDict(Command, Parameters, CacheOptions, Timeout, ConnectionString);
 		}
+		#endregion Synchronous Database Access
+
+		#region Asynchronous Database Access
+		public async Task<DataTable> ExecuteCMDAsync(string Command)
+		{
+			DatabaseMemoryCacheOptions? CacheOptions = null;
+
+			Dictionary<string, object> dbDict = new Dictionary<string, object>();
+			return _ExecuteCMD(Command, dbDict, CacheOptions, 30, "");
+		}
+
+		public async Task<DataTable> ExecuteCMDAsync(string Command, DatabaseMemoryCacheOptions? CacheOptions)
+		{
+			Dictionary<string, object> dbDict = new Dictionary<string, object>();
+			return _ExecuteCMD(Command, dbDict, CacheOptions, 30, "");
+		}
+
+		public async Task<DataTable> ExecuteCMDAsync(string Command, Dictionary<string, object> Parameters)
+		{
+			DatabaseMemoryCacheOptions? CacheOptions = null;
+
+			return _ExecuteCMD(Command, Parameters, CacheOptions, 30, "");
+		}
+
+		public async Task<DataTable> ExecuteCMDAsync(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions)
+		{
+			return _ExecuteCMD(Command, Parameters, CacheOptions, 30, "");
+		}
+
+		public async Task<DataTable> ExecuteCMDAsync(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
+		{
+			DatabaseMemoryCacheOptions? CacheOptions = null;
+
+			return _ExecuteCMD(Command, Parameters, CacheOptions, Timeout, ConnectionString);
+		}
+
+		public async Task<DataTable> ExecuteCMDAsync(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions, int Timeout = 30, string ConnectionString = "")
+		{
+			return _ExecuteCMD(Command, Parameters, CacheOptions, Timeout, ConnectionString);
+		}
+
+		public async Task<List<Dictionary<string, object>>> ExecuteCMDDictAsync(string Command)
+		{
+			DatabaseMemoryCacheOptions? CacheOptions = null;
+
+			Dictionary<string, object> dbDict = new Dictionary<string, object>();
+			return _ExecuteCMDDict(Command, dbDict, CacheOptions, 30, "");
+		}
+
+		public async Task<List<Dictionary<string, object>>> ExecuteCMDDictAsync(string Command, DatabaseMemoryCacheOptions? CacheOptions)
+		{
+			Dictionary<string, object> dbDict = new Dictionary<string, object>();
+			return _ExecuteCMDDict(Command, dbDict, CacheOptions, 30, "");
+		}
+
+		public async Task<List<Dictionary<string, object>>> ExecuteCMDDictAsync(string Command, Dictionary<string, object> Parameters)
+		{
+			DatabaseMemoryCacheOptions? CacheOptions = null;
+
+			return _ExecuteCMDDict(Command, Parameters, CacheOptions, 30, "");
+		}
+
+		public async Task<List<Dictionary<string, object>>> ExecuteCMDDictAsync(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions)
+		{
+			return _ExecuteCMDDict(Command, Parameters, CacheOptions, 30, "");
+		}
+
+		public async Task<List<Dictionary<string, object>>> ExecuteCMDDictAsync(string Command, Dictionary<string, object> Parameters, int Timeout = 30, string ConnectionString = "")
+		{
+			DatabaseMemoryCacheOptions? CacheOptions = null;
+
+			return _ExecuteCMDDict(Command, Parameters, CacheOptions, Timeout, ConnectionString);
+		}
+
+		public async Task<List<Dictionary<string, object>>> ExecuteCMDDictAsync(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions, int Timeout = 30, string ConnectionString = "")
+		{
+			return _ExecuteCMDDict(Command, Parameters, CacheOptions, Timeout, ConnectionString);
+		}
+		#endregion Asynchronous Database Access
+
 
 		private List<Dictionary<string, object>> _ExecuteCMDDict(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions, int Timeout = 30, string ConnectionString = "")
 		{
