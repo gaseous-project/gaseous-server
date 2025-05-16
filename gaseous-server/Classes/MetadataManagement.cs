@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
 using gaseous_server.Models;
@@ -427,11 +428,11 @@ namespace gaseous_server.Classes
 			RefreshGames(forceRefresh);
 		}
 
-		public void RefreshPlatforms(bool forceRefresh = false)
+		public async Task RefreshPlatforms(bool forceRefresh = false)
 		{
 			// update platform metadata
 			string sql = "SELECT Id, `Name` FROM Platform;";
-			DataTable dt = db.ExecuteCMD(sql);
+			DataTable dt = await db.ExecuteCMDAsync(sql);
 
 			int StatusCounter = 1;
 			foreach (DataRow dr in dt.Rows)
@@ -460,7 +461,7 @@ namespace gaseous_server.Classes
 					{
 						// set the platform to unknown
 						sql = "UPDATE Platform SET Name = 'Unknown Platform', Slug = 'unknown', PlatformLogo = 0 WHERE Id = 0;";
-						db.ExecuteCMD(sql);
+						await db.ExecuteCMDAsync(sql);
 					}
 
 					// force platformLogo refresh
@@ -479,7 +480,7 @@ namespace gaseous_server.Classes
 			ClearStatus();
 		}
 
-		public void RefreshSignatures(bool forceRefresh = false)
+		public async Task RefreshSignatures(bool forceRefresh = false)
 		{
 			// update rom signatures - only valid if Haseheous is enabled
 			if (Config.MetadataConfiguration.SignatureSource == MetadataModel.SignatureSources.Hasheous)
@@ -491,7 +492,7 @@ namespace gaseous_server.Classes
 				{
 					{ "@LastUpdateThreshold", DateTime.UtcNow.AddDays(-new Random().Next(14, 30)) }
 				};
-				DataTable dt = db.ExecuteCMD(sql, dbDict);
+				DataTable dt = await db.ExecuteCMDAsync(sql, dbDict);
 
 				int StatusCounter = 1;
 				foreach (DataRow dr in dt.Rows)
@@ -572,7 +573,7 @@ namespace gaseous_server.Classes
 			}
 		}
 
-		public void RefreshGames(bool forceRefresh = false)
+		public async Task RefreshGames(bool forceRefresh = false)
 		{
 			string sql = "";
 
@@ -587,7 +588,7 @@ namespace gaseous_server.Classes
 				// when run normally, update all games (since this will honour cache timeouts)
 				sql = "SELECT DISTINCT MetadataSourceId AS `Id`, MetadataSourceType AS `GameIdType`, SignatureGameName AS `Name` FROM gaseous.view_MetadataMap;";
 			}
-			DataTable dt = db.ExecuteCMD(sql);
+			DataTable dt = await db.ExecuteCMDAsync(sql);
 
 			int StatusCounter = 1;
 			foreach (DataRow dr in dt.Rows)
@@ -602,7 +603,7 @@ namespace gaseous_server.Classes
 		}
 
 		static List<Dictionary<string, object>> inProgressRefreshes = new List<Dictionary<string, object>>();
-		public void RefreshSpecificGame(long metadataMapId)
+		public async Task RefreshSpecificGameAsync(long metadataMapId)
 		{
 			// get the metadata map for the game
 			string sql = @"
@@ -621,7 +622,7 @@ namespace gaseous_server.Classes
 			{
 				{ "@metadataMapId", metadataMapId }
 			};
-			DataTable dt = db.ExecuteCMD(sql, dbDict);
+			DataTable dt = await db.ExecuteCMDAsync(sql, dbDict);
 
 			foreach (DataRow dr in dt.Rows)
 			{

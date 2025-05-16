@@ -291,7 +291,7 @@ namespace gaseous_server
                                             if (metadataMapId != null)
                                             {
                                                 MetadataManagement metadataManagement = new MetadataManagement();
-                                                metadataManagement.RefreshSpecificGame((long)metadataMapId);
+                                                metadataManagement.RefreshSpecificGameAsync((long)metadataMapId);
                                             }
                                         }
                                         ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Completed, ImportStateItem.ImportType.Rom, ProcessData);
