@@ -795,23 +795,24 @@ namespace gaseous_server.Classes
             dbDict.Add("libraryid", library.Id);
             DataTable dtRoms = db.ExecuteCMD(sql, dbDict);
 
-            // clean out database entries in the import folder
+            // Remove database entries for files not in the correct library directory
             if (dtRoms.Rows.Count > 0)
             {
-                for (var i = 0; i < dtRoms.Rows.Count; i++)
-                {
-                    long romId = (long)dtRoms.Rows[i]["Id"];
-                    string romPath = (string)dtRoms.Rows[i]["Path"];
+                var rowsToDelete = dtRoms.AsEnumerable()
+                    .Where(row => !((string)row["Path"]).StartsWith(library.Path))
+                    .Select(row => (Id: (long)row["Id"], Path: (string)row["Path"]))
+                    .ToList();
 
-                    if (!romPath.StartsWith(library.Path))
+                foreach (var entry in rowsToDelete)
+                {
+                    Logging.Log(Logging.LogType.Information, "Library Scan", $"Deleting database entry for file with incorrect directory {entry.Path}");
+                    string deleteSql = "DELETE FROM Games_Roms WHERE Id=@id AND LibraryId=@libraryid";
+                    var deleteDict = new Dictionary<string, object>
                     {
-                        Logging.Log(Logging.LogType.Information, "Library Scan", "Deleting database entry for files with incorrect directory " + romPath);
-                        string deleteSql = "DELETE FROM Games_Roms WHERE Id=@id AND LibraryId=@libraryid";
-                        Dictionary<string, object> deleteDict = new Dictionary<string, object>();
-                        deleteDict.Add("Id", romId);
-                        deleteDict.Add("libraryid", library.Id);
-                        db.ExecuteCMD(deleteSql, deleteDict);
-                    }
+                        { "id", entry.Id },
+                        { "libraryid", library.Id }
+                    };
+                    db.ExecuteCMD(deleteSql, deleteDict);
                 }
             }
 
