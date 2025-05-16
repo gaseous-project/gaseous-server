@@ -882,52 +882,55 @@ namespace gaseous_server.Classes
             sql = "SELECT * FROM view_Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
             dtRoms = db.ExecuteCMD(sql, dbDict);
 
-            // check all roms to see if their local file still exists
+            // Check all roms to see if their local file still exists
             Logging.Log(Logging.LogType.Information, "Library Scan", "Checking library files exist on disk");
             StatusCount = 0;
+
             if (dtRoms.Rows.Count > 0)
             {
-                for (var i = 0; i < dtRoms.Rows.Count; i++)
+                string[] supportedExtensions = PlatformMapping.SupportedFileExtensions.ToArray();
+                HashSet<string> skippableFiles = new HashSet<string>(Common.SkippableFiles, StringComparer.OrdinalIgnoreCase);
+
+                for (var i = 0; i < dtRoms.Rows.Count; i++, StatusCount++)
                 {
                     long romId = (long)dtRoms.Rows[i]["Id"];
                     string romPath = (string)dtRoms.Rows[i]["Path"];
-                    gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType romMetadataSource = (gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType)(int)dtRoms.Rows[i]["MetadataSource"];
 
-                    SetStatus(StatusCount, dtRoms.Rows.Count, "Processing file " + romPath);
-                    Logging.Log(Logging.LogType.Information, "Library Scan", "Processing ROM at path " + romPath);
+                    SetStatus(StatusCount, dtRoms.Rows.Count, $"Processing file {romPath}");
+                    Logging.Log(Logging.LogType.Information, "Library Scan", $"Processing ROM at path {romPath}");
 
-                    if (
-                        File.Exists(romPath) &&
-                        !Common.SkippableFiles.Contains<string>(Path.GetFileName(romPath), StringComparer.OrdinalIgnoreCase) &&
-                        PlatformMapping.SupportedFileExtensions.Contains(Path.GetExtension(romPath), StringComparer.OrdinalIgnoreCase)
-                    )
+                    string fileName = Path.GetFileName(romPath);
+                    string fileExt = Path.GetExtension(romPath);
+
+                    bool fileExists = File.Exists(romPath);
+                    bool isSkippable = skippableFiles.Contains(fileName);
+                    bool isSupportedExt = supportedExtensions.Contains(fileExt, StringComparer.OrdinalIgnoreCase);
+
+                    if (fileExists && !isSkippable && isSupportedExt)
                     {
-                        if (library.IsDefaultLibrary == true)
+                        if (library.IsDefaultLibrary && romPath != ComputeROMPath(romId))
                         {
-                            if (romPath != ComputeROMPath(romId))
-                            {
-                                Logging.Log(Logging.LogType.Information, "Library Scan", "ROM at path " + romPath + " found, but needs to be moved");
-                                MoveGameFile(romId, false);
-                            }
-                            else
-                            {
-                                Logging.Log(Logging.LogType.Information, "Library Scan", "ROM at path " + romPath + " found");
-                            }
+                            Logging.Log(Logging.LogType.Information, "Library Scan", $"ROM at path {romPath} found, but needs to be moved");
+                            MoveGameFile(romId, false);
+                        }
+                        else
+                        {
+                            Logging.Log(Logging.LogType.Information, "Library Scan", $"ROM at path {romPath} found");
                         }
                     }
                     else
                     {
-                        // file doesn't exist where it's supposed to be! delete it from the db
-                        Logging.Log(Logging.LogType.Warning, "Library Scan", "Deleting orphaned database entry for " + romPath);
+                        // File doesn't exist where it's supposed to be! Delete it from the db
+                        Logging.Log(Logging.LogType.Warning, "Library Scan", $"Deleting orphaned database entry for {romPath}");
 
                         string deleteSql = "DELETE FROM Games_Roms WHERE Id = @id AND LibraryId = @libraryid";
-                        Dictionary<string, object> deleteDict = new Dictionary<string, object>();
-                        deleteDict.Add("id", romId);
-                        deleteDict.Add("libraryid", library.Id);
+                        var deleteDict = new Dictionary<string, object>
+                        {
+                            { "id", romId },
+                            { "libraryid", library.Id }
+                        };
                         db.ExecuteCMD(deleteSql, deleteDict);
                     }
-
-                    StatusCount += 1;
                 }
             }
 
