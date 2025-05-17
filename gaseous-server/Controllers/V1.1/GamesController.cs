@@ -555,7 +555,7 @@ namespace gaseous_server.Controllers.v1_1
                 ORDER BY `MetadataMap`.`PlatformId`
                 SEPARATOR ','),
             ']') AS `Platforms`,
-    COUNT(`Games_Roms`.`Id`) AS `RomCount`,
+    `RomCounts`.`RomCount`,
     CASE
         WHEN `RomMediaGroup`.`Id` IS NULL THEN 0
         ELSE 1
@@ -607,8 +607,8 @@ namespace gaseous_server.Controllers.v1_1
     `Game`.`GameModes`,
     `Game`.`PlayerPerspectives`,
     `Game`.`Themes`,
-    MIN(`Games_Roms`.`DateCreated`) AS `DateAdded`,
-    MAX(`Games_Roms`.`DateUpdated`) AS `DateUpdated`,
+    `RomCounts`.`DateAdded`,
+    `RomCounts`.`DateUpdated`,
     SUM(`UserTimeTracking`.`SessionLength`) AS `TimePlayed`,
     MAX(`UserTimeTracking`.`SessionTime`) AS `LastPlayed`
 FROM
@@ -616,6 +616,15 @@ FROM
         LEFT JOIN
     `MetadataMapBridge` ON (`MetadataMap`.`Id` = `MetadataMapBridge`.`ParentMapId`
         AND `MetadataMapBridge`.`Preferred` = 1)
+        JOIN
+    (SELECT 
+        `MetadataMapId`,
+            COUNT(`Id`) AS `RomCount`,
+            MIN(`DateCreated`) AS `DateAdded`,
+            MAX(`DateUpdated`) AS `DateUpdated`
+    FROM
+        `Games_Roms`
+    GROUP BY `MetadataMapId`) AS `RomCounts` ON `MetadataMap`.`Id` = `RomCounts`.`MetadataMapId`
         JOIN
     `Games_Roms` ON `MetadataMap`.`Id` = `Games_Roms`.`MetadataMapId`
         LEFT JOIN
