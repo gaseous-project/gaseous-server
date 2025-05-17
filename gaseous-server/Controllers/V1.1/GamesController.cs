@@ -609,8 +609,8 @@ namespace gaseous_server.Controllers.v1_1
     `Game`.`Themes`,
     `RomCounts`.`DateAdded`,
     `RomCounts`.`DateUpdated`,
-    SUM(`UserTimeTracking`.`SessionLength`) AS `TimePlayed`,
-    MAX(`UserTimeTracking`.`SessionTime`) AS `LastPlayed`
+    IFNULL(`UserTimeTracking`.`TimePlayed`, 0) AS `TimePlayed`,
+    `UserTimeTracking`.`LastPlayed`
 FROM
     `MetadataMap`
         LEFT JOIN
@@ -628,9 +628,17 @@ FROM
         JOIN
     `Games_Roms` ON `MetadataMap`.`Id` = `Games_Roms`.`MetadataMapId`
         LEFT JOIN
-    `UserTimeTracking` ON `MetadataMap`.`Id` = `UserTimeTracking`.`GameId`
+    (SELECT 
+        `GameId`,
+            `PlatformId`,
+            SUM(`SessionLength`) AS `TimePlayed`,
+            MAX(`SessionTime`) AS `LastPlayed`
+    FROM
+        `UserTimeTracking`
+    WHERE
+        `UserId` = @userid
+    GROUP BY `GameId`, `PlatformId`) AS `UserTimeTracking` ON `MetadataMap`.`Id` = `UserTimeTracking`.`GameId`
         AND `MetadataMap`.`PlatformId` = `UserTimeTracking`.`PlatformId`
-        AND `UserTimeTracking`.`UserId` = @userid
         LEFT JOIN
     `Favourites` ON `MetadataMapBridge`.`ParentMapId` = `Favourites`.`GameId`
         AND `Favourites`.`UserId` = @userid
@@ -776,64 +784,40 @@ FROM
                 // build alpha list
                 if (orderByField == "NameThe" || orderByField == "Name")
                 {
-                    int CurrentPage = 1;
-                    int NextPageIndex = pageSize;
+                    int currentPage = 1;
+                    int nextPageIndex = pageSize > 0 ? pageSize : int.MaxValue;
 
-                    string alphaSearchField;
-                    if (orderByField == "NameThe")
-                    {
-                        alphaSearchField = "NameThe";
-                    }
-                    else
-                    {
-                        alphaSearchField = "Name";
-                    }
+                    string alphaSearchField = orderByField == "NameThe" ? "NameThe" : "Name";
+                    HashSet<string> seenKeys = new HashSet<string>();
 
                     for (int i = 0; i < dbResponse.Rows.Count; i++)
                     {
-                        if (NextPageIndex == i + 1)
+                        if (i + 1 == nextPageIndex)
                         {
-                            NextPageIndex += pageSize;
-                            CurrentPage += 1;
+                            currentPage++;
+                            nextPageIndex += pageSize;
                         }
 
-                        string gameName = dbResponse.Rows[i][alphaSearchField].ToString();
-                        if (gameName.Length == 0)
+                        string? gameName = dbResponse.Rows[i][alphaSearchField]?.ToString();
+                        string key;
+                        if (string.IsNullOrEmpty(gameName))
                         {
-                            if (!AlphaList.ContainsKey("#"))
-                            {
-                                AlphaList.Add("#", new GameReturnPackage.AlphaListItem
-                                {
-                                    Index = i,
-                                    Page = 1
-                                });
-                            }
+                            key = "#";
                         }
                         else
                         {
-                            string firstChar = gameName.Substring(0, 1).ToUpperInvariant();
-                            if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(firstChar))
+                            char firstChar = char.ToUpperInvariant(gameName[0]);
+                            key = (firstChar >= 'A' && firstChar <= 'Z') ? firstChar.ToString() : "#";
+                        }
+
+                        if (!seenKeys.Contains(key))
+                        {
+                            AlphaList[key] = new GameReturnPackage.AlphaListItem
                             {
-                                if (!AlphaList.ContainsKey(firstChar))
-                                {
-                                    AlphaList.Add(firstChar, new GameReturnPackage.AlphaListItem
-                                    {
-                                        Index = i,
-                                        Page = CurrentPage
-                                    });
-                                }
-                            }
-                            else
-                            {
-                                if (!AlphaList.ContainsKey("#"))
-                                {
-                                    AlphaList.Add("#", new GameReturnPackage.AlphaListItem
-                                    {
-                                        Index = i,
-                                        Page = 1
-                                    });
-                                }
-                            }
+                                Index = i,
+                                Page = currentPage
+                            };
+                            seenKeys.Add(key);
                         }
                     }
                 }

@@ -292,7 +292,7 @@ namespace gaseous_server
                                             if (metadataMapId != null)
                                             {
                                                 MetadataManagement metadataManagement = new MetadataManagement();
-                                                metadataManagement.RefreshSpecificGameAsync((long)metadataMapId);
+                                                await metadataManagement.RefreshSpecificGameAsync((long)metadataMapId);
                                             }
                                         }
                                         ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Completed, ImportStateItem.ImportType.Rom, ProcessData);
@@ -308,27 +308,27 @@ namespace gaseous_server
                             case TaskTypes.MetadataRefresh_Platform:
                                 Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing platform metadata for " + _TaskName);
                                 MetadataManagement metadataPlatform = new MetadataManagement(this);
-                                metadataPlatform.RefreshPlatforms(true);
+                                await metadataPlatform.RefreshPlatforms(true);
                                 break;
 
                             case TaskTypes.MetadataRefresh_Signatures:
                                 Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing signature metadata for " + _TaskName);
                                 MetadataManagement metadataSignatures = new MetadataManagement(this);
-                                metadataSignatures.RefreshSignatures(true);
+                                await metadataSignatures.RefreshSignatures(true);
                                 break;
 
                             case TaskTypes.MetadataRefresh_Game:
                                 Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing game metadata for " + _TaskName);
                                 MetadataManagement metadataGame = new MetadataManagement(this);
                                 metadataGame.UpdateRomCounts();
-                                metadataGame.RefreshGames(true);
+                                await metadataGame.RefreshGames(true);
                                 break;
 
                             case TaskTypes.LibraryScanWorker:
                                 CallContext.SetData("CallingProcess", _TaskType.ToString() + " - " + ((GameLibrary.LibraryItem)_Settings).Name);
                                 Logging.Log(Logging.LogType.Information, "Library Scan", "Scanning library " + _TaskName);
                                 ImportGame importLibraryScan = new ImportGame(this);
-                                importLibraryScan.LibrarySpecificScan((GameLibrary.LibraryItem)_Settings);
+                                await importLibraryScan.LibrarySpecificScan((GameLibrary.LibraryItem)_Settings);
                                 break;
                         }
                         _State = QueueItemState.Stopped;
@@ -635,7 +635,7 @@ namespace gaseous_server
                                     {
                                         CallingQueueItem = this
                                     };
-                                    importLibraryOrg.OrganiseLibrary();
+                                    await importLibraryOrg.OrganiseLibrary();
 
                                     _SaveLastRunTime = true;
 
@@ -673,7 +673,7 @@ namespace gaseous_server
 
                                 case QueueItemType.MediaGroupCompiler:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Media Group Compiler");
-                                    Classes.RomMediaGroup.CompileMediaGroup((long)Options);
+                                    await Classes.RomMediaGroup.CompileMediaGroup((long)Options);
                                     break;
 
                                 case QueueItemType.BackgroundDatabaseUpgrade:
@@ -687,7 +687,7 @@ namespace gaseous_server
                                     {
                                         CallingQueueItem = this
                                     };
-                                    maintenance.RunDailyMaintenance();
+                                    await maintenance.RunDailyMaintenance();
 
                                     _SaveLastRunTime = true;
 
@@ -699,7 +699,7 @@ namespace gaseous_server
                                     {
                                         CallingQueueItem = this
                                     };
-                                    weeklyMaintenance.RunWeeklyMaintenance();
+                                    await weeklyMaintenance.RunWeeklyMaintenance();
 
                                     _SaveLastRunTime = true;
                                     break;
