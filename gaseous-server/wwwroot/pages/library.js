@@ -65,7 +65,7 @@ async function SetupPage() {
                         });
                     }
 
-                    // add placeholder game tiles
+                    // add placeholder game tiles without blocking the UI
                     let maxPages = Math.ceil(filter.GameCount / filter.filterSelections["pageSize"]);
                     // generate page spans
                     for (let i = 1; i <= maxPages; i++) {
@@ -75,27 +75,38 @@ async function SetupPage() {
                         pageSpan.setAttribute('data-loaded', '0');
                         gamesElement.appendChild(pageSpan);
                     }
-                    // generate placeholder game tiles
+
+                    // generate placeholder game tiles in batches to avoid blocking
+                    const batchSize = 100;
                     let pageNumber = 1;
                     let tilesPerPage = 0;
-                    for (let i = 0; i < filter.GameCount; i++) {
-                        tilesPerPage++;
-                        if (tilesPerPage > filter.filterSelections["pageSize"]) {
-                            pageNumber++;
-                            tilesPerPage = 1;
+                    let i = 0;
+
+                    async function createPlaceholdersBatch() {
+                        let end = Math.min(i + batchSize, filter.GameCount);
+                        for (; i < end; i++) {
+                            tilesPerPage++;
+                            if (tilesPerPage > filter.filterSelections["pageSize"]) {
+                                pageNumber++;
+                                tilesPerPage = 1;
+                            }
+                            let targetElement = document.querySelector('span[data-page="' + pageNumber + '"]');
+                            if (targetElement) {
+                                let gameTile = document.createElement('div');
+                                gameTile.classList.add('game_tile_placeholder');
+                                gameTile.setAttribute('name', 'GamePlaceholder');
+                                gameTile.setAttribute('data-index', i);
+                                gameTile.setAttribute('data-page', pageNumber);
+                                let placeholderIcon = new GameIcon();
+                                gameTile.appendChild(await placeholderIcon.Render(false, false, false, [], false, false));
+                                targetElement.appendChild(gameTile);
+                            }
                         }
-                        let targetElement = document.querySelector('span[data-page="' + pageNumber + '"]');
-                        if (targetElement) {
-                            let gameTile = document.createElement('div');
-                            gameTile.classList.add('game_tile_placeholder');
-                            gameTile.setAttribute('name', 'GamePlaceholder');
-                            gameTile.setAttribute('data-index', i);
-                            gameTile.setAttribute('data-page', pageNumber);
-                            let placeholderIcon = new GameIcon();
-                            gameTile.appendChild(await placeholderIcon.Render(false, false, false, [], false, false));
-                            targetElement.appendChild(gameTile);
+                        if (i < filter.GameCount) {
+                            setTimeout(createPlaceholdersBatch, 0);
                         }
                     }
+                    createPlaceholdersBatch();
                 }
 
                 // render game tiles
