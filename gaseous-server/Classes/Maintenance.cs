@@ -34,6 +34,11 @@ namespace gaseous_server.Classes
                 await db.ExecuteCMDAsync(sqlLibraryWhereClause);
             }
 
+            // update rom counts
+            Logging.Log(Logging.LogType.Information, "Maintenance", "Updating rom counts");
+            MetadataManagement metadataGame = new MetadataManagement(this);
+            metadataGame.UpdateRomCounts();
+
             // delete old logs
             Logging.Log(Logging.LogType.Information, "Maintenance", "Removing logs older than " + Config.LoggingConfiguration.LogRetention + " days");
             long deletedCount = 1;
