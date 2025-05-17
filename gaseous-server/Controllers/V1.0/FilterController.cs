@@ -41,7 +41,7 @@ namespace gaseous_server.Controllers
         {
             var user = await _userManager.GetUserAsync(User);
 
-            return Ok(Filters.Filter(user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction, user.SecurityProfile.AgeRestrictionPolicy.IncludeUnrated));
+            return Ok(await Filters.Filter(user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction, user.SecurityProfile.AgeRestrictionPolicy.IncludeUnrated));
         }
     }
 }

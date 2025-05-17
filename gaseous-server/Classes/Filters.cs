@@ -1,5 +1,6 @@
 using System.Data;
 using System.Reflection.Metadata.Ecma335;
+using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
 using IGDB.Models;
 
@@ -7,7 +8,7 @@ namespace gaseous_server.Classes
 {
     public class Filters
     {
-        public static Dictionary<string, List<FilterItem>> Filter(Metadata.AgeGroups.AgeRestrictionGroupings MaximumAgeRestriction, bool IncludeUnrated)
+        public static async Task<Dictionary<string, List<FilterItem>>> Filter(Metadata.AgeGroups.AgeRestrictionGroupings MaximumAgeRestriction, bool IncludeUnrated)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
@@ -26,7 +27,7 @@ namespace gaseous_server.Classes
 
             string sql = "SELECT Platform.Id, Platform.`Name`, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT Game.Id, view_Games_Roms.PlatformId, COUNT(view_Games_Roms.Id) AS RomCount FROM Game LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + ageRestriction_Platform + ") GROUP BY Game.Id , view_Games_Roms.PlatformId HAVING RomCount > 0) Game JOIN Platform ON Game.PlatformId = Platform.Id AND Platform.SourceId = 0 GROUP BY Platform.`Name`;";
 
-            DataTable dbResponse = db.ExecuteCMD(sql, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 300));
+            DataTable dbResponse = await db.ExecuteCMDAsync(sql, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 300));
 
             foreach (DataRow dr in dbResponse.Rows)
             {
@@ -37,25 +38,25 @@ namespace gaseous_server.Classes
             FilterSet.Add("platforms", platforms);
 
             // genres
-            List<FilterItem> genres = GenerateFilterSet(db, "Genre", ageRestriction_Platform);
+            List<FilterItem> genres = await GenerateFilterSet(db, "Genre", ageRestriction_Platform);
             FilterSet.Add("genres", genres);
 
             // game modes
-            List<FilterItem> gameModes = GenerateFilterSet(db, "GameMode", ageRestriction_Platform);
+            List<FilterItem> gameModes = await GenerateFilterSet(db, "GameMode", ageRestriction_Platform);
             FilterSet.Add("gamemodes", gameModes);
 
             // player perspectives
-            List<FilterItem> playerPerspectives = GenerateFilterSet(db, "PlayerPerspective", ageRestriction_Platform);
+            List<FilterItem> playerPerspectives = await GenerateFilterSet(db, "PlayerPerspective", ageRestriction_Platform);
             FilterSet.Add("playerperspectives", playerPerspectives);
 
             // themes
-            List<FilterItem> themes = GenerateFilterSet(db, "Theme", ageRestriction_Platform);
+            List<FilterItem> themes = await GenerateFilterSet(db, "Theme", ageRestriction_Platform);
             FilterSet.Add("themes", themes);
 
             // age groups
             List<FilterItem> agegroupings = new List<FilterItem>();
             sql = "SELECT Game.AgeGroupId, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT Game.Id, AgeGroup.AgeGroupId, COUNT(view_Games_Roms.Id) AS RomCount FROM Game LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + ageRestriction_Platform + ") GROUP BY Game.Id HAVING RomCount > 0) Game GROUP BY Game.AgeGroupId ORDER BY Game.AgeGroupId DESC";
-            dbResponse = db.ExecuteCMD(sql, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 300));
+            dbResponse = await db.ExecuteCMDAsync(sql, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 300));
 
             foreach (DataRow dr in dbResponse.Rows)
             {
@@ -80,10 +81,10 @@ namespace gaseous_server.Classes
             return FilterSet;
         }
 
-        private static List<FilterItem> GenerateFilterSet(Database db, string Name, string AgeRestriction)
+        private static async Task<List<FilterItem>> GenerateFilterSet(Database db, string Name, string AgeRestriction)
         {
             List<FilterItem> filter = new List<FilterItem>();
-            DataTable dbResponse = GetGenericFilterItem(db, Name, AgeRestriction);
+            DataTable dbResponse = await GetGenericFilterItem(db, Name, AgeRestriction);
 
             foreach (DataRow dr in dbResponse.Rows)
             {
@@ -124,11 +125,11 @@ namespace gaseous_server.Classes
             return filter;
         }
 
-        private static DataTable GetGenericFilterItem(Database db, string Name, string AgeRestriction)
+        private static async Task<DataTable> GetGenericFilterItem(Database db, string Name, string AgeRestriction)
         {
             string sql = "SELECT Game.GameIdType, <ITEMNAME>.Id, <ITEMNAME>.`Name`, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT view_Games_Roms.GameIdType, Game.Id, AgeGroup.AgeGroupId, COUNT(view_Games_Roms.Id) AS RomCount FROM Game LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + AgeRestriction + ") GROUP BY Game.Id HAVING RomCount > 0) Game JOIN Relation_Game_<ITEMNAME>s ON Game.Id = Relation_Game_<ITEMNAME>s.GameId AND Game.GameIdType = Relation_Game_<ITEMNAME>s.GameSourceId JOIN <ITEMNAME> ON Relation_Game_<ITEMNAME>s.<ITEMNAME>sId = <ITEMNAME>.Id GROUP BY GameIdType, <ITEMNAME>.`Name` ORDER BY <ITEMNAME>.`Name`;";
             sql = sql.Replace("<ITEMNAME>", Name);
-            DataTable dbResponse = db.ExecuteCMD(sql, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 300));
+            DataTable dbResponse = await db.ExecuteCMDAsync(sql, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 300));
 
             return dbResponse;
         }

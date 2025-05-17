@@ -275,7 +275,7 @@ namespace gaseous_server.Classes
             else
             {
                 // get all platforms to pull from
-                Dictionary<string, List<Filters.FilterItem>> FilterDict = Filters.Filter(AgeGroups.AgeRestrictionGroupings.Adult, true);
+                Dictionary<string, List<Filters.FilterItem>> FilterDict = Filters.Filter(AgeGroups.AgeRestrictionGroupings.Adult, true).Result;
                 List<Classes.Filters.FilterItem> filteredPlatforms = (List<Classes.Filters.FilterItem>)FilterDict["platforms"];
                 foreach (Filters.FilterItem filterItem in filteredPlatforms)
                 {

@@ -9,3 +9,7 @@ CREATE INDEX idx_GameLocalization_Game_SourceId_Region ON GameLocalization (Game
 CREATE INDEX idx_GameLocalization_Name ON GameLocalization (Name);
 
 CREATE INDEX idx_Region_Id_SourceId_Identifier ON Region (Id, SourceId, Identifier);
+
+CREATE INDEX idx_Game_Id ON Game (Id);
+
+CREATE INDEX idx_Platform_Id_SourceId_Name ON Platform (Id, SourceId, Name);

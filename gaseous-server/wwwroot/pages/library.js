@@ -54,7 +54,6 @@ async function SetupPage() {
                         alphaPager.appendChild(alphaSpan);
 
                         alphaSpan.addEventListener('click', function () {
-                            // document.querySelector('div[data-index="' + value.index + '"]').scrollIntoView({ block: "start", behavior: 'smooth' });
                             document.querySelector('div[data-index="' + value.index + '"]').scrollIntoView({ block: "start" });
 
                             // load the target page
@@ -65,7 +64,7 @@ async function SetupPage() {
                         });
                     }
 
-                    // add placeholder game tiles without blocking the UI
+                    // add placeholder game tiles
                     let maxPages = Math.ceil(filter.GameCount / filter.filterSelections["pageSize"]);
                     // generate page spans
                     for (let i = 1; i <= maxPages; i++) {
@@ -75,38 +74,6 @@ async function SetupPage() {
                         pageSpan.setAttribute('data-loaded', '0');
                         gamesElement.appendChild(pageSpan);
                     }
-
-                    // generate placeholder game tiles in batches to avoid blocking
-                    const batchSize = 100;
-                    let pageNumber = 1;
-                    let tilesPerPage = 0;
-                    let i = 0;
-
-                    async function createPlaceholdersBatch() {
-                        let end = Math.min(i + batchSize, filter.GameCount);
-                        for (; i < end; i++) {
-                            tilesPerPage++;
-                            if (tilesPerPage > filter.filterSelections["pageSize"]) {
-                                pageNumber++;
-                                tilesPerPage = 1;
-                            }
-                            let targetElement = document.querySelector('span[data-page="' + pageNumber + '"]');
-                            if (targetElement) {
-                                let gameTile = document.createElement('div');
-                                gameTile.classList.add('game_tile_placeholder');
-                                gameTile.setAttribute('name', 'GamePlaceholder');
-                                gameTile.setAttribute('data-index', i);
-                                gameTile.setAttribute('data-page', pageNumber);
-                                let placeholderIcon = new GameIcon();
-                                gameTile.appendChild(await placeholderIcon.Render(false, false, false, [], false, false));
-                                targetElement.appendChild(gameTile);
-                            }
-                        }
-                        if (i < filter.GameCount) {
-                            setTimeout(createPlaceholdersBatch, 0);
-                        }
-                    }
-                    createPlaceholdersBatch();
                 }
 
                 // render game tiles
@@ -259,15 +226,43 @@ async function SetupPage() {
     });
 }
 
-function ScrollLoadPage(ScrolledObject, Anticipate) {
+async function ScrollLoadPage(ScrolledObject, Anticipate) {
     if (ScrolledObject.getAttribute('data-loaded') === "0") {
         ScrolledObject.setAttribute('data-loaded', "1");
         let pageToLoad = Number(ScrolledObject.getAttribute('data-page'));
         if (Anticipate === true) {
-            console.log('Loading page via pre-fetch: ' + pageToLoad);
+            console.log('Loading page via pre-fetch: ' + pageToLoad + ' into object ' + ScrolledObject.getAttribute('data-page'));
         } else {
-            console.log('Loading page: ' + pageToLoad);
+            console.log('Loading page ' + pageToLoad + ' into object ' + ScrolledObject.getAttribute('data-page'));
         }
+
+        // generate placeholder game tiles
+        let tilesPerPage = 0;
+        for (let i = 0; i < filter.GameCount; i++) {
+            tilesPerPage++;
+            if (tilesPerPage > filter.filterSelections["pageSize"]) {
+                break;
+            }
+
+            // calculate the index of the tile based on the page size and page number
+            let index = (pageToLoad - 1) * filter.filterSelections["pageSize"] + i;
+            if (index >= filter.GameCount) {
+                break;
+            }
+
+            let targetElement = document.querySelector('span[data-page="' + pageToLoad + '"]');
+            if (targetElement) {
+                let gameTile = document.createElement('div');
+                gameTile.classList.add('game_tile_placeholder');
+                gameTile.setAttribute('name', 'GamePlaceholder');
+                gameTile.setAttribute('data-index', index);
+                gameTile.setAttribute('data-page', pageToLoad);
+                let placeholderIcon = new GameIcon();
+                gameTile.appendChild(await placeholderIcon.Render(false, false, false, [], false, false));
+                targetElement.appendChild(gameTile);
+            }
+        }
+
         filter.ExecuteFilter(pageToLoad);
 
         return pageToLoad;
