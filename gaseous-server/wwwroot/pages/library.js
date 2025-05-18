@@ -1,3 +1,9 @@
+let gameTileWidth = 232;
+let gameTileHeight = 283;
+let gameTileMargin = 0;
+
+let loadedPages = [];
+
 async function SetupPage() {
     // setup view controls
     document.getElementById('games_filter_button_column').addEventListener('click', function () {
@@ -31,6 +37,8 @@ async function SetupPage() {
                 gamesElement.innerHTML = '';
 
                 coverURLList = [];
+
+                loadedPages = [];
             }
 
             filter.executeCallback = async (games) => {
@@ -63,63 +71,59 @@ async function SetupPage() {
                             }
                         });
                     }
-
-                    // add placeholder game tiles
-                    let maxPages = Math.ceil(filter.GameCount / filter.filterSelections["pageSize"]);
-                    // generate page spans
-                    for (let i = 1; i <= maxPages; i++) {
-                        let pageSpan = document.createElement('span');
-                        pageSpan.classList.add('pageAnchor');
-                        pageSpan.setAttribute('data-page', i);
-                        pageSpan.setAttribute('data-loaded', '0');
-                        gamesElement.appendChild(pageSpan);
-                    }
                 }
 
                 // render game tiles
                 for (const game of games) {
-                    let tileContainer = document.querySelector('div[data-index="' + game.index + '"]');
+                    // make sure tile with index doesn't exist
+                    let existingTile = document.querySelector('div[data-index="' + game.index + '"]');
+                    if (existingTile) {
+                        continue;
+                    }
 
-                    if (tileContainer) {
-                        tileContainer.classList.add('game_tile_wrapper_icon');
+                    let tileContainer = document.createElement('div');
+                    tileContainer.classList.add('game_tile_wrapper_icon');
 
-                        // set data-loaded=1 on the pageAnchor span to prevent re-rendering
-                        let pageAnchor = document.querySelector('span[data-page="' + tileContainer.getAttribute('data-page') + '"]');
-                        if (pageAnchor) {
-                            pageAnchor.setAttribute('data-loaded', '1');
-                        }
+                    tileContainer.setAttribute('data-index', game.index);
 
-                        tileContainer.innerHTML = '';
-                        let gameObj = new GameIcon(game);
-                        let gameTile = await gameObj.Render(showTitle, showRatings, showClassification, classificationDisplayOrder);
-                        tileContainer.appendChild(gameTile);
+                    let gameObj = new GameIcon(game);
+                    let gameTile = await gameObj.Render(showTitle, showRatings, showClassification, classificationDisplayOrder);
+                    tileContainer.appendChild(gameTile);
 
-                        if (game.cover) {
-                            let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg';
-                            if (!coverURLList.includes(coverUrl)) {
-                                coverURLList.push(coverUrl);
-                            }
+                    if (game.cover) {
+                        let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg';
+                        if (!coverURLList.includes(coverUrl)) {
+                            coverURLList.push(coverUrl);
                         }
                     }
+
+                    gamesElement.appendChild(tileContainer);
                 }
+
+                // sort all game tiles by their data-index attribute
+                let gameTiles = document.querySelectorAll('.game_tile_wrapper_icon');
+                let gameTilesArray = Array.from(gameTiles);
+                gameTilesArray.sort((a, b) => {
+                    let aIndex = parseInt(a.getAttribute('data-index'));
+                    let bIndex = parseInt(b.getAttribute('data-index'));
+                    return aIndex - bIndex;
+                });
+                for (const gameTile of gameTilesArray) {
+                    gamesElement.appendChild(gameTile);
+                }
+
+                // resize the game library element
+                ResizeLibraryPanel();
 
                 if (freshLoad === true) {
                     backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true, false);
                     freshLoad = false;
-                }
 
-                // restore the scroll position
-                let scrollPosition = localStorage.getItem('Library.ScrollPosition');
-                if (scrollPosition) {
-                    console.log('restoring scroll position: ' + scrollPosition);
-                    window.scrollTo(0, scrollPosition);
-                }
-
-                // load any visible pages
-                let anchors = document.querySelectorAll('span[class="pageAnchor"]');
-                for (const anchor of anchors) {
-                    if (elementIsVisibleInViewport(anchor, true)) {
-                        ScrollLoadPage(anchor);
+                    // restore the scroll position
+                    let scrollPosition = localStorage.getItem('Library.ScrollPosition');
+                    if (scrollPosition) {
+                        console.log('restoring scroll position: ' + scrollPosition);
+                        window.scrollTo(0, scrollPosition);
                     }
                 }
             };
@@ -179,105 +183,116 @@ async function SetupPage() {
                 filter.SetOrderDirection(orderDirectionSelect.val());
             });
 
-            filter.ApplyFilter();
+            await filter.ApplyFilter();
         });
 
-        filter.GetGamesFilter();
+        await filter.GetGamesFilter();
     }
 
     // setup scroll position
-    window.addEventListener('scroll', (pos) => {
+    window.addEventListener('scroll', async (pos) => {
         // save the scroll position to localStorage
         localStorage.setItem('Library.ScrollPosition', window.scrollY);
 
-        let pageToLoad;
-        let anchors = document.getElementsByClassName('pageAnchor');
-        for (const anchor of anchors) {
-            if (elementIsVisibleInViewport(anchor, true)) {
-                pageToLoad = ScrollLoadPage(anchor);
+        let gameLibraryElement = document.getElementById('games_library');
+
+        // get the scroll position
+        let scrollTop = window.scrollY;
+
+        // get the window height
+        let windowHeight = window.innerHeight;
+
+        // get the number of pages
+        let pageSize = parseInt(filter.filterSelections['pageSize']);
+        let pageCount = Math.ceil(filter.GameCount / pageSize);
+
+        // each element is 232px wide and 283px high, and there are pageSize elements per page - get the height of the page based on the width of gameLibraryElement
+        let tilesPerRow = Math.floor(gameLibraryElement.clientWidth / gameTileWidth);
+        // how many rows per page - incomplete rows are not counted
+        let rowsPerPage = Math.floor(pageSize / tilesPerRow);
+        // calculate the height of the page based on the number of rows per page
+        // and the height of the game tile
+        // the height of the game tile is 283px, and there is a margin of 0px between tiles
+        // the height of the game library element is the number of rows per page * the height of the game tile
+        // plus the margin between tiles
+        let pageHeight = Math.floor(rowsPerPage * gameTileHeight) + (rowsPerPage - 1) * gameTileMargin;
+
+        // make a list of all the pages and top and bottom coordinates of each page
+        let pages = [];
+        for (let i = 0; i < pageCount; i++) {
+            let pageTop = i * pageHeight;
+            let pageBottom = (i + 1) * pageHeight;
+            pages.push({ page: i + 1, top: pageTop, bottom: pageBottom });
+        }
+        console.log(pages);
+
+        // find the pages that are visible in the window
+        let visiblePages = [];
+        for (const page of pages) {
+            if (page.top < scrollTop + windowHeight && page.bottom > scrollTop) {
+                console.log('page ' + page.page + ' is visible');
+                visiblePages.push(page.page);
             }
         }
 
-        // anticipate scroll direction
-        if (pageToLoad !== undefined) {
-            let st = document.documentElement.scrollTop;
-            if (st > lastScrollTop) {
-                // pre-load the next page
-                let nextPageAnchor = document.querySelector('span[data-page="' + (pageToLoad + 1) + '"]');
-                if (nextPageAnchor) {
-                    ScrollLoadPage(nextPageAnchor, true);
-                }
-                let nextPageAnchor2 = document.querySelector('span[data-page="' + (pageToLoad + 2) + '"]');
-                if (nextPageAnchor2) {
-                    ScrollLoadPage(nextPageAnchor2, true);
-                }
-            } else {
-                // pre-load the previous page
-                let prevPageAnchor = document.querySelector('span[data-page="' + (pageToLoad - 1) + '"]');
-                if (prevPageAnchor) {
-                    ScrollLoadPage(prevPageAnchor, true);
-                }
-                let prevPageAnchor2 = document.querySelector('span[data-page="' + (pageToLoad - 2) + '"]');
-                if (prevPageAnchor2) {
-                    ScrollLoadPage(prevPageAnchor2, true);
-                }
+        // load the visible pages
+        for (const page of visiblePages) {
+            if (!loadedPages.includes(page)) {
+                loadedPages.push(page);
+                await filter.ExecuteFilter(page, pageSize);
             }
         }
     });
 }
 
-async function ScrollLoadPage(ScrolledObject, Anticipate) {
-    if (ScrolledObject.getAttribute('data-loaded') === "0") {
-        ScrolledObject.setAttribute('data-loaded', "1");
-        let pageToLoad = Number(ScrolledObject.getAttribute('data-page'));
-        if (Anticipate === true) {
-            console.log('Loading page via pre-fetch: ' + pageToLoad + ' into object ' + ScrolledObject.getAttribute('data-page'));
-        } else {
-            console.log('Loading page ' + pageToLoad + ' into object ' + ScrolledObject.getAttribute('data-page'));
-        }
+function ResizeLibraryPanel() {
+    // resize the game library element to contain the number of tiles in filter.GameCount - tiles are 232px wide and 283px high
+    // the game library element should not be wider than the window width minus the alphabet pager width
+    let gameLibraryElement = document.getElementById('games_library');
+    let alphaPager = document.getElementById('games_library_alpha_pager');
+    let gameLibraryWidth = Math.floor(window.innerWidth - gameTileWidth - alphaPager.clientWidth) - 20;
+    // get the number of pages
+    let pageSize = parseInt(filter.filterSelections['pageSize']);
+    let pageCount = Math.ceil(filter.GameCount / pageSize);
 
-        // generate placeholder game tiles
-        let tilesPerPage = 0;
-        for (let i = 0; i < filter.GameCount; i++) {
-            tilesPerPage++;
-            if (tilesPerPage > filter.filterSelections["pageSize"]) {
-                break;
-            }
+    // each element is 232px wide and 283px high, and there are pageSize elements per page - get the height of the page based on the width of gameLibraryElement
+    let tilesPerRow = Math.floor(gameLibraryElement.clientWidth / gameTileWidth);
+    // how many rows per page - incomplete rows are not counted
+    let rowsPerPage = Math.floor(pageSize / tilesPerRow);
+    // calculate the height of the page based on the number of rows per page
+    // and the height of the game tile
+    // the height of the game tile is 283px, and there is a margin of 0px between tiles
+    // the height of the game library element is the number of rows per page * the height of the game tile
+    // plus the margin between tiles
+    let gameLibraryHeight = Math.floor((rowsPerPage * pageCount) * gameTileHeight);
+    gameLibraryElement.setAttribute('style', 'width: ' + gameLibraryWidth + 'px; height: ' + gameLibraryHeight + 'px; position: relative;');
 
-            // calculate the index of the tile based on the page size and page number
-            let index = (pageToLoad - 1) * filter.filterSelections["pageSize"] + i;
-            if (index >= filter.GameCount) {
-                break;
-            }
-
-            let targetElement = document.querySelector('span[data-page="' + pageToLoad + '"]');
-            if (targetElement) {
-                let gameTile = document.createElement('div');
-                gameTile.classList.add('game_tile_placeholder');
-                gameTile.setAttribute('name', 'GamePlaceholder');
-                gameTile.setAttribute('data-index', index);
-                gameTile.setAttribute('data-page', pageToLoad);
-                let placeholderIcon = new GameIcon();
-                gameTile.appendChild(await placeholderIcon.Render(false, false, false, [], false, false));
-                targetElement.appendChild(gameTile);
-            }
-        }
-
-        filter.ExecuteFilter(pageToLoad);
-
-        return pageToLoad;
+    // rearrange the game tiles to fit the new width
+    let gameTiles = document.querySelectorAll('.game_tile_wrapper_icon');
+    let gameTileCount = Math.floor(gameLibraryWidth / (gameTileWidth + gameTileMargin));
+    for (const gameTile of gameTiles) {
+        // get the game tile index
+        // get the game tile index based on the number of tiles per row
+        // the game tile index is the index of the tile in the list of tiles
+        let gameTileIndex = gameTile.getAttribute('data-index');
+        // determine the row and column of the game tile based on the index
+        let gameTileRow = Math.floor(gameTileIndex / gameTileCount);
+        let gameTileColumn = gameTileIndex % gameTileCount;
+        // calculate the x and y position of the game tile based on the row and column
+        // the x position is the column * the width of the game tile + the margin between tiles
+        let gameTileX = gameTileColumn * (gameTileWidth + gameTileMargin);
+        // the y position is the row * the height of the game tile + the margin between tiles
+        let gameTileY = gameTileRow * (gameTileHeight + gameTileMargin);
+        // set the position of the game tile
+        gameTile.setAttribute('style', 'left: ' + gameTileX + 'px; top: ' + gameTileY + 'px; position: absolute;');
+        gameTileIndex++;
     }
 }
 
-const elementIsVisibleInViewport = (el, partiallyVisible = false) => {
-    const { top, left, bottom, right } = el.getBoundingClientRect();
-    const { innerHeight, innerWidth } = window;
-    return partiallyVisible
-        ? ((top > 0 && top < innerHeight) ||
-            (bottom > 0 && bottom < innerHeight)) &&
-        ((left > 0 && left < innerWidth) || (right > 0 && right < innerWidth))
-        : top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
-};
+// execute ResizeLibraryPanel() on window resize
+window.addEventListener('resize', () => {
+    ResizeLibraryPanel();
+});
 
 function FilterDisplayToggle(display, storePreference = true) {
     let filterPanel = document.getElementById('games_filter_panel');
