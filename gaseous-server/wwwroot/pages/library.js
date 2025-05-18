@@ -39,6 +39,8 @@ async function SetupPage() {
                 coverURLList = [];
 
                 loadedPages = [];
+
+                window.scrollTo(0, 0);
             }
 
             filter.executeCallback = async (games) => {
@@ -61,14 +63,20 @@ async function SetupPage() {
                         alphaSpan.setAttribute('data-letter', key);
                         alphaPager.appendChild(alphaSpan);
 
-                        alphaSpan.addEventListener('click', function () {
-                            document.querySelector('div[data-index="' + value.index + '"]').scrollIntoView({ block: "start" });
-
-                            // load the target page
-                            let pageAnchor = document.querySelector('span[data-page="' + value.page + '"]');
-                            if (pageAnchor) {
-                                ScrollLoadPage(pageAnchor);
-                            }
+                        alphaSpan.addEventListener('click', () => {
+                            // calculate the vertical position of the game tile with the index defined in value.index
+                            let tilesPerRow = Math.floor(gamesElement.clientWidth / gameTileWidth);
+                            // which row is the game tile in
+                            let gameTileRow = Math.floor(value.index / tilesPerRow);
+                            // scroll to the game tile
+                            let gameTileY = gameTileRow * (gameTileHeight + gameTileMargin);
+                            // scroll to the game tile
+                            let gameTileTop = gameTileY - (window.innerHeight / 2) + (gameTileHeight / 2);
+                            // scroll to the game tile
+                            window.scrollTo({
+                                top: gameTileTop,
+                                behavior: 'smooth'
+                            });
                         });
                     }
                 }
@@ -224,13 +232,11 @@ async function SetupPage() {
             let pageBottom = (i + 1) * pageHeight;
             pages.push({ page: i + 1, top: pageTop, bottom: pageBottom });
         }
-        console.log(pages);
 
         // find the pages that are visible in the window
         let visiblePages = [];
         for (const page of pages) {
             if (page.top < scrollTop + windowHeight && page.bottom > scrollTop) {
-                console.log('page ' + page.page + ' is visible');
                 visiblePages.push(page.page);
             }
         }
@@ -240,6 +246,16 @@ async function SetupPage() {
             if (!loadedPages.includes(page)) {
                 loadedPages.push(page);
                 await filter.ExecuteFilter(page, pageSize);
+
+                // anticipate the next and previous pages
+                if (page + 1 <= pageCount && !loadedPages.includes(page + 1)) {
+                    loadedPages.push(page + 1);
+                    await filter.ExecuteFilter(page + 1, pageSize);
+                }
+                if (page - 1 > 0 && !loadedPages.includes(page - 1)) {
+                    loadedPages.push(page - 1);
+                    await filter.ExecuteFilter(page - 1, pageSize);
+                }
             }
         }
     });
