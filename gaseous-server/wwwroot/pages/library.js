@@ -343,6 +343,7 @@ function FilterDisplayToggle(display, storePreference = true) {
 }
 
 let filter = new Filtering();
+filter.GetSummary = true;
 
 let coverURLList = [];
 

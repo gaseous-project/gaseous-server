@@ -284,6 +284,7 @@ class Filtering {
         this.ExecuteFilter(pageNumber, pageSize);
     }
 
+    GetSummary = false;
     GameCount = 0;
     AlphaList = [];
 
@@ -296,7 +297,7 @@ class Filtering {
         }
 
         let returnSummary = "false";
-        if (this.AlphaList.length === 0) {
+        if (this.GetSummary === true) {
             returnSummary = "true";
         }
 
@@ -304,7 +305,9 @@ class Filtering {
             this.executeBeginCallback();
         }
 
-        await fetch('/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize + '&returnSummary=' + returnSummary + '&returnGames=true', {
+        let url = '/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize + '&returnSummary=' + returnSummary + '&returnGames=true';
+
+        await fetch(url, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
