@@ -203,6 +203,31 @@
                                                         }
                                                     }
 
+                                                    // add event listener for escape key
+                                                    document.addEventListener("keydown", (event) => {
+                                                        if (event.key === "Escape") {
+                                                            let modalBackgrounds = document.getElementsByClassName('modal-background');
+                                                            if (modalBackgrounds.length === 1) {
+                                                                // set the scroll bar back to auto
+                                                                document.body.style.overflow = 'auto';
+
+                                                                // Remove all keys from session storage that start with "Card."
+                                                                let keys = Object.keys(sessionStorage);
+                                                                keys.forEach(key => {
+                                                                    if (key.startsWith("Card.")) {
+                                                                        sessionStorage.removeItem(key);
+                                                                    }
+                                                                });
+                                                            }
+
+                                                            // remove the last modal in modalBackgrounds
+                                                            if (modalBackgrounds.length > 0) {
+                                                                let modalBackground = modalBackgrounds[modalBackgrounds.length - 1];
+                                                                modalBackground.parentNode.removeChild(modalBackground);
+                                                            }
+                                                        }
+                                                    });
+
                                                     break;
                                                 }
                                             }

@@ -93,12 +93,12 @@ class Card {
         // append the modal to the body
         document.body.appendChild(this.modalBackground);
 
-        // add event listener for escape key
-        document.addEventListener("keydown", (event) => {
-            if (event.key === "Escape") {
-                this.Close();
-            }
-        });
+        // // add event listener for escape key
+        // document.addEventListener("keydown", (event) => {
+        //     if (event.key === "Escape") {
+        //         this.Close();
+        //     }
+        // });
     }
 
     PostOpenCallbacks = [
@@ -857,7 +857,6 @@ class GameCardPlatformItem {
                     if (element.lastPlayedRomIsMediagroup === true || element.favouriteRomIsMediagroup === true) {
                         isMediaGroup = true;
                     }
-                    console.log('RomID: ' + element.lastPlayedRomId + ' isMediaGroup: ' + isMediaGroup);
                     let stateManager = new EmulatorStateManager(element.lastPlayedRomId, isMediaGroup, element.emulatorConfiguration.emulatorType, element.emulatorConfiguration.core, element.id, element.metadataMapId, element.lastPlayedRomName);
                     stateManager.open();
                 });
@@ -1163,8 +1162,6 @@ class GameCardRomList {
                     }
                 }
 
-                console.log(data);
-
                 if (forceUpdate === true) {
                     // clear the media group container
                     this.mediaGroupContainer.innerHTML = '';
@@ -1316,7 +1313,6 @@ class GameCardRomList {
                             platformStateManagerButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstatemanagericon" />';
                             platformStateManagerButton.addEventListener('click', (e) => {
                                 e.stopPropagation();
-                                console.log('RomID: ' + element.id + ' isMediaGroup: ' + true);
                                 let stateManager = new EmulatorStateManager(element.id, true, this.gamePlatformObject.emulatorConfiguration.emulatorType, this.gamePlatformObject.emulatorConfiguration.core, element.platformId, element.metadataMapId, element.name);
                                 stateManager.open();
                             });
@@ -1371,7 +1367,6 @@ class GameCardRomList {
                 'Content-Type': 'application/json'
             }
         }).then(response => response.json()).then(data => {
-            console.log(data);
             if (data.gameRomItems) {
                 data.gameRomItems.forEach(element => {
                     let romItem = document.createElement('div');
@@ -1532,7 +1527,6 @@ class GameCardRomList {
                     platformStateManagerButton.innerHTML = '<img src="/images/SaveStates.png" class="savedstatemanagericon" />';
                     platformStateManagerButton.addEventListener('click', (e) => {
                         e.stopPropagation();
-                        console.log('RomID: ' + element.id + ' isMediaGroup: ' + false);
                         let stateManager = new EmulatorStateManager(element.id, false, this.gamePlatformObject.emulatorConfiguration.emulatorType, this.gamePlatformObject.emulatorConfiguration.core, element.platformId, element.metadataMapId, element.name);
                         stateManager.open();
                     });
@@ -1623,8 +1617,6 @@ class GameCardRomList {
                 });
 
                 element.preferred = true;
-                console.log('Selected: ' + element.sourceType);
-                console.log(metadataMap);
             });
             if (element.preferred == true) {
                 itemSectionHeaderRadio.checked = true;
