@@ -347,22 +347,38 @@ class Filtering {
     }
 
     async GetGamesFilter() {
-        await fetch('/api/v1.1/Filter', {
-            method: 'GET'
-        }).then(response => {
-            if (response.ok) {
-                return response.json();
+        try {
+            const response = await fetch('/api/v1.1/Filter', { method: 'GET' });
+            if (!response.ok) throw new Error('Failed to load filter content');
+            const data = await response.json();
+
+            // Fetch all filter components in parallel
+            const filterEntries = await Promise.all(
+                data.map(async element => {
+                    try {
+                        const res = await fetch(`/api/v1.1/Filter/${element}`, { method: 'GET' });
+                        if (!res.ok) throw new Error('Failed to load filter component');
+                        const filterItem = await res.json();
+                        return [element.toLowerCase(), filterItem];
+                    } catch (error) {
+                        console.error(error);
+                        return null;
+                    }
+                })
+            );
+
+            // Build filter object from successful fetches
+            const filter = {};
+            for (const entry of filterEntries) {
+                if (entry) filter[entry[0]] = entry[1];
             }
-            throw new Error('Failed to load filter content');
-        }).then(data => {
-            if (this.FilterCallbacks.length > 0) {
-                for (const callback of this.FilterCallbacks) {
-                    callback(data);
-                }
+
+            for (const callback of this.FilterCallbacks) {
+                callback(filter);
             }
-        }).catch(error => {
+        } catch (error) {
             console.error(error);
-        });
+        }
     }
 
     FilterCallbacks = [];
