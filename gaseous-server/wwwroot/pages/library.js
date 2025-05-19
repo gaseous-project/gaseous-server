@@ -199,65 +199,73 @@ async function SetupPage() {
 
     // setup scroll position
     window.addEventListener('scroll', async (pos) => {
-        // save the scroll position to localStorage
-        localStorage.setItem('Library.ScrollPosition', window.scrollY);
-
-        let gameLibraryElement = document.getElementById('games_library');
-
-        // get the scroll position
-        let scrollTop = window.scrollY;
-
-        // get the window height
-        let windowHeight = window.innerHeight;
-
-        // get the number of pages
-        let pageSize = parseInt(filter.filterSelections['pageSize']);
-        let pageCount = Math.ceil(filter.GameCount / pageSize);
-
-        // each element is 232px wide and 283px high, and there are pageSize elements per page - get the height of the page based on the width of gameLibraryElement
-        let tilesPerRow = Math.floor(gameLibraryElement.clientWidth / gameTileWidth);
-        // how many rows per page - incomplete rows are not counted
-        let rowsPerPage = Math.floor(pageSize / tilesPerRow);
-        // calculate the height of the page based on the number of rows per page
-        // and the height of the game tile
-        // the height of the game tile is 283px, and there is a margin of 0px between tiles
-        // the height of the game library element is the number of rows per page * the height of the game tile
-        // plus the margin between tiles
-        let pageHeight = Math.floor(rowsPerPage * gameTileHeight) + (rowsPerPage - 1) * gameTileMargin;
-
-        // make a list of all the pages and top and bottom coordinates of each page
-        let pages = [];
-        for (let i = 0; i < pageCount; i++) {
-            let pageTop = i * pageHeight;
-            let pageBottom = (i + 1) * pageHeight;
-            pages.push({ page: i + 1, top: pageTop, bottom: pageBottom });
+        // clear the scroll timer
+        if (scrollTimer) {
+            clearTimeout(scrollTimer);
         }
 
-        // find the pages that are visible in the window
-        let visiblePages = [];
-        for (const page of pages) {
-            if (page.top < scrollTop + windowHeight && page.bottom > scrollTop) {
-                visiblePages.push(page.page);
+        // set the scroll timer to perform the scroll action after 1 second
+        scrollTimer = setTimeout(async () => {
+            // save the scroll position to localStorage
+            localStorage.setItem('Library.ScrollPosition', window.scrollY);
+
+            let gameLibraryElement = document.getElementById('games_library');
+
+            // get the scroll position
+            let scrollTop = window.scrollY;
+
+            // get the window height
+            let windowHeight = window.innerHeight;
+
+            // get the number of pages
+            let pageSize = parseInt(filter.filterSelections['pageSize']);
+            let pageCount = Math.ceil(filter.GameCount / pageSize);
+
+            // each element is 232px wide and 283px high, and there are pageSize elements per page - get the height of the page based on the width of gameLibraryElement
+            let tilesPerRow = Math.floor(gameLibraryElement.clientWidth / gameTileWidth);
+            // how many rows per page - incomplete rows are not counted
+            let rowsPerPage = Math.floor(pageSize / tilesPerRow);
+            // calculate the height of the page based on the number of rows per page
+            // and the height of the game tile
+            // the height of the game tile is 283px, and there is a margin of 0px between tiles
+            // the height of the game library element is the number of rows per page * the height of the game tile
+            // plus the margin between tiles
+            let pageHeight = Math.floor(rowsPerPage * gameTileHeight) + (rowsPerPage - 1) * gameTileMargin;
+
+            // make a list of all the pages and top and bottom coordinates of each page
+            let pages = [];
+            for (let i = 0; i < pageCount; i++) {
+                let pageTop = i * pageHeight;
+                let pageBottom = (i + 1) * pageHeight;
+                pages.push({ page: i + 1, top: pageTop, bottom: pageBottom });
             }
-        }
 
-        // load the visible pages
-        for (const page of visiblePages) {
-            if (!loadedPages.includes(page)) {
-                loadedPages.push(page);
-                await filter.ExecuteFilter(page, pageSize);
-
-                // anticipate the next and previous pages
-                if (page + 1 <= pageCount && !loadedPages.includes(page + 1)) {
-                    loadedPages.push(page + 1);
-                    await filter.ExecuteFilter(page + 1, pageSize);
-                }
-                if (page - 1 > 0 && !loadedPages.includes(page - 1)) {
-                    loadedPages.push(page - 1);
-                    await filter.ExecuteFilter(page - 1, pageSize);
+            // find the pages that are visible in the window
+            let visiblePages = [];
+            for (const page of pages) {
+                if (page.top < scrollTop + windowHeight && page.bottom > scrollTop) {
+                    visiblePages.push(page.page);
                 }
             }
-        }
+
+            // load the visible pages
+            for (const page of visiblePages) {
+                if (!loadedPages.includes(page)) {
+                    loadedPages.push(page);
+                    await filter.ExecuteFilter(page, pageSize);
+
+                    // anticipate the next and previous pages
+                    if (page + 1 <= pageCount && !loadedPages.includes(page + 1)) {
+                        loadedPages.push(page + 1);
+                        await filter.ExecuteFilter(page + 1, pageSize);
+                    }
+                    if (page - 1 > 0 && !loadedPages.includes(page - 1)) {
+                        loadedPages.push(page - 1);
+                        await filter.ExecuteFilter(page - 1, pageSize);
+                    }
+                }
+            }
+        }, 250);
     });
 }
 
@@ -265,8 +273,12 @@ function ResizeLibraryPanel() {
     // resize the game library element to contain the number of tiles in filter.GameCount - tiles are 232px wide and 283px high
     // the game library element should not be wider than the window width minus the alphabet pager width
     let gameLibraryElement = document.getElementById('games_library');
+    let filterPanel = document.getElementById('games_filter_panel');
     let alphaPager = document.getElementById('games_library_alpha_pager');
-    let gameLibraryWidth = Math.floor(window.innerWidth - gameTileWidth - alphaPager.clientWidth) - 20;
+    let gameLibraryWidth = Math.floor(window.innerWidth - alphaPager.clientWidth);
+    if (filterPanel.style.display == 'block') {
+        gameLibraryWidth = Math.floor(window.innerWidth - alphaPager.clientWidth - filterPanel.clientWidth);
+    }
     // get the number of pages
     let pageSize = parseInt(filter.filterSelections['pageSize']);
     let pageCount = Math.ceil(filter.GameCount / pageSize);
@@ -326,6 +338,8 @@ function FilterDisplayToggle(display, storePreference = true) {
         gamesHome.classList.add('games_home_expanded');
         if (storePreference === true) { SetPreference("Library.ShowFilter", false); }
     }
+
+    ResizeLibraryPanel();
 }
 
 let filter = new Filtering();
@@ -333,5 +347,6 @@ let filter = new Filtering();
 let coverURLList = [];
 
 let lastScrollTop = localStorage.getItem('Library.ScrollPosition') || 0;
+let scrollTimer = null;
 
 SetupPage();
