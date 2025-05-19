@@ -99,7 +99,7 @@ namespace gaseous_server.Controllers.v1_1
                     model.GameAgeRating.IncludeUnrated = false;
                 }
 
-                return Ok(GetGames(model, user, pageNumber, pageSize, returnSummary, returnGames));
+                return Ok(await GetGames(model, user, pageNumber, pageSize, returnSummary, returnGames));
             }
             else
             {
@@ -131,12 +131,12 @@ namespace gaseous_server.Controllers.v1_1
 
                 List<Models.Game> RetVal = new List<Models.Game>();
 
-                DataTable dbResponse = db.ExecuteCMD(sql, dbDict);
+                DataTable dbResponse = await db.ExecuteCMDAsync(sql, dbDict);
 
                 foreach (DataRow dr in dbResponse.Rows)
                 {
-                    MetadataMap.MetadataMapItem metadataMap = Classes.MetadataManagement.GetMetadataMap(MetadataMapId).PreferredMetadataMapItem;
-                    RetVal.Add(Classes.Metadata.Games.GetGame(metadataMap.SourceType, (long)dr["SimilarGamesId"]));
+                    MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).PreferredMetadataMapItem;
+                    RetVal.Add(await Classes.Metadata.Games.GetGame(metadataMap.SourceType, (long)dr["SimilarGamesId"]));
                 }
 
                 GameReturnPackage gameReturn = new GameReturnPackage(RetVal.Count, RetVal);
@@ -206,7 +206,7 @@ namespace gaseous_server.Controllers.v1_1
             }
         }
 
-        public static GameReturnPackage GetGames(GameSearchModel model, ApplicationUser? user, int pageNumber = 0, int pageSize = 0, bool returnSummary = true, bool returnGames = true)
+        public static async Task<GameReturnPackage> GetGames(GameSearchModel model, ApplicationUser? user, int pageNumber = 0, int pageSize = 0, bool returnSummary = true, bool returnGames = true)
         {
             string whereClause = "";
             string havingClause = "";
@@ -555,7 +555,7 @@ namespace gaseous_server.Controllers.v1_1
                 ORDER BY `MetadataMap`.`PlatformId`
                 SEPARATOR ','),
             ']') AS `Platforms`,
-    COUNT(`Games_Roms`.`Id`) AS `RomCount`,
+    `RomCounts`.`RomCount`,
     CASE
         WHEN `RomMediaGroup`.`Id` IS NULL THEN 0
         ELSE 1
@@ -607,21 +607,38 @@ namespace gaseous_server.Controllers.v1_1
     `Game`.`GameModes`,
     `Game`.`PlayerPerspectives`,
     `Game`.`Themes`,
-    MIN(`Games_Roms`.`DateCreated`) AS `DateAdded`,
-    MAX(`Games_Roms`.`DateUpdated`) AS `DateUpdated`,
-    SUM(`UserTimeTracking`.`SessionLength`) AS `TimePlayed`,
-    MAX(`UserTimeTracking`.`SessionTime`) AS `LastPlayed`
+    `RomCounts`.`DateAdded`,
+    `RomCounts`.`DateUpdated`,
+    IFNULL(`UserTimeTracking`.`TimePlayed`, 0) AS `TimePlayed`,
+    `UserTimeTracking`.`LastPlayed`
 FROM
     `MetadataMap`
         LEFT JOIN
     `MetadataMapBridge` ON (`MetadataMap`.`Id` = `MetadataMapBridge`.`ParentMapId`
         AND `MetadataMapBridge`.`Preferred` = 1)
         JOIN
+    (SELECT 
+        `MetadataMapId`,
+            COUNT(`Id`) AS `RomCount`,
+            MIN(`DateCreated`) AS `DateAdded`,
+            MAX(`DateUpdated`) AS `DateUpdated`
+    FROM
+        `Games_Roms`
+    GROUP BY `MetadataMapId`) AS `RomCounts` ON `MetadataMap`.`Id` = `RomCounts`.`MetadataMapId`
+        JOIN
     `Games_Roms` ON `MetadataMap`.`Id` = `Games_Roms`.`MetadataMapId`
         LEFT JOIN
-    `UserTimeTracking` ON `MetadataMap`.`Id` = `UserTimeTracking`.`GameId`
+    (SELECT 
+        `GameId`,
+            `PlatformId`,
+            SUM(`SessionLength`) AS `TimePlayed`,
+            MAX(`SessionTime`) AS `LastPlayed`
+    FROM
+        `UserTimeTracking`
+    WHERE
+        `UserId` = @userid
+    GROUP BY `GameId`, `PlatformId`) AS `UserTimeTracking` ON `MetadataMap`.`Id` = `UserTimeTracking`.`GameId`
         AND `MetadataMap`.`PlatformId` = `UserTimeTracking`.`PlatformId`
-        AND `UserTimeTracking`.`UserId` = @userid
         LEFT JOIN
     `Favourites` ON `MetadataMapBridge`.`ParentMapId` = `Favourites`.`GameId`
         AND `Favourites`.`UserId` = @userid
@@ -691,7 +708,7 @@ FROM
                 whereParams["lang"] = "";
             }
 
-            DataTable dbResponse = db.ExecuteCMD(sql + limiter, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
+            DataTable dbResponse = await db.ExecuteCMDAsync(sql + limiter, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
 
             // get count
             int? RecordCount = null;
@@ -758,7 +775,7 @@ FROM
             Dictionary<string, GameReturnPackage.AlphaListItem>? AlphaList = null;
             if (returnSummary == true)
             {
-                dbResponse = db.ExecuteCMD(sql, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
+                dbResponse = await db.ExecuteCMDAsync(sql, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
 
                 RecordCount = dbResponse.Rows.Count;
 
@@ -767,64 +784,40 @@ FROM
                 // build alpha list
                 if (orderByField == "NameThe" || orderByField == "Name")
                 {
-                    int CurrentPage = 1;
-                    int NextPageIndex = pageSize;
+                    int currentPage = 1;
+                    int nextPageIndex = pageSize > 0 ? pageSize : int.MaxValue;
 
-                    string alphaSearchField;
-                    if (orderByField == "NameThe")
-                    {
-                        alphaSearchField = "NameThe";
-                    }
-                    else
-                    {
-                        alphaSearchField = "Name";
-                    }
+                    string alphaSearchField = orderByField == "NameThe" ? "NameThe" : "Name";
+                    HashSet<string> seenKeys = new HashSet<string>();
 
                     for (int i = 0; i < dbResponse.Rows.Count; i++)
                     {
-                        if (NextPageIndex == i + 1)
+                        if (i + 1 == nextPageIndex)
                         {
-                            NextPageIndex += pageSize;
-                            CurrentPage += 1;
+                            currentPage++;
+                            nextPageIndex += pageSize;
                         }
 
-                        string gameName = dbResponse.Rows[i][alphaSearchField].ToString();
-                        if (gameName.Length == 0)
+                        string? gameName = dbResponse.Rows[i][alphaSearchField]?.ToString();
+                        string key;
+                        if (string.IsNullOrEmpty(gameName))
                         {
-                            if (!AlphaList.ContainsKey("#"))
-                            {
-                                AlphaList.Add("#", new GameReturnPackage.AlphaListItem
-                                {
-                                    Index = i,
-                                    Page = 1
-                                });
-                            }
+                            key = "#";
                         }
                         else
                         {
-                            string firstChar = gameName.Substring(0, 1).ToUpperInvariant();
-                            if ("ABCDEFGHIJKLMNOPQRSTUVWXYZ".Contains(firstChar))
+                            char firstChar = char.ToUpperInvariant(gameName[0]);
+                            key = (firstChar >= 'A' && firstChar <= 'Z') ? firstChar.ToString() : "#";
+                        }
+
+                        if (!seenKeys.Contains(key))
+                        {
+                            AlphaList[key] = new GameReturnPackage.AlphaListItem
                             {
-                                if (!AlphaList.ContainsKey(firstChar))
-                                {
-                                    AlphaList.Add(firstChar, new GameReturnPackage.AlphaListItem
-                                    {
-                                        Index = i,
-                                        Page = CurrentPage
-                                    });
-                                }
-                            }
-                            else
-                            {
-                                if (!AlphaList.ContainsKey("#"))
-                                {
-                                    AlphaList.Add("#", new GameReturnPackage.AlphaListItem
-                                    {
-                                        Index = i,
-                                        Page = 1
-                                    });
-                                }
-                            }
+                                Index = i,
+                                Page = currentPage
+                            };
+                            seenKeys.Add(key);
                         }
                     }
                 }

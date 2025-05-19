@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Classes.Metadata
@@ -11,7 +12,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static Region? GetGame_Region(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<Region?> GetGame_Region(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -19,7 +20,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Region? RetVal = Metadata.GetMetadata<Region>(SourceType, (long)Id, false);
+                Region? RetVal = await Metadata.GetMetadataAsync<Region>(SourceType, (long)Id, false);
 
                 return RetVal;
             }

@@ -34,7 +34,7 @@ namespace gaseous_server.Models
                     switch (SourceType)
                     {
                         case MetadataSources.IGDB:
-                            Game game = Games.GetGame(SourceType, (long)SourceId);
+                            Game game = Games.GetGame(SourceType, (long)SourceId).Result;
                             if (game != null)
                             {
                                 slug = game.Slug;

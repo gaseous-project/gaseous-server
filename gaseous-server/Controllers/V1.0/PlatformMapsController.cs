@@ -29,11 +29,11 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(typeof(List<PlatformMapping.PlatformMapItem>), StatusCodes.Status200OK)]
-        public ActionResult GetPlatformMap(bool ResetToDefault = false)
+        public async Task<ActionResult> GetPlatformMap(bool ResetToDefault = false)
         {
             if (ResetToDefault == true)
             {
-                PlatformMapping.ExtractPlatformMap(true);
+                await PlatformMapping.ExtractPlatformMap(true);
             }
 
             return Ok(PlatformMapping.PlatformMap);
@@ -71,11 +71,11 @@ namespace gaseous_server.Controllers
         [Route("{PlatformId}")]
         [ProducesResponseType(typeof(PlatformMapping.PlatformMapItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult PlatformMap(long PlatformId)
+        public async Task<ActionResult> PlatformMap(long PlatformId)
         {
             try
             {
-                PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(PlatformId);
+                PlatformMapping.PlatformMapItem platformMapItem = await PlatformMapping.GetPlatformMap(PlatformId);
 
                 if (platformMapItem != null)
                 {
@@ -138,7 +138,7 @@ namespace gaseous_server.Controllers
             // Process uploaded files
             foreach (Dictionary<string, object> UploadedFile in UploadedFiles)
             {
-                Models.PlatformMapping.ExtractPlatformMap((string)UploadedFile["fullpath"]);
+                await Models.PlatformMapping.ExtractPlatformMap((string)UploadedFile["fullpath"]);
             }
 
             if (Directory.Exists(workPath))
@@ -156,11 +156,11 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(PlatformMapping.PlatformMapItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Authorize(Roles = "Admin")]
-        public ActionResult EditPlatformMap(long PlatformId, PlatformMapping.PlatformMapItem Map)
+        public async Task<ActionResult> EditPlatformMap(long PlatformId, PlatformMapping.PlatformMapItem Map)
         {
             try
             {
-                PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(PlatformId);
+                PlatformMapping.PlatformMapItem platformMapItem = await PlatformMapping.GetPlatformMap(PlatformId);
 
                 if (platformMapItem != null)
                 {

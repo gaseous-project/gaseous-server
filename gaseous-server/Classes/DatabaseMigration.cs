@@ -1,6 +1,7 @@
 using System;
 using System.Data;
 using System.Reflection;
+using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
 
@@ -389,7 +390,7 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static void MySql_1024_MigrateMetadataVersion()
+        public static async Task MySql_1024_MigrateMetadataVersion()
         {
             FileSignature fileSignature = new FileSignature();
 
@@ -401,20 +402,20 @@ namespace gaseous_server.Classes
             {
                 Logging.Log(Logging.LogType.Information, "Database Migration", "Updating ROM table for ROM (" + count + " / " + data.Rows.Count + "): " + (string)row["Name"]);
 
-                GameLibrary.LibraryItem library = GameLibrary.GetLibrary((int)row["LibraryId"]);
+                GameLibrary.LibraryItem library = await GameLibrary.GetLibrary((int)row["LibraryId"]);
                 Common.hashObject hash = new Common.hashObject()
                 {
                     md5hash = (string)row["MD5"],
                     sha1hash = (string)row["SHA1"]
                 };
-                Signatures_Games signature = fileSignature.GetFileSignature(
+                Signatures_Games signature = await fileSignature.GetFileSignatureAsync(
                     library,
                     hash,
                     new FileInfo((string)row["Path"]),
                     (string)row["Path"]
                 );
 
-                HasheousClient.Models.Metadata.IGDB.Platform platform = Platforms.GetPlatform((long)row["PlatformId"]);
+                HasheousClient.Models.Metadata.IGDB.Platform platform = await Platforms.GetPlatform((long)row["PlatformId"]);
 
                 ImportGame.StoreGame(library, hash, signature, platform, (string)row["Path"], (long)row["Id"]);
 

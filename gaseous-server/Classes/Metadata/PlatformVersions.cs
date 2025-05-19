@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Threading.Tasks;
 using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Classes.Metadata
@@ -12,7 +13,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static PlatformVersion? GetPlatformVersion(HasheousClient.Models.MetadataSources SourceType, long Id)
+        public static async Task<PlatformVersion?> GetPlatformVersion(HasheousClient.Models.MetadataSources SourceType, long Id)
         {
             if (Id == 0)
             {
@@ -20,7 +21,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                PlatformVersion? RetVal = Metadata.GetMetadata<PlatformVersion>(SourceType, Id, false);
+                PlatformVersion? RetVal = await Metadata.GetMetadataAsync<PlatformVersion>(SourceType, Id, false);
                 return RetVal;
             }
         }

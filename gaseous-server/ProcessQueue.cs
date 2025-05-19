@@ -2,6 +2,7 @@
 using System.ComponentModel.Design.Serialization;
 using System.Data;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
@@ -222,7 +223,7 @@ namespace gaseous_server
                             break;
                     }
                 }
-                public void Execute()
+                public async Task Execute()
                 {
                     CallContext.SetData("CorrelationId", _CorrelationId.ToString());
                     CallContext.SetData("CallingProcess", _TaskType.ToString());
@@ -277,7 +278,7 @@ namespace gaseous_server
                                         Platform? platformOverride = null;
                                         if (importState.PlatformOverride != null)
                                         {
-                                            platformOverride = Platforms.GetPlatform((long)importState.PlatformOverride);
+                                            platformOverride = await Platforms.GetPlatform((long)importState.PlatformOverride);
                                         }
                                         ImportGame.ImportGameFile(importState.FileName, hash, ref ProcessData, platformOverride);
 
@@ -291,7 +292,7 @@ namespace gaseous_server
                                             if (metadataMapId != null)
                                             {
                                                 MetadataManagement metadataManagement = new MetadataManagement();
-                                                metadataManagement.RefreshSpecificGame((long)metadataMapId);
+                                                await metadataManagement.RefreshSpecificGameAsync((long)metadataMapId);
                                             }
                                         }
                                         ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Completed, ImportStateItem.ImportType.Rom, ProcessData);
@@ -307,27 +308,27 @@ namespace gaseous_server
                             case TaskTypes.MetadataRefresh_Platform:
                                 Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing platform metadata for " + _TaskName);
                                 MetadataManagement metadataPlatform = new MetadataManagement(this);
-                                metadataPlatform.RefreshPlatforms(true);
+                                await metadataPlatform.RefreshPlatforms(true);
                                 break;
 
                             case TaskTypes.MetadataRefresh_Signatures:
                                 Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing signature metadata for " + _TaskName);
                                 MetadataManagement metadataSignatures = new MetadataManagement(this);
-                                metadataSignatures.RefreshSignatures(true);
+                                await metadataSignatures.RefreshSignatures(true);
                                 break;
 
                             case TaskTypes.MetadataRefresh_Game:
                                 Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing game metadata for " + _TaskName);
                                 MetadataManagement metadataGame = new MetadataManagement(this);
                                 metadataGame.UpdateRomCounts();
-                                metadataGame.RefreshGames(true);
+                                await metadataGame.RefreshGames(true);
                                 break;
 
                             case TaskTypes.LibraryScanWorker:
                                 CallContext.SetData("CallingProcess", _TaskType.ToString() + " - " + ((GameLibrary.LibraryItem)_Settings).Name);
                                 Logging.Log(Logging.LogType.Information, "Library Scan", "Scanning library " + _TaskName);
                                 ImportGame importLibraryScan = new ImportGame(this);
-                                importLibraryScan.LibrarySpecificScan((GameLibrary.LibraryItem)_Settings);
+                                await importLibraryScan.LibrarySpecificScan((GameLibrary.LibraryItem)_Settings);
                                 break;
                         }
                         _State = QueueItemState.Stopped;
@@ -497,7 +498,7 @@ namespace gaseous_server
             public string CorrelationId => _CorrelationId;
             public List<QueueItemType> Blocks => _Blocks;
 
-            public void Execute()
+            public async Task Execute()
             {
                 if (_ItemState != QueueItemState.Disabled)
                 {
@@ -634,7 +635,7 @@ namespace gaseous_server
                                     {
                                         CallingQueueItem = this
                                     };
-                                    importLibraryOrg.OrganiseLibrary();
+                                    await importLibraryOrg.OrganiseLibrary();
 
                                     _SaveLastRunTime = true;
 
@@ -648,13 +649,16 @@ namespace gaseous_server
                                     };
 
                                     // get all libraries
-                                    List<GameLibrary.LibraryItem> libraries = GameLibrary.GetLibraries();
-
-                                    // process each library
-                                    foreach (GameLibrary.LibraryItem library in libraries)
+                                    if (SubTasks == null || SubTasks.Count == 0)
                                     {
-                                        Guid childCorrelationId = AddSubTask(SubTask.TaskTypes.LibraryScanWorker, library.Name, library, true);
-                                        Logging.Log(Logging.LogType.Information, "Library Scan", "Queuing library " + library.Name + " for scanning with correlation id: " + childCorrelationId);
+                                        List<GameLibrary.LibraryItem> libraries = await GameLibrary.GetLibraries();
+
+                                        // process each library
+                                        foreach (GameLibrary.LibraryItem library in libraries)
+                                        {
+                                            Guid childCorrelationId = AddSubTask(SubTask.TaskTypes.LibraryScanWorker, library.Name, library, true);
+                                            Logging.Log(Logging.LogType.Information, "Library Scan", "Queuing library " + library.Name + " for scanning with correlation id: " + childCorrelationId);
+                                        }
                                     }
 
                                     _SaveLastRunTime = true;
@@ -669,7 +673,7 @@ namespace gaseous_server
 
                                 case QueueItemType.MediaGroupCompiler:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Media Group Compiler");
-                                    Classes.RomMediaGroup.CompileMediaGroup((long)Options);
+                                    await Classes.RomMediaGroup.CompileMediaGroup((long)Options);
                                     break;
 
                                 case QueueItemType.BackgroundDatabaseUpgrade:
@@ -683,7 +687,7 @@ namespace gaseous_server
                                     {
                                         CallingQueueItem = this
                                     };
-                                    maintenance.RunDailyMaintenance();
+                                    await maintenance.RunDailyMaintenance();
 
                                     _SaveLastRunTime = true;
 
@@ -695,7 +699,7 @@ namespace gaseous_server
                                     {
                                         CallingQueueItem = this
                                     };
-                                    weeklyMaintenance.RunWeeklyMaintenance();
+                                    await weeklyMaintenance.RunWeeklyMaintenance();
 
                                     _SaveLastRunTime = true;
                                     break;
@@ -703,7 +707,7 @@ namespace gaseous_server
                                 case QueueItemType.TempCleanup:
                                     try
                                     {
-                                        foreach (GameLibrary.LibraryItem libraryItem in GameLibrary.GetLibraries())
+                                        foreach (GameLibrary.LibraryItem libraryItem in await GameLibrary.GetLibraries())
                                         {
                                             string rootPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, libraryItem.Id.ToString());
                                             if (Directory.Exists(rootPath))
@@ -808,7 +812,7 @@ namespace gaseous_server
                         if (nextTask != null)
                         {
                             // execute the task
-                            Thread thread = new Thread(new ThreadStart(nextTask.Execute));
+                            Thread thread = new Thread(() => nextTask.Execute().GetAwaiter().GetResult());
                             thread.Name = nextTask.TaskName;
                             thread.Start();
                             BackgroundThreads.Add(nextTask.TaskName, thread);

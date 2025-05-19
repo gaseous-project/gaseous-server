@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Data;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading.Tasks;
 using gaseous_server.Models;
 
 namespace gaseous_server.Classes.Metadata
@@ -8,6 +9,13 @@ namespace gaseous_server.Classes.Metadata
     public class Games
     {
         public const string fieldList = "fields age_ratings,aggregated_rating,aggregated_rating_count,alternative_names,artworks,bundles,category,checksum,collections,cover,created_at,dlcs,expanded_games,expansions,external_games,first_release_date,follows,forks,franchise,franchises,game_engines,game_localizations,game_modes,genres,hypes,involved_companies,keywords,language_supports,multiplayer_modes,name,parent_game,platforms,player_perspectives,ports,rating,rating_count,release_dates,remakes,remasters,screenshots,similar_games,slug,standalone_expansions,status,storyline,summary,tags,themes,total_rating,total_rating_count,updated_at,url,version_parent,version_title,videos,websites;";
+
+        /// <summary>
+        /// Sources are in order: ScreenScaper, TheGamesDB
+        /// </summary>
+        public static List<HasheousClient.Models.MetadataSources> clearLogoSources = new List<HasheousClient.Models.MetadataSources>{
+                HasheousClient.Models.MetadataSources.TheGamesDb
+            };
 
         public Games()
         {
@@ -20,7 +28,7 @@ namespace gaseous_server.Classes.Metadata
             { }
         }
 
-        public static Game? GetGame(HasheousClient.Models.MetadataSources SourceType, long? Id, bool Massage = true)
+        public static async Task<Game?> GetGame(HasheousClient.Models.MetadataSources SourceType, long? Id, bool Massage = true)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -28,7 +36,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Game? RetVal = Metadata.GetMetadata<Game>(SourceType, (long)Id, false);
+                Game? RetVal = await Metadata.GetMetadataAsync<Game>(SourceType, (long)Id, false);
                 RetVal.MetadataSource = SourceType;
                 long? metadataMap = MetadataManagement.GetMetadataMapIdFromSourceId(SourceType, (long)Id);
                 if (metadataMap == null)
@@ -43,18 +51,18 @@ namespace gaseous_server.Classes.Metadata
 
                 if (Massage == true)
                 {
-                    RetVal = MassageResult(RetVal);
+                    RetVal = await MassageResult(RetVal);
                 }
 
                 return RetVal;
             }
         }
 
-        public static Game? GetGame(HasheousClient.Models.MetadataSources SourceType, string? Slug)
+        public static async Task<Game?> GetGame(HasheousClient.Models.MetadataSources SourceType, string? Slug)
         {
-            Game? RetVal = Metadata.GetMetadata<Game>(SourceType, Slug, false);
+            Game? RetVal = await Metadata.GetMetadataAsync<Game>(SourceType, Slug, false);
             RetVal.MetadataSource = SourceType;
-            RetVal = MassageResult(RetVal);
+            RetVal = await MassageResult(RetVal);
             return RetVal;
         }
 
@@ -63,13 +71,13 @@ namespace gaseous_server.Classes.Metadata
             return Storage.BuildCacheObject<Game>(new Game(), dataRow);
         }
 
-        private static Game MassageResult(Game result)
+        private static async Task<Game> MassageResult(Game result)
         {
             Game? parentGame = null;
 
             if (result.ParentGame != null)
             {
-                parentGame = GetGame(result.MetadataSource, (long)result.ParentGame);
+                parentGame = await GetGame(result.MetadataSource, (long)result.ParentGame);
             }
 
             // get cover art from parent if this has no cover
@@ -93,21 +101,18 @@ namespace gaseous_server.Classes.Metadata
             }
 
             // get associated metadataMapIds
-            List<long> metadataMapIds = MetadataManagement.GetAssociatedMetadataMapIds(result.MetadataMapId);
+            List<long> metadataMapIds = await MetadataManagement.GetAssociatedMetadataMapIds(result.MetadataMapId);
             List<MetadataMap> metadataMaps = new List<MetadataMap>();
             foreach (long metadataMapId in metadataMapIds)
             {
-                MetadataMap? metadataMap = MetadataManagement.GetMetadataMap(metadataMapId);
+                MetadataMap? metadataMap = await MetadataManagement.GetMetadataMap(metadataMapId);
                 if (metadataMap != null)
                 {
                     metadataMaps.Add(metadataMap);
                 }
             }
 
-            // search metadataMaps for a valid clear logo data source - sources are in order: ScreenScaper, TheGamesDB
-            List<HasheousClient.Models.MetadataSources> clearLogoSources = new List<HasheousClient.Models.MetadataSources>{
-                HasheousClient.Models.MetadataSources.TheGamesDb
-            };
+            // search for a clear logo
             result.ClearLogo = new Dictionary<HasheousClient.Models.MetadataSources, List<long>>();
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             foreach (HasheousClient.Models.MetadataSources source in clearLogoSources)
@@ -129,7 +134,7 @@ namespace gaseous_server.Classes.Metadata
                     if (metadataMapItem != null)
                     {
                         // force refresh of game data
-                        GetGame(source, metadataMapItem.SourceId, false);
+                        await GetGame(source, metadataMapItem.SourceId, false);
 
                         // found a valid source - check if there is a clear logo
                         string sql = "SELECT * FROM ClearLogo WHERE SourceId = @sourceid AND Game = @gameid;";
@@ -138,7 +143,7 @@ namespace gaseous_server.Classes.Metadata
                             { "sourceid", (int)source },
                             { "gameid", metadataMapItem.SourceId }
                         };
-                        DataTable data = db.ExecuteCMD(sql, dbDict);
+                        DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
                         foreach (DataRow row in data.Rows)
                         {
                             if (result.ClearLogo.ContainsKey(source) == false)
@@ -160,7 +165,7 @@ namespace gaseous_server.Classes.Metadata
             // populate age group data
             if (result.MetadataSource == HasheousClient.Models.MetadataSources.IGDB)
             {
-                AgeGroups.GetAgeGroup(result);
+                await AgeGroups.GetAgeGroup(result);
             }
 
             return result;
@@ -168,7 +173,7 @@ namespace gaseous_server.Classes.Metadata
 
         private static bool AllowNoPlatformSearch = false;
 
-        public static Game[] SearchForGame(string SearchString, long PlatformId, SearchType searchType)
+        public static async Task<Game[]> SearchForGame(string SearchString, long PlatformId, SearchType searchType)
         {
             // search local first
             Logging.Log(Logging.LogType.Information, "Game Search", "Attempting local search of type '" + searchType.ToString() + "' for " + SearchString);
@@ -223,7 +228,7 @@ namespace gaseous_server.Classes.Metadata
             {
                 List<Game> searchResults = new List<Game>();
                 Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                DataTable data = db.ExecuteCMD(sql, dbDict);
+                DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
                 foreach (DataRow row in data.Rows)
                 {
                     Game game = new Game
@@ -314,7 +319,7 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        public static List<AvailablePlatformItem> GetAvailablePlatforms(string UserId, HasheousClient.Models.MetadataSources SourceType, long GameId)
+        public static async Task<List<AvailablePlatformItem>> GetAvailablePlatformsAsync(string UserId, HasheousClient.Models.MetadataSources SourceType, long GameId)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = @"
@@ -374,23 +379,23 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                 { "gameid", GameId },
                 { "userid", UserId }
             };
-            DataTable data = db.ExecuteCMD(sql, dbDict);
+            DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
 
             PlatformMapping platformMapping = new PlatformMapping();
             List<AvailablePlatformItem> platforms = new List<AvailablePlatformItem>();
             foreach (DataRow row in data.Rows)
             {
-                HasheousClient.Models.Metadata.IGDB.Platform platform = Platforms.GetPlatform((long)row["PlatformId"]);
+                HasheousClient.Models.Metadata.IGDB.Platform platform = await Platforms.GetPlatform((long)row["PlatformId"]);
 
                 // get the user emulator configuration
-                PlatformMapping.UserEmulatorConfiguration? emulatorConfiguration = platformMapping.GetUserEmulator(UserId, GameId, (long)platform.Id);
+                PlatformMapping.UserEmulatorConfiguration? emulatorConfiguration = await platformMapping.GetUserEmulator(UserId, GameId, (long)platform.Id);
 
                 // if no user configuration, get the platform emulator configuration
                 if (emulatorConfiguration == null)
                 {
                     if (platform.Id != 0)
                     {
-                        Models.PlatformMapping.PlatformMapItem platformMap = PlatformMapping.GetPlatformMap((long)platform.Id);
+                        Models.PlatformMapping.PlatformMapItem platformMap = await PlatformMapping.GetPlatformMap((long)platform.Id);
                         if (platformMap != null)
                         {
                             emulatorConfiguration = new PlatformMapping.UserEmulatorConfiguration
@@ -478,7 +483,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
             return platforms;
         }
 
-        public static void GameSetFavouriteRom(string UserId, long GameId, long PlatformId, long RomId, bool IsMediaGroup)
+        public static async Task GameSetFavouriteRom(string UserId, long GameId, long PlatformId, long RomId, bool IsMediaGroup)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "DELETE FROM User_GameFavouriteRoms WHERE UserId = @userid AND GameId = @gameid AND PlatformId = @platformid; INSERT INTO User_GameFavouriteRoms (UserId, GameId, PlatformId, RomId, IsMediaGroup) VALUES (@userid, @gameid, @platformid, @romid, @ismediagroup);";
@@ -490,10 +495,10 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                 { "romid", RomId },
                 { "ismediagroup", IsMediaGroup }
             };
-            db.ExecuteCMD(sql, dbDict);
+            await db.ExecuteCMDAsync(sql, dbDict);
         }
 
-        public static void GameClearFavouriteRom(string UserId, long GameId, long PlatformId)
+        public static async Task GameClearFavouriteRom(string UserId, long GameId, long PlatformId)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "DELETE FROM User_GameFavouriteRoms WHERE UserId = @userid AND GameId = @gameid AND PlatformId = @platformid;";
@@ -503,7 +508,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                 { "gameid", GameId },
                 { "platformid", PlatformId }
             };
-            db.ExecuteCMD(sql, dbDict);
+            await db.ExecuteCMDAsync(sql, dbDict);
         }
 
         public class AvailablePlatformItem : HasheousClient.Models.Metadata.IGDB.Platform
@@ -557,7 +562,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                 {
                     foreach (long genreId in gameObject.Genres)
                     {
-                        HasheousClient.Models.Metadata.IGDB.Genre? genre = Classes.Metadata.Genres.GetGenres(gameObject.MetadataSource, genreId);
+                        HasheousClient.Models.Metadata.IGDB.Genre? genre = Classes.Metadata.Genres.GetGenres(gameObject.MetadataSource, genreId).Result;
                         if (genre != null)
                         {
                             if (!this.Genres.Contains(genre.Name))
@@ -574,7 +579,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                 {
                     foreach (long themeId in gameObject.Themes)
                     {
-                        HasheousClient.Models.Metadata.IGDB.Theme? theme = Classes.Metadata.Themes.GetGame_Themes(gameObject.MetadataSource, themeId);
+                        HasheousClient.Models.Metadata.IGDB.Theme? theme = Classes.Metadata.Themes.GetGame_ThemesAsync(gameObject.MetadataSource, themeId).Result;
                         if (theme != null)
                         {
                             if (!this.Themes.Contains(theme.Name))
@@ -591,7 +596,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                 {
                     foreach (long playerId in gameObject.GameModes)
                     {
-                        HasheousClient.Models.Metadata.IGDB.GameMode? player = Classes.Metadata.GameModes.GetGame_Modes(gameObject.MetadataSource, playerId);
+                        HasheousClient.Models.Metadata.IGDB.GameMode? player = Classes.Metadata.GameModes.GetGame_Modes(gameObject.MetadataSource, playerId).Result;
                         if (player != null)
                         {
                             if (!this.Players.Contains(player.Name))
@@ -608,7 +613,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                 {
                     foreach (long perspectiveId in gameObject.PlayerPerspectives)
                     {
-                        HasheousClient.Models.Metadata.IGDB.PlayerPerspective? perspective = Classes.Metadata.PlayerPerspectives.GetGame_PlayerPerspectives(gameObject.MetadataSource, perspectiveId);
+                        HasheousClient.Models.Metadata.IGDB.PlayerPerspective? perspective = Classes.Metadata.PlayerPerspectives.GetGame_PlayerPerspectives(gameObject.MetadataSource, perspectiveId).Result;
                         if (perspective != null)
                         {
                             if (!this.Perspectives.Contains(perspective.Name))
@@ -625,7 +630,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                 {
                     foreach (long ageRatingId in gameObject.AgeRatings)
                     {
-                        HasheousClient.Models.Metadata.IGDB.AgeRating? rating = Classes.Metadata.AgeRatings.GetAgeRating(gameObject.MetadataSource, ageRatingId);
+                        HasheousClient.Models.Metadata.IGDB.AgeRating? rating = Classes.Metadata.AgeRatings.GetAgeRating(gameObject.MetadataSource, ageRatingId).Result;
                         if (rating != null)
                         {
                             this.AgeRatings.Add(rating);

@@ -1,4 +1,5 @@
 using System.Data;
+using System.Threading.Tasks;
 using gaseous_server.Models;
 using gaseous_signature_parser.models.RomSignatureObject;
 using static gaseous_server.Classes.Common;
@@ -7,27 +8,27 @@ namespace gaseous_server.Classes
 {
     public class SignatureManagement
     {
-        public List<gaseous_server.Models.Signatures_Games> GetSignature(string md5 = "", string sha1 = "", string crc = "")
+        public async Task<List<gaseous_server.Models.Signatures_Games>> GetSignature(string md5 = "", string sha1 = "", string crc = "")
         {
             if (md5.Length > 0)
             {
-                return _GetSignature("Signatures_Roms.md5 = @searchstring", md5);
+                return await _GetSignature("Signatures_Roms.md5 = @searchstring", md5);
             }
             else if (sha1.Length > 0)
             {
-                return _GetSignature("Signatures_Roms.sha1 = @searchstring", sha1);
+                return await _GetSignature("Signatures_Roms.sha1 = @searchstring", sha1);
             }
             else
             {
-                return _GetSignature("Signatures_Roms.crc = @searchstring", crc);
+                return await _GetSignature("Signatures_Roms.crc = @searchstring", crc);
             }
         }
 
-        public List<gaseous_server.Models.Signatures_Games> GetByTosecName(string TosecName = "")
+        public async Task<List<gaseous_server.Models.Signatures_Games>> GetByTosecName(string TosecName = "")
         {
             if (TosecName.Length > 0)
             {
-                return _GetSignature("Signatures_Roms.name = @searchstring", TosecName);
+                return await _GetSignature("Signatures_Roms.name = @searchstring", TosecName);
             }
             else
             {
@@ -35,14 +36,14 @@ namespace gaseous_server.Classes
             }
         }
 
-        private List<gaseous_server.Models.Signatures_Games> _GetSignature(string sqlWhere, string searchString)
+        private async Task<List<gaseous_server.Models.Signatures_Games>> _GetSignature(string sqlWhere, string searchString)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT     view_Signatures_Games.*,    Signatures_Roms.Id AS romid,    Signatures_Roms.Name AS romname,    Signatures_Roms.Size,    Signatures_Roms.CRC,    Signatures_Roms.MD5,    Signatures_Roms.SHA1,    Signatures_Roms.CRC,   Signatures_Roms.DevelopmentStatus,    Signatures_Roms.Attributes,    Signatures_Roms.RomType,    Signatures_Roms.RomTypeMedia,    Signatures_Roms.MediaLabel,    Signatures_Roms.MetadataSource FROM    Signatures_Roms        INNER JOIN    view_Signatures_Games ON Signatures_Roms.GameId = view_Signatures_Games.Id WHERE " + sqlWhere;
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("searchString", searchString);
 
-            DataTable sigDb = db.ExecuteCMD(sql, dbDict);
+            DataTable sigDb = await db.ExecuteCMDAsync(sql, dbDict);
 
             List<gaseous_server.Models.Signatures_Games> GamesList = new List<gaseous_server.Models.Signatures_Games>();
 
@@ -61,8 +62,8 @@ namespace gaseous_server.Classes
                         System = (string)sigDbRow["Platform"],
                         SystemVariant = (string)sigDbRow["SystemVariant"],
                         Video = (string)sigDbRow["Video"],
-                        Countries = new Dictionary<string, string>(GetLookup(LookupTypes.Country, (long)(int)sigDbRow["Id"])),
-                        Languages = new Dictionary<string, string>(GetLookup(LookupTypes.Language, (long)(int)sigDbRow["Id"])),
+                        Countries = new Dictionary<string, string>(await GetLookup(LookupTypes.Country, (long)(int)sigDbRow["Id"])),
+                        Languages = new Dictionary<string, string>(await GetLookup(LookupTypes.Language, (long)(int)sigDbRow["Id"])),
                         Copyright = (string)sigDbRow["Copyright"]
                     },
                     Rom = new gaseous_server.Models.Signatures_Games.RomItem
@@ -86,11 +87,11 @@ namespace gaseous_server.Classes
             return GamesList;
         }
 
-        public List<Signatures_Sources> GetSources()
+        public async Task<List<Signatures_Sources>> GetSources()
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM Signatures_Sources ORDER BY `SourceType`, `Name`;";
-            DataTable sigDb = db.ExecuteCMD(sql);
+            DataTable sigDb = await db.ExecuteCMDAsync(sql);
 
             List<Signatures_Sources> SourcesList = new List<Signatures_Sources>();
 
@@ -116,7 +117,7 @@ namespace gaseous_server.Classes
             return SourcesList;
         }
 
-        public void DeleteSource(int sourceId)
+        public async Task DeleteSource(int sourceId)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "DELETE FROM Signatures_Sources WHERE Id = @sourceId;";
@@ -124,10 +125,10 @@ namespace gaseous_server.Classes
             {
                 { "sourceId", sourceId }
             };
-            db.ExecuteCMD(sql, dbDict);
+            await db.ExecuteCMDAsync(sql, dbDict);
         }
 
-        public Dictionary<string, string> GetLookup(LookupTypes LookupType, long GameId)
+        public async Task<Dictionary<string, string>> GetLookup(LookupTypes LookupType, long GameId)
         {
             string tableName = "";
             switch (LookupType)
@@ -147,7 +148,7 @@ namespace gaseous_server.Classes
             Dictionary<string, object> dbDict = new Dictionary<string, object>{
                 { "id", GameId }
             };
-            DataTable data = db.ExecuteCMD(sql, dbDict);
+            DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
 
             Dictionary<string, string> returnDict = new Dictionary<string, string>();
             foreach (DataRow row in data.Rows)

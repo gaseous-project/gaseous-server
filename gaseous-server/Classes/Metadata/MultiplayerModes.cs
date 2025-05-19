@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using HasheousClient.Models.Metadata.IGDB;
 
 
@@ -12,7 +13,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static MultiplayerMode? GetGame_MultiplayerModes(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<MultiplayerMode?> GetGame_MultiplayerModes(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -20,7 +21,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                MultiplayerMode? RetVal = Metadata.GetMetadata<MultiplayerMode>(SourceType, (long)Id, false);
+                MultiplayerMode? RetVal = await Metadata.GetMetadataAsync<MultiplayerMode>(SourceType, (long)Id, false);
                 return RetVal;
             }
         }

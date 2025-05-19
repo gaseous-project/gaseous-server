@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using HasheousClient.Models.Metadata.IGDB;
 
 
@@ -12,7 +13,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static AgeRatingContentDescription? GetAgeRatingContentDescriptions(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<AgeRatingContentDescription?> GetAgeRatingContentDescriptions(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -20,7 +21,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                AgeRatingContentDescription? RetVal = Metadata.GetMetadata<AgeRatingContentDescription>(SourceType, (long)Id, false);
+                AgeRatingContentDescription? RetVal = await Metadata.GetMetadataAsync<AgeRatingContentDescription>(SourceType, (long)Id, false);
                 return RetVal;
             }
         }

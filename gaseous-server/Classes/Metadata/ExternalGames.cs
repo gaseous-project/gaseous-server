@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Classes.Metadata
@@ -11,7 +12,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static ExternalGame? GetExternalGames(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<ExternalGame?> GetExternalGames(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -19,7 +20,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                ExternalGame? RetVal = Metadata.GetMetadata<ExternalGame>(SourceType, (long)Id, false);
+                ExternalGame? RetVal = await Metadata.GetMetadataAsync<ExternalGame>(SourceType, (long)Id, false);
                 return RetVal;
             }
         }

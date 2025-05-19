@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using HasheousClient.Models.Metadata.IGDB;
 
 
@@ -12,7 +13,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static ReleaseDate? GetReleaseDates(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<ReleaseDate?> GetReleaseDates(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -20,7 +21,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                ReleaseDate? RetVal = Metadata.GetMetadata<ReleaseDate>(SourceType, (long)Id, false);
+                ReleaseDate? RetVal = await Metadata.GetMetadataAsync<ReleaseDate>(SourceType, (long)Id, false);
                 return RetVal;
             }
         }

@@ -808,6 +808,7 @@ input[name='filter_panel_range_max'] {
 .games_library_controls {
     position: fixed;
     z-index: 10;
+    top: 40px;
     left: 225px;
     right: 0px;
     background-color: var(--section-header-background);
@@ -900,7 +901,7 @@ input[name='filter_panel_range_max'] {
 #games_library {
     display: block;
     margin-right: 50px;
-    padding-top: 50px;
+    margin-top: 50px;
     position: relative;
     /* width: 90%; */
     /* border-style: solid;

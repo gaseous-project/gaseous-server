@@ -14,7 +14,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static Theme? GetGame_Themes(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<Theme?> GetGame_ThemesAsync(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -36,7 +36,7 @@ namespace gaseous_server.Classes.Metadata
                     return nTheme;
                 }
 
-                Theme? RetVal = Metadata.GetMetadata<Theme>(SourceType, (long)Id, false);
+                Theme? RetVal = await Metadata.GetMetadataAsync<Theme>(SourceType, (long)Id, false);
 
                 if (RetVal != null)
                 {

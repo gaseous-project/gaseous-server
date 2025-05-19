@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Classes.Metadata
@@ -9,7 +10,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static ClearLogo? GetClearLogo(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<ClearLogo?> GetClearLogo(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -17,7 +18,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                ClearLogo? RetVal = Metadata.GetMetadata<ClearLogo>(SourceType, (long)Id, false);
+                ClearLogo? RetVal = await Metadata.GetMetadataAsync<ClearLogo>(SourceType, (long)Id, false);
                 return RetVal;
             }
         }

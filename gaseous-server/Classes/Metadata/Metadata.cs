@@ -1,5 +1,6 @@
 using System.Data;
 using System.Data.SqlTypes;
+using System.Threading.Tasks;
 
 namespace gaseous_server.Classes.Metadata
 {
@@ -49,7 +50,7 @@ namespace gaseous_server.Classes.Metadata
                 throw new InvalidMetadataId(Id);
             }
 
-            return _GetMetadata<T>(HasheousClient.Models.MetadataSources.IGDB, Id, ForceRefresh);
+            return _GetMetadataAsync<T>(HasheousClient.Models.MetadataSources.IGDB, Id, ForceRefresh).Result;
         }
 
         /// <summary>
@@ -77,15 +78,73 @@ namespace gaseous_server.Classes.Metadata
                 throw new InvalidMetadataId(SourceType, Id);
             }
 
-            return _GetMetadata<T>(SourceType, Id, ForceRefresh);
+            return _GetMetadataAsync<T>(SourceType, Id, ForceRefresh).Result;
         }
 
         public static T? GetMetadata<T>(HasheousClient.Models.MetadataSources SourceType, string Slug, Boolean ForceRefresh = false) where T : class
         {
-            return _GetMetadata<T>(SourceType, Slug, ForceRefresh);
+            return _GetMetadataAsync<T>(SourceType, Slug, ForceRefresh).Result;
         }
 
-        private static T? _GetMetadata<T>(HasheousClient.Models.MetadataSources SourceType, object Id, Boolean ForceRefresh) where T : class
+        /// <summary>
+        /// Get metadata from the default source
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of metadata to get
+        /// </typeparam>
+        /// <param name="Id">
+        /// The id of the metadata to get
+        /// </param>
+        /// <returns>
+        /// The metadata object
+        /// </returns>
+        /// <exception cref="InvalidMetadataId">
+        /// Thrown when the id is invalid
+        /// </exception>
+        public static async Task<T?> GetMetadataAsync<T>(long Id, Boolean ForceRefresh = false) where T : class
+        {
+            if (Id < 0)
+            {
+                throw new InvalidMetadataId(Id);
+            }
+
+            return await _GetMetadataAsync<T>(HasheousClient.Models.MetadataSources.IGDB, Id, ForceRefresh);
+        }
+
+        /// <summary>
+        /// Get metadata from the specified source
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of metadata to get
+        /// </typeparam>
+        /// <param name="SourceType">
+        /// The source of the metadata
+        /// </param>
+        /// <param name="Id">
+        /// The id of the metadata to get
+        /// </param>
+        /// <returns>
+        /// The metadata object
+        /// </returns>
+        /// <exception cref="InvalidMetadataId">
+        /// Thrown when the id is invalid
+        /// </exception>
+        public static async Task<T?> GetMetadataAsync<T>(HasheousClient.Models.MetadataSources SourceType, long Id, Boolean ForceRefresh = false) where T : class
+        {
+            if (Id < 0)
+            {
+                throw new InvalidMetadataId(SourceType, Id);
+            }
+
+            return await _GetMetadataAsync<T>(SourceType, Id, ForceRefresh);
+        }
+
+        public static async Task<T?> GetMetadataAsync<T>(HasheousClient.Models.MetadataSources SourceType, string Slug, Boolean ForceRefresh = false) where T : class
+        {
+            return await _GetMetadataAsync<T>(SourceType, Slug, ForceRefresh);
+        }
+
+        private static async Task<T?> _GetMetadataAsync<T>(HasheousClient.Models.MetadataSources SourceType, object Id, Boolean ForceRefresh) where T : class
         {
             // get T type as string
             string type = typeof(T).Name;
@@ -98,11 +157,11 @@ namespace gaseous_server.Classes.Metadata
             Storage.CacheStatus? cacheStatus;
             if (idType == IdType.Long)
             {
-                cacheStatus = Storage.GetCacheStatus(SourceType, type, (long)Id);
+                cacheStatus = await Storage.GetCacheStatusAsync(SourceType, type, (long)Id);
             }
             else
             {
-                cacheStatus = Storage.GetCacheStatus(SourceType, type, (string)Id);
+                cacheStatus = await Storage.GetCacheStatusAsync(SourceType, type, (string)Id);
             }
 
             // if ForceRefresh is true, set cache status to expired if it is current
@@ -130,11 +189,11 @@ namespace gaseous_server.Classes.Metadata
                 case Storage.CacheStatus.Current:
                     if (idType == IdType.Long)
                     {
-                        metadata = Storage.GetCacheValue<T>(SourceType, metadata, "Id", (long)Id);
+                        metadata = await Storage.GetCacheValue<T>(SourceType, metadata, "Id", (long)Id);
                     }
                     else
                     {
-                        metadata = Storage.GetCacheValue<T>(SourceType, metadata, "Slug", (string)Id);
+                        metadata = await Storage.GetCacheValue<T>(SourceType, metadata, "Slug", (string)Id);
                     }
                     break;
 
@@ -143,13 +202,13 @@ namespace gaseous_server.Classes.Metadata
                     {
                         if (idType == IdType.Long)
                         {
-                            metadata = GetMetadataFromServer<T>(SourceType, (long)Id).Result;
+                            metadata = await GetMetadataFromServer<T>(SourceType, (long)Id);
                         }
                         else
                         {
-                            metadata = GetMetadataFromServer<T>(SourceType, (string)Id).Result;
+                            metadata = await GetMetadataFromServer<T>(SourceType, (string)Id);
                         }
-                        Storage.NewCacheValue<T>(SourceType, metadata, true);
+                        await Storage.NewCacheValue<T>(SourceType, metadata, true);
                     }
                     catch (Exception e)
                     {
@@ -163,13 +222,13 @@ namespace gaseous_server.Classes.Metadata
                     {
                         if (idType == IdType.Long)
                         {
-                            metadata = GetMetadataFromServer<T>(SourceType, (long)Id).Result;
+                            metadata = await GetMetadataFromServer<T>(SourceType, (long)Id);
                         }
                         else
                         {
-                            metadata = GetMetadataFromServer<T>(SourceType, (string)Id).Result;
+                            metadata = await GetMetadataFromServer<T>(SourceType, (string)Id);
                         }
-                        Storage.NewCacheValue<T>(SourceType, metadata, false);
+                        await Storage.NewCacheValue<T>(SourceType, metadata, false);
                     }
                     catch (Exception e)
                     {
@@ -208,7 +267,7 @@ namespace gaseous_server.Classes.Metadata
                     {
                         Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
                         string sql = "SELECT * FROM MetadataMap JOIN MetadataMapBridge ON MetadataMap.Id = MetadataMapBridge.ParentMapId WHERE MetadataSourceId = @id AND MetadataSourceType = 0;";
-                        DataTable dataTable = db.ExecuteCMD(sql, new Dictionary<string, object>
+                        DataTable dataTable = await db.ExecuteCMDAsync(sql, new Dictionary<string, object>
                     {
                         { "@id", Id }
                     });
@@ -228,7 +287,7 @@ namespace gaseous_server.Classes.Metadata
                             var theGamesDbGameResult = await comms.APIComm<HasheousClient.Models.Metadata.TheGamesDb.GamesByGameID>(SourceType, Communications.MetadataEndpoint.Game, Id);
 
                             // get genres from TheGamesDb if we haven't before
-                            Storage.CacheStatus genreStatus = Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.TheGamesDb, "Genre", 1);
+                            Storage.CacheStatus genreStatus = await Storage.GetCacheStatusAsync(HasheousClient.Models.MetadataSources.TheGamesDb, "Genre", 1);
                             if (genreStatus == Storage.CacheStatus.NotPresent || genreStatus == Storage.CacheStatus.Expired)
                             {
                                 var theGamesDbGenres = await comms.APIComm<HasheousClient.Models.Metadata.TheGamesDb.Genres>(SourceType, Communications.MetadataEndpoint.Genre, 1);
@@ -238,11 +297,11 @@ namespace gaseous_server.Classes.Metadata
 
                                     foreach (string genre in genres.data.genres.Keys)
                                     {
-                                        Storage.CacheStatus genreCacheStatus = Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.TheGamesDb, "Genre", genres.data.genres[genre].id);
+                                        Storage.CacheStatus genreCacheStatus = await Storage.GetCacheStatusAsync(HasheousClient.Models.MetadataSources.TheGamesDb, "Genre", genres.data.genres[genre].id);
                                         switch (genreCacheStatus)
                                         {
                                             case Storage.CacheStatus.NotPresent:
-                                                Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, new HasheousClient.Models.Metadata.IGDB.Genre
+                                                await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, new HasheousClient.Models.Metadata.IGDB.Genre
                                                 {
                                                     Id = genres.data.genres[genre].id,
                                                     Name = genres.data.genres[genre].name
@@ -250,7 +309,7 @@ namespace gaseous_server.Classes.Metadata
                                                 break;
 
                                             case Storage.CacheStatus.Expired:
-                                                Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, new HasheousClient.Models.Metadata.IGDB.Genre
+                                                await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, new HasheousClient.Models.Metadata.IGDB.Genre
                                                 {
                                                     Id = genres.data.genres[genre].id,
                                                     Name = genres.data.genres[genre].name
@@ -301,15 +360,15 @@ namespace gaseous_server.Classes.Metadata
                                     };
 
                                     // update cache
-                                    Storage.CacheStatus ageRatingStatus = Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.TheGamesDb, "AgeRating", (long)igdbAgeRating.Id);
+                                    Storage.CacheStatus ageRatingStatus = await Storage.GetCacheStatusAsync(HasheousClient.Models.MetadataSources.TheGamesDb, "AgeRating", (long)igdbAgeRating.Id);
                                     switch (ageRatingStatus)
                                     {
                                         case Storage.CacheStatus.NotPresent:
-                                            Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbAgeRating, false);
+                                            await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbAgeRating, false);
                                             break;
 
                                         case Storage.CacheStatus.Expired:
-                                            Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbAgeRating, true);
+                                            await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbAgeRating, true);
                                             break;
                                     }
                                 }
@@ -346,15 +405,15 @@ namespace gaseous_server.Classes.Metadata
                                     };
 
                                     // update cache
-                                    Storage.CacheStatus coverStatus = Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.TheGamesDb, "Cover", (long)igdbCover.Id);
+                                    Storage.CacheStatus coverStatus = await Storage.GetCacheStatusAsync(HasheousClient.Models.MetadataSources.TheGamesDb, "Cover", (long)igdbCover.Id);
                                     switch (coverStatus)
                                     {
                                         case Storage.CacheStatus.NotPresent:
-                                            Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbCover, false);
+                                            await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbCover, false);
                                             break;
 
                                         case Storage.CacheStatus.Expired:
-                                            Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbCover, true);
+                                            await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbCover, true);
                                             break;
                                     }
                                     break;
@@ -374,15 +433,15 @@ namespace gaseous_server.Classes.Metadata
                                 };
 
                                 // update cache
-                                Storage.CacheStatus videoStatus = Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.TheGamesDb, "GameVideo", (long)igdbVideo.Id);
+                                Storage.CacheStatus videoStatus = await Storage.GetCacheStatusAsync(HasheousClient.Models.MetadataSources.TheGamesDb, "GameVideo", (long)igdbVideo.Id);
                                 switch (videoStatus)
                                 {
                                     case Storage.CacheStatus.NotPresent:
-                                        Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbVideo, false);
+                                        await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbVideo, false);
                                         break;
 
                                     case Storage.CacheStatus.Expired:
-                                        Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbVideo, true);
+                                        await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbVideo, true);
                                         break;
                                 }
                             }
@@ -404,15 +463,15 @@ namespace gaseous_server.Classes.Metadata
                                     };
 
                                     // update cache
-                                    Storage.CacheStatus artworkStatus = Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.TheGamesDb, "Artwork", (long)igdbArtworkItem.Id);
+                                    Storage.CacheStatus artworkStatus = await Storage.GetCacheStatusAsync(HasheousClient.Models.MetadataSources.TheGamesDb, "Artwork", (long)igdbArtworkItem.Id);
                                     switch (artworkStatus)
                                     {
                                         case Storage.CacheStatus.NotPresent:
-                                            Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbArtworkItem, false);
+                                            await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbArtworkItem, false);
                                             break;
 
                                         case Storage.CacheStatus.Expired:
-                                            Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbArtworkItem, true);
+                                            await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbArtworkItem, true);
                                             break;
                                     }
 
@@ -437,15 +496,15 @@ namespace gaseous_server.Classes.Metadata
                                     };
 
                                     // update cache
-                                    Storage.CacheStatus clearLogoStatus = Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.TheGamesDb, "ClearLogo", (long)igdbClearWorkItem.Id);
+                                    Storage.CacheStatus clearLogoStatus = await Storage.GetCacheStatusAsync(HasheousClient.Models.MetadataSources.TheGamesDb, "ClearLogo", (long)igdbClearWorkItem.Id);
                                     switch (clearLogoStatus)
                                     {
                                         case Storage.CacheStatus.NotPresent:
-                                            Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbClearWorkItem, false);
+                                            await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbClearWorkItem, false);
                                             break;
 
                                         case Storage.CacheStatus.Expired:
-                                            Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbClearWorkItem, true);
+                                            await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbClearWorkItem, true);
                                             break;
                                     }
 
@@ -470,15 +529,15 @@ namespace gaseous_server.Classes.Metadata
                                     };
 
                                     // update cache
-                                    Storage.CacheStatus screenshotStatus = Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.TheGamesDb, "Screenshot", (long)igdbScreenshotItem.Id);
+                                    Storage.CacheStatus screenshotStatus = await Storage.GetCacheStatusAsync(HasheousClient.Models.MetadataSources.TheGamesDb, "Screenshot", (long)igdbScreenshotItem.Id);
                                     switch (screenshotStatus)
                                     {
                                         case Storage.CacheStatus.NotPresent:
-                                            Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbScreenshotItem, false);
+                                            await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbScreenshotItem, false);
                                             break;
 
                                         case Storage.CacheStatus.Expired:
-                                            Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbScreenshotItem, true);
+                                            await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbScreenshotItem, true);
                                             break;
                                     }
 
@@ -559,13 +618,13 @@ namespace gaseous_server.Classes.Metadata
                             return igdbGame as T;
 
                         default:
-                            Storage.CacheStatus objectStatus = Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.TheGamesDb, type, Id);
+                            Storage.CacheStatus objectStatus = await Storage.GetCacheStatusAsync(HasheousClient.Models.MetadataSources.TheGamesDb, type, Id);
                             if (
                                 objectStatus == Storage.CacheStatus.Current ||
                                 objectStatus == Storage.CacheStatus.Expired
                                 )
                             {
-                                return Storage.GetCacheValue<T>(HasheousClient.Models.MetadataSources.TheGamesDb, (T)Activator.CreateInstance(typeof(T)), "Id", Id);
+                                return await Storage.GetCacheValue<T>(HasheousClient.Models.MetadataSources.TheGamesDb, (T)Activator.CreateInstance(typeof(T)), "Id", Id);
                             }
                             else
                             {

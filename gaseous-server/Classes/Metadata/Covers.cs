@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using HasheousClient.Models.Metadata.IGDB;
 
 namespace gaseous_server.Classes.Metadata
@@ -11,7 +12,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static Cover? GetCover(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<Cover?> GetCover(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -19,7 +20,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Cover? RetVal = Metadata.GetMetadata<Cover>(SourceType, (long)Id, false);
+                Cover? RetVal = await Metadata.GetMetadataAsync<Cover>(SourceType, (long)Id, false);
                 return RetVal;
             }
         }

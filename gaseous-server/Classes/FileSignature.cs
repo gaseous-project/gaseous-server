@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Configuration;
 using System.IO.Compression;
 using System.Net;
+using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
 using HasheousClient.Models.Metadata.IGDB;
@@ -17,11 +18,11 @@ namespace gaseous_server.Classes
 {
     public class FileSignature
     {
-        public gaseous_server.Models.Signatures_Games GetFileSignature(GameLibrary.LibraryItem library, Common.hashObject hash, FileInfo fi, string GameFileImportPath)
+        public async Task<Signatures_Games> GetFileSignatureAsync(GameLibrary.LibraryItem library, Common.hashObject hash, FileInfo fi, string GameFileImportPath)
         {
             Logging.Log(Logging.LogType.Information, "Get Signature", "Getting signature for file: " + GameFileImportPath);
             gaseous_server.Models.Signatures_Games discoveredSignature = new gaseous_server.Models.Signatures_Games();
-            discoveredSignature = _GetFileSignature(hash, fi.Name, fi.Extension, fi.Length, GameFileImportPath, false);
+            discoveredSignature = await _GetFileSignatureAsync(hash, fi.Name, fi.Extension, fi.Length, GameFileImportPath, false);
 
             string[] CompressionExts = { ".zip", ".rar", ".7z" };
             string ImportedFileExtension = Path.GetExtension(GameFileImportPath);
@@ -130,7 +131,7 @@ namespace gaseous_server.Classes
                             {
                                 if (signatureFound == false)
                                 {
-                                    gaseous_server.Models.Signatures_Games zDiscoveredSignature = _GetFileSignature(zhash, zfi.Name, zfi.Extension, zfi.Length, file, true);
+                                    gaseous_server.Models.Signatures_Games zDiscoveredSignature = await _GetFileSignatureAsync(zhash, zfi.Name, zfi.Extension, zfi.Length, file, true);
                                     zDiscoveredSignature.Rom.Name = Path.ChangeExtension(zDiscoveredSignature.Rom.Name, ImportedFileExtension);
 
                                     if (zDiscoveredSignature.Score > discoveredSignature.Score)
@@ -192,7 +193,7 @@ namespace gaseous_server.Classes
             Platform? determinedPlatform = null;
             if (library.DefaultPlatformId == null || library.DefaultPlatformId == 0)
             {
-                determinedPlatform = Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId);
+                determinedPlatform = await Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId);
                 if (determinedPlatform == null)
                 {
                     determinedPlatform = new Platform();
@@ -200,7 +201,7 @@ namespace gaseous_server.Classes
             }
             else
             {
-                determinedPlatform = Metadata.Platforms.GetPlatform((long)library.DefaultPlatformId);
+                determinedPlatform = await Metadata.Platforms.GetPlatform((long)library.DefaultPlatformId);
                 discoveredSignature.MetadataSources.AddPlatform((long)determinedPlatform.Id, determinedPlatform.Name, HasheousClient.Models.MetadataSources.None);
             }
 
@@ -213,7 +214,7 @@ namespace gaseous_server.Classes
             return discoveredSignature;
         }
 
-        private gaseous_server.Models.Signatures_Games _GetFileSignature(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath, bool IsInZip)
+        private async Task<Signatures_Games> _GetFileSignatureAsync(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath, bool IsInZip)
         {
             Logging.Log(Logging.LogType.Information, "Import Game", "Checking signature for file: " + GameFileImportPath + "\nMD5 hash: " + hash.md5hash + "\nSHA1 hash: " + hash.sha1hash + "\nCRC32 hash: " + hash.crc32hash);
 
@@ -226,20 +227,20 @@ namespace gaseous_server.Classes
                 case HasheousClient.Models.MetadataModel.SignatureSources.LocalOnly:
                     Logging.Log(Logging.LogType.Information, "Import Game", "Hasheous disabled - searching local database only");
 
-                    discoveredSignature = _GetFileSignatureFromDatabase(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
+                    discoveredSignature = await _GetFileSignatureFromDatabase(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
 
                     break;
 
                 case HasheousClient.Models.MetadataModel.SignatureSources.Hasheous:
                     Logging.Log(Logging.LogType.Information, "Import Game", "Hasheous enabled - searching Hashesous and then local database if not found");
 
-                    discoveredSignature = _GetFileSignatureFromHasheous(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
+                    discoveredSignature = await _GetFileSignatureFromHasheous(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
 
                     if (discoveredSignature == null)
                     {
                         Logging.Log(Logging.LogType.Information, "Import Game", "Signature not found in Hasheous - checking local database");
 
-                        discoveredSignature = _GetFileSignatureFromDatabase(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
+                        discoveredSignature = await _GetFileSignatureFromDatabase(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
                     }
                     else
                     {
@@ -254,7 +255,7 @@ namespace gaseous_server.Classes
                 // construct a signature from file data
                 Logging.Log(Logging.LogType.Information, "Import Game", "Signature not found in local database or Hasheous (if enabled) - generating from file data");
 
-                discoveredSignature = _GetFileSignatureFromFileData(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
+                discoveredSignature = await _GetFileSignatureFromFileData(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
 
                 Logging.Log(Logging.LogType.Information, "Import Game", "Signature generated from provided file for game: " + discoveredSignature.Game.Name);
             }
@@ -267,26 +268,26 @@ namespace gaseous_server.Classes
             return discoveredSignature;
         }
 
-        private gaseous_server.Models.Signatures_Games? _GetFileSignatureFromDatabase(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
+        private async Task<gaseous_server.Models.Signatures_Games?> _GetFileSignatureFromDatabase(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
         {
             Logging.Log(Logging.LogType.Information, "Get Signature", "Checking local database for MD5: " + hash.md5hash);
 
             // check 1: do we have a signature for it?
             gaseous_server.Classes.SignatureManagement sc = new SignatureManagement();
-            List<gaseous_server.Models.Signatures_Games> signatures = sc.GetSignature(hash.md5hash);
+            List<gaseous_server.Models.Signatures_Games> signatures = await sc.GetSignature(hash.md5hash);
             if (signatures == null || signatures.Count == 0)
             {
                 Logging.Log(Logging.LogType.Information, "Get Signature", "Checking local database for SHA1: " + hash.sha1hash);
 
                 // no md5 signature found - try sha1
-                signatures = sc.GetSignature("", hash.sha1hash);
+                signatures = await sc.GetSignature("", hash.sha1hash);
             }
             if (signatures == null || signatures.Count == 0)
             {
                 Logging.Log(Logging.LogType.Information, "Get Signature", "Checking local database for CRC32: " + hash.crc32hash);
 
                 // no sha1 signature found - try crc32
-                signatures = sc.GetSignature("", "", hash.crc32hash);
+                signatures = await sc.GetSignature("", "", hash.crc32hash);
             }
 
             gaseous_server.Models.Signatures_Games? discoveredSignature = null;
@@ -316,7 +317,7 @@ namespace gaseous_server.Classes
             return null;
         }
 
-        private gaseous_server.Models.Signatures_Games? _GetFileSignatureFromHasheous(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
+        private async Task<gaseous_server.Models.Signatures_Games?> _GetFileSignatureFromHasheous(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
         {
             // check if hasheous is enabled, and if so use it's signature database
             if (Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous)
@@ -429,13 +430,13 @@ namespace gaseous_server.Classes
                                             if (metadataResult.ImmutableId.Length > 0)
                                             {
                                                 // use immutable id
-                                                Platform hasheousPlatform = Platforms.GetPlatform(long.Parse(metadataResult.ImmutableId));
+                                                Platform hasheousPlatform = await Platforms.GetPlatform(long.Parse(metadataResult.ImmutableId));
                                                 signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataResult.Source);
                                             }
                                             else if (metadataResult.Id.Length > 0)
                                             {
                                                 // fall back to id
-                                                Platform hasheousPlatform = Platforms.GetPlatform(metadataResult.Id);
+                                                Platform hasheousPlatform = await Platforms.GetPlatform(metadataResult.Id);
                                                 signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataResult.Source);
                                             }
                                             else
@@ -464,7 +465,7 @@ namespace gaseous_server.Classes
                                             switch (metadataResult.Source)
                                             {
                                                 case HasheousClient.Models.MetadataSources.IGDB:
-                                                    gaseous_server.Models.Game hasheousGame = Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, metadataResult.Id);
+                                                    gaseous_server.Models.Game hasheousGame = await Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, metadataResult.Id);
                                                     signature.MetadataSources.AddGame((long)hasheousGame.Id, hasheousGame.Name, metadataResult.Source);
                                                     break;
 
@@ -541,14 +542,14 @@ namespace gaseous_server.Classes
             return null;
         }
 
-        private gaseous_server.Models.Signatures_Games _GetFileSignatureFromFileData(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
+        private async Task<gaseous_server.Models.Signatures_Games> _GetFileSignatureFromFileData(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
         {
             SignatureManagement signatureManagement = new SignatureManagement();
 
             gaseous_server.Models.Signatures_Games discoveredSignature = new gaseous_server.Models.Signatures_Games();
 
             // no signature match found - try name search
-            List<gaseous_server.Models.Signatures_Games> signatures = signatureManagement.GetByTosecName(ImageName);
+            List<gaseous_server.Models.Signatures_Games> signatures = await signatureManagement.GetByTosecName(ImageName);
 
             if (signatures.Count == 1)
             {

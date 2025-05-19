@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
 using HasheousClient.Models.Metadata.IGDB;
 
@@ -18,7 +19,7 @@ namespace gaseous_server.Classes
             BiosFileInfo.Add("type", "bios");
             BiosFileInfo.Add("status", "notimported");
 
-            foreach (Classes.Bios.BiosItem biosItem in Classes.Bios.GetBios())
+            foreach (Classes.Bios.BiosItem biosItem in Classes.Bios.GetBios().Result)
             {
                 if (biosItem.Available == false)
                 {
@@ -90,15 +91,15 @@ namespace gaseous_server.Classes
             return null;
         }
 
-        public static List<BiosItem> GetBios()
+        public static async Task<List<BiosItem>> GetBios()
         {
-            return BuildBiosList();
+            return await BuildBiosList();
         }
 
-        public static List<BiosItem> GetBios(long PlatformId, bool HideUnavailable)
+        public static async Task<List<BiosItem>> GetBios(long PlatformId, bool HideUnavailable)
         {
             List<BiosItem> biosItems = new List<BiosItem>();
-            foreach (BiosItem biosItem in BuildBiosList())
+            foreach (BiosItem biosItem in await BuildBiosList())
             {
                 if (biosItem.platformid == PlatformId)
                 {
@@ -119,7 +120,7 @@ namespace gaseous_server.Classes
             return biosItems;
         }
 
-        private static List<BiosItem> BuildBiosList()
+        private static async Task<List<BiosItem>> BuildBiosList()
         {
             List<BiosItem> biosItems = new List<BiosItem>();
 
@@ -127,7 +128,7 @@ namespace gaseous_server.Classes
             {
                 if (platformMapping.Bios != null)
                 {
-                    Platform platform = Metadata.Platforms.GetPlatform(platformMapping.IGDBId);
+                    Platform platform = await Metadata.Platforms.GetPlatform(platformMapping.IGDBId);
 
                     foreach (Models.PlatformMapping.PlatformMapItem.EmulatorBiosItem emulatorBios in platformMapping.Bios)
                     {

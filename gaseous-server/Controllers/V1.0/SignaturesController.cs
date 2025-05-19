@@ -39,22 +39,22 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public List<gaseous_server.Models.Signatures_Games> GetSignature(string md5 = "", string sha1 = "")
+        public async Task<List<gaseous_server.Models.Signatures_Games>> GetSignature(string md5 = "", string sha1 = "")
         {
             SignatureManagement signatureManagement = new SignatureManagement();
-            return signatureManagement.GetSignature(md5, sha1);
+            return await signatureManagement.GetSignature(md5, sha1);
         }
 
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public List<gaseous_server.Models.Signatures_Games> GetByTosecName(string TosecName = "")
+        public async Task<List<gaseous_server.Models.Signatures_Games>> GetByTosecName(string TosecName = "")
         {
             if (TosecName.Length > 0)
             {
                 SignatureManagement signatureManagement = new SignatureManagement();
-                return signatureManagement.GetByTosecName(TosecName);
+                return await signatureManagement.GetByTosecName(TosecName);
             }
             else
             {
@@ -66,20 +66,20 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public List<Signatures_Sources> GetSignatureSources()
+        public async Task<List<Signatures_Sources>> GetSignatureSources()
         {
             SignatureManagement signatureManagement = new SignatureManagement();
-            return signatureManagement.GetSources();
+            return await signatureManagement.GetSources();
         }
 
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpDelete]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public IActionResult DeleteSignatureSource(int Id)
+        public async Task<IActionResult> DeleteSignatureSource(int Id)
         {
             SignatureManagement signatureManagement = new SignatureManagement();
-            signatureManagement.DeleteSource(Id);
+            await signatureManagement.DeleteSource(Id);
 
             return Ok();
         }

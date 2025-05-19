@@ -39,6 +39,7 @@ class HomePageGameRow {
         }, 1000);
 
         let gameFilter = new Filtering();
+        gameFilter.GetSummary = false;
         gameFilter.executeCallback = async (games) => {
             clearInterval(this.loadingInterval);
             this.games.innerHTML = "";

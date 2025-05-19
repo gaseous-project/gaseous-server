@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
 using gaseous_server.Models;
@@ -70,7 +71,7 @@ namespace gaseous_server.Classes
 			DataTable dt = new DataTable();
 
 			// check if the metadata map already exists
-			MetadataMap? existingMetadataMap = GetMetadataMap(platformId, name);
+			MetadataMap? existingMetadataMap = GetMetadataMap(platformId, name).Result;
 			if (existingMetadataMap != null)
 			{
 				Processing = false;
@@ -100,7 +101,7 @@ namespace gaseous_server.Classes
 			AddMetadataMapItem(metadataMapId, HasheousClient.Models.MetadataSources.None, gameId, true);
 
 			// return the new metadata map
-			MetadataMap RetVal = GetMetadataMap(metadataMapId);
+			MetadataMap RetVal = GetMetadataMap(metadataMapId).Result;
 			Processing = false;
 			return RetVal;
 		}
@@ -187,7 +188,7 @@ namespace gaseous_server.Classes
 		/// <remarks>
 		/// This method will return the first metadata map found with the given platformId and name.
 		/// </remarks>
-		private static MetadataMap? GetMetadataMap(long platformId, string name)
+		private static async Task<MetadataMap?> GetMetadataMap(long platformId, string name)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
@@ -199,11 +200,11 @@ namespace gaseous_server.Classes
 			DataTable dt = new DataTable();
 
 			sql = "SELECT Id FROM MetadataMap WHERE PlatformId = @platformId AND SignatureGameName = @name;";
-			dt = db.ExecuteCMD(sql, dbDict);
+			dt = await db.ExecuteCMDAsync(sql, dbDict);
 
 			if (dt.Rows.Count > 0)
 			{
-				return GetMetadataMap((long)dt.Rows[0]["Id"]);
+				return await GetMetadataMap((long)dt.Rows[0]["Id"]);
 			}
 
 			return null;
@@ -221,7 +222,7 @@ namespace gaseous_server.Classes
 		/// <remarks>
 		/// This method will return the metadata map with the given ID.
 		/// </remarks>
-		public static MetadataMap? GetMetadataMap(long metadataMapId)
+		public static async Task<MetadataMap?> GetMetadataMap(long metadataMapId)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
@@ -232,7 +233,7 @@ namespace gaseous_server.Classes
 			DataTable dt = new DataTable();
 
 			sql = "SELECT * FROM MetadataMap WHERE Id = @metadataMapId;";
-			dt = db.ExecuteCMD(sql, dbDict);
+			dt = await db.ExecuteCMDAsync(sql, dbDict);
 
 			if (dt.Rows.Count > 0)
 			{
@@ -245,7 +246,7 @@ namespace gaseous_server.Classes
 				};
 
 				sql = "SELECT * FROM MetadataMapBridge WHERE ParentMapId = @metadataMapId;";
-				dt = db.ExecuteCMD(sql, dbDict);
+				dt = await db.ExecuteCMDAsync(sql, dbDict);
 
 				foreach (DataRow dr in dt.Rows)
 				{
@@ -271,7 +272,7 @@ namespace gaseous_server.Classes
 		public static void SetMetadataSupportData(long metadataMapId, MetadataMapSupportDataTypes dataType, string data)
 		{
 			// verify the metadata map exists
-			MetadataMap? metadataMap = GetMetadataMap(metadataMapId);
+			MetadataMap? metadataMap = GetMetadataMap(metadataMapId).Result;
 			if (metadataMap == null)
 			{
 				return;
@@ -380,7 +381,7 @@ namespace gaseous_server.Classes
 		/// </summary>
 		/// <param name="metadataMapId"></param>
 		/// <returns></returns>
-		public static List<long> GetAssociatedMetadataMapIds(long metadataMapId)
+		public static async Task<List<long>> GetAssociatedMetadataMapIds(long metadataMapId)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
@@ -390,7 +391,7 @@ namespace gaseous_server.Classes
 			};
 
 			sql = "SELECT `M1`.`Id` AS `Id` FROM `view_MetadataMap` `M` JOIN `view_MetadataMap` `M1` ON `M`.`MetadataSourceId` = `M1`.`MetadataSourceId` WHERE `M`.`Id` = @metadataMapId; ";
-			DataTable dt = db.ExecuteCMD(sql, dbDict);
+			DataTable dt = await db.ExecuteCMDAsync(sql, dbDict);
 
 			List<long> metadataMapIds = new List<long>();
 			foreach (DataRow dr in dt.Rows)
@@ -427,11 +428,11 @@ namespace gaseous_server.Classes
 			RefreshGames(forceRefresh);
 		}
 
-		public void RefreshPlatforms(bool forceRefresh = false)
+		public async Task RefreshPlatforms(bool forceRefresh = false)
 		{
 			// update platform metadata
 			string sql = "SELECT Id, `Name` FROM Platform;";
-			DataTable dt = db.ExecuteCMD(sql);
+			DataTable dt = await db.ExecuteCMDAsync(sql);
 
 			int StatusCounter = 1;
 			foreach (DataRow dr in dt.Rows)
@@ -445,7 +446,7 @@ namespace gaseous_server.Classes
 					HasheousClient.Models.MetadataSources metadataSource = HasheousClient.Models.MetadataSources.None;
 
 					// fetch the platform metadata
-					Platform platform = Metadata.Platforms.GetPlatform((long)dr["id"], metadataSource);
+					Platform platform = await Metadata.Platforms.GetPlatform((long)dr["id"], metadataSource);
 
 					// fetch the platform metadata from Hasheous
 					if ((long)dr["id"] != 0)
@@ -460,7 +461,7 @@ namespace gaseous_server.Classes
 					{
 						// set the platform to unknown
 						sql = "UPDATE Platform SET Name = 'Unknown Platform', Slug = 'unknown', PlatformLogo = 0 WHERE Id = 0;";
-						db.ExecuteCMD(sql);
+						await db.ExecuteCMDAsync(sql);
 					}
 
 					// force platformLogo refresh
@@ -479,7 +480,7 @@ namespace gaseous_server.Classes
 			ClearStatus();
 		}
 
-		public void RefreshSignatures(bool forceRefresh = false)
+		public async Task RefreshSignatures(bool forceRefresh = false)
 		{
 			// update rom signatures - only valid if Haseheous is enabled
 			if (Config.MetadataConfiguration.SignatureSource == MetadataModel.SignatureSources.Hasheous)
@@ -491,7 +492,7 @@ namespace gaseous_server.Classes
 				{
 					{ "@LastUpdateThreshold", DateTime.UtcNow.AddDays(-new Random().Next(14, 30)) }
 				};
-				DataTable dt = db.ExecuteCMD(sql, dbDict);
+				DataTable dt = await db.ExecuteCMDAsync(sql, dbDict);
 
 				int StatusCounter = 1;
 				foreach (DataRow dr in dt.Rows)
@@ -533,12 +534,12 @@ namespace gaseous_server.Classes
 						}
 
 						// get the library for the ROM
-						GameLibrary.LibraryItem library = GameLibrary.GetLibrary((int)dr["LibraryId"]);
+						GameLibrary.LibraryItem library = await GameLibrary.GetLibrary((int)dr["LibraryId"]);
 
 						// get the signature for the ROM
 						FileInfo fi = new FileInfo(dr["Path"].ToString());
 						FileSignature fileSignature = new FileSignature();
-						gaseous_server.Models.Signatures_Games signature = fileSignature.GetFileSignature(library, hash, fi, fi.FullName);
+						gaseous_server.Models.Signatures_Games signature = await fileSignature.GetFileSignatureAsync(library, hash, fi, fi.FullName);
 
 						// validate the signature - if it is invalid, skip the rest of the loop
 						// validation rules: 1) signature must not be null, 2) signature must have a platform ID
@@ -550,10 +551,10 @@ namespace gaseous_server.Classes
 						}
 
 						// update the signature in the database
-						Platform? signaturePlatform = Metadata.Platforms.GetPlatform((long)signature.Flags.PlatformId);
+						Platform? signaturePlatform = await Metadata.Platforms.GetPlatform((long)signature.Flags.PlatformId);
 						if (signature.Flags.GameId == 0)
 						{
-							HasheousClient.Models.Metadata.IGDB.Game? discoveredGame = ImportGame.SearchForGame(signature, signature.Flags.PlatformId, false);
+							HasheousClient.Models.Metadata.IGDB.Game? discoveredGame = await ImportGame.SearchForGame(signature, signature.Flags.PlatformId, false);
 							if (discoveredGame != null && discoveredGame.Id != null)
 							{
 								signature.MetadataSources.AddGame((long)discoveredGame.Id, discoveredGame.Name, MetadataSources.IGDB);
@@ -572,7 +573,7 @@ namespace gaseous_server.Classes
 			}
 		}
 
-		public void RefreshGames(bool forceRefresh = false)
+		public async Task RefreshGames(bool forceRefresh = false)
 		{
 			string sql = "";
 
@@ -587,7 +588,7 @@ namespace gaseous_server.Classes
 				// when run normally, update all games (since this will honour cache timeouts)
 				sql = "SELECT DISTINCT MetadataSourceId AS `Id`, MetadataSourceType AS `GameIdType`, SignatureGameName AS `Name` FROM gaseous.view_MetadataMap;";
 			}
-			DataTable dt = db.ExecuteCMD(sql);
+			DataTable dt = await db.ExecuteCMDAsync(sql);
 
 			int StatusCounter = 1;
 			foreach (DataRow dr in dt.Rows)
@@ -602,7 +603,7 @@ namespace gaseous_server.Classes
 		}
 
 		static List<Dictionary<string, object>> inProgressRefreshes = new List<Dictionary<string, object>>();
-		public void RefreshSpecificGame(long metadataMapId)
+		public async Task RefreshSpecificGameAsync(long metadataMapId)
 		{
 			// get the metadata map for the game
 			string sql = @"
@@ -621,7 +622,7 @@ namespace gaseous_server.Classes
 			{
 				{ "@metadataMapId", metadataMapId }
 			};
-			DataTable dt = db.ExecuteCMD(sql, dbDict);
+			DataTable dt = await db.ExecuteCMDAsync(sql, dbDict);
 
 			foreach (DataRow dr in dt.Rows)
 			{
@@ -648,7 +649,7 @@ namespace gaseous_server.Classes
 			}
 		}
 
-		void _RefreshSpecificGame(DataRow dataRow)
+		async Task _RefreshSpecificGame(DataRow dataRow)
 		{
 			// convert dataRow to dictionary
 			Dictionary<string, object?> dr = new Dictionary<string, object?>();
@@ -678,7 +679,7 @@ namespace gaseous_server.Classes
 					metadataSource = (MetadataSources)Enum.Parse(typeof(MetadataSources), dr["gameidtype"].ToString());
 
 					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing metadata for game " + dr["name"] + " (" + dr["id"] + ") using source " + metadataSource.ToString());
-					Models.Game game = Metadata.Games.GetGame(metadataSource, (long)dr["id"]);
+					Models.Game game = await Metadata.Games.GetGame(metadataSource, (long)dr["id"]);
 
 					// get supporting metadata
 					if (game != null)
@@ -689,37 +690,37 @@ namespace gaseous_server.Classes
 							long? metadataMapId = game.MetadataMapId;
 							if (metadataMapId != null)
 							{
-								MetadataMap? metadataMapItem = GetMetadataMap((long)metadataMapId);
+								MetadataMap? metadataMapItem = await GetMetadataMap((long)metadataMapId);
 								if (metadataMapItem != null)
 								{
 									// get the TheGamesDb metadata map item
 									MetadataMap.MetadataMapItem? metadataMapItemItem = metadataMapItem.MetadataMapItems.Find(x => x.SourceType == MetadataSources.TheGamesDb);
 									if (metadataMapItemItem != null)
 									{
-										Models.Game? tgdbGameItem = Metadata.Games.GetGame(MetadataSources.TheGamesDb, metadataMapItemItem.SourceId);
+										Models.Game? tgdbGameItem = await Metadata.Games.GetGame(MetadataSources.TheGamesDb, metadataMapItemItem.SourceId);
 
 										// get images
 										if (tgdbGameItem != null)
 										{
 											if (tgdbGameItem.Cover != null)
 											{
-												Metadata.Covers.GetCover(MetadataSources.TheGamesDb, (long)tgdbGameItem.Cover);
-												ImageHandling.GameImage((long)metadataMapId, MetadataSources.TheGamesDb, ImageHandling.MetadataImageType.cover, tgdbGameItem.Cover, Communications.IGDBAPI_ImageSize.original);
+												await Metadata.Covers.GetCover(MetadataSources.TheGamesDb, (long)tgdbGameItem.Cover);
+												await ImageHandling.GameImage((long)metadataMapId, MetadataSources.TheGamesDb, ImageHandling.MetadataImageType.cover, tgdbGameItem.Cover, Communications.IGDBAPI_ImageSize.original);
 											}
 											if (tgdbGameItem.Artworks != null)
 											{
 												foreach (long artworkId in tgdbGameItem.Artworks)
 												{
-													Metadata.Artworks.GetArtwork(MetadataSources.TheGamesDb, artworkId);
-													ImageHandling.GameImage((long)metadataMapId, MetadataSources.TheGamesDb, ImageHandling.MetadataImageType.artwork, artworkId, Communications.IGDBAPI_ImageSize.original);
+													await Metadata.Artworks.GetArtwork(MetadataSources.TheGamesDb, artworkId);
+													await ImageHandling.GameImage((long)metadataMapId, MetadataSources.TheGamesDb, ImageHandling.MetadataImageType.artwork, artworkId, Communications.IGDBAPI_ImageSize.original);
 												}
 											}
 											if (tgdbGameItem.Screenshots != null)
 											{
 												foreach (long screenshotId in tgdbGameItem.Screenshots)
 												{
-													Metadata.Screenshots.GetScreenshot(MetadataSources.TheGamesDb, screenshotId);
-													ImageHandling.GameImage((long)metadataMapId, MetadataSources.TheGamesDb, ImageHandling.MetadataImageType.screenshots, screenshotId, Communications.IGDBAPI_ImageSize.original);
+													await Metadata.Screenshots.GetScreenshotAsync(MetadataSources.TheGamesDb, screenshotId);
+													await ImageHandling.GameImage((long)metadataMapId, MetadataSources.TheGamesDb, ImageHandling.MetadataImageType.screenshots, screenshotId, Communications.IGDBAPI_ImageSize.original);
 												}
 											}
 										}
@@ -732,12 +733,12 @@ namespace gaseous_server.Classes
 						{
 							foreach (long ageRatingId in game.AgeRatings)
 							{
-								AgeRating ageRating = Metadata.AgeRatings.GetAgeRating(metadataSource, ageRatingId);
+								AgeRating ageRating = await Metadata.AgeRatings.GetAgeRating(metadataSource, ageRatingId);
 								if (ageRating.ContentDescriptions != null)
 								{
 									foreach (long ageRatingContentDescriptionId in ageRating.ContentDescriptions)
 									{
-										Metadata.AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(metadataSource, ageRatingContentDescriptionId);
+										await Metadata.AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(metadataSource, ageRatingContentDescriptionId);
 									}
 								}
 							}
@@ -746,52 +747,52 @@ namespace gaseous_server.Classes
 						{
 							foreach (long alternateNameId in game.AlternativeNames)
 							{
-								Metadata.AlternativeNames.GetAlternativeNames(metadataSource, alternateNameId);
+								await Metadata.AlternativeNames.GetAlternativeNames(metadataSource, alternateNameId);
 							}
 						}
 						if (game.Artworks != null)
 						{
 							foreach (long artworkId in game.Artworks)
 							{
-								Metadata.Artworks.GetArtwork(metadataSource, artworkId);
-								ImageHandling.GameImage((long)game.MetadataMapId, metadataSource, ImageHandling.MetadataImageType.artwork, artworkId, Communications.IGDBAPI_ImageSize.original);
+								await Metadata.Artworks.GetArtwork(metadataSource, artworkId);
+								await ImageHandling.GameImage((long)game.MetadataMapId, metadataSource, ImageHandling.MetadataImageType.artwork, artworkId, Communications.IGDBAPI_ImageSize.original);
 							}
 						}
 						if (game.Cover != null)
 						{
-							Metadata.Covers.GetCover(metadataSource, (long?)game.Cover);
-							ImageHandling.GameImage((long)game.MetadataMapId, metadataSource, ImageHandling.MetadataImageType.cover, game.Cover, Communications.IGDBAPI_ImageSize.original);
+							await Metadata.Covers.GetCover(metadataSource, (long?)game.Cover);
+							await ImageHandling.GameImage((long)game.MetadataMapId, metadataSource, ImageHandling.MetadataImageType.cover, game.Cover, Communications.IGDBAPI_ImageSize.original);
 						}
 						if (game.GameModes != null)
 						{
 							foreach (long gameModeId in game.GameModes)
 							{
-								Metadata.GameModes.GetGame_Modes(metadataSource, gameModeId);
+								await Metadata.GameModes.GetGame_Modes(metadataSource, gameModeId);
 							}
 						}
 						if (game.Genres != null)
 						{
 							foreach (long genreId in game.Genres)
 							{
-								Metadata.Genres.GetGenres(metadataSource, genreId);
+								await Metadata.Genres.GetGenres(metadataSource, genreId);
 							}
 						}
 						if (game.GameLocalizations != null)
 						{
 							foreach (long gameLocalizationId in game.GameLocalizations)
 							{
-								GameLocalization gameLocalization = Metadata.GameLocalizations.GetGame_Locatization(metadataSource, gameLocalizationId);
+								GameLocalization gameLocalization = await Metadata.GameLocalizations.GetGame_Locatization(metadataSource, gameLocalizationId);
 
 								if (gameLocalization != null)
 								{
 									if (gameLocalization.Cover != null)
 									{
-										Metadata.Covers.GetCover(metadataSource, (long)gameLocalization.Cover);
+										await Metadata.Covers.GetCover(metadataSource, (long)gameLocalization.Cover);
 									}
 
 									if (gameLocalization.Region != null)
 									{
-										Metadata.Regions.GetGame_Region(metadataSource, (long)gameLocalization.Region);
+										await Metadata.Regions.GetGame_Region(metadataSource, (long)gameLocalization.Region);
 									}
 								}
 							}
@@ -800,43 +801,43 @@ namespace gaseous_server.Classes
 						{
 							foreach (long gameVideoId in game.Videos)
 							{
-								Metadata.GamesVideos.GetGame_Videos(metadataSource, gameVideoId);
+								await Metadata.GamesVideos.GetGame_Videos(metadataSource, gameVideoId);
 							}
 						}
 						if (game.MultiplayerModes != null)
 						{
 							foreach (long multiplayerModeId in game.MultiplayerModes)
 							{
-								Metadata.MultiplayerModes.GetGame_MultiplayerModes(metadataSource, multiplayerModeId);
+								await Metadata.MultiplayerModes.GetGame_MultiplayerModes(metadataSource, multiplayerModeId);
 							}
 						}
 						if (game.PlayerPerspectives != null)
 						{
 							foreach (long playerPerspectiveId in game.PlayerPerspectives)
 							{
-								Metadata.PlayerPerspectives.GetGame_PlayerPerspectives(metadataSource, playerPerspectiveId);
+								await Metadata.PlayerPerspectives.GetGame_PlayerPerspectives(metadataSource, playerPerspectiveId);
 							}
 						}
 						if (game.ReleaseDates != null)
 						{
 							foreach (long releaseDateId in game.ReleaseDates)
 							{
-								Metadata.ReleaseDates.GetReleaseDates(metadataSource, releaseDateId);
+								await Metadata.ReleaseDates.GetReleaseDates(metadataSource, releaseDateId);
 							}
 						}
 						if (game.Screenshots != null)
 						{
 							foreach (long screenshotId in game.Screenshots)
 							{
-								Metadata.Screenshots.GetScreenshot(metadataSource, screenshotId);
-								ImageHandling.GameImage((long)game.MetadataMapId, metadataSource, ImageHandling.MetadataImageType.screenshots, screenshotId, Communications.IGDBAPI_ImageSize.original);
+								await Metadata.Screenshots.GetScreenshotAsync(metadataSource, screenshotId);
+								await ImageHandling.GameImage((long)game.MetadataMapId, metadataSource, ImageHandling.MetadataImageType.screenshots, screenshotId, Communications.IGDBAPI_ImageSize.original);
 							}
 						}
 						if (game.Themes != null)
 						{
 							foreach (long themeId in game.Themes)
 							{
-								Metadata.Themes.GetGame_Themes(metadataSource, themeId);
+								await Metadata.Themes.GetGame_ThemesAsync(metadataSource, themeId);
 							}
 						}
 					}

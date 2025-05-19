@@ -33,7 +33,7 @@ namespace gaseous_server.Controllers
             return Ok(PlatformsController.GetPlatforms());
         }
 
-        public static List<Platform> GetPlatforms()
+        public static async Task<List<Platform>> GetPlatforms()
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
@@ -41,10 +41,10 @@ namespace gaseous_server.Controllers
 
             List<Platform> RetVal = new List<Platform>();
 
-            DataTable dbResponse = db.ExecuteCMD(sql);
+            DataTable dbResponse = await db.ExecuteCMDAsync(sql);
             foreach (DataRow dr in dbResponse.Rows)
             {
-                RetVal.Add(Classes.Metadata.Platforms.GetPlatform((long)dr["id"]));
+                RetVal.Add(await Classes.Metadata.Platforms.GetPlatform((long)dr["id"]));
             }
 
             return RetVal;
@@ -56,11 +56,11 @@ namespace gaseous_server.Controllers
         [Route("{PlatformId}")]
         [ProducesResponseType(typeof(Platform), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult Platform(long PlatformId)
+        public async Task<ActionResult> Platform(long PlatformId)
         {
             try
             {
-                Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
+                Platform platformObject = await Classes.Metadata.Platforms.GetPlatform(PlatformId);
 
                 if (platformObject != null)
                 {
@@ -77,41 +77,6 @@ namespace gaseous_server.Controllers
             }
         }
 
-        // [MapToApiVersion("1.0")]
-        // [MapToApiVersion("1.1")]
-        // [HttpGet]
-        // [Route("{PlatformId}/platformlogo")]
-        // [ProducesResponseType(typeof(PlatformLogo), StatusCodes.Status200OK)]
-        // [ProducesResponseType(StatusCodes.Status404NotFound)]
-        // public ActionResult PlatformLogo(long PlatformId)
-        // {
-        //     try
-        //     {
-        //         Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId);
-        //         if (platformObject != null)
-        //         {
-        //             PlatformLogo logoObjectParent = (PlatformLogo)platformObject.PlatformLogo;
-        //             PlatformLogo logoObject = PlatformLogos.GetPlatformLogo(logoObjectParent.Id);
-        //             if (logoObject != null)
-        //             {
-        //                 return Ok(logoObject);
-        //             }
-        //             else
-        //             {
-        //                 return NotFound();
-        //             }
-        //         }
-        //         else
-        //         {
-        //             return NotFound();
-        //         }
-        //     }
-        //     catch
-        //     {
-        //         return NotFound();
-        //     }
-        // }
-
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
         [HttpGet]
@@ -125,10 +90,10 @@ namespace gaseous_server.Controllers
             {
                 HasheousClient.Models.MetadataSources metadataSources = HasheousClient.Models.MetadataSources.None;
 
-                Platform platformObject = Classes.Metadata.Platforms.GetPlatform(PlatformId, metadataSources);
+                Platform platformObject = await Classes.Metadata.Platforms.GetPlatform(PlatformId, metadataSources);
                 PlatformLogo? logoObject = null;
 
-                logoObject = PlatformLogos.GetPlatformLogo((long)platformObject.PlatformLogo, metadataSources);
+                logoObject = await PlatformLogos.GetPlatformLogo((long)platformObject.PlatformLogo, metadataSources);
 
                 if (logoObject == null)
                 {
@@ -137,8 +102,8 @@ namespace gaseous_server.Controllers
                     {
                         if (platformObject.Versions.Count > 0)
                         {
-                            PlatformVersion platformVersion = Classes.Metadata.PlatformVersions.GetPlatformVersion(metadataSources, (long)platformObject.Versions[0]);
-                            logoObject = PlatformLogos.GetPlatformLogo((long)platformVersion.PlatformLogo);
+                            PlatformVersion platformVersion = await Classes.Metadata.PlatformVersions.GetPlatformVersion(metadataSources, (long)platformObject.Versions[0]);
+                            logoObject = await PlatformLogos.GetPlatformLogo((long)platformVersion.PlatformLogo);
                         }
                         else
                         {
@@ -157,17 +122,13 @@ namespace gaseous_server.Controllers
                 if (!System.IO.File.Exists(imagePath))
                 {
                     Communications comms = new Communications();
-                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(metadataSources, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject)), logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
-
-                    imagePath = ImgFetch.Result;
+                    imagePath = await comms.GetSpecificImageFromServer(metadataSources, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject)), logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
                 }
 
                 if (!System.IO.File.Exists(imagePath))
                 {
                     Communications comms = new Communications();
-                    Task<string> ImgFetch = comms.GetSpecificImageFromServer(metadataSources, basePath, logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
-
-                    imagePath = ImgFetch.Result;
+                    imagePath = await comms.GetSpecificImageFromServer(metadataSources, basePath, logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
                 }
 
                 if (System.IO.File.Exists(imagePath))

@@ -2,6 +2,7 @@
 using System.Buffers;
 using System.Reflection;
 using System.Text.Json.Serialization;
+using System.Threading.Tasks;
 using HasheousClient.Models.Metadata.IGDB;
 using Microsoft.CodeAnalysis.Classification;
 
@@ -15,7 +16,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static AgeRating? GetAgeRating(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<AgeRating?> GetAgeRating(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -23,16 +24,16 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                AgeRating? RetVal = Metadata.GetMetadata<AgeRating>(SourceType, (long)Id, false);
+                AgeRating? RetVal = await Metadata.GetMetadataAsync<AgeRating>(SourceType, (long)Id, false);
                 return RetVal;
             }
         }
 
-        public static GameAgeRating GetConsolidatedAgeRating(HasheousClient.Models.MetadataSources SourceType, long RatingId)
+        public static async Task<GameAgeRating> GetConsolidatedAgeRating(HasheousClient.Models.MetadataSources SourceType, long RatingId)
         {
             GameAgeRating gameAgeRating = new GameAgeRating();
 
-            AgeRating ageRating = GetAgeRating(SourceType, RatingId);
+            AgeRating ageRating = await GetAgeRating(SourceType, RatingId);
             gameAgeRating.Id = (long)ageRating.Id;
             gameAgeRating.RatingBoard = (AgeRatingCategory)ageRating.Category;
             gameAgeRating.RatingTitle = (AgeRatingTitle)ageRating.Rating;
@@ -44,7 +45,7 @@ namespace gaseous_server.Classes.Metadata
                 {
                     try
                     {
-                        AgeRatingContentDescription ageRatingContentDescription = AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(SourceType, ContentId);
+                        AgeRatingContentDescription ageRatingContentDescription = await AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(SourceType, ContentId);
                         descriptions.Add(ageRatingContentDescription.Description);
                     }
                     catch (Exception ex)
@@ -66,7 +67,7 @@ namespace gaseous_server.Classes.Metadata
             public string[] Descriptions { get; set; }
         }
 
-        public static void PopulateAgeMap()
+        public static async Task PopulateAgeMapAsync()
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "DELETE FROM ClassificationMap;";
@@ -96,7 +97,7 @@ namespace gaseous_server.Classes.Metadata
                                 dbDict.Add("RatingId", ageRatingTitle);
 
                                 sql = "INSERT INTO ClassificationMap (AgeGroupId, ClassificationBoardId, RatingId) VALUES (@AgeGroupId, @ClassificationBoardId, @RatingId);";
-                                db.ExecuteCMD(sql, dbDict);
+                                await db.ExecuteCMDAsync(sql, dbDict);
                             }
                         }
                     }

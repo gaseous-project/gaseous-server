@@ -95,12 +95,12 @@ class Modal {
             }
         });
 
-        // Add event listener to close the modal when the escape key is pressed
-        document.addEventListener('keydown', (event) => {
-            if (event.key === 'Escape') {
-                this.close();
-            }
-        });
+        // // Add event listener to close the modal when the escape key is pressed
+        // document.addEventListener('keydown', (event) => {
+        //     if (event.key === 'Escape') {
+        //         this.close();
+        //     }
+        // });
 
         return;
     }

@@ -20,9 +20,9 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(typeof(List<GameLibrary.LibraryItem>), StatusCodes.Status200OK)]
-        public ActionResult GetLibraries(bool GetStorageInfo = false)
+        public async Task<ActionResult> GetLibrariesAsync(bool GetStorageInfo = false)
         {
-            return Ok(GameLibrary.GetLibraries(GetStorageInfo));
+            return Ok(await GameLibrary.GetLibraries(GetStorageInfo));
         }
 
         [MapToApiVersion("1.0")]
@@ -30,11 +30,11 @@ namespace gaseous_server.Controllers
         [HttpGet("{LibraryId}")]
         [ProducesResponseType(typeof(GameLibrary.LibraryItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult GetLibrary(int LibraryId, bool GetStorageInfo = false)
+        public async Task<ActionResult> GetLibrary(int LibraryId, bool GetStorageInfo = false)
         {
             try
             {
-                return Ok(GameLibrary.GetLibrary(LibraryId, GetStorageInfo));
+                return Ok(await GameLibrary.GetLibrary(LibraryId, GetStorageInfo));
             }
             catch
             {
@@ -48,11 +48,11 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(GameLibrary.LibraryItem), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status409Conflict)]
-        public ActionResult AddLibrary(string Name, string Path, long DefaultPlatformId)
+        public async Task<ActionResult> AddLibraryAsync(string Name, string Path, long DefaultPlatformId)
         {
             try
             {
-                return Ok(GameLibrary.AddLibrary(Name, Path, DefaultPlatformId));
+                return Ok(await GameLibrary.AddLibrary(Name, Path, DefaultPlatformId));
             }
             catch (GameLibrary.PathExists exPE)
             {
@@ -70,11 +70,11 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult DelLibrary(int LibraryId)
+        public async Task<ActionResult> DelLibrary(int LibraryId)
         {
             try
             {
-                GameLibrary.DeleteLibrary(LibraryId);
+                await GameLibrary.DeleteLibrary(LibraryId);
                 return Ok();
             }
             catch (GameLibrary.CannotDeleteDefaultLibrary exCDDL)

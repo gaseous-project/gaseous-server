@@ -269,17 +269,17 @@ namespace gaseous_server.Classes
             {
                 foreach (long PlatformId in platformids)
                 {
-                    platforms.Add(Platforms.GetPlatform(PlatformId));
+                    platforms.Add(Platforms.GetPlatform(PlatformId).Result);
                 }
             }
             else
             {
                 // get all platforms to pull from
-                Dictionary<string, List<Filters.FilterItem>> FilterDict = Filters.Filter(AgeGroups.AgeRestrictionGroupings.Adult, true);
+                Dictionary<string, List<Filters.FilterItem>> FilterDict = Filters.Filter(AgeGroups.AgeRestrictionGroupings.Adult, true).Result;
                 List<Classes.Filters.FilterItem> filteredPlatforms = (List<Classes.Filters.FilterItem>)FilterDict["platforms"];
                 foreach (Filters.FilterItem filterItem in filteredPlatforms)
                 {
-                    platforms.Add(Platforms.GetPlatform((long)filterItem.Id));
+                    platforms.Add(Platforms.GetPlatform((long)filterItem.Id).Result);
                 }
             }
 
@@ -329,7 +329,7 @@ namespace gaseous_server.Classes
                             IncludeUnrated = UserAgeGroupIncludeUnrated
                         }
                     };
-                    games = Controllers.v1_1.GamesController.GetGames(searchModel, user);
+                    games = Controllers.v1_1.GamesController.GetGames(searchModel, user).Result;
 
                 }
 
@@ -346,13 +346,20 @@ namespace gaseous_server.Classes
                         ) && alwaysIncludeItem.PlatformId == platform.Id
                         )
                     {
-                        MinimalGameItem AlwaysIncludeGame = new MinimalGameItem(Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, alwaysIncludeItem.GameId));
+                        MinimalGameItem AlwaysIncludeGame = new MinimalGameItem(Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, alwaysIncludeItem.GameId).Result);
                         CollectionContents.CollectionPlatformItem.CollectionGameItem gameItem = new CollectionContents.CollectionPlatformItem.CollectionGameItem(AlwaysIncludeGame);
                         gameItem.InclusionStatus = new CollectionItem.AlwaysIncludeItem();
                         gameItem.InclusionStatus.PlatformId = alwaysIncludeItem.PlatformId;
                         gameItem.InclusionStatus.GameId = alwaysIncludeItem.GameId;
                         gameItem.InclusionStatus.InclusionState = alwaysIncludeItem.InclusionState;
-                        gameItem.Roms = Roms.GetRoms((long)gameItem.Id, (long)platform.Id).GameRomItems;
+
+                        // execute Roms.GetRomsAsync and wait for it to finish
+                        // this is a blocking call
+                        gameItem.Roms = Task.Run(async () =>
+                        {
+                            var result = await Roms.GetRomsAsync((long)gameItem.Id, (long)platform.Id);
+                            return result.GameRomItems;
+                        }).Result;
 
                         collectionPlatformItem.Games.Add(gameItem);
                     }
@@ -373,16 +380,17 @@ namespace gaseous_server.Classes
                     {
                         CollectionContents.CollectionPlatformItem.CollectionGameItem collectionGameItem = new CollectionContents.CollectionPlatformItem.CollectionGameItem(game);
 
-                        List<Roms.GameRomItem> gameRoms = Roms.GetRoms((long)game.Id, (long)platform.Id).GameRomItems;
+                        // Retrieve ROMs for the game synchronously
+                        List<Roms.GameRomItem> gameRoms = Task.Run(async () =>
+                        {
+                            var result = await Roms.GetRomsAsync((long)game.Id, (long)platform.Id);
+                            return result.GameRomItems;
+                        }).Result;
+
+                        // Calculate total ROM size for the game
+                        long GameRomSize = gameRoms.Sum(r => (long)r.Size);
 
                         bool AddGame = false;
-
-                        // calculate total rom size for the game
-                        long GameRomSize = 0;
-                        foreach (Roms.GameRomItem gameRom in gameRoms)
-                        {
-                            GameRomSize += (long)gameRom.Size;
-                        }
                         if (collectionItem.MaximumBytesPerPlatform > 0)
                         {
                             if ((TotalRomSize + GameRomSize) < collectionItem.MaximumBytesPerPlatform)
@@ -522,7 +530,7 @@ namespace gaseous_server.Classes
                         // get platform bios files if present
                         if (collectionItem.IncludeBIOSFiles == true)
                         {
-                            List<Bios.BiosItem> bios = Bios.GetBios(collectionPlatformItem.Id, true);
+                            List<Bios.BiosItem> bios = Bios.GetBios(collectionPlatformItem.Id, true).Result;
                             if (!Directory.Exists(ZipBiosPath))
                             {
                                 Directory.CreateDirectory(ZipBiosPath);
@@ -549,7 +557,7 @@ namespace gaseous_server.Classes
                             case CollectionItem.FolderStructures.RetroPie:
                                 try
                                 {
-                                    PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(collectionPlatformItem.Id);
+                                    PlatformMapping.PlatformMapItem platformMapItem = PlatformMapping.GetPlatformMap(collectionPlatformItem.Id).Result;
                                     ZipPlatformPath = Path.Combine(ZipFileTempPath, "roms", platformMapItem.RetroPieDirectoryName);
                                 }
                                 catch

@@ -45,7 +45,7 @@ namespace gaseous_server.Controllers
             List<Platform> platforms = new List<Platform>();
             foreach (DataRow row in data.Rows)
             {
-                Platform platform = Platforms.GetPlatform((long)row["Id"]);
+                Platform platform = await Platforms.GetPlatform((long)row["Id"]);
 
                 platforms.Add(platform);
             }
@@ -116,7 +116,7 @@ namespace gaseous_server.Controllers
                             List<gaseous_server.Models.Game> gamesToReturn = new List<gaseous_server.Models.Game>();
                             foreach (gaseous_server.Models.Game game in searchCache)
                             {
-                                gaseous_server.Models.Game? tempGame = Games.GetGame(Communications.MetadataSource, (long)game.Id);
+                                gaseous_server.Models.Game? tempGame = await Games.GetGame(Communications.MetadataSource, (long)game.Id);
                                 if (tempGame != null)
                                 {
                                     gamesToReturn.Add(tempGame);
