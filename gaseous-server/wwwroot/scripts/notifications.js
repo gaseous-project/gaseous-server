@@ -55,7 +55,7 @@ class Notification {
     // if message is not set, it will default to null
     // if callback is not set, it will default to null
     // if timeout is set to 0, the notification will not close automatically
-    constructor(heading, message, image, callback, timeout) {
+    constructor(heading, message, image, callback, timeout, noteid = undefined) {
         this.heading = heading;
         this.message = message;
         this.image = image;
@@ -65,11 +65,21 @@ class Notification {
             this.timeout = timeout;
         }
         this.callback = callback;
+        this.noteId = noteid;
     }
 
     Show() {
-        this.noteId = Math.random().toString(36).slice(2, 11);
+        if (this.noteId === undefined) {
+            this.noteId = Math.random().toString(36).slice(2, 11);
+        }
 
+        // if the notification id already exists, remove all existing notifications with the same ID
+        const existingNotifications = document.querySelectorAll(`.${this.noteId}`);
+        existingNotifications.forEach(notification => {
+            notification.remove();
+        });
+
+        // create the notification box
         this.noteBox = document.createElement('div');
         this.noteBox.id = this.noteId;
         this.noteBox.className = 'notification';

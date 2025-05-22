@@ -581,10 +581,10 @@ async function SetPreference(Setting, Value, callbackSuccess, callbackError) {
         }
     ];
 
-    await SetPreference_Batch(model, callbackSuccess, callbackError);
+    await SetPreference_Batch(model, null, callbackSuccess, callbackError);
 }
 
-async function SetPreference_Batch(model, callbackSuccess, callbackError) {
+async function SetPreference_Batch(model, callingObject, callbackSuccess, callbackError) {
     // set local storage, and create a model for the server
     let serverModel = [];
     for (let item of model) {
@@ -606,19 +606,19 @@ async function SetPreference_Batch(model, callbackSuccess, callbackError) {
             .then(response => {
                 if (response.ok) {
                     if (callbackSuccess) {
-                        callbackSuccess();
+                        callbackSuccess(callingObject);
                     }
                 } else {
                     console.log("SetPreference_Batch: Error: " + response.statusText);
                     if (callbackError) {
-                        callbackError();
+                        callbackError(callingObject);
                     }
                 }
             })
             .catch(error => {
                 console.log("SetPreference_Batch: Error: " + error);
                 if (callbackError) {
-                    callbackError();
+                    callbackError(callingObject);
                 }
             });
     }
