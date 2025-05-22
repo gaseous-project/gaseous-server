@@ -36,6 +36,19 @@
         display: none;
     }
 
+    .banner_header {
+        height: 40px;
+    }
+
+    .banner_button {
+        width: 40px;
+        height: 40px;
+    }
+
+    #banner_home {
+        display: none;
+    }
+
     #modal-header-text:after {
         content: "";
         /* Needed to render the pseudo */
@@ -298,5 +311,9 @@
 
     .card-romlist-labels {
         flex: 2;
+    }
+
+    .block_mini_mode {
+        display: none;
     }
 }
