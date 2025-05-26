@@ -371,14 +371,12 @@ function CalculateTileSize() {
             let gameTileWidth = Number(cssClassStyle.marginLeft.replace('px', '')) + Number(cssClassStyle.width.replace('px', '')) + Number(cssClassStyle.marginRight.replace('px', ''));
             // get the height of the game tile
             let gameTileHeight = Number(cssClassStyle.marginTop.replace('px', '')) + Number(cssClassStyle.height.replace('px', '')) + Number(cssClassStyle.marginBottom.replace('px', ''));
-            console.log(gameTileHeight);
             // add the height of game_tile_label_box to the height of the game tile
             let gameTileLabelBox = document.querySelector('.game_tile_label_box');
             if (gameTileLabelBox !== null) {
                 let gameTileLabelBoxStyle = getComputedStyle(gameTileLabelBox);
                 if (gameTileLabelBoxStyle !== null) {
                     gameTileHeight += Number(gameTileLabelBoxStyle.height.replace('px', ''));
-                    console.log(gameTileHeight);
                 }
             }
             return { width: gameTileWidth, height: gameTileHeight };

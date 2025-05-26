@@ -45,7 +45,7 @@ namespace gaseous_server
                         if (DateTime.UtcNow > qi.NextRunTime || qi.Force == true)
                         {
                             // execute queued process
-                            qi.Execute();
+                            _ = Task.Run(() => qi.Execute());
 
                             if (qi.RemoveWhenStopped == true && qi.ItemState == ProcessQueue.QueueItemState.Stopped)
                             {

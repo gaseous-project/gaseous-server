@@ -407,7 +407,7 @@ namespace gaseous_server.Classes
 		}
 
 		Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-		public void RefreshMetadata(bool forceRefresh = false)
+		public async Task RefreshMetadata(bool forceRefresh = false)
 		{
 			string sql = "";
 			DataTable dt = new DataTable();
@@ -416,16 +416,16 @@ namespace gaseous_server.Classes
 			forceRefresh = false;
 
 			// refresh platforms
-			RefreshPlatforms(forceRefresh);
+			await RefreshPlatforms(forceRefresh);
 
 			// refresh signatures
-			RefreshSignatures(forceRefresh);
+			await RefreshSignatures(forceRefresh);
 
 			// update the rom counts
 			UpdateRomCounts();
 
 			// refresh games
-			RefreshGames(forceRefresh);
+			await RefreshGames(forceRefresh);
 		}
 
 		public async Task RefreshPlatforms(bool forceRefresh = false)
@@ -454,7 +454,7 @@ namespace gaseous_server.Classes
 						if (Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous)
 						{
 
-							Communications.PopulateHasheousPlatformData((long)dr["id"]);
+							await Communications.PopulateHasheousPlatformData((long)dr["id"]);
 						}
 					}
 					else
@@ -467,7 +467,7 @@ namespace gaseous_server.Classes
 					// force platformLogo refresh
 					if (platform.PlatformLogo != null)
 					{
-						Metadata.PlatformLogos.GetPlatformLogo(platform.PlatformLogo, metadataSource);
+						await Metadata.PlatformLogos.GetPlatformLogo(platform.PlatformLogo, metadataSource);
 					}
 				}
 				catch (Exception ex)
@@ -490,8 +490,31 @@ namespace gaseous_server.Classes
 				// set @LastUpdateThreshold to a random date between 14 and 30 days in the past
 				Dictionary<string, object> dbDict = new Dictionary<string, object>()
 				{
-					{ "@LastUpdateThreshold", DateTime.UtcNow.AddDays(-new Random().Next(14, 30)) }
+					{ "LastUpdateThreshold", DateTime.UtcNow.AddDays(-new Random().Next(14, 30)) }
 				};
+				if (forceRefresh == true)
+				{
+					// set the LastUpdateThreshold to the current time
+					dbDict["LastUpdateThreshold"] = DateTime.UtcNow; // force refresh all ROMs
+
+					// clear hasheous cache
+					string hasheousCachePath = Config.LibraryConfiguration.LibraryMetadataDirectory_Hasheous();
+					// delete all *.json files in the hasheous cache directory
+					if (Directory.Exists(hasheousCachePath))
+					{
+						foreach (string file in Directory.GetFiles(hasheousCachePath, "*.json"))
+						{
+							try
+							{
+								File.Delete(file);
+							}
+							catch (Exception ex)
+							{
+								Logging.Log(Logging.LogType.Warning, "Metadata Refresh", "Failed to delete file " + file + " from Hasheous cache directory", ex);
+							}
+						}
+					}
+				}
 				DataTable dt = await db.ExecuteCMDAsync(sql, dbDict);
 
 				int StatusCounter = 1;
@@ -560,7 +583,7 @@ namespace gaseous_server.Classes
 								signature.MetadataSources.AddGame((long)discoveredGame.Id, discoveredGame.Name, MetadataSources.IGDB);
 							}
 						}
-						ImportGame.StoreGame(library, hash, signature, signaturePlatform, fi.FullName, (long)dr["Id"], false);
+						await ImportGame.StoreGame(library, hash, signature, signaturePlatform, fi.FullName, (long)dr["Id"], false);
 					}
 					catch (Exception ex)
 					{
@@ -595,7 +618,7 @@ namespace gaseous_server.Classes
 			{
 				SetStatus(StatusCounter, dt.Rows.Count, "Refreshing metadata for game " + dr["name"]);
 
-				_RefreshSpecificGame(dr);
+				await _RefreshSpecificGame(dr, forceRefresh);
 
 				StatusCounter += 1;
 			}
@@ -642,14 +665,14 @@ namespace gaseous_server.Classes
 				});
 
 				// refresh the game metadata
-				_RefreshSpecificGame(dr);
+				await _RefreshSpecificGame(dr, false);
 
 				// remove the game from the in progress list
 				inProgressRefreshes.RemoveAll(x => x["Id"].ToString() == dr["Id"].ToString());
 			}
 		}
 
-		async Task _RefreshSpecificGame(DataRow dataRow)
+		async Task _RefreshSpecificGame(DataRow dataRow, bool forceRefresh)
 		{
 			// convert dataRow to dictionary
 			Dictionary<string, object?> dr = new Dictionary<string, object?>();

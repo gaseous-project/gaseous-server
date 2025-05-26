@@ -258,13 +258,13 @@ namespace gaseous_server.Classes.Metadata
                                     newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(newDict["Ids"]);
                                     objectDict[key.Key] = newObjectValue;
 
-                                    StoreRelations(SourceType, ObjectTypeName, key.Key, (long)objectDict["Id"], newObjectValue);
+                                    await StoreRelations(SourceType, ObjectTypeName, key.Key, (long)objectDict["Id"], newObjectValue);
                                     break;
                                 case "list":
                                     newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(objectValue);
                                     objectDict[key.Key] = newObjectValue;
 
-                                    StoreRelations(SourceType, ObjectTypeName, key.Key, (long)objectDict["Id"], newObjectValue);
+                                    await StoreRelations(SourceType, ObjectTypeName, key.Key, (long)objectDict["Id"], newObjectValue);
 
                                     break;
                                 case "int32[]":

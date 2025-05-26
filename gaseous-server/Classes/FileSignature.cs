@@ -359,7 +359,7 @@ namespace gaseous_server.Classes
                         if (cacheFile.LastWriteTimeUtc > DateTime.UtcNow.AddDays(-30))
                         {
                             Logging.Log(Logging.LogType.Information, "Get Signature", "Using cached signature from Hasheous");
-                            HasheousResult = Newtonsoft.Json.JsonConvert.DeserializeObject<HasheousClient.Models.LookupItemModel>(File.ReadAllText(cacheFilePath));
+                            HasheousResult = Newtonsoft.Json.JsonConvert.DeserializeObject<HasheousClient.Models.LookupItemModel>(await File.ReadAllTextAsync(cacheFilePath));
                         }
                     }
 
@@ -378,7 +378,7 @@ namespace gaseous_server.Classes
                             if (HasheousResult != null)
                             {
                                 // save to cache
-                                File.WriteAllText(cacheFilePath, Newtonsoft.Json.JsonConvert.SerializeObject(HasheousResult));
+                                await File.WriteAllTextAsync(cacheFilePath, Newtonsoft.Json.JsonConvert.SerializeObject(HasheousResult));
                             }
                         }
                     }
@@ -398,7 +398,7 @@ namespace gaseous_server.Classes
                             if (File.Exists(cacheFilePath))
                             {
                                 Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous - using cached signature", ex);
-                                HasheousResult = Newtonsoft.Json.JsonConvert.DeserializeObject<HasheousClient.Models.LookupItemModel>(File.ReadAllText(cacheFilePath));
+                                HasheousResult = Newtonsoft.Json.JsonConvert.DeserializeObject<HasheousClient.Models.LookupItemModel>(await File.ReadAllTextAsync(cacheFilePath));
                             }
                             else
                             {
@@ -427,13 +427,14 @@ namespace gaseous_server.Classes
                                         // only IGDB metadata is supported
                                         if (metadataResult.Source == HasheousClient.Models.MetadataSources.IGDB)
                                         {
-                                            if (metadataResult.ImmutableId.Length > 0)
-                                            {
-                                                // use immutable id
-                                                Platform hasheousPlatform = await Platforms.GetPlatform(long.Parse(metadataResult.ImmutableId));
-                                                signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataResult.Source);
-                                            }
-                                            else if (metadataResult.Id.Length > 0)
+                                            // if (metadataResult.ImmutableId.Length > 0)
+                                            // {
+                                            //     // use immutable id
+                                            //     Platform hasheousPlatform = await Platforms.GetPlatform(long.Parse(metadataResult.ImmutableId));
+                                            //     signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataResult.Source);
+                                            // }
+                                            // else 
+                                            if (metadataResult.Id.Length > 0)
                                             {
                                                 // fall back to id
                                                 Platform hasheousPlatform = await Platforms.GetPlatform(metadataResult.Id);
@@ -456,11 +457,12 @@ namespace gaseous_server.Classes
                                 {
                                     foreach (HasheousClient.Models.MetadataItem metadataResult in HasheousResult.Metadata)
                                     {
-                                        if (metadataResult.ImmutableId.Length > 0)
-                                        {
-                                            signature.MetadataSources.AddGame(long.Parse(metadataResult.ImmutableId), HasheousResult.Name, metadataResult.Source);
-                                        }
-                                        else if (metadataResult.Id.Length > 0)
+                                        // if (metadataResult.ImmutableId.Length > 0)
+                                        // {
+                                        //     signature.MetadataSources.AddGame(long.Parse(metadataResult.ImmutableId), HasheousResult.Name, metadataResult.Source);
+                                        // }
+                                        // else
+                                        if (metadataResult.Id.Length > 0)
                                         {
                                             switch (metadataResult.Source)
                                             {

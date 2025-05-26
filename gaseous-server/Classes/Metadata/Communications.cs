@@ -715,7 +715,7 @@ namespace gaseous_server.Classes.Metadata
                             RetryAttempts += 1;
 
                             // perform the actual API call
-                            var results2 = HasheousAPIFetch<T>(SourceType, Endpoint, Fields, Query).Result;
+                            var results2 = await HasheousAPIFetch<T>(SourceType, Endpoint, Fields, Query);
 
                             return results2;
                         }
@@ -734,7 +734,7 @@ namespace gaseous_server.Classes.Metadata
                         RetryAttempts += 1;
 
                         // perform the actual API call
-                        var results3 = HasheousAPIFetch<T>(SourceType, Endpoint, Fields, Query).Result;
+                        var results3 = await HasheousAPIFetch<T>(SourceType, Endpoint, Fields, Query);
 
                         return results3;
 
@@ -1267,7 +1267,7 @@ namespace gaseous_server.Classes.Metadata
                 {
                     image.Resize((uint)resolution.X, (uint)resolution.Y);
                     image.Strip();
-                    image.Write(requestedFilePath);
+                    await image.WriteAsync(requestedFilePath);
                 }
             }
 
@@ -1327,6 +1327,14 @@ namespace gaseous_server.Classes.Metadata
         static List<HasheousClient.Models.DataObjectItem> hasheousPlatforms = new List<HasheousClient.Models.DataObjectItem>();
         public static async Task PopulateHasheousPlatformData(long Id)
         {
+            // get the platform object from the cache
+            Platform? platform = await Platforms.GetPlatform(Id);
+            if (platform == null)
+            {
+                Logging.Log(Logging.LogType.Warning, "PopulateHasheousPlatformData", "Platform with ID " + Id + " not found in cache.");
+                return;
+            }
+
             // fetch all platforms
             ConfigureHasheousClient(ref hasheous);
             if (hasheousPlatforms.Count == 0)
@@ -1334,73 +1342,84 @@ namespace gaseous_server.Classes.Metadata
                 hasheousPlatforms = hasheous.GetPlatforms();
             }
 
-            foreach (var hasheousPlatform in hasheousPlatforms)
+            // loop through the platforms and check if the metadata matches the IGDB platform id
+            if (hasheousPlatforms == null || hasheousPlatforms.Count == 0)
             {
-                // check the metadata attribute for a igdb platform id
-                if (hasheousPlatform.Metadata != null)
+                Logging.Log(Logging.LogType.Warning, "PopulateHasheousPlatformData", "No platforms found in Hasheous.");
+                return;
+            }
+
+            // search through hasheousPlatforms for a match where the metadata source is IGDB and the immutable id matches the platform id, or the metadata source is IGDB and the id matches the platform slug
+            HasheousClient.Models.DataObjectItem? hasheousPlatform = hasheousPlatforms.FirstOrDefault(p =>
+                p.Metadata != null &&
+                p.Metadata.Any(m => m.Source == HasheousClient.Models.MetadataSources.IGDB && (
+                    (m.ImmutableId != null && m.ImmutableId.Length > 0 && long.TryParse(m.ImmutableId, out long objId) && objId == Id) ||
+                    (m.Id != null && m.Id.Equals(platform.Slug, StringComparison.OrdinalIgnoreCase))
+                ))
+            );
+
+            if (hasheousPlatform == null)
+            {
+                Logging.Log(Logging.LogType.Warning, "PopulateHasheousPlatformData", "No matching platform found in Hasheous for ID " + Id);
+                return;
+            }
+
+            // check the attributes for a logo
+            HasheousClient.Models.Metadata.IGDB.PlatformLogo? platformLogo = null;
+
+            if (hasheousPlatform.Attributes != null && hasheousPlatform.Attributes.Count > 0)
+            {
+                foreach (var hasheousPlatformAttribute in hasheousPlatform.Attributes)
                 {
-                    foreach (var metadata in hasheousPlatform.Metadata)
+                    if (
+                        hasheousPlatformAttribute.attributeType == HasheousClient.Models.AttributeItem.AttributeType.ImageId &&
+                        hasheousPlatformAttribute.attributeName == HasheousClient.Models.AttributeItem.AttributeName.Logo &&
+                        hasheousPlatformAttribute.Value != null
+                        )
                     {
-                        if (metadata.Source == HasheousClient.Models.MetadataSources.IGDB)
+                        Uri logoUrl = new Uri(
+                            new Uri(HasheousClient.WebApp.HttpHelper.BaseUri, UriKind.Absolute),
+                            new Uri("/api/v1/images/" + hasheousPlatformAttribute.Value, UriKind.Relative));
+
+                        // generate a platform logo object
+                        platformLogo = new HasheousClient.Models.Metadata.IGDB.PlatformLogo
                         {
-                            if (metadata.ImmutableId.Length > 0)
-                            {
-                                long objId = 0;
-                                long.TryParse(metadata.ImmutableId, out objId);
-                                if (objId == Id)
-                                {
-                                    // we have a match - check hasheousPlatform attributes for a logo
-                                    foreach (var hasheousPlatformAttribute in hasheousPlatform.Attributes)
-                                    {
-                                        if (
-                                            hasheousPlatformAttribute.attributeType == HasheousClient.Models.AttributeItem.AttributeType.ImageId &&
-                                            hasheousPlatformAttribute.attributeName == HasheousClient.Models.AttributeItem.AttributeName.Logo &&
-                                            hasheousPlatformAttribute.Value != null
-                                            )
-                                        {
-                                            Uri logoUrl = new Uri(
-                                                new Uri(HasheousClient.WebApp.HttpHelper.BaseUri, UriKind.Absolute),
-                                                new Uri("/api/v1/images/" + hasheousPlatformAttribute.Value, UriKind.Relative));
+                            AlphaChannel = false,
+                            Animated = false,
+                            ImageId = (string)hasheousPlatformAttribute.Value,
+                            Url = logoUrl.ToString()
+                        };
 
-                                            // generate a platform logo object
-                                            HasheousClient.Models.Metadata.IGDB.PlatformLogo platformLogo = new HasheousClient.Models.Metadata.IGDB.PlatformLogo
-                                            {
-                                                AlphaChannel = false,
-                                                Animated = false,
-                                                ImageId = (string)hasheousPlatformAttribute.Value,
-                                                Url = logoUrl.ToString()
-                                            };
+                        // generate a long id from the value
+                        byte[] bytes = System.Text.Encoding.UTF8.GetBytes(platformLogo.ImageId);
+                        long longId = BitConverter.ToInt64(bytes, 0);
+                        platformLogo.Id = longId;
 
-                                            // generate a long id from the value
-                                            byte[] bytes = System.Text.Encoding.UTF8.GetBytes(platformLogo.ImageId);
-                                            long longId = BitConverter.ToInt64(bytes, 0);
-                                            platformLogo.Id = longId;
-
-                                            // store the platform logo object
-                                            Storage.CacheStatus cacheStatus = Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.None, "PlatformLogo", longId);
-                                            switch (cacheStatus)
-                                            {
-                                                case Storage.CacheStatus.NotPresent:
-                                                    Storage.NewCacheValue<PlatformLogo>(HasheousClient.Models.MetadataSources.None, platformLogo, false);
-                                                    break;
-                                            }
-
-                                            // update the platform object
-                                            Platform? platform = await Platforms.GetPlatform(Id);
-                                            if (platform != null)
-                                            {
-                                                platform.Name = hasheousPlatform.Name;
-                                                platform.PlatformLogo = (long)platformLogo.Id;
-                                                Storage.NewCacheValue<Platform>(HasheousClient.Models.MetadataSources.None, platform, true);
-                                            }
-                                        }
-                                    }
-                                }
-                            }
+                        // store the platform logo object
+                        Storage.CacheStatus cacheStatus = await Storage.GetCacheStatusAsync(HasheousClient.Models.MetadataSources.None, "PlatformLogo", longId);
+                        switch (cacheStatus)
+                        {
+                            case Storage.CacheStatus.NotPresent:
+                                await Storage.NewCacheValue<PlatformLogo>(HasheousClient.Models.MetadataSources.None, platformLogo, false);
+                                break;
                         }
+
+                        break;
                     }
                 }
             }
+
+            // update the platform object with the name and logo id
+            if (platform != null)
+            {
+                platform.Name = hasheousPlatform.Name;
+                if (platformLogo != null && platformLogo.Id.HasValue)
+                {
+                    platform.PlatformLogo = platformLogo.Id.Value;
+                }
+                await Storage.NewCacheValue<Platform>(HasheousClient.Models.MetadataSources.None, platform, true);
+            }
+            Logging.Log(Logging.LogType.Information, "PopulateHasheousPlatformData", "Platform data populated for ID " + Id);
         }
 
         /// <summary>

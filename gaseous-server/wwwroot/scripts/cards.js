@@ -92,13 +92,6 @@ class Card {
 
         // append the modal to the body
         document.body.appendChild(this.modalBackground);
-
-        // // add event listener for escape key
-        // document.addEventListener("keydown", (event) => {
-        //     if (event.key === "Escape") {
-        //         this.Close();
-        //     }
-        // });
     }
 
     PostOpenCallbacks = [

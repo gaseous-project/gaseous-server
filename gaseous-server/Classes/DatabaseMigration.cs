@@ -11,7 +11,7 @@ namespace gaseous_server.Classes
     {
         public static List<int> BackgroundUpgradeTargetSchemaVersions = new List<int>();
 
-        public static void PreUpgradeScript(int TargetSchemaVersion, Database.databaseType? DatabaseType)
+        public static async Task PreUpgradeScript(int TargetSchemaVersion, Database.databaseType? DatabaseType)
         {
             // load resources
             var assembly = Assembly.GetExecutingAssembly();
@@ -37,7 +37,7 @@ namespace gaseous_server.Classes
                             sql = "SELECT table_name FROM information_schema.tables WHERE table_schema = @dbname AND table_name = @tablename;";
                             dbDict.Add("dbname", Config.DatabaseConfiguration.DatabaseName);
                             dbDict.Add("tablename", "Relation_Game_AgeRatings");
-                            data = db.ExecuteCMD(sql, dbDict);
+                            data = await db.ExecuteCMDAsync(sql, dbDict);
                             if (data.Rows.Count == 0)
                             {
                                 Logging.Log(Logging.LogType.Information, "Database", "Schema version " + TargetSchemaVersion + " requires a table which is missing.");
@@ -51,11 +51,11 @@ namespace gaseous_server.Classes
                                     using (Stream stream = assembly.GetManifestResourceStream(resourceName))
                                     using (StreamReader reader = new StreamReader(stream))
                                     {
-                                        dbScript = reader.ReadToEnd();
+                                        dbScript = await reader.ReadToEndAsync();
 
                                         // apply schema!
                                         Logging.Log(Logging.LogType.Information, "Database", "Applying schema version fix prior to version 1005");
-                                        db.ExecuteCMD(dbScript, dbDict, 180);
+                                        await db.ExecuteCMDAsync(dbScript, dbDict, 180);
                                     }
                                 }
                             }
@@ -65,8 +65,8 @@ namespace gaseous_server.Classes
                             Logging.Log(Logging.LogType.Information, "Database", "Running pre-upgrade for schema version " + TargetSchemaVersion);
                             // create the basic relation tables
                             // this is a blocking task
-                            Storage.CreateRelationsTables<IGDB.Models.Game>();
-                            Storage.CreateRelationsTables<IGDB.Models.Platform>();
+                            await Storage.CreateRelationsTables<IGDB.Models.Game>();
+                            await Storage.CreateRelationsTables<IGDB.Models.Platform>();
                             break;
                     }
                     break;
@@ -276,7 +276,7 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static void UpgradeScriptBackgroundTasks()
+        public static async Task UpgradeScriptBackgroundTasks()
         {
             foreach (int TargetSchemaVersion in BackgroundUpgradeTargetSchemaVersions)
             {
@@ -287,7 +287,7 @@ namespace gaseous_server.Classes
                         break;
 
                     case 1024:
-                        MySql_1024_MigrateMetadataVersion();
+                        await MySql_1024_MigrateMetadataVersion();
                         break;
                 }
             }
@@ -396,7 +396,7 @@ namespace gaseous_server.Classes
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM view_Games_Roms WHERE RomDataVersion = 1;";
-            DataTable data = db.ExecuteCMD(sql);
+            DataTable data = await db.ExecuteCMDAsync(sql);
             long count = 1;
             foreach (DataRow row in data.Rows)
             {
@@ -417,7 +417,7 @@ namespace gaseous_server.Classes
 
                 HasheousClient.Models.Metadata.IGDB.Platform platform = await Platforms.GetPlatform((long)row["PlatformId"]);
 
-                ImportGame.StoreGame(library, hash, signature, platform, (string)row["Path"], (long)row["Id"]);
+                await ImportGame.StoreGame(library, hash, signature, platform, (string)row["Path"], (long)row["Id"]);
 
                 count += 1;
             }
