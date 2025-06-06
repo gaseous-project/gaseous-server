@@ -259,24 +259,22 @@ namespace gaseous_server.Classes.Metadata
                 case HasheousClient.Models.MetadataSources.IGDB:
                     if (Config.IGDB.UseHasheousProxy == false)
                     {
-                        string fieldList = "";
+                        string fieldList = "fields *;";
                         string query = "where slug = \"" + Slug + "\"";
                         string EndpointString = "";
 
                         switch (Endpoint)
                         {
                             case MetadataEndpoint.Platform:
-                                fieldList = Platforms.fieldList;
                                 EndpointString = IGDBClient.Endpoints.Platforms;
                                 break;
 
                             case MetadataEndpoint.Game:
-                                fieldList = Games.fieldList;
                                 EndpointString = IGDBClient.Endpoints.Games;
                                 break;
 
                             default:
-                                throw new Exception("Endpoint must be either Platform or Game");
+                                throw new ArgumentException("Invalid endpoint specified: " + Endpoint.ToString());
 
                         }
 
@@ -345,139 +343,114 @@ namespace gaseous_server.Classes.Metadata
                 case HasheousClient.Models.MetadataSources.IGDB:
                     if (Config.IGDB.UseHasheousProxy == false)
                     {
-                        string fieldList = "";
+                        string fieldList = "fields *;";
                         string query = "where id = " + Id;
                         string EndpointString = "";
 
                         switch (Endpoint)
                         {
                             case MetadataEndpoint.AgeRating:
-                                fieldList = AgeRatings.fieldList;
                                 EndpointString = IGDBClient.Endpoints.AgeRating;
                                 break;
 
                             case MetadataEndpoint.AgeRatingContentDescription:
-                                fieldList = AgeRatingContentDescriptions.fieldList;
-                                EndpointString = IGDBClient.Endpoints.AgeRatingContentDescriptions;
+                                EndpointString = IGDBClient.Endpoints.AgeRatingContentDescriptionsV2;
                                 break;
 
                             case MetadataEndpoint.AlternativeName:
-                                fieldList = AlternativeNames.fieldList;
                                 EndpointString = IGDBClient.Endpoints.AlternativeNames;
                                 break;
 
                             case MetadataEndpoint.Artwork:
-                                fieldList = Artworks.fieldList;
                                 EndpointString = IGDBClient.Endpoints.Artworks;
                                 break;
 
                             case MetadataEndpoint.Collection:
-                                fieldList = Collections.fieldList;
                                 EndpointString = IGDBClient.Endpoints.Collections;
                                 break;
 
                             case MetadataEndpoint.Company:
-                                fieldList = Companies.fieldList;
                                 EndpointString = IGDBClient.Endpoints.Companies;
                                 break;
 
                             case MetadataEndpoint.CompanyLogo:
-                                fieldList = CompanyLogos.fieldList;
                                 EndpointString = IGDBClient.Endpoints.CompanyLogos;
                                 break;
 
                             case MetadataEndpoint.Cover:
-                                fieldList = Covers.fieldList;
                                 EndpointString = IGDBClient.Endpoints.Covers;
                                 break;
 
                             case MetadataEndpoint.ExternalGame:
-                                fieldList = ExternalGames.fieldList;
                                 EndpointString = IGDBClient.Endpoints.ExternalGames;
                                 break;
 
                             case MetadataEndpoint.Franchise:
-                                fieldList = Franchises.fieldList;
                                 EndpointString = IGDBClient.Endpoints.Franchies;
                                 break;
 
                             case MetadataEndpoint.GameMode:
-                                fieldList = GameModes.fieldList;
                                 EndpointString = IGDBClient.Endpoints.GameModes;
                                 break;
 
                             case MetadataEndpoint.GameLocalization:
-                                fieldList = GameLocalizations.fieldList;
                                 EndpointString = "game_localizations";
                                 break;
 
                             case MetadataEndpoint.Game:
-                                fieldList = Games.fieldList;
                                 EndpointString = IGDBClient.Endpoints.Games;
                                 break;
 
                             case MetadataEndpoint.GameVideo:
-                                fieldList = GamesVideos.fieldList;
                                 EndpointString = IGDBClient.Endpoints.GameVideos;
                                 break;
 
                             case MetadataEndpoint.Genre:
-                                fieldList = Genres.fieldList;
                                 EndpointString = IGDBClient.Endpoints.Genres;
                                 break;
 
                             case MetadataEndpoint.InvolvedCompany:
-                                fieldList = InvolvedCompanies.fieldList;
                                 EndpointString = IGDBClient.Endpoints.InvolvedCompanies;
                                 break;
 
                             case MetadataEndpoint.MultiplayerMode:
-                                fieldList = MultiplayerModes.fieldList;
                                 EndpointString = IGDBClient.Endpoints.MultiplayerModes;
                                 break;
 
                             case MetadataEndpoint.PlatformLogo:
-                                fieldList = PlatformLogos.fieldList;
                                 EndpointString = IGDBClient.Endpoints.PlatformLogos;
                                 break;
 
                             case MetadataEndpoint.Platform:
-                                fieldList = Platforms.fieldList;
                                 EndpointString = IGDBClient.Endpoints.Platforms;
                                 break;
 
                             case MetadataEndpoint.PlatformVersion:
-                                fieldList = PlatformVersions.fieldList;
                                 EndpointString = IGDBClient.Endpoints.PlatformVersions;
                                 break;
 
                             case MetadataEndpoint.PlayerPerspective:
-                                fieldList = PlayerPerspectives.fieldList;
                                 EndpointString = IGDBClient.Endpoints.PlayerPerspectives;
                                 break;
 
                             case MetadataEndpoint.ReleaseDate:
-                                fieldList = ReleaseDates.fieldList;
                                 EndpointString = IGDBClient.Endpoints.ReleaseDates;
                                 break;
 
                             case MetadataEndpoint.Region:
-                                fieldList = Regions.fieldList;
                                 EndpointString = "regions";
                                 break;
 
                             case MetadataEndpoint.Screenshot:
-                                fieldList = Screenshots.fieldList;
                                 EndpointString = IGDBClient.Endpoints.Screenshots;
                                 break;
 
                             case MetadataEndpoint.Theme:
-                                fieldList = Themes.fieldList;
                                 EndpointString = IGDBClient.Endpoints.Themes;
                                 break;
 
                             default:
-                                throw new Exception("Endpoint must be either Platform or Game");
+                                throw new ArgumentException("Invalid endpoint specified: " + Endpoint.ToString());
 
                         }
 
@@ -772,11 +745,23 @@ namespace gaseous_server.Classes.Metadata
 
                             return new T[] { ConvertToIGDBModel<T>(ageRatingResult) };
 
-                        case "ageratingcontentdescription":
-                            HasheousClient.Models.Metadata.IGDB.AgeRatingContentDescription ageRatingContentDescriptionResult = new HasheousClient.Models.Metadata.IGDB.AgeRatingContentDescription();
-                            ageRatingContentDescriptionResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.AgeRatingContentDescription>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                        case "ageratingcategory":
+                            HasheousClient.Models.Metadata.IGDB.AgeRatingCategory ageRatingCategoryResult = new HasheousClient.Models.Metadata.IGDB.AgeRatingCategory();
+                            ageRatingCategoryResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.AgeRatingCategory>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                            return new T[] { ConvertToIGDBModel<T>(ageRatingCategoryResult) };
+
+                        case "ageratingcontentdescriptionv2":
+                            HasheousClient.Models.Metadata.IGDB.AgeRatingContentDescriptionV2 ageRatingContentDescriptionResult = new HasheousClient.Models.Metadata.IGDB.AgeRatingContentDescriptionV2();
+                            ageRatingContentDescriptionResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.AgeRatingContentDescriptionV2>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(ageRatingContentDescriptionResult) };
+
+                        case "ageratingorganization":
+                            HasheousClient.Models.Metadata.IGDB.AgeRatingOrganization ageRatingOrganizationResult = new HasheousClient.Models.Metadata.IGDB.AgeRatingOrganization();
+                            ageRatingOrganizationResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.AgeRatingOrganization>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+
+                            return new T[] { ConvertToIGDBModel<T>(ageRatingOrganizationResult) };
 
                         case "alternativename":
                             HasheousClient.Models.Metadata.IGDB.AlternativeName alternativeNameResult = new HasheousClient.Models.Metadata.IGDB.AlternativeName();

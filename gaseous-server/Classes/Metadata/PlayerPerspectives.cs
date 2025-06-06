@@ -7,8 +7,6 @@ namespace gaseous_server.Classes.Metadata
 {
     public class PlayerPerspectives
     {
-        public const string fieldList = "fields checksum,created_at,name,slug,updated_at,url;";
-
         static List<PlayerPerspectiveItem> playerPerspectiveItemCache = new List<PlayerPerspectiveItem>();
 
         public PlayerPerspectives()

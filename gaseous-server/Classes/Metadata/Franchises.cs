@@ -6,8 +6,6 @@ namespace gaseous_server.Classes.Metadata
 {
     public class Franchises
     {
-        public const string fieldList = "fields checksum,created_at,games,name,slug,updated_at,url;";
-
         public Franchises()
         {
         }

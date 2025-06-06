@@ -37,6 +37,11 @@ db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.Conn
 
 // set up db
 db.InitDB();
+// create tables from types
+Classes.Metadata.Utility.TableBuilder.BuildTableFromType(typeof(IGDB.Models.AgeRating));
+Classes.Metadata.Utility.TableBuilder.BuildTableFromType(typeof(IGDB.Models.AgeRatingCategory));
+Classes.Metadata.Utility.TableBuilder.BuildTableFromType(typeof(IGDB.Models.AgeRatingContentDescriptionV2));
+Classes.Metadata.Utility.TableBuilder.BuildTableFromType(typeof(IGDB.Models.AgeRatingOrganization));
 // create relation tables if they don't exist
 await Storage.CreateRelationsTables<IGDB.Models.Game>();
 await Storage.CreateRelationsTables<IGDB.Models.Platform>();

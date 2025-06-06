@@ -10,8 +10,6 @@ namespace gaseous_server.Classes.Metadata
 {
     public class AgeRatings
     {
-        public const string fieldList = "fields category,checksum,content_descriptions,rating,rating_cover_url,synopsis;";
-
         public AgeRatings()
         {
         }
@@ -35,18 +33,18 @@ namespace gaseous_server.Classes.Metadata
 
             AgeRating ageRating = await GetAgeRating(SourceType, RatingId);
             gameAgeRating.Id = (long)ageRating.Id;
-            gameAgeRating.RatingBoard = (AgeRatingCategory)ageRating.Category;
-            gameAgeRating.RatingTitle = (AgeRatingTitle)ageRating.Rating;
+            gameAgeRating.RatingBoard = await AgeRatingOrganizations.GetAgeRatingOrganization(SourceType, ageRating.Organization);
+            gameAgeRating.RatingTitle = await AgeRatingCategorys.GetAgeRatingCategory(SourceType, ageRating.RatingCategory);
 
-            List<string> descriptions = new List<string>();
-            if (ageRating.ContentDescriptions != null)
+            List<AgeRatingContentDescriptionV2> descriptions = new List<AgeRatingContentDescriptionV2>();
+            if (ageRating.RatingContentDescriptions != null)
             {
-                foreach (long ContentId in ageRating.ContentDescriptions)
+                foreach (long ContentId in ageRating.RatingContentDescriptions)
                 {
                     try
                     {
-                        AgeRatingContentDescription ageRatingContentDescription = await AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(SourceType, ContentId);
-                        descriptions.Add(ageRatingContentDescription.Description);
+                        AgeRatingContentDescriptionV2 ageRatingContentDescription = await AgeRatingContentDescriptionsV2.GetAgeRatingContentDescriptionsV2(SourceType, ContentId);
+                        descriptions.Add(ageRatingContentDescription);
                     }
                     catch (Exception ex)
                     {
@@ -62,9 +60,9 @@ namespace gaseous_server.Classes.Metadata
         public class GameAgeRating
         {
             public long Id { get; set; }
-            public AgeRatingCategory RatingBoard { get; set; }
-            public AgeRatingTitle RatingTitle { get; set; }
-            public string[] Descriptions { get; set; }
+            public AgeRatingOrganization RatingBoard { get; set; }
+            public AgeRatingCategory RatingTitle { get; set; }
+            public AgeRatingContentDescriptionV2[] Descriptions { get; set; }
         }
 
         public static async Task PopulateAgeMapAsync()
@@ -74,30 +72,45 @@ namespace gaseous_server.Classes.Metadata
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             db.ExecuteNonQuery(sql);
 
-            // loop all age groups
-            foreach (KeyValuePair<AgeGroups.AgeRestrictionGroupings, AgeGroups.AgeGroupItem> ageGrouping in AgeGroups.AgeGroupingsFlat)
+            // loop all AgeRestrictionGroupings enums and store each item in a string
+            foreach (AgeGroups.AgeRestrictionGroupings AgeRestrictionGroup in Enum.GetValues(typeof(AgeGroups.AgeRestrictionGroupings))) // example Adult, Teen, etc
             {
-                AgeGroups.AgeGroupItem ageGroupItem = ageGrouping.Value;
-                var properties = ageGroupItem.GetType().GetProperties();
-                foreach (var prop in properties)
+                if (AgeRestrictionGroup != AgeGroups.AgeRestrictionGroupings.Unclassified)
                 {
-                    if (prop.GetGetMethod() != null)
+                    int ageRestrictionGroupValue = (int)AgeRestrictionGroup;
+
+                    // loop all AgeGroups in the AgeGroups.AgeGroupMap
+                    foreach (var ratingBoard in AgeGroups.AgeGroupMap.AgeGroups[AgeRestrictionGroup].Ratings.Keys)
                     {
-                        List<string> AgeRatingCategories = new List<string>(Enum.GetNames(typeof(AgeRatingCategory)));
-                        if (AgeRatingCategories.Contains(prop.Name))
+                        // collect ratings for this AgeRestrictionGroup
+                        if (AgeGroups.AgeGroupMap.RatingsBoards.ContainsKey(ratingBoard))
                         {
-                            AgeRatingCategory ageRatingCategory = (AgeRatingCategory)Enum.Parse(typeof(AgeRatingCategory), prop.Name);
-                            List<AgeRatingTitle> ageRatingTitles = (List<AgeRatingTitle>)prop.GetValue(ageGroupItem);
+                            var ratingBoardItem = AgeGroups.AgeGroupMap.RatingsBoards[ratingBoard];
+                            long ratingBoardId = ratingBoardItem.IGDBId;
 
-                            foreach (AgeRatingTitle ageRatingTitle in ageRatingTitles)
+                            // loop all ratings for this rating board
+                            foreach (var rating in AgeGroups.AgeGroupMap.AgeGroups[AgeRestrictionGroup].Ratings[ratingBoard])
                             {
-                                dbDict.Clear();
-                                dbDict.Add("AgeGroupId", ageGrouping.Key);
-                                dbDict.Add("ClassificationBoardId", ageRatingCategory);
-                                dbDict.Add("RatingId", ageRatingTitle);
+                                if (ratingBoardItem.Ratings.ContainsKey(rating))
+                                {
+                                    long ratingId = ratingBoardItem.Ratings[rating].IGDBId;
 
-                                sql = "INSERT INTO ClassificationMap (AgeGroupId, ClassificationBoardId, RatingId) VALUES (@AgeGroupId, @ClassificationBoardId, @RatingId);";
-                                await db.ExecuteCMDAsync(sql, dbDict);
+                                    // insert into ClassificationMap
+                                    sql = "INSERT INTO ClassificationMap (AgeGroupId, ClassificationBoardId, RatingId) VALUES (@ageGroupId, @classificationBoardId, @ratingId);";
+                                    dbDict.Clear();
+                                    dbDict.Add("@ageGroupId", ageRestrictionGroupValue);
+                                    dbDict.Add("@classificationBoardId", ratingBoardId);
+                                    dbDict.Add("@ratingId", ratingId);
+
+                                    try
+                                    {
+                                        db.ExecuteNonQuery(sql, dbDict);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine($"Error inserting into ClassificationMap: {ex.Message}");
+                                    }
+                                }
                             }
                         }
                     }

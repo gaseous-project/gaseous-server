@@ -94,7 +94,7 @@ ORDER BY Platform.`Name`; ";
             Dictionary<int, string> ClassificationBoardsStrings = new Dictionary<int, string>();
             foreach (IGDB.Models.AgeRatingCategory ageRatingCategory in Enum.GetValues(typeof(IGDB.Models.AgeRatingCategory)))
             {
-                ClassificationBoardsStrings.Add((int)ageRatingCategory, ageRatingCategory.ToString());
+                ClassificationBoardsStrings.Add((int)ageRatingCategory.Id, ageRatingCategory.ToString());
             }
 
             Dictionary<int, string> AgeRatingsStrings = new Dictionary<int, string>();
