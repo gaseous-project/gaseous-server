@@ -428,12 +428,48 @@ namespace gaseous_server.Classes.Metadata
 
             switch (typeName)
             {
+                case "AgeRating":
+                    endpoint.Endpoint = "age_ratings";
+                    break;
+
                 case "AgeRatingCategory":
-                    endpoint.Endpoint = IGDBClient.Endpoints.AgeRatingCategories;
+                    endpoint.Endpoint = "age_rating_categories";
+                    break;
+
+                case "AgeRatingContentDescriptionV2":
+                    endpoint.Endpoint = "age_rating_content_descriptions_v2";
+                    break;
+
+                case "AgeRatingOrganization":
+                    endpoint.Endpoint = "age_rating_organizations";
+                    break;
+
+                case "AlternativeName":
+                    endpoint.Endpoint = "alternative_names";
+                    break;
+
+                case "Artwork":
+                    endpoint.Endpoint = "artworks";
+                    break;
+
+                case "Character":
+                    endpoint.Endpoint = "characters";
+                    break;
+
+                case "CharacterGender":
+                    endpoint.Endpoint = "character_genders";
+                    break;
+
+                case "CharacterMugshot":
+                    endpoint.Endpoint = "character_mug_shots";
+                    break;
+
+                case "CharacterSpecies":
+                    endpoint.Endpoint = "character_species";
                     break;
 
                 case "Collection":
-                    endpoint.Endpoint = IGDBClient.Endpoints.Collections;
+                    endpoint.Endpoint = "collections";
                     endpoint.SupportsSlugSearch = true;
                     break;
 
@@ -458,12 +494,28 @@ namespace gaseous_server.Classes.Metadata
                     break;
 
                 case "Company":
-                    endpoint.Endpoint = IGDBClient.Endpoints.Companies;
+                    endpoint.Endpoint = "companies";
                     endpoint.SupportsSlugSearch = true;
+                    break;
+
+                case "CompanyLogo":
+                    endpoint.Endpoint = "company_logos";
                     break;
 
                 case "CompanyStatus":
                     endpoint.Endpoint = "company_statuses";
+                    break;
+
+                case "CompanyWebsite":
+                    endpoint.Endpoint = "company_websites";
+                    break;
+
+                case "Cover":
+                    endpoint.Endpoint = "covers";
+                    break;
+
+                case "DateFormat":
+                    endpoint.Endpoint = "date_formats";
                     break;
 
                 case "Event":
@@ -478,22 +530,82 @@ namespace gaseous_server.Classes.Metadata
                     endpoint.Endpoint = "event_networks";
                     break;
 
+                case "ExternalGame":
+                    endpoint.Endpoint = "external_games";
+                    break;
+
+                case "ExternalGameSource":
+                    endpoint.Endpoint = "external_game_sources";
+                    break;
+
                 case "Franchise":
-                    endpoint.Endpoint = IGDBClient.Endpoints.Franchies;
+                    endpoint.Endpoint = "franchises";
                     endpoint.SupportsSlugSearch = true;
                     break;
 
                 case "Game":
-                    endpoint.Endpoint = IGDBClient.Endpoints.Games;
+                    endpoint.Endpoint = "games";
                     endpoint.SupportsSlugSearch = true;
+                    break;
+
+                case "GameEngine":
+                    endpoint.Endpoint = "game_engines";
+                    break;
+
+                case "GameEngineLogo":
+                    endpoint.Endpoint = "game_engine_logos";
                     break;
 
                 case "GameLocalization":
                     endpoint.Endpoint = "game_localizations";
                     break;
 
+                case "GameMode":
+                    endpoint.Endpoint = "game_modes";
+                    break;
+
+                case "GameReleaseFormat":
+                    endpoint.Endpoint = "game_release_formats";
+                    break;
+
                 case "GameStatus":
                     endpoint.Endpoint = "game_statuses";
+                    break;
+
+                case "GameTimeToBeat":
+                    endpoint.Endpoint = "game_time_to_beats";
+                    break;
+
+                case "GameType":
+                    endpoint.Endpoint = "game_types";
+                    break;
+
+                case "GameVersion":
+                    endpoint.Endpoint = "game_versions";
+                    break;
+
+                case "GameVersionFeature":
+                    endpoint.Endpoint = "game_version_features";
+                    break;
+
+                case "GameVersionFeatureValue":
+                    endpoint.Endpoint = "game_version_feature_values";
+                    break;
+
+                case "GameVideo":
+                    endpoint.Endpoint = "game_videos";
+                    break;
+
+                case "Genre":
+                    endpoint.Endpoint = "genres";
+                    break;
+
+                case "Keyword":
+                    endpoint.Endpoint = "keywords";
+                    break;
+
+                case "InvolvedCompany":
+                    endpoint.Endpoint = "involved_companies";
                     break;
 
                 case "Language":
@@ -508,29 +620,93 @@ namespace gaseous_server.Classes.Metadata
                     endpoint.Endpoint = "language_support_types";
                     break;
 
+                case "MultiplayerMode":
+                    endpoint.Endpoint = "multiplayer_modes";
+                    break;
+
                 case "NetworkType":
                     endpoint.Endpoint = "network_types";
                     break;
 
                 case "Platform":
-                    endpoint.Endpoint = IGDBClient.Endpoints.Platforms;
+                    endpoint.Endpoint = "platforms";
                     endpoint.SupportsSlugSearch = true;
                     break;
 
                 case "PlatformFamily":
-                    endpoint.Endpoint = IGDBClient.Endpoints.PlatformFamilies;
+                    endpoint.Endpoint = "platform_families";
+                    break;
+
+                case "PlatformLogo":
+                    endpoint.Endpoint = "platform_logos";
+                    break;
+
+                case "PlatformType":
+                    endpoint.Endpoint = "platform_types";
+                    break;
+
+                case "PlatformVersion":
+                    endpoint.Endpoint = "platform_versions";
                     break;
 
                 case "PlatformVersionCompany":
                     endpoint.Endpoint = "platform_version_companies";
                     break;
 
+                case "PlatformVersionReleaseDate":
+                    endpoint.Endpoint = "platform_version_release_dates";
+                    break;
+
+                case "PlatformWebsite":
+                    endpoint.Endpoint = "platform_websites";
+                    break;
+
+                case "PlayerPerspective":
+                    endpoint.Endpoint = "player_perspectives";
+                    break;
+
+                case "PopularityPrimitive":
+                    endpoint.Endpoint = "popularity_primitives";
+                    break;
+
+                case "PopularityType":
+                    endpoint.Endpoint = "popularity_types";
+                    break;
+
                 case "Region":
                     endpoint.Endpoint = "regions";
                     break;
 
+                case "ReleaseDate":
+                    endpoint.Endpoint = "release_dates";
+                    break;
+
+                case "ReleaseDateRegion":
+                    endpoint.Endpoint = "release_date_regions";
+                    break;
+
                 case "ReleaseDateStatus":
                     endpoint.Endpoint = "release_date_statuses";
+                    break;
+
+                case "Screenshot":
+                    endpoint.Endpoint = "screenshots";
+                    break;
+
+                case "Search":
+                    endpoint.Endpoint = "search";
+                    break;
+
+                case "Theme":
+                    endpoint.Endpoint = "themes";
+                    break;
+
+                case "Website":
+                    endpoint.Endpoint = "websites";
+                    break;
+
+                case "WebsiteType":
+                    endpoint.Endpoint = "website_types";
                     break;
 
                 default:
