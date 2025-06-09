@@ -86,7 +86,7 @@ namespace gaseous_server.Classes.Metadata
             }
 
             // get missing metadata from parent if this is a port
-            if (result.Category == HasheousClient.Models.Metadata.IGDB.Category.Port)
+            if (result.GameType == 11) // 11 = Port
             {
                 if (result.Summary == null)
                 {
@@ -461,7 +461,6 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                     Name = platform.Name,
                     MetadataMapId = (long)row["MetadataMapId"],
                     MetadataGameName = (string)row["MetadataGameName"],
-                    Category = platform.Category,
                     emulatorConfiguration = emulatorConfiguration,
                     LastPlayedRomId = LastPlayedRomId,
                     LastPlayedRomIsMediagroup = LastPlayedIsMediagroup,

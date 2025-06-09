@@ -314,7 +314,7 @@ class UserEdit {
         // setup age restriction tab
         let ageRestrictionPolicyBox = this.dialog.modalElement.querySelector('#settings_user_agerestrictions');
         let ageRestrictionPolicyTable = document.createElement('table');
-        for (let ageGroup in AgeRatingGroups) {
+        for (const ageGroup of Object.keys(AgeRatingMappings.AgeGroups)) {
             let tRow = document.createElement('tr');
             let tCell = document.createElement('td');
 
@@ -557,10 +557,10 @@ class UserEdit {
         let ageRestrictionPolicyTable = document.createElement('table');
         ageRestrictionPolicyTable.classList.add('romtable');
         ageRestrictionPolicyTable.setAttribute('cellspacing', '0');
-        for (const [key, value] of Object.entries(ClassificationBoards)) {
+        for (const [key, value] of Object.entries(AgeRatingMappings.RatingBoards)) {
             let thRow = document.createElement('tr');
             let thCell = document.createElement('th');
-            thCell.innerHTML = value;
+            thCell.innerHTML = value.Name;
             thRow.appendChild(thCell);
             ageRestrictionPolicyTable.appendChild(thRow);
 
@@ -568,17 +568,15 @@ class UserEdit {
             let trRow = document.createElement('tr');
             let tdCell = document.createElement('td');
 
-            for (let i = 0; i < ageGroupList.length; i++) {
-                // let ageRatingBadgeIndexes = AgeRatingGroups[ageGroupList[i]][key.toLowerCase()];
-                let ageRatingBadgeIndexes = getParameterCaseInsensitive(AgeRatingGroups[ageGroupList[i]], key);
+            for (const ageGroup of ageGroupList) {
+                let ageRatingBadgeIndexes = AgeRatingMappings.AgeGroups[ageGroup].Ratings[key];
 
-                for (let j = 0; j < ageRatingBadgeIndexes.length; j++) {
+                for (const badgeIndex of ageRatingBadgeIndexes) {
                     let ageRatingBatch = document.createElement('img');
-                    // let ageRatingBadge = AgeRatingStrings[ageRatingBadgeIndexes[j]];
-                    let ageRatingBadge = ageRatingBadgeIndexes[j];
-                    ageRatingBatch.src = '/images/Ratings/' + key + '/' + ageRatingBadge + '.svg';
+                    let ageRatingBadge = AgeRatingMappings.RatingBoards[key].Ratings[badgeIndex];
+                    ageRatingBatch.src = '/images/Ratings/' + key + '/' + ageRatingBadge.IconName + '.svg';
                     ageRatingBatch.classList.add('rating_image_mini');
-                    ageRatingBatch.setAttribute('title', ClassificationRatings[ageRatingBadge]);
+                    ageRatingBatch.setAttribute('title', ageRatingBadge.Name);
                     tdCell.appendChild(ageRatingBatch);
                 }
 

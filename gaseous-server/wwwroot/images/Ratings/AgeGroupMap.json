@@ -125,291 +125,330 @@
             "Ratings": {
                 "G": {
                     "IGDBId": 34,
+                    "IGDBName": "ACB_G",
                     "Name": "General",
                     "Description": "Content is suitable for all ages.",
                     "IconName": "ACB_G"
                 },
                 "PG": {
                     "IGDBId": 35,
+                    "IGDBName": "ACB_PG",
                     "Name": "Parental Guidance",
                     "Description": "Content is suitable for children with parental guidance.",
                     "IconName": "ACB_PG"
                 },
                 "M": {
                     "IGDBId": 36,
+                    "IGDBName": "ACB_M",
                     "Name": "Mature",
                     "Description": "Content is suitable for mature audiences.",
                     "IconName": "ACB_M"
                 },
                 "MA15": {
                     "IGDBId": 37,
+                    "IGDBName": "ACB_MA15",
                     "Name": "Mature Accompanied 15+",
                     "Description": "Content is suitable for mature audiences aged 15 and over, with parental accompaniment recommended.",
                     "IconName": "ACB_MA15"
                 },
                 "R18": {
                     "IGDBId": 38,
+                    "IGDBName": "ACB_R18",
                     "Name": "Restricted 18+",
                     "Description": "Content is suitable for adults aged 18 and over.",
                     "IconName": "ACB_R18"
                 },
                 "RC": {
                     "IGDBId": 39,
+                    "IGDBName": "ACB_RC",
                     "Name": "Refused Classification",
                     "Description": "Content that is refused classification and cannot be legally sold or distributed in Australia.",
                     "IconName": "ACB_RC"
                 }
-            },
-            "CERO": {
-                "IGDBId": 3,
-                "Name": "Computer Entertainment Rating Organization",
-                "ShortName": "CERO",
-                "Description": "CERO is the organization responsible for rating video games in Japan. It assigns age ratings and content descriptors to ensure that games are appropriate for different audiences.",
-                "Website": "https://www.cero.gr.jp/",
-                "Ratings": {
-                    "A": {
-                        "IGDBId": 13,
-                        "Name": "All Ages",
-                        "Description": "Content is suitable for all ages.",
-                        "IconName": "CERO_A"
-                    },
-                    "B": {
-                        "IGDBId": 14,
-                        "Name": "12 and Older",
-                        "Description": "Content is suitable for ages 12 and older.",
-                        "IconName": "CERO_B"
-                    },
-                    "C": {
-                        "IGDBId": 15,
-                        "Name": "15 and Older",
-                        "Description": "Content is suitable for ages 15 and older.",
-                        "IconName": "CERO_C"
-                    },
-                    "D": {
-                        "IGDBId": 16,
-                        "Name": "17 and Older",
-                        "Description": "Content is suitable for ages 17 and older.",
-                        "IconName": "CERO_D"
-                    },
-                    "Z": {
-                        "IGDBId": 17,
-                        "Name": "18 and Older",
-                        "Description": "Content is suitable for adults aged 18 and over.",
-                        "IconName": "CERO_Z"
-                    }
+            }
+        },
+        "CERO": {
+            "IGDBId": 3,
+            "Name": "Computer Entertainment Rating Organization",
+            "ShortName": "CERO",
+            "Description": "CERO is the organization responsible for rating video games in Japan. It assigns age ratings and content descriptors to ensure that games are appropriate for different audiences.",
+            "Website": "https://www.cero.gr.jp/",
+            "Ratings": {
+                "A": {
+                    "IGDBId": 13,
+                    "IGDBName": "CERO_A",
+                    "Name": "All Ages",
+                    "Description": "Content is suitable for all ages.",
+                    "IconName": "CERO_A"
+                },
+                "B": {
+                    "IGDBId": 14,
+                    "IGDBName": "CERO_B",
+                    "Name": "12 and Older",
+                    "Description": "Content is suitable for ages 12 and older.",
+                    "IconName": "CERO_B"
+                },
+                "C": {
+                    "IGDBId": 15,
+                    "IGDBName": "CERO_C",
+                    "Name": "15 and Older",
+                    "Description": "Content is suitable for ages 15 and older.",
+                    "IconName": "CERO_C"
+                },
+                "D": {
+                    "IGDBId": 16,
+                    "IGDBName": "CERO_D",
+                    "Name": "17 and Older",
+                    "Description": "Content is suitable for ages 17 and older.",
+                    "IconName": "CERO_D"
+                },
+                "Z": {
+                    "IGDBId": 17,
+                    "IGDBName": "CERO_Z",
+                    "Name": "18 and Older",
+                    "Description": "Content is suitable for adults aged 18 and over.",
+                    "IconName": "CERO_Z"
                 }
-            },
-            "CLASS_IND": {
-                "IGDBId": 6,
-                "Name": "ClassInd",
-                "ShortName": "ClassInd",
-                "Description": "ClassInd is the Brazilian classification system for video games, responsible for rating games based on their content to ensure they are appropriate for different age groups.",
-                "Website": "https://en.wikipedia.org/wiki/Brazilian_advisory_rating_system",
-                "Ratings": {
-                    "L": {
-                        "IGDBId": 28,
-                        "Name": "Livre",
-                        "Description": "Content is suitable for all ages.",
-                        "IconName": "ClassInd_L"
-                    },
-                    "Ten": {
-                        "IGDBId": 29,
-                        "Name": "10 Anos",
-                        "Description": "Content is suitable for ages 10 and older.",
-                        "IconName": "ClassInd_Ten"
-                    },
-                    "Twelve": {
-                        "IGDBId": 30,
-                        "Name": "12 Anos",
-                        "Description": "Content is suitable for ages 12 and older.",
-                        "IconName": "ClassInd_Twelve"
-                    },
-                    "Fourteen": {
-                        "IGDBId": 31,
-                        "Name": "14 Anos",
-                        "Description": "Content is suitable for ages 14 and older.",
-                        "IconName": "ClassInd_Fourteen"
-                    },
-                    "Sixteen": {
-                        "IGDBId": 32,
-                        "Name": "16 Anos",
-                        "Description": "Content is suitable for ages 16 and older.",
-                        "IconName": "ClassInd_Sixteen"
-                    },
-                    "Eighteen": {
-                        "IGDBId": 33,
-                        "Name": "18 Anos",
-                        "Description": "Content is suitable for adults aged 18 and over.",
-                        "IconName": "ClassInd_Eighteen"
-                    }
+            }
+        },
+        "CLASS_IND": {
+            "IGDBId": 6,
+            "Name": "Brazilian Advisory Rating System",
+            "ShortName": "ClassInd",
+            "Description": "ClassInd is the Brazilian classification system for video games, responsible for rating games based on their content to ensure they are appropriate for different age groups.",
+            "Website": "https://en.wikipedia.org/wiki/Brazilian_advisory_rating_system",
+            "Ratings": {
+                "L": {
+                    "IGDBId": 28,
+                    "IGDBName": "CLASS_IND_L",
+                    "Name": "Livre",
+                    "Description": "Content is suitable for all ages.",
+                    "IconName": "CLASS_IND_L"
+                },
+                "Ten": {
+                    "IGDBId": 29,
+                    "IGDBName": "CLASS_IND_Ten",
+                    "Name": "10 Anos",
+                    "Description": "Content is suitable for ages 10 and older.",
+                    "IconName": "CLASS_IND_Ten"
+                },
+                "Twelve": {
+                    "IGDBId": 30,
+                    "IGDBName": "CLASS_IND_Twelve",
+                    "Name": "12 Anos",
+                    "Description": "Content is suitable for ages 12 and older.",
+                    "IconName": "CLASS_IND_Twelve"
+                },
+                "Fourteen": {
+                    "IGDBId": 31,
+                    "IGDBName": "CLASS_IND_Fourteen",
+                    "Name": "14 Anos",
+                    "Description": "Content is suitable for ages 14 and older.",
+                    "IconName": "CLASS_IND_Fourteen"
+                },
+                "Sixteen": {
+                    "IGDBId": 32,
+                    "IGDBName": "CLASS_IND_Sixteen",
+                    "Name": "16 Anos",
+                    "Description": "Content is suitable for ages 16 and older.",
+                    "IconName": "CLASS_IND_Sixteen"
+                },
+                "Eighteen": {
+                    "IGDBId": 33,
+                    "IGDBName": "CLASS_IND_Eighteen",
+                    "Name": "18 Anos",
+                    "Description": "Content is suitable for adults aged 18 and over.",
+                    "IconName": "CLASS_IND_Eighteen"
                 }
-            },
-            "ESRB": {
-                "IGDBId": 1,
-                "Name": "Entertainment Software Rating Board",
-                "ShortName": "ESRB",
-                "Description": "The ESRB is a self-regulatory organization that assigns age and content ratings to video games in North America. It provides information about the content of games to help consumers make informed choices.",
-                "Website": "https://www.esrb.org/",
-                "Ratings": {
-                    "RP": {
-                        "IGDBId": 6,
-                        "Name": "Rating Pending",
-                        "Description": "Content is awaiting classification.",
-                        "IconName": "RP"
-                    },
-                    "EC": {
-                        "IGDBId": 7,
-                        "Name": "Early Childhood",
-                        "Description": "Content is suitable for young children.",
-                        "IconName": "EC"
-                    },
-                    "E": {
-                        "IGDBId": 8,
-                        "Name": "Everyone",
-                        "Description": "Content is suitable for all ages.",
-                        "IconName": "E"
-                    },
-                    "E10": {
-                        "IGDBId": 9,
-                        "Name": "Everyone 10 and Older",
-                        "Description": "Content is suitable for ages 10 and older.",
-                        "IconName": "E10"
-                    },
-                    "T": {
-                        "IGDBId": 10,
-                        "Name": "Teen",
-                        "Description": "Content is suitable for teenagers.",
-                        "IconName": "T"
-                    },
-                    "M": {
-                        "IGDBId": 11,
-                        "Name": "Mature",
-                        "Description": "Content is suitable for mature audiences.",
-                        "IconName": "M"
-                    },
-                    "AO": {
-                        "IGDBId": 12,
-                        "Name": "Adults Only",
-                        "Description": "Content is suitable for adults only, typically ages 18 and older.",
-                        "IconName": "AO"
-                    }
+            }
+        },
+        "ESRB": {
+            "IGDBId": 1,
+            "Name": "Entertainment Software Rating Board",
+            "ShortName": "ESRB",
+            "Description": "The ESRB is a self-regulatory organization that assigns age and content ratings to video games in North America. It provides information about the content of games to help consumers make informed choices.",
+            "Website": "https://www.esrb.org/",
+            "Ratings": {
+                "RP": {
+                    "IGDBId": 1,
+                    "IGDBName": "RP",
+                    "Name": "Rating Pending",
+                    "Description": "Content is awaiting classification.",
+                    "IconName": "RP"
+                },
+                "EC": {
+                    "IGDBId": 2,
+                    "IGDBName": "EC",
+                    "Name": "Early Childhood",
+                    "Description": "Content is suitable for young children.",
+                    "IconName": "EC"
+                },
+                "E": {
+                    "IGDBId": 3,
+                    "IGDBName": "E",
+                    "Name": "Everyone",
+                    "Description": "Content is suitable for all ages.",
+                    "IconName": "E"
+                },
+                "E10": {
+                    "IGDBId": 4,
+                    "IGDBName": "E10",
+                    "Name": "Everyone 10 and Older",
+                    "Description": "Content is suitable for ages 10 and older.",
+                    "IconName": "E10"
+                },
+                "T": {
+                    "IGDBId": 5,
+                    "IGDBName": "T",
+                    "Name": "Teen",
+                    "Description": "Content is suitable for teenagers.",
+                    "IconName": "T"
+                },
+                "M": {
+                    "IGDBId": 6,
+                    "IGDBName": "M",
+                    "Name": "Mature",
+                    "Description": "Content is suitable for mature audiences.",
+                    "IconName": "M"
+                },
+                "AO": {
+                    "IGDBId": 7,
+                    "IGDBName": "AO",
+                    "Name": "Adults Only",
+                    "Description": "Content is suitable for adults only, typically ages 18 and older.",
+                    "IconName": "AO"
                 }
-            },
-            "GRAC": {
-                "IGDBId": 5,
-                "Name": "Game Rating and Administration Committee",
-                "ShortName": "GRAC",
-                "Description": "GRAC is the South Korean organization responsible for rating video games. It assigns age ratings and content descriptors to ensure that games are appropriate for different audiences.",
-                "Website": "https://www.grac.or.kr/",
-                "Ratings": {
-                    "All": {
-                        "IGDBId": 23,
-                        "Name": "All Ages",
-                        "Description": "Content is suitable for all ages.",
-                        "IconName": "GRAC_All"
-                    },
-                    "Twelve": {
-                        "IGDBId": 24,
-                        "Name": "12 and Older",
-                        "Description": "Content is suitable for ages 12 and older.",
-                        "IconName": "GRAC_Twelve"
-                    },
-                    "Fifteen": {
-                        "IGDBId": 25,
-                        "Name": "15 and Older",
-                        "Description": "Content is suitable for ages 15 and older.",
-                        "IconName": "GRAC_Fifteen"
-                    },
-                    "Eighteen": {
-                        "IGDBId": 26,
-                        "Name": "18 and Older",
-                        "Description": "Content is suitable for adults aged 18 and over.",
-                        "IconName": "GRAC_Eighteen"
-                    },
-                    "Testing": {
-                        "IGDBId": 27,
-                        "Name": "Testing",
-                        "Description": "Content is under testing and not yet rated.",
-                        "IconName": "GRAC_Testing"
-                    }
+            }
+        },
+        "GRAC": {
+            "IGDBId": 5,
+            "Name": "Game Rating and Administration Committee",
+            "ShortName": "GRAC",
+            "Description": "GRAC is the South Korean organization responsible for rating video games. It assigns age ratings and content descriptors to ensure that games are appropriate for different audiences.",
+            "Website": "https://www.grac.or.kr/",
+            "Ratings": {
+                "All": {
+                    "IGDBId": 23,
+                    "IGDBName": "GRAC_All",
+                    "Name": "All Ages",
+                    "Description": "Content is suitable for all ages.",
+                    "IconName": "GRAC_All"
+                },
+                "Twelve": {
+                    "IGDBId": 24,
+                    "IGDBName": "GRAC_Twelve",
+                    "Name": "12 and Older",
+                    "Description": "Content is suitable for ages 12 and older.",
+                    "IconName": "GRAC_Twelve"
+                },
+                "Fifteen": {
+                    "IGDBId": 25,
+                    "IGDBName": "GRAC_Fifteen",
+                    "Name": "15 and Older",
+                    "Description": "Content is suitable for ages 15 and older.",
+                    "IconName": "GRAC_Fifteen"
+                },
+                "Eighteen": {
+                    "IGDBId": 26,
+                    "IGDBName": "GRAC_Eighteen",
+                    "Name": "18 and Older",
+                    "Description": "Content is suitable for adults aged 18 and over.",
+                    "IconName": "GRAC_Eighteen"
+                },
+                "Testing": {
+                    "IGDBId": 27,
+                    "IGDBName": "GRAC_Testing",
+                    "Name": "Testing",
+                    "Description": "Content is under testing and not yet rated.",
+                    "IconName": "GRAC_Testing"
                 }
-            },
-            "PEGI": {
-                "IGDBId": 2,
-                "Name": "Pan European Game Information",
-                "ShortName": "PEGI",
-                "Description": "PEGI is a European video game content rating system that provides age ratings and content descriptors to help consumers make informed choices about video games.",
-                "Website": "https://pegi.info/",
-                "Ratings": {
-                    "Three": {
-                        "IGDBId": 1,
-                        "Name": "Three",
-                        "Description": "Content is suitable for all ages.",
-                        "IconName": "Three"
-                    },
-                    "Seven": {
-                        "IGDBId": 2,
-                        "Name": "Seven",
-                        "Description": "Content is suitable for ages 7 and older.",
-                        "IconName": "Seven"
-                    },
-                    "Twelve": {
-                        "IGDBId": 3,
-                        "Name": "Twelve",
-                        "Description": "Content is suitable for ages 12 and older.",
-                        "IconName": "Twelve"
-                    },
-                    "Sixteen": {
-                        "IGDBId": 4,
-                        "Name": "Sixteen",
-                        "Description": "Content is suitable for ages 16 and older.",
-                        "IconName": "Sixteen"
-                    },
-                    "Eighteen": {
-                        "IGDBId": 5,
-                        "Name": "Eighteen",
-                        "Description": "Content is suitable for adults aged 18 and over.",
-                        "IconName": "Eighteen"
-                    }
+            }
+        },
+        "PEGI": {
+            "IGDBId": 2,
+            "Name": "Pan European Game Information",
+            "ShortName": "PEGI",
+            "Description": "PEGI is a European video game content rating system that provides age ratings and content descriptors to help consumers make informed choices about video games.",
+            "Website": "https://pegi.info/",
+            "Ratings": {
+                "Three": {
+                    "IGDBId": 8,
+                    "IGDBName": "Three",
+                    "Name": "Three",
+                    "Description": "Content is suitable for all ages.",
+                    "IconName": "Three"
+                },
+                "Seven": {
+                    "IGDBId": 9,
+                    "IGDBName": "Seven",
+                    "Name": "Seven",
+                    "Description": "Content is suitable for ages 7 and older.",
+                    "IconName": "Seven"
+                },
+                "Twelve": {
+                    "IGDBId": 10,
+                    "IGDBName": "Twelve",
+                    "Name": "Twelve",
+                    "Description": "Content is suitable for ages 12 and older.",
+                    "IconName": "Twelve"
+                },
+                "Sixteen": {
+                    "IGDBId": 11,
+                    "IGDBName": "Sixteen",
+                    "Name": "Sixteen",
+                    "Description": "Content is suitable for ages 16 and older.",
+                    "IconName": "Sixteen"
+                },
+                "Eighteen": {
+                    "IGDBId": 12,
+                    "IGDBName": "Eighteen",
+                    "Name": "Eighteen",
+                    "Description": "Content is suitable for adults aged 18 and over.",
+                    "IconName": "Eighteen"
                 }
-            },
-            "USK": {
-                "IGDBId": 4,
-                "Name": "Unterhaltungssoftware Selbstkontrolle",
-                "ShortName": "USK",
-                "Description": "USK is the German video game content rating system that provides age ratings and content descriptors to help consumers make informed choices about video games.",
-                "Website": "https://www.usk.de/",
-                "Ratings": {
-                    "0": {
-                        "IGDBId": 18,
-                        "Name": "Freigegeben ohne Altersbeschränkung",
-                        "Description": "Content is suitable for all ages.",
-                        "IconName": "USK_0"
-                    },
-                    "6": {
-                        "IGDBId": 19,
-                        "Name": "Freigegeben ab 6 Jahren",
-                        "Description": "Content is suitable for ages 6 and older.",
-                        "IconName": "USK_6"
-                    },
-                    "12": {
-                        "IGDBId": 20,
-                        "Name": "Freigegeben ab 12 Jahren",
-                        "Description": "Content is suitable for ages 12 and older.",
-                        "IconName": "USK_12"
-                    },
-                    "16": {
-                        "IGDBId": 21,
-                        "Name": "Freigegeben ab 16 Jahren",
-                        "Description": "Content is suitable for ages 16 and older.",
-                        "IconName": "USK_16"
-                    },
-                    "18": {
-                        "IGDBId": 22,
-                        "Name": "Keine Jugendfreigabe",
-                        "Description": "Content is suitable for adults aged 18 and over.",
-                        "IconName": "USK_18"
-                    }
+            }
+        },
+        "USK": {
+            "IGDBId": 4,
+            "Name": "Unterhaltungssoftware Selbstkontrolle",
+            "ShortName": "USK",
+            "Description": "USK is the German video game content rating system that provides age ratings and content descriptors to help consumers make informed choices about video games.",
+            "Website": "https://www.usk.de/",
+            "Ratings": {
+                "0": {
+                    "IGDBId": 18,
+                    "IGDBName": "USK_0",
+                    "Name": "Freigegeben ohne Altersbeschränkung",
+                    "Description": "Content is suitable for all ages.",
+                    "IconName": "USK_0"
+                },
+                "6": {
+                    "IGDBId": 19,
+                    "IGDBName": "USK_6",
+                    "Name": "Freigegeben ab 6 Jahren",
+                    "Description": "Content is suitable for ages 6 and older.",
+                    "IconName": "USK_6"
+                },
+                "12": {
+                    "IGDBId": 20,
+                    "IGDBName": "USK_12",
+                    "Name": "Freigegeben ab 12 Jahren",
+                    "Description": "Content is suitable for ages 12 and older.",
+                    "IconName": "USK_12"
+                },
+                "16": {
+                    "IGDBId": 21,
+                    "IGDBName": "USK_16",
+                    "Name": "Freigegeben ab 16 Jahren",
+                    "Description": "Content is suitable for ages 16 and older.",
+                    "IconName": "USK_16"
+                },
+                "18": {
+                    "IGDBId": 22,
+                    "IGDBName": "USK_18",
+                    "Name": "Keine Jugendfreigabe",
+                    "Description": "Content is suitable for adults aged 18 and over.",
+                    "IconName": "USK_18"
                 }
             }
         }

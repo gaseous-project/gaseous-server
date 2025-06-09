@@ -144,7 +144,7 @@ namespace gaseous_server.Classes.Metadata
             long ratingBoard = ageRating.Organization;
             long ratingValue = ageRating.RatingCategory;
 
-            var boardEntry = AgeGroupMap.RatingsBoards
+            var boardEntry = AgeGroupMap.RatingBoards
                 .FirstOrDefault(b => b.Value.IGDBId == ratingBoard);
 
             if (!string.IsNullOrEmpty(boardEntry.Key))
@@ -173,6 +173,68 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
             return null;
+        }
+
+        public static Dictionary<string, object> GetAgeRatingAndGroupings()
+        {
+            // get age ratings dictionary
+            Dictionary<long, string> ClassificationBoardsStrings = new Dictionary<long, string>();
+            Dictionary<long, string> AgeRatingsStrings = new Dictionary<long, string>();
+            foreach (var ratingBoardKey in AgeGroups.AgeGroupMap.RatingBoards.Keys)
+            {
+                ClassificationBoardsStrings.Add(
+                    (long)AgeGroups.AgeGroupMap.RatingBoards[ratingBoardKey].IGDBId,
+                    ratingBoardKey
+                    );
+
+                foreach (var ageRatingKey in AgeGroups.AgeGroupMap.RatingBoards[ratingBoardKey].Ratings.Keys)
+                {
+                    AgeRatingsStrings.Add(
+                        (long)AgeGroups.AgeGroupMap.RatingBoards[ratingBoardKey].Ratings[ageRatingKey].IGDBId,
+                        AgeGroups.AgeGroupMap.RatingBoards[ratingBoardKey].Ratings[ageRatingKey].IGDBName
+                        );
+                }
+            }
+
+            Dictionary<string, Dictionary<string, List<long>>> AgeGroupsStrings = new Dictionary<string, Dictionary<string, List<long>>>();
+            foreach (var ageGroupKey in AgeGroups.AgeGroupMap.AgeGroups.Keys)
+            {
+                Dictionary<string, List<long>> ageGroupRatings = new Dictionary<string, List<long>>();
+                foreach (var ratingBoardKey in AgeGroups.AgeGroupMap.AgeGroups[ageGroupKey].Ratings.Keys)
+                {
+                    List<long> ageRatingIds = new List<long>();
+                    foreach (var ageRatingItem in AgeGroups.AgeGroupMap.AgeGroups[ageGroupKey].Ratings[ratingBoardKey])
+                    {
+                        if (AgeGroups.AgeGroupMap.RatingBoards.ContainsKey(ratingBoardKey))
+                        {
+                            if (AgeGroups.AgeGroupMap.RatingBoards[ratingBoardKey].Ratings.ContainsKey(ageRatingItem))
+                            {
+                                ageRatingIds.Add((long)AgeGroups.AgeGroupMap.RatingBoards[ratingBoardKey].Ratings[ageRatingItem].IGDBId);
+                            }
+                        }
+                    }
+
+                    if (ageRatingIds.Count > 0)
+                    {
+                        ageGroupRatings.Add(ratingBoardKey, ageRatingIds);
+                    }
+                }
+
+                if (ageGroupRatings.Count > 0)
+                {
+                    AgeGroupsStrings.Add(ageGroupKey.ToString(), ageGroupRatings);
+                }
+            }
+
+            // create the final dictionary
+            Dictionary<string, object> ageRatingAndGroupings = new Dictionary<string, object>
+            {
+                { "ClassificationBoards", ClassificationBoardsStrings },
+                { "AgeRatings", AgeRatingsStrings },
+                { "AgeGroups", AgeGroupsStrings }
+            };
+
+            return ageRatingAndGroupings;
         }
 
         /// <summary>
@@ -221,7 +283,7 @@ namespace gaseous_server.Classes.Metadata
             Unclassified = 0
         }
 
-        private static AgeGroupMapModel? _ageGroupMap;
+        private static AgeGroupMapModel? _ageGroupMap { get; set; } = null;
         /// <summary>
         /// Gets the age group map model, loading from file or embedded resource if necessary.
         /// </summary>
@@ -243,12 +305,17 @@ namespace gaseous_server.Classes.Metadata
                     }
                     else
                     {
-                        using Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("gaseous_server.Metadata.AgeGroupMap.json");
+                        using Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("gaseous_server.wwwroot.images.Ratings.AgeGroupMap.json");
                         if (stream != null)
                         {
                             using StreamReader reader = new StreamReader(stream);
                             string json = reader.ReadToEnd();
-                            _ageGroupMap = Newtonsoft.Json.JsonConvert.DeserializeObject<AgeGroupMapModel>(json);
+                            _ageGroupMap = Newtonsoft.Json.JsonConvert.DeserializeObject<AgeGroupMapModel>(json, new Newtonsoft.Json.JsonSerializerSettings
+                            {
+                                NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+                                DefaultValueHandling = Newtonsoft.Json.DefaultValueHandling.Ignore,
+                                MaxDepth = 10
+                            });
                         }
                         else
                         {
@@ -275,7 +342,7 @@ namespace gaseous_server.Classes.Metadata
             /// <summary>
             /// Gets or sets the dictionary of ratings boards, keyed by their names.
             /// </summary>
-            public Dictionary<string, RatingsBoardModel> RatingsBoards { get; set; } = new Dictionary<string, RatingsBoardModel>();
+            public Dictionary<string, RatingBoardModel> RatingBoards { get; set; } = new Dictionary<string, RatingBoardModel>();
 
             /// <summary>
             /// Represents an age group model containing its ID and associated ratings.
@@ -296,12 +363,12 @@ namespace gaseous_server.Classes.Metadata
             /// <summary>
             /// Represents a ratings board model containing ratings boards and their associated items.
             /// </summary>
-            public class RatingsBoardModel
+            public class RatingBoardModel
             {
                 /// <summary>
                 /// Gets or sets the IGDB identifier for the ratings board item.
                 /// </summary>
-                public long IGDBId { get; set; }
+                public long? IGDBId { get; set; }
                 /// <summary>
                 /// Gets or sets the name of the ratings board item.
                 /// </summary>
@@ -331,19 +398,23 @@ namespace gaseous_server.Classes.Metadata
                     /// <summary>
                     /// Gets or sets the IGDB identifier for the rating item.
                     /// </summary>
-                    public long IGDBId { get; set; }
+                    public long? IGDBId { get; set; }
+                    /// <summary>
+                    /// Gets or sets the IGDB name for the rating item.
+                    /// </summary>
+                    public string? IGDBName { get; set; }
                     /// <summary>
                     /// Gets or sets the name of the rating item.
                     /// </summary>
-                    public string Name { get; set; }
+                    public string? Name { get; set; }
                     /// <summary>
                     /// Gets or sets the description of the rating item.
                     /// </summary>
-                    public string Description { get; set; }
+                    public string? Description { get; set; }
                     /// <summary>
                     /// Gets or sets the icon name associated with the rating item.
                     /// </summary>
-                    public string IconName { get; set; }
+                    public string? IconName { get; set; }
                 }
             }
         }

@@ -366,33 +366,54 @@ class GameCard {
                     userRatingOrder.forEach(ratingElement => {
                         if (abortLoop === false) {
                             data.forEach(dataElement => {
-                                if (ratingElement.toLowerCase() === dataElement.ratingBoard.toLowerCase()) {
-                                    let rating = document.createElement('div');
-                                    rating.classList.add('card-rating');
+                                if (ratingElement.toLowerCase() === dataElement.ratingBoard.name.toLowerCase()) {
+                                    // find rating in AgeRatingMappings
+                                    let organization = null;
+                                    let organizationRatingKey = null;
+                                    let organizationRating = null;
 
-                                    let ratingIcon = document.createElement('img');
-                                    ratingIcon.src = `/images/Ratings/${dataElement.ratingBoard.toUpperCase()}/${dataElement.ratingTitle}.svg`;
-                                    ratingIcon.alt = dataElement.ratingTitle;
-                                    ratingIcon.title = dataElement.ratingTitle;
-                                    ratingIcon.classList.add('card-rating-icon');
-
-                                    let description = ClassificationBoards[dataElement.ratingBoard] + '\nRating: ' + ClassificationRatings[dataElement.ratingTitle];
-                                    if (dataElement.descriptions && dataElement.descriptions.length > 0) {
-                                        description += '\n\nDescription:';
-                                        dataElement.descriptions.forEach(element => {
-                                            description += '\n' + element;
-                                        });
+                                    for (const key of Object.keys(AgeRatingMappings.RatingBoards)) {
+                                        if (AgeRatingMappings.RatingBoards[key].IGDBId === dataElement.ratingBoard.id) {
+                                            organization = AgeRatingMappings.RatingBoards[key];
+                                            for (const ratingKey of Object.keys(AgeRatingMappings.RatingBoards[key].Ratings)) {
+                                                if (AgeRatingMappings.RatingBoards[key].Ratings[ratingKey].IGDBId === dataElement.ratingTitle.id) {
+                                                    organizationRatingKey = ratingKey;
+                                                    organizationRating = AgeRatingMappings.RatingBoards[key].Ratings[ratingKey];
+                                                    break;
+                                                }
+                                            }
+                                            break;
+                                        }
                                     }
 
-                                    ratingIcon.alt = description;
-                                    ratingIcon.title = description;
+                                    if (organization !== null || organizationRating !== null) {
+                                        let rating = document.createElement('div');
+                                        rating.classList.add('card-rating');
 
-                                    rating.appendChild(ratingIcon);
+                                        let ratingIcon = document.createElement('img');
+                                        ratingIcon.src = `/images/Ratings/${dataElement.ratingBoard.name.toUpperCase()}/${organizationRating.IconName}.svg`;
+                                        ratingIcon.alt = dataElement.ratingTitle;
+                                        ratingIcon.title = dataElement.ratingTitle;
+                                        ratingIcon.classList.add('card-rating-icon');
 
-                                    ageRating.appendChild(rating);
-                                    ageRating.style.display = '';
+                                        let description = ClassificationBoards[dataElement.ratingBoard.name] + '\nRating: ' + organizationRatingKey;
+                                        if (dataElement.descriptions && dataElement.descriptions.length > 0) {
+                                            description += '\n\nDescription:';
+                                            dataElement.descriptions.forEach(element => {
+                                                description += '\n' + element.description;
+                                            });
+                                        }
 
-                                    abortLoop = true;
+                                        ratingIcon.alt = description;
+                                        ratingIcon.title = description;
+
+                                        rating.appendChild(ratingIcon);
+
+                                        ageRating.appendChild(rating);
+                                        ageRating.style.display = '';
+
+                                        abortLoop = true;
+                                    }
                                 }
                             });
                         } else {

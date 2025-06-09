@@ -444,7 +444,7 @@ namespace gaseous_server.Classes.Metadata
             long[] RelationValues = Newtonsoft.Json.JsonConvert.DeserializeObject<long[]>(Relations);
             foreach (long RelationValue in RelationValues)
             {
-                sql = "INSERT INTO " + TableName + " (`" + PrimaryTable + "SourceId`, `" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`) VALUES (@sourceid, @objectid, @relationvalue);";
+                sql = "INSERT IGNORE INTO " + TableName + " (`" + PrimaryTable + "SourceId`, `" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`) VALUES (@sourceid, @objectid, @relationvalue);";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>
                 {
                     { "sourceid", SourceType },

@@ -12,6 +12,20 @@ class PreferencesWindow {
         this.dialog = await new Modal("preferences");
         await this.dialog.BuildModal();
 
+        // load age rating mappings
+        this.AgeRatingMappings = await fetch('/images/Ratings/AgeGroupMap.json')
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Failed to load age rating mappings');
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                return {};
+            });
+
         // setup the dialog
         this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Preferences";
 
@@ -160,8 +174,9 @@ class PreferencesWindow {
         if (!this.userClassifications) {
             this.userClassifications = GetRatingsBoards();
         }
+
         for (const classification of this.userClassifications) {
-            classifications[classification] = ClassificationBoards[classification];
+            classifications[classification] = this.AgeRatingMappings.RatingBoards[classification];
         }
         this.classificationSelector = this.dialog.modalElement.querySelector('#classificationBoardSelector');
         this.classificationSelector.innerHTML = "";
@@ -195,43 +210,30 @@ class PreferencesWindow {
 
             let classificationName = document.createElement('div');
             classificationName.classList.add("listboxselector-item-name");
-            classificationName.innerHTML = value;
+            classificationName.innerHTML = value.Name;
             classificationItemBox.appendChild(classificationName);
 
             let classificationIcons = document.createElement('div');
             classificationIcons.classList.add("listboxselector-item-icons");
             // loop the age rating groups
-            let ratingGroupsOrder = [
+            for (const ratingGroup of [
                 "Child",
                 "Teen",
                 "Mature",
                 "Adult"
-            ];
-            for (const ratingGroup of ratingGroupsOrder) {
-                let ageGroupValue = AgeRatingGroups[ratingGroup];
-                let ageGroupValueLower = {};
-                for (const [key, value] of Object.entries(ageGroupValue)) {
-                    ageGroupValueLower[key.toLowerCase()] = value;
-                }
+            ]) {
+                let ageGroupValue = this.AgeRatingMappings.AgeGroups[ratingGroup];
+                let ageGroupRatingGroup = ageGroupValue.Ratings[key];
 
-                let iconIdList = ageGroupValueLower[key.toLowerCase()];
-                // loop the age rating icons
-                if (iconIdList) {
-                    for (const iconId of iconIdList) {
+                let ratingBoard = this.AgeRatingMappings.RatingBoards[key];
+
+                for (const groupRating of ageGroupRatingGroup) {
+                    if (ratingBoard.Ratings[groupRating]) {
+                        // generate icon
                         let icon = document.createElement('img');
-
-                        // get age rating strings
-                        let ageRatingString;
-                        for (const x of Object.keys(AgeRatingStrings)) {
-                            if (AgeRatingStrings[x] == iconId) {
-                                ageRatingString = AgeRatingStrings[x];
-                                break;
-                            }
-                        }
-
-                        icon.src = "/images/Ratings/" + key + "/" + ageRatingString + ".svg";
-                        icon.title = ageRatingString;
-                        icon.alt = ageRatingString;
+                        icon.src = "/images/Ratings/" + key + "/" + ratingBoard.Ratings[groupRating].IconName + ".svg";
+                        icon.title = ratingBoard.Ratings[groupRating].Name;
+                        icon.alt = ratingBoard.Ratings[groupRating].Name;
                         icon.classList.add("rating_image_mini");
                         classificationIcons.appendChild(icon);
                     }

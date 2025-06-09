@@ -188,31 +188,74 @@ namespace gaseous_server.Classes.Metadata
         {
             AgeGroup,
             AgeRating,
+            AgeRatingCategory,
             AgeRatingContentDescription,
+            AgeRatingContentDescriptionV2,
+            AgeRatingOrganization,
             AlternativeName,
             Artwork,
+            Character,
+            CharacterGender,
+            CharacterMugShot,
+            CharacterSpecies,
             Collection,
+            CollectionMembership,
+            CollectionMembershipType,
+            CollectionRelation,
+            CollectionRelationType,
+            CollectionType,
             Company,
             CompanyLogo,
+            CompanyStatus,
+            CompanyWebsite,
+            Country,
             Cover,
+            Event,
+            EventLogo,
+            EventNetwork,
             ExternalGame,
+            ExternalGameSource,
             Franchise,
-            GameMode,
-            GameLocalization,
             Game,
+            GameEngine,
+            GameEngineLogo,
+            GameLocalization,
+            GameMode,
+            GameReleaseFormat,
+            GameStatus,
+            GameTimeToBeat,
+            GameType,
+            GameVersion,
+            GameVersionFeature,
+            GameVersionFeatureValue,
             GameVideo,
             Genre,
             InvolvedCompany,
+            Keyword,
+            Language,
+            LanguageSupport,
+            LanguageSupportType,
             MultiplayerMode,
-            PlatformLogo,
+            NetworkType,
             Platform,
+            PlatformFamily,
+            PlatformLogo,
             PlatformVersion,
+            PlatformVersionCompany,
+            PlatformVersionReleaseDate,
+            PlatformWebsite,
             PlayerPerspective,
-            ReleaseDate,
+            PopularityPrimitive,
+            PopularityType,
             Region,
+            ReleaseDate,
+            ReleaseDateRegion,
+            ReleaseDateStatus,
             Search,
             Screenshot,
-            Theme
+            Theme,
+            Website,
+            WebsiteType
         }
 
         /// <summary>
@@ -345,114 +388,7 @@ namespace gaseous_server.Classes.Metadata
                     {
                         string fieldList = "fields *;";
                         string query = "where id = " + Id;
-                        string EndpointString = "";
-
-                        switch (Endpoint)
-                        {
-                            case MetadataEndpoint.AgeRating:
-                                EndpointString = IGDBClient.Endpoints.AgeRating;
-                                break;
-
-                            case MetadataEndpoint.AgeRatingContentDescription:
-                                EndpointString = IGDBClient.Endpoints.AgeRatingContentDescriptionsV2;
-                                break;
-
-                            case MetadataEndpoint.AlternativeName:
-                                EndpointString = IGDBClient.Endpoints.AlternativeNames;
-                                break;
-
-                            case MetadataEndpoint.Artwork:
-                                EndpointString = IGDBClient.Endpoints.Artworks;
-                                break;
-
-                            case MetadataEndpoint.Collection:
-                                EndpointString = IGDBClient.Endpoints.Collections;
-                                break;
-
-                            case MetadataEndpoint.Company:
-                                EndpointString = IGDBClient.Endpoints.Companies;
-                                break;
-
-                            case MetadataEndpoint.CompanyLogo:
-                                EndpointString = IGDBClient.Endpoints.CompanyLogos;
-                                break;
-
-                            case MetadataEndpoint.Cover:
-                                EndpointString = IGDBClient.Endpoints.Covers;
-                                break;
-
-                            case MetadataEndpoint.ExternalGame:
-                                EndpointString = IGDBClient.Endpoints.ExternalGames;
-                                break;
-
-                            case MetadataEndpoint.Franchise:
-                                EndpointString = IGDBClient.Endpoints.Franchies;
-                                break;
-
-                            case MetadataEndpoint.GameMode:
-                                EndpointString = IGDBClient.Endpoints.GameModes;
-                                break;
-
-                            case MetadataEndpoint.GameLocalization:
-                                EndpointString = "game_localizations";
-                                break;
-
-                            case MetadataEndpoint.Game:
-                                EndpointString = IGDBClient.Endpoints.Games;
-                                break;
-
-                            case MetadataEndpoint.GameVideo:
-                                EndpointString = IGDBClient.Endpoints.GameVideos;
-                                break;
-
-                            case MetadataEndpoint.Genre:
-                                EndpointString = IGDBClient.Endpoints.Genres;
-                                break;
-
-                            case MetadataEndpoint.InvolvedCompany:
-                                EndpointString = IGDBClient.Endpoints.InvolvedCompanies;
-                                break;
-
-                            case MetadataEndpoint.MultiplayerMode:
-                                EndpointString = IGDBClient.Endpoints.MultiplayerModes;
-                                break;
-
-                            case MetadataEndpoint.PlatformLogo:
-                                EndpointString = IGDBClient.Endpoints.PlatformLogos;
-                                break;
-
-                            case MetadataEndpoint.Platform:
-                                EndpointString = IGDBClient.Endpoints.Platforms;
-                                break;
-
-                            case MetadataEndpoint.PlatformVersion:
-                                EndpointString = IGDBClient.Endpoints.PlatformVersions;
-                                break;
-
-                            case MetadataEndpoint.PlayerPerspective:
-                                EndpointString = IGDBClient.Endpoints.PlayerPerspectives;
-                                break;
-
-                            case MetadataEndpoint.ReleaseDate:
-                                EndpointString = IGDBClient.Endpoints.ReleaseDates;
-                                break;
-
-                            case MetadataEndpoint.Region:
-                                EndpointString = "regions";
-                                break;
-
-                            case MetadataEndpoint.Screenshot:
-                                EndpointString = IGDBClient.Endpoints.Screenshots;
-                                break;
-
-                            case MetadataEndpoint.Theme:
-                                EndpointString = IGDBClient.Endpoints.Themes;
-                                break;
-
-                            default:
-                                throw new ArgumentException("Invalid endpoint specified: " + Endpoint.ToString());
-
-                        }
+                        string EndpointString = GetEndpointData<T>().Endpoint;
 
                         return await IGDBAPI<T>(EndpointString, fieldList, query);
                     }
@@ -482,6 +418,143 @@ namespace gaseous_server.Classes.Metadata
                 default:
                     return null;
             }
+        }
+
+        public static EndpointDataItem GetEndpointData<T>()
+        {
+            // use reflection to get the endpoint for the type T. The endpoint is a public const and is the name of the type, and is under IGDBClient.Endpoints
+            var typeName = typeof(T).Name;
+            EndpointDataItem endpoint = new EndpointDataItem();
+
+            switch (typeName)
+            {
+                case "AgeRatingCategory":
+                    endpoint.Endpoint = IGDBClient.Endpoints.AgeRatingCategories;
+                    break;
+
+                case "Collection":
+                    endpoint.Endpoint = IGDBClient.Endpoints.Collections;
+                    endpoint.SupportsSlugSearch = true;
+                    break;
+
+                case "CollectionMembership":
+                    endpoint.Endpoint = "collection_memberships";
+                    break;
+
+                case "CollectionMembershipType":
+                    endpoint.Endpoint = "collection_membership_types";
+                    break;
+
+                case "CollectionRelation":
+                    endpoint.Endpoint = "collection_relations";
+                    break;
+
+                case "CollectionRelationType":
+                    endpoint.Endpoint = "collection_relation_types";
+                    break;
+
+                case "CollectionType":
+                    endpoint.Endpoint = "collection_types";
+                    break;
+
+                case "Company":
+                    endpoint.Endpoint = IGDBClient.Endpoints.Companies;
+                    endpoint.SupportsSlugSearch = true;
+                    break;
+
+                case "CompanyStatus":
+                    endpoint.Endpoint = "company_statuses";
+                    break;
+
+                case "Event":
+                    endpoint.Endpoint = "events";
+                    break;
+
+                case "EventLogo":
+                    endpoint.Endpoint = "event_logos";
+                    break;
+
+                case "EventNetwork":
+                    endpoint.Endpoint = "event_networks";
+                    break;
+
+                case "Franchise":
+                    endpoint.Endpoint = IGDBClient.Endpoints.Franchies;
+                    endpoint.SupportsSlugSearch = true;
+                    break;
+
+                case "Game":
+                    endpoint.Endpoint = IGDBClient.Endpoints.Games;
+                    endpoint.SupportsSlugSearch = true;
+                    break;
+
+                case "GameLocalization":
+                    endpoint.Endpoint = "game_localizations";
+                    break;
+
+                case "GameStatus":
+                    endpoint.Endpoint = "game_statuses";
+                    break;
+
+                case "Language":
+                    endpoint.Endpoint = "languages";
+                    break;
+
+                case "LanguageSupport":
+                    endpoint.Endpoint = "language_supports";
+                    break;
+
+                case "LanguageSupportType":
+                    endpoint.Endpoint = "language_support_types";
+                    break;
+
+                case "NetworkType":
+                    endpoint.Endpoint = "network_types";
+                    break;
+
+                case "Platform":
+                    endpoint.Endpoint = IGDBClient.Endpoints.Platforms;
+                    endpoint.SupportsSlugSearch = true;
+                    break;
+
+                case "PlatformFamily":
+                    endpoint.Endpoint = IGDBClient.Endpoints.PlatformFamilies;
+                    break;
+
+                case "PlatformVersionCompany":
+                    endpoint.Endpoint = "platform_version_companies";
+                    break;
+
+                case "Region":
+                    endpoint.Endpoint = "regions";
+                    break;
+
+                case "ReleaseDateStatus":
+                    endpoint.Endpoint = "release_date_statuses";
+                    break;
+
+                default:
+                    var endpointField = typeof(IGDBClient.Endpoints).GetField(typeName);
+                    if (endpointField == null)
+                    {
+                        // try again with pluralized type name
+                        endpointField = typeof(IGDBClient.Endpoints).GetField(typeName + "s");
+
+                        if (endpointField == null)
+                            return null;
+                    }
+
+                    endpoint.Endpoint = (string)endpointField.GetValue(null);
+                    break;
+            }
+
+            return endpoint;
+        }
+
+        public class EndpointDataItem
+        {
+            public string Endpoint { get; set; }
+            public bool SupportsSlugSearch { get; set; } = false;
         }
 
         public static void ConfigureHasheousClient(ref HasheousClient.Hasheous hasheous)
@@ -725,6 +798,8 @@ namespace gaseous_server.Classes.Metadata
 
         private async Task<T[]> HasheousAPIFetch<T>(HasheousClient.Models.MetadataSources SourceType, string Endpoint, string Fields, object Query)
         {
+            ConfigureHasheousClient(ref hasheous);
+
             // drop out early if Fields is not valid
             if (Fields != "slug" && Fields != "id")
             {

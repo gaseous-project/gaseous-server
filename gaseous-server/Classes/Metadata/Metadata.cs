@@ -325,38 +325,23 @@ namespace gaseous_server.Classes.Metadata
 
                             // generate age rating object
                             HasheousClient.Models.Metadata.IGDB.AgeRating? igdbAgeRating = null;
-                            HasheousClient.Models.Metadata.IGDB.AgeRatingTitle? igdbAgeRatingTitle = null;
+                            long? igdbAgeRatingTitle = null;
                             if (theGamesDbGame.rating != null && theGamesDbGame.rating != "")
                             {
-                                switch (theGamesDbGame.rating.Split(" - ")[0])
+                                // search the age group map for the rating id
+                                string tgdbRatingName = theGamesDbGame.rating.Split(" - ")[0];
+                                if (AgeGroups.AgeGroupMap.RatingBoards["ESRB"].Ratings.ContainsKey(tgdbRatingName))
                                 {
-                                    case "E":
-                                        igdbAgeRatingTitle = HasheousClient.Models.Metadata.IGDB.AgeRatingTitle.E;
-                                        break;
-
-                                    case "E10":
-                                        igdbAgeRatingTitle = HasheousClient.Models.Metadata.IGDB.AgeRatingTitle.E10;
-                                        break;
-
-                                    case "T":
-                                        igdbAgeRatingTitle = HasheousClient.Models.Metadata.IGDB.AgeRatingTitle.T;
-                                        break;
-
-                                    case "M":
-                                        igdbAgeRatingTitle = HasheousClient.Models.Metadata.IGDB.AgeRatingTitle.M;
-                                        break;
-
-                                    case "AO":
-                                        igdbAgeRatingTitle = HasheousClient.Models.Metadata.IGDB.AgeRatingTitle.AO;
-                                        break;
+                                    igdbAgeRatingTitle = AgeGroups.AgeGroupMap.RatingBoards["ESRB"].Ratings[tgdbRatingName].IGDBId;
                                 }
+
                                 if (igdbAgeRatingTitle != null)
                                 {
                                     igdbAgeRating = new HasheousClient.Models.Metadata.IGDB.AgeRating
                                     {
                                         Id = theGamesDbGame.id,
-                                        Rating = (HasheousClient.Models.Metadata.IGDB.AgeRatingTitle)igdbAgeRatingTitle,
-                                        Category = HasheousClient.Models.Metadata.IGDB.AgeRatingCategory.ESRB
+                                        Organization = 1, // IGDB Age Rating Organization ID for ESRB
+                                        RatingCategory = (long)igdbAgeRatingTitle
                                     };
 
                                     // update cache
@@ -376,47 +361,55 @@ namespace gaseous_server.Classes.Metadata
 
                             // generate cover image object
                             HasheousClient.Models.Metadata.IGDB.Cover? igdbCover = null;
-                            List<HasheousClient.Models.Metadata.TheGamesDb.GameImage>? imageDict = theGamesDbGameResult[0].include.boxart.data[theGamesDbGame.id.ToString()];
-                            foreach (HasheousClient.Models.Metadata.TheGamesDb.GameImage image in imageDict)
+                            List<HasheousClient.Models.Metadata.TheGamesDb.GameImage>? imageDict = new List<HasheousClient.Models.Metadata.TheGamesDb.GameImage>();
+                            if (
+                                theGamesDbGameResult[0].include != null &&
+                                theGamesDbGameResult[0].include.boxart != null &&
+                                theGamesDbGameResult[0].include.boxart.data != null &&
+                                theGamesDbGameResult[0].include.boxart.data.ContainsKey(theGamesDbGame.id.ToString()))
                             {
-                                if (image.type == "boxart" && image.side == "front")
+                                imageDict = theGamesDbGameResult[0].include.boxart.data[theGamesDbGame.id.ToString()];
+                                foreach (HasheousClient.Models.Metadata.TheGamesDb.GameImage image in imageDict)
                                 {
-                                    int width = 0;
-                                    int height = 0;
-
-                                    if (image.resolution == null || image.resolution == "")
+                                    if (image.type == "boxart" && image.side == "front")
                                     {
-                                        image.resolution = "0x0";
+                                        int width = 0;
+                                        int height = 0;
+
+                                        if (image.resolution == null || image.resolution == "")
+                                        {
+                                            image.resolution = "0x0";
+                                        }
+
+                                        width = int.TryParse(image.resolution.Split("x")[0].Trim(), out width) ? width : 0;
+                                        height = int.TryParse(image.resolution.Split("x")[1].Trim(), out height) ? height : 0;
+
+                                        igdbCover = new HasheousClient.Models.Metadata.IGDB.Cover
+                                        {
+                                            Id = image.id,
+                                            ImageId = image.filename,
+                                            Width = width,
+                                            Height = height,
+                                            Url = new Uri(theGamesDbGameResult[0].include.boxart.base_url.original + image.filename).ToString(),
+                                            AlphaChannel = false,
+                                            Animated = false,
+                                            Game = theGamesDbGame.id
+                                        };
+
+                                        // update cache
+                                        Storage.CacheStatus coverStatus = await Storage.GetCacheStatusAsync(HasheousClient.Models.MetadataSources.TheGamesDb, "Cover", (long)igdbCover.Id);
+                                        switch (coverStatus)
+                                        {
+                                            case Storage.CacheStatus.NotPresent:
+                                                await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbCover, false);
+                                                break;
+
+                                            case Storage.CacheStatus.Expired:
+                                                await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbCover, true);
+                                                break;
+                                        }
+                                        break;
                                     }
-
-                                    width = int.TryParse(image.resolution.Split("x")[0].Trim(), out width) ? width : 0;
-                                    height = int.TryParse(image.resolution.Split("x")[1].Trim(), out height) ? height : 0;
-
-                                    igdbCover = new HasheousClient.Models.Metadata.IGDB.Cover
-                                    {
-                                        Id = image.id,
-                                        ImageId = image.filename,
-                                        Width = width,
-                                        Height = height,
-                                        Url = new Uri(theGamesDbGameResult[0].include.boxart.base_url.original + image.filename).ToString(),
-                                        AlphaChannel = false,
-                                        Animated = false,
-                                        Game = theGamesDbGame.id
-                                    };
-
-                                    // update cache
-                                    Storage.CacheStatus coverStatus = await Storage.GetCacheStatusAsync(HasheousClient.Models.MetadataSources.TheGamesDb, "Cover", (long)igdbCover.Id);
-                                    switch (coverStatus)
-                                    {
-                                        case Storage.CacheStatus.NotPresent:
-                                            await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbCover, false);
-                                            break;
-
-                                        case Storage.CacheStatus.Expired:
-                                            await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.TheGamesDb, igdbCover, true);
-                                            break;
-                                    }
-                                    break;
                                 }
                             }
 

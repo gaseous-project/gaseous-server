@@ -144,7 +144,7 @@ namespace gaseous_server.Classes
 				db.ExecuteCMD(sql, dbDict);
 			}
 
-			sql = "INSERT INTO MetadataMapBridge (ParentMapId, MetadataSourceType, MetadataSourceId, Preferred, ProcessedAtImport) VALUES (@metadataMapId, @sourceType, @sourceId, @preferred, @processedatimport);";
+			sql = "INSERT IGNORE INTO MetadataMapBridge (ParentMapId, MetadataSourceType, MetadataSourceId, Preferred, ProcessedAtImport) VALUES (@metadataMapId, @sourceType, @sourceId, @preferred, @processedatimport);";
 			db.ExecuteCMD(sql, dbDict);
 		}
 
@@ -757,11 +757,19 @@ namespace gaseous_server.Classes
 							foreach (long ageRatingId in game.AgeRatings)
 							{
 								AgeRating ageRating = await Metadata.AgeRatings.GetAgeRating(metadataSource, ageRatingId);
-								if (ageRating.ContentDescriptions != null)
+								if (ageRating.Organization != null)
 								{
-									foreach (long ageRatingContentDescriptionId in ageRating.ContentDescriptions)
+									await Metadata.AgeRatingOrganizations.GetAgeRatingOrganization(metadataSource, (long)ageRating.Organization);
+								}
+								if (ageRating.RatingCategory != null)
+								{
+									await Metadata.AgeRatingCategorys.GetAgeRatingCategory(metadataSource, (long)ageRating.RatingCategory);
+								}
+								if (ageRating.RatingContentDescriptions != null)
+								{
+									foreach (long ageRatingContentDescriptionId in ageRating.RatingContentDescriptions)
 									{
-										await Metadata.AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(metadataSource, ageRatingContentDescriptionId);
+										await Metadata.AgeRatingContentDescriptionsV2.GetAgeRatingContentDescriptionsV2(metadataSource, ageRatingContentDescriptionId);
 									}
 								}
 							}

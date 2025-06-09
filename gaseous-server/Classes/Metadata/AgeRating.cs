@@ -83,17 +83,17 @@ namespace gaseous_server.Classes.Metadata
                     foreach (var ratingBoard in AgeGroups.AgeGroupMap.AgeGroups[AgeRestrictionGroup].Ratings.Keys)
                     {
                         // collect ratings for this AgeRestrictionGroup
-                        if (AgeGroups.AgeGroupMap.RatingsBoards.ContainsKey(ratingBoard))
+                        if (AgeGroups.AgeGroupMap.RatingBoards.ContainsKey(ratingBoard))
                         {
-                            var ratingBoardItem = AgeGroups.AgeGroupMap.RatingsBoards[ratingBoard];
-                            long ratingBoardId = ratingBoardItem.IGDBId;
+                            var ratingBoardItem = AgeGroups.AgeGroupMap.RatingBoards[ratingBoard];
+                            long ratingBoardId = (long)ratingBoardItem.IGDBId;
 
                             // loop all ratings for this rating board
                             foreach (var rating in AgeGroups.AgeGroupMap.AgeGroups[AgeRestrictionGroup].Ratings[ratingBoard])
                             {
                                 if (ratingBoardItem.Ratings.ContainsKey(rating))
                                 {
-                                    long ratingId = ratingBoardItem.Ratings[rating].IGDBId;
+                                    long ratingId = (long)ratingBoardItem.Ratings[rating].IGDBId;
 
                                     // insert into ClassificationMap
                                     sql = "INSERT INTO ClassificationMap (AgeGroupId, ClassificationBoardId, RatingId) VALUES (@ageGroupId, @classificationBoardId, @ratingId);";
