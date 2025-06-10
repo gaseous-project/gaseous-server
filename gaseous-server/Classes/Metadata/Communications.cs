@@ -870,6 +870,7 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
+        #region Hasheous API Call
         /// <summary>
         /// Access the HasheousAPI
         /// </summary>
@@ -971,6 +972,7 @@ namespace gaseous_server.Classes.Metadata
                 throw;
             }
         }
+        #endregion Hasheous API Call
 
         private async Task<T[]> HasheousAPIFetch<T>(HasheousClient.Models.MetadataSources SourceType, string Endpoint, string Fields, object Query)
         {
@@ -992,79 +994,79 @@ namespace gaseous_server.Classes.Metadata
                     {
                         case "agerating":
                             HasheousClient.Models.Metadata.IGDB.AgeRating ageRatingResult = new HasheousClient.Models.Metadata.IGDB.AgeRating();
-                            ageRatingResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.AgeRating>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            ageRatingResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.AgeRating>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(ageRatingResult) };
 
                         case "ageratingcategory":
                             HasheousClient.Models.Metadata.IGDB.AgeRatingCategory ageRatingCategoryResult = new HasheousClient.Models.Metadata.IGDB.AgeRatingCategory();
-                            ageRatingCategoryResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.AgeRatingCategory>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            ageRatingCategoryResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.AgeRatingCategory>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(ageRatingCategoryResult) };
 
                         case "ageratingcontentdescriptionv2":
                             HasheousClient.Models.Metadata.IGDB.AgeRatingContentDescriptionV2 ageRatingContentDescriptionResult = new HasheousClient.Models.Metadata.IGDB.AgeRatingContentDescriptionV2();
-                            ageRatingContentDescriptionResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.AgeRatingContentDescriptionV2>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            ageRatingContentDescriptionResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.AgeRatingContentDescriptionV2>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(ageRatingContentDescriptionResult) };
 
                         case "ageratingorganization":
                             HasheousClient.Models.Metadata.IGDB.AgeRatingOrganization ageRatingOrganizationResult = new HasheousClient.Models.Metadata.IGDB.AgeRatingOrganization();
-                            ageRatingOrganizationResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.AgeRatingOrganization>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            ageRatingOrganizationResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.AgeRatingOrganization>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(ageRatingOrganizationResult) };
 
                         case "alternativename":
                             HasheousClient.Models.Metadata.IGDB.AlternativeName alternativeNameResult = new HasheousClient.Models.Metadata.IGDB.AlternativeName();
-                            alternativeNameResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.AlternativeName>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            alternativeNameResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.AlternativeName>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(alternativeNameResult) };
 
                         case "artwork":
                             HasheousClient.Models.Metadata.IGDB.Artwork artworkResult = new HasheousClient.Models.Metadata.IGDB.Artwork();
-                            artworkResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Artwork>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            artworkResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.Artwork>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(artworkResult) };
 
                         case "collection":
                             HasheousClient.Models.Metadata.IGDB.Collection collectionResult = new HasheousClient.Models.Metadata.IGDB.Collection();
-                            collectionResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Collection>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            collectionResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.Collection>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(collectionResult) };
 
                         case "company":
                             HasheousClient.Models.Metadata.IGDB.Company companyResult = new HasheousClient.Models.Metadata.IGDB.Company();
-                            companyResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Company>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            companyResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.Company>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(companyResult) };
 
                         case "companylogo":
                             HasheousClient.Models.Metadata.IGDB.CompanyLogo companyLogoResult = new HasheousClient.Models.Metadata.IGDB.CompanyLogo();
-                            companyLogoResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.CompanyLogo>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            companyLogoResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.CompanyLogo>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(companyLogoResult) };
 
                         case "companywebsite":
                             HasheousClient.Models.Metadata.IGDB.CompanyWebsite companyWebsiteResult = new HasheousClient.Models.Metadata.IGDB.CompanyWebsite();
-                            companyWebsiteResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.CompanyWebsite>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            companyWebsiteResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.CompanyWebsite>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(companyWebsiteResult) };
 
                         case "cover":
                             HasheousClient.Models.Metadata.IGDB.Cover coverResult = new HasheousClient.Models.Metadata.IGDB.Cover();
-                            coverResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Cover>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            coverResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.Cover>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(coverResult) };
 
                         case "externalgame":
                             HasheousClient.Models.Metadata.IGDB.ExternalGame externalGameResult = new HasheousClient.Models.Metadata.IGDB.ExternalGame();
-                            externalGameResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.ExternalGame>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            externalGameResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.ExternalGame>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(externalGameResult) };
 
                         case "franchise":
                             HasheousClient.Models.Metadata.IGDB.Franchise franchiseResult = new HasheousClient.Models.Metadata.IGDB.Franchise();
-                            franchiseResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Franchise>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            franchiseResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.Franchise>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(franchiseResult) };
 
@@ -1072,66 +1074,66 @@ namespace gaseous_server.Classes.Metadata
                             HasheousClient.Models.Metadata.IGDB.Game gameResult = new HasheousClient.Models.Metadata.IGDB.Game();
                             if (Fields == "slug")
                             {
-                                gameResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Game>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, Query.ToString());
+                                gameResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.Game>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, Query.ToString());
                             }
                             else if (Fields == "id")
                             {
-                                gameResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Game>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                                gameResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.Game>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
                             }
 
                             return new T[] { ConvertToIGDBModel<T>(gameResult) };
 
                         case "gameengine":
                             HasheousClient.Models.Metadata.IGDB.GameEngine gameEngineResult = new HasheousClient.Models.Metadata.IGDB.GameEngine();
-                            gameEngineResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.GameEngine>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            gameEngineResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.GameEngine>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(gameEngineResult) };
 
                         case "gameenginelogo":
                             HasheousClient.Models.Metadata.IGDB.GameEngineLogo gameEngineLogoResult = new HasheousClient.Models.Metadata.IGDB.GameEngineLogo();
-                            gameEngineLogoResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.GameEngineLogo>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            gameEngineLogoResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.GameEngineLogo>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(gameEngineLogoResult) };
 
                         case "gamelocalization":
                             HasheousClient.Models.Metadata.IGDB.GameLocalization gameLocalizationResult = new HasheousClient.Models.Metadata.IGDB.GameLocalization();
-                            gameLocalizationResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.GameLocalization>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            gameLocalizationResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.GameLocalization>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(gameLocalizationResult) };
 
                         case "gamemode":
                             HasheousClient.Models.Metadata.IGDB.GameMode gameModeResult = new HasheousClient.Models.Metadata.IGDB.GameMode();
-                            gameModeResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.GameMode>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            gameModeResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.GameMode>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(gameModeResult) };
 
                         case "gamevideo":
                             HasheousClient.Models.Metadata.IGDB.GameVideo gameVideoResult = new HasheousClient.Models.Metadata.IGDB.GameVideo();
-                            gameVideoResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.GameVideo>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            gameVideoResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.GameVideo>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(gameVideoResult) };
 
                         case "genre":
                             HasheousClient.Models.Metadata.IGDB.Genre genreResult = new HasheousClient.Models.Metadata.IGDB.Genre();
-                            genreResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Genre>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            genreResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.Genre>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(genreResult) };
 
                         case "involvedcompany":
                             HasheousClient.Models.Metadata.IGDB.InvolvedCompany involvedCompanyResult = new HasheousClient.Models.Metadata.IGDB.InvolvedCompany();
-                            involvedCompanyResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.InvolvedCompany>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            involvedCompanyResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.InvolvedCompany>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(involvedCompanyResult) };
 
                         case "multiplayermode":
                             HasheousClient.Models.Metadata.IGDB.MultiplayerMode multiplayerModeResult = new HasheousClient.Models.Metadata.IGDB.MultiplayerMode();
-                            multiplayerModeResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.MultiplayerMode>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            multiplayerModeResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.MultiplayerMode>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(multiplayerModeResult) };
 
                         case "platformlogo":
                             HasheousClient.Models.Metadata.IGDB.PlatformLogo platformLogoResult = new HasheousClient.Models.Metadata.IGDB.PlatformLogo();
-                            platformLogoResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.PlatformLogo>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            platformLogoResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.PlatformLogo>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(platformLogoResult) };
 
@@ -1139,48 +1141,48 @@ namespace gaseous_server.Classes.Metadata
                             HasheousClient.Models.Metadata.IGDB.Platform platformResult = new HasheousClient.Models.Metadata.IGDB.Platform();
                             if (Fields == "slug")
                             {
-                                platformResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Platform>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, Query.ToString());
+                                platformResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.Platform>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, Query.ToString());
                             }
                             else if (Fields == "id")
                             {
-                                platformResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Platform>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                                platformResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.Platform>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
                             }
 
                             return new T[] { ConvertToIGDBModel<T>(platformResult) };
 
                         case "platformversion":
                             HasheousClient.Models.Metadata.IGDB.PlatformVersion platformVersionResult = new HasheousClient.Models.Metadata.IGDB.PlatformVersion();
-                            platformVersionResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.PlatformVersion>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            platformVersionResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.PlatformVersion>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(platformVersionResult) };
 
                         case "playerperspective":
                             HasheousClient.Models.Metadata.IGDB.PlayerPerspective playerPerspectiveResult = new HasheousClient.Models.Metadata.IGDB.PlayerPerspective();
-                            playerPerspectiveResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.PlayerPerspective>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            playerPerspectiveResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.PlayerPerspective>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(playerPerspectiveResult) };
 
                         case "releasedate":
                             HasheousClient.Models.Metadata.IGDB.ReleaseDate releaseDateResult = new HasheousClient.Models.Metadata.IGDB.ReleaseDate();
-                            releaseDateResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.ReleaseDate>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            releaseDateResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.ReleaseDate>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(releaseDateResult) };
 
                         case "region":
                             HasheousClient.Models.Metadata.IGDB.Region regionResult = new HasheousClient.Models.Metadata.IGDB.Region();
-                            regionResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Region>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            regionResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.Region>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(regionResult) };
 
                         case "screenshot":
                             HasheousClient.Models.Metadata.IGDB.Screenshot screenshotResult = new HasheousClient.Models.Metadata.IGDB.Screenshot();
-                            screenshotResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Screenshot>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            screenshotResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.Screenshot>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(screenshotResult) };
 
                         case "theme":
                             HasheousClient.Models.Metadata.IGDB.Theme themeResult = new HasheousClient.Models.Metadata.IGDB.Theme();
-                            themeResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.IGDB.Theme>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
+                            themeResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.IGDB.Theme>(Endpoint, HasheousClient.Hasheous.MetadataProvider.IGDB, long.Parse(Query.ToString()));
 
                             return new T[] { ConvertToIGDBModel<T>(themeResult) };
 
@@ -1341,27 +1343,43 @@ namespace gaseous_server.Classes.Metadata
         /// </summary>
         /// <param name="uri">The uri to download from</param>
         /// <param name="DestinationFile">The file name and path the download should be stored as</param>
-        public Task<bool?> DownloadFile(Uri uri, string DestinationFile)
+        public async Task<bool?> DownloadFile(Uri uri, string DestinationFile)
         {
-            var result = _DownloadFile(uri, DestinationFile);
+            var result = await _DownloadFile(uri, DestinationFile);
 
             return result;
         }
 
+        #region Download File
         private async Task<bool?> _DownloadFile(Uri uri, string DestinationFile)
         {
+            Logging.Log(Logging.LogType.Debug, "Communications", "Download attempt " + RetryAttempts + " of " + RetryAttemptsMax + " from: " + uri.ToString());
+
             ConfigureHasheousClient(ref hasheous);
 
-            string DestinationDirectory = new FileInfo(DestinationFile).Directory.FullName;
-            if (!Directory.Exists(DestinationDirectory))
+            if (RateLimitResumeTime > DateTime.UtcNow)
             {
-                Directory.CreateDirectory(DestinationDirectory);
+                Logging.Log(Logging.LogType.Information, "Communications", "Hasheous rate limit hit. Pausing API communications until " + RateLimitResumeTime.ToString() + ". Attempt " + RetryAttempts + " of " + RetryAttemptsMax + " retries.");
+                Thread.Sleep(RateLimitRecoveryWaitTime);
             }
-
-            Logging.Log(Logging.LogType.Information, "Communications", "Downloading from " + uri.ToString() + " to " + DestinationFile);
 
             try
             {
+                if (InRateLimitAvoidanceMode == true)
+                {
+                    // sleep for a moment to help avoid hitting the rate limiter
+                    Logging.Log(Logging.LogType.Information, "Communications: Downloading from:" + uri.ToString(), "Hasheous rate limit hit. Pausing API communications for " + RateLimitAvoidanceWait + " milliseconds to avoid rate limiter.");
+                    Thread.Sleep(RateLimitAvoidanceWait);
+                }
+
+                string DestinationDirectory = new FileInfo(DestinationFile).Directory.FullName;
+                if (!Directory.Exists(DestinationDirectory))
+                {
+                    Directory.CreateDirectory(DestinationDirectory);
+                }
+
+                Logging.Log(Logging.LogType.Information, "Communications", "Downloading from " + uri.ToString() + " to " + DestinationFile);
+
                 using (HttpResponseMessage response = client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead).Result)
                 {
                     response.EnsureSuccessStatusCode();
@@ -1397,27 +1415,58 @@ namespace gaseous_server.Classes.Metadata
                     }
                 }
 
+                // increment rate limiter avoidance call count
+                RateLimitAvoidanceCallCount += 1;
+
                 return true;
             }
             catch (HttpRequestException ex)
             {
-                if (ex.StatusCode == HttpStatusCode.NotFound)
+                switch (ex.StatusCode)
                 {
-                    if (File.Exists(DestinationFile))
-                    {
-                        FileInfo fi = new FileInfo(DestinationFile);
-                        if (fi.Length == 0)
+                    case HttpStatusCode.TooManyRequests:
+                        if (RetryAttempts >= RetryAttemptsMax)
                         {
-                            File.Delete(DestinationFile);
+                            Logging.Log(Logging.LogType.Warning, "Communications", "Hasheous rate limiter attempts expired. Aborting.", ex);
+                            throw;
                         }
-                    }
-                }
+                        else
+                        {
+                            Logging.Log(Logging.LogType.Information, "Communications", "Hasheous API rate limit hit while downloading " + uri.ToString(), ex);
 
-                Logging.Log(Logging.LogType.Warning, "Download Images", "Error downloading file from Uri: " + uri.ToString(), ex);
+                            RetryAttempts += 1;
+
+                            // attempt to download again
+                            var results2 = await _DownloadFile(uri, DestinationFile);
+
+                            return results2;
+                        }
+
+                    case HttpStatusCode.NotFound:
+                        if (File.Exists(DestinationFile))
+                        {
+                            FileInfo fi = new FileInfo(DestinationFile);
+                            if (fi.Length == 0)
+                            {
+                                File.Delete(DestinationFile);
+                            }
+                        }
+                        break;
+
+                    default:
+                        Logging.Log(Logging.LogType.Warning, "Communications", "Error downloading file from Uri: " + uri.ToString(), ex);
+                        throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                Logging.Log(Logging.LogType.Warning, "Communications", "Error downloading file from Uri: " + uri.ToString(), ex);
+                throw;
             }
 
             return false;
         }
+        #endregion Download File
 
         public async Task<string> GetSpecificImageFromServer(HasheousClient.Models.MetadataSources SourceType, string ImagePath, string ImageId, IGDBAPI_ImageSize size, List<IGDBAPI_ImageSize>? FallbackSizes = null)
         {
