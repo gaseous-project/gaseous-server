@@ -35,19 +35,21 @@
                 <img src="/images/viewlist.svg" alt="List View" title="List View" class="games_library_button_icon" />
             </div> -->
 
-            <div class="games_library_controlblock">
+            <div class="games_library_controlblock block_mini_mode">
                 <span class="games_library_label">Page size: </span>
             </div>
-            <div id="games_library_pagesize" class="games_library_controlblock" style="text-align: left;">
+            <div id="games_library_pagesize block_mini_mode" class="games_library_controlblock"
+                style="text-align: left;">
                 <select id="games_library_pagesize_select" data-minimum-results-for-search="Infinity">
 
                 </select>
             </div>
 
-            <div class="games_library_controlblock">
+            <div class="games_library_controlblock block_mini_mode">
                 <span class="games_library_label">Order by: </span>
             </div>
-            <div id="games_library_orderby" class="games_library_controlblock" style="text-align: left;">
+            <div id="games_library_orderby" class="games_library_controlblock block_mini_mode"
+                style="text-align: left;">
                 <select id="games_library_orderby_select" data-minimum-results-for-search="Infinity">
                     <option selected="selected" value="NameThe">Name, The</option>
                     <option value="Name">Name</option>
@@ -58,7 +60,8 @@
                     <option value="LastPlayed">Last Played</option>
                     <option value="TimePlayed">Play Time</option>
                 </select>
-                <select id="games_library_orderby_direction_select" data-minimum-results-for-search="Infinity">
+                <select id="games_library_orderby_direction_select" data-minimum-results-for-search="Infinity"
+                    class="block_mini_mode">
                     <option selected="selected" value="Ascending">Ascending</option>
                     <option value="Descending">Descending</option>
                 </select>

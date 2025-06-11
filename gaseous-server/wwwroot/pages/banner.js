@@ -106,7 +106,11 @@ function setupBanner() {
                                 // show the notification
                                 let notificationMsg = new Notification(
                                     'Game Imported',
-                                    'New games have been imported. Reload the library to see them.'
+                                    'New games have been imported. Reload the library to see them.',
+                                    undefined,
+                                    undefined,
+                                    undefined,
+                                    'GameImported'
                                 );
                                 notificationMsg.Show();
                             }
@@ -193,12 +197,11 @@ function setupBanner() {
     }
     // event for preferences drop down item
     document.getElementById('dropdown-menu-preferences').addEventListener('click', function () {
-        const prefsDialog = new PreferencesWindow();
         prefsDialog.open();
     });
     // event for account drop down item
     document.getElementById('dropdown-menu-account').addEventListener('click', function () {
-        const accountDialog = new AccountWindow(); accountDialog.open();
+        accountDialog.open();
     });
 }
 
@@ -239,6 +242,8 @@ function setNotificationIconState(state) {
     }
 }
 
+const accountDialog = new AccountWindow();
+const prefsDialog = new PreferencesWindow();
 const uploadDialog = new UploadRom();
 
 setupBanner();

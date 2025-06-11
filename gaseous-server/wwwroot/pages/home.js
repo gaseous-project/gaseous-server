@@ -19,11 +19,10 @@ class HomePageGameRow {
 
     async populate() {
         // get preferences
+        let showTitle = GetPreference("Library.ShowGameTitle");
         let showRatings = GetPreference("Library.ShowGameRating");
         let showClassification = GetPreference("Library.ShowGameClassification");
         let classificationDisplayOrder = GetRatingsBoards();
-        if (showRatings == "true") { showRatings = true; } else { showRatings = false; }
-        if (showClassification == "true") { showClassification = true; } else { showClassification = false; }
 
         showRatings = false;
         showClassification = false;
@@ -56,7 +55,7 @@ class HomePageGameRow {
                     gameItem.classList.add("homegame-item");
 
                     let gameObj = new GameIcon(game);
-                    let gameTile = await gameObj.Render(true, showRatings, showClassification, classificationDisplayOrder, false, true);
+                    let gameTile = await gameObj.Render(showTitle, showRatings, showClassification, classificationDisplayOrder, false, true);
                     gameItem.appendChild(gameTile);
 
                     scroller.appendChild(gameItem);
@@ -146,9 +145,11 @@ gameRows.push(new HomePageGameRow("Top Rated Games",
 async function populateRows() {
     // start populating the rows
 
+    targetDiv.innerHTML = "";
+
     for (let row of gameRows) {
         targetDiv.appendChild(row.row);
-        row.populate();
+        await row.populate();
     }
 }
 
@@ -160,3 +161,8 @@ let profileDiv = document.getElementById("gameprofile");
 profileDiv.innerHTML = "";
 let profileCardContent = new ProfileCard(userProfile.profileId, false);
 profileDiv.appendChild(profileCardContent);
+
+// setup preferences callbacks
+prefsDialog.OkCallbacks.push(async () => {
+    await populateRows();
+});

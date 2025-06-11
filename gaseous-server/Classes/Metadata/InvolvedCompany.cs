@@ -6,8 +6,6 @@ namespace gaseous_server.Classes.Metadata
 {
     public class InvolvedCompanies
     {
-        public const string fieldList = "fields *;";
-
         public InvolvedCompanies()
         {
         }

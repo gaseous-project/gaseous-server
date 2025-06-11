@@ -8,8 +8,6 @@ namespace gaseous_server.Classes.Metadata
 {
     public class Games
     {
-        public const string fieldList = "fields age_ratings,aggregated_rating,aggregated_rating_count,alternative_names,artworks,bundles,category,checksum,collections,cover,created_at,dlcs,expanded_games,expansions,external_games,first_release_date,follows,forks,franchise,franchises,game_engines,game_localizations,game_modes,genres,hypes,involved_companies,keywords,language_supports,multiplayer_modes,name,parent_game,platforms,player_perspectives,ports,rating,rating_count,release_dates,remakes,remasters,screenshots,similar_games,slug,standalone_expansions,status,storyline,summary,tags,themes,total_rating,total_rating_count,updated_at,url,version_parent,version_title,videos,websites;";
-
         /// <summary>
         /// Sources are in order: ScreenScaper, TheGamesDB
         /// </summary>
@@ -28,7 +26,7 @@ namespace gaseous_server.Classes.Metadata
             { }
         }
 
-        public static async Task<Game?> GetGame(HasheousClient.Models.MetadataSources SourceType, long? Id, bool Massage = true)
+        public static async Task<Game?> GetGame(HasheousClient.Models.MetadataSources SourceType, long? Id, bool Massage = true, bool ForceRefresh = false)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -36,7 +34,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Game? RetVal = await Metadata.GetMetadataAsync<Game>(SourceType, (long)Id, false);
+                Game? RetVal = await Metadata.GetMetadataAsync<Game>(SourceType, (long)Id, ForceRefresh);
                 RetVal.MetadataSource = SourceType;
                 long? metadataMap = MetadataManagement.GetMetadataMapIdFromSourceId(SourceType, (long)Id);
                 if (metadataMap == null)
@@ -88,7 +86,7 @@ namespace gaseous_server.Classes.Metadata
             }
 
             // get missing metadata from parent if this is a port
-            if (result.Category == HasheousClient.Models.Metadata.IGDB.Category.Port)
+            if (result.GameType == 11) // 11 = Port
             {
                 if (result.Summary == null)
                 {
@@ -463,7 +461,6 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                     Name = platform.Name,
                     MetadataMapId = (long)row["MetadataMapId"],
                     MetadataGameName = (string)row["MetadataGameName"],
-                    Category = platform.Category,
                     emulatorConfiguration = emulatorConfiguration,
                     LastPlayedRomId = LastPlayedRomId,
                     LastPlayedRomIsMediagroup = LastPlayedIsMediagroup,

@@ -678,7 +678,7 @@ namespace gaseous_server
 
                                 case QueueItemType.BackgroundDatabaseUpgrade:
                                     Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Background Upgrade");
-                                    DatabaseMigration.UpgradeScriptBackgroundTasks();
+                                    await DatabaseMigration.UpgradeScriptBackgroundTasks();
                                     break;
 
                                 case QueueItemType.DailyMaintainer:

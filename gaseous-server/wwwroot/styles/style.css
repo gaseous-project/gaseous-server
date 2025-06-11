@@ -1137,6 +1137,8 @@ input[name='filter_panel_range_max'] {
     position: absolute;
     left: 0px;
     right: 0px;
+    /* width: 150px; */
+    height: 63px;
 }
 
 .game_tile_label_box_small {

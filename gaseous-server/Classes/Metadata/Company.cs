@@ -6,8 +6,6 @@ namespace gaseous_server.Classes.Metadata
 {
     public class Companies
     {
-        public const string fieldList = "fields change_date,change_date_category,changed_company_id,checksum,country,created_at,description,developed,logo,name,parent,published,slug,start_date,start_date_category,updated_at,url,websites;";
-
         public Companies()
         {
         }

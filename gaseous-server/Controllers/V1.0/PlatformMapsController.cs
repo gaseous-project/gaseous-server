@@ -164,8 +164,8 @@ namespace gaseous_server.Controllers
 
                 if (platformMapItem != null)
                 {
-                    PlatformMapping.WritePlatformMap(Map, true, false);
-                    return Ok(PlatformMapping.GetPlatformMap(PlatformId));
+                    await PlatformMapping.WritePlatformMap(Map, true, false);
+                    return Ok(await PlatformMapping.GetPlatformMap(PlatformId));
                 }
                 else
                 {

@@ -93,11 +93,11 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult ScanLibrary(int LibraryId)
+        public async Task<ActionResult> ScanLibrary(int LibraryId)
         {
             try
             {
-                GameLibrary.ScanLibrary(LibraryId);
+                await GameLibrary.ScanLibrary(LibraryId);
                 return Ok();
             }
             catch (GameLibrary.LibraryNotFound exLNF)

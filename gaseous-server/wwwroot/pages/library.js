@@ -1,7 +1,3 @@
-let gameTileWidth = 232;
-let gameTileHeight = 283;
-let gameTileMargin = 0;
-
 let loadedPages = [];
 
 async function SetupPage() {
@@ -12,11 +8,6 @@ async function SetupPage() {
 
     let displayFilter = GetPreference("Library.ShowFilter");
     FilterDisplayToggle(displayFilter, true);
-
-    let showTitle = GetPreference("Library.ShowGameTitle");
-    let showRatings = GetPreference("Library.ShowGameRating");
-    let showClassification = GetPreference("Library.ShowGameClassification");
-    let classificationDisplayOrder = GetRatingsBoards();
 
     // setup filter panel
     let scrollerElement = document.getElementById('games_filter_scroller');
@@ -44,6 +35,11 @@ async function SetupPage() {
             }
 
             filter.executeCallback = async (games) => {
+                let showTitle = GetPreference("Library.ShowGameTitle");
+                let showRatings = GetPreference("Library.ShowGameRating");
+                let showClassification = GetPreference("Library.ShowGameClassification");
+                let classificationDisplayOrder = GetRatingsBoards();
+
                 if (freshLoad === true) {
                     // render game chrome objects
                     let gameCountElement = document.getElementById('games_library_recordcount');
@@ -64,12 +60,19 @@ async function SetupPage() {
                         alphaPager.appendChild(alphaSpan);
 
                         alphaSpan.addEventListener('click', () => {
+                            // get the tile width from the class game_tile
+                            let tileSize = CalculateTileSize();
+                            // get the width of the game tile
+                            let gameTileWidth = tileSize.width;
+                            // get the height of the game tile
+                            let gameTileHeight = tileSize.height;
+
                             // calculate the vertical position of the game tile with the index defined in value.index
                             let tilesPerRow = Math.floor(gamesElement.clientWidth / gameTileWidth);
                             // which row is the game tile in
                             let gameTileRow = Math.floor(value.index / tilesPerRow);
                             // scroll to the game tile
-                            let gameTileY = gameTileRow * (gameTileHeight + gameTileMargin);
+                            let gameTileY = gameTileRow * gameTileHeight;
                             // scroll to the game tile
                             let gameTileTop = gameTileY - (window.innerHeight / 2) + (gameTileHeight / 2);
                             // scroll to the game tile
@@ -121,7 +124,7 @@ async function SetupPage() {
                 }
 
                 // resize the game library element
-                ResizeLibraryPanel();
+                await ResizeLibraryPanel();
 
                 if (freshLoad === true) {
                     backgroundImageHandler = new BackgroundImageRotator(coverURLList, null, true, false);
@@ -221,6 +224,13 @@ async function SetupPage() {
             let pageSize = parseInt(filter.filterSelections['pageSize']);
             let pageCount = Math.ceil(filter.GameCount / pageSize);
 
+            // get the game_tile class
+            let tileSize = CalculateTileSize();
+            // get the width of the game tile
+            let gameTileWidth = tileSize.width;
+            // get the height of the game tile
+            let gameTileHeight = tileSize.height;
+
             // each element is 232px wide and 283px high, and there are pageSize elements per page - get the height of the page based on the width of gameLibraryElement
             let tilesPerRow = Math.floor(gameLibraryElement.clientWidth / gameTileWidth);
             // how many rows per page - incomplete rows are not counted
@@ -230,7 +240,7 @@ async function SetupPage() {
             // the height of the game tile is 283px, and there is a margin of 0px between tiles
             // the height of the game library element is the number of rows per page * the height of the game tile
             // plus the margin between tiles
-            let pageHeight = Math.floor(rowsPerPage * gameTileHeight) + (rowsPerPage - 1) * gameTileMargin;
+            let pageHeight = Math.floor(rowsPerPage * gameTileHeight) + (rowsPerPage - 1);
 
             // make a list of all the pages and top and bottom coordinates of each page
             let pages = [];
@@ -269,7 +279,7 @@ async function SetupPage() {
     });
 }
 
-function ResizeLibraryPanel() {
+async function ResizeLibraryPanel() {
     // resize the game library element to contain the number of tiles in filter.GameCount - tiles are 232px wide and 283px high
     // the game library element should not be wider than the window width minus the alphabet pager width
     let gameLibraryElement = document.getElementById('games_library');
@@ -283,46 +293,55 @@ function ResizeLibraryPanel() {
     let pageSize = parseInt(filter.filterSelections['pageSize']);
     let pageCount = Math.ceil(filter.GameCount / pageSize);
 
-    // each element is 232px wide and 283px high, and there are pageSize elements per page - get the height of the page based on the width of gameLibraryElement
-    let tilesPerRow = Math.floor(gameLibraryElement.clientWidth / gameTileWidth);
-    // how many rows per page - incomplete rows are not counted
-    let rowsPerPage = Math.floor(pageSize / tilesPerRow);
-    // calculate the height of the page based on the number of rows per page
-    // and the height of the game tile
-    // the height of the game tile is 283px, and there is a margin of 0px between tiles
-    // the height of the game library element is the number of rows per page * the height of the game tile
-    // plus the margin between tiles
-    let gameLibraryHeight = Math.floor((rowsPerPage * pageCount) * gameTileHeight);
-    gameLibraryElement.setAttribute('style', 'width: ' + gameLibraryWidth + 'px; height: ' + gameLibraryHeight + 'px; position: relative;');
+    // get the game_tile class
+    let tileSize = CalculateTileSize();
+    if (tileSize !== null) {
+        // get the width of the game tile
+        let gameTileWidth = tileSize.width;
+        // get the height of the game tile
+        let gameTileHeight = tileSize.height;
 
-    // rearrange the game tiles to fit the new width
-    let gameTiles = document.querySelectorAll('.game_tile_wrapper_icon');
-    let gameTileCount = Math.floor(gameLibraryWidth / (gameTileWidth + gameTileMargin));
-    for (const gameTile of gameTiles) {
-        // get the game tile index
-        // get the game tile index based on the number of tiles per row
-        // the game tile index is the index of the tile in the list of tiles
-        let gameTileIndex = gameTile.getAttribute('data-index');
-        // determine the row and column of the game tile based on the index
-        let gameTileRow = Math.floor(gameTileIndex / gameTileCount);
-        let gameTileColumn = gameTileIndex % gameTileCount;
-        // calculate the x and y position of the game tile based on the row and column
-        // the x position is the column * the width of the game tile + the margin between tiles
-        let gameTileX = gameTileColumn * (gameTileWidth + gameTileMargin);
-        // the y position is the row * the height of the game tile + the margin between tiles
-        let gameTileY = gameTileRow * (gameTileHeight + gameTileMargin);
-        // set the position of the game tile
-        gameTile.setAttribute('style', 'left: ' + gameTileX + 'px; top: ' + gameTileY + 'px; position: absolute;');
-        gameTileIndex++;
+        // each element is 232px wide and 283px high, and there are pageSize elements per page - get the height of the page based on the width of gameLibraryElement
+        let tilesPerRow = Math.floor(gameLibraryElement.clientWidth / gameTileWidth);
+        // how many rows per page - incomplete rows are not counted
+        let rowsPerPage = Math.floor(pageSize / tilesPerRow);
+        // calculate the height of the page based on the number of rows per page
+        // and the height of the game tile
+        // the height of the game tile is 283px, and there is a margin of 0px between tiles
+        // the height of the game library element is the number of rows per page * the height of the game tile
+        // plus the margin between tiles
+        let gameLibraryHeight = Math.floor((rowsPerPage * pageCount) * gameTileHeight);
+        gameLibraryElement.setAttribute('style', 'width: ' + gameLibraryWidth + 'px; height: ' + gameLibraryHeight + 'px; position: relative;');
+
+        // rearrange the game tiles to fit the new width
+        let gameTiles = document.querySelectorAll('.game_tile_wrapper_icon');
+        let gameTileCount = Math.floor(gameLibraryWidth / gameTileWidth);
+        for (const gameTile of gameTiles) {
+            // get the game tile index
+            // get the game tile index based on the number of tiles per row
+            // the game tile index is the index of the tile in the list of tiles
+            let gameTileIndex = gameTile.getAttribute('data-index');
+            // determine the row and column of the game tile based on the index
+            let gameTileRow = Math.floor(gameTileIndex / gameTileCount);
+            let gameTileColumn = gameTileIndex % gameTileCount;
+            // calculate the x and y position of the game tile based on the row and column
+            // the x position is the column * the width of the game tile + the margin between tiles
+            let gameTileX = gameTileColumn * gameTileWidth;
+            // the y position is the row * the height of the game tile + the margin between tiles
+            let gameTileY = gameTileRow * gameTileHeight;
+            // set the position of the game tile
+            gameTile.setAttribute('style', 'left: ' + gameTileX + 'px; top: ' + gameTileY + 'px; position: absolute;');
+            gameTileIndex++;
+        }
     }
 }
 
 // execute ResizeLibraryPanel() on window resize
-window.addEventListener('resize', () => {
-    ResizeLibraryPanel();
+window.addEventListener('resize', async () => {
+    await ResizeLibraryPanel();
 });
 
-function FilterDisplayToggle(display, storePreference = true) {
+async function FilterDisplayToggle(display, storePreference = true) {
     let filterPanel = document.getElementById('games_filter_panel');
     let libraryControls = document.getElementById('games_library_controls');
     let gamesHome = document.getElementById('games_home');
@@ -339,7 +358,31 @@ function FilterDisplayToggle(display, storePreference = true) {
         if (storePreference === true) { SetPreference("Library.ShowFilter", false); }
     }
 
-    ResizeLibraryPanel();
+    await ResizeLibraryPanel();
+}
+
+function CalculateTileSize() {
+    // get the game_tile class
+    let cssClass = document.querySelector('.game_tile');
+    if (cssClass !== null) {
+        let cssClassStyle = getComputedStyle(cssClass);
+        if (cssClassStyle !== null) {
+            // get the width of the game tile
+            let gameTileWidth = Number(cssClassStyle.marginLeft.replace('px', '')) + Number(cssClassStyle.width.replace('px', '')) + Number(cssClassStyle.marginRight.replace('px', ''));
+            // get the height of the game tile
+            let gameTileHeight = Number(cssClassStyle.marginTop.replace('px', '')) + Number(cssClassStyle.height.replace('px', '')) + Number(cssClassStyle.marginBottom.replace('px', ''));
+            // add the height of game_tile_label_box to the height of the game tile
+            let gameTileLabelBox = document.querySelector('.game_tile_label_box');
+            if (gameTileLabelBox !== null) {
+                let gameTileLabelBoxStyle = getComputedStyle(gameTileLabelBox);
+                if (gameTileLabelBoxStyle !== null) {
+                    gameTileHeight += Number(gameTileLabelBoxStyle.height.replace('px', ''));
+                }
+            }
+            return { width: gameTileWidth, height: gameTileHeight };
+        }
+    }
+    return null;
 }
 
 let filter = new Filtering();
@@ -349,5 +392,10 @@ let coverURLList = [];
 
 let lastScrollTop = localStorage.getItem('Library.ScrollPosition') || 0;
 let scrollTimer = null;
+
+// setup preferences callbacks
+prefsDialog.OkCallbacks.push(async () => {
+    await filter.ApplyFilter();
+});
 
 SetupPage();

@@ -79,12 +79,24 @@ class GameIcon {
         let shownClassificationBoard = '';
         if (showClassification === true) {
             for (const board of classificationDisplayOrder) {
-                if (shownClassificationBoard == '') {
+                if (shownClassificationBoard === '') {
                     for (const rating of data.ageRatings) {
-                        if (rating.category == board) {
-                            shownClassificationBoard = board;
-                            displayClassification = true;
-                            classificationPath = '/images/Ratings/' + board + '/' + rating.rating + '.svg';
+                        let organization = null;
+                        for (const key of Object.keys(AgeRatingMappings.RatingBoards)) {
+                            if (AgeRatingMappings.RatingBoards[key].IGDBId === rating.organization) {
+                                organization = AgeRatingMappings.RatingBoards[key];
+                                break;
+                            }
+                        }
+
+                        if (organization !== null) {
+                            if (organization.ShortName === board) {
+                                shownClassificationBoard = board;
+                                displayClassification = true;
+                                let ratingItem = Object.keys(organization.Ratings).find(key => organization.Ratings[key].IGDBId === rating.rating_category);
+                                let ratingIcon = organization.Ratings[ratingItem].IconName;
+                                classificationPath = '/images/Ratings/' + board + '/' + ratingIcon + '.svg';
+                            }
                         }
                     }
                 } else {

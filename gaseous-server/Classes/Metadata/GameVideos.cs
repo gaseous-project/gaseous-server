@@ -7,8 +7,6 @@ namespace gaseous_server.Classes.Metadata
 {
     public class GamesVideos
     {
-        public const string fieldList = "fields checksum,game,name,video_id;";
-
         public GamesVideos()
         {
         }

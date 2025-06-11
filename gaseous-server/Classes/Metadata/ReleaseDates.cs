@@ -7,8 +7,6 @@ namespace gaseous_server.Classes.Metadata
 {
     public class ReleaseDates
     {
-        public const string fieldList = "fields category,checksum,created_at,date,game,human,m,platform,region,status,updated_at,y;";
-
         public ReleaseDates()
         {
         }

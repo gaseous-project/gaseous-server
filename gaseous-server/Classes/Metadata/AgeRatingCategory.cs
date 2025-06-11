@@ -1,17 +1,17 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using HasheousClient.Models.Metadata.IGDB;
 
 
 namespace gaseous_server.Classes.Metadata
 {
-    public class AlternativeNames
+    public class AgeRatingCategorys
     {
-        public AlternativeNames()
+        public AgeRatingCategorys()
         {
         }
 
-        public static async Task<AlternativeName?> GetAlternativeNames(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<AgeRatingCategory?> GetAgeRatingCategory(HasheousClient.Models.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -19,10 +19,9 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                AlternativeName? RetVal = await Metadata.GetMetadataAsync<AlternativeName>(SourceType, (long)Id, false);
+                AgeRatingCategory? RetVal = await Metadata.GetMetadataAsync<AgeRatingCategory>(SourceType, (long)Id, false);
                 return RetVal;
             }
         }
     }
 }
-

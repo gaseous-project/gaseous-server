@@ -747,7 +747,7 @@ namespace gaseous_server.Classes
                     SetStatus(i, romDT.Rows.Count, "Processing file " + romDT.Rows[i]["name"]);
                     Logging.Log(Logging.LogType.Information, "Organise Library", "(" + i + "/" + romDT.Rows.Count + ") Processing ROM " + romDT.Rows[i]["name"]);
                     long RomId = (long)romDT.Rows[i]["id"];
-                    MoveGameFile(RomId, false);
+                    await MoveGameFile(RomId, false);
                 }
             }
             ClearStatus();
@@ -867,7 +867,7 @@ namespace gaseous_server.Classes
 
                             gaseous_server.Models.Game determinedGame = await SearchForGame(sig, PlatformId, true);
 
-                            StoreGame(library, hash, sig, determinedPlatform, LibraryFile, 0, false);
+                            await StoreGame(library, hash, sig, determinedPlatform, LibraryFile, 0, false);
                         }
                         catch (Exception ex)
                         {
@@ -911,7 +911,7 @@ namespace gaseous_server.Classes
                         if (library.IsDefaultLibrary && romPath != await ComputeROMPath(romId))
                         {
                             Logging.Log(Logging.LogType.Information, "Library Scan", $"ROM at path {romPath} found, but needs to be moved");
-                            MoveGameFile(romId, false);
+                            await MoveGameFile(romId, false);
                         }
                         else
                         {

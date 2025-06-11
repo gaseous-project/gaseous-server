@@ -6,8 +6,6 @@ namespace gaseous_server.Classes.Metadata
 {
     public class Themes
     {
-        public const string fieldList = "fields checksum,created_at,name,slug,updated_at,url;";
-
         static List<ThemeItem> themeItemCache = new List<ThemeItem>();
 
         public Themes()

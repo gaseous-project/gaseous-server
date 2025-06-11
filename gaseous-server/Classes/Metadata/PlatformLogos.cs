@@ -8,8 +8,6 @@ namespace gaseous_server.Classes.Metadata
 {
     public class PlatformLogos
     {
-        public const string fieldList = "fields alpha_channel,animated,checksum,height,image_id,url,width;";
-
         public PlatformLogos()
         {
         }

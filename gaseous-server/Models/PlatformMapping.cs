@@ -24,7 +24,7 @@ namespace gaseous_server.Models
             using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("gaseous_server.Support.PlatformMap.json"))
             using (StreamReader reader = new StreamReader(stream))
             {
-                string rawJson = reader.ReadToEnd();
+                string rawJson = await reader.ReadToEndAsync();
                 List<PlatformMapItem> platforms = new List<PlatformMapItem>();
                 Newtonsoft.Json.JsonSerializerSettings jsonSerializerSettings = new JsonSerializerSettings
                 {
@@ -42,12 +42,12 @@ namespace gaseous_server.Models
                         // exists
                         if (ResetToDefault == false)
                         {
-                            WriteAvailableEmulators(mapItem);
+                            await WriteAvailableEmulators(mapItem);
                             Logging.Log(Logging.LogType.Information, "Platform Map", "Skipping import of " + mapItem.IGDBName + " - already in database.");
                         }
                         else
                         {
-                            WritePlatformMap(mapItem, true, true, true);
+                            await WritePlatformMap(mapItem, true, true, true);
                             Logging.Log(Logging.LogType.Information, "Platform Map", "Overwriting " + mapItem.IGDBName + " with default values.");
                         }
                     }
@@ -55,7 +55,7 @@ namespace gaseous_server.Models
                     {
                         Logging.Log(Logging.LogType.Information, "Platform Map", "Importing " + mapItem.IGDBName + " from predefined data.");
                         // doesn't exist - add it
-                        WritePlatformMap(mapItem, false, true, true);
+                        await WritePlatformMap(mapItem, false, true, true);
                     }
                 }
             }
@@ -67,7 +67,7 @@ namespace gaseous_server.Models
         /// <param name="ImportFile"></param>
         public static async Task ExtractPlatformMap(string ImportFile)
         {
-            string rawJson = File.ReadAllText(ImportFile);
+            string rawJson = await File.ReadAllTextAsync(ImportFile);
             List<PlatformMapItem> platforms = new List<PlatformMapItem>();
             platforms = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PlatformMapItem>>(rawJson);
 
@@ -82,13 +82,13 @@ namespace gaseous_server.Models
 
                     // still here? we must have found the item we're looking for! overwrite it
                     Logging.Log(Logging.LogType.Information, "Platform Map", "Replacing " + mapItem.IGDBName + " from external JSON file.");
-                    WritePlatformMap(mapItem, true, true);
+                    await WritePlatformMap(mapItem, true, true);
                 }
                 catch
                 {
                     // we caught a not found error, insert a new record
                     Logging.Log(Logging.LogType.Information, "Platform Map", "Importing " + mapItem.IGDBName + " from external JSON file.");
-                    WritePlatformMap(mapItem, false, true);
+                    await WritePlatformMap(mapItem, false, true);
                 }
             }
         }
@@ -105,12 +105,12 @@ namespace gaseous_server.Models
 
             if (Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.None, "Platform", mapItem.IGDBId) == Storage.CacheStatus.NotPresent)
             {
-                Storage.NewCacheValue(HasheousClient.Models.MetadataSources.None, platform);
+                _ = Task.Run(() => Storage.NewCacheValue(HasheousClient.Models.MetadataSources.None, platform));
             }
 
             if (Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.IGDB, "Platform", mapItem.IGDBId) == Storage.CacheStatus.NotPresent)
             {
-                Storage.NewCacheValue(HasheousClient.Models.MetadataSources.IGDB, platform);
+                _ = Task.Run(() => Storage.NewCacheValue(HasheousClient.Models.MetadataSources.IGDB, platform));
             }
 
             return platform;
@@ -349,7 +349,7 @@ namespace gaseous_server.Models
 
             // get platform data
             Platform? platform = null;
-            if (Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.None, "Platform", IGDBId) == Storage.CacheStatus.NotPresent)
+            if (await Storage.GetCacheStatusAsync(HasheousClient.Models.MetadataSources.None, "Platform", IGDBId) == Storage.CacheStatus.NotPresent)
             {
                 //platform = Platforms.GetPlatform(IGDBId, false);
             }

@@ -3,10 +3,28 @@ class PreferencesWindow {
 
     }
 
+    OkCallbacks = [];
+    CancelCallbacks = [];
+    ErrorCallbacks = [];
+
     async open() {
         // Create the modal
         this.dialog = await new Modal("preferences");
         await this.dialog.BuildModal();
+
+        // load age rating mappings
+        this.AgeRatingMappings = await fetch('/images/Ratings/AgeGroupMap.json')
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                } else {
+                    throw new Error('Failed to load age rating mappings');
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                return {};
+            });
 
         // setup the dialog
         this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Preferences";
@@ -109,17 +127,40 @@ class PreferencesWindow {
 
             // get the classification order
             let classificationOrder = [];
-            for (let i = 0; i < callingObject.classificationSelector.children.length; i++) {
-                classificationOrder.push(callingObject.classificationSelector.children[i].getAttribute("data-classification"));
+            for (const child of callingObject.classificationSelector.children) {
+                classificationOrder.push(child.getAttribute("data-classification"));
             }
             preferences.push({ setting: "Library.GameClassificationDisplayOrder", value: JSON.stringify(classificationOrder) });
 
-            SetPreference_Batch(preferences, function () { window.location.reload(); }, function () { window.location.reload(); });
+            SetPreference_Batch(preferences, callingObject, function (callingObject) {
+                console.log(callingObject);
+                if (callingObject.OkCallbacks) {
+                    for (const callback of callingObject.OkCallbacks) {
+                        callback();
+                    }
+                }
+
+                callingObject.dialog.close();
+            }, () => {
+                if (callingObject.ErrorCallbacks) {
+                    for (const callback of callingObject.ErrorCallbacks) {
+                        callback();
+                    }
+                }
+
+                callingObject.dialog.close();
+            });
         });
         this.dialog.addButton(okButton);
 
         // create the cancel button
         let cancelButton = new ModalButton("Cancel", 0, this, function (callingObject) {
+            if (callingObject.CancelCallbacks) {
+                for (const callback of callingObject.CancelCallbacks) {
+                    callback();
+                }
+            }
+
             callingObject.dialog.close();
         });
         this.dialog.addButton(cancelButton);
@@ -133,8 +174,9 @@ class PreferencesWindow {
         if (!this.userClassifications) {
             this.userClassifications = GetRatingsBoards();
         }
-        for (let i = 0; i < this.userClassifications.length; i++) {
-            classifications[this.userClassifications[i]] = ClassificationBoards[this.userClassifications[i]];
+
+        for (const classification of this.userClassifications) {
+            classifications[classification] = this.AgeRatingMappings.RatingBoards[classification];
         }
         this.classificationSelector = this.dialog.modalElement.querySelector('#classificationBoardSelector');
         this.classificationSelector.innerHTML = "";
@@ -155,9 +197,9 @@ class PreferencesWindow {
             classificationItemBox.setAttribute("name", "classificationBoardSelectorItem");
             classificationItemBox.addEventListener('click', (e) => {
                 let rows = this.classificationSelector.querySelectorAll('[name="classificationBoardSelectorItem"]');
-                for (let i = 0; i < rows.length; i++) {
-                    rows[i].setAttribute("data-selected", "false");
-                    rows[i].classList.remove("listboxselector-item-selected");
+                for (const row of rows) {
+                    row.setAttribute("data-selected", "false");
+                    row.classList.remove("listboxselector-item-selected");
                 }
 
                 if (e.target.getAttribute("name") == "classificationBoardSelectorItem") {
@@ -168,45 +210,30 @@ class PreferencesWindow {
 
             let classificationName = document.createElement('div');
             classificationName.classList.add("listboxselector-item-name");
-            classificationName.innerHTML = value;
+            classificationName.innerHTML = value.Name;
             classificationItemBox.appendChild(classificationName);
 
             let classificationIcons = document.createElement('div');
             classificationIcons.classList.add("listboxselector-item-icons");
             // loop the age rating groups
-            let ratingGroupsOrder = [
+            for (const ratingGroup of [
                 "Child",
                 "Teen",
                 "Mature",
                 "Adult"
-            ];
-            for (let j = 0; j < ratingGroupsOrder.length; j++) {
-                let ratingGroup = ratingGroupsOrder[j];
-                let ageGroupValue = AgeRatingGroups[ratingGroup];
-                let ageGroupValueLower = {};
-                for (const [key, value] of Object.entries(ageGroupValue)) {
-                    ageGroupValueLower[key.toLowerCase()] = value;
-                }
+            ]) {
+                let ageGroupValue = this.AgeRatingMappings.AgeGroups[ratingGroup];
+                let ageGroupRatingGroup = ageGroupValue.Ratings[key];
 
-                let iconIdList = ageGroupValueLower[key.toLowerCase()];
-                // loop the age rating icons
-                if (iconIdList) {
-                    for (const [i, value] of Object.entries(iconIdList)) {
+                let ratingBoard = this.AgeRatingMappings.RatingBoards[key];
+
+                for (const groupRating of ageGroupRatingGroup) {
+                    if (ratingBoard.Ratings[groupRating]) {
+                        // generate icon
                         let icon = document.createElement('img');
-
-                        // get age rating strings
-                        let iconId = iconIdList[i];
-                        let ageRatingString;
-                        for (const [x, y] of Object.entries(AgeRatingStrings)) {
-                            if (AgeRatingStrings[x] == iconId) {
-                                ageRatingString = AgeRatingStrings[x];
-                                break;
-                            }
-                        }
-
-                        icon.src = "/images/Ratings/" + key + "/" + ageRatingString + ".svg";
-                        icon.title = ageRatingString;
-                        icon.alt = ageRatingString;
+                        icon.src = "/images/Ratings/" + key + "/" + ratingBoard.Ratings[groupRating].IconName + ".svg";
+                        icon.title = ratingBoard.Ratings[groupRating].Name;
+                        icon.alt = ratingBoard.Ratings[groupRating].Name;
                         icon.classList.add("rating_image_mini");
                         classificationIcons.appendChild(icon);
                     }

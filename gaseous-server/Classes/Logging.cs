@@ -152,7 +152,7 @@ namespace gaseous_server.Classes
 
                     try
                     {
-                        db.ExecuteCMD(sql, dbDict);
+                        await db.ExecuteCMDAsync(sql, dbDict);
                     }
                     catch (Exception ex)
                     {

@@ -7,8 +7,6 @@ namespace gaseous_server.Classes.Metadata
 {
     public class GameModes
     {
-        public const string fieldList = "fields checksum,created_at,name,slug,updated_at,url;";
-
         static List<GameModeItem> gameModeItemCache = new List<GameModeItem>();
 
         public GameModes()

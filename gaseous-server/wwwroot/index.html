@@ -27,7 +27,6 @@
         ];
 
         let scriptLinks = [
-            "/scripts/classifications.js",
             "/scripts/filtering.js",
             "/scripts/rendergames.js",
             "/pages/settings/mapping.js",
@@ -70,9 +69,7 @@
         let AppVersion = "0.0.0";
         let DBSchemaVersion = "1000";
         let FirstRunStatus = "0";
-        let AgeRatingBoardStrings = {};
-        let AgeRatingStrings = {};
-        let AgeRatingGroups = {};
+        var AgeRatingMappings = {};
         let emulatorDebugMode = "false";
 
         let backgroundImageHandler = undefined;
@@ -108,16 +105,27 @@
                         AppVersion = versionFile.AppVersion;
                         DBSchemaVersion = versionFile.DBSchemaVersion;
                         FirstRunStatus = versionFile.FirstRunStatus;
-                        AgeRatingBoardStrings = versionFile.AgeRatingBoardStrings;
-                        AgeRatingStrings = versionFile.AgeRatingStrings;
-                        AgeRatingGroups = versionFile.AgeRatingGroups;
                         emulatorDebugMode = versionFile.emulatorDebugMode;
+
+                        // load age rating mappings
+                        AgeRatingMappings = await fetch('/images/Ratings/AgeGroupMap.json')
+                            .then(response => {
+                                if (response.ok) {
+                                    return response.json();
+                                } else {
+                                    throw new Error('Failed to load age rating mappings');
+                                }
+                            })
+                            .catch(error => {
+                                console.error(error);
+                                return {};
+                            });
 
                         // load scripts and style files
                         // update script links
-                        for (let i = 0; i < scriptLinks.length; i++) {
+                        for (const scriptLink of scriptLinks) {
                             let newScript = document.createElement('script');
-                            newScript.src = scriptLinks[i] + '?v=' + AppVersion;
+                            newScript.src = scriptLink + '?v=' + AppVersion;
                             newScript.type = "text/javascript";
                             newScript.async = false;
 
@@ -125,10 +133,10 @@
                         }
 
                         // update stylesheet links
-                        for (let i = 0; i < styleSheets.length; i++) {
+                        for (const styleSheet of styleSheets) {
                             let newLink = document.createElement('link');
                             newLink.rel = "stylesheet";
-                            newLink.href = styleSheets[i] + '?v=' + AppVersion;
+                            newLink.href = styleSheet + '?v=' + AppVersion;
                             newLink.type = "text/css";
 
                             head.appendChild(newLink);
@@ -253,6 +261,8 @@
                 .catch(async (error) => {
                     console.log(error);
                 });
+
+            console.log("Gaseous Games started successfully");
         }
 
         function DeleteAllDatabases() {

@@ -36,6 +36,19 @@
         display: none;
     }
 
+    .banner_header {
+        height: 40px;
+    }
+
+    .banner_button {
+        width: 40px;
+        height: 40px;
+    }
+
+    #banner_home {
+        display: none;
+    }
+
     #modal-header-text:after {
         content: "";
         /* Needed to render the pseudo */
@@ -52,8 +65,7 @@
     }
 
     .game_tile {
-        min-height: 50px;
-        /* min-width: 50px; */
+        min-height: 100px;
         width: 80px;
         margin-left: 10px;
         margin-right: 10px;
@@ -74,6 +86,11 @@
         max-height: 100px;
         padding: 0px;
         margin: 0px;
+    }
+
+    .game_tile_label_box {
+        /* width: 75px; */
+        height: 63px;
     }
 
     .game_tile_label {
@@ -294,5 +311,9 @@
 
     .card-romlist-labels {
         flex: 2;
+    }
+
+    .block_mini_mode {
+        display: none;
     }
 }

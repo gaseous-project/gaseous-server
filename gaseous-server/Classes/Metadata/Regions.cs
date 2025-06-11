@@ -6,8 +6,6 @@ namespace gaseous_server.Classes.Metadata
 {
     public class Regions
     {
-        public const string fieldList = "fields category,checksum,created_at,identifier,name,updated_at;";
-
         public Regions()
         {
         }

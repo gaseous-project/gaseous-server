@@ -40,7 +40,7 @@ namespace gaseous_server.Controllers
             string query = "SELECT `Id` FROM Platform WHERE `Name` LIKE @SearchString;";
             Dictionary<string, object> parameters = new Dictionary<string, object>();
             parameters.Add("SearchString", "%" + SearchString + "%");
-            DataTable data = db.ExecuteCMD(query, parameters);
+            DataTable data = await db.ExecuteCMDAsync(query, parameters);
 
             List<Platform> platforms = new List<Platform>();
             foreach (DataRow row in data.Rows)
@@ -89,15 +89,15 @@ namespace gaseous_server.Controllers
                             List<gaseous_server.Models.Game> games = new List<gaseous_server.Models.Game>();
                             foreach (gaseous_server.Models.Game game in results.ToList())
                             {
-                                Storage.CacheStatus cacheStatus = Storage.GetCacheStatus(HasheousClient.Models.MetadataSources.IGDB, "Game", (long)game.Id);
+                                Storage.CacheStatus cacheStatus = await Storage.GetCacheStatusAsync(HasheousClient.Models.MetadataSources.IGDB, "Game", (long)game.Id);
                                 switch (cacheStatus)
                                 {
                                     case Storage.CacheStatus.NotPresent:
-                                        Storage.NewCacheValue(HasheousClient.Models.MetadataSources.IGDB, game, false);
+                                        await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.IGDB, game, false);
                                         break;
 
                                     case Storage.CacheStatus.Expired:
-                                        Storage.NewCacheValue(HasheousClient.Models.MetadataSources.IGDB, game, true);
+                                        await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.IGDB, game, true);
                                         break;
 
                                 }

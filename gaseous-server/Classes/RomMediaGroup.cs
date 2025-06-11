@@ -54,7 +54,7 @@ namespace gaseous_server.Classes
                 }
             }
 
-            StartMediaGroupBuild(mgId);
+            await StartMediaGroupBuild(mgId);
 
             return await GetMediaGroupAsync(mgId);
         }
@@ -185,7 +185,7 @@ namespace gaseous_server.Classes
                 File.Delete(MediaGroupZipPath);
             }
 
-            StartMediaGroupBuild(Id);
+            await StartMediaGroupBuild(Id);
 
             // return to caller
             return await GetMediaGroupAsync(Id);
@@ -251,7 +251,7 @@ namespace gaseous_server.Classes
             string sql = "SELECT * FROM RomMediaGroup_Members WHERE GroupId=@id;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("id", mediaGroupItem.Id);
-            DataTable data = db.ExecuteCMD(sql, dbDict);
+            DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
             foreach (DataRow dataRow in data.Rows)
             {
                 mediaGroupItem.RomIds.Add((long)dataRow["RomId"]);
@@ -505,7 +505,7 @@ namespace gaseous_server.Classes
                         M3UFileContents.Add(M3UFileContent);
                     }
 
-                    File.WriteAllText(Path.Combine(ZipFileTempPath, GameObject.Name + ".m3u"), String.Join(Environment.NewLine, M3UFileContents));
+                    await File.WriteAllTextAsync(Path.Combine(ZipFileTempPath, GameObject.Name + ".m3u"), String.Join(Environment.NewLine, M3UFileContents));
 
                     // compress to zip
                     Logging.Log(Logging.LogType.Information, "Media Group", "Compressing media group");

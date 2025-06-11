@@ -37,12 +37,14 @@ db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.Conn
 
 // set up db
 db.InitDB();
+// create tables from types
+Classes.Metadata.Utility.TableBuilder.BuildTables();
 // create relation tables if they don't exist
-Storage.CreateRelationsTables<IGDB.Models.Game>();
-Storage.CreateRelationsTables<IGDB.Models.Platform>();
+await Storage.CreateRelationsTables<IGDB.Models.Game>();
+await Storage.CreateRelationsTables<IGDB.Models.Platform>();
 
 // populate db with static data for lookups
-AgeRatings.PopulateAgeMapAsync();
+await AgeRatings.PopulateAgeMapAsync();
 
 // load app settings
 Config.InitSettings();
@@ -50,7 +52,7 @@ Config.InitSettings();
 Config.UpdateConfig();
 
 // update default library path
-GameLibrary.UpdateDefaultLibraryPathAsync();
+await GameLibrary.UpdateDefaultLibraryPathAsync();
 
 // set api metadata source from config
 Communications.MetadataSource = Config.MetadataConfiguration.DefaultMetadataSource;
@@ -354,12 +356,12 @@ app.Use(async (context, next) =>
 Config.LibraryConfiguration.InitLibrary();
 
 // create unknown platform
-Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.None);
-Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.IGDB);
-Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.TheGamesDb);
+await Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.None);
+await Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.IGDB);
+await Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.TheGamesDb);
 
 // extract platform map if not present
-PlatformMapping.ExtractPlatformMap();
+await PlatformMapping.ExtractPlatformMap();
 
 // migrate old firmware directory structure to new style
 Bios.MigrateToNewFolderStructure();
@@ -405,4 +407,4 @@ ProcessQueue.QueueItems.Add(tempCleanup);
 Logging.WriteToDiskOnly = false;
 
 // start the app
-app.Run();
+await app.RunAsync();

@@ -655,6 +655,13 @@ namespace gaseous_server.Classes
                     return MetadataPath;
                 }
 
+                public string LibraryMetadataDirectory_TheGamesDB()
+                {
+                    string MetadataPath = Path.Combine(LibraryMetadataDirectory, "TheGamesDB");
+                    if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
+                    return MetadataPath;
+                }
+
                 public string LibrarySignaturesDirectory
                 {
                     get
