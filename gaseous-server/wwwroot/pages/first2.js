@@ -69,7 +69,7 @@ async function SetupPage() {
                     await this.dialog.BuildModal();
 
                     // override the dialog size
-                    this.dialog.modalElement.style = 'width: 440px; height: 250px; min-width: unset; min-height: 215px; max-width: unset; max-height: unset;';
+                    this.dialog.modalElement.style = 'width: 90%; height: 250px; min-width: 350px; min-height: 215px; max-width: 440px; max-height: unset;';
 
                     // setup the dialog
                     this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Advanced";

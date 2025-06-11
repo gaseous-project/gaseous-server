@@ -16,7 +16,6 @@ function setupBanner() {
     let userMenuLogoff = document.getElementById("banner_user_logoff");
     if (userMenuLogoff) {
         userMenuLogoff.addEventListener('click', async () => {
-            await db.DeleteDatabase();
             ajaxCall(
                 '/api/v1.1/Account/LogOff',
                 'POST',
