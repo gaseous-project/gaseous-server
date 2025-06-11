@@ -5,6 +5,9 @@ async function SetupPage() {
     document.getElementById('games_filter_button_column').addEventListener('click', function () {
         FilterDisplayToggle();
     });
+    document.getElementById('games_filter_button_column_filter').addEventListener('click', function (e) {
+        FilterDisplayToggle();
+    });
 
     let displayFilter = GetPreference("Library.ShowFilter");
     FilterDisplayToggle(displayFilter, true);
@@ -350,11 +353,15 @@ async function FilterDisplayToggle(display, storePreference = true) {
         filterPanel.style.display = 'block';
         libraryControls.classList.remove('games_library_controls_expanded');
         gamesHome.classList.remove('games_home_expanded');
+        libraryControls.classList.add('games_library_controls_collapsed');
+        gamesHome.classList.add('games_home_collapsed');
         if (storePreference === true) { SetPreference("Library.ShowFilter", true); }
     } else {
         filterPanel.style.display = 'none';
         libraryControls.classList.add('games_library_controls_expanded');
         gamesHome.classList.add('games_home_expanded');
+        libraryControls.classList.remove('games_library_controls_collapsed');
+        gamesHome.classList.remove('games_home_collapsed');
         if (storePreference === true) { SetPreference("Library.ShowFilter", false); }
     }
 

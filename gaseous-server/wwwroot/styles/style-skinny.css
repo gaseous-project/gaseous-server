@@ -354,4 +354,62 @@
         display: block;
         width: 100%;
     }
+
+    #games_filter_panel {
+        left: 0px;
+        right: 0px;
+        width: unset;
+    }
+
+    .games_filter_controls {
+        width: unset;
+        left: 0px;
+        right: 10px;
+    }
+
+    #search {
+        width: 95%;
+    }
+
+    #games_filter_scroller,
+    #games_filter {
+        width: unset;
+        left: 0px;
+        right: 0px;
+        padding-left: 5px;
+        overflow-y: auto;
+    }
+
+    #games_home {
+        margin-left: 0px;
+    }
+
+    #games_library_controls {
+        left: 0px;
+    }
+
+    .games_library_controls_collapsed,
+    .games_home_collapsed {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 370px) {
+    #card-info {
+        padding-left: 2px;
+        padding-right: 2px;
+    }
+
+    #card-platforms {
+        gap: 5px;
+    }
+
+    .section-body {
+        padding: 7px;
+    }
+
+    .card-platform-gamename {
+        padding-left: 5px;
+        flex-grow: 0.1;
+    }
 }
