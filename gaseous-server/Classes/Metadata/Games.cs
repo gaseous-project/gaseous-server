@@ -26,7 +26,7 @@ namespace gaseous_server.Classes.Metadata
             { }
         }
 
-        public static async Task<Game?> GetGame(HasheousClient.Models.MetadataSources SourceType, long? Id, bool Massage = true)
+        public static async Task<Game?> GetGame(HasheousClient.Models.MetadataSources SourceType, long? Id, bool Massage = true, bool ForceRefresh = false)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -34,7 +34,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Game? RetVal = await Metadata.GetMetadataAsync<Game>(SourceType, (long)Id, false);
+                Game? RetVal = await Metadata.GetMetadataAsync<Game>(SourceType, (long)Id, ForceRefresh);
                 RetVal.MetadataSource = SourceType;
                 long? metadataMap = MetadataManagement.GetMetadataMapIdFromSourceId(SourceType, (long)Id);
                 if (metadataMap == null)

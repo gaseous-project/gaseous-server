@@ -1195,15 +1195,13 @@ namespace gaseous_server.Classes.Metadata
                     switch (typeName)
                     {
                         case "gamesbygameid":
-                            HasheousClient.Models.Metadata.TheGamesDb.GamesByGameID gameResult = new HasheousClient.Models.Metadata.TheGamesDb.GamesByGameID();
-                            gameResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.TheGamesDb.GamesByGameID>(Endpoint, HasheousClient.Hasheous.MetadataProvider.TheGamesDb, long.Parse(Query.ToString()));
+                            HasheousClient.Models.Metadata.TheGamesDb.GamesByGameID gameResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.TheGamesDb.GamesByGameID>(Endpoint, HasheousClient.Hasheous.MetadataProvider.TheGamesDb, long.Parse(Query.ToString()));
 
                             // return the game object
                             return new T[] { (T)(object)gameResult };
 
                         case "genres":
-                            HasheousClient.Models.Metadata.TheGamesDb.Genres genreResult = new HasheousClient.Models.Metadata.TheGamesDb.Genres();
-                            genreResult = hasheous.GetMetadataProxy<HasheousClient.Models.Metadata.TheGamesDb.Genres>(Endpoint, HasheousClient.Hasheous.MetadataProvider.TheGamesDb, long.Parse(Query.ToString()));
+                            HasheousClient.Models.Metadata.TheGamesDb.Genres genreResult = await hasheous.GetMetadataProxyAsync<HasheousClient.Models.Metadata.TheGamesDb.Genres>(Endpoint, HasheousClient.Hasheous.MetadataProvider.TheGamesDb, long.Parse(Query.ToString()));
 
                             // return the genre object
                             return new T[] { (T)(object)genreResult };

@@ -238,13 +238,24 @@ class GameCard {
         this.card.SetHeader(gameData.name, false);
 
         // set the background image
-        if (gameData.artworks) {
+        if (gameData.artworks && gameData.artworks.length > 0) {
             // // randomly select an artwork to display
             // let randomIndex = Math.floor(Math.random() * gameData.artworks.length);
             // let artwork = gameData.artworks[randomIndex];
             let artwork = gameData.artworks[0];
             let artworkUrl = `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/artwork/${artwork}/image/original/${artwork}.jpg`;
             this.card.SetBackgroundImage(artworkUrl, true, () => {
+                if (this.card.contrastColour !== 'fff') {
+                    let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
+                    ratingIgdbLogo.classList.add('card-info-rating-icon-black');
+                }
+            });
+        } else if (gameData.screenshots && gameData.screenshots.length > 0) {
+            // randomly select a screenshot to display
+            let randomIndex = Math.floor(Math.random() * gameData.screenshots.length);
+            let screenshot = gameData.screenshots[randomIndex];
+            let screenshotUrl = `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/screenshots/${screenshot}/image/original/${screenshot}.jpg`;
+            this.card.SetBackgroundImage(screenshotUrl, true, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
                     ratingIgdbLogo.classList.add('card-info-rating-icon-black');
@@ -396,7 +407,7 @@ class GameCard {
                                         ratingIcon.title = dataElement.ratingTitle;
                                         ratingIcon.classList.add('card-rating-icon');
 
-                                        let description = ClassificationBoards[dataElement.ratingBoard.name] + '\nRating: ' + organizationRatingKey;
+                                        let description = AgeRatingMappings.RatingBoards[dataElement.ratingBoard.name].Name + '\nRating: ' + organizationRatingKey;
                                         if (dataElement.descriptions && dataElement.descriptions.length > 0) {
                                             description += '\n\nDescription:';
                                             dataElement.descriptions.forEach(element => {

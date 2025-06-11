@@ -53,7 +53,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).PreferredMetadataMapItem;
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId, true);
 
                 // apply user specific localisation
                 if (game.GameLocalizations != null && game.GameLocalizations.Count > 0)
