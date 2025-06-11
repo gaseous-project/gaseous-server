@@ -305,8 +305,7 @@ h3 {
 
 /* end new modal style */
 
-#banner_icon {
-    /* background-color: white; */
+/* #banner_icon {
     background-color: rgba(0, 22, 56, 0.2);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -321,6 +320,11 @@ h3 {
     margin: 0px;
     display: flex;
     z-index: 50;
+} */
+
+#banner_icon {
+    display: inline-block;
+    padding: 5px;
 }
 
 #banner_icon:hover {
@@ -331,6 +335,20 @@ h3 {
     width: 30px;
     height: 30px;
     filter: drop-shadow(1px 1px 0 rgb(180, 180, 180)) drop-shadow(-1px 1px 0 rgb(180, 180, 180)) drop-shadow(1px -1px 0 rgb(180, 180, 180)) drop-shadow(-1px -1px 0 rgb(180, 180, 180));
+}
+
+#banner_header_label {
+    font-family: var(--pixel-font);
+    display: inline-block;
+    padding: 10px;
+    font-size: 16pt;
+    vertical-align: top;
+    /*color: #edeffa;*/
+    color: #FFFFFF;
+}
+
+#banner_header_label {
+    cursor: pointer;
 }
 
 .banner_label {
@@ -424,25 +442,11 @@ h3 {
     -webkit-backdrop-filter: blur(8px);
     position: fixed;
     top: 0px;
-    left: 40px;
+    left: 0px;
     height: 40px;
     right: 0px;
     align-items: center;
     z-index: 50;
-}
-
-#banner_header_label {
-    font-family: var(--pixel-font);
-    display: inline-block;
-    padding: 10px;
-    font-size: 16pt;
-    vertical-align: top;
-    /*color: #edeffa;*/
-    color: #FFFFFF;
-}
-
-#banner_header_label {
-    cursor: pointer;
 }
 
 #content {
@@ -3819,4 +3823,29 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     text-align: right;
     font-size: smaller;
     font-weight: lighter;
+}
+
+#gameprofile {
+    display: inline-block;
+    width: 250px;
+}
+
+#gamehome {
+    display: inline-block;
+    max-width: 820px;
+    margin-right: 20px;
+    vertical-align: top;
+    width: 100%;
+}
+
+#rightcolumn {
+    display: inline-block;
+    width: 250px;
+    vertical-align: top;
+}
+
+#librarylink {
+    margin-top: 20px;
+    display: inline-block;
+    width: 250px;
 }

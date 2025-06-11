@@ -41,12 +41,9 @@
     }
 
     .banner_button {
-        width: 40px;
+        width: 7.5%;
+        max-width: 40px;
         height: 40px;
-    }
-
-    #banner_home {
-        display: none;
     }
 
     #modal-header-text:after {
@@ -333,5 +330,28 @@
 
     .loginwindow-logospace-banner-panel {
         display: none;
+    }
+
+    #gamepage {
+        padding: 5px;
+        min-width: unset;
+        max-width: unset;
+        min-height: unset;
+    }
+
+    #gameprofile {
+        display: none;
+    }
+
+    #gamehome,
+    #rightcolumn {
+        display: block;
+        vertical-align: top;
+        width: 100%;
+    }
+
+    #librarylink {
+        display: block;
+        width: 100%;
     }
 }
