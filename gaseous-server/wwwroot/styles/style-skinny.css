@@ -409,7 +409,7 @@
     }
 
     .card-platform-gamename {
-        padding-left: 5px;
-        flex-grow: 0.1;
+        width: unset;
+        flex-grow: 1;
     }
 }
