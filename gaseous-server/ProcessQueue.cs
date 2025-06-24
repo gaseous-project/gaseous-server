@@ -249,7 +249,7 @@ namespace gaseous_server
                                     ProcessData.Add("sessionid", importState.SessionId.ToString());
 
                                     // get the hash of the file
-                                    Common.hashObject hash = new Common.hashObject(importState.FileName);
+                                    HashObject hash = new HashObject(importState.FileName);
                                     ProcessData.Add("md5hash", hash.md5hash);
                                     ProcessData.Add("sha1hash", hash.sha1hash);
                                     ProcessData.Add("crc32hash", hash.crc32hash);

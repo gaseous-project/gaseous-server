@@ -68,12 +68,29 @@ namespace gaseous_server.Models
                             link = $"https://retroachievements.org/game/{SourceId}";
                             break;
 
+                        case MetadataSources.GiantBomb:
+                            link = $"https://www.giantbomb.com/games/3030-{SourceId}/";
+                            break;
+
                         default:
                             link = "";
                             break;
                     }
 
                     return link;
+                }
+            }
+            public bool supportedDataSource
+            {
+                get
+                {
+                    return SourceType switch
+                    {
+                        MetadataSources.None => true,
+                        MetadataSources.IGDB => true,
+                        MetadataSources.TheGamesDb => true,
+                        _ => false,
+                    };
                 }
             }
         }

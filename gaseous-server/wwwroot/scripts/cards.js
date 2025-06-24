@@ -158,7 +158,17 @@ class Card {
         this.cardBackground.onload = () => {
             // get the average colour of the image
             let rgbAverage = getAverageRGB(this.cardBackground);
-            this.card.style.backgroundColor = 'rgb(' + rgbAverage.r + ', ' + rgbAverage.g + ', ' + rgbAverage.b + ')';
+            let rgbSlightlyBrighter = {
+                r: Math.min(rgbAverage.r + 20, 255),
+                g: Math.min(rgbAverage.g + 20, 255),
+                b: Math.min(rgbAverage.b + 20, 255)
+            };
+            let rgbMuchBrighter = {
+                r: Math.min(rgbAverage.r + 50, 255),
+                g: Math.min(rgbAverage.g + 50, 255),
+                b: Math.min(rgbAverage.b + 50, 255)
+            };
+            this.card.style.background = 'rgb(' + rgbAverage.r + ', ' + rgbAverage.g + ', ' + rgbAverage.b + ')';
             this.cardGradient.style.background = 'linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(' + rgbAverage.r + ', ' + rgbAverage.g + ', ' + rgbAverage.b + ', 1) 100%)';
             if (blur === true) {
                 this.cardBackgroundContainer.classList.add('card-background-blurred');
@@ -166,7 +176,7 @@ class Card {
 
             // set the font colour to a contrasting colour
             let contrastColour = contrastingColor(rgbToHex(rgbAverage.r, rgbAverage.g, rgbAverage.b).replace("#", ""));
-            this.card.style.color = '#' + contrastColour;
+            // this.card.style.color = '#' + contrastColour;
             this.contrastColour = contrastColour;
 
             if (callback) {
@@ -540,6 +550,32 @@ class GameCard {
         let screenshots = this.card.cardBody.querySelector('#card-screenshots');
         let screenshotsSection = this.card.cardBody.querySelector('#card-screenshots-section');
         if (screenshots) {
+            if (gameData.videos && gameData.videos.length > 0) {
+                await fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/videos`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => response.json()).then(videoData => {
+                    if (!videoData) {
+                        console.error(`Error fetching video data for game ${this.gameId}`);
+                        return;
+                    }
+                    console.log(videoData);
+
+                    videoData.forEach(element => {
+                        let videoItem = document.createElement('li');
+                        videoItem.classList.add('card-screenshot-item');
+
+                        let videoImg = document.createElement('img');
+                        videoImg.src = `https://i.ytimg.com/vi/${element.video_id}/hqdefault.jpg`;
+                        videoImg.alt = element.name;
+                        videoImg.title = element.name;
+                        videoItem.appendChild(videoImg);
+                        screenshots.appendChild(videoItem);
+                    });
+                });
+            }
             if (gameData.screenshots) {
                 gameData.screenshots.forEach(screenshot => {
                     let screenshotItem = document.createElement('li');
@@ -1622,6 +1658,10 @@ class GameCardRomList {
         }).then(response => response.json());
 
         metadataMap.metadataMapItems.forEach(element => {
+            if (element.supportedDataSource === false) {
+                return; // skip unsupported data sources
+            };
+
             let itemSection = document.createElement('div');
             itemSection.className = 'section';
 

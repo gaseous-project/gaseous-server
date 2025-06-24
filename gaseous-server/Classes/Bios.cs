@@ -14,7 +14,7 @@ namespace gaseous_server.Classes
 
         }
 
-        public static void ImportBiosFile(string FilePath, Common.hashObject Hash, ref Dictionary<string, object> BiosFileInfo)
+        public static void ImportBiosFile(string FilePath, HashObject Hash, ref Dictionary<string, object> BiosFileInfo)
         {
             BiosFileInfo.Add("type", "bios");
             BiosFileInfo.Add("status", "notimported");

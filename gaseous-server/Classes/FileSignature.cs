@@ -18,7 +18,7 @@ namespace gaseous_server.Classes
 {
     public class FileSignature
     {
-        public async Task<Signatures_Games> GetFileSignatureAsync(GameLibrary.LibraryItem library, Common.hashObject hash, FileInfo fi, string GameFileImportPath)
+        public async Task<Signatures_Games> GetFileSignatureAsync(GameLibrary.LibraryItem library, HashObject hash, FileInfo fi, string GameFileImportPath)
         {
             Logging.Log(Logging.LogType.Information, "Get Signature", "Getting signature for file: " + GameFileImportPath);
             gaseous_server.Models.Signatures_Games discoveredSignature = new gaseous_server.Models.Signatures_Games();
@@ -123,7 +123,7 @@ namespace gaseous_server.Classes
                         if (File.Exists(file))
                         {
                             FileInfo zfi = new FileInfo(file);
-                            Common.hashObject zhash = new Common.hashObject(file);
+                            HashObject zhash = new HashObject(file);
 
                             Logging.Log(Logging.LogType.Information, "Get Signature", "Checking signature of decompressed file " + file);
 
@@ -146,6 +146,7 @@ namespace gaseous_server.Classes
                                         zDiscoveredSignature.Rom.Crc = discoveredSignature.Rom.Crc;
                                         zDiscoveredSignature.Rom.Md5 = discoveredSignature.Rom.Md5;
                                         zDiscoveredSignature.Rom.Sha1 = discoveredSignature.Rom.Sha1;
+                                        zDiscoveredSignature.Rom.Sha256 = discoveredSignature.Rom.Sha256;
                                         zDiscoveredSignature.Rom.Size = discoveredSignature.Rom.Size;
                                         discoveredSignature = zDiscoveredSignature;
 
@@ -166,6 +167,7 @@ namespace gaseous_server.Classes
                                     Size = zfi.Length,
                                     MD5 = zhash.md5hash,
                                     SHA1 = zhash.sha1hash,
+                                    SHA256 = zhash.sha256hash,
                                     CRC = zhash.crc32hash,
                                     isSignatureSelector = signatureSelector
                                 };
@@ -214,9 +216,9 @@ namespace gaseous_server.Classes
             return discoveredSignature;
         }
 
-        private async Task<Signatures_Games> _GetFileSignatureAsync(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath, bool IsInZip)
+        private async Task<Signatures_Games> _GetFileSignatureAsync(HashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath, bool IsInZip)
         {
-            Logging.Log(Logging.LogType.Information, "Import Game", "Checking signature for file: " + GameFileImportPath + "\nMD5 hash: " + hash.md5hash + "\nSHA1 hash: " + hash.sha1hash + "\nCRC32 hash: " + hash.crc32hash);
+            Logging.Log(Logging.LogType.Information, "Import Game", "Checking signature for file: " + GameFileImportPath + "\nMD5 hash: " + hash.md5hash + "\nSHA1 hash: " + hash.sha1hash + "\nSHA256 hash: " + hash.sha256hash + "\nCRC32 hash: " + hash.crc32hash);
 
 
             gaseous_server.Models.Signatures_Games? discoveredSignature = null;
@@ -268,27 +270,14 @@ namespace gaseous_server.Classes
             return discoveredSignature;
         }
 
-        private async Task<gaseous_server.Models.Signatures_Games?> _GetFileSignatureFromDatabase(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
+        private async Task<gaseous_server.Models.Signatures_Games?> _GetFileSignatureFromDatabase(HashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
         {
-            Logging.Log(Logging.LogType.Information, "Get Signature", "Checking local database for MD5: " + hash.md5hash);
-
             // check 1: do we have a signature for it?
             gaseous_server.Classes.SignatureManagement sc = new SignatureManagement();
-            List<gaseous_server.Models.Signatures_Games> signatures = await sc.GetSignature(hash.md5hash);
-            if (signatures == null || signatures.Count == 0)
-            {
-                Logging.Log(Logging.LogType.Information, "Get Signature", "Checking local database for SHA1: " + hash.sha1hash);
 
-                // no md5 signature found - try sha1
-                signatures = await sc.GetSignature("", hash.sha1hash);
-            }
-            if (signatures == null || signatures.Count == 0)
-            {
-                Logging.Log(Logging.LogType.Information, "Get Signature", "Checking local database for CRC32: " + hash.crc32hash);
+            Logging.Log(Logging.LogType.Information, "Get Signature", "Checking local database for: " + hash.sha256hash);
 
-                // no sha1 signature found - try crc32
-                signatures = await sc.GetSignature("", "", hash.crc32hash);
-            }
+            List<gaseous_server.Models.Signatures_Games> signatures = await sc.GetSignature(hash);
 
             gaseous_server.Models.Signatures_Games? discoveredSignature = null;
             if (signatures.Count == 1)
@@ -317,7 +306,7 @@ namespace gaseous_server.Classes
             return null;
         }
 
-        private async Task<gaseous_server.Models.Signatures_Games?> _GetFileSignatureFromHasheous(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
+        private async Task<gaseous_server.Models.Signatures_Games?> _GetFileSignatureFromHasheous(HashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
         {
             // check if hasheous is enabled, and if so use it's signature database
             if (Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous)
@@ -372,6 +361,7 @@ namespace gaseous_server.Classes
                             {
                                 MD5 = hash.md5hash,
                                 SHA1 = hash.sha1hash,
+                                SHA256 = hash.sha256hash,
                                 CRC = hash.crc32hash
                             }, false);
 
@@ -427,23 +417,26 @@ namespace gaseous_server.Classes
                                         // only IGDB metadata is supported
                                         if (metadataResult.Source == HasheousClient.Models.MetadataSources.IGDB)
                                         {
-                                            // if (metadataResult.ImmutableId.Length > 0)
-                                            // {
-                                            //     // use immutable id
-                                            //     Platform hasheousPlatform = await Platforms.GetPlatform(long.Parse(metadataResult.ImmutableId));
-                                            //     signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataResult.Source);
-                                            // }
-                                            // else 
-                                            if (metadataResult.Id.Length > 0)
+                                            // check if the immutable id is a long
+                                            if (metadataResult.ImmutableId.Length > 0 && long.TryParse(metadataResult.ImmutableId, out long immutableId) == true)
                                             {
-                                                // fall back to id
-                                                Platform hasheousPlatform = await Platforms.GetPlatform(metadataResult.Id);
+                                                // use immutable id
+                                                Platform hasheousPlatform = await Platforms.GetPlatform(immutableId);
                                                 signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataResult.Source);
                                             }
                                             else
                                             {
-                                                // no id or immutable id - use unknown platform
-                                                signature.MetadataSources.AddPlatform(0, "Unknown Platform", HasheousClient.Models.MetadataSources.None);
+                                                // immutable id is a string
+                                                Platform hasheousPlatform = await Platforms.GetPlatform(metadataResult.ImmutableId);
+                                                if (hasheousPlatform != null)
+                                                {
+                                                    signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataResult.Source);
+                                                }
+                                                else
+                                                {
+                                                    // unresolvable immutableid - use unknown platform
+                                                    signature.MetadataSources.AddPlatform(0, "Unknown Platform", HasheousClient.Models.MetadataSources.None);
+                                                }
                                             }
                                         }
                                     }
@@ -457,22 +450,36 @@ namespace gaseous_server.Classes
                                 {
                                     foreach (HasheousClient.Models.MetadataItem metadataResult in HasheousResult.Metadata)
                                     {
-                                        // if (metadataResult.ImmutableId.Length > 0)
-                                        // {
-                                        //     signature.MetadataSources.AddGame(long.Parse(metadataResult.ImmutableId), HasheousResult.Name, metadataResult.Source);
-                                        // }
-                                        // else
-                                        if (metadataResult.Id.Length > 0)
+                                        if (metadataResult.ImmutableId.Length > 0)
                                         {
                                             switch (metadataResult.Source)
                                             {
                                                 case HasheousClient.Models.MetadataSources.IGDB:
-                                                    gaseous_server.Models.Game hasheousGame = await Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, metadataResult.Id);
-                                                    signature.MetadataSources.AddGame((long)hasheousGame.Id, hasheousGame.Name, metadataResult.Source);
+                                                    // check if the immutable id is a long
+                                                    if (metadataResult.ImmutableId.Length > 0 && long.TryParse(metadataResult.ImmutableId, out long immutableId) == true)
+                                                    {
+                                                        // use immutable id
+                                                        gaseous_server.Models.Game hasheousGame = await Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, immutableId);
+                                                        signature.MetadataSources.AddGame((long)hasheousGame.Id, hasheousGame.Name, metadataResult.Source);
+                                                    }
+                                                    else
+                                                    {
+                                                        // immutable id is a string
+                                                        gaseous_server.Models.Game hasheousGame = await Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, metadataResult.ImmutableId);
+                                                        if (hasheousGame != null)
+                                                        {
+                                                            signature.MetadataSources.AddGame((long)hasheousGame.Id, hasheousGame.Name, metadataResult.Source);
+                                                        }
+                                                        else
+                                                        {
+                                                            // unresolvable immutable id - use unknown game
+                                                            signature.MetadataSources.AddGame(0, "Unknown Game", HasheousClient.Models.MetadataSources.None);
+                                                        }
+                                                    }
                                                     break;
 
                                                 default:
-                                                    if (long.TryParse(metadataResult.Id, out long id) == true)
+                                                    if (long.TryParse(metadataResult.ImmutableId, out long id) == true)
                                                     {
                                                         signature.MetadataSources.AddGame(id, HasheousResult.Name, metadataResult.Source);
                                                     }
@@ -485,7 +492,7 @@ namespace gaseous_server.Classes
                                         }
                                         else
                                         {
-                                            // no id or immutable id - use unknown game
+                                            // unresolvable immutable id - use unknown game
                                             signature.MetadataSources.AddGame(0, "Unknown Game", HasheousClient.Models.MetadataSources.None);
                                         }
                                     }
@@ -544,7 +551,7 @@ namespace gaseous_server.Classes
             return null;
         }
 
-        private async Task<gaseous_server.Models.Signatures_Games> _GetFileSignatureFromFileData(Common.hashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
+        private async Task<gaseous_server.Models.Signatures_Games> _GetFileSignatureFromFileData(HashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
         {
             SignatureManagement signatureManagement = new SignatureManagement();
 
@@ -613,6 +620,7 @@ namespace gaseous_server.Classes
             public long Size { get; set; }
             public string MD5 { get; set; }
             public string SHA1 { get; set; }
+            public string SHA256 { get; set; }
             public string CRC { get; set; }
             public bool isSignatureSelector { get; set; } = false;
         }
