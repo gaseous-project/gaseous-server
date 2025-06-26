@@ -115,6 +115,10 @@
     .games_library_alpha_pager_letter {
         font-size: 8px;
     }
+
+    .card-screenshot-item {
+        width: 170px;
+    }
 }
 
 @media screen and (max-width: 749px) {
@@ -149,6 +153,15 @@
 
     .modal-window-tabs {
         display: none;
+    }
+
+    .modal-screenshots {
+        height: 260px;
+        width: 100%;
+        min-width: unset;
+        min-height: unset;
+        max-width: unset;
+        max-height: unset;
     }
 
     .account-modal-tab1 {

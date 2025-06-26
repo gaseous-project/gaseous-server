@@ -240,6 +240,7 @@ class GameCard {
             }
         });
         const gameData = await response.json();
+        this.metadataSource = gameData.metadataSource;
 
         // dump the game data to the console for debugging
         console.log(gameData);
@@ -561,17 +562,25 @@ class GameCard {
                         console.error(`Error fetching video data for game ${this.gameId}`);
                         return;
                     }
-                    console.log(videoData);
 
                     videoData.forEach(element => {
                         let videoItem = document.createElement('li');
                         videoItem.classList.add('card-screenshot-item');
+                        videoItem.style.backgroundImage = `url(https://i.ytimg.com/vi/${element.video_id}/hqdefault.jpg)`;
+                        videoItem.alt = element.name;
+                        videoItem.title = element.name;
 
-                        let videoImg = document.createElement('img');
-                        videoImg.src = `https://i.ytimg.com/vi/${element.video_id}/hqdefault.jpg`;
-                        videoImg.alt = element.name;
-                        videoImg.title = element.name;
-                        videoItem.appendChild(videoImg);
+                        videoItem.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+
+                            // open the screenshot display dialog
+                            await this.#ShowScreenshots(this.metadataSource, this.gameId, 'video_' + element.id);
+                        });
+
+                        let videoYouTubeIcon = document.createElement('div');
+                        videoYouTubeIcon.classList.add('card-screenshot-youtube-icon');
+                        videoItem.appendChild(videoYouTubeIcon);
+
                         screenshots.appendChild(videoItem);
                     });
                 });
@@ -580,12 +589,17 @@ class GameCard {
                 gameData.screenshots.forEach(screenshot => {
                     let screenshotItem = document.createElement('li');
                     screenshotItem.classList.add('card-screenshot-item');
+                    screenshotItem.style.backgroundImage = `url(/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/screenshots/${screenshot}/image/screenshot_med/${screenshot}.jpg)`;
+                    screenshotItem.alt = gameData.name;
+                    screenshotItem.title = gameData.name;
 
-                    let screenshotImg = document.createElement('img');
-                    screenshotImg.src = `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/screenshots/${screenshot}/image/screenshot_med/${screenshot}.jpg`;
-                    screenshotImg.alt = gameData.name;
-                    screenshotImg.title = gameData.name;
-                    screenshotItem.appendChild(screenshotImg);
+                    screenshotItem.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+
+                        // open the screenshot display dialog
+                        await this.#ShowScreenshots(this.metadataSource, this.gameId, 'screenshot_' + screenshot);
+                    });
+
                     screenshots.appendChild(screenshotItem);
                 });
                 screenshotsSection.style.display = '';
@@ -790,6 +804,11 @@ class GameCard {
 
         // show the card
         this.card.Open();
+    }
+
+    async #ShowScreenshots(metadataSource, gameid, selectedImage) {
+        let screenshotsDialog = new ScreenshotDisplay(metadataSource, gameid, selectedImage);
+        await screenshotsDialog.open();
     }
 }
 

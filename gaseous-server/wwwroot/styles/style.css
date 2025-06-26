@@ -3374,8 +3374,8 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     height: 90%;
     border-radius: 20px;
     border-style: solid;
-    border-width: 0px;
-    border-color: var(--modal-border-color);
+    border-width: 1px;
+    border-color: var(--modal-background-color);
     overflow: hidden;
     box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
     -webkit-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
@@ -3446,8 +3446,8 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 .card-background-blurred {
-    filter: blur(4px);
-    -webkit-filter: blur(4px);
+    filter: blur(3px);
+    -webkit-filter: blur(3px);
 }
 
 .card-gradient {
@@ -3594,11 +3594,45 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .card-screenshot-item {
     display: inline-block;
     margin-right: 10px;
+    position: relative;
+    border-radius: var(--standard-radius);
+    border-width: 2px;
+    border-color: transparent;
+    border-style: solid;
+    overflow: hidden;
+    padding: 0px;
+    /* width: 169px; */
+    /* height: 95px; */
+    width: 300px;
+    aspect-ratio: 16/9;
+    background-color: black;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+.card-screenshot-item:hover {
+    cursor: pointer;
+    border-color: white;
 }
 
 .card-screenshot-item>img {
     max-width: 200px;
     max-height: 125px;
+}
+
+.card-screenshot-item>.card-screenshot-youtube-icon {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 28px;
+    height: 20px;
+    margin: 0px;
+    background-image: url('/images/youtube.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    content: '';
 }
 
 #card-summary {}
@@ -3736,6 +3770,32 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     min-height: 400px;
     max-width: unset;
     max-height: 80%;
+}
+
+.modal-screenshots {
+    height: 80%;
+    width: 80%;
+    min-width: unset;
+    min-height: unset;
+    max-width: unset;
+    max-height: 80%;
+}
+
+.screenshot-item {
+    display: inline-block;
+    margin-right: 10px;
+    overflow: hidden;
+    margin: 0px;
+    padding: 0px;
+    width: auto;
+    height: 100%;
+    aspect-ratio: 16/9;
+    box-sizing: border-box;
+    background-color: black;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    content: '';
 }
 
 .card-romlist-item {
