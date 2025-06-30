@@ -1894,6 +1894,15 @@ class SettingsCard {
         "/services": {
             name: "Services"
         },
+        "/services/services-configure": {
+            name: "Service Configuration"
+        },
+        "/users": {
+            name: "Users"
+        },
+        "/users/user-management": {
+            name: "User Management"
+        },
         "/platforms": {
             name: "Platforms"
         },
@@ -1967,13 +1976,21 @@ class SettingsCard {
 
     BuildMenu() {
         let menuContainer = this.card.cardBody.querySelector('#card-settings-menu');
+        menuContainer.classList.add('section');
         menuContainer.innerHTML = '';
 
         for (const item in Object.keys(this.menuItems)) {
+            // skip if item has more than one slash
+            if (Object.keys(this.menuItems)[item].split('/').length > 2) {
+                continue;
+            }
+
             let key = Object.keys(this.menuItems)[item];
 
             let menuItem = document.createElement('div');
-            menuItem.className = 'card-settings-menu-item';
+            menuItem.classList.add('section-body');
+            menuItem.classList.add('card-settings-menu-item');
+            menuItem.classList.add('section-body-button');
             menuItem.setAttribute('data-page', key);
             menuItem.innerHTML = this.menuItems[key].name;
             menuItem.addEventListener('click', async () => {
@@ -1988,6 +2005,7 @@ class SettingsCard {
         // split the page path to get the page name - page name to load is the last part of the path
         let pagePathParts = pagePath.split('/');
         let page = pagePathParts[pagePathParts.length - 1];
+        let pageRoot = `/${pagePathParts[1]}`;
 
         await fetch('/pages/cards/settings/' + page + '.html', {
             method: 'GET',
@@ -2015,12 +2033,20 @@ class SettingsCard {
                 this.card.backButton.classList.remove('card-back-button-smallscreen-visible');
             }
 
+            if (pagePathParts.length > 2) {
+                // show the back button since we're on a subpage
+                this.card.backButton.classList.add('card-back-button-nested-visible');
+            } else {
+                // hide the back button since we're on a top-level page
+                this.card.backButton.classList.remove('card-back-button-nested-visible');
+            }
+
             // select the appropriate button
             let menuItems = this.card.cardBody.querySelectorAll('.card-settings-menu-item');
 
             menuItems.forEach(mi => {
                 mi.classList.remove('card-settings-menu-item-selected');
-                if (mi.getAttribute('data-page').startsWith(pagePath)) {
+                if (mi.getAttribute('data-page').startsWith(pageRoot)) {
                     mi.classList.add('card-settings-menu-item-selected');
                 }
             });
@@ -2056,6 +2082,20 @@ class SettingsCard {
                     this.refresher = setInterval(() => {
                         this.SystemLoadStatus();
                     }, 5000);
+                    this.body.querySelector('#system_tasks_config').addEventListener('click', async () => {
+                        this.SwitchPage('/services/services-configure');
+                    });
+                    break;
+
+                case 'services-configure':
+                    await this.getBackgroundTaskTimers();
+                    this.body.querySelector('#settings_tasktimers_default').addEventListener('click', async () => {
+                        this.defaultTaskTimers();
+                    });
+                    this.body.querySelector('#settings_tasktimers_new').addEventListener('click', async () => {
+                        await this.saveTaskTimers();
+                        await this.SwitchPage('/services');
+                    });
                     break;
             }
         }).catch(error => {
@@ -2495,28 +2535,28 @@ class SettingsCard {
                     },
                     interval: {
                         text: 'Interval',
-                        classList: ['romcell'],
+                        classList: ['romcell', 'card-services-column'],
                         styleOverrideList: [],
                         tooltip: 'Interval',
                         jsonName: 'interval'
                     },
                     lastRunDuration: {
                         text: 'Last Run Duration',
-                        classList: ['romcell'],
+                        classList: ['romcell', 'card-services-column'],
                         styleOverrideList: [],
                         tooltip: 'Last Run Duration',
                         jsonName: 'lastRunDuration'
                     },
                     lastRunTime: {
                         text: 'Last Run Time',
-                        classList: ['romcell'],
+                        classList: ['romcell', 'card-services-column'],
                         styleOverrideList: [],
                         tooltip: 'Last Run Time',
                         jsonName: 'lastRunTime'
                     },
                     nextRunTime: {
                         text: 'Next Run Time',
-                        classList: ['romcell'],
+                        classList: ['romcell', 'card-services-column'],
                         styleOverrideList: [],
                         tooltip: 'Next Run Time',
                         jsonName: 'nextRunTime'
@@ -2721,7 +2761,7 @@ class SettingsCard {
 
                         if (task.currentStateProgress.includes(" of ")) {
                             let progressParts = task.currentStateProgress.split(" of ");
-                            runningCell.innerHTML = `<table style="width: 100%;"><tr><td style="width: 25%;padding-left: 10px; padding-right: 10px;">Running ${task.currentStateProgress}</td><td style="width: 75%; padding-left: 10px; padding-right: 10px;"><progress value="${progressParts[0]}" max="${progressParts[1]}" style="width: 100%;">${task.currentStateProgress}</progress></td></tr></table>`;
+                            runningCell.innerHTML = `<table style="width: 100%;"><tr><td style="width: 35%;padding-left: 10px; padding-right: 10px;">Running ${task.currentStateProgress}</td><td style="width: 65%; padding-left: 10px; padding-right: 10px;"><progress value="${progressParts[0]}" max="${progressParts[1]}" style="width: 100%;">${task.currentStateProgress}</progress></td></tr></table>`;
                         } else {
                             runningCell.innerHTML = `Running (${task.currentStateProgress})`;
                         }
@@ -2746,9 +2786,10 @@ class SettingsCard {
                         subHeaderRow.className = 'romrow taskrow';
                         subHeaderRow.innerHTML = `
                             <th class="romcell" style="width: 20px;"></th>
-                            <th class="romcell">Task Name</th>
-                            <th class="romcell" colspan="2">Progress</th>
-                            <th class="romcell">Logs</th>
+                            <th class="romcell" style="width: 20%;">Task Name</th>
+                            <th class="romcell" style="width: 25%;">Progress</th>
+                            <th class="romcell"></th>
+                            <th class="romcell" style="width: 20px;"></th>
                         `;
                         subTable.appendChild(subHeaderRow);
 
@@ -2788,5 +2829,316 @@ class SettingsCard {
                 targetDiv.appendChild(newTable);
             })
             .catch(error => console.error('Error fetching background tasks:', error));
+    }
+
+    async getBackgroundTaskTimers() {
+        fetch('/api/v1/System/Settings/BackgroundTasks/Configuration', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then((result) => {
+                let targetTable = this.card.cardBody.querySelector('#settings_tasktimers');
+                targetTable.innerHTML = '';
+
+                for (const [key, value] of Object.entries(result)) {
+                    let enabledString = "";
+                    if (value.enabled == true) {
+                        enabledString = 'checked="checked"';
+                    }
+
+                    // create section
+                    let serviceSection = document.createElement('div');
+                    serviceSection.className = 'section';
+                    // serviceSection.id = 'settings_tasktimers_' + value.task;
+                    targetTable.appendChild(serviceSection);
+
+                    // add heading
+                    let serviceHeader = document.createElement('div');
+                    serviceHeader.className = 'section-header';
+                    serviceHeader.innerHTML = GetTaskFriendlyName(value.task);
+                    serviceSection.appendChild(serviceHeader);
+
+                    // create table for each service
+                    let serviceTable = document.createElement('table');
+                    serviceTable.style.width = '100%';
+                    serviceTable.classList.add('section-body');
+
+                    // add enabled
+                    let newEnabledRow = document.createElement('tr');
+
+                    let newEnabledTitle = document.createElement('td');
+                    newEnabledTitle.className = 'romcell romcell-headercell';
+                    newEnabledTitle.innerHTML = "Enabled:";
+                    newEnabledRow.appendChild(newEnabledTitle);
+
+                    let newEnabledContent = document.createElement('td');
+                    newEnabledContent.className = 'romcell';
+                    let newEnabledCheckbox = document.createElement('input');
+                    newEnabledCheckbox.id = 'settings_enabled_' + value.task;
+                    newEnabledCheckbox.name = 'settings_tasktimers_enabled';
+                    newEnabledCheckbox.type = 'checkbox';
+                    newEnabledCheckbox.checked = value.enabled;
+                    newEnabledContent.appendChild(newEnabledCheckbox);
+                    newEnabledRow.appendChild(newEnabledContent);
+
+                    serviceTable.appendChild(newEnabledRow);
+
+                    // add interval
+                    let newIntervalRow = document.createElement('tr');
+
+                    let newIntervalTitle = document.createElement('td');
+                    newIntervalTitle.className = 'romcell romcell-headercell';
+                    newIntervalTitle.innerHTML = "Minimum Interval (Minutes):";
+                    newIntervalRow.appendChild(newIntervalTitle);
+
+                    let newIntervalContent = document.createElement('td');
+                    newIntervalContent.className = 'romcell';
+                    let newIntervalInput = document.createElement('input');
+                    newIntervalInput.id = 'settings_tasktimers_' + value.task;
+                    newIntervalInput.name = 'settings_tasktimers_values';
+                    newIntervalInput.setAttribute('data-name', value.task);
+                    newIntervalInput.setAttribute('data-default', value.defaultInterval);
+                    newIntervalInput.type = 'number';
+                    newIntervalInput.placeholder = value.defaultInterval;
+                    newIntervalInput.min = value.minimumAllowedInterval;
+                    newIntervalInput.value = value.interval;
+                    newIntervalContent.appendChild(newIntervalInput);
+                    newIntervalRow.appendChild(newIntervalContent);
+
+                    serviceTable.appendChild(newIntervalRow);
+
+                    // allowed time periods row
+                    let newTableRowTime = document.createElement('tr');
+
+                    let rowTimeContentTitle = document.createElement('td');
+                    rowTimeContentTitle.className = 'romcell romcell-headercell';
+                    rowTimeContentTitle.innerHTML = "Allowed Days:";
+                    newTableRowTime.appendChild(rowTimeContentTitle);
+
+                    let rowTimeContent = document.createElement('td');
+                    // rowTimeContent.setAttribute('colspan', 2);
+                    rowTimeContent.className = 'romcell';
+                    let daySelector = document.createElement('select');
+                    daySelector.id = 'settings_alloweddays_' + value.task;
+                    daySelector.name = 'settings_alloweddays';
+                    daySelector.multiple = 'multiple';
+                    daySelector.setAttribute('data-default', value.defaultAllowedDays.join(","));
+                    daySelector.style.width = '95%';
+                    let days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+                    for (let d = 0; d < days.length; d++) {
+                        let dayOpt = document.createElement('option');
+                        dayOpt.value = days[d];
+                        dayOpt.innerHTML = days[d];
+                        if (value.allowedDays.includes(days[d])) {
+                            dayOpt.selected = 'selected';
+                        }
+                        daySelector.appendChild(dayOpt);
+                    }
+                    rowTimeContent.appendChild(daySelector);
+                    $(daySelector).select2({
+                        tags: false
+                    });
+                    newTableRowTime.appendChild(rowTimeContent);
+
+                    serviceTable.appendChild(newTableRowTime);
+
+                    // add start and end times
+                    let newTableRowClock = document.createElement('tr');
+
+                    let rowClockContentTitle = document.createElement('td');
+                    rowClockContentTitle.className = 'romcell romcell-headercell';
+                    rowClockContentTitle.innerHTML = "Time Range:";
+                    newTableRowClock.appendChild(rowClockContentTitle);
+
+                    let rowClockContent = document.createElement('td');
+                    rowClockContent.className = 'romcell';
+                    // rowClockContent.setAttribute('colspan', 2);
+
+                    rowClockContent.appendChild(this.generateTimeDropDowns(value.task, 'Start', value.defaultAllowedStartHours, value.defaultAllowedStartMinutes, value.allowedStartHours, value.allowedStartMinutes));
+
+                    let rowClockContentSeparator = document.createElement('span');
+                    rowClockContentSeparator.innerHTML = '&nbsp;-&nbsp;';
+                    rowClockContent.appendChild(rowClockContentSeparator);
+
+                    rowClockContent.appendChild(this.generateTimeDropDowns(value.task, 'End', value.defaultAllowedEndHours, value.defaultAllowedEndMinutes, value.allowedEndHours, value.allowedEndMinutes));
+
+                    newTableRowClock.appendChild(rowClockContent);
+
+                    serviceTable.appendChild(newTableRowClock);
+
+                    // blocks tasks
+                    let newTableRowBlocks = document.createElement('tr');
+
+                    let rowBlocksContentTitle = document.createElement('td');
+                    rowBlocksContentTitle.className = 'romcell romcell-headercell';
+                    rowBlocksContentTitle.innerHTML = "Blocks:";
+                    newTableRowBlocks.appendChild(rowBlocksContentTitle);
+
+                    let rowBlocksContent = document.createElement('td');
+                    rowBlocksContent.className = 'romcell';
+                    // rowBlocksContent.setAttribute('colspan', 2);
+                    let blocksString = "";
+                    for (let i = 0; i < value.blocks.length; i++) {
+                        if (blocksString.length > 0) { blocksString += ", "; }
+                        blocksString += GetTaskFriendlyName(value.blocks[i]);
+                    }
+                    if (blocksString.length == 0) { blocksString = 'None'; }
+                    rowBlocksContent.innerHTML = blocksString;
+                    newTableRowBlocks.appendChild(rowBlocksContent);
+
+                    serviceTable.appendChild(newTableRowBlocks);
+
+                    // blocked by tasks
+                    let newTableRowBlockedBy = document.createElement('tr');
+
+                    let rowBlockedByContentTitle = document.createElement('td');
+                    rowBlockedByContentTitle.className = 'romcell romcell-headercell';
+                    rowBlockedByContentTitle.innerHTML = "Blocked By:";
+                    newTableRowBlockedBy.appendChild(rowBlockedByContentTitle);
+
+                    let rowBlockedByContent = document.createElement('td');
+                    rowBlockedByContent.className = 'romcell';
+                    // rowBlockedByContent.setAttribute('colspan', 2);
+                    let BlockedByString = "";
+                    for (let i = 0; i < value.blockedBy.length; i++) {
+                        if (BlockedByString.length > 0) { BlockedByString += ", "; }
+                        BlockedByString += GetTaskFriendlyName(value.blockedBy[i]);
+                    }
+                    if (BlockedByString.length == 0) { BlockedByString = 'None'; }
+                    rowBlockedByContent.innerHTML = BlockedByString;
+                    newTableRowBlockedBy.appendChild(rowBlockedByContent);
+
+                    serviceTable.appendChild(newTableRowBlockedBy);
+
+                    // complete row
+                    serviceSection.appendChild(serviceTable);
+                }
+            }
+            );
+    }
+
+    generateTimeDropDowns(taskName, rangeName, defaultHour, defaultMinute, valueHour, valueMinute) {
+        let container = document.createElement('div');
+        container.style.display = 'inline';
+
+        let elementName = 'settings_tasktimers_time';
+
+        let hourSelector = document.createElement('input');
+        hourSelector.id = 'settings_tasktimers_' + taskName + '_' + rangeName + '_Hour';
+        hourSelector.name = elementName;
+        hourSelector.setAttribute('data-name', taskName);
+        hourSelector.setAttribute('type', 'number');
+        hourSelector.setAttribute('min', '0');
+        hourSelector.setAttribute('max', '23');
+        hourSelector.setAttribute('placeholder', defaultHour);
+        hourSelector.value = valueHour;
+        container.appendChild(hourSelector);
+
+        let separator = document.createElement('span');
+        separator.innerHTML = " : ";
+        container.appendChild(separator);
+
+        let minSelector = document.createElement('input');
+        minSelector.id = 'settings_tasktimers_' + taskName + '_' + rangeName + '_Minute';
+        minSelector.name = elementName;
+        minSelector.setAttribute('type', 'number');
+        minSelector.setAttribute('min', '0');
+        minSelector.setAttribute('max', '59');
+        minSelector.setAttribute('placeholder', defaultMinute);
+        minSelector.value = valueMinute;
+        container.appendChild(minSelector);
+
+        return container;
+    }
+
+    async saveTaskTimers() {
+        let timerValues = this.card.cardBody.querySelectorAll('[name="settings_tasktimers_values"]');
+
+        let model = [];
+        for (let i = 0; i < timerValues.length; i++) {
+            let taskName = timerValues[i].getAttribute('data-name');
+            let taskEnabled = this.card.cardBody.querySelector('#settings_enabled_' + taskName).checked;
+            let taskIntervalObj = this.card.cardBody.querySelector('#settings_tasktimers_' + taskName);
+            let taskInterval = function () { if (taskIntervalObj.value) { return taskIntervalObj.value; } else { return taskIntervalObj.getAttribute('placeholder'); } };
+            let taskDaysRaw = $('#settings_alloweddays_' + taskName).select2('data');
+            let taskDays = [];
+            if (taskDaysRaw.length > 0) {
+                for (let d = 0; d < taskDaysRaw.length; d++) {
+                    taskDays.push(taskDaysRaw[d].id);
+                }
+            } else {
+                taskDays.push("Monday");
+            }
+            let taskStartHourObj = this.card.cardBody.querySelector('#settings_tasktimers_' + taskName + '_Start_Hour');
+            let taskStartMinuteObj = this.card.cardBody.querySelector('#settings_tasktimers_' + taskName + '_Start_Minute');
+            let taskEndHourObj = this.card.cardBody.querySelector('#settings_tasktimers_' + taskName + '_End_Hour');
+            let taskEndMinuteObj = this.card.cardBody.querySelector('#settings_tasktimers_' + taskName + '_End_Minute');
+
+            let taskStartHour = function () { if (taskStartHourObj.value) { return taskStartHourObj.value; } else { return taskStartHourObj.getAttribute('placeholder'); } };
+            let taskStartMinute = function () { if (taskStartMinuteObj.value) { return taskStartMinuteObj.value; } else { return taskStartMinuteObj.getAttribute('placeholder'); } };
+            let taskEndHour = function () { if (taskEndHourObj.value) { return taskEndHourObj.value; } else { return taskEndHourObj.getAttribute('placeholder'); } };
+            let taskEndMinute = function () { if (taskEndMinuteObj.value) { return taskEndMinuteObj.value; } else { return taskEndMinuteObj.getAttribute('placeholder'); } };
+
+            model.push(
+                {
+                    "task": taskName,
+                    "enabled": taskEnabled,
+                    "interval": taskInterval(),
+                    "allowedDays": taskDays,
+                    "allowedStartHours": taskStartHour(),
+                    "allowedStartMinutes": taskStartMinute(),
+                    "allowedEndHours": taskEndHour(),
+                    "allowedEndMinutes": taskEndMinute()
+                }
+            );
+        }
+
+        await fetch('/api/v1/System/Settings/BackgroundTasks/Configuration',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(model)
+            }
+        ).then((result) => {
+            this.getBackgroundTaskTimers();
+        }
+        ).catch((error) => {
+            console.error('Error saving task timers:', error);
+        });
+    }
+
+    defaultTaskTimers() {
+        let taskEnabled = this.card.cardBody.querySelectorAll('[name="settings_tasktimers_enabled"]');
+
+        for (let i = 0; i < taskEnabled.length; i++) {
+            taskEnabled[i].checked = true;
+        }
+
+        let taskTimerValues = this.card.cardBody.querySelectorAll('[name="settings_tasktimers_values"]');
+
+        for (let i = 0; i < taskTimerValues.length; i++) {
+            taskTimerValues[i].value = taskTimerValues[i].getAttribute('data-default');
+        }
+
+        let taskAllowedDays = this.card.cardBody.querySelectorAll('[name="settings_alloweddays"]');
+
+        for (let i = 0; i < taskAllowedDays.length; i++) {
+            let defaultSelections = taskAllowedDays[i].getAttribute('data-default').split(',');
+            $(taskAllowedDays[i]).val(defaultSelections);
+            $(taskAllowedDays[i]).trigger('change');
+        }
+
+        let taskTimes = this.card.cardBody.querySelectorAll('[name="settings_tasktimers_time"]');
+
+        for (let i = 0; i < taskTimes.length; i++) {
+            taskTimes[i].value = taskTimes[i].getAttribute('placeholder');
+        }
+
+        this.saveTaskTimers();
     }
 }

@@ -119,6 +119,10 @@
     .card-screenshot-item {
         width: 170px;
     }
+
+    .card-services-column {
+        display: none;
+    }
 }
 
 @media screen and (max-width: 749px) {
