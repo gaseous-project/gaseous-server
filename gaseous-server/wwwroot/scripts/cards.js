@@ -10,9 +10,7 @@
 class Card {
     constructor(cardType) {
         this.cardType = cardType;
-    }
 
-    async BuildCard() {
         // create the background
         this.modalBackground = document.createElement("div");
         this.modalBackground.classList.add("modal-background");
@@ -63,20 +61,21 @@ class Card {
         this.cardGradient.classList.add("card-gradient");
         this.cardBackgroundContainer.appendChild(this.cardGradient);
 
-        // Load the content from the HTML file
-        const response = await fetch("/pages/cards/" + this.cardType + ".html");
-        const content = await response.text();
-
         // add the card body
         this.cardBody = document.createElement("div");
         this.cardBody.classList.add("card-body");
-        this.cardBody.innerHTML = content;
         this.cardContent.appendChild(this.cardBody);
 
         // add the card header
         this.cardHeader = document.createElement("div");
         this.cardHeader.classList.add("card-header");
         this.card.appendChild(this.cardHeader);
+
+        // add the back button
+        this.backButton = document.createElement("div");
+        this.backButton.classList.add("card-back-button");
+        this.backButton.innerHTML = "&larr;";
+        this.card.appendChild(this.backButton);
 
         // add the close button
         this.closeButton = document.createElement("div");
@@ -92,6 +91,14 @@ class Card {
 
         // append the modal to the body
         document.body.appendChild(this.modalBackground);
+    }
+
+    async BuildCard() {
+        // Load the content from the HTML file
+        const response = await fetch("/pages/cards/" + this.cardType + ".html");
+        const content = await response.text();
+
+        this.cardBody.innerHTML = content;
     }
 
     PostOpenCallbacks = [
@@ -227,7 +234,7 @@ class GameCard {
 
     async ShowCard() {
         this.card = new Card('game', this.gameId);
-        this.card.BuildCard();
+        await this.card.BuildCard();
 
         // store the card object in the session storage
         sessionStorage.setItem("Card." + this.card.cardType + ".Id", this.gameId);
@@ -1866,5 +1873,920 @@ class GameCardRomList {
 
         // show the dialog
         await mappingModal.open();
+    }
+}
+
+class SettingsCard {
+    constructor() {
+
+    }
+
+    menuItems = {
+        "/home": {
+            name: "General"
+        },
+        "/server": {
+            name: "Server Settings"
+        },
+        "/datasources": {
+            name: "Data Sources"
+        },
+        "/services": {
+            name: "Services"
+        },
+        "/platforms": {
+            name: "Platforms"
+        },
+        "/firmware": {
+            name: "Firmware"
+        }
+    }
+
+    currentPage = '';
+
+    async ShowCard() {
+        this.card = new Card('settings', this.gameId);
+        this.card.BuildCard();
+
+        // set the header
+        this.card.SetHeader("Settings", true);
+
+        // set the background
+        this.card.cardBackgroundContainer.style.display = 'none';
+        this.card.cardScroller.classList.add('card-settings-scroller-background');
+
+        // load the card body
+        fetch("/pages/cards/settings.html", {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'text/html'
+            }
+        }).then(async response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            const content = await response.text();
+            this.card.cardBody.innerHTML = content;
+
+            // set the body
+            this.menu = this.card.cardBody.querySelector('#card-settings-menu-box');
+            this.body = this.card.cardBody.querySelector('#card-settings-content');
+            this.contentHeading = this.card.cardBody.querySelector('#card-settings-content-heading-label');
+            this.content = this.card.cardBody.querySelector('#card-settings-content-body');
+
+            // set the back button
+            this.card.backButton.addEventListener('click', async () => {
+                let pagePathParts = this.currentPagePath.split('/');
+                if (pagePathParts.length === 2) {
+                    // show the menu
+                    this.menu.classList.remove('card-settings-menu-box-smallscreen-invisible');
+                    // hide the content box
+                    this.body.classList.add('card-settings-content-box-smallscreen-invisible');
+                    // hide the back button
+                    this.card.backButton.classList.remove('card-back-button-smallscreen-visible');
+                } else {
+                    // switch to the parent page
+                    let parentPagePath = pagePathParts.slice(0, -1).join('/');
+                    await this.SwitchPage(parentPagePath);
+                }
+            });
+
+            // build the menu
+            this.BuildMenu();
+
+            // show the card
+            this.card.Open();
+
+            // load the home settings page
+            await this.SwitchPage('/home', true);
+        }).catch(error => {
+            console.error('Error fetching card content:', error);
+            // handle error, e.g., show an error message
+        });
+    }
+
+    BuildMenu() {
+        let menuContainer = this.card.cardBody.querySelector('#card-settings-menu');
+        menuContainer.innerHTML = '';
+
+        for (const item in Object.keys(this.menuItems)) {
+            let key = Object.keys(this.menuItems)[item];
+
+            let menuItem = document.createElement('div');
+            menuItem.className = 'card-settings-menu-item';
+            menuItem.setAttribute('data-page', key);
+            menuItem.innerHTML = this.menuItems[key].name;
+            menuItem.addEventListener('click', async () => {
+                // switch the page
+                await this.SwitchPage(key);
+            });
+            menuContainer.appendChild(menuItem);
+        }
+    }
+
+    async SwitchPage(pagePath, initialLoad = false) {
+        // split the page path to get the page name - page name to load is the last part of the path
+        let pagePathParts = pagePath.split('/');
+        let page = pagePathParts[pagePathParts.length - 1];
+
+        await fetch('/pages/cards/settings/' + page + '.html', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'text/html'
+            }
+        }).then(async response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+
+            if (initialLoad === false) {
+                // hide the menu on small screens
+                this.menu.classList.add('card-settings-menu-box-smallscreen-invisible');
+                // show the content box on small screens
+                this.body.classList.remove('card-settings-content-box-smallscreen-invisible');
+                // show the back button
+                this.card.backButton.classList.add('card-back-button-smallscreen-visible');
+            } else {
+                // show the menu on initial load on small screens
+                this.menu.classList.remove('card-settings-menu-box-smallscreen-invisible');
+                // hide the content box on initial load on small screens
+                this.body.classList.add('card-settings-content-box-smallscreen-invisible');
+                // hide the back button on initial load
+                this.card.backButton.classList.remove('card-back-button-smallscreen-visible');
+            }
+
+            // select the appropriate button
+            let menuItems = this.card.cardBody.querySelectorAll('.card-settings-menu-item');
+
+            menuItems.forEach(mi => {
+                mi.classList.remove('card-settings-menu-item-selected');
+                if (mi.getAttribute('data-page').startsWith(pagePath)) {
+                    mi.classList.add('card-settings-menu-item-selected');
+                }
+            });
+
+            // set the content
+            let pageName = this.menuItems[pagePath].name;
+            this.contentHeading.innerHTML = pageName;
+            this.content.innerHTML = await response.text();
+
+            this.currentPage = page;
+            this.currentPagePath = pagePath;
+        }).then(async () => {
+            // clear the refresher if it exists
+            if (this.refresher) {
+                clearInterval(this.refresher);
+                this.refresher = null;
+            }
+
+            // load the content based on the page
+            switch (page) {
+                case 'home':
+                    await this.SystemLoadSystemStatus();
+                    await this.SystemSignaturesStatus();
+                    break;
+
+                case 'server':
+                case 'datasources':
+                    await this.LoadServerSettings();
+                    break;
+
+                case 'services':
+                    await this.SystemLoadStatus();
+                    this.refresher = setInterval(() => {
+                        this.SystemLoadStatus();
+                    }, 5000);
+                    break;
+            }
+        }).catch(error => {
+            console.error('Error fetching page:', error);
+            // handle error, e.g., show an error message
+        });
+    }
+
+    refresher = null;
+
+    async SystemLoadSystemStatus() {
+        fetch('/api/v1.1/System')
+            .then(response => response.json())
+            .then(result => {
+                if (result) {
+                    this.#BuildLibraryStatisticsBar(
+                        this.content.querySelector('#system_platforms'),
+                        this.content.querySelector('#system_platforms_legend'),
+                        result.platformStatistics
+                    );
+
+                    // database
+                    let newDbTable = document.createElement('table');
+                    newDbTable.className = 'romtable';
+                    newDbTable.setAttribute('cellspacing', 0);
+                    newDbTable.appendChild(createTableRow(false, ['Database Size', formatBytes(result.databaseSize)]));
+
+                    let targetDbDiv = this.body.querySelector('#system_database');
+                    targetDbDiv.innerHTML = '';
+                    targetDbDiv.appendChild(newDbTable);
+                }
+            });
+    }
+
+    #BuildLibraryStatisticsBar(TargetObject, TargetObjectLegend, LibraryStatistics) {
+        TargetObject.innerHTML = '';
+        TargetObjectLegend.innerHTML = '';
+
+        let newTable = document.createElement('div');
+        newTable.setAttribute('cellspacing', 0);
+        newTable.setAttribute('style', 'width: 100%; height: 10px;');
+
+        let newRow = document.createElement('div');
+        newRow.setAttribute('style', 'display: flex; width: 100%;');
+
+        let LibrarySize = 0;
+        // get LibarySize as sum of all platform sizes
+        for (const stat of LibraryStatistics) {
+            LibrarySize += stat.totalSize;
+        }
+
+        for (const stat of LibraryStatistics) {
+            let platformSizePercent = stat.totalSize / LibrarySize * 100;
+            let platformSizeColour = intToRGB(hashCode(stat.platform));
+            let newCell = document.createElement('div');
+            let segmentId = 'platform_' + stat.platform;
+            newCell.id = segmentId;
+            newCell.setAttribute('style', 'display: inline; height: 10px; min-width: 1px; width: ' + platformSizePercent + '%; background-color: #' + platformSizeColour);
+            newRow.appendChild(newCell);
+
+            let legend = document.createElement('div');
+            legend.id = 'legend_' + stat.platform;
+            legend.className = 'legend_box';
+
+            let legendColour = document.createElement('div');
+            let colourId = 'colour_' + stat.platform;
+            legendColour.id = colourId;
+            legendColour.className = 'legend_colour';
+            legendColour.setAttribute('style', 'background-color: #' + platformSizeColour + ';');
+
+            let legendLabel = document.createElement('div');
+            legendLabel.className = 'legend_label';
+            legendLabel.innerHTML = '<strong>' + stat.platform + '</strong><br />' + formatBytes(stat.totalSize) + '<br />ROMs: ' + stat.romCount;
+
+            // event listeners
+            legend.addEventListener('mouseenter', () => {
+                newCell.style.outline = '2px solid #' + platformSizeColour;
+                newCell.style.outlineOffset = '0px';
+                newCell.style.zIndex = '1';
+                newCell.style.boxShadow = '0px 0px 10px 0px #' + platformSizeColour;
+
+                legendColour.style.outline = '2px solid #' + platformSizeColour;
+                legendColour.style.outlineOffset = '0px';
+                legendColour.style.zIndex = '1';
+                legendColour.style.boxShadow = '0px 0px 10px 0px #' + platformSizeColour;
+            });
+            legend.addEventListener('mouseleave', () => {
+                newCell.style.outline = 'none';
+                newCell.style.outlineOffset = '0px';
+                newCell.style.zIndex = '0';
+                newCell.style.boxShadow = 'none';
+
+                legendColour.style.outline = 'none';
+                legendColour.style.outlineOffset = '0px';
+                legendColour.style.zIndex = '0';
+                legendColour.style.boxShadow = 'none';
+            });
+
+            legend.appendChild(legendColour);
+            legend.appendChild(legendLabel);
+            TargetObjectLegend.appendChild(legend);
+        }
+
+        newTable.appendChild(newRow);
+        TargetObject.appendChild(newTable);
+    }
+
+    async SystemSignaturesStatus() {
+        fetch('/api/v1.1/Signatures/Status')
+            .then(response => response.json())
+            .then(result => {
+                let newTable = document.createElement('table');
+                newTable.className = 'romtable';
+                newTable.setAttribute('cellspacing', 0);
+                newTable.appendChild(createTableRow(true, ['Sources', 'Platforms', 'Games', 'ROMs']));
+
+                if (result) {
+                    let newRow = [
+                        result.sources,
+                        result.platforms,
+                        result.games,
+                        result.roms
+                    ];
+                    newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
+                }
+
+                let targetDiv = this.body.querySelector('#system_signatures');
+                targetDiv.innerHTML = '';
+                targetDiv.appendChild(newTable);
+            })
+            .catch(error => console.error('Error fetching signatures status:', error));
+    }
+
+    async LoadServerSettings() {
+        // this is used for both the Data Sources and Server Settings pages, so we can use the same function
+        await fetch('/api/v1.1/System/Settings/System')
+            .then(response => response.json())
+            .then(result => {
+                switch (this.currentPage) {
+                    case 'server':
+                        // set the server settings
+                        let optionToSelect = '#settings_logs_write_db';
+                        if (result.alwaysLogToDisk == true) {
+                            optionToSelect = '#settings_logs_write_fs';
+                        }
+                        this.card.cardBody.querySelector(optionToSelect).checked = true;
+
+                        this.card.cardBody.querySelector('#settings_logs_retention').value = result.minimumLogRetentionPeriod;
+
+                        this.card.cardBody.querySelector('#settings_emulator_debug').checked = result.emulatorDebugMode;
+                        break;
+
+                    case 'datasources':
+                        // set the data sources settings
+                        switch (result.signatureSource.source) {
+                            case "LocalOnly":
+                                this.card.cardBody.querySelector('#settings_signaturesource_local').checked = true;
+                                break;
+
+                            case "Hasheous":
+                                this.card.cardBody.querySelector('#settings_signaturesource_hasheous').checked = true;
+                                break;
+
+                        }
+
+                        let metadataSettingsContainer = this.card.cardBody.querySelector('#settings_metadata');
+                        metadataSettingsContainer.innerHTML = '';
+                        result.metadataSources.forEach(element => {
+                            // section
+                            let sourceSection = document.createElement('div');
+                            sourceSection.classList.add('section');
+                            sourceSection.setAttribute('id', 'settings_metadatasource_' + element.source);
+
+                            // section header
+                            let sourceHeader = document.createElement('div');
+                            sourceHeader.classList.add('section-header');
+
+                            let sourceRadio = document.createElement('input');
+                            sourceRadio.setAttribute('type', 'radio');
+                            sourceRadio.setAttribute('name', 'settings_metadatasource');
+                            sourceRadio.setAttribute('value', element.source);
+                            sourceRadio.setAttribute('data-settingname', 'metadataconfiguration.defaultmetadatasource');
+                            sourceRadio.setAttribute('id', 'settings_metadatasource_' + element.source + '_radio');
+                            sourceRadio.style.margin = '0px';
+                            sourceRadio.style.height = 'unset';
+                            if (element.default) {
+                                sourceRadio.checked = true;
+                            }
+
+                            let sourceLabel = document.createElement('label');
+                            sourceLabel.setAttribute('for', 'settings_metadatasource_' + element.source + '_radio');
+
+                            let sourceName = document.createElement('span');
+                            switch (element.source) {
+                                case "IGDB":
+                                    sourceName.innerText = 'Internet Game Database (IGDB)';
+                                    break;
+
+                                default:
+                                    sourceName.innerText = element.source;
+                                    break;
+                            }
+                            sourceName.style.marginLeft = '10px';
+                            sourceLabel.appendChild(sourceName);
+
+                            let sourceConfigured = document.createElement('span');
+                            sourceConfigured.style.float = 'right';
+                            sourceConfigured.classList.add(element.configured ? 'greentext' : 'redtext');
+                            sourceConfigured.innerText = element.configured ? 'Configured' : 'Not Configured';
+
+                            sourceHeader.appendChild(sourceRadio);
+                            sourceHeader.appendChild(sourceLabel);
+                            sourceHeader.appendChild(sourceConfigured);
+                            sourceSection.appendChild(sourceHeader);
+
+                            // section body
+                            let sourceContent = document.createElement('div');
+                            sourceContent.classList.add('section-body');
+                            if (element.usesProxy === false && element.usesClientIdAndSecret === false) {
+                                sourceContent.innerText = 'No options to configure';
+                            } else {
+                                // render controls
+                                let controlsTable = document.createElement('table');
+                                controlsTable.style.width = '100%';
+
+                                // hasheous proxy row
+                                if (element.usesProxy === true) {
+                                    let proxyRow = document.createElement('tr');
+
+                                    let proxyLabel = document.createElement('td');
+                                    if (element.usesClientIdAndSecret === true) {
+                                        let proxyRadio = document.createElement('input');
+                                        proxyRadio.id = 'settings_metadatasource_proxy_' + element.source;
+                                        proxyRadio.setAttribute('type', 'radio');
+                                        proxyRadio.setAttribute('name', 'settings_metadatasource_proxy_' + element.source);
+                                        proxyRadio.setAttribute('data-settingname', 'igdb.usehasheousproxy');
+                                        proxyRadio.setAttribute('value', 'true');
+                                        proxyRadio.style.marginRight = '10px';
+                                        if (element.useHasheousProxy === true) {
+                                            proxyRadio.checked = true;
+                                        }
+                                        proxyLabel.appendChild(proxyRadio);
+
+                                        let proxyLabelLabel = document.createElement('label');
+                                        proxyLabelLabel.setAttribute('for', 'settings_metadatasource_proxy_' + element.source);
+
+                                        let proxyLabelSpan = document.createElement('span');
+                                        proxyLabelSpan.innerText = 'Use Hasheous Proxy';
+                                        proxyLabelLabel.appendChild(proxyLabelSpan);
+                                        proxyLabel.appendChild(proxyLabelLabel);
+
+                                        proxyRow.appendChild(proxyLabel);
+                                    } else {
+                                        proxyLabel.innerHTML = 'Uses Hasheous Proxy';
+                                        proxyRow.appendChild(proxyLabel);
+                                    }
+
+                                    controlsTable.appendChild(proxyRow);
+                                }
+
+                                // client id and secret row
+                                if (element.usesClientIdAndSecret === true) {
+                                    if (element.usesProxy === true) {
+                                        let clientRadioRow = document.createElement('tr');
+
+                                        let clientRadioLabel = document.createElement('td');
+                                        let clientRadio = document.createElement('input');
+                                        clientRadio.id = 'settings_metadatasource_client_' + element.source;
+                                        clientRadio.setAttribute('type', 'radio');
+                                        clientRadio.setAttribute('name', 'settings_metadatasource_proxy_' + element.source);
+                                        clientRadio.setAttribute('data-settingname', 'igdb.usehasheousproxy');
+                                        clientRadio.setAttribute('value', 'false');
+                                        clientRadio.style.marginRight = '10px';
+                                        if (element.useHasheousProxy === false) {
+                                            clientRadio.checked = true;
+                                        }
+                                        clientRadioLabel.appendChild(clientRadio);
+
+                                        let clientRadioLabelLabel = document.createElement('label');
+                                        clientRadioLabelLabel.setAttribute('for', 'settings_metadatasource_client_' + element.source);
+
+                                        let clientRadioLabelSpan = document.createElement('span');
+                                        clientRadioLabelSpan.innerText = 'Direct connection';
+                                        clientRadioLabelLabel.appendChild(clientRadioLabelSpan);
+                                        clientRadioLabel.appendChild(clientRadioLabelLabel);
+
+                                        clientRadioRow.appendChild(clientRadioLabel);
+
+                                        controlsTable.appendChild(clientRadioRow);
+                                    }
+
+                                    let clientIdTable = document.createElement('table');
+                                    clientIdTable.style.width = '100%';
+                                    if (element.usesProxy === true) {
+                                        clientIdTable.style.marginLeft = '30px';
+                                    }
+
+                                    let clientIdRow = document.createElement('tr');
+
+                                    let clientIdLabel = document.createElement('td');
+                                    clientIdLabel.style.width = '15%';
+                                    clientIdLabel.innerText = 'Client ID';
+                                    clientIdRow.appendChild(clientIdLabel);
+
+                                    let clientIdInput = document.createElement('td');
+                                    let clientIdInputField = document.createElement('input');
+                                    clientIdInputField.style.width = '90%';
+                                    clientIdInputField.setAttribute('type', 'text');
+                                    clientIdInputField.setAttribute('id', 'settings_metadatasource_' + element.source + '_clientid');
+                                    clientIdInputField.setAttribute('data-settingname', element.source.toLowerCase() + '.clientid');
+                                    clientIdInputField.value = element.clientId;
+                                    clientIdInput.appendChild(clientIdInputField);
+                                    clientIdRow.appendChild(clientIdInput);
+
+                                    clientIdTable.appendChild(clientIdRow);
+
+                                    let clientSecretRow = document.createElement('tr');
+
+                                    let clientSecretLabel = document.createElement('td');
+                                    clientSecretLabel.style.width = '15%';
+                                    clientSecretLabel.innerText = 'Client Secret';
+                                    clientSecretRow.appendChild(clientSecretLabel);
+
+                                    let clientSecretInput = document.createElement('td');
+                                    let clientSecretInputField = document.createElement('input');
+                                    clientSecretInputField.style.width = '90%';
+                                    clientSecretInputField.setAttribute('type', 'text');
+                                    clientSecretInputField.setAttribute('id', 'settings_metadatasource_' + element.source + '_clientsecret');
+                                    clientSecretInputField.setAttribute('data-settingname', element.source.toLowerCase() + '.secret');
+                                    clientSecretInputField.value = element.secret;
+                                    clientSecretInput.appendChild(clientSecretInputField);
+                                    clientSecretRow.appendChild(clientSecretInput);
+
+                                    clientIdTable.appendChild(clientSecretRow);
+
+                                    controlsTable.appendChild(clientIdTable);
+                                }
+
+
+                                sourceContent.appendChild(controlsTable);
+                            }
+                            sourceSection.appendChild(sourceContent);
+
+                            metadataSettingsContainer.appendChild(sourceSection);
+                        });
+
+                        this.card.cardBody.querySelector('#settings_signaturesource_hasheoushost').value = result.signatureSource.hasheousHost;
+
+                        let hasheousSubmitCheck = this.card.cardBody.querySelector('#settings_hasheoussubmit');
+                        if (result.signatureSource.hasheousSubmitFixes === true) {
+                            hasheousSubmitCheck.checked = true;
+                        }
+                        hasheousSubmitCheck.addEventListener('change', () => {
+                            this.#toggleHasheousAPIKey(hasheousSubmitCheck);
+                        });
+                        this.card.cardBody.querySelector('#settings_hasheousapikey').value = result.signatureSource.hasheousAPIKey;
+                        this.#toggleHasheousAPIKey(hasheousSubmitCheck);
+
+                        break;
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching server settings:', error);
+                // handle error, e.g., show an error message
+            });
+
+        // set the event listeners for the settings
+        let settingInputs = this.card.cardBody.querySelectorAll('[data-settingname]');
+        settingInputs.forEach(input => {
+            let eventTypes = ['change'];
+            if (input.type === 'text' || input.type === 'password' || input.type === 'email' || input.type === 'url' || input.type === 'number') {
+                eventTypes = ['change', 'input'];
+            }
+
+            eventTypes.forEach(eventType => {
+                input.addEventListener(eventType, async (event) => {
+                    let settingName = event.target.getAttribute('data-settingname');
+                    let settingValue = event.target.value;
+
+                    // handle checkbox inputs
+                    if (event.target.type === 'checkbox') {
+                        settingValue = event.target.checked;
+                    }
+
+                    // format the setting
+                    let settingValueDict = {};
+                    settingValueDict[settingName] = settingValue;
+
+                    console.log('Setting changed:', settingValue);
+                    console.log(settingValueDict);
+
+                    // send the setting change to the server
+                    await fetch('/api/v1.1/System/Settings/System', {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(settingValueDict)
+                    }).then(response => response.json()).then(result => {
+                        console.log('Setting updated:', result);
+                    }).catch(error => {
+                        console.error('Error updating setting:', error);
+                    });
+                });
+            });
+        });
+    }
+
+    #toggleHasheousAPIKey(checkbox) {
+        let settings_hasheousapikey_row = document.getElementById('settings_hasheousapikey_row');
+        if (checkbox.checked === true) {
+            settings_hasheousapikey_row.style.display = '';
+        } else {
+            settings_hasheousapikey_row.style.display = 'none';
+        }
+    }
+
+    async SystemLoadStatus() {
+        await fetch('/api/v1.1/BackgroundTasks')
+            .then(response => response.json())
+            .then(result => {
+                // table header
+                const columnHeaders = {
+                    status: {
+                        text: '',
+                        classList: ['romcell'],
+                        styleOverrideList: ['width: 20px;', 'height: 20px;'],
+                        tooltip: 'Status',
+                        jsonName: 'itemState'
+                    },
+                    type: {
+                        text: 'Task Name',
+                        classList: ['romcell'],
+                        styleOverrideList: [],
+                        tooltip: 'Task Type',
+                        jsonName: 'itemType'
+                    },
+                    interval: {
+                        text: 'Interval',
+                        classList: ['romcell'],
+                        styleOverrideList: [],
+                        tooltip: 'Interval',
+                        jsonName: 'interval'
+                    },
+                    lastRunDuration: {
+                        text: 'Last Run Duration',
+                        classList: ['romcell'],
+                        styleOverrideList: [],
+                        tooltip: 'Last Run Duration',
+                        jsonName: 'lastRunDuration'
+                    },
+                    lastRunTime: {
+                        text: 'Last Run Time',
+                        classList: ['romcell'],
+                        styleOverrideList: [],
+                        tooltip: 'Last Run Time',
+                        jsonName: 'lastRunTime'
+                    },
+                    nextRunTime: {
+                        text: 'Next Run Time',
+                        classList: ['romcell'],
+                        styleOverrideList: [],
+                        tooltip: 'Next Run Time',
+                        jsonName: 'nextRunTime'
+                    },
+                    logLink: {
+                        text: '',
+                        classList: ['romcell'],
+                        styleOverrideList: ['width: 20px;'],
+                        tooltip: 'Logs',
+                        jsonName: 'correlationId'
+                    },
+                    startButton: {
+                        text: '',
+                        classList: ['romcell'],
+                        styleOverrideList: ['width: 20px;'],
+                        tooltip: 'Start Task',
+                        jsonName: 'force'
+                    }
+                }
+
+                const states = {
+                    NeverStarted: {
+                        icon: "",
+                        text: "",
+                        hoverText: "Never started"
+                    },
+                    Stopped: {
+                        icon: "",
+                        text: "",
+                        hoverText: "Stopped"
+                    },
+                    Running: {
+                        icon: "play-icon.svg",
+                        text: "Running",
+                        hoverText: "Running"
+                    },
+                    Blocked: {
+                        icon: "blocked.svg",
+                        text: "Blocked",
+                        hoverText: "Blocked"
+                    },
+                    Unknown: {
+                        icon: "",
+                        text: "Unknown",
+                        hoverText: "Unknown status"
+                    }
+                }
+
+                if (result === null || result === undefined || result.length === 0) {
+                    let errorReport = document.createElement('div');
+                    errorReport.className = 'error-report';
+                    errorReport.innerHTML = '<p>No background tasks found.</p>';
+                    this.card.cardBody.querySelector('#system_tasks').appendChild(errorReport);
+                    return;
+                }
+
+                // filter out disabled tasks and ImportQueueProcessor without child tasks
+                result = result.filter(task => task.itemState !== "Disabled" && !(task.itemType === 'ImportQueueProcessor' && (task.childTasks === undefined || task.childTasks.length === 0)));
+
+                // sort tasks by itemType
+                result.sort((a, b) => a.itemType.localeCompare(b.itemType));
+
+                // generate a table for the tasks
+                let newTable = document.createElement('table');
+                newTable.className = 'romtable';
+                newTable.setAttribute('cellspacing', 0);
+
+                // create the header row
+                let headerRow = document.createElement('tr');
+                headerRow.className = 'romrow taskrow';
+                for (const key in columnHeaders) {
+                    let header = columnHeaders[key];
+                    let headerCell = document.createElement('th');
+                    headerCell.className = header.classList.join(' ');
+                    headerCell.style = header.styleOverrideList.join(' ');
+                    headerCell.title = header.tooltip;
+                    headerCell.innerHTML = header.text;
+
+                    headerRow.appendChild(headerCell);
+                }
+                newTable.appendChild(headerRow);
+
+                // iterate over the tasks and create a row for each
+                for (const task of result) {
+                    if (task.itemState === "Disabled") {
+                        continue; // skip disabled tasks
+                    }
+
+                    if (task.itemType === 'ImportQueueProcessor' && (task.childTasks === undefined || task.childTasks.length === 0)) {
+                        continue; // skip ImportQueueProcessor if no child tasks
+                    }
+
+                    // create a new row for the task
+                    let taskRow = document.createElement('tbody');
+                    taskRow.className = 'romrow taskrow';
+
+                    let newRow = document.createElement('tr');
+
+                    // create cells for each column
+                    for (const key in columnHeaders) {
+                        let header = columnHeaders[key];
+                        let cell = document.createElement('td');
+                        cell.className = header.classList.join(' ');
+                        cell.style = header.styleOverrideList.join(' ');
+
+                        // handle the specific data for each column
+                        switch (header.jsonName) {
+                            case 'itemState':
+                                let state = task.itemState;
+                                if (states[state]) {
+                                    let stateIcon = states[state].icon ? `<img src='/images/${states[state].icon}' class='banner_button_image' style='padding-top: 5px;' title='${states[state].hoverText}'>` : '';
+                                    cell.innerHTML = stateIcon;
+                                } else {
+                                    cell.innerHTML = `<img src='/images/Critical.svg' class='banner_button_image' style='padding-top: 5px;' title='Unknown status'>`;
+                                }
+                                break;
+
+                            case 'itemType':
+                                let itemTypeName = GetTaskFriendlyName(task.itemType, task.options);
+                                cell.innerHTML = itemTypeName;
+                                break;
+
+                            case 'interval':
+                                let itemInterval = task.interval;
+                                if (!task.allowManualStart && task.removeWhenStopped) {
+                                    itemInterval = '';
+                                }
+                                cell.innerHTML = itemInterval;
+                                break;
+
+                            case 'lastRunDuration':
+                                cell.innerHTML = new Date(task.lastRunDuration * 1000).toISOString().slice(11, 19);
+                                break;
+
+                            case 'lastRunTime':
+                                cell.innerHTML = moment(task.lastRunTime).format("YYYY-MM-DD h:mm:ss a");
+                                break;
+
+                            case 'nextRunTime':
+                                cell.innerHTML = moment(task.nextRunTime).format("YYYY-MM-DD h:mm:ss a");
+                                break;
+
+                            case 'correlationId':
+                                if (task.correlationId) {
+                                    cell.innerHTML = `<img id="logLink" class="banner_button_image" src="/images/log.svg" onclick="window.location.href='/index.html?page=settings&sub=logs&correlationid=${task.correlationId}'" title="Logs" style="cursor: pointer;">`;
+                                } else {
+                                    cell.innerHTML = '';
+                                }
+                                break;
+
+                            case 'force':
+                                if (userProfile.roles.includes("Admin")) {
+                                    if (!task.force) {
+                                        if (task.allowManualStart && !["Running"].includes(task.itemState) && !task.isBlocked) {
+                                            let startButton = document.createElement('img');
+                                            startButton.id = 'startProcess';
+                                            startButton.className = 'taskstart';
+                                            startButton.src = '/images/start-task.svg';
+                                            startButton.title = 'Start';
+                                            startButton.alt = 'Start';
+                                            startButton.addEventListener('click', () => {
+                                                fetch('/api/v1.1/BackgroundTasks/' + task.itemType + '?ForceRun=true', { method: 'GET' })
+                                                    .then(response => response.json())
+                                                    .then(result => {
+                                                        this.SystemLoadStatus();
+                                                    })
+                                                    .catch(error => console.error('Error starting process:', error));
+                                            });
+                                            cell.appendChild(startButton);
+                                        }
+                                    }
+                                }
+                                break;
+
+                            default:
+                                cell.innerHTML = ''; // default case, should not happen
+                                break;
+                        }
+
+                        newRow.appendChild(cell);
+                    }
+
+                    taskRow.appendChild(newRow);
+
+                    // add a more detailed row for the task
+                    if (task.force === true && task.itemState !== "Running") {
+                        // add a pending state row
+                        let pendingRow = document.createElement('tr');
+                        pendingRow.className = 'taskrow';
+                        let pendingCell = document.createElement('td');
+                        pendingCell.colSpan = Object.keys(columnHeaders).length;
+
+                        pendingCell.innerHTML = `<table style="width: 100%;"><tr><td style="width: 25%;padding-left: 10px; padding-right: 10px;">Pending</td><td style="width: 75%; padding-left: 10px; padding-right: 10px;"><progress style="width: 100%;"></progress></td></tr></table>`;
+                        pendingRow.appendChild(pendingCell);
+                        taskRow.appendChild(pendingRow);
+                    } else if (task.itemState === "Running" && task.currentStateProgress) {
+                        // add a running state row with progress
+                        let runningRow = document.createElement('tr');
+                        runningRow.className = 'taskrow';
+                        let runningCell = document.createElement('td');
+                        runningCell.colSpan = Object.keys(columnHeaders).length;
+
+                        if (task.currentStateProgress.includes(" of ")) {
+                            let progressParts = task.currentStateProgress.split(" of ");
+                            runningCell.innerHTML = `<table style="width: 100%;"><tr><td style="width: 25%;padding-left: 10px; padding-right: 10px;">Running ${task.currentStateProgress}</td><td style="width: 75%; padding-left: 10px; padding-right: 10px;"><progress value="${progressParts[0]}" max="${progressParts[1]}" style="width: 100%;">${task.currentStateProgress}</progress></td></tr></table>`;
+                        } else {
+                            runningCell.innerHTML = `Running (${task.currentStateProgress})`;
+                        }
+                        runningRow.appendChild(runningCell);
+                        taskRow.appendChild(runningRow);
+                    }
+
+                    // add sub-row for sub tasks if they exist
+                    if (task.childTasks && task.childTasks.length > 0) {
+                        let subRow = document.createElement('tr');
+                        let subRowCell = document.createElement('td');
+                        subRowCell.style.padding = '10px';
+                        subRowCell.colSpan = Object.keys(columnHeaders).length; // span all columns
+
+                        // create sub table
+                        let subTable = document.createElement('table');
+                        subTable.className = 'romtable';
+                        subTable.setAttribute('cellspacing', 0);
+
+                        // create header row for sub table
+                        let subHeaderRow = document.createElement('tr');
+                        subHeaderRow.className = 'romrow taskrow';
+                        subHeaderRow.innerHTML = `
+                            <th class="romcell" style="width: 20px;"></th>
+                            <th class="romcell">Task Name</th>
+                            <th class="romcell" colspan="2">Progress</th>
+                            <th class="romcell">Logs</th>
+                        `;
+                        subTable.appendChild(subHeaderRow);
+
+                        // iterate over child tasks and create a row for each
+                        for (const subTask of task.childTasks) {
+                            let subRow = document.createElement('tr');
+                            subRow.className = 'romrow taskrow';
+
+                            let subState = states[subTask.state] || { text: subTask.state, icon: '' };
+                            let subStateIcon = subState.icon ? `<img src='/images/${subState.icon}' class='banner_button_image' style='padding-top: 5px;' title='${subState.text}'>` : '';
+
+                            let subRowData = [
+                                subStateIcon,
+                                subTask.taskName,
+                                subTask.currentStateProgress || '',
+                                subTask.currentStateProgress ? `<progress value="${subTask.currentStateProgress.split(" of ")[0]}" max="${subTask.currentStateProgress.split(" of ")[1]}">${subTask.currentStateProgress}</progress>` : '<progress value="0" max="100"></progress>',
+                                subTask.correlationId ? `<img id="logLink" class="banner_button_image" src="/images/log.svg" onclick="window.location.href='/index.html?page=settings&sub=logs&correlationid=${subTask.correlationId}'" title="Logs" style="cursor: pointer;">` : ''
+                            ];
+
+                            let subRowBody = document.createElement('tbody');
+                            subRowBody.className = 'romrow taskrow';
+                            subRowBody.appendChild(createTableRow(false, subRowData, '', 'romcell'));
+                            subTable.appendChild(subRowBody);
+                        }
+
+                        subRowCell.appendChild(subTable);
+                        subRow.appendChild(subRowCell);
+                        taskRow.appendChild(subRow);
+                    }
+
+                    newTable.appendChild(taskRow);
+                }
+
+                // clear the previous content and append the new table
+                let targetDiv = this.card.cardBody.querySelector('#system_tasks');
+                targetDiv.innerHTML = '';
+                targetDiv.appendChild(newTable);
+            })
+            .catch(error => console.error('Error fetching background tasks:', error));
     }
 }

@@ -113,7 +113,7 @@ namespace gaseous_server.Classes
             {
                 SetStatus(StatusCounter, tables.Rows.Count, "Optimising table " + row[0].ToString());
 
-                sql = "OPTIMIZE TABLE " + row[0].ToString();
+                sql = "OPTIMIZE TABLE `" + row[0].ToString() + "`;";
                 DataTable response = await db.ExecuteCMDAsync(sql, new Dictionary<string, object>(), 240);
                 foreach (DataRow responseRow in response.Rows)
                 {

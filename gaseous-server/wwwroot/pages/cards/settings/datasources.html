@@ -1,0 +1,68 @@
+<div class="section">
+    <div class="section-header">Signature Sources</div>
+    <div class="section-body">
+        <table style="width: 100%;">
+            <tr>
+                <td style="width: 30%;">
+                    Signature Source
+                </td>
+                <td>
+                    <input type="radio" name="settings_signaturesource" id="settings_signaturesource_local"
+                        data-settingname="metadataconfiguration.signaturesource" value="LocalOnly">
+                    <label for="settings_signaturesource_local">Local Only</label>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <input type="radio" name="settings_signaturesource" id="settings_signaturesource_hasheous"
+                        data-settingname="metadataconfiguration.signaturesource" value="Hasheous">
+                    <label for="settings_signaturesource_hasheous">Hasheous</label>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-header">Default Metadata Source</div>
+    <div class="section-body" id="settings_metadata">
+
+    </div>
+</div>
+
+<div class="section">
+    <div class="section-header">Hasheous Configuration</div>
+    <div class="section-body">
+        <table style="width: 100%;">
+            <tr id="settings_hasheoushost_row">
+                <td style="width: 30%;">
+                    Hasheous Host
+                </td>
+                <td>
+                    <input type="url" id="settings_signaturesource_hasheoushost" style="width: 90%;"
+                        data-settingname="metadataconfiguration.hasheoushost">
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <label for="settings_hasheoussubmit">Submit updates to Hasheous when fixing ROM
+                        matches</label>
+                </td>
+                <td>
+                    <input type="checkbox" id="settings_hasheoussubmit"
+                        data-settingname="metadataconfiguration.hasheoussubmitfixes">
+                </td>
+            </tr>
+            <tr id="settings_hasheousapikey_row">
+                <td style="width: 30%;">
+                    Hasheous API key
+                </td>
+                <td>
+                    <input type="text" id="settings_hasheousapikey" style="width: 90%;"
+                        data-settingname="metadataconfiguration.hasheousapikey">
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>

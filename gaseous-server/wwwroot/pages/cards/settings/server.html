@@ -1,0 +1,51 @@
+<div class="section">
+    <div class="section-header">Logging</div>
+    <div class="section-body">
+        <table>
+            <tr>
+                <td style="width: 25%;">
+                    Write logs
+                </td>
+                <td>
+                    <input type="radio" name="settings_logs_write" id="settings_logs_write_db" value="false"
+                        data-settingname="logginconfiguration.alwayslogtodisk" checked="checked"><label
+                        for="settings_logs_write_db"> To database only
+                        (default)</label>
+                </td>
+            </tr>
+            <tr>
+                <td></td>
+                <td>
+                    <input type="radio" name="settings_logs_write" id="settings_logs_write_fs" value="true"
+                        data-settingname="logginconfiguration.alwayslogtodisk"><label for="settings_logs_write_fs"> To
+                        database and disk</label>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2">&nbsp;</td>
+            </tr>
+            <tr>
+                <td style="width: 25%;">
+                    Minimum log retention (days):
+                </td>
+                <td>
+                    <input type="number" min="1" id="settings_logs_retention"
+                        data-settingname="loggingconfiguration.logretention" />
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div class="section">
+    <div class="section-header">Emulator</div>
+    <div class="section-body">
+        <table>
+            <tr>
+                <td style="width: 25%;"><label for="settings_emulator_debug">Enable debug mode</label></td>
+                <td><input type="checkbox" name="settings_emulator" id="settings_emulator_debug" checked="checked"
+                        data-settingname="emulatordebugmode" />
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>

@@ -405,6 +405,26 @@
     .games_home_collapsed {
         display: none;
     }
+
+    .card-settings-menu-item-selected {
+        background-color: unset;
+    }
+
+    .card-back-button-smallscreen-visible {
+        display: block;
+    }
+
+    #card-settings-menu-box {
+        width: 100%;
+    }
+
+    .card-settings-menu-box-smallscreen-invisible {
+        display: none;
+    }
+
+    .card-settings-content-box-smallscreen-invisible {
+        display: none;
+    }
 }
 
 @media screen and (max-width: 370px) {

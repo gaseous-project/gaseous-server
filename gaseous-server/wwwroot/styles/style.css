@@ -3467,6 +3467,98 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     padding: 20px;
 }
 
+.card-settings-scroller-background {
+    background: #071275;
+    background: linear-gradient(194deg, rgb(8, 15, 82) 0%, rgba(17, 23, 38, 1) 50%, rgb(29, 38, 108) 100%);
+}
+
+.card-settings-body {
+    margin-top: 45px;
+    padding-bottom: 20px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: normal;
+    align-items: normal;
+    align-content: normal;
+    gap: 20px;
+}
+
+#card-settings-menu-box {
+    width: 200px;
+    min-width: 200px;
+    flex-grow: 0;
+    flex-shrink: 1;
+    flex-basis: auto;
+    align-self: auto;
+    order: 0;
+}
+
+.card-settings-menu-item {
+    padding: 10px;
+    width: 100%;
+}
+
+.card-settings-menu-item-selected {
+    background-color: var(--section-header-background);
+}
+
+.card-settings-menu-item:hover {
+    cursor: pointer;
+    background-color: var(--section-header-background-solid);
+}
+
+#card-settings-content {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: auto;
+    align-self: auto;
+    order: 0;
+    position: relative;
+    /* padding-top: 50px; */
+}
+
+#card-settings-content-heading-label {
+    /* position: absolute;
+    top: 15px;
+    left: 40px;
+    right: 40px;
+    font-weight: bold; */
+    text-align: center;
+    /* display: inline-block; */
+}
+
+.card-back-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 20px;
+    height: 20px;
+    font-size: 17px;
+    color: white;
+    background-color: var(--button-background);
+    border-radius: 50%;
+    border-width: 0px;
+    border-color: transparent;
+    border-style: solid;
+    overflow: hidden;
+    cursor: pointer;
+    text-align: center;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
+    display: none;
+}
+
+.card-back-button:hover {
+    background-color: var(--button-background-hover);
+}
+
+.card-back-button-nested-visible {
+    display: block;
+}
+
 .card-close-button {
     position: absolute;
     top: 10px;
