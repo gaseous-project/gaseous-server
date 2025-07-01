@@ -720,6 +720,7 @@ function BuildSpaceBar(LibrarySize, OtherSize, TotalSize) {
     librarySizeSpan.style.position = 'absolute';
     librarySizeSpan.classList.add('sizelabel');
     librarySizeSpan.classList.add('sizelabel_left');
+    librarySizeSpan.style.display = 'none';
     if (LibrarySizePercent > 10) {
         librarySizeSpan.style.left = 'calc(' + LibrarySizePercent + '% - 75px)';
     } else {
@@ -728,21 +729,44 @@ function BuildSpaceBar(LibrarySize, OtherSize, TotalSize) {
     librarySizeSpan.innerHTML = 'Library: ' + formatBytes(LibrarySize) + ' (' + LibrarySizePercent + '%)';
     sizeBox.appendChild(librarySizeSpan);
 
+    LibraryCell.addEventListener('mouseover', function () {
+        librarySizeSpan.style.display = 'block';
+    });
+    LibraryCell.addEventListener('mouseout', function () {
+        librarySizeSpan.style.display = 'none';
+    });
+
     let otherSizeSpan = document.createElement('span');
     otherSizeSpan.style.position = 'absolute';
     otherSizeSpan.style.left = 'calc(' + OtherSizePercent + '% - 75px)';
     otherSizeSpan.classList.add('sizelabel');
     otherSizeSpan.classList.add('sizelabel_center');
+    otherSizeSpan.style.display = 'none';
     otherSizeSpan.innerHTML = 'Other: ' + formatBytes(OtherSize) + ' (' + OtherSizePercent + '%)';
     sizeBox.appendChild(otherSizeSpan);
+
+    OtherCell.addEventListener('mouseover', function () {
+        otherSizeSpan.style.display = 'block';
+    });
+    OtherCell.addEventListener('mouseout', function () {
+        otherSizeSpan.style.display = 'none';
+    });
 
     let freeSizeSpan = document.createElement('span');
     freeSizeSpan.style.position = 'absolute';
     freeSizeSpan.style.right = '0px';
     freeSizeSpan.classList.add('sizelabel');
     freeSizeSpan.classList.add('sizelabel_right');
+    freeSizeSpan.style.display = 'none';
     freeSizeSpan.innerHTML = 'Free: ' + formatBytes(TotalSize - (Number(LibrarySize) + Number(OtherSize))) + ' (' + FreeSizePercent + '%)';
     sizeBox.appendChild(freeSizeSpan);
+
+    FreeCell.addEventListener('mouseover', function () {
+        freeSizeSpan.style.display = 'block';
+    });
+    FreeCell.addEventListener('mouseout', function () {
+        freeSizeSpan.style.display = 'none';
+    });
 
     containerDiv.appendChild(sizeBox);
 

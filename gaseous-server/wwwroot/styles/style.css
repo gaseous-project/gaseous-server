@@ -2797,8 +2797,8 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     /* Make sure the arrow is visible */
     z-index: 1;
     display: inline-block;
-    /* Invert SVG color */
-    filter: invert(1);
+    /* Make SVG off white */
+    filter: invert(0.60) brightness(1.2);
 }
 
 .listboxselector {
