@@ -2109,6 +2109,14 @@ class SettingsCard {
                         await this.drawLibrary();
                     });
                     break;
+
+                case 'users':
+                    await this.GetUsers();
+                    this.body.querySelector('#settings_users_new').addEventListener('click', async () => {
+                        let newUser = new UserNew(this);
+                        newUser.open();
+                    });
+                    break;
             }
         }).catch(error => {
             console.error('Error fetching page:', error);
@@ -3315,6 +3323,191 @@ class SettingsCard {
 
                     newTable.appendChild(container);
                 }
+            }
+            );
+    }
+
+    async GetUsers() {
+        console.log("Loading users...");
+        let targetDiv = document.getElementById('settings_users_table_container');
+        targetDiv.innerHTML = '';
+
+        fetch('/api/v1.1/Account/Users', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json())
+            .then((result) => {
+                let newTable = document.createElement('table');
+                newTable.className = 'romtable';
+                newTable.style.width = '100%';
+                newTable.cellSpacing = 0;
+
+                let headerRow = document.createElement('tr');
+                headerRow.className = 'romrow';
+
+                let headerCell1 = document.createElement('th');
+                headerCell1.classList.add('romcell');
+                headerCell1.style.width = '32px'; // Avatar width
+                headerRow.appendChild(headerCell1);
+
+                let headerCell2 = document.createElement('th');
+                headerCell2.classList.add('romcell');
+                headerCell2.innerHTML = 'Email';
+                headerRow.appendChild(headerCell2);
+
+                let headerCell3 = document.createElement('th');
+                headerCell3.classList.add('romcell');
+                headerCell3.classList.add('card-services-column');
+                headerCell3.innerHTML = 'Role';
+                headerRow.appendChild(headerCell3);
+
+                let headerCell4 = document.createElement('th');
+                headerCell4.classList.add('romcell');
+                headerCell4.classList.add('card-services-column');
+                headerCell4.innerHTML = 'Age Restriction';
+                headerRow.appendChild(headerCell4);
+
+                let headerCell5 = document.createElement('th');
+                headerCell5.className = 'romcell';
+                headerRow.appendChild(headerCell5);
+
+                let headerCell6 = document.createElement('th');
+                headerCell6.className = 'romcell';
+                headerRow.appendChild(headerCell6);
+
+                newTable.appendChild(headerRow);
+
+                for (const user of result) {
+                    let userAvatar = new Avatar(user.profileId, 32, 32, true);
+                    userAvatar.classList.add("user_list_icon");
+
+                    let roleDiv = document.createElement('div');
+
+                    let roleItem = CreateBadge(user.highestRole);
+                    roleDiv.appendChild(roleItem);
+
+                    let ageRestrictionPolicyDescription = document.createElement('div');
+                    if (user.securityProfile != null) {
+                        if (user.securityProfile.ageRestrictionPolicy != null) {
+                            let IncludeUnratedText = '';
+                            if (user.securityProfile.ageRestrictionPolicy.includeUnrated) {
+                                IncludeUnratedText = " &#43; Unclassified titles";
+                            }
+
+                            let restrictionText = user.securityProfile.ageRestrictionPolicy.maximumAgeRestriction + IncludeUnratedText;
+
+                            ageRestrictionPolicyDescription = CreateBadge(restrictionText);
+                        }
+                    }
+
+                    let controls = document.createElement('div');
+                    controls.style.textAlign = 'right';
+
+                    let editButton;
+                    let deleteButton;
+
+                    if (userProfile.userId != user.id) {
+                        editButton = document.createElement('a');
+                        editButton.href = '#';
+                        editButton.addEventListener('click', () => {
+                            let userEdit = new UserEdit(user.id, this.GetUsers);
+                            userEdit.open();
+                        });
+                        editButton.classList.add('romlink');
+
+                        let editButtonImage = document.createElement('img');
+                        editButtonImage.src = '/images/edit.svg';
+                        editButtonImage.classList.add('banner_button_image');
+                        editButtonImage.alt = 'Edit';
+                        editButtonImage.title = 'Edit';
+                        editButton.appendChild(editButtonImage);
+
+                        deleteButton = document.createElement('a');
+                        deleteButton.href = '#';
+                        deleteButton.addEventListener('click', () => {
+                            let warningDialog = new MessageBox("Delete User", "Are you sure you want to delete this user?<br /><br /><strong>Warning</strong>: This cannot be undone!");
+                            const handleDelete = async (callingObject) => {
+                                try {
+                                    const response = await fetch("/api/v1.1/Account/Users/" + user.id, {
+                                        method: 'DELETE'
+                                    });
+                                    if (response.ok) {
+                                        this.GetUsers();
+                                        callingObject.msgDialog.close();
+                                    } else {
+                                        let warningDialogError = new MessageBox("Delete User Error", "An error occurred while deleting the user.");
+                                        warningDialogError.open();
+                                    }
+                                } catch (error) {
+                                    let warningDialogError = new MessageBox("Delete User Error", "An error occurred while deleting the user.");
+                                    warningDialogError.open();
+                                }
+                            };
+                            warningDialog.addButton(new ModalButton("OK", 2, warningDialog, handleDelete));
+                            warningDialog.addButton(new ModalButton("Cancel", 0, warningDialog, function (callingObject) {
+                                callingObject.msgDialog.close();
+                            }));
+                            warningDialog.open();
+                        });
+                        deleteButton.classList.add('romlink');
+
+                        let deleteButtonImage = document.createElement('img');
+                        deleteButtonImage.src = '/images/delete.svg';
+                        deleteButtonImage.classList.add('banner_button_image');
+                        deleteButtonImage.alt = 'Delete';
+                        deleteButtonImage.title = 'Delete';
+                        deleteButton.appendChild(deleteButtonImage);
+                    }
+
+                    // create the table row for the user
+                    let userRow = document.createElement('tr');
+                    userRow.classList.add('romrow');
+
+                    // create the table cells for the user
+                    let userAvatarCell = document.createElement('td');
+                    userAvatarCell.classList.add('romcell');
+                    userAvatarCell.style.width = '32px'; // Avatar width
+                    userAvatarCell.appendChild(userAvatar);
+                    userRow.appendChild(userAvatarCell);
+
+                    let userEmailCell = document.createElement('td');
+                    userEmailCell.classList.add('romcell');
+                    userEmailCell.innerHTML = user.emailAddress;
+                    userRow.appendChild(userEmailCell);
+
+                    let userRoleCell = document.createElement('td');
+                    userRoleCell.classList.add('romcell');
+                    userRoleCell.classList.add('card-services-column');
+                    userRoleCell.appendChild(roleDiv);
+                    userRow.appendChild(userRoleCell);
+
+                    let ageRestrictionCell = document.createElement('td');
+                    ageRestrictionCell.classList.add('romcell');
+                    ageRestrictionCell.classList.add('card-services-column');
+                    ageRestrictionCell.appendChild(ageRestrictionPolicyDescription);
+                    userRow.appendChild(ageRestrictionCell);
+
+                    let controlsCell = document.createElement('td');
+                    controlsCell.className = 'romcell';
+                    if (editButton) {
+                        controlsCell.appendChild(editButton);
+                    }
+                    userRow.appendChild(controlsCell);
+
+                    let controlsCell2 = document.createElement('td');
+                    controlsCell2.className = 'romcell';
+                    if (deleteButton) {
+                        controlsCell2.appendChild(deleteButton);
+                    }
+                    userRow.appendChild(controlsCell2);
+
+                    // append the user row to the new table
+                    newTable.appendChild(userRow);
+                }
+
+                targetDiv.appendChild(newTable);
             }
             );
     }
