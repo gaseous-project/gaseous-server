@@ -529,11 +529,13 @@ namespace gaseous_server.Classes
 						// get the hash of the ROM from the datarow
 						string? md5 = dr["MD5"] == DBNull.Value ? null : dr["MD5"].ToString();
 						string? sha1 = dr["SHA1"] == DBNull.Value ? null : dr["SHA1"].ToString();
+						string? sha256 = dr["SHA256"] == DBNull.Value ? null : dr["SHA256"].ToString();
 						string? crc = dr["CRC"] == DBNull.Value ? null : dr["CRC"].ToString();
-						Common.hashObject hash = new Common.hashObject();
+						HashObject hash = new HashObject();
 						if (
 							md5 != null && md5 != "" &&
 							sha1 != null && sha1 != "" &&
+							sha256 != null && sha256 != "" &&
 							crc != null && crc != ""
 						)
 						{
@@ -545,6 +547,10 @@ namespace gaseous_server.Classes
 							{
 								hash.sha1hash = sha1;
 							}
+							if (sha256 != null)
+							{
+								hash.sha256hash = sha256;
+							}
 							if (crc != null)
 							{
 								hash.crc32hash = crc;
@@ -553,7 +559,7 @@ namespace gaseous_server.Classes
 						else
 						{
 							Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Missing one or more hashes for " + dr["Name"] + " - recalculating hashes");
-							hash = new Common.hashObject(dr["Path"].ToString());
+							hash = new HashObject(dr["Path"].ToString());
 						}
 
 						// get the library for the ROM
@@ -695,19 +701,22 @@ namespace gaseous_server.Classes
 						foreach (long ageRatingId in game.AgeRatings)
 						{
 							AgeRating ageRating = await Metadata.AgeRatings.GetAgeRating(item.SourceType, ageRatingId);
-							if (ageRating.Organization != null)
+							if (ageRating != null)
 							{
-								await Metadata.AgeRatingOrganizations.GetAgeRatingOrganization(item.SourceType, (long)ageRating.Organization);
-							}
-							if (ageRating.RatingCategory != null)
-							{
-								await Metadata.AgeRatingCategorys.GetAgeRatingCategory(item.SourceType, (long)ageRating.RatingCategory);
-							}
-							if (ageRating.RatingContentDescriptions != null)
-							{
-								foreach (long ageRatingContentDescriptionId in ageRating.RatingContentDescriptions)
+								if (ageRating.Organization != null)
 								{
-									await Metadata.AgeRatingContentDescriptionsV2.GetAgeRatingContentDescriptionsV2(item.SourceType, ageRatingContentDescriptionId);
+									await Metadata.AgeRatingOrganizations.GetAgeRatingOrganization(item.SourceType, (long)ageRating.Organization);
+								}
+								if (ageRating.RatingCategory != null)
+								{
+									await Metadata.AgeRatingCategorys.GetAgeRatingCategory(item.SourceType, (long)ageRating.RatingCategory);
+								}
+								if (ageRating.RatingContentDescriptions != null)
+								{
+									foreach (long ageRatingContentDescriptionId in ageRating.RatingContentDescriptions)
+									{
+										await Metadata.AgeRatingContentDescriptionsV2.GetAgeRatingContentDescriptionsV2(item.SourceType, ageRatingContentDescriptionId);
+									}
 								}
 							}
 						}

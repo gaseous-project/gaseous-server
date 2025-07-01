@@ -16,7 +16,6 @@ function setupBanner() {
     let userMenuLogoff = document.getElementById("banner_user_logoff");
     if (userMenuLogoff) {
         userMenuLogoff.addEventListener('click', async () => {
-            await db.DeleteDatabase();
             ajaxCall(
                 '/api/v1.1/Account/LogOff',
                 'POST',
@@ -30,10 +29,18 @@ function setupBanner() {
         });
     }
 
+    let bannerCogold = document.getElementById("banner_cogold");
+    if (bannerCogold) {
+        bannerCogold.addEventListener('click', () => {
+            window.location.href = '/index.html?page=settings';
+        });
+    }
+
     let bannerCog = document.getElementById("banner_cog");
     if (bannerCog) {
         bannerCog.addEventListener('click', () => {
-            window.location.href = '/index.html?page=settings';
+            let settingsCard = new SettingsCard();
+            settingsCard.ShowCard();
         });
     }
 

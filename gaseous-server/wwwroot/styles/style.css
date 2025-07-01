@@ -305,8 +305,7 @@ h3 {
 
 /* end new modal style */
 
-#banner_icon {
-    /* background-color: white; */
+/* #banner_icon {
     background-color: rgba(0, 22, 56, 0.2);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
@@ -321,6 +320,11 @@ h3 {
     margin: 0px;
     display: flex;
     z-index: 50;
+} */
+
+#banner_icon {
+    display: inline-block;
+    padding: 5px;
 }
 
 #banner_icon:hover {
@@ -331,6 +335,20 @@ h3 {
     width: 30px;
     height: 30px;
     filter: drop-shadow(1px 1px 0 rgb(180, 180, 180)) drop-shadow(-1px 1px 0 rgb(180, 180, 180)) drop-shadow(1px -1px 0 rgb(180, 180, 180)) drop-shadow(-1px -1px 0 rgb(180, 180, 180));
+}
+
+#banner_header_label {
+    font-family: var(--pixel-font);
+    display: inline-block;
+    padding: 10px;
+    font-size: 16pt;
+    vertical-align: top;
+    /*color: #edeffa;*/
+    color: #FFFFFF;
+}
+
+#banner_header_label {
+    cursor: pointer;
 }
 
 .banner_label {
@@ -424,25 +442,11 @@ h3 {
     -webkit-backdrop-filter: blur(8px);
     position: fixed;
     top: 0px;
-    left: 40px;
+    left: 0px;
     height: 40px;
     right: 0px;
     align-items: center;
     z-index: 50;
-}
-
-#banner_header_label {
-    font-family: var(--pixel-font);
-    display: inline-block;
-    padding: 10px;
-    font-size: 16pt;
-    vertical-align: top;
-    /*color: #edeffa;*/
-    color: #FFFFFF;
-}
-
-#banner_header_label {
-    cursor: pointer;
 }
 
 #content {
@@ -2593,6 +2597,24 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     text-align: center;
 }
 
+.setupwizard-window {
+    width: 600px;
+    height: 550px;
+    min-height: unset;
+    min-width: unset;
+    max-height: unset;
+    max-width: unset;
+}
+
+.loginwindow-loginbox {
+    width: 600px;
+    height: 300px;
+    min-height: unset;
+    min-width: unset;
+    max-height: unset;
+    max-width: unset;
+}
+
 /* The container <div> - needed to position the dropdown content */
 .dropdown {
     position: relative;
@@ -2752,11 +2774,31 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 .section-body-button {
+    position: relative;
     cursor: pointer;
 }
 
 .section-body-button:hover {
     background-color: var(--section-header-background);
+}
+
+.section-body-button::after {
+    background-image: url('/images/arrow-right.svg');
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    background-size: 18px 18px;
+    width: 20px;
+    height: 20px;
+    content: "";
+    position: absolute;
+    right: 5px;
+    top: 50%;
+    transform: translateY(-50%);
+    /* Make sure the arrow is visible */
+    z-index: 1;
+    display: inline-block;
+    /* Make SVG off white */
+    filter: invert(0.60) brightness(1.2);
 }
 
 .listboxselector {
@@ -3352,8 +3394,8 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     height: 90%;
     border-radius: 20px;
     border-style: solid;
-    border-width: 0px;
-    border-color: var(--modal-border-color);
+    border-width: 1px;
+    border-color: var(--modal-background-color);
     overflow: hidden;
     box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
     -webkit-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
@@ -3424,8 +3466,8 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 .card-background-blurred {
-    filter: blur(4px);
-    -webkit-filter: blur(4px);
+    filter: blur(3px);
+    -webkit-filter: blur(3px);
 }
 
 .card-gradient {
@@ -3443,6 +3485,93 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     top: 0px;
     bottom: 0px;
     padding: 20px;
+}
+
+.card-settings-scroller-background {
+    background: #071275;
+    background: linear-gradient(194deg, rgb(8, 15, 82) 0%, rgba(17, 23, 38, 1) 50%, rgb(29, 38, 108) 100%);
+}
+
+.card-settings-body {
+    margin-top: 45px;
+    padding-bottom: 20px;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: normal;
+    align-items: normal;
+    align-content: normal;
+    gap: 20px;
+}
+
+#card-settings-menu-box {
+    width: 200px;
+    min-width: 200px;
+    flex-grow: 0;
+    flex-shrink: 1;
+    flex-basis: auto;
+    align-self: auto;
+    order: 0;
+}
+
+.card-settings-menu-item-selected {
+    background-color: var(--section-header-background);
+}
+
+.card-settings-menu-item:hover {
+    cursor: pointer;
+    background-color: var(--section-header-background-solid);
+}
+
+#card-settings-content {
+    flex-grow: 1;
+    flex-shrink: 1;
+    flex-basis: auto;
+    align-self: auto;
+    order: 0;
+    position: relative;
+    /* padding-top: 50px; */
+}
+
+#card-settings-content-heading-label {
+    /* position: absolute;
+    top: 15px;
+    left: 40px;
+    right: 40px;
+    font-weight: bold; */
+    text-align: center;
+    /* display: inline-block; */
+}
+
+.card-back-button {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 20px;
+    height: 20px;
+    font-size: 17px;
+    color: white;
+    background-color: var(--button-background);
+    border-radius: 50%;
+    border-width: 0px;
+    border-color: transparent;
+    border-style: solid;
+    overflow: hidden;
+    cursor: pointer;
+    text-align: center;
+    padding-top: 2px;
+    padding-bottom: 2px;
+    padding-left: 2px;
+    padding-right: 2px;
+    display: none;
+}
+
+.card-back-button:hover {
+    background-color: var(--button-background-hover);
+}
+
+.card-back-button-nested-visible {
+    display: block;
 }
 
 .card-close-button {
@@ -3572,11 +3701,45 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .card-screenshot-item {
     display: inline-block;
     margin-right: 10px;
+    position: relative;
+    border-radius: var(--standard-radius);
+    border-width: 2px;
+    border-color: transparent;
+    border-style: solid;
+    overflow: hidden;
+    padding: 0px;
+    /* width: 169px; */
+    /* height: 95px; */
+    width: 300px;
+    aspect-ratio: 16/9;
+    background-color: black;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+}
+
+.card-screenshot-item:hover {
+    cursor: pointer;
+    border-color: white;
 }
 
 .card-screenshot-item>img {
     max-width: 200px;
     max-height: 125px;
+}
+
+.card-screenshot-item>.card-screenshot-youtube-icon {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 28px;
+    height: 20px;
+    margin: 0px;
+    background-image: url('/images/youtube.svg');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    content: '';
 }
 
 #card-summary {}
@@ -3716,6 +3879,32 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     max-height: 80%;
 }
 
+.modal-screenshots {
+    height: 80%;
+    width: 80%;
+    min-width: unset;
+    min-height: unset;
+    max-width: unset;
+    max-height: 80%;
+}
+
+.screenshot-item {
+    display: inline-block;
+    margin-right: 10px;
+    overflow: hidden;
+    margin: 0px;
+    padding: 0px;
+    width: auto;
+    height: 100%;
+    aspect-ratio: 16/9;
+    box-sizing: border-box;
+    background-color: black;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: contain;
+    content: '';
+}
+
 .card-romlist-item {
     display: flex;
     flex-direction: row;
@@ -3801,4 +3990,29 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     text-align: right;
     font-size: smaller;
     font-weight: lighter;
+}
+
+#gameprofile {
+    display: inline-block;
+    width: 250px;
+}
+
+#gamehome {
+    display: inline-block;
+    max-width: 820px;
+    margin-right: 20px;
+    vertical-align: top;
+    width: 100%;
+}
+
+#rightcolumn {
+    display: inline-block;
+    width: 250px;
+    vertical-align: top;
+}
+
+#librarylink {
+    margin-top: 20px;
+    display: inline-block;
+    width: 250px;
 }

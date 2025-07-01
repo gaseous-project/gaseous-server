@@ -259,7 +259,7 @@ namespace gaseous_server.Classes
         /// <param name="OverridePlatform">
         /// The platform to use for the game file
         /// </param>
-        public static void ImportGameFile(string FilePath, Common.hashObject Hash, ref Dictionary<string, object> GameFileInfo, Platform? OverridePlatform)
+        public static void ImportGameFile(string FilePath, HashObject Hash, ref Dictionary<string, object> GameFileInfo, Platform? OverridePlatform)
         {
             GameFileInfo.Add("type", "rom");
 
@@ -353,7 +353,7 @@ namespace gaseous_server.Classes
         /// <param name="SourceIsExternal">
         /// Whether the source of the file is external to the library
         /// </param>
-        public static async Task<long> StoreGame(GameLibrary.LibraryItem library, Common.hashObject hash, Signatures_Games signature, Platform platform, string filePath, long romId = 0, bool SourceIsExternal = false)
+        public static async Task<long> StoreGame(GameLibrary.LibraryItem library, HashObject hash, Signatures_Games signature, Platform platform, string filePath, long romId = 0, bool SourceIsExternal = false)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
@@ -416,11 +416,11 @@ namespace gaseous_server.Classes
             dbDict = new Dictionary<string, object>();
             if (romId == 0)
             {
-                sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, RelativePath, MetadataSource, MetadataGameName, MetadataVersion, LibraryId, RomDataVersion, MetadataMapId) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @developmentstatus, @Attributes, @romtype, @romtypemedia, @medialabel, @path, @metadatasource, @metadatagamename, @metadataversion, @libraryid, @romdataversion, @metadatamapid); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+                sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, SHA256, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, RelativePath, MetadataSource, MetadataGameName, MetadataVersion, LibraryId, RomDataVersion, MetadataMapId) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @sha256, @developmentstatus, @Attributes, @romtype, @romtypemedia, @medialabel, @path, @metadatasource, @metadatagamename, @metadataversion, @libraryid, @romdataversion, @metadatamapid); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
             }
             else
             {
-                sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid, Name=@name, Size=@size, CRC=@crc, MD5=@md5, SHA1=@sha1, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion, RomDataVersion=@romdataversion, MetadataMapId=@metadatamapid, DateUpdated=@dateupdated WHERE Id=@id;";
+                sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid, Name=@name, Size=@size, CRC=@crc, MD5=@md5, SHA1=@sha1, SHA256=@sha256, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion, RomDataVersion=@romdataversion, MetadataMapId=@metadatamapid, DateUpdated=@dateupdated WHERE Id=@id;";
                 dbDict.Add("id", romId);
             }
             dbDict.Add("platformid", Common.ReturnValueIfNull(platform.Id, 0));
@@ -429,6 +429,7 @@ namespace gaseous_server.Classes
             dbDict.Add("size", Common.ReturnValueIfNull(signature.Rom.Size, 0));
             dbDict.Add("md5", hash.md5hash);
             dbDict.Add("sha1", hash.sha1hash);
+            dbDict.Add("sha256", hash.sha256hash);
             dbDict.Add("crc", hash.crc32hash);
             dbDict.Add("developmentstatus", Common.ReturnValueIfNull(signature.Rom.DevelopmentStatus, ""));
             dbDict.Add("metadatasource", signature.Rom.SignatureSource);
@@ -841,7 +842,7 @@ namespace gaseous_server.Classes
                         // file is not in database - process it
                         Logging.Log(Logging.LogType.Information, "Library Scan", "Orphaned file found in library: " + LibraryFile);
 
-                        Common.hashObject hash = new Common.hashObject(LibraryFile);
+                        HashObject hash = new HashObject(LibraryFile);
                         FileInfo fi = new FileInfo(LibraryFile);
 
                         FileSignature fileSignature = new FileSignature();

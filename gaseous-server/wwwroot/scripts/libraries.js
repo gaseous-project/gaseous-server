@@ -1,6 +1,6 @@
 class NewLibrary {
-    constructor() {
-
+    constructor(parent) {
+        this.parent = parent;
     }
 
     async open() {
@@ -76,29 +76,38 @@ class NewLibrary {
         });
 
         // add ok button
-        let okButton = new ModalButton("OK", 1, this, async function (callingObject) {
-            if (await callingObject.validate()) {
+        let okButton = new ModalButton("OK", 1, this, async (callingObject) => {
+            if (await this.validate()) {
                 // create the library
                 let defaultPlatform = 0;
-                let defaultPlatformSelector = $(callingObject.defaultPlatformSelector).select2('data');
+                let defaultPlatformSelector = $(this.defaultPlatformSelector).select2('data');
                 if (defaultPlatformSelector.length > 0) {
                     defaultPlatform = defaultPlatformSelector[0].id;
                 }
 
-                ajaxCall(
-                    '/api/v1.1/Library?Name=' + encodeURIComponent(callingObject.LibraryName.value) + '&DefaultPlatformId=' + defaultPlatform + '&Path=' + encodeURIComponent(callingObject.LibraryPath.value),
-                    'POST',
-                    function (result) {
-                        // call the page drawLibrary function
-                        drawLibrary();
+                // make the ajax call to create the library
+                fetch('/api/v1.1/Library?Name=' + encodeURIComponent(this.LibraryName.value) + '&DefaultPlatformId=' + defaultPlatform + '&Path=' + encodeURIComponent(this.LibraryPath.value),
+                    {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok: ' + response.statusText);
+                        }
+                        if (this.parent) {
+                            // call the page drawLibrary function
+                            this.parent.drawLibrary();
+                        }
 
                         // close the dialog
-                        callingObject.dialog.close();
-                    },
-                    function (error) {
-                        alert('An error occurred while creating the library:\n\n' + JSON.stringify(error.responseText));
-                    }
-                );
+                        this.dialog.close();
+                    })
+                    .catch(error => {
+                        alert('An error occurred while creating the library:\n\n' + error.message);
+                    });
             }
         });
         this.dialog.addButton(okButton);

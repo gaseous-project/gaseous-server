@@ -403,7 +403,7 @@ namespace gaseous_server.Classes
                 Logging.Log(Logging.LogType.Information, "Database Migration", "Updating ROM table for ROM (" + count + " / " + data.Rows.Count + "): " + (string)row["Name"]);
 
                 GameLibrary.LibraryItem library = await GameLibrary.GetLibrary((int)row["LibraryId"]);
-                Common.hashObject hash = new Common.hashObject()
+                HashObject hash = new HashObject()
                 {
                     md5hash = (string)row["MD5"],
                     sha1hash = (string)row["SHA1"]

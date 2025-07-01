@@ -2,25 +2,37 @@ using System.Data;
 using System.Threading.Tasks;
 using gaseous_server.Models;
 using gaseous_signature_parser.models.RomSignatureObject;
+using HasheousClient.Models;
 using static gaseous_server.Classes.Common;
 
 namespace gaseous_server.Classes
 {
     public class SignatureManagement
     {
-        public async Task<List<gaseous_server.Models.Signatures_Games>> GetSignature(string md5 = "", string sha1 = "", string crc = "")
+        public async Task<List<gaseous_server.Models.Signatures_Games>> GetSignature(HashObject hashes)
         {
-            if (md5.Length > 0)
+            // Check if any hashes are provided
+            // Search in the order of SHA256, SHA1, MD5, CRC32
+            // If none are provided, return an empty list
+            if (hashes.sha256hash != null && hashes.sha256hash.Length > 0)
             {
-                return await _GetSignature("Signatures_Roms.md5 = @searchstring", md5);
+                return await _GetSignature("Signatures_Roms.sha256 = @searchstring", hashes.sha256hash.ToLower());
             }
-            else if (sha1.Length > 0)
+            else if (hashes.sha1hash != null && hashes.sha1hash.Length > 0)
             {
-                return await _GetSignature("Signatures_Roms.sha1 = @searchstring", sha1);
+                return await _GetSignature("Signatures_Roms.sha1 = @searchstring", hashes.sha1hash.ToLower());
+            }
+            else if (hashes.md5hash != null && hashes.md5hash.Length > 0)
+            {
+                return await _GetSignature("Signatures_Roms.md5 = @searchstring", hashes.md5hash.ToLower());
+            }
+            else if (hashes.crc32hash != null && hashes.crc32hash.Length > 0)
+            {
+                return await _GetSignature("Signatures_Roms.crc = @searchstring", hashes.crc32hash.ToLower());
             }
             else
             {
-                return await _GetSignature("Signatures_Roms.crc = @searchstring", crc);
+                return new List<gaseous_server.Models.Signatures_Games>();
             }
         }
 

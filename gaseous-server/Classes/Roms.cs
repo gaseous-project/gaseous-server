@@ -306,6 +306,7 @@ namespace gaseous_server.Classes
 				Crc = ((string)romDR["crc"]).ToLower(),
 				Md5 = ((string)romDR["md5"]).ToLower(),
 				Sha1 = ((string)romDR["sha1"]).ToLower(),
+				Sha256 = ((string)romDR["sha256"]).ToLower(),
 				DevelopmentStatus = (string)romDR["developmentstatus"],
 				Attributes = romAttributes,
 				RomType = (HasheousClient.Models.SignatureModel.RomItem.RomTypes)(int)romDR["romtype"],

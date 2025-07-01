@@ -35,6 +35,11 @@ namespace gaseous_server.Classes.Metadata
             else
             {
                 Game? RetVal = await Metadata.GetMetadataAsync<Game>(SourceType, (long)Id, ForceRefresh);
+                if (RetVal == null)
+                {
+                    return null;
+                }
+
                 RetVal.MetadataSource = SourceType;
                 long? metadataMap = MetadataManagement.GetMetadataMapIdFromSourceId(SourceType, (long)Id);
                 if (metadataMap == null)

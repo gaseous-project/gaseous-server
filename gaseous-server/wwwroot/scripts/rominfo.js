@@ -26,6 +26,7 @@ class rominfodialog {
             callingObject.dialog.modalElement.querySelector('#rominfo_medialabel').innerHTML = data.mediaLabel;
             callingObject.dialog.modalElement.querySelector('#rominfo_md5').innerHTML = data.md5 ? data.md5 : "N/A";
             callingObject.dialog.modalElement.querySelector('#rominfo_sha1').innerHTML = data.sha1 ? data.sha1 : "N/A";
+            callingObject.dialog.modalElement.querySelector('#rominfo_sha256').innerHTML = data.sha256 ? data.sha256 : "N/A";
             callingObject.dialog.modalElement.querySelector('#rominfo_crc').innerHTML = data.crc ? data.crc : "N/A";
             callingObject.dialog.modalElement.querySelector('#rominfo_signaturematch').innerHTML = data.signatureSource;
             callingObject.dialog.modalElement.querySelector('#rominfo_signaturetitle').innerHTML = data.signatureSourceGameTitle;
@@ -92,7 +93,7 @@ class rominfodialog {
                                 let hashRow = zipBody.insertRow();
                                 let hashCell1 = hashRow.insertCell();
                                 hashCell1.classList.add("romcell");
-                                hashCell1.innerHTML = "MD5: " + (zipContents[i].MD5 ? zipContents[i].MD5 : "N/A") + "<br>SHA1: " + (zipContents[i].SHA1 ? zipContents[i].SHA1 : "N/A") + "<br>CRC: " + (zipContents[i].CRC ? zipContents[i].CRC : "N/A");
+                                hashCell1.innerHTML = "MD5: " + (zipContents[i].MD5 ? zipContents[i].MD5 : "N/A") + "<br>SHA1: " + (zipContents[i].SHA1 ? zipContents[i].SHA1 : "N/A") + "<br>SHA256: " + (zipContents[i].SHA256 ? zipContents[i].SHA256 : "N/A") + "<br>CRC: " + (zipContents[i].CRC ? zipContents[i].CRC : "N/A");
                                 hashCell1.colSpan = 2;
                                 hashCell1.setAttribute('style', 'padding-left: 20px;');
 

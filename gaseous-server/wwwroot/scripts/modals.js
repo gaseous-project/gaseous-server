@@ -712,3 +712,87 @@ class EmulatorStateManager {
         }
     }
 }
+
+class ScreenshotDisplay {
+    constructor(metadataSource, gameid, selectedImage = null) {
+        this.gameid = gameid;
+        this.metadataSource = metadataSource;
+        this.selectedImage = selectedImage;
+    }
+
+    async open() {
+        // Create the modal
+        this.dialog = await new Modal("screenshots");
+        await this.dialog.BuildModal();
+
+        // setup the dialog
+        this.dialog.modalElement.classList.add('modal-screenshots');
+        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Screenshots";
+        this.panel = this.dialog.modalElement.querySelector('#modal-body');
+        this.panel.setAttribute('style', 'overflow-x: auto; overflow-y: hidden; padding: 0px; position: relative;');
+        this.scroller = this.dialog.modalElement.querySelector('#modal-window-content');
+        this.scroller.setAttribute('style', 'position: absolute; top: 0px; left: 0px; bottom: 0px; height: 100%; white-space: nowrap;');
+
+        // load the game data
+        let gameUrl = `/api/v1.1/Games/${this.gameid}`;
+        await fetch(gameUrl).then(async response => {
+            if (!response.ok) {
+                this.scroller.innerHTML = '<li class=screenshot-item">No screenshots found.</li>';
+            } else {
+                let gameData = await response.json();
+
+                if (gameData.videos && gameData.videos.length > 0) {
+                    let videoGameUrl = `/api/v1.1/Games/${this.gameid}/${this.metadataSource}/videos`;
+                    let videoResponse = await fetch(videoGameUrl);
+                    if (videoResponse.ok) {
+                        let videoData = await videoResponse.json();
+                        if (videoData && videoData.length > 0) {
+
+                            videoData.forEach(video => {
+                                let videoItem = document.createElement('div');
+                                videoItem.id = 'video_' + video.id;
+                                videoItem.classList.add('screenshot-item');
+                                videoItem.innerHTML = `
+                                    <iframe
+                                        height="100%"
+                                        width="100%"
+                                        src="https://www.youtube.com/embed/${video.video_id}?autoplay=0&mute=0&controls=1"
+                                        frameborder="0"
+                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                                        allowfullscreen
+                                    </iframe>`
+                                this.scroller.appendChild(videoItem);
+                            });
+                        }
+                    }
+                }
+
+                if (gameData.screenshots && gameData.screenshots.length > 0) {
+                    gameData.screenshots.forEach((screenshot) => {
+                        let screenshotItem = document.createElement('div');
+                        screenshotItem.id = 'screenshot_' + screenshot;
+                        screenshotItem.classList.add('screenshot-item');
+                        screenshotItem.style.backgroundImage = `url(/api/v1.1/Games/${this.gameid}/${this.metadataSource}/screenshots/${screenshot}/image/original/${screenshot}.jpg)`;
+                        this.scroller.appendChild(screenshotItem);
+                    });
+                }
+            }
+        });
+
+        // show the dialog
+        this.dialog.open();
+
+        if (this.selectedImage) {
+            let selectedImage = this.scroller.querySelector('#' + this.selectedImage);
+            if (selectedImage) {
+                console.log("Selected image found: " + this.selectedImage);
+                // scroll into view smoothly
+                selectedImage.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                    inline: 'start'
+                });
+            }
+        }
+    }
+}

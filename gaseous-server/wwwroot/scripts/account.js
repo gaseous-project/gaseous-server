@@ -300,7 +300,7 @@ class Avatar {
 
             let profileCard = this.ProfileCard;
             this.Avatar.addEventListener('mouseenter', function () {
-                profileCard.style.position = "absolute";
+                profileCard.style.position = "fixed";
                 profileCard.style.marginTop = "-2px";
                 profileCard.style.marginLeft = "-2px";
                 profileCard.style.display = "block";

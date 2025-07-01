@@ -39,10 +39,18 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public async Task<List<gaseous_server.Models.Signatures_Games>> GetSignature(string md5 = "", string sha1 = "")
+        public async Task<List<gaseous_server.Models.Signatures_Games>> GetSignature(string md5 = "", string sha1 = "", string sha256 = "", string crc32 = "")
         {
+            HashObject hashes = new HashObject
+            {
+                md5hash = md5,
+                sha1hash = sha1,
+                sha256hash = sha256,
+                crc32hash = crc32
+            };
+
             SignatureManagement signatureManagement = new SignatureManagement();
-            return await signatureManagement.GetSignature(md5, sha1);
+            return await signatureManagement.GetSignature(hashes);
         }
 
         [MapToApiVersion("1.0")]

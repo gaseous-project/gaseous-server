@@ -364,6 +364,90 @@ ORDER BY Platform.`Name`; ";
             return Ok(model);
         }
 
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpPut]
+        [Route("Settings/System")]
+        [Authorize(Roles = "Admin")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        public ActionResult SetSystemSetting([FromBody] Dictionary<string, object> value)
+        {
+            foreach (var kvp in value)
+            {
+                try
+                {
+                    string strValue = kvp.Value.ToString();
+
+                    switch (kvp.Key.ToLower())
+                    {
+                        case "logginconfiguration.alwayslogtodisk":
+                            bool parsedValue = bool.Parse(strValue);
+                            Config.LoggingConfiguration.AlwaysLogToDisk = parsedValue;
+                            break;
+
+                        case "loggingconfiguration.logretention":
+                            int retentionValue = int.Parse(strValue);
+                            Config.LoggingConfiguration.LogRetention = retentionValue;
+                            break;
+
+                        case "emulatordebugmode":
+                            bool emulatorDebugMode = bool.Parse(strValue);
+                            Config.SetSetting<string>("emulatorDebugMode", emulatorDebugMode.ToString());
+                            break;
+
+                        case "metadataconfiguration.signaturesource":
+                            Config.MetadataConfiguration.SignatureSource = (HasheousClient.Models.MetadataModel.SignatureSources)Enum.Parse(typeof(HasheousClient.Models.MetadataModel.SignatureSources), strValue);
+                            break;
+
+                        case "metadataconfiguration.hasheoushost":
+                            Config.MetadataConfiguration.HasheousHost = strValue;
+                            break;
+
+                        case "metadataconfiguration.hasheousapikey":
+                            Config.MetadataConfiguration.HasheousAPIKey = strValue;
+                            break;
+
+                        case "metadataconfiguration.hasheoussubmitfixes":
+                            bool hasheousSubmitFixes = bool.Parse(strValue);
+                            Config.MetadataConfiguration.HasheousSubmitFixes = hasheousSubmitFixes;
+                            break;
+
+                        case "metadataconfiguration.defaultmetadatasource":
+                            Config.MetadataConfiguration.DefaultMetadataSource = (HasheousClient.Models.MetadataSources)Enum.Parse(typeof(HasheousClient.Models.MetadataSources), strValue);
+                            break;
+
+                        case "igdb.usehasheousproxy":
+                            bool useHasheousProxy = bool.Parse(strValue);
+                            Config.IGDB.UseHasheousProxy = useHasheousProxy;
+                            break;
+
+                        case "igdb.clientid":
+                            Config.IGDB.ClientId = strValue;
+                            break;
+
+                        case "igdb.secret":
+                            Config.IGDB.Secret = strValue;
+                            break;
+
+                        default:
+                            Logging.Log(Logging.LogType.Warning, "GetSystemSetting", "Unknown system setting: " + kvp.Key);
+                            return BadRequest("Unknown system setting: " + kvp.Key);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Log(Logging.LogType.Warning, "GetSystemSetting", "Error setting system setting " + kvp.Key + ": " + ex.Message);
+                    return BadRequest("Error setting system setting: " + ex.Message);
+                }
+
+                // Update the configuration file
+                Logging.Log(Logging.LogType.Information, "GetSystemSetting", "Updating system setting " + kvp.Value);
+                Config.UpdateConfig();
+            }
+
+            return Ok();
+        }
+
         public static SystemInfo.PathItem GetDisk(string Path)
         {
             SystemInfo.PathItem pathItem = new SystemInfo.PathItem
