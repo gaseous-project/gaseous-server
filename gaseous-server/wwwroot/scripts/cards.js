@@ -1911,6 +1911,9 @@ class SettingsCard {
         },
         "/firmware": {
             name: "Firmware"
+        },
+        "/about": {
+            name: "About"
         }
     }
 
@@ -2116,6 +2119,20 @@ class SettingsCard {
                         let newUser = new UserNew(this);
                         newUser.open();
                     });
+                    break;
+
+                case 'platforms':
+                    await this.SetupButtons();
+                    await this.loadPlatformMapping();
+                    break;
+
+                case 'firmware':
+                    let bios = new BiosTable(this.body.querySelector('#table_firmware'));
+                    await bios.loadBios();
+                    break;
+
+                case 'about':
+                    await this.setupAboutPage();
                     break;
             }
         }).catch(error => {
@@ -3329,7 +3346,7 @@ class SettingsCard {
 
     async GetUsers() {
         console.log("Loading users...");
-        let targetDiv = document.getElementById('settings_users_table_container');
+        let targetDiv = this.card.cardBody.querySelector('#settings_users_table_container');
         targetDiv.innerHTML = '';
 
         fetch('/api/v1.1/Account/Users', {
@@ -3510,5 +3527,148 @@ class SettingsCard {
                 targetDiv.appendChild(newTable);
             }
             );
+    }
+
+    async setupAboutPage() {
+        let appVersionBox = this.card.cardBody.querySelector('#settings_appversion');
+        if (AppVersion == "1.5.0.0") {
+            appVersionBox.innerHTML = "Built from source";
+        } else {
+            appVersionBox.innerHTML = AppVersion;
+        }
+
+        let dbVersionBox = this.card.cardBody.querySelector('#settings_dbversion');
+        dbVersionBox.innerHTML = DBSchemaVersion;
+    }
+
+    async loadPlatformMapping(Overwrite) {
+        let queryString = '';
+        if (Overwrite == true) {
+            console.log('Overwriting PlatformMap.json');
+            queryString = '?ResetToDefault=true';
+        }
+
+        console.log('Loading platform mappings');
+
+        await fetch('/api/v1.1/PlatformMaps' + queryString, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(async response => await response.json())
+            .then((result) => {
+                let newTable = document.getElementById('settings_mapping_table');
+
+                newTable.innerHTML = '';
+                newTable.appendChild(
+                    createTableRow(
+                        true,
+                        [
+                            '',
+                            'Platform',
+                            'Supported File Extensions',
+                            'Unique File Extensions',
+                            'Has Web Emulator',
+                            ''
+                        ],
+                        '',
+                        ''
+                    )
+                );
+
+                for (const platform of result) {
+                    let logoBox = document.createElement('div');
+                    logoBox.classList.add('platform_image_container');
+
+                    let logo = document.createElement('img');
+                    logo.src = '/api/v1.1/Platforms/' + platform.igdbId + '/platformlogo/original/';
+                    logo.alt = platform.igdbName;
+                    logo.title = platform.igdbName;
+                    logo.classList.add('platform_image');
+
+                    logoBox.appendChild(logo);
+
+                    let hasWebEmulator = '';
+                    if (platform.webEmulator.type.length > 0) {
+                        hasWebEmulator = 'Yes';
+                    }
+
+                    let platformEditButton = null;
+                    if (userProfile.roles.includes("Admin")) {
+                        platformEditButton = document.createElement('div');
+                        platformEditButton.classList.add('romlink');
+                        platformEditButton.addEventListener('click', () => {
+                            let mappingModal = new Mapping(platform.igdbId, this.loadPlatformMapping);
+                            mappingModal.OKCallback = this.loadPlatformMapping.bind(this);
+                            console.log(mappingModal);
+                            mappingModal.open();
+                        });
+                        let editButtonImage = document.createElement('img');
+                        editButtonImage.src = '/images/edit.svg';
+                        editButtonImage.alt = 'Edit';
+                        editButtonImage.title = 'Edit';
+                        editButtonImage.classList.add('banner_button_image');
+                        platformEditButton.appendChild(editButtonImage);
+                    }
+
+                    let newRow = [
+                        logoBox,
+                        platform.igdbName,
+                        platform.extensions.supportedFileExtensions.join(', '),
+                        platform.extensions.uniqueFileExtensions.join(', '),
+                        hasWebEmulator,
+                        platformEditButton
+                    ];
+
+                    newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell logs_table_cell'));
+                }
+            }
+            );
+    }
+
+    DownloadJSON() {
+        window.location = '/api/v1.1/PlatformMaps/PlatformMap.json';
+    }
+
+    async SetupButtons() {
+        if (userProfile.roles.includes("Admin")) {
+            this.card.cardBody.querySelector('#settings_mapping_import').style.display = '';
+
+            // Setup the JSON import button
+            this.card.cardBody.querySelector('#uploadjson').addEventListener('change', function () {
+                $(this).simpleUpload("/api/v1.1/PlatformMaps", {
+                    start: function (file) {
+                        //upload started
+                        console.log("JSON upload started");
+                    },
+                    success: function (data) {
+                        //upload successful
+                        window.location.reload();
+                    }
+                });
+            });
+
+            this.card.cardBody.querySelector('#importjson').addEventListener('click', () => {
+                this.card.cardBody.querySelector('#uploadjson').click();
+            });
+
+            // Setup the JSON export button
+            this.card.cardBody.querySelector('#exportjson').addEventListener('click', this.DownloadJSON);
+
+            // Setup the reset to defaults button
+            this.card.cardBody.querySelector('#resetmapping').addEventListener('click', () => {
+                let warningDialog = new MessageBox("Platform Mapping Reset", "This will reset the platform mappings to the default values. Are you sure you want to continue?");
+                warningDialog.addButton(new ModalButton("OK", 2, warningDialog, async (callingObject) => {
+                    this.loadPlatformMapping(true);
+                    callingObject.msgDialog.close();
+                    let completedDialog = new MessageBox("Platform Mapping Reset", "All platform mappings have been reset to default values.");
+                    completedDialog.open();
+                }));
+                warningDialog.addButton(new ModalButton("Cancel", 0, warningDialog, async (callingObject) => {
+                    callingObject.msgDialog.close();
+                }));
+                warningDialog.open();
+            });
+        }
     }
 }
