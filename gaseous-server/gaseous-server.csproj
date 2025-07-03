@@ -18,18 +18,18 @@
   <ItemGroup>
     <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
-    <PackageReference Include="gaseous-signature-parser" Version="2.3.5" />
-    <PackageReference Include="gaseous.IGDB" Version="1.0.2" />
+    <PackageReference Include="gaseous-signature-parser" Version="2.3.11" />
+    <PackageReference Include="gaseous.IGDB" Version="1.0.5" />
     <PackageReference Include="hasheous-client" Version="0.1.0" />
-    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="13.5.0" />
-    <PackageReference Include="sharpcompress" Version="0.38.0" />
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.6.0" />
+    <PackageReference Include="sharpcompress" Version="0.40.0" />
     <PackageReference Include="Squid-Box.SevenZipSharp" Version="1.6.2.24" />
-    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.9.0" />
-    <PackageReference Include="MySqlConnector" Version="2.3.7" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.10" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.10" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.1" />
-    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="8.0.6" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.1" />
+    <PackageReference Include="MySqlConnector" Version="2.4.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="8.0.17" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.17" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="9.0.6" />
+    <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
   <ItemGroup>
@@ -41,32 +41,7 @@
     <None Remove="Support\" />
     <None Remove="Support\Database\" />
     <None Remove="Support\Database\MySQL\" />
-    <None Remove="Support\Database\MySQL\gaseous-1000.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1001.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1002.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1003.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1004.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-fix-1005.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1005.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1006.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1007.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1008.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1009.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1010.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1011.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1012.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1013.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1014.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1015.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1016.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1017.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1018.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1019.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1020.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1021.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1022.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1023.sql" />
-    <None Remove="Support\Database\MySQL\gaseous-1024.sql" />
+    <None Remove="Support\Database\MySQL\gaseous-*.sql" />
     <None Remove="Classes\Metadata\" />
   </ItemGroup>
   <ItemGroup>
@@ -90,31 +65,7 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Support\Country.txt" />
     <EmbeddedResource Include="Support\Language.txt" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1000.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1001.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1002.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1003.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1004.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-fix-1005.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1005.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1006.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1007.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1008.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1009.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1010.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1011.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1012.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1013.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1014.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1015.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1016.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1017.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1018.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1019.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1020.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1021.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1022.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1023.sql" />
-    <EmbeddedResource Include="Support\Database\MySQL\gaseous-1024.sql" />
+    <EmbeddedResource Include="Support\Database\MySQL\gaseous-*.sql" />
+    <EmbeddedResource Include="wwwroot\images\Ratings\AgeGroupMap.json" />
   </ItemGroup>
 </Project>

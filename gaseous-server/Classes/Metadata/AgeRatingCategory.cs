@@ -1,19 +1,19 @@
-﻿using System;
+using System;
 using IGDB;
 using IGDB.Models;
 
 
 namespace gaseous_server.Classes.Metadata
 {
-	public class AgeRatingContentDescriptions
+    public class AgeRatingCategories
     {
-        const string fieldList = "fields category,checksum,description;";
+        const string fieldList = "fields *;";
 
-        public AgeRatingContentDescriptions()
+        public AgeRatingCategories()
         {
         }
 
-        public static AgeRatingContentDescription? GetAgeRatingContentDescriptions(long? Id)
+        public static AgeRatingCategory? GetAgeRatingCategory(long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -21,28 +21,22 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<AgeRatingContentDescription> RetVal = _GetAgeRatingContentDescriptions(SearchUsing.id, Id);
+                Task<AgeRatingCategory> RetVal = _GetAgeRatingCategory(SearchUsing.id, Id);
                 return RetVal.Result;
             }
         }
 
-        public static AgeRatingContentDescription GetAgeRatingContentDescriptions(string Slug)
-        {
-            Task<AgeRatingContentDescription> RetVal = _GetAgeRatingContentDescriptions(SearchUsing.slug, Slug);
-            return RetVal.Result;
-        }
-
-        private static async Task<AgeRatingContentDescription> _GetAgeRatingContentDescriptions(SearchUsing searchUsing, object searchValue)
+        private static async Task<AgeRatingCategory> _GetAgeRatingCategory(SearchUsing searchUsing, object searchValue)
         {
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
             if (searchUsing == SearchUsing.id)
             {
-                cacheStatus = Storage.GetCacheStatus("AgeRatingContentDescription", (long)searchValue);
+                cacheStatus = Storage.GetCacheStatus("AgeRatingCategory", (long)searchValue);
             }
             else
             {
-                cacheStatus = Storage.GetCacheStatus("AgeRatingContentDescription", (string)searchValue);
+                cacheStatus = Storage.GetCacheStatus("AgeRatingCategory", (string)searchValue);
             }
 
             // set up where clause
@@ -59,13 +53,13 @@ namespace gaseous_server.Classes.Metadata
                     throw new Exception("Invalid search type");
             }
 
-            AgeRatingContentDescription returnValue = new AgeRatingContentDescription();
+            AgeRatingCategory returnValue = new AgeRatingCategory();
             switch (cacheStatus)
             {
                 case Storage.CacheStatus.NotPresent:
                     returnValue = await GetObjectFromServer(WhereClause);
                     Storage.NewCacheValue(returnValue);
-                    break;  
+                    break;
                 case Storage.CacheStatus.Expired:
                     try
                     {
@@ -75,11 +69,11 @@ namespace gaseous_server.Classes.Metadata
                     catch (Exception ex)
                     {
                         Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
-                        returnValue = Storage.GetCacheValue<AgeRatingContentDescription>(returnValue, "id", (long)searchValue);
+                        returnValue = Storage.GetCacheValue<AgeRatingCategory>(returnValue, "id", (long)searchValue);
                     }
                     break;
                 case Storage.CacheStatus.Current:
-                    returnValue = Storage.GetCacheValue<AgeRatingContentDescription>(returnValue, "id", (long)searchValue);
+                    returnValue = Storage.GetCacheValue<AgeRatingCategory>(returnValue, "id", (long)searchValue);
                     break;
                 default:
                     throw new Exception("How did you get here?");
@@ -94,15 +88,14 @@ namespace gaseous_server.Classes.Metadata
             slug
         }
 
-        private static async Task<AgeRatingContentDescription> GetObjectFromServer(string WhereClause)
+        private static async Task<AgeRatingCategory> GetObjectFromServer(string WhereClause)
         {
-            // get AgeRatingContentDescriptionContentDescriptions metadata
+            // get Game_Videos metadata
             Communications comms = new Communications();
-            var results = await comms.APIComm<AgeRatingContentDescription>(IGDBClient.Endpoints.AgeRatingContentDescriptions, fieldList, WhereClause);
+            var results = await comms.APIComm<AgeRatingCategory>(IGDBClient.Endpoints.AgeRatingCategories, fieldList, WhereClause);
             var result = results.First();
 
             return result;
         }
-	}
+    }
 }
-

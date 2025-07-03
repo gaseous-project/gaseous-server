@@ -7,7 +7,7 @@ namespace gaseous_server.Classes.Metadata
 {
 	public class AlternativeNames
     {
-        const string fieldList = "fields checksum,comment,game,name;";
+        const string fieldList = "fields *;";
 
         public AlternativeNames()
         {

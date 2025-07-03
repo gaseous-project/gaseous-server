@@ -249,6 +249,16 @@ namespace gaseous_server.Classes.Metadata
                                         case "platformversioncompany":
                                             objectToStore = new IdentityOrValue<PlatformVersionCompany>(id: (long)dataRow[property.Name]);
                                             break;
+                                        case "ageratingorganization":
+                                            objectToStore = new IdentityOrValue<AgeRatingOrganization>(id: (long)dataRow[property.Name]);
+                                            break;
+                                        case "ageratingcategory":
+                                            objectToStore = new IdentityOrValue<AgeRatingCategory>(id: (long)dataRow[property.Name]);
+                                            break;
+                                        case "ageratingcontentdescriptionv2":
+                                            objectToStore = new IdentityOrValue<AgeRatingContentDescriptionV2>(id: (long)dataRow[property.Name]);
+                                            break;
+
                                     }
 
                                     if (objectToStore != null)
@@ -273,8 +283,8 @@ namespace gaseous_server.Classes.Metadata
                                         case "artwork":
                                             objectToStore = new IdentitiesOrValues<Artwork>(ids: fromJsonObject);
                                             break;
-                                        case "ageratingcontentdescription":
-                                            objectToStore = new IdentitiesOrValues<AgeRatingContentDescription>(ids: fromJsonObject);
+                                        case "ageratingcontentdescriptionv2":
+                                            objectToStore = new IdentitiesOrValues<AgeRatingContentDescriptionV2>(ids: fromJsonObject);
                                             break;
                                         case "game":
                                             objectToStore = new IdentitiesOrValues<Game>(ids: fromJsonObject);
@@ -348,33 +358,33 @@ namespace gaseous_server.Classes.Metadata
                                         property.SetValue(EndpointType, fromJsonObject_int32Array);
                                     }
                                     break;
-                                case "[igdb.models.category":
-                                    property.SetValue(EndpointType, (Category)dataRow[property.Name]);
-                                    break;
+                                // case "[igdb.models.category":
+                                //     property.SetValue(EndpointType, (Category)dataRow[property.Name]);
+                                //     break;
                                 case "[igdb.models.gamestatus":
                                     property.SetValue(EndpointType, (GameStatus)dataRow[property.Name]);
                                     break;
                                 case "[igdb.models.ageratingcategory":
                                     property.SetValue(EndpointType, (AgeRatingCategory)dataRow[property.Name]);
                                     break;
-                                case "[igdb.models.ageratingcontentdescriptioncategory":
-                                    property.SetValue(EndpointType, (AgeRatingContentDescriptionCategory)dataRow[property.Name]);
-                                    break;
-                                case "[igdb.models.ageratingtitle":
-                                    property.SetValue(EndpointType, (AgeRatingTitle)dataRow[property.Name]);
-                                    break;
-                                case "[igdb.models.externalcategory":
-                                    property.SetValue(EndpointType, (ExternalCategory)dataRow[property.Name]);
-                                    break;
-                                case "[igdb.models.startdatecategory":
-                                    property.SetValue(EndpointType, (StartDateCategory)dataRow[property.Name]);
-                                    break;
+                                // case "[igdb.models.ageratingcontentdescriptioncategory":
+                                //     property.SetValue(EndpointType, (AgeRatingContentDescriptionCategory)dataRow[property.Name]);
+                                //     break;
+                                // case "[igdb.models.ageratingtitle":
+                                //     property.SetValue(EndpointType, (AgeRatingTitle)dataRow[property.Name]);
+                                //     break;
+                                // case "[igdb.models.externalcategory":
+                                //     property.SetValue(EndpointType, (ExternalCategory)dataRow[property.Name]);
+                                //     break;
+                                // case "[igdb.models.startdatecategory":
+                                //     property.SetValue(EndpointType, (StartDateCategory)dataRow[property.Name]);
+                                //     break;
                                 case "[igdb.models.releasedateregion":
                                     property.SetValue(EndpointType, (ReleaseDateRegion)dataRow[property.Name]);
                                     break;
-                                case "[igdb.models.releasedatecategory":
-                                    property.SetValue(EndpointType, (ReleaseDateCategory)dataRow[property.Name]);
-                                    break;
+                                // case "[igdb.models.releasedatecategory":
+                                //     property.SetValue(EndpointType, (ReleaseDateCategory)dataRow[property.Name]);
+                                //     break;
                                 case "[gaseous_server.classes.metadata.agegroups+agerestrictiongroupings":
                                     property.SetValue(EndpointType, (AgeGroups.AgeRestrictionGroupings)dataRow[property.Name]);
                                     break;

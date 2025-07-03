@@ -7,7 +7,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class MultiplayerModes
     {
-        const string fieldList = "fields campaigncoop,checksum,dropin,game,lancoop,offlinecoop,offlinecoopmax,offlinemax,onlinecoop,onlinecoopmax,onlinemax,platform,splitscreen,splitscreenonline;";
+        const string fieldList = "fields *;";
 
         public MultiplayerModes()
         {

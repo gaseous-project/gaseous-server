@@ -1,18 +1,19 @@
-﻿using System;
+using System;
 using IGDB;
 using IGDB.Models;
 
+
 namespace gaseous_server.Classes.Metadata
 {
-    public class Companies
+    public class AgeRatingOrganizations
     {
         const string fieldList = "fields *;";
 
-        public Companies()
+        public AgeRatingOrganizations()
         {
         }
 
-        public static Company? GetCompanies(long? Id)
+        public static AgeRatingOrganization? GetAgeRatingOrganizations(long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -20,28 +21,28 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<Company> RetVal = _GetCompanies(SearchUsing.id, Id);
+                Task<AgeRatingOrganization> RetVal = _GetAgeRatingOrganizations(SearchUsing.id, Id);
                 return RetVal.Result;
             }
         }
 
-        public static Company GetCompanies(string Slug)
+        public static AgeRatingOrganization GetAgeRatingOrganizations(string Slug)
         {
-            Task<Company> RetVal = _GetCompanies(SearchUsing.slug, Slug);
+            Task<AgeRatingOrganization> RetVal = _GetAgeRatingOrganizations(SearchUsing.slug, Slug);
             return RetVal.Result;
         }
 
-        private static async Task<Company> _GetCompanies(SearchUsing searchUsing, object searchValue)
+        private static async Task<AgeRatingOrganization> _GetAgeRatingOrganizations(SearchUsing searchUsing, object searchValue)
         {
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
             if (searchUsing == SearchUsing.id)
             {
-                cacheStatus = Storage.GetCacheStatus("Company", (long)searchValue);
+                cacheStatus = Storage.GetCacheStatus("AgeRatingOrganization", (long)searchValue);
             }
             else
             {
-                cacheStatus = Storage.GetCacheStatus("Company", (string)searchValue);
+                cacheStatus = Storage.GetCacheStatus("AgeRatingOrganization", (string)searchValue);
             }
 
             // set up where clause
@@ -58,13 +59,12 @@ namespace gaseous_server.Classes.Metadata
                     throw new Exception("Invalid search type");
             }
 
-            Company returnValue = new Company();
+            AgeRatingOrganization returnValue = new AgeRatingOrganization();
             switch (cacheStatus)
             {
                 case Storage.CacheStatus.NotPresent:
                     returnValue = await GetObjectFromServer(WhereClause);
-                    if (returnValue != null) { Storage.NewCacheValue(returnValue); }
-                    UpdateSubClasses(returnValue);
+                    Storage.NewCacheValue(returnValue);
                     break;
                 case Storage.CacheStatus.Expired:
                     try
@@ -75,11 +75,11 @@ namespace gaseous_server.Classes.Metadata
                     catch (Exception ex)
                     {
                         Logging.Log(Logging.LogType.Warning, "Metadata: " + returnValue.GetType().Name, "An error occurred while connecting to IGDB. WhereClause: " + WhereClause, ex);
-                        returnValue = Storage.GetCacheValue<Company>(returnValue, "id", (long)searchValue);
+                        returnValue = Storage.GetCacheValue<AgeRatingOrganization>(returnValue, "id", (long)searchValue);
                     }
                     break;
                 case Storage.CacheStatus.Current:
-                    returnValue = Storage.GetCacheValue<Company>(returnValue, "id", (long)searchValue);
+                    returnValue = Storage.GetCacheValue<AgeRatingOrganization>(returnValue, "id", (long)searchValue);
                     break;
                 default:
                     throw new Exception("How did you get here?");
@@ -88,37 +88,20 @@ namespace gaseous_server.Classes.Metadata
             return returnValue;
         }
 
-        private static void UpdateSubClasses(Company company)
-        {
-            if (company.Logo != null)
-            {
-                CompanyLogo companyLogo = CompanyLogos.GetCompanyLogo(company.Logo.Id, Config.LibraryConfiguration.LibraryMetadataDirectory_Company(company));
-            }
-        }
-
         private enum SearchUsing
         {
             id,
             slug
         }
 
-        private static async Task<Company> GetObjectFromServer(string WhereClause)
+        private static async Task<AgeRatingOrganization> GetObjectFromServer(string WhereClause)
         {
-            // get Companies metadata
+            // get AgeRatingContentDescriptionContentDescriptions metadata
             Communications comms = new Communications();
-            var results = await comms.APIComm<Company>(IGDBClient.Endpoints.Companies, fieldList, WhereClause);
-            if (results.Length > 0)
-            {
-                var result = results.First();
+            var results = await comms.APIComm<AgeRatingOrganization>(IGDBClient.Endpoints.AgeRatingOrganizations, fieldList, WhereClause);
+            var result = results.First();
 
-                return result;
-            }
-            else
-            {
-                return null;
-            }
-
+            return result;
         }
     }
 }
-

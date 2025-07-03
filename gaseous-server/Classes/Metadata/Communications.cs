@@ -191,7 +191,7 @@ namespace gaseous_server.Classes.Metadata
             }
 
             try
-            {   
+            {
                 if (InRateLimitAvoidanceMode == true)
                 {
                     // sleep for a moment to help avoid hitting the rate limiter
@@ -203,7 +203,7 @@ namespace gaseous_server.Classes.Metadata
 
                 // increment rate limiter avoidance call count
                 RateLimitAvoidanceCallCount += 1;
-                
+
                 return results;
             }
             catch (ApiException apiEx)
@@ -219,15 +219,15 @@ namespace gaseous_server.Classes.Metadata
                         else
                         {
                             Logging.Log(Logging.LogType.Information, "API Connection", "IGDB API rate limit hit while accessing endpoint " + Endpoint, apiEx);
-                            
+
                             RetryAttempts += 1;
 
                             return await IGDBAPI<T>(Endpoint, Fields, Query);
                         }
-                    
+
                     case HttpStatusCode.Unauthorized:
                         Logging.Log(Logging.LogType.Information, "API Connection", "IGDB API unauthorised error while accessing endpoint " + Endpoint + ". Waiting " + RateLimitAvoidanceWait + " milliseconds and resetting IGDB client.", apiEx);
-                        
+
                         Thread.Sleep(RateLimitAvoidanceWait);
 
                         igdb = new IGDBClient(
@@ -245,7 +245,7 @@ namespace gaseous_server.Classes.Metadata
                         throw;
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 Logging.Log(Logging.LogType.Warning, "API Connection", "Exception when accessing endpoint " + Endpoint, ex);
                 throw;
@@ -260,7 +260,7 @@ namespace gaseous_server.Classes.Metadata
         public Task<bool?> DownloadFile(Uri uri, string DestinationFile)
         {
             var result = _DownloadFile(uri, DestinationFile);
-            
+
             return result;
         }
 
@@ -353,9 +353,9 @@ namespace gaseous_server.Classes.Metadata
                         // get original size image and resize
                         string originalSizePath = await GetSpecificImageFromServer(ImagePath, ImageId, IGDBAPI_ImageSize.original, null);
 
-                        int width = 0;
-                        int height = 0;
-                        
+                        uint width = 0;
+                        uint height = 0;
+
                         switch (size)
                         {
                             case IGDBAPI_ImageSize.screenshot_small:
@@ -363,7 +363,7 @@ namespace gaseous_server.Classes.Metadata
                                 width = 235;
                                 height = 128;
                                 break;
-                            
+
                             case IGDBAPI_ImageSize.screenshot_thumb:
                                 // 165x90
                                 width = 165;
@@ -412,7 +412,7 @@ namespace gaseous_server.Classes.Metadata
                         {
                             await comms.IGDBAPI_GetImage(imageSizes, ImageId, ImagePath);
                         }
-                        
+
                     }
                     catch (HttpRequestException ex)
                     {
@@ -497,14 +497,14 @@ namespace gaseous_server.Classes.Metadata
         public async Task IGDBAPI_GetImage(List<IGDBAPI_ImageSize> ImageSizes, string ImageId, string OutputPath)
         {
             string urlTemplate = "https://images.igdb.com/igdb/image/upload/t_{size}/{hash}.jpg";
-            
+
             foreach (IGDBAPI_ImageSize ImageSize in ImageSizes)
             {
                 string url = urlTemplate.Replace("{size}", Common.GetDescription(ImageSize)).Replace("{hash}", ImageId);
                 string newOutputPath = Path.Combine(OutputPath, Common.GetDescription(ImageSize));
                 string OutputFile = ImageId + ".jpg";
                 string fullPath = Path.Combine(newOutputPath, OutputFile);
-                
+
                 await _DownloadFile(new Uri(url), fullPath);
             }
         }

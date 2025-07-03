@@ -7,7 +7,7 @@ namespace gaseous_server.Classes.Metadata
 {
 	public class ExternalGames
     {
-        const string fieldList = "fields category,checksum,countries,created_at,game,media,name,platform,uid,updated_at,url,year;";
+        const string fieldList = "fields *;";
 
         public ExternalGames()
         {

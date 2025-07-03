@@ -7,7 +7,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class PlatformVersions
     {
-        const string fieldList = "fields checksum,companies,connectivity,cpu,graphics,main_manufacturer,media,memory,name,online,os,output,platform_logo,platform_version_release_dates,resolutions,slug,sound,storage,summary,url;";
+        const string fieldList = "fields *;";
 
         public PlatformVersions()
         {

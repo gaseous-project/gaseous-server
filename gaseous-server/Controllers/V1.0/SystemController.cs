@@ -85,31 +85,20 @@ namespace gaseous_server.Controllers
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
-            // get age ratings dictionary
-            Dictionary<int, string> ClassificationBoardsStrings = new Dictionary<int, string>();
-            foreach (IGDB.Models.AgeRatingCategory ageRatingCategory in Enum.GetValues(typeof(IGDB.Models.AgeRatingCategory)))
-            {
-                ClassificationBoardsStrings.Add((int)ageRatingCategory, ageRatingCategory.ToString());
-            }
-
-            Dictionary<int, string> AgeRatingsStrings = new Dictionary<int, string>();
-            foreach (IGDB.Models.AgeRatingTitle ageRatingTitle in Enum.GetValues(typeof(IGDB.Models.AgeRatingTitle)))
-            {
-                AgeRatingsStrings.Add((int)ageRatingTitle, ageRatingTitle.ToString());
-            }
+            Dictionary<string, object> ageRatingAndGroups = AgeGroups.GetAgeRatingAndGroupings();
 
             string ver = "var AppVersion = \"" + Assembly.GetExecutingAssembly().GetName().Version.ToString() + "\";" + Environment.NewLine +
                 "var DBSchemaVersion = \"" + db.GetDatabaseSchemaVersion() + "\";" + Environment.NewLine +
                 "var FirstRunStatus = \"" + Config.ReadSetting<string>("FirstRunStatus", "0") + "\";" + Environment.NewLine +
-                "var AgeRatingBoardsStrings = " + JsonSerializer.Serialize(ClassificationBoardsStrings, new JsonSerializerOptions
+                "var AgeRatingBoardsStrings = " + JsonSerializer.Serialize(ageRatingAndGroups["ClassificationBoards"], new JsonSerializerOptions
                 {
                     WriteIndented = true
                 }) + ";" + Environment.NewLine +
-                "var AgeRatingStrings = " + JsonSerializer.Serialize(AgeRatingsStrings, new JsonSerializerOptions
+                "var AgeRatingStrings = " + JsonSerializer.Serialize(ageRatingAndGroups["AgeRatings"], new JsonSerializerOptions
                 {
                     WriteIndented = true
                 }) + ";" + Environment.NewLine +
-                "var AgeRatingGroups = " + JsonSerializer.Serialize(AgeGroups.AgeGroupingsFlat, new JsonSerializerOptions
+                "var AgeRatingGroups = " + JsonSerializer.Serialize(ageRatingAndGroups["AgeGroups"], new JsonSerializerOptions
                 {
                     WriteIndented = true
                 }) + ";" + Environment.NewLine +

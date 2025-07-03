@@ -7,7 +7,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class CompanyLogos
     {
-        const string fieldList = "fields alpha_channel,animated,checksum,height,image_id,url,width;";
+        const string fieldList = "fields *;";
 
         public CompanyLogos()
         {

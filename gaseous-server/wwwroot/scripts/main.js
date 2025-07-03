@@ -539,3 +539,20 @@ function loadAvatar(AvatarId) {
         }
     }
 }
+
+// load /images/Ratings/AgeGroupMap.json into a global variable
+var AgeGroupMap = {};
+fetch('/images/Ratings/AgeGroupMap.json', {
+    method: 'GET',
+    headers: {
+        'Content-Type': 'application/json'
+    }
+})
+    .then(response => response.json())
+    .then(data => {
+        AgeGroupMap = data;
+        console.log("AgeGroupMap loaded", AgeGroupMap);
+    })
+    .catch(error => {
+        console.error('Error loading AgeGroupMap:', error);
+    });
