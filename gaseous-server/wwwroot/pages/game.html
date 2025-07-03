@@ -336,8 +336,6 @@
         var gameSummaryRatings = document.getElementById('gamesummary_ratings');
         if (result.ageRatings) {
             ajaxCall('/api/v1.1/games/' + gameId + '/agerating', 'GET', function (result) {
-                console.log(result);
-
                 var classTable = document.createElement('table');
                 var gameRatingsSml = document.createElement('div');
 
@@ -375,7 +373,12 @@
                 }
                 gameSummaryRatings.appendChild(classTable);
                 gameSummaryRatings.appendChild(gameRatingsSml);
-            });
+            },
+                function (error) {
+                    console.log('Error loading age ratings:', error);
+                    gameSummaryRatings.setAttribute('style', 'display: none;');
+                }
+            );
         } else {
             gameSummaryRatings.setAttribute('style', 'display: none;');
         }

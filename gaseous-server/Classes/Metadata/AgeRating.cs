@@ -16,7 +16,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static AgeRating? GetAgeRatings(long? Id)
+        public static AgeRating? GetAgeRatings(long? Id, bool forceRefresh = false)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -24,18 +24,12 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Task<AgeRating> RetVal = _GetAgeRatings(SearchUsing.id, Id);
+                Task<AgeRating> RetVal = _GetAgeRatings(SearchUsing.id, Id, forceRefresh);
                 return RetVal.Result;
             }
         }
 
-        public static AgeRating GetAgeRatings(string Slug)
-        {
-            Task<AgeRating> RetVal = _GetAgeRatings(SearchUsing.slug, Slug);
-            return RetVal.Result;
-        }
-
-        private static async Task<AgeRating> _GetAgeRatings(SearchUsing searchUsing, object searchValue)
+        private static async Task<AgeRating> _GetAgeRatings(SearchUsing searchUsing, object searchValue, bool forceRefresh = false)
         {
             // check database first
             Storage.CacheStatus? cacheStatus = new Storage.CacheStatus();
@@ -46,6 +40,11 @@ namespace gaseous_server.Classes.Metadata
             else
             {
                 cacheStatus = Storage.GetCacheStatus("AgeRating", (string)searchValue);
+            }
+
+            if (forceRefresh == true)
+            {
+                cacheStatus = Storage.CacheStatus.Expired; // force refresh
             }
 
             // set up where clause

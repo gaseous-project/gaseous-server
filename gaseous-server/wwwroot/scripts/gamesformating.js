@@ -421,6 +421,18 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
             if (shownClassificationBoard == '') {
                 for (var c = 0; c < gameObject.ageRatings.length; c++) {
                     // find the first matching classification board in the AgeGroupMap
+
+                    // if the game has no age ratings, skip to the next board
+                    if (gameObject.ageRatings[c].organization == undefined || gameObject.ageRatings[c].ratingCategory == undefined) {
+                        continue;
+                    }
+
+                    // check if the AgeGroupMap is defined
+                    if (AgeGroupMap == undefined) {
+                        console.warn("AgeGroupMap is not defined. Please ensure it is loaded before rendering game icons.");
+                        break;
+                    }
+
                     let classBoard = '';
                     if (AgeGroupMap) {
                         for (const [key, value] of Object.entries(AgeGroupMap.RatingBoards)) {
