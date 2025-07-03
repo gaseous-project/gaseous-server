@@ -441,6 +441,12 @@ namespace gaseous_server.Classes.Metadata
 
         public static T? GetSearchCache<T>(string SearchFields, string SearchString)
         {
+            // check limits
+            if (SearchFields.Length > 380 || SearchString.Length > 124)
+            {
+                return default; // no point checking the cache if the search fields or search string are too long
+            }
+
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM SearchCache WHERE SearchFields = @searchfields AND SearchString = @searchstring;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>
@@ -475,6 +481,12 @@ namespace gaseous_server.Classes.Metadata
 
         public static void SetSearchCache<T>(string SearchFields, string SearchString, T SearchResult)
         {
+            // check limits
+            if (SearchFields.Length > 380 || SearchString.Length > 124)
+            {
+                return; // don't cache if the search fields or search string are too long
+            }
+
             Logging.Log(Logging.LogType.Information, "Search Cache", "Storing search results in cache. Search string: " + SearchString);
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);

@@ -551,7 +551,6 @@ fetch('/images/Ratings/AgeGroupMap.json', {
     .then(response => response.json())
     .then(data => {
         AgeGroupMap = data;
-        console.log("AgeGroupMap loaded", AgeGroupMap);
     })
     .catch(error => {
         console.error('Error loading AgeGroupMap:', error);

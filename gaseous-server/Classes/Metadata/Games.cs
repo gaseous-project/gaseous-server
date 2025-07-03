@@ -183,7 +183,7 @@ namespace gaseous_server.Classes.Metadata
             {
                 foreach (long AgeRatingId in Game.AgeRatings.Ids)
                 {
-                    AgeRating GameAgeRating = AgeRatings.GetAgeRatings(AgeRatingId);
+                    AgeRating GameAgeRating = AgeRatings.GetAgeRatings(AgeRatingId, forceRefresh);
                 }
             }
             AgeGroups.GetAgeGroup(Game);
