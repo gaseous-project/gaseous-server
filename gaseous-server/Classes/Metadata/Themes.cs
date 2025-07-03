@@ -7,7 +7,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class Themes
     {
-        const string fieldList = "fields checksum,created_at,name,slug,updated_at,url;";
+        const string fieldList = "fields *;";
 
         public Themes()
         {

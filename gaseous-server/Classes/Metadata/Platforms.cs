@@ -8,7 +8,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class Platforms
     {
-        const string fieldList = "fields abbreviation,alternative_name,category,checksum,created_at,generation,name,platform_family,platform_logo,slug,summary,updated_at,url,versions,websites;";
+        const string fieldList = "fields *;";
 
         public Platforms()
         {

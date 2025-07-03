@@ -9,7 +9,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class Covers
     {
-        const string fieldList = "fields alpha_channel,animated,checksum,game,game_localization,height,image_id,url,width;";
+        const string fieldList = "fields *;";
 
         public Covers()
         {

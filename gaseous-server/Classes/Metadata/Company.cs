@@ -4,9 +4,9 @@ using IGDB.Models;
 
 namespace gaseous_server.Classes.Metadata
 {
-	public class Companies
-	{
-        const string fieldList = "fields change_date,change_date_category,changed_company_id,checksum,country,created_at,description,developed,logo,name,parent,published,slug,start_date,start_date_category,updated_at,url,websites;";
+    public class Companies
+    {
+        const string fieldList = "fields *;";
 
         public Companies()
         {
@@ -117,7 +117,7 @@ namespace gaseous_server.Classes.Metadata
             {
                 return null;
             }
-            
+
         }
     }
 }

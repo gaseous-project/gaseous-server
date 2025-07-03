@@ -7,7 +7,7 @@ namespace gaseous_server.Classes.Metadata
 {
 	public class Collections
     {
-        const string fieldList = "fields as_child_relations,as_parent_relations,checksum,created_at,games,name,slug,type,updated_at,url;";
+        const string fieldList = "fields *;";
 
         public Collections()
         {
