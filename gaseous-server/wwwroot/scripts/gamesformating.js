@@ -1,58 +1,72 @@
 ﻿var ClassificationBoards = {
-    "ESRB":      "Entertainment Software Rating Board (ESRB)",
-    "PEGI":      "Pan European Game Information (PEGI)",
-    "CERO":      "Computer Entertainment Rating Organisation (CERO)",
-    "USK":       "Unterhaltungssoftware Selbstkontrolle (USK)",
-    "GRAC":      "Game Rating and Administration Committee (GRAC)",
+    "ESRB": "Entertainment Software Rating Board (ESRB)",
+    "PEGI": "Pan European Game Information (PEGI)",
+    "CERO": "Computer Entertainment Rating Organisation (CERO)",
+    "USK": "Unterhaltungssoftware Selbstkontrolle (USK)",
+    "GRAC": "Game Rating and Administration Committee (GRAC)",
     "CLASS_IND": "Brazilian advisory rating system",
-    "ACB":       "Australian Classification Board (ACB)"
+    "ACB": "Australian Classification Board (ACB)"
 };
 
 var ClassificationRatings = {
-    "E":         "Everyone",
-    "E10":       "Everyone 10+",
-    "T":         "Teen",
-    "M":         "Mature 17+",
-    "AO":        "Adults Only 18+",
-    "RP":        "Rating Pending",
+    "ESRB": {
+        "E": "Everyone",
+        "E10": "Everyone 10+",
+        "T": "Teen",
+        "M": "Mature 17+",
+        "AO": "Adults Only 18+",
+        "RP": "Rating Pending"
+    },
 
-    "Three":     "PEGI 3",
-    "Seven":     "PEGI 7",
-    "Twelve":    "PEGI 12",
-    "Sixteen":   "PEGI 16",
-    "Eighteen":  "PEGI 18",
-    
-    "CERO_A":    "All Ages",
-    "CERO_B":    "Ages 12 and up",
-    "CERO_C":    "Ages 15 and up",
-    "CERO_D":    "Ages 17 and up",
-    "CERO_Z":    "Ages 18 and up only",
+    "PEGI": {
+        "3": "PEGI 3",
+        "7": "PEGI 7",
+        "12": "PEGI 12",
+        "16": "PEGI 16",
+        "18": "PEGI 18"
+    },
 
-    "USK_0":     "Approved without age restriction",
-    "USK_6":     "Approved for children aged 6 and above",
-    "USK_12":    "Approved for children aged 12 and above",
-    "USK_16":    "Approved for children aged 16 and above",
-    "USK_18":    "Not approved for young persons",
+    "CERO": {
+        "A": "All Ages",
+        "B": "Ages 12 and up",
+        "C": "Ages 15 and up",
+        "D": "Ages 17 and up",
+        "Z": "Ages 18 and up only"
+    },
 
-    "GRAC_All":  "All",
-    "GRAC_Twelve": "12+",
-    "GRAC_Fifteen": "15+",
-    "GRAC_Eighteen": "18+",
-    "GRAC_Testing": "Testing",
+    "USK": {
+        "0": "Approved without age restriction",
+        "6": "Approved for children aged 6 and above",
+        "12": "Approved for children aged 12 and above",
+        "16": "Approved for children aged 16 and above",
+        "18": "Not approved for young persons"
+    },
 
-    "CLASS_IND_L": "General Audiences",
-    "CLASS_IND_Ten": "Not recommended for minors under ten",
-    "CLASS_IND_Twelve": "Not recommended for minors under twelve",
-    "CLASS_IND_Fourteen": "Not recommended for minors under fourteen",
-    "CLASS_IND_Sixteen": "Not recommended for minors under sixteen",
-    "CLASS_IND_Eighteen": "Not recommended for minors under eighteen",
+    "GRAC": {
+        "All": "All",
+        "Twelve": "12+",
+        "Fifteen": "15+",
+        "Eighteen": "18+",
+        "Testing": "Testing"
+    },
 
-    "ACB_G":     "General",
-    "ACB_PG":    "Parental Guidance",
-    "ACB_M":     "Mature",
-    "ACB_MA15":  "Mature Accompanied",
-    "ACB_R18":   "Restricted",
-    "ACB_RC":    "Refused Classification"
+    "CLASS_IND": {
+        "L": "General Audiences",
+        "Ten": "Not recommended for minors under ten",
+        "Twelve": "Not recommended for minors under twelve",
+        "Fourteen": "Not recommended for minors under fourteen",
+        "Sixteen": "Not recommended for minors under sixteen",
+        "Eighteen": "Not recommended for minors under eighteen"
+    },
+
+    "ACB": {
+        "G": "General",
+        "PG": "Parental Guidance",
+        "M": "Mature",
+        "MA15": "Mature Accompanied",
+        "R18": "Restricted",
+        "RC": "Refused Classification"
+    }
 };
 
 var pageReloadInterval;
@@ -139,7 +153,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
     var showTitle = GetPreference("LibraryShowGameTitle", true);
     var showRatings = GetPreference("LibraryShowGameRating", true);
     var showClassification = GetPreference("LibraryShowGameClassification", true);
-    var classificationDisplayOrderString = GetPreference("LibraryGameClassificationDisplayOrder", JSON.stringify([ "ESRB" ]));
+    var classificationDisplayOrderString = GetPreference("LibraryGameClassificationDisplayOrder", JSON.stringify(["ESRB"]));
     var classificationDisplayOrder = JSON.parse(classificationDisplayOrderString);
     if (showTitle == "true") { showTitle = true; } else { showTitle = false; }
     if (showRatings == "true") { showRatings = true; } else { showRatings = false; }
@@ -172,7 +186,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
     var alphaPager = document.getElementById('games_library_alpha_pager');
     alphaPager.innerHTML = '';
 
-    switch(pageMode) {
+    switch (pageMode) {
         case 'infinite':
             for (const [key, value] of Object.entries(result.alphaList)) {
                 var letterPager = document.createElement('span');
@@ -181,7 +195,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
                 letterPager.innerHTML = key;
                 alphaPager.appendChild(letterPager);
             }
-            
+
             if (firstLoad == true) {
                 if (localStorage.getItem("gaseous-library-scrollpos") != null) {
                     $(window).scrollTop(localStorage.getItem("gaseous-library-scrollpos"));
@@ -297,7 +311,7 @@ function formatGamesPanel(targetElement, result, pageNumber, pageSize, forceScro
         visibleOnly: true,
         defaultImage: '/images/unknowngame.png',
         delay: 250,
-        afterLoad: function(element) {
+        afterLoad: function (element) {
             //console.log(element[0].getAttribute('data-id'));
         }
     });
@@ -319,11 +333,11 @@ const elementIsVisibleInViewport = (el, partiallyVisible = false) => {
     const { top, left, bottom, right } = el.getBoundingClientRect();
     const { innerHeight, innerWidth } = window;
     return partiallyVisible
-      ? ((top > 0 && top < innerHeight) ||
-          (bottom > 0 && bottom < innerHeight)) &&
-          ((left > 0 && left < innerWidth) || (right > 0 && right < innerWidth))
-      : top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
-  };
+        ? ((top > 0 && top < innerHeight) ||
+            (bottom > 0 && bottom < innerHeight)) &&
+        ((left > 0 && left < innerWidth) || (right > 0 && right < innerWidth))
+        : top >= 0 && left >= 0 && bottom <= innerHeight && right <= innerWidth;
+};
 
 function IsInView() {
     var pageMode = GetPreference('LibraryPagination', 'paged');
@@ -406,10 +420,34 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
         for (var b = 0; b < classificationDisplayOrder.length; b++) {
             if (shownClassificationBoard == '') {
                 for (var c = 0; c < gameObject.ageRatings.length; c++) {
-                    if (gameObject.ageRatings[c].category == classificationDisplayOrder[b]) {
+                    // find the first matching classification board in the AgeGroupMap
+                    let classBoard = '';
+                    if (AgeGroupMap) {
+                        for (const [key, value] of Object.entries(AgeGroupMap.RatingBoards)) {
+                            // check if the IGDBId matches the age rating organization id
+                            if (value.IGDBId == gameObject.ageRatings[c].organization.id) {
+                                classBoard = key;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (classBoard == classificationDisplayOrder[b]) {
                         shownClassificationBoard = classificationDisplayOrder[b];
                         displayClassification = true;
-                        classificationPath = '/images/Ratings/' + classificationDisplayOrder[b] + '/' + gameObject.ageRatings[c].rating + '.svg';
+
+                        let classificationObject = AgeGroupMap.RatingBoards[shownClassificationBoard];
+
+                        // look up the rating category in the classification object
+                        let classCategory = '';
+                        for (const [key, value] of Object.entries(classificationObject.Ratings)) {
+                            if (value.IGDBId == gameObject.ageRatings[c].ratingCategory.id) {
+                                classCategory = key;
+                                break;
+                            }
+                        }
+
+                        classificationPath = '/images/Ratings/' + classificationDisplayOrder[b] + '/' + classCategory + '.svg';
                     }
                 }
             } else {
@@ -445,7 +483,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
                     gameImageRatingBannerLogo.src = '/images/IGDB_logo.svg';
                     gameImageRatingBannerLogo.setAttribute('style', 'filter: invert(100%); height: 10px; margin-right: 5px; padding-top: 4px;');
                     gameImageRatingBanner.appendChild(gameImageRatingBannerLogo);
-    
+
                     var gameImageRatingBannerValue = document.createElement('span');
                     gameImageRatingBannerValue.innerHTML = Math.floor(gameObject.totalRating) + '% / ' + gameObject.totalRatingCount;
                     gameImageRatingBanner.appendChild(gameImageRatingBannerValue);
@@ -453,7 +491,7 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
             }
 
             gameImageBox.appendChild(gameImageRatingBanner);
-            
+
             if (displayClassification == true) {
                 var gameImageClassificationLogo = document.createElement('img');
                 gameImageClassificationLogo.src = classificationPath;
@@ -477,31 +515,31 @@ function renderGameIcon(gameObject, showTitle, showRatings, showClassification, 
 function getViewModeClasses(listView) {
     if (listView == false) {
         return {
-            "game_tile game_tile_small": [ "game_tile", "game_tile_small" ],
-            "game_tile": [ "game_tile" ],
-            "game_tile_box": [ "game_tile_box" ],
-            "game_tile_image game_tile_image_small lazy": [ "game_tile_image", "game_tile_image_small", "lazy" ],
-            "game_tile_image lazy": [ "game_tile_image", "lazy" ],
-            "game_tile_image unknown": [ "game_tile_image", "unknown" ],
-            "game_tile_box_savedgame savedstateicon": [ "game_tile_box_savedgame", "savedstateicon" ],
-            "game_tile_box_favouritegame favouriteicon": [ "game_tile_box_favouritegame", "favouriteicon" ],
-            "game_tile_box_ratingbanner": [ "game_tile_box_ratingbanner" ],
-            "rating_image_overlay": [ "rating_image_overlay" ],
-            "game_tile_label": [ "game_tile_label" ]
+            "game_tile game_tile_small": ["game_tile", "game_tile_small"],
+            "game_tile": ["game_tile"],
+            "game_tile_box": ["game_tile_box"],
+            "game_tile_image game_tile_image_small lazy": ["game_tile_image", "game_tile_image_small", "lazy"],
+            "game_tile_image lazy": ["game_tile_image", "lazy"],
+            "game_tile_image unknown": ["game_tile_image", "unknown"],
+            "game_tile_box_savedgame savedstateicon": ["game_tile_box_savedgame", "savedstateicon"],
+            "game_tile_box_favouritegame favouriteicon": ["game_tile_box_favouritegame", "favouriteicon"],
+            "game_tile_box_ratingbanner": ["game_tile_box_ratingbanner"],
+            "rating_image_overlay": ["rating_image_overlay"],
+            "game_tile_label": ["game_tile_label"]
         };
     } else {
         return {
-            "game_tile game_tile_small": [ "game_tile_row", "game_tile_small" ],
-            "game_tile": [ "game_tile_row" ],
-            "game_tile_box": [ "game_tile_box_row" ],
-            "game_tile_image game_tile_image_small lazy": [ "game_tile_image_row", "game_tile_image_small", "lazy" ],
-            "game_tile_image lazy": [ "game_tile_image_row", "lazy" ],
-            "game_tile_image unknown": [ "game_tile_image_row", "unknown" ],
-            "game_tile_box_savedgame savedstateicon": [ "game_tile_box_savedgame_row", "savedstateicon" ],
-            "game_tile_box_favouritegame favouriteicon": [ "game_tile_box_favouritegame_row", "favouriteicon" ],
-            "game_tile_box_ratingbanner": [ "game_tile_box_ratingbanner_row" ],
-            "rating_image_overlay": [ "rating_image_overlay_row" ],
-            "game_tile_label": [ "game_tile_label_row" ]
+            "game_tile game_tile_small": ["game_tile_row", "game_tile_small"],
+            "game_tile": ["game_tile_row"],
+            "game_tile_box": ["game_tile_box_row"],
+            "game_tile_image game_tile_image_small lazy": ["game_tile_image_row", "game_tile_image_small", "lazy"],
+            "game_tile_image lazy": ["game_tile_image_row", "lazy"],
+            "game_tile_image unknown": ["game_tile_image_row", "unknown"],
+            "game_tile_box_savedgame savedstateicon": ["game_tile_box_savedgame_row", "savedstateicon"],
+            "game_tile_box_favouritegame favouriteicon": ["game_tile_box_favouritegame_row", "favouriteicon"],
+            "game_tile_box_ratingbanner": ["game_tile_box_ratingbanner_row"],
+            "rating_image_overlay": ["rating_image_overlay_row"],
+            "game_tile_label": ["game_tile_label_row"]
         };
     }
 }

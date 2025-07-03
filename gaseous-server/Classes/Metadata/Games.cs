@@ -7,7 +7,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class Games
     {
-        const string fieldList = "fields age_ratings,aggregated_rating,aggregated_rating_count,alternative_names,artworks,bundles,category,checksum,collections,cover,created_at,dlcs,expanded_games,expansions,external_games,first_release_date,follows,forks,franchise,franchises,game_engines,game_localizations,game_modes,genres,hypes,involved_companies,keywords,language_supports,multiplayer_modes,name,parent_game,platforms,player_perspectives,ports,rating,rating_count,release_dates,remakes,remasters,screenshots,similar_games,slug,standalone_expansions,status,storyline,summary,tags,themes,total_rating,total_rating_count,updated_at,url,version_parent,version_title,videos,websites;";
+        const string fieldList = "fields *;";
 
         public Games()
         {
@@ -239,31 +239,31 @@ namespace gaseous_server.Classes.Metadata
                     }
                 }
 
-                if (Game.Collection != null)
-                {
-                    Collection GameCollection = Collections.GetCollections(Game.Collection.Id);
-                }
+                // if (Game.Collections != null)
+                // {
+                //     Collection GameCollection = Collections.GetCollections(Game.Collections.Id);
+                // }
 
-                if (Game.ExternalGames != null)
-                {
-                    foreach (long ExternalGameId in Game.ExternalGames.Ids)
-                    {
-                        ExternalGame GameExternalGame = ExternalGames.GetExternalGames(ExternalGameId);
-                    }
-                }
+                // if (Game.ExternalGames != null)
+                // {
+                //     foreach (long ExternalGameId in Game.ExternalGames.Ids)
+                //     {
+                //         ExternalGame GameExternalGame = ExternalGames.GetExternalGames(ExternalGameId);
+                //     }
+                // }
 
-                if (Game.Franchise != null)
-                {
-                    Franchise GameFranchise = Franchises.GetFranchises(Game.Franchise.Id);
-                }
+                // if (Game.Franchise != null)
+                // {
+                //     Franchise GameFranchise = Franchises.GetFranchises(Game.Franchise.Id);
+                // }
 
-                if (Game.Franchises != null)
-                {
-                    foreach (long FranchiseId in Game.Franchises.Ids)
-                    {
-                        Franchise GameFranchise = Franchises.GetFranchises(FranchiseId);
-                    }
-                }
+                // if (Game.Franchises != null)
+                // {
+                //     foreach (long FranchiseId in Game.Franchises.Ids)
+                //     {
+                //         Franchise GameFranchise = Franchises.GetFranchises(FranchiseId);
+                //     }
+                // }
 
                 if (Game.InvolvedCompanies != null)
                 {
@@ -348,7 +348,7 @@ namespace gaseous_server.Classes.Metadata
             }
 
             // get missing metadata from parent if this is a port
-            if (result.Category == Category.Port)
+            if (result.GameType.Id == 11) // this is a port
             {
                 if (result.Summary == null)
                 {

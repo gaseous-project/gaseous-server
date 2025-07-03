@@ -55,8 +55,10 @@
     <div id="mainbody">
         <div id="gamescreenshots">
             <div id="gamescreenshots_portal">
-                <div id="gamescreenshots_left_arrow" onclick="selectScreenshot_Prev();" class="gamescreenshots_arrows">&lt;</div>
-                <div id="gamescreenshots_right_arrow" onclick="selectScreenshot_Next();" class="gamescreenshots_arrows">&gt;</div>
+                <div id="gamescreenshots_left_arrow" onclick="selectScreenshot_Prev();" class="gamescreenshots_arrows">
+                    &lt;</div>
+                <div id="gamescreenshots_right_arrow" onclick="selectScreenshot_Next();" class="gamescreenshots_arrows">
+                    &gt;</div>
                 <div id="gamescreenshots_main"></div>
             </div>
             <div id="gamescreenshots_gallery">
@@ -75,15 +77,19 @@
 
             <div id="gamestatistics_favourite" class="gamestatistics_box">
                 <div id="gamestatistics_favourite_button">
-                    
+
                 </div>
             </div>
         </div>
         <div id="gamesummarytext">
             <span id="gamesummarytext_label" class="line-clamp-4"></span>
-            <p id="gamesummarytext_label_button_expand" class="text_link" style="display: none;" onclick="document.querySelector('#gamesummarytext_label').classList.remove('line-clamp-4'); document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', 'display: none;'); document.querySelector('#gamesummarytext_label_button_contract').setAttribute('style', '');">Read more...</p>
+            <p id="gamesummarytext_label_button_expand" class="text_link" style="display: none;"
+                onclick="document.querySelector('#gamesummarytext_label').classList.remove('line-clamp-4'); document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', 'display: none;'); document.querySelector('#gamesummarytext_label_button_contract').setAttribute('style', '');">
+                Read more...</p>
 
-            <p id="gamesummarytext_label_button_contract" class="text_link" style="display: none;" onclick="document.querySelector('#gamesummarytext_label').classList.add('line-clamp-4'); document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', ''); document.querySelector('#gamesummarytext_label_button_contract').setAttribute('style', 'display: none;');">Read less...</p>
+            <p id="gamesummarytext_label_button_contract" class="text_link" style="display: none;"
+                onclick="document.querySelector('#gamesummarytext_label').classList.add('line-clamp-4'); document.querySelector('#gamesummarytext_label_button_expand').setAttribute('style', ''); document.querySelector('#gamesummarytext_label_button_contract').setAttribute('style', 'display: none;');">
+                Read less...</p>
         </div>
         <div id="gamesummarymediagroups" style="display: none;">
             <h3>Media Groups</h3>
@@ -99,7 +105,8 @@
                     <select id="rom_edit_fixplatform" style="width: 150px;"></select>
                     <select id="rom_edit_fixgame" style="width: 300px;"></select>
                     <button id="rom_edit_update" onclick="remapTitles();">Update</button>
-                    <button id="rom_edit_creategroup" onclick="createMgGroup();" disabled="disabled">Create Media Group</button>
+                    <button id="rom_edit_creategroup" onclick="createMgGroup();" disabled="disabled">Create Media
+                        Group</button>
                 </div>
             </div>
             <div id="games_library_controls">
@@ -302,7 +309,7 @@
             gameFavIcon.className = "favouriteicon";
             gameFavIcon.title = "Favourite";
             gameFavIcon.alt = "Favourite";
-            
+
             if (result == true) {
                 gameFavIcon.setAttribute("src", '/images/favourite-filled.svg');
                 gameFavIcon.setAttribute('onclick', "SetGameFavourite(false);");
@@ -329,15 +336,18 @@
         var gameSummaryRatings = document.getElementById('gamesummary_ratings');
         if (result.ageRatings) {
             ajaxCall('/api/v1.1/games/' + gameId + '/agerating', 'GET', function (result) {
+                console.log(result);
+
                 var classTable = document.createElement('table');
                 var gameRatingsSml = document.createElement('div');
-                
-                var SpotlightClassifications = GetPreference("LibraryGameClassificationDisplayOrder", JSON.stringify([ "ESRB" ]));
+
+                var SpotlightClassifications = GetPreference("LibraryGameClassificationDisplayOrder", JSON.stringify(["ESRB"]));
 
                 for (var i = 0; i < result.length; i++) {
                     var ratingImage = document.createElement('img');
-                    ratingImage.src = '/images/Ratings/' + result[i].ratingBoard + '/' + result[i].ratingTitle + '.svg';
-                    var ratingString = ClassificationBoards[result[i].ratingBoard] + "\nRating: " + ClassificationRatings[result[i].ratingTitle];
+
+                    ratingImage.src = '/images/Ratings/' + result[i].ratingBoard.name + '/' + result[i].ratingTitle.rating + '.svg';
+                    var ratingString = ClassificationBoards[result[i].ratingBoard.name] + "\nRating: " + ClassificationRatings[result[i].ratingBoard.name][result[i].ratingTitle.rating];
                     if (result[i].descriptions.length > 0) {
                         ratingString += '\nContains: ' + result[i].descriptions.join(', ');
                     }
@@ -354,7 +364,7 @@
                         if (result[i].descriptions.length > 0) {
                             classTableDescription.innerHTML = result[i].descriptions.join('<br />');
                         } else {
-                            classTableDescription.innerHTML = ClassificationRatings[result[i].ratingTitle];
+                            classTableDescription.innerHTML = ClassificationRatings[result[i].ratingBoard.name][result[i].ratingTitle];
                         }
                         classTableRow.appendChild(classTableDescription);
                         classTable.appendChild(classTableRow);
@@ -487,7 +497,7 @@
                     }
 
                     selectScreenshot(0);
-                }, function(error) {
+                }, function (error) {
                     selectScreenshot(0);
                 });
             } else {
@@ -565,8 +575,8 @@
 
                             launchButton = '<a href="/index.html?page=emulator&engine=' + mediaGroup.emulator.type + '&core=' + mediaGroup.emulator.core + '&platformid=' + mediaGroup.platformId + '&gameid=' + gameId + '&romid=' + mediaGroup.id + '&mediagroup=1&rompath=' + romPath + '" class="romstart">Launch</a>';
                         }
-                    }    
-            
+                    }
+
                     var statusText = mediaGroup.status;
                     var downloadLink = '';
                     var packageSize = '-';
@@ -623,8 +633,8 @@
                     var mgRomCell = document.createElement('td');
                     mgRomCell.setAttribute('colspan', 7);
                     mgRomCell.className = 'romGroupTitles';
-                    
-                    
+
+
                     // iterate the group members
                     var groupMembers = [];
                     for (var r = 0; r < mediaGroup.roms.length; r++) {
@@ -760,7 +770,7 @@
                 if (result.count > pageSize) {
                     // draw pagination
                     var numOfPages = Math.ceil(result.count / pageSize);
-                    
+
                     var romPaginator = document.createElement('div');
                     romPaginator.id = 'romPaginator';
                     romPaginator.className = 'rom_pager';
@@ -806,9 +816,9 @@
                 gameRomsSection.setAttribute('style', 'display: none;');
             }
         },
-        function(error) {
-            
-        });
+            function (error) {
+
+            });
     }
 
     function loadArtwork(game, cover) {
@@ -1203,7 +1213,7 @@
                 gameFavIcon.className = "favouriteicon";
                 gameFavIcon.title = "Favourite";
                 gameFavIcon.alt = "Favourite";
-                
+
                 if (result == true) {
                     gameFavIcon.setAttribute("src", '/images/favourite-filled.svg');
                     gameFavIcon.setAttribute('onclick', "SetGameFavourite(false);");
