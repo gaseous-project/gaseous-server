@@ -642,7 +642,7 @@ namespace gaseous_server.Classes
 				// check if the game is already in progress
 				if (inProgressRefreshes.Any(x => x["Id"].ToString() == dr["Id"].ToString()))
 				{
-					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Skipping metadata refresh for game " + dr["name"] + " (" + dr["id"] + ") - already in progress");
+					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Skipping metadata refresh for game " + dr["Name"] + " (" + dr["Id"] + ") - already in progress");
 					continue;
 				}
 
@@ -650,7 +650,7 @@ namespace gaseous_server.Classes
 				inProgressRefreshes.Add(new Dictionary<string, object>()
 				{
 					{ "Id", dr["Id"] },
-					{ "GameIdType", dr["GameIdType"] },
+					// { "GameIdType", dr["GameIdType"] },
 					{ "Name", dr["Name"] }
 				});
 
