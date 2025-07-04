@@ -341,16 +341,38 @@
 
                 var SpotlightClassifications = GetPreference("LibraryGameClassificationDisplayOrder", JSON.stringify(["ESRB"]));
 
+                // console.log(AgeGroupMap);
                 for (var i = 0; i < result.length; i++) {
                     var ratingImage = document.createElement('img');
 
-                    ratingImage.src = '/images/Ratings/' + result[i].ratingBoard.name + '/' + result[i].ratingTitle.rating + '.svg';
-                    var ratingString = ClassificationBoards[result[i].ratingBoard.name] + "\nRating: " + ClassificationRatings[result[i].ratingBoard.name][result[i].ratingTitle.rating];
+                    let ratingBoard = AgeGroupMap.RatingBoards[result[i].ratingBoard.name];
+                    let ratingIconName = result[i].ratingTitle.id;
+                    let ratingDetails;
+                    for (const [key, value] of Object.entries(ratingBoard.Ratings)) {
+                        if (value.IGDBId === result[i].ratingTitle.id) {
+                            ratingIconName = key;
+                            ratingDetails = value;
+                            break;
+                        }
+                    }
+
+                    console.log(result[i]);
+
+                    ratingImage.src = '/images/Ratings/' + result[i].ratingBoard.name + '/' + ratingIconName + '.svg';
+                    var ratingString = ClassificationBoards[result[i].ratingBoard.name] + "\nRating: " + ClassificationRatings[result[i].ratingBoard.name][ratingIconName];
                     if (result[i].descriptions.length > 0) {
-                        ratingString += '\nContains: ' + result[i].descriptions.join(', ');
+                        ratingString += '\nContains: ';
+                        let ratingStringBuild = '';
+                        result[i].descriptions.forEach((element) => {
+                            if (ratingStringBuild.length > 0) {
+                                ratingStringBuild += ', ';
+                            }
+                            ratingStringBuild += element.description;
+                        });
+                        ratingString += ratingStringBuild;
                     }
                     ratingImage.title = ratingString;
-                    if (SpotlightClassifications.includes(result[i].ratingBoard)) {
+                    if (SpotlightClassifications.includes(result[i].ratingBoard.name)) {
                         ratingImage.className = 'rating_image';
 
                         var classTableRow = document.createElement('tr');
@@ -360,9 +382,16 @@
                         classTableRow.appendChild(classTableLogo);
                         var classTableDescription = document.createElement('td');
                         if (result[i].descriptions.length > 0) {
-                            classTableDescription.innerHTML = result[i].descriptions.join('<br />');
+                            let descriptions = '';
+                            result[i].descriptions.forEach((element) => {
+                                if (descriptions.length > 0) {
+                                    descriptions += '<br />';
+                                }
+                                descriptions += element.description;
+                            });
+                            classTableDescription.innerHTML = descriptions;
                         } else {
-                            classTableDescription.innerHTML = ClassificationRatings[result[i].ratingBoard.name][result[i].ratingTitle];
+                            classTableDescription.innerHTML = ClassificationRatings[result[i].ratingBoard.name][ratingIconName];
                         }
                         classTableRow.appendChild(classTableDescription);
                         classTable.appendChild(classTableRow);
