@@ -19,11 +19,11 @@ var ClassificationRatings = {
     },
 
     "PEGI": {
-        "3": "PEGI 3",
-        "7": "PEGI 7",
-        "12": "PEGI 12",
-        "16": "PEGI 16",
-        "18": "PEGI 18"
+        "Three": "PEGI 3",
+        "Seven": "PEGI 7",
+        "Twelve": "PEGI 12",
+        "Sixteen": "PEGI 16",
+        "Eighteen": "PEGI 18"
     },
 
     "CERO": {
