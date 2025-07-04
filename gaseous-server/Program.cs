@@ -37,8 +37,6 @@ db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.Conn
 
 // set up db
 db.InitDB();
-// create tables from types
-Classes.Metadata.Utility.TableBuilder.BuildTables();
 // create relation tables if they don't exist
 await Storage.CreateRelationsTables<IGDB.Models.Game>();
 await Storage.CreateRelationsTables<IGDB.Models.Platform>();

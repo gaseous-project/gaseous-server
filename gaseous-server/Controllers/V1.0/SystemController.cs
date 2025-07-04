@@ -60,7 +60,7 @@ SELECT
 FROM
     view_Games_Roms
         LEFT JOIN
-    Platform ON view_Games_Roms.PlatformId = Platform.`Id`
+    `Metadata_Platform` AS `Platform` ON view_Games_Roms.PlatformId = Platform.`Id`
         AND Platform.SourceId = 0
 GROUP BY Platform.`Name`
 ORDER BY Platform.`Name`; ";

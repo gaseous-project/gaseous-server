@@ -140,7 +140,7 @@ namespace gaseous_server.Classes.Metadata
                         await GetGame(source, metadataMapItem.SourceId, false);
 
                         // found a valid source - check if there is a clear logo
-                        string sql = "SELECT * FROM ClearLogo WHERE SourceId = @sourceid AND Game = @gameid;";
+                        string sql = "SELECT * FROM Metadata_ClearLogo WHERE SourceId = @sourceid AND Game = @gameid;";
                         Dictionary<string, object> dbDict = new Dictionary<string, object>
                         {
                             { "sourceid", (int)source },
@@ -222,7 +222,7 @@ namespace gaseous_server.Classes.Metadata
                     break;
             }
 
-            string sql = "SELECT Game.Id, Game.`Name`, Game.Slug, Relation_Game_Platforms.PlatformsId AS PlatformsId, Game.Summary FROM gaseous.Game JOIN Relation_Game_Platforms ON Game.Id = Relation_Game_Platforms.GameId AND Game.SourceId = Relation_Game_Platforms.GameSourceId WHERE " + whereClause + ";";
+            string sql = "SELECT Game.Id, Game.`Name`, Game.Slug, Relation_Game_Platforms.PlatformsId AS PlatformsId, Game.Summary FROM gaseous.Metadata_Game AS `Game` JOIN Relation_Game_Platforms ON Game.Id = Relation_Game_Platforms.GameId AND Game.SourceId = Relation_Game_Platforms.GameSourceId WHERE " + whereClause + ";";
 
 
             // get Game metadata
@@ -360,7 +360,7 @@ SELECT DISTINCT
 FROM
     view_Games_Roms
         LEFT JOIN
-    Platform ON view_Games_Roms.PlatformId = Platform.Id AND Platform.SourceId = view_Games_Roms.GameIdType
+    `Metadata_Platform` AS `Platform` ON view_Games_Roms.PlatformId = Platform.Id AND Platform.SourceId = view_Games_Roms.GameIdType
         LEFT JOIN
     User_RecentPlayedRoms ON User_RecentPlayedRoms.UserId = @userid
         AND User_RecentPlayedRoms.GameId = view_Games_Roms.MetadataMapId

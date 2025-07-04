@@ -85,7 +85,7 @@ namespace gaseous_server.Classes
 			long metadataMapId = (long)dt.Rows[0][0];
 
 			// create dummy game metadata item and capture id
-			sql = "INSERT INTO Game (SourceId, Name, dateAdded, lastUpdated) VALUES (@sourceid, @name, @dateadded, @lastupdated); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+			sql = "INSERT INTO Metadata_Game (SourceId, Name, dateAdded, lastUpdated) VALUES (@sourceid, @name, @dateadded, @lastupdated); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
 			dbDict = new Dictionary<string, object>()
 			{
 				{ "@sourceid", HasheousClient.Models.MetadataSources.None },
@@ -431,7 +431,7 @@ namespace gaseous_server.Classes
 		public async Task RefreshPlatforms(bool forceRefresh = false)
 		{
 			// update platform metadata
-			string sql = "SELECT Id, `Name` FROM Platform;";
+			string sql = "SELECT Id, `Name` FROM Metadata_Platform;";
 			DataTable dt = await db.ExecuteCMDAsync(sql);
 
 			int StatusCounter = 1;
@@ -460,7 +460,7 @@ namespace gaseous_server.Classes
 					else
 					{
 						// set the platform to unknown
-						sql = "UPDATE Platform SET Name = 'Unknown Platform', Slug = 'unknown', PlatformLogo = 0 WHERE Id = 0;";
+						sql = "UPDATE Metadata_Platform SET Name = 'Unknown Platform', Slug = 'unknown', PlatformLogo = 0 WHERE Id = 0;";
 						await db.ExecuteCMDAsync(sql);
 					}
 

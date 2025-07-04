@@ -164,7 +164,7 @@ namespace gaseous_server.Classes
 		public static int GetLookupByCode(LookupTypes LookupType, string Code)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "SELECT Id FROM " + LookupType.ToString() + " WHERE Code = @code";
+			string sql = "SELECT Id FROM Lookup" + LookupType.ToString() + " WHERE Code = @code";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>{
 				{ "code", Code }
 			};
@@ -183,7 +183,7 @@ namespace gaseous_server.Classes
 		public static int GetLookupByValue(LookupTypes LookupType, string Value)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "SELECT Id FROM " + LookupType.ToString() + " WHERE Value = @value";
+			string sql = "SELECT Id FROM Lookup" + LookupType.ToString() + " WHERE Value = @value";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>{
 				{ "value", Value }
 			};

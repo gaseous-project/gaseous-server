@@ -68,6 +68,15 @@ namespace gaseous_server.Classes
                             await Storage.CreateRelationsTables<IGDB.Models.Game>();
                             await Storage.CreateRelationsTables<IGDB.Models.Platform>();
                             break;
+
+                        case 1030:
+                            Logging.Log(Logging.LogType.Information, "Database", "Running pre-upgrade for schema version " + TargetSchemaVersion);
+                            // build tables for metadata storage
+                            Metadata.Utility.TableBuilder.BuildTables();
+                            sql = "RENAME TABLE AgeGroup TO Metadata_AgeGroup; RENAME TABLE ClearLogo TO Metadata_ClearLogo;";
+                            dbDict.Clear();
+                            await db.ExecuteCMDAsync(sql, dbDict);
+                            break;
                     }
                     break;
             }
