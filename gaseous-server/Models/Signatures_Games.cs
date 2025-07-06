@@ -17,6 +17,35 @@ namespace gaseous_server.Models
             public long IGDBPlatformId { get; set; }
             public string IGDBPlatformName { get; set; }
             public long IGDBGameId { get; set; }
+            public SignatureGenerationSource GenerationSource { get; set; }
+            public enum SignatureGenerationSource
+            {
+                File,
+                Database
+            }
+            public int SignatureScore
+            {
+                get
+                {
+                    int scoreSourceBooster = 0;
+                    switch (GenerationSource)
+                    {
+                        case SignatureGenerationSource.File:
+                            scoreSourceBooster = 0;
+                            break;
+
+                        case SignatureGenerationSource.Database:
+                            scoreSourceBooster = 2;
+                            break;
+
+                        default:
+                            scoreSourceBooster = 0;
+                            break;
+                    }
+
+                    return scoreSourceBooster;
+                }
+            }
         }
     }
 }

@@ -52,7 +52,7 @@ namespace gaseous_server.Classes
                         Name = (string)sigDbRow["Name"],
                         Description = (string)sigDbRow["Description"],
                         Year = (string)sigDbRow["Year"],
-                        Publisher = (string)sigDbRow["Publisher"],
+                        Publisher = (string)Common.ReturnValueIfNull(sigDbRow["Publisher"], ""),
                         Demo = (gaseous_server.Models.Signatures_Games.GameItem.DemoTypes)(int)sigDbRow["Demo"],
                         System = (string)sigDbRow["Platform"],
                         SystemVariant = (string)sigDbRow["SystemVariant"],

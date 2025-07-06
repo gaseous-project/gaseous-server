@@ -1,7 +1,9 @@
 ﻿<div id="properties_toc">
     <div id="properties_toc_general" name="properties_toc_item" onclick="SelectTab('general');">General</div>
-    <div id="properties_toc_archive" name="properties_toc_item" onclick="SelectTab('archive');" style="display: none;">Archive Contents</div>
-    <div id="properties_toc_attributes" name="properties_toc_item" onclick="SelectTab('attributes');" style="display: none;">Attributes</div>
+    <div id="properties_toc_archive" name="properties_toc_item" onclick="SelectTab('archive');" style="display: none;">
+        Archive Contents</div>
+    <div id="properties_toc_attributes" name="properties_toc_item" onclick="SelectTab('attributes');"
+        style="display: none;">Attributes</div>
     <div id="properties_toc_match" name="properties_toc_item" onclick="SelectTab('match');">Title Match</div>
     <!--<div id="properties_toc_manage" name="properties_toc_item" onclick="SelectTab('manage');">Manage</div>-->
 </div>
@@ -59,7 +61,7 @@
     </div>
 
     <div id="properties_bodypanel_attributes" name="properties_tab" style="display: none;">
-        
+
     </div>
 
     <div id="properties_bodypanel_match" name="properties_tab" style="display: none;">
@@ -78,7 +80,9 @@
                 <td style="width: 75%;"><select id="properties_fixgame" style="width: 100%;"></select></td>
             </tr>
             <tr>
-                <td colspan="2" style="text-align: right;"><button id="properties_fixclear" value="Clear Match" onclick="ClearFixedGame();">Clear Match</button><button id="properties_fixsave" value="Save Match" onclick="SaveFixedGame();">Save Match</button></td>
+                <td colspan="2" style="text-align: right;"><button id="properties_fixclear" value="Clear Match"
+                        onclick="ClearFixedGame();">Clear Match</button><button id="properties_fixsave"
+                        value="Save Match" onclick="SaveFixedGame();">Save Match</button></td>
             </tr>
         </table>
     </div>
@@ -123,6 +127,25 @@
         }
     }
 
+    function SignatureSource(sourceId) {
+        switch (sourceId) {
+            case 1:
+                return "TOSEC";
+            case 2:
+                return "MAMEArcade";
+            case 3:
+                return "MAMEMess";
+            case 4:
+                return "NoIntro";
+            case 5:
+                return "Redump";
+            case 6:
+                return "WHDLoad";
+            default:
+                return sourceId;
+        }
+    }
+
     ajaxCall('/api/v1.1/Games/' + gameId + '/roms/' + modalVariables, 'GET', function (result) {
         romData = result;
         document.getElementById('modal-heading').innerHTML = result.name;
@@ -134,7 +157,7 @@
         document.getElementById('rominfo_medialabel').innerHTML = result.mediaLabel;
         document.getElementById('rominfo_md5').innerHTML = result.md5;
         document.getElementById('rominfo_sha1').innerHTML = result.sha1;
-        document.getElementById('rominfo_signaturematch').innerHTML = result.signatureSource;
+        document.getElementById('rominfo_signaturematch').innerHTML = SignatureSource(result.signatureSource);
         document.getElementById('rominfo_signaturetitle').innerHTML = result.signatureSourceGameTitle;
 
         document.getElementById('properties_fixplatform').innerHTML = "<option value='" + result.platformId + "' selected='selected'>" + result.platform + "</option>";
@@ -307,10 +330,10 @@
         for (var i = 0; i < attributes.length; i++) {
             if (attributes[i].key == "ZipContents") {
                 var archiveContent = JSON.parse(attributes[i].value);
-                
+
                 // show archive button
                 document.getElementById('properties_toc_archive').style.display = '';
-                
+
                 var aTable = document.createElement('table');
                 aTable.className = 'romtable';
                 aTable.setAttribute('cellspacing', 0);
@@ -354,18 +377,18 @@
     function ConvertTOSECAttributeName(attributeName) {
         var tosecAttributeNames = {
             "cr": "Cracked",
-            "f" : "Fixed",
-            "h" : "Hacked",
-            "m" : "Modified",
-            "p" : "Pirated",
-            "t" : "Trained",
+            "f": "Fixed",
+            "h": "Hacked",
+            "m": "Modified",
+            "p": "Pirated",
+            "t": "Trained",
             "tr": "Translated",
-            "o" : "Over Dump",
-            "u" : "Under Dump",
-            "v" : "Virus",
-            "b" : "Bad Dump",
-            "a" : "Alternate",
-            "!" : "Known Verified Dump"
+            "o": "Over Dump",
+            "u": "Under Dump",
+            "v": "Virus",
+            "b": "Bad Dump",
+            "a": "Alternate",
+            "!": "Known Verified Dump"
         };
 
         if (attributeName in tosecAttributeNames) {

@@ -126,8 +126,8 @@ namespace gaseous_server.Classes
                                     FileName = Path.GetFileName(file),
                                     FilePath = zfi.Directory.FullName.Replace(ExtractPath, ""),
                                     Size = zfi.Length,
-                                    MD5 = hash.md5hash,
-                                    SHA1 = hash.sha1hash
+                                    MD5 = zhash.md5hash,
+                                    SHA1 = zhash.sha1hash
                                 };
                                 archiveFiles.Add(archiveData);
 
@@ -136,7 +136,10 @@ namespace gaseous_server.Classes
                                     gaseous_server.Models.Signatures_Games zDiscoveredSignature = _GetFileSignature(zhash, zfi.Name, zfi.Extension, zfi.Length, file, true);
                                     zDiscoveredSignature.Rom.Name = Path.ChangeExtension(zDiscoveredSignature.Rom.Name, ImportedFileExtension);
 
-                                    if (zDiscoveredSignature.Score > discoveredSignature.Score)
+                                    if (
+                                        (zDiscoveredSignature.Score + zDiscoveredSignature.Flags.SignatureScore) >
+                                        (discoveredSignature.Score + discoveredSignature.Flags.SignatureScore)
+                                    )
                                     {
                                         if (
                                             zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEArcade ||
@@ -185,28 +188,30 @@ namespace gaseous_server.Classes
             {
                 // local signature found
                 Logging.Log(Logging.LogType.Information, "Import Game", "Signature found in local database for game: " + dbSignature.Game.Name);
+                dbSignature.Flags.GenerationSource = Models.Signatures_Games.SignatureFlags.SignatureGenerationSource.Database;
                 discoveredSignature = dbSignature;
             }
             else
             {
-                // no local signature attempt to pull from Hasheous
-                dbSignature = _GetFileSignatureFromHasheous(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
+                // // no local signature attempt to pull from Hasheous
+                // dbSignature = _GetFileSignatureFromHasheous(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
 
-                if (dbSignature != null)
-                {
-                    // signature retrieved from Hasheous
-                    Logging.Log(Logging.LogType.Information, "Import Game", "Signature retrieved from Hasheous for game: " + dbSignature.Game.Name);
+                // if (dbSignature != null)
+                // {
+                //     // signature retrieved from Hasheous
+                //     Logging.Log(Logging.LogType.Information, "Import Game", "Signature retrieved from Hasheous for game: " + dbSignature.Game.Name);
 
-                    discoveredSignature = dbSignature;
-                }
-                else
-                {
-                    // construct a signature from file data
-                    dbSignature = _GetFileSignatureFromFileData(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
-                    Logging.Log(Logging.LogType.Information, "Import Game", "Signature generated from provided file for game: " + dbSignature.Game.Name);
+                //     discoveredSignature = dbSignature;
+                // }
+                // else
+                // {
+                // construct a signature from file data
+                dbSignature = _GetFileSignatureFromFileData(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
+                dbSignature.Flags.GenerationSource = Models.Signatures_Games.SignatureFlags.SignatureGenerationSource.File;
+                Logging.Log(Logging.LogType.Information, "Import Game", "Signature generated from provided file for game: " + dbSignature.Game.Name);
 
-                    discoveredSignature = dbSignature;
-                }
+                discoveredSignature = dbSignature;
+                // }
             }
 
             gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, ImageExtension, false);
