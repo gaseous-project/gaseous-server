@@ -109,7 +109,7 @@ namespace gaseous_server.Classes
 				sqlCount = "SELECT COUNT(Games_Roms.Id) AS RomCount FROM Games_Roms WHERE Games_Roms.MetadataMapId = @id AND Games_Roms.PlatformId = @platformid" + NameSearchWhere + ";";
 
 				dbDict.Add("platformid", PlatformId);
-				dbDict.Add("platformsource", (int)HasheousClient.Models.MetadataSources.None);
+				dbDict.Add("platformsource", (int)FileSignature.MetadataSources.None);
 			}
 			DataTable romDT = await db.ExecuteCMDAsync(sql, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks));
 
@@ -184,7 +184,7 @@ namespace gaseous_server.Classes
 			HasheousClient.Models.Metadata.IGDB.Platform platform = await Classes.Metadata.Platforms.GetPlatform(PlatformId);
 
 			// ensure metadata for gameid is present
-			Models.Game game = await Classes.Metadata.Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, GameId);
+			Models.Game game = await Classes.Metadata.Games.GetGame(FileSignature.MetadataSources.IGDB, GameId);
 
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "UPDATE Games_Roms SET PlatformId=@platformid, MetadataMapId=@gameid WHERE Id = @id";
@@ -298,7 +298,7 @@ namespace gaseous_server.Classes
 				PlatformId = (long)romDR["platformid"],
 				Platform = (string)romDR["platformname"],
 				MetadataMapId = (long)romDR["metadatamapid"],
-				MetadataSource = (HasheousClient.Models.MetadataSources)(int)romDR["metadatasource"],
+				MetadataSource = (FileSignature.MetadataSources)(int)romDR["metadatasource"],
 				GameId = (long)romDR["gameid"],
 				Game = (string)Common.ReturnValueIfNull(romDR["gamename"], ""),
 				Name = (string)romDR["name"],
@@ -352,7 +352,7 @@ namespace gaseous_server.Classes
 			public long PlatformId { get; set; }
 			public string Platform { get; set; }
 			public long MetadataMapId { get; set; }
-			public HasheousClient.Models.MetadataSources MetadataSource { get; set; }
+			public FileSignature.MetadataSources MetadataSource { get; set; }
 			public long GameId { get; set; }
 			public string Game { get; set; }
 			public string? Path { get; set; }

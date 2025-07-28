@@ -304,9 +304,9 @@ ORDER BY Platform.`Name`; ";
                 },
                 MetadataSources = new List<SystemSettingsModel.MetadataSourceItem>
                 {
-                    new SystemSettingsModel.MetadataSourceItem(HasheousClient.Models.MetadataSources.None, false, "", "", Config.MetadataConfiguration.DefaultMetadataSource),
-                    new SystemSettingsModel.MetadataSourceItem(HasheousClient.Models.MetadataSources.IGDB, Config.IGDB.UseHasheousProxy, Config.IGDB.ClientId, Config.IGDB.Secret, Config.MetadataConfiguration.DefaultMetadataSource),
-                    new SystemSettingsModel.MetadataSourceItem(HasheousClient.Models.MetadataSources.TheGamesDb, true, "", "", Config.MetadataConfiguration.DefaultMetadataSource)
+                    new SystemSettingsModel.MetadataSourceItem(FileSignature.MetadataSources.None, false, "", "", Config.MetadataConfiguration.DefaultMetadataSource),
+                    new SystemSettingsModel.MetadataSourceItem(FileSignature.MetadataSources.IGDB, Config.IGDB.UseHasheousProxy, Config.IGDB.ClientId, Config.IGDB.Secret, Config.MetadataConfiguration.DefaultMetadataSource),
+                    new SystemSettingsModel.MetadataSourceItem(FileSignature.MetadataSources.TheGamesDb, true, "", "", Config.MetadataConfiguration.DefaultMetadataSource)
                 }
             };
 
@@ -332,7 +332,7 @@ ORDER BY Platform.`Name`; ";
                 Config.MetadataConfiguration.HasheousSubmitFixes = model.SignatureSource.HasheousSubmitFixes;
 
                 // reset the default metadata source to none
-                Config.MetadataConfiguration.DefaultMetadataSource = HasheousClient.Models.MetadataSources.None;
+                Config.MetadataConfiguration.DefaultMetadataSource = FileSignature.MetadataSources.None;
 
                 foreach (SystemSettingsModel.MetadataSourceItem metadataSourceItem in model.MetadataSources)
                 {
@@ -345,14 +345,14 @@ ORDER BY Platform.`Name`; ";
                     // configure the metadata source
                     switch (metadataSourceItem.Source)
                     {
-                        case HasheousClient.Models.MetadataSources.None:
+                        case FileSignature.MetadataSources.None:
                             break;
-                        case HasheousClient.Models.MetadataSources.IGDB:
+                        case FileSignature.MetadataSources.IGDB:
                             Config.IGDB.UseHasheousProxy = metadataSourceItem.UseHasheousProxy;
                             Config.IGDB.ClientId = metadataSourceItem.ClientId;
                             Config.IGDB.Secret = metadataSourceItem.Secret;
                             break;
-                        case HasheousClient.Models.MetadataSources.TheGamesDb:
+                        case FileSignature.MetadataSources.TheGamesDb:
                             break;
                         default:
                             break;
@@ -413,7 +413,7 @@ ORDER BY Platform.`Name`; ";
                             break;
 
                         case "metadataconfiguration.defaultmetadatasource":
-                            Config.MetadataConfiguration.DefaultMetadataSource = (HasheousClient.Models.MetadataSources)Enum.Parse(typeof(HasheousClient.Models.MetadataSources), strValue);
+                            Config.MetadataConfiguration.DefaultMetadataSource = (FileSignature.MetadataSources)Enum.Parse(typeof(FileSignature.MetadataSources), strValue);
                             break;
 
                         case "igdb.usehasheousproxy":
@@ -875,7 +875,7 @@ ORDER BY Platform.`Name`; ";
 
             }
 
-            public MetadataSourceItem(HasheousClient.Models.MetadataSources source, bool useHasheousProxy, string clientId, string secret, HasheousClient.Models.MetadataSources defaultSource)
+            public MetadataSourceItem(FileSignature.MetadataSources source, bool useHasheousProxy, string clientId, string secret, FileSignature.MetadataSources defaultSource)
             {
                 Source = source;
                 UseHasheousProxy = useHasheousProxy;
@@ -891,7 +891,7 @@ ORDER BY Platform.`Name`; ";
                 }
             }
 
-            public HasheousClient.Models.MetadataSources Source { get; set; }
+            public FileSignature.MetadataSources Source { get; set; }
             public bool UseHasheousProxy { get; set; }
             public string ClientId { get; set; }
             public string Secret { get; set; }
@@ -902,9 +902,9 @@ ORDER BY Platform.`Name`; ";
                 {
                     switch (Source)
                     {
-                        case HasheousClient.Models.MetadataSources.None:
+                        case FileSignature.MetadataSources.None:
                             return true;
-                        case HasheousClient.Models.MetadataSources.IGDB:
+                        case FileSignature.MetadataSources.IGDB:
                             if ((!String.IsNullOrEmpty(ClientId) && !String.IsNullOrEmpty(Secret)) || UseHasheousProxy == true)
                             {
                                 return true;
@@ -913,7 +913,7 @@ ORDER BY Platform.`Name`; ";
                             {
                                 return false;
                             }
-                        case HasheousClient.Models.MetadataSources.TheGamesDb:
+                        case FileSignature.MetadataSources.TheGamesDb:
                             if ((!String.IsNullOrEmpty(ClientId) && !String.IsNullOrEmpty(Secret)) || UseHasheousProxy == true)
                             {
                                 return true;
@@ -933,11 +933,11 @@ ORDER BY Platform.`Name`; ";
                 {
                     switch (Source)
                     {
-                        case HasheousClient.Models.MetadataSources.None:
+                        case FileSignature.MetadataSources.None:
                             return false;
-                        case HasheousClient.Models.MetadataSources.IGDB:
+                        case FileSignature.MetadataSources.IGDB:
                             return true;
-                        case HasheousClient.Models.MetadataSources.TheGamesDb:
+                        case FileSignature.MetadataSources.TheGamesDb:
                             return true;
                         default:
                             return false;
@@ -950,11 +950,11 @@ ORDER BY Platform.`Name`; ";
                 {
                     switch (Source)
                     {
-                        case HasheousClient.Models.MetadataSources.None:
+                        case FileSignature.MetadataSources.None:
                             return false;
-                        case HasheousClient.Models.MetadataSources.IGDB:
+                        case FileSignature.MetadataSources.IGDB:
                             return true;
-                        case HasheousClient.Models.MetadataSources.TheGamesDb:
+                        case FileSignature.MetadataSources.TheGamesDb:
                             return false;
                         default:
                             return false;

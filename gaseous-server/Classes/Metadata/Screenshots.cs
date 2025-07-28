@@ -10,7 +10,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static async Task<Screenshot?> GetScreenshotAsync(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<Screenshot?> GetScreenshotAsync(FileSignature.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {

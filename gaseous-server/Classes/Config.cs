@@ -135,7 +135,7 @@ namespace gaseous_server.Classes
                                 _config.DatabaseConfiguration.Password = (string)Common.GetEnvVar("dbpass", _config.DatabaseConfiguration.Password);
                                 _config.DatabaseConfiguration.DatabaseName = (string)Common.GetEnvVar("dbname", _config.DatabaseConfiguration.DatabaseName);
                                 _config.DatabaseConfiguration.Port = int.Parse((string)Common.GetEnvVar("dbport", _config.DatabaseConfiguration.Port.ToString()));
-                                _config.MetadataConfiguration.DefaultMetadataSource = (HasheousClient.Models.MetadataSources)Enum.Parse(typeof(HasheousClient.Models.MetadataSources), (string)Common.GetEnvVar("metadatasource", _config.MetadataConfiguration.DefaultMetadataSource.ToString()));
+                                _config.MetadataConfiguration.DefaultMetadataSource = (FileSignature.MetadataSources)Enum.Parse(typeof(FileSignature.MetadataSources), (string)Common.GetEnvVar("metadatasource", _config.MetadataConfiguration.DefaultMetadataSource.ToString()));
                                 _config.IGDBConfiguration.UseHasheousProxy = bool.Parse((string)Common.GetEnvVar("metadatausehasheousproxy", _config.IGDBConfiguration.UseHasheousProxy.ToString()));
                                 _config.MetadataConfiguration.SignatureSource = (HasheousClient.Models.MetadataModel.SignatureSources)Enum.Parse(typeof(HasheousClient.Models.MetadataModel.SignatureSources), (string)Common.GetEnvVar("signaturesource", _config.MetadataConfiguration.SignatureSource.ToString())); ;
                                 _config.MetadataConfiguration.HasheousHost = (string)Common.GetEnvVar("hasheoushost", _config.MetadataConfiguration.HasheousHost);
@@ -702,17 +702,17 @@ namespace gaseous_server.Classes
                     }
                 }
 
-                private static HasheousClient.Models.MetadataSources _MetadataSource
+                private static FileSignature.MetadataSources _MetadataSource
                 {
                     get
                     {
                         if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("metadatasource")))
                         {
-                            return (HasheousClient.Models.MetadataSources)Enum.Parse(typeof(HasheousClient.Models.MetadataSources), Environment.GetEnvironmentVariable("metadatasource"));
+                            return (FileSignature.MetadataSources)Enum.Parse(typeof(FileSignature.MetadataSources), Environment.GetEnvironmentVariable("metadatasource"));
                         }
                         else
                         {
-                            return HasheousClient.Models.MetadataSources.IGDB;
+                            return FileSignature.MetadataSources.IGDB;
                         }
                     }
                 }
@@ -751,7 +751,7 @@ namespace gaseous_server.Classes
                     }
                 }
 
-                public HasheousClient.Models.MetadataSources DefaultMetadataSource = _MetadataSource;
+                public FileSignature.MetadataSources DefaultMetadataSource = _MetadataSource;
 
                 public HasheousClient.Models.MetadataModel.SignatureSources SignatureSource = _SignatureSource;
 

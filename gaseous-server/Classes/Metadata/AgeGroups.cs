@@ -23,7 +23,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Storage.CacheStatus? cacheStatus = await Storage.GetCacheStatusAsync(HasheousClient.Models.MetadataSources.IGDB, "AgeGroup", (long)game.Id);
+                Storage.CacheStatus? cacheStatus = await Storage.GetCacheStatusAsync(FileSignature.MetadataSources.IGDB, "AgeGroup", (long)game.Id);
 
                 AgeGroup? RetVal = new AgeGroup();
 
@@ -31,16 +31,16 @@ namespace gaseous_server.Classes.Metadata
                 {
                     case Storage.CacheStatus.NotPresent:
                         RetVal = await _GetAgeGroup(game);
-                        await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.IGDB, RetVal, false);
+                        await Storage.NewCacheValue(FileSignature.MetadataSources.IGDB, RetVal, false);
                         break;
 
                     case Storage.CacheStatus.Expired:
                         RetVal = await _GetAgeGroup(game);
-                        await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.IGDB, RetVal, true);
+                        await Storage.NewCacheValue(FileSignature.MetadataSources.IGDB, RetVal, true);
                         break;
 
                     case Storage.CacheStatus.Current:
-                        RetVal = await Storage.GetCacheValue<AgeGroup>(HasheousClient.Models.MetadataSources.IGDB, RetVal, "Id", game.Id);
+                        RetVal = await Storage.GetCacheValue<AgeGroup>(FileSignature.MetadataSources.IGDB, RetVal, "Id", game.Id);
                         break;
 
                     default:

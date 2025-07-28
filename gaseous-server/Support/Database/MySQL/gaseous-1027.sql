@@ -1,23 +1,3 @@
-CREATE TABLE `Signatures_RomToSource` (
-    `SourceId` int NOT NULL,
-    `RomId` int NOT NULL,
-    PRIMARY KEY (`SourceId`, `RomId`)
-);
-
-CREATE TABLE `Signatures_Games_Countries` (
-    `GameId` INT NOT NULL,
-    `CountryId` INT NOT NULL,
-    PRIMARY KEY (`GameId`, `CountryId`),
-    CONSTRAINT `GameCountry` FOREIGN KEY (`GameId`) REFERENCES `Signatures_Games` (`Id`) ON DELETE CASCADE ON UPDATE NO ACTION
-);
-
-CREATE TABLE `Signatures_Games_Languages` (
-    `GameId` INT NOT NULL,
-    `LanguageId` INT NOT NULL,
-    PRIMARY KEY (`GameId`, `LanguageId`),
-    CONSTRAINT `GameLanguage` FOREIGN KEY (`GameId`) REFERENCES `Signatures_Games` (`Id`) ON DELETE CASCADE ON UPDATE NO ACTION
-);
-
 ALTER TABLE `Signatures_Games`
 CHANGE `Year` `Year` varchar(50) DEFAULT NULL;
 
@@ -60,7 +40,11 @@ ADD COLUMN `RomId` BIGINT,
 ADD INDEX `idx_UserTimeTracking_GameId` (`GameId`),
 ADD INDEX `idx_UserTimeTracking_UserId` (`UserId`),
 ADD INDEX `idx_UserTimeTracking_PlatformId` (`PlatformId`),
-ADD INDEX `idx_UserTimeTracking_GameId_UserId_PlatformId` (`GameId`, `UserId`, `PlatformId`);
+ADD INDEX `idx_UserTimeTracking_GameId_UserId_PlatformId` (
+    `GameId`,
+    `UserId`,
+    `PlatformId`
+);
 
 CREATE TABLE `User_RecentPlayedRoms` (
     `UserId` varchar(128) NOT NULL,
@@ -96,7 +80,7 @@ CHANGE `Path` `RelativePath` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_gene
 ALTER TABLE `Games_Roms`
 ADD CONSTRAINT Games_Roms_LibraryId FOREIGN KEY (`LibraryId`) REFERENCES `GameLibraries` (`Id`) ON DELETE CASCADE;
 
-CREATE VIEW view_UserTimeTracking AS
+CREATE OR REPLACE VIEW view_UserTimeTracking AS
 SELECT *, DATE_ADD(
         SessionTime, INTERVAL SessionLength MINUTE
     ) AS SessionEnd
@@ -142,8 +126,14 @@ CREATE TABLE `MetadataMapBridge` (
     ),
     INDEX `idx_parentmapidpreferred` (`ParentMapId`, `Preferred`),
     INDEX `idx_MetadataSourceType` (`MetadataSourceType`),
-    INDEX `idx_MetadataPreferredSource` (`MetadataSourceId`, `Preferred`),
-    INDEX `idx_MetadataMapBridge_MetadataSourceType_MetadataSourceId` (`MetadataSourceType`, `MetadataSourceId`),
+    INDEX `idx_MetadataPreferredSource` (
+        `MetadataSourceId`,
+        `Preferred`
+    ),
+    INDEX `idx_MetadataMapBridge_MetadataSourceType_MetadataSourceId` (
+        `MetadataSourceType`,
+        `MetadataSourceId`
+    ),
     CONSTRAINT `MetadataMapBridge_MetadataMap` FOREIGN KEY (`ParentMapId`) REFERENCES `MetadataMap` (`Id`) ON DELETE CASCADE
 );
 
@@ -533,16 +523,24 @@ CREATE TABLE `Region` (
     PRIMARY KEY (`Id`)
 );
 
-CREATE INDEX `idx_GameState_RomId_IsMediaGroup_UserId` ON `GameState` (`RomId`, `IsMediaGroup`, `UserId`);
+CREATE INDEX `idx_GameState_RomId_IsMediaGroup_UserId` ON `GameState` (
+    `RomId`,
+    `IsMediaGroup`,
+    `UserId`
+);
+
 CREATE INDEX `idx_RomMediaGroup_GameId_PlatformId` ON `RomMediaGroup` (`GameId`, `PlatformId`);
+
 CREATE INDEX `idx_AlternativeName_Game_SourceId` ON `AlternativeName` (`Game`, `SourceId`);
+
 CREATE INDEX `idx_GameLocalization_Game_SourceId` ON `GameLocalization` (`Game`, `SourceId`);
-CREATE INDEX `idx_Relation_Game_Genres_GameId_GameSourceId` ON `Relation_Game_Genres` (`GameId`, `GameSourceId`);
-CREATE INDEX `idx_Relation_Game_GameModes_GameId_GameSourceId` ON `Relation_Game_GameModes` (`GameId`, `GameSourceId`);
-CREATE INDEX `idx_Relation_Game_PlayerPerspectives_GameId_GameSourceId` ON `Relation_Game_PlayerPerspectives` (`GameId`, `GameSourceId`);
-CREATE INDEX `idx_Relation_Game_Themes_GameId_GameSourceId` ON `Relation_Game_Themes` (`GameId`, `GameSourceId`);
+
 CREATE INDEX `idx_AgeGroup_GameId_AgeGroupId` ON `AgeGroup` (`GameId`, `AgeGroupId`);
+
 CREATE INDEX `idx_genre_id_name` ON `Genre` (`Id`, `Name`);
+
 CREATE INDEX `idx_theme_id_name` ON `Theme` (`Id`, `Name`);
+
 CREATE INDEX `idx_gamemode_id_name` ON `GameMode` (`Id`, `Name`);
+
 CREATE INDEX `idx_playerperspective_id_name` ON `PlayerPerspective` (`Id`, `Name`);

@@ -61,7 +61,7 @@ namespace gaseous_server.Classes
                             }
                             break;
 
-                        case 1025:
+                        case 1027:
                             Logging.Log(Logging.LogType.Information, "Database", "Running pre-upgrade for schema version " + TargetSchemaVersion);
                             // create the basic relation tables
                             // this is a blocking task
@@ -69,7 +69,7 @@ namespace gaseous_server.Classes
                             await Storage.CreateRelationsTables<IGDB.Models.Platform>();
                             break;
 
-                        case 1030:
+                        case 1031:
                             Logging.Log(Logging.LogType.Information, "Database", "Running pre-upgrade for schema version " + TargetSchemaVersion);
                             // build tables for metadata storage
                             Metadata.Utility.TableBuilder.BuildTables();
@@ -169,6 +169,16 @@ namespace gaseous_server.Classes
                             break;
 
                         case 1024:
+                            // attempt to re-import signature dats
+
+                            // delete existing signature sources to allow re-import
+                            Logging.Log(Logging.LogType.Information, "Database Upgrade", "Deleting existing signature sources");
+                            sql = "DELETE FROM Signatures_Sources;";
+                            db.ExecuteNonQuery(sql);
+
+                            break;
+
+                        case 1027:
                             // create profiles for all existing users
                             sql = "SELECT * FROM Users;";
                             data = db.ExecuteCMD(sql);

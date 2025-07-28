@@ -346,7 +346,7 @@ namespace gaseous_server.Classes
                         ) && alwaysIncludeItem.PlatformId == platform.Id
                         )
                     {
-                        MinimalGameItem AlwaysIncludeGame = new MinimalGameItem(Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, alwaysIncludeItem.GameId).Result);
+                        MinimalGameItem AlwaysIncludeGame = new MinimalGameItem(Games.GetGame(FileSignature.MetadataSources.IGDB, alwaysIncludeItem.GameId).Result);
                         CollectionContents.CollectionPlatformItem.CollectionGameItem gameItem = new CollectionContents.CollectionPlatformItem.CollectionGameItem(AlwaysIncludeGame);
                         gameItem.InclusionStatus = new CollectionItem.AlwaysIncludeItem();
                         gameItem.InclusionStatus.PlatformId = alwaysIncludeItem.PlatformId;

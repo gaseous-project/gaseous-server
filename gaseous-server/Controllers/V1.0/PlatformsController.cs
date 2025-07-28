@@ -88,7 +88,7 @@ namespace gaseous_server.Controllers
         {
             try
             {
-                HasheousClient.Models.MetadataSources metadataSources = HasheousClient.Models.MetadataSources.None;
+                FileSignature.MetadataSources metadataSources = FileSignature.MetadataSources.None;
 
                 Platform platformObject = await Classes.Metadata.Platforms.GetPlatform(PlatformId, metadataSources);
                 PlatformLogo? logoObject = null;

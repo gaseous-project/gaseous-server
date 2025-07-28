@@ -55,7 +55,7 @@ namespace gaseous_server.Models
                 if (_flags.PlatformId == 0)
                 {
                     // fall back to the IGDB source if present
-                    var igdbPlatform = MetadataSources.Platforms.Find(x => x.Source == HasheousClient.Models.MetadataSources.IGDB);
+                    var igdbPlatform = MetadataSources.Platforms.Find(x => x.Source == FileSignature.MetadataSources.IGDB);
                     if (igdbPlatform != null)
                     {
                         _flags.PlatformId = igdbPlatform.Id;
@@ -65,7 +65,7 @@ namespace gaseous_server.Models
                     else
                     {
                         // fall back to none source if present
-                        var nonePlatform = MetadataSources.Platforms.Find(x => x.Source == HasheousClient.Models.MetadataSources.None);
+                        var nonePlatform = MetadataSources.Platforms.Find(x => x.Source == FileSignature.MetadataSources.None);
                         if (nonePlatform != null)
                         {
                             _flags.PlatformId = nonePlatform.Id;
@@ -87,7 +87,7 @@ namespace gaseous_server.Models
                 if (_flags.GameId == 0)
                 {
                     // fall back to the IGDB source if present
-                    var igdbGame = MetadataSources.Games.Find(x => x.Source == HasheousClient.Models.MetadataSources.IGDB);
+                    var igdbGame = MetadataSources.Games.Find(x => x.Source == FileSignature.MetadataSources.IGDB);
                     if (igdbGame != null)
                     {
                         _flags.GameId = igdbGame.Id;
@@ -97,7 +97,7 @@ namespace gaseous_server.Models
                     else
                     {
                         // fall back to none source if present
-                        var noneGame = MetadataSources.Games.Find(x => x.Source == HasheousClient.Models.MetadataSources.None);
+                        var noneGame = MetadataSources.Games.Find(x => x.Source == FileSignature.MetadataSources.None);
                         if (noneGame != null)
                         {
                             _flags.GameId = noneGame.Id;
@@ -118,7 +118,7 @@ namespace gaseous_server.Models
                     {
                         _flags.GameName = "Unknown Game";
                     }
-                    _flags.GameMetadataSource = HasheousClient.Models.MetadataSources.None;
+                    _flags.GameMetadataSource = FileSignature.MetadataSources.None;
                 }
 
                 return _flags;
@@ -136,10 +136,10 @@ namespace gaseous_server.Models
             {
                 public long Id { get; set; }
                 public string Name { get; set; }
-                public HasheousClient.Models.MetadataSources Source { get; set; }
+                public FileSignature.MetadataSources Source { get; set; }
             }
 
-            public void AddPlatform(long Id, string Name, HasheousClient.Models.MetadataSources Source)
+            public void AddPlatform(long Id, string Name, FileSignature.MetadataSources Source)
             {
                 // check that the platform doesn't already exist
                 foreach (SourceValueItem item in Platforms)
@@ -157,7 +157,7 @@ namespace gaseous_server.Models
                 Platforms.Add(newItem);
             }
 
-            public void AddGame(long Id, string Name, HasheousClient.Models.MetadataSources Source)
+            public void AddGame(long Id, string Name, FileSignature.MetadataSources Source)
             {
                 // check that the game doesn't already exist
                 foreach (SourceValueItem item in Games)
@@ -182,8 +182,8 @@ namespace gaseous_server.Models
             public string PlatformName { get; set; }
             public long GameId { get; set; }
             public string GameName { get; set; }
-            public HasheousClient.Models.MetadataSources PlatformMetadataSource { get; set; }
-            public HasheousClient.Models.MetadataSources GameMetadataSource { get; set; }
+            public FileSignature.MetadataSources PlatformMetadataSource { get; set; }
+            public FileSignature.MetadataSources GameMetadataSource { get; set; }
         }
 
         public class GameItem : HasheousClient.Models.SignatureModel.GameItem

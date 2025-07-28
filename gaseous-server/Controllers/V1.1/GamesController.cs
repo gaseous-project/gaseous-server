@@ -732,7 +732,7 @@ FROM
                 {
                     Models.Game retGame = Storage.BuildCacheObject<Models.Game>(new Models.Game(), dbResponse.Rows[i]);
                     retGame.MetadataMapId = (long)dbResponse.Rows[i]["MetadataMapId"];
-                    retGame.MetadataSource = (HasheousClient.Models.MetadataSources)dbResponse.Rows[i]["GameIdType"];
+                    retGame.MetadataSource = (FileSignature.MetadataSources)dbResponse.Rows[i]["GameIdType"];
 
                     Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
                     retMinGame.Index = indexInPage;

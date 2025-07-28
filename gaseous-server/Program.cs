@@ -354,9 +354,9 @@ app.Use(async (context, next) =>
 Config.LibraryConfiguration.InitLibrary();
 
 // create unknown platform
-await Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.None);
-await Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.IGDB);
-await Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.TheGamesDb);
+await Platforms.GetPlatform(0, FileSignature.MetadataSources.None);
+await Platforms.GetPlatform(0, FileSignature.MetadataSources.IGDB);
+await Platforms.GetPlatform(0, FileSignature.MetadataSources.TheGamesDb);
 
 // extract platform map if not present
 await PlatformMapping.ExtractPlatformMap();

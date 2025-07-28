@@ -621,9 +621,9 @@ namespace gaseous_server
                                     }
 
                                     // set up metadata refresh subtasks
-                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Platform, "Platform Metadata", null, false);
-                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Signatures, "Signature Metadata", null, false);
-                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Game, "Game Metadata", null, false);
+                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Platform, "Platform Metadata", null, true);
+                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Signatures, "Signature Metadata", null, true);
+                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Game, "Game Metadata", null, true);
 
                                     _SaveLastRunTime = true;
 

@@ -2244,6 +2244,11 @@ class SettingsCard {
         fetch('/api/v1.1/Signatures/Status')
             .then(response => response.json())
             .then(result => {
+                if (!result || (result.sources === 0 && result.platforms === 0 && result.games === 0 && result.roms === 0)) {
+                    let targetDiv = this.body.querySelector('#system_signaturessection');
+                    targetDiv.style.display = 'none';
+                }
+
                 let newTable = document.createElement('table');
                 newTable.className = 'romtable';
                 newTable.setAttribute('cellspacing', 0);

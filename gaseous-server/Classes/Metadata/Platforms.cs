@@ -13,9 +13,9 @@ namespace gaseous_server.Classes.Metadata
 
         }
 
-        public static async Task<Platform?> GetPlatform(long Id, HasheousClient.Models.MetadataSources? SourceType = null)
+        public static async Task<Platform?> GetPlatform(long Id, FileSignature.MetadataSources? SourceType = null)
         {
-            HasheousClient.Models.MetadataSources Source = SourceType ?? Communications.MetadataSource;
+            FileSignature.MetadataSources Source = SourceType ?? Communications.MetadataSource;
 
             if ((Id == 0) || (Id == null))
             {
@@ -40,8 +40,8 @@ namespace gaseous_server.Classes.Metadata
             else
             {
                 Platform? RetVal = new Platform();
-                RetVal = (Platform?)await Storage.GetCacheValue<Platform>(HasheousClient.Models.MetadataSources.None, RetVal, "Id", (long)Id);
-                if (Source != HasheousClient.Models.MetadataSources.None)
+                RetVal = (Platform?)await Storage.GetCacheValue<Platform>(FileSignature.MetadataSources.None, RetVal, "Id", (long)Id);
+                if (Source != FileSignature.MetadataSources.None)
                 {
                     if (RetVal == null)
                     {
@@ -57,7 +57,7 @@ namespace gaseous_server.Classes.Metadata
             // get platform id from slug - query Platform table
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string query = "SELECT Id FROM Platform WHERE slug = @slug AND SourceId = @sourceid;";
-            DataTable result = await db.ExecuteCMDAsync(query, new Dictionary<string, object> { { "@slug", Slug }, { "@sourceid", HasheousClient.Models.MetadataSources.IGDB } });
+            DataTable result = await db.ExecuteCMDAsync(query, new Dictionary<string, object> { { "@slug", Slug }, { "@sourceid", FileSignature.MetadataSources.IGDB } });
             if (result.Rows.Count == 0)
             {
                 throw new Metadata.InvalidMetadataId(Slug);

@@ -46,7 +46,7 @@ namespace gaseous_server.Classes.Metadata
         /// <summary>
         /// Configure metadata API communications
         /// </summary>
-        public static HasheousClient.Models.MetadataSources MetadataSource
+        public static FileSignature.MetadataSources MetadataSource
         {
             get
             {
@@ -58,7 +58,7 @@ namespace gaseous_server.Classes.Metadata
 
                 switch (value)
                 {
-                    case HasheousClient.Models.MetadataSources.IGDB:
+                    case FileSignature.MetadataSources.IGDB:
                         if (Config.IGDB.UseHasheousProxy == false)
                         {
                             // set rate limiter avoidance values
@@ -88,7 +88,7 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
         }
-        private static HasheousClient.Models.MetadataSources _MetadataSource = HasheousClient.Models.MetadataSources.None;
+        private static FileSignature.MetadataSources _MetadataSource = FileSignature.MetadataSources.None;
 
         // rate limit avoidance - what can we do to ensure that rate limiting is avoided?
         // these values affect all communications
@@ -293,13 +293,13 @@ namespace gaseous_server.Classes.Metadata
         /// <returns>
         /// The object requested
         /// </returns>
-        public async Task<T[]?> APIComm<T>(HasheousClient.Models.MetadataSources SourceType, MetadataEndpoint Endpoint, string Slug)
+        public async Task<T[]?> APIComm<T>(FileSignature.MetadataSources SourceType, MetadataEndpoint Endpoint, string Slug)
         {
             switch (SourceType)
             {
-                case HasheousClient.Models.MetadataSources.None:
+                case FileSignature.MetadataSources.None:
                     return null;
-                case HasheousClient.Models.MetadataSources.IGDB:
+                case FileSignature.MetadataSources.IGDB:
                     if (Config.IGDB.UseHasheousProxy == false)
                     {
                         string fieldList = "fields *;";
@@ -330,7 +330,7 @@ namespace gaseous_server.Classes.Metadata
                         return await HasheousAPI<T>(SourceType, Endpoint.ToString(), "slug", Slug);
                     }
 
-                case HasheousClient.Models.MetadataSources.TheGamesDb:
+                case FileSignature.MetadataSources.TheGamesDb:
                     // not implemented
                     return null;
 
@@ -377,13 +377,13 @@ namespace gaseous_server.Classes.Metadata
         /// <returns>
         /// The object requested
         /// </returns>
-        public async Task<T[]> APIComm<T>(HasheousClient.Models.MetadataSources SourceType, MetadataEndpoint Endpoint, long Id)
+        public async Task<T[]> APIComm<T>(FileSignature.MetadataSources SourceType, MetadataEndpoint Endpoint, long Id)
         {
             switch (SourceType)
             {
-                case HasheousClient.Models.MetadataSources.None:
+                case FileSignature.MetadataSources.None:
                     return null;
-                case HasheousClient.Models.MetadataSources.IGDB:
+                case FileSignature.MetadataSources.IGDB:
                     if (Config.IGDB.UseHasheousProxy == false)
                     {
                         string fieldList = "fields *;";
@@ -399,7 +399,7 @@ namespace gaseous_server.Classes.Metadata
                         return await HasheousAPI<T>(SourceType, Endpoint.ToString(), "id", Id.ToString());
                     }
 
-                case HasheousClient.Models.MetadataSources.TheGamesDb:
+                case FileSignature.MetadataSources.TheGamesDb:
                     ConfigureHasheousClient(ref hasheous);
 
                     switch (Endpoint)
@@ -780,9 +780,9 @@ namespace gaseous_server.Classes.Metadata
         {
             switch (_MetadataSource)
             {
-                case HasheousClient.Models.MetadataSources.None:
+                case FileSignature.MetadataSources.None:
                     return null;
-                case HasheousClient.Models.MetadataSources.IGDB:
+                case FileSignature.MetadataSources.IGDB:
                     if (Config.IGDB.UseHasheousProxy == false)
                     {
                         return await IGDBAPI<T>(Endpoint, Fields, Query);
@@ -892,7 +892,7 @@ namespace gaseous_server.Classes.Metadata
         /// <returns>
         /// The object requested
         /// </returns>
-        private async Task<T[]> HasheousAPI<T>(HasheousClient.Models.MetadataSources SourceType, string Endpoint, string Fields, string Query)
+        private async Task<T[]> HasheousAPI<T>(FileSignature.MetadataSources SourceType, string Endpoint, string Fields, string Query)
         {
             Logging.Log(Logging.LogType.Debug, "API Connection", "Accessing API for endpoint: " + Endpoint);
 
@@ -974,7 +974,7 @@ namespace gaseous_server.Classes.Metadata
         }
         #endregion Hasheous API Call
 
-        private async Task<T[]> HasheousAPIFetch<T>(HasheousClient.Models.MetadataSources SourceType, string Endpoint, string Fields, object Query)
+        private async Task<T[]> HasheousAPIFetch<T>(FileSignature.MetadataSources SourceType, string Endpoint, string Fields, object Query)
         {
             ConfigureHasheousClient(ref hasheous);
 
@@ -989,7 +989,7 @@ namespace gaseous_server.Classes.Metadata
 
             switch (SourceType)
             {
-                case HasheousClient.Models.MetadataSources.IGDB:
+                case FileSignature.MetadataSources.IGDB:
                     switch (typeName)
                     {
                         case "agerating":
@@ -1191,7 +1191,7 @@ namespace gaseous_server.Classes.Metadata
                     }
                     break;
 
-                case HasheousClient.Models.MetadataSources.TheGamesDb:
+                case FileSignature.MetadataSources.TheGamesDb:
                     switch (typeName)
                     {
                         case "gamesbygameid":
@@ -1466,7 +1466,7 @@ namespace gaseous_server.Classes.Metadata
         }
         #endregion Download File
 
-        public async Task<string> GetSpecificImageFromServer(HasheousClient.Models.MetadataSources SourceType, string ImagePath, string ImageId, IGDBAPI_ImageSize size, List<IGDBAPI_ImageSize>? FallbackSizes = null)
+        public async Task<string> GetSpecificImageFromServer(FileSignature.MetadataSources SourceType, string ImagePath, string ImageId, IGDBAPI_ImageSize size, List<IGDBAPI_ImageSize>? FallbackSizes = null)
         {
             string originalPath = Path.Combine(ImagePath, SourceType.ToString(), IGDBAPI_ImageSize.original.ToString());
             string originalFilePath = Path.Combine(originalPath, ImageId);
@@ -1475,7 +1475,7 @@ namespace gaseous_server.Classes.Metadata
 
             switch (SourceType)
             {
-                case HasheousClient.Models.MetadataSources.TheGamesDb:
+                case FileSignature.MetadataSources.TheGamesDb:
                     originalPath = Path.GetDirectoryName(originalFilePath);
                     requestedPath = Path.GetDirectoryName(requestedFilePath);
                     break;
@@ -1515,12 +1515,12 @@ namespace gaseous_server.Classes.Metadata
                 Communications comms = new Communications();
                 switch (SourceType)
                 {
-                    case HasheousClient.Models.MetadataSources.None:
+                    case FileSignature.MetadataSources.None:
                         await comms.API_GetURL(ImageId, originalPath);
 
                         return originalFilePath;
 
-                    case HasheousClient.Models.MetadataSources.IGDB:
+                    case FileSignature.MetadataSources.IGDB:
                         originalFilePath = originalFilePath + ".jpg";
                         requestedFilePath = requestedFilePath + ".jpg";
                         if (Config.IGDB.UseHasheousProxy == false)
@@ -1533,7 +1533,7 @@ namespace gaseous_server.Classes.Metadata
                         }
                         break;
 
-                    case HasheousClient.Models.MetadataSources.TheGamesDb:
+                    case FileSignature.MetadataSources.TheGamesDb:
                         await comms.HasheousProxyAPI_GetImage(SourceType, ImageId, originalPath);
                         break;
 
@@ -1635,7 +1635,7 @@ namespace gaseous_server.Classes.Metadata
             // search through hasheousPlatforms for a match where the metadata source is IGDB and the immutable id matches the platform id, or the metadata source is IGDB and the id matches the platform slug
             HasheousClient.Models.DataObjectItem? hasheousPlatform = hasheousPlatforms.FirstOrDefault(p =>
                 p.Metadata != null &&
-                p.Metadata.Any(m => m.Source == HasheousClient.Models.MetadataSources.IGDB && (
+                p.Metadata.Any(m => m.Source == FileSignature.MetadataSources.IGDB.ToString() && (
                     (m.ImmutableId != null && m.ImmutableId.Length > 0 && long.TryParse(m.ImmutableId, out long objId) && objId == Id) ||
                     (m.Id != null && m.Id.Equals(platform.Slug, StringComparison.OrdinalIgnoreCase))
                 ))
@@ -1679,11 +1679,11 @@ namespace gaseous_server.Classes.Metadata
                         platformLogo.Id = longId;
 
                         // store the platform logo object
-                        Storage.CacheStatus cacheStatus = await Storage.GetCacheStatusAsync(HasheousClient.Models.MetadataSources.None, "PlatformLogo", longId);
+                        Storage.CacheStatus cacheStatus = await Storage.GetCacheStatusAsync(FileSignature.MetadataSources.None, "PlatformLogo", longId);
                         switch (cacheStatus)
                         {
                             case Storage.CacheStatus.NotPresent:
-                                await Storage.NewCacheValue<PlatformLogo>(HasheousClient.Models.MetadataSources.None, platformLogo, false);
+                                await Storage.NewCacheValue<PlatformLogo>(FileSignature.MetadataSources.None, platformLogo, false);
                                 break;
                         }
 
@@ -1700,7 +1700,7 @@ namespace gaseous_server.Classes.Metadata
                 {
                     platform.PlatformLogo = platformLogo.Id.Value;
                 }
-                await Storage.NewCacheValue<Platform>(HasheousClient.Models.MetadataSources.None, platform, true);
+                await Storage.NewCacheValue<Platform>(FileSignature.MetadataSources.None, platform, true);
             }
             Logging.Log(Logging.LogType.Information, "PopulateHasheousPlatformData", "Platform data populated for ID " + Id);
         }
@@ -1737,7 +1737,7 @@ namespace gaseous_server.Classes.Metadata
         /// The path to the downloaded file
         /// </returns>
         /// <exception cref="NotImplementedException"></exception>
-        public async Task HasheousProxyAPI_GetImage(HasheousClient.Models.MetadataSources SourceType, string ImageId, string OutputPath)
+        public async Task HasheousProxyAPI_GetImage(FileSignature.MetadataSources SourceType, string ImageId, string OutputPath)
         {
             string urlTemplate;
 
@@ -1747,14 +1747,14 @@ namespace gaseous_server.Classes.Metadata
 
             switch (SourceType)
             {
-                case HasheousClient.Models.MetadataSources.IGDB:
+                case FileSignature.MetadataSources.IGDB:
                     urlTemplate = HasheousClient.WebApp.HttpHelper.BaseUri + "api/v1/MetadataProxy/IGDB/Image/{hash}.jpg";
                     url = urlTemplate.Replace("{hash}", ImageId);
                     OutputFile = ImageId + ".jpg";
                     fullPath = Path.Combine(OutputPath, OutputFile);
                     break;
 
-                case HasheousClient.Models.MetadataSources.TheGamesDb:
+                case FileSignature.MetadataSources.TheGamesDb:
                     urlTemplate = HasheousClient.WebApp.HttpHelper.BaseUri + "api/v1/MetadataProxy/TheGamesDB/Images/original/{FileName}";
                     url = urlTemplate.Replace("{FileName}", ImageId);
                     OutputFile = Path.GetFileName(ImageId);

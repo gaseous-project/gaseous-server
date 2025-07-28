@@ -23,9 +23,9 @@ namespace gaseous_server.Classes
 
 		private static bool Processing = false;
 
-		public static HasheousClient.Models.MetadataSources[] BlockedMetadataSource = new HasheousClient.Models.MetadataSources[]
+		public static FileSignature.MetadataSources[] BlockedMetadataSource = new FileSignature.MetadataSources[]
 		{
-			HasheousClient.Models.MetadataSources.RetroAchievements
+			FileSignature.MetadataSources.RetroAchievements
 		};
 
 		public enum MetadataMapSupportDataTypes
@@ -88,7 +88,7 @@ namespace gaseous_server.Classes
 			sql = "INSERT INTO Metadata_Game (SourceId, Name, dateAdded, lastUpdated) VALUES (@sourceid, @name, @dateadded, @lastupdated); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
 			dbDict = new Dictionary<string, object>()
 			{
-				{ "@sourceid", HasheousClient.Models.MetadataSources.None },
+				{ "@sourceid", FileSignature.MetadataSources.None },
 				{ "@name", name },
 				{ "@dateadded", DateTime.UtcNow },
 				{ "@lastupdated", DateTime.UtcNow }
@@ -98,7 +98,7 @@ namespace gaseous_server.Classes
 			long gameId = (long)dt.Rows[0][0];
 
 			// add default metadata sources
-			AddMetadataMapItem(metadataMapId, HasheousClient.Models.MetadataSources.None, gameId, true);
+			AddMetadataMapItem(metadataMapId, FileSignature.MetadataSources.None, gameId, true);
 
 			// return the new metadata map
 			MetadataMap RetVal = GetMetadataMap(metadataMapId).Result;
@@ -124,7 +124,7 @@ namespace gaseous_server.Classes
 		/// <remarks>
 		/// If the metadata source is preferred, all other metadata sources for the same metadata map will be set to not preferred.
 		/// </remarks>
-		public static void AddMetadataMapItem(long metadataMapId, HasheousClient.Models.MetadataSources sourceType, long sourceId, bool preferred)
+		public static void AddMetadataMapItem(long metadataMapId, FileSignature.MetadataSources sourceType, long sourceId, bool preferred)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
@@ -148,7 +148,7 @@ namespace gaseous_server.Classes
 			db.ExecuteCMD(sql, dbDict);
 		}
 
-		public static void UpdateMetadataMapItem(long metadataMapId, HasheousClient.Models.MetadataSources SourceType, long sourceId, bool? preferred = null)
+		public static void UpdateMetadataMapItem(long metadataMapId, FileSignature.MetadataSources SourceType, long sourceId, bool? preferred = null)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
@@ -252,7 +252,7 @@ namespace gaseous_server.Classes
 				{
 					MetadataMap.MetadataMapItem metadataMapItem = new MetadataMap.MetadataMapItem()
 					{
-						SourceType = (HasheousClient.Models.MetadataSources)dr["MetadataSourceType"],
+						SourceType = (FileSignature.MetadataSources)dr["MetadataSourceType"],
 						SourceId = (long)dr["MetadataSourceId"],
 						Preferred = (bool)dr["Preferred"]
 					};
@@ -310,7 +310,7 @@ namespace gaseous_server.Classes
 		/// <remarks>
 		/// This method will return the MetadataMapItem with the given sourceType and sourceId.
 		/// </remarks>
-		public static MetadataMap.MetadataMapItem? GetMetadataMapFromSourceId(HasheousClient.Models.MetadataSources sourceType, long sourceId)
+		public static MetadataMap.MetadataMapItem? GetMetadataMapFromSourceId(FileSignature.MetadataSources sourceType, long sourceId)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
@@ -328,7 +328,7 @@ namespace gaseous_server.Classes
 			{
 				MetadataMap.MetadataMapItem metadataMapItem = new MetadataMap.MetadataMapItem()
 				{
-					SourceType = (HasheousClient.Models.MetadataSources)dt.Rows[0]["MetadataSourceType"],
+					SourceType = (FileSignature.MetadataSources)dt.Rows[0]["MetadataSourceType"],
 					SourceId = (long)dt.Rows[0]["MetadataSourceId"],
 					Preferred = (bool)dt.Rows[0]["Preferred"]
 				};
@@ -351,7 +351,7 @@ namespace gaseous_server.Classes
 		/// <returns>
 		/// The ID of the MetadataMap, or null if it does not exist.
 		/// </returns>
-		public static long? GetMetadataMapIdFromSourceId(HasheousClient.Models.MetadataSources sourceType, long sourceId, bool preferred = true)
+		public static long? GetMetadataMapIdFromSourceId(FileSignature.MetadataSources sourceType, long sourceId, bool preferred = true)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
@@ -443,7 +443,7 @@ namespace gaseous_server.Classes
 				{
 					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Refreshing metadata for platform " + dr["name"] + " (" + dr["id"] + ")");
 
-					HasheousClient.Models.MetadataSources metadataSource = HasheousClient.Models.MetadataSources.None;
+					FileSignature.MetadataSources metadataSource = FileSignature.MetadataSources.None;
 
 					// fetch the platform metadata
 					Platform platform = await Metadata.Platforms.GetPlatform((long)dr["id"], metadataSource);
@@ -586,7 +586,7 @@ namespace gaseous_server.Classes
 							HasheousClient.Models.Metadata.IGDB.Game? discoveredGame = await ImportGame.SearchForGame(signature, signature.Flags.PlatformId, false);
 							if (discoveredGame != null && discoveredGame.Id != null)
 							{
-								signature.MetadataSources.AddGame((long)discoveredGame.Id, discoveredGame.Name, MetadataSources.IGDB);
+								signature.MetadataSources.AddGame((long)discoveredGame.Id, discoveredGame.Name, FileSignature.MetadataSources.IGDB);
 							}
 						}
 						await ImportGame.StoreGame(library, hash, signature, signaturePlatform, fi.FullName, (long)dr["Id"], false);
@@ -680,10 +680,10 @@ namespace gaseous_server.Classes
 			foreach (MetadataMap.MetadataMapItem item in metadataItem.MetadataMapItems)
 			{
 				// skip unsupported metadata sources
-				List<HasheousClient.Models.MetadataSources> BlockedMetadataSource = new List<MetadataSources>
+				List<FileSignature.MetadataSources> BlockedMetadataSource = new List<FileSignature.MetadataSources>
 				{
-					HasheousClient.Models.MetadataSources.None,
-					HasheousClient.Models.MetadataSources.RetroAchievements
+					FileSignature.MetadataSources.None,
+					FileSignature.MetadataSources.RetroAchievements
 				};
 				if (BlockedMetadataSource.Contains(item.SourceType))
 				{

@@ -10,7 +10,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static async Task<Region?> GetGame_Region(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<Region?> GetGame_Region(FileSignature.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {

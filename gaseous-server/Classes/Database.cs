@@ -143,7 +143,17 @@ namespace gaseous_server.Classes
 
 											// apply schema!
 											Logging.Log(Logging.LogType.Information, "Database", "Updating schema to version " + i);
-											ExecuteCMD(dbScript, dbDict, CacheOptions, 180);
+
+											// split dbScript into each SQL statement and execute them one by one
+											List<string> sqlStatements = SplitSqlStatements(dbScript);
+											foreach (string statement in sqlStatements)
+											{
+												if (!string.IsNullOrWhiteSpace(statement))
+												{
+													Logging.Log(Logging.LogType.Information, "Database", "Executing SQL statement: " + statement);
+													ExecuteCMD(statement, dbDict, 100);
+												}
+											}
 
 											sql = "UPDATE schema_version SET schema_version=@schemaver";
 											dbDict = new Dictionary<string, object>();
@@ -169,6 +179,90 @@ namespace gaseous_server.Classes
 					Logging.Log(Logging.LogType.Information, "Database", "Database setup complete");
 					break;
 			}
+		}
+
+		/// <summary>
+		/// Splits a SQL script into individual statements, ignoring semicolons inside strings and comments.
+		/// </summary>
+		private static List<string> SplitSqlStatements(string sqlScript)
+		{
+			var statements = new List<string>();
+			var sb = new System.Text.StringBuilder();
+			bool inSingleQuote = false;
+			bool inDoubleQuote = false;
+			bool inLineComment = false;
+			bool inBlockComment = false;
+
+			for (int i = 0; i < sqlScript.Length; i++)
+			{
+				char c = sqlScript[i];
+				char next = i < sqlScript.Length - 1 ? sqlScript[i + 1] : '\0';
+
+				// Handle entering/exiting comments
+				if (!inSingleQuote && !inDoubleQuote)
+				{
+					if (!inBlockComment && c == '-' && next == '-')
+					{
+						inLineComment = true;
+					}
+					else if (!inBlockComment && c == '/' && next == '*')
+					{
+						inBlockComment = true;
+						i++; // skip '*'
+						continue;
+					}
+					else if (inBlockComment && c == '*' && next == '/')
+					{
+						inBlockComment = false;
+						i++; // skip '/'
+						continue;
+					}
+				}
+
+				if (inLineComment)
+				{
+					if (c == '\n')
+					{
+						inLineComment = false;
+						sb.Append(c);
+					}
+					continue;
+				}
+				if (inBlockComment)
+				{
+					continue;
+				}
+
+				// Handle entering/exiting string literals
+				if (c == '\'' && !inDoubleQuote)
+				{
+					inSingleQuote = !inSingleQuote;
+				}
+				else if (c == '"' && !inSingleQuote)
+				{
+					inDoubleQuote = !inDoubleQuote;
+				}
+
+				// Split on semicolon if not inside a string
+				if (c == ';' && !inSingleQuote && !inDoubleQuote)
+				{
+					var statement = sb.ToString().Trim();
+					if (!string.IsNullOrEmpty(statement))
+						statements.Add(statement);
+					sb.Clear();
+				}
+				else
+				{
+					sb.Append(c);
+				}
+			}
+
+			// Add any remaining statement
+			var last = sb.ToString().Trim();
+			if (!string.IsNullOrEmpty(last))
+				statements.Add(last);
+
+			return statements;
 		}
 
 		#region Synchronous Database Access

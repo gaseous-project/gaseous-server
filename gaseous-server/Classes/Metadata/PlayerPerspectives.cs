@@ -13,7 +13,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static async Task<PlayerPerspective?> GetGame_PlayerPerspectives(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<PlayerPerspective?> GetGame_PlayerPerspectives(FileSignature.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -58,7 +58,7 @@ namespace gaseous_server.Classes.Metadata
     class PlayerPerspectiveItem
     {
         public long Id { get; set; }
-        public HasheousClient.Models.MetadataSources SourceType { get; set; }
+        public FileSignature.MetadataSources SourceType { get; set; }
         public string Name { get; set; }
     }
 }

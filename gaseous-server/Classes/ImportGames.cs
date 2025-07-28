@@ -11,7 +11,6 @@ using NuGet.Common;
 using NuGet.LibraryModel;
 using static gaseous_server.Classes.Metadata.Games;
 using static gaseous_server.Classes.FileSignature;
-using HasheousClient.Models;
 using HasheousClient.Models.Metadata.IGDB;
 using Mono.TextTemplating;
 

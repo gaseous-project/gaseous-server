@@ -217,3 +217,11 @@ FROM (
         LEFT JOIN `Metadata_AgeGroup` `b` ON (`b`.`GameId` = `a`.`Id`)
     )
 ORDER BY `a`.`NameThe`;
+
+-- CREATE INDEX `idx_Relation_Game_Genres_GameId_GameSourceId` ON `Relation_Game_Genres` (`GameId`, `GameSourceId`);
+
+-- CREATE INDEX `idx_Relation_Game_GameModes_GameId_GameSourceId` ON `Relation_Game_GameModes` (`GameId`, `GameSourceId`);
+
+-- CREATE INDEX `idx_Relation_Game_PlayerPerspectives_GameId_GameSourceId` ON `Relation_Game_PlayerPerspectives` (`GameId`, `GameSourceId`);
+
+-- CREATE INDEX `idx_Relation_Game_Themes_GameId_GameSourceId` ON `Relation_Game_Themes` (`GameId`, `GameSourceId`);
