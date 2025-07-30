@@ -143,18 +143,9 @@ namespace gaseous_server.Classes
 
 											// apply schema!
 											Logging.Log(Logging.LogType.Information, "Database", "Updating schema to version " + i);
+											ExecuteCMD(dbScript, dbDict, 100);
 
-											// split dbScript into each SQL statement and execute them one by one
-											List<string> sqlStatements = SplitSqlStatements(dbScript);
-											foreach (string statement in sqlStatements)
-											{
-												if (!string.IsNullOrWhiteSpace(statement))
-												{
-													Logging.Log(Logging.LogType.Information, "Database", "Executing SQL statement: " + statement);
-													ExecuteCMD(statement, dbDict, 100);
-												}
-											}
-
+											// increment schema version
 											sql = "UPDATE schema_version SET schema_version=@schemaver";
 											dbDict = new Dictionary<string, object>();
 											dbDict.Add("schemaver", i);

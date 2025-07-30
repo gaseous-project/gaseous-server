@@ -338,7 +338,7 @@ app.Use(async (context, next) =>
     string userIdentity;
     try
     {
-        userIdentity = context.User.Claims.Where(x => x.Type == System.Security.Claims.ClaimTypes.NameIdentifier).FirstOrDefault().Value;
+        userIdentity = context.User.Claims.FirstOrDefault(x => x.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
     }
     catch
     {
@@ -346,7 +346,7 @@ app.Use(async (context, next) =>
     }
     CallContext.SetData("CallingUser", userIdentity);
 
-    context.Response.Headers.Add("x-correlation-id", correlationId.ToString());
+    context.Response.Headers.Append("x-correlation-id", correlationId.ToString());
     await next();
 });
 
