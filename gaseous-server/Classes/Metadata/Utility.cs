@@ -103,8 +103,15 @@ namespace Classes.Metadata.Utility
             db.ExecuteNonQuery(createTableQuery);
 
             // Add the sourceId column if it does not exist
-            string addSourceIdQuery = $"ALTER TABLE `{tableName}` ADD COLUMN IF NOT EXISTS `SourceId` INT";
-            db.ExecuteNonQuery(addSourceIdQuery);
+            // Check if the SourceId column exists
+            string checkSourceIdColumnQuery = $"SHOW COLUMNS FROM `{tableName}` LIKE 'SourceId'";
+            var sourceIdResult = db.ExecuteCMD(checkSourceIdColumnQuery);
+            if (sourceIdResult.Rows.Count == 0)
+            {
+                // Add the SourceId column if it does not exist
+                string addSourceIdQuery = $"ALTER TABLE `{tableName}` ADD COLUMN `SourceId` INT";
+                db.ExecuteNonQuery(addSourceIdQuery);
+            }
 
             // Loop through each property to add it as a column in the table
             foreach (PropertyInfo property in properties)
@@ -178,9 +185,16 @@ namespace Classes.Metadata.Utility
                 }
 
                 // Add the column to the table if it does not already exist
-                string addColumnQuery = $"ALTER TABLE `{tableName}` ADD COLUMN IF NOT EXISTS `{columnName}` {columnType}";
-                Console.WriteLine($"Executing query: {addColumnQuery}");
-                db.ExecuteNonQuery(addColumnQuery);
+                // Check if the column exists
+                string checkColumnExistsQuery = $"SHOW COLUMNS FROM `{tableName}` LIKE '{columnName}'";
+                var columnExistsResult = db.ExecuteCMD(checkColumnExistsQuery);
+                if (columnExistsResult.Rows.Count == 0)
+                {
+                    // Column does not exist, add it
+                    string addColumnQuery = $"ALTER TABLE `{tableName}` ADD COLUMN `{columnName}` {columnType}";
+                    Console.WriteLine($"Executing query: {addColumnQuery}");
+                    db.ExecuteNonQuery(addColumnQuery);
+                }
             }
         }
     }
