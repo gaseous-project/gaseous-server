@@ -297,7 +297,7 @@ namespace gaseous_server.Classes
 				Id = (long)romDR["id"],
 				PlatformId = (long)romDR["platformid"],
 				Platform = (string)romDR["platformname"],
-				MetadataMapId = (long)romDR["metadatamapid"],
+				MetadataMapId = (long)Common.ReturnValueIfNull(romDR["metadatamapid"], 0),
 				MetadataSource = (FileSignature.MetadataSources)(int)romDR["metadatasource"],
 				GameId = (long)romDR["gameid"],
 				Game = (string)Common.ReturnValueIfNull(romDR["gamename"], ""),

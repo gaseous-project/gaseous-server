@@ -76,6 +76,8 @@ namespace gaseous_server.Classes
 
 			DatabaseMemoryCacheOptions? CacheOptions = new DatabaseMemoryCacheOptions(false);
 
+			Config.DatabaseConfiguration.UpgradeInProgress = true;
+
 			switch (_ConnectorType)
 			{
 				case databaseType.MySql:

@@ -1,6 +1,7 @@
 using System;
 using System.Data;
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
@@ -67,6 +68,52 @@ namespace gaseous_server.Classes
                             // this is a blocking task
                             await Storage.CreateRelationsTables<IGDB.Models.Game>();
                             await Storage.CreateRelationsTables<IGDB.Models.Platform>();
+
+                            // drop source id from all metadata tables if it exists
+                            var tablesToDropSourceId = new List<string>
+                            {
+                                "AgeGroup","AgeRating","AgeRatingContentDescription","AlternativeName","Artwork","Collection","Company","CompanyLogo","Cover","ExternalGame","Franchise","Game","GameMode","GameVideo","Genre","InvolvedCompany","MultiplayerMode","Platform","PlatformLogo","PlatformVersion","PlayerPerspective","ReleaseDate","Screenshot","Theme","GameLocalization","Region"
+                            };
+                            foreach (var table in tablesToDropSourceId)
+                            {
+                                // check if the column exists
+                                sql = $"SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = '{Config.DatabaseConfiguration.DatabaseName}' AND TABLE_NAME = '{table}' AND COLUMN_NAME = 'SourceId';";
+                                dbDict.Clear();
+                                data = await db.ExecuteCMDAsync(sql, dbDict);
+                                if (data.Rows.Count > 0)
+                                {
+                                    // column exists, drop it
+                                    sql = $"ALTER TABLE {table} DROP COLUMN SourceId;"; // MySQL does not support IF EXISTS in ALTER TABLE
+                                    await db.ExecuteCMDAsync(sql, dbDict);
+                                    Logging.Log(Logging.LogType.Information, "Database", $"Dropped SourceId column from {table} table.");
+                                }
+
+                                switch (table)
+                                {
+                                    case "ReleaseDate":
+                                        // check if month and/or year columns exist
+                                        sql = $"SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = '{Config.DatabaseConfiguration.DatabaseName}' AND TABLE_NAME = '{table}' AND COLUMN_NAME IN ('Month', 'Year');";
+                                        data = await db.ExecuteCMDAsync(sql, dbDict);
+                                        foreach (DataRow row in data.Rows)
+                                        {
+                                            sql = "";
+                                            if (row["COLUMN_NAME"].ToString() == "Month")
+                                            {
+                                                sql += "ALTER TABLE ReleaseDate DROP COLUMN Month, CHANGE `m` `Month` int(11) DEFAULT NULL;";
+                                            }
+                                            if (row["COLUMN_NAME"].ToString() == "Year")
+                                            {
+                                                sql += "ALTER TABLE ReleaseDate DROP COLUMN Year, CHANGE `y` `Year` int(11) DEFAULT NULL;";
+                                            }
+                                            if (!string.IsNullOrEmpty(sql))
+                                            {
+                                                await db.ExecuteCMDAsync(sql, dbDict);
+                                                Logging.Log(Logging.LogType.Information, "Database", $"Dropped {row["COLUMN_NAME"]} column from ReleaseDate table.");
+                                            }
+                                        }
+                                        break;
+                                }
+                            }
                             break;
 
                         case 1031:
@@ -175,6 +222,8 @@ namespace gaseous_server.Classes
                             Logging.Log(Logging.LogType.Information, "Database Upgrade", "Deleting existing signature sources");
                             sql = "DELETE FROM Signatures_Sources;";
                             db.ExecuteNonQuery(sql);
+
+                            _ = MySql_1024_MigrateMetadataVersion();
 
                             break;
 
@@ -290,6 +339,18 @@ namespace gaseous_server.Classes
                             // migrating metadata is a safe background task
                             BackgroundUpgradeTargetSchemaVersions.Add(1024);
                             break;
+
+                        case 1031:
+                            // update Metadata_Platform SourceId to 0
+                            sql = "UPDATE Metadata_Platform SET SourceId = 0;";
+                            db.ExecuteNonQuery(sql);
+
+                            // update Gmes_Roms to MetadataId = 0
+                            sql = "UPDATE Games_Roms SET GameId = 0;";
+                            db.ExecuteNonQuery(sql);
+
+                            DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1031);
+                            break;
                     }
                     break;
             }
@@ -299,15 +360,22 @@ namespace gaseous_server.Classes
         {
             foreach (int TargetSchemaVersion in BackgroundUpgradeTargetSchemaVersions)
             {
-                switch (TargetSchemaVersion)
+                try
                 {
-                    case 1002:
-                        MySql_1002_MigrateMetadataVersion();
-                        break;
+                    switch (TargetSchemaVersion)
+                    {
+                        case 1002:
+                            MySql_1002_MigrateMetadataVersion();
+                            break;
 
-                    case 1024:
-                        await MySql_1024_MigrateMetadataVersion();
-                        break;
+                        case 1031:
+                            MySql_1031_MigrateMetadataVersion();
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Log(Logging.LogType.Warning, "Database Upgrade", "Error during background upgrade for schema version " + TargetSchemaVersion, ex);
                 }
             }
         }
@@ -439,6 +507,20 @@ namespace gaseous_server.Classes
                 await ImportGame.StoreGame(library, hash, signature, platform, (string)row["Path"], (long)row["Id"]);
 
                 count += 1;
+            }
+        }
+
+        public static void MySql_1031_MigrateMetadataVersion()
+        {
+            // get the database migration task
+            foreach (ProcessQueue.QueueItem qi in ProcessQueue.QueueItems)
+            {
+                if (qi.ItemType == ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade)
+                {
+                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Platform, "Platform Metadata", null, true);
+                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Signatures, "Signature Metadata", null, true);
+                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Game, "Game Metadata", null, true);
+                }
             }
         }
     }

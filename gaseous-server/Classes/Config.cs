@@ -106,6 +106,23 @@ namespace gaseous_server.Classes
             }
         }
 
+        [JsonIgnore]
+        public static string FirstRunStatus
+        {
+            get
+            {
+                return Config.ReadSetting<string>("FirstRunStatus", "0");
+            }
+        }
+
+        public static string FirstRunStatusWhenSet
+        {
+            get
+            {
+                return "2";
+            }
+        }
+
         static Config()
         {
             if (_config == null)
@@ -527,6 +544,9 @@ namespace gaseous_server.Classes
                         return dbConnString;
                     }
                 }
+
+                [JsonIgnore]
+                public bool UpgradeInProgress { get; set; } = false;
             }
 
             public class Library

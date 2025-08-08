@@ -69,16 +69,13 @@ if (Directory.Exists(Config.LibraryConfiguration.LibraryUploadDirectory))
 }
 
 // kick off any delayed upgrade tasks
-// run 1002 background updates in the background on every start
-DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1002);
-DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1023);
 // start the task
 ProcessQueue.QueueItem queueItem = new ProcessQueue.QueueItem(
         ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade,
         1,
         new List<ProcessQueue.QueueItemType>
         {
-            ProcessQueue.QueueItemType.SignatureIngestor
+            ProcessQueue.QueueItemType.All
         },
         false,
         true
@@ -366,8 +363,8 @@ Bios.MigrateToNewFolderStructure();
 
 // add background tasks
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.SignatureIngestor)
-    );
+ProcessQueue.QueueItemType.SignatureIngestor)
+);
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.TitleIngestor)
     );

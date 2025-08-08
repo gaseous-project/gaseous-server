@@ -95,7 +95,7 @@ namespace gaseous_server.Controllers
 
                 logoObject = await PlatformLogos.GetPlatformLogo((long)platformObject.PlatformLogo, metadataSources);
 
-                if (logoObject == null)
+                if (logoObject == null || logoObject.ImageId == null || logoObject.ImageId == "")
                 {
                     // getting the logo failed, so we'll try a platform variant if available
                     if (platformObject.Versions != null)
@@ -104,6 +104,12 @@ namespace gaseous_server.Controllers
                         {
                             PlatformVersion platformVersion = await Classes.Metadata.PlatformVersions.GetPlatformVersion(metadataSources, (long)platformObject.Versions[0]);
                             logoObject = await PlatformLogos.GetPlatformLogo((long)platformVersion.PlatformLogo);
+
+                            if (logoObject == null || logoObject.ImageId == null || logoObject.ImageId == "")
+                            {
+                                // no image found, return a dummy image
+                                return GetDummyImage();
+                            }
                         }
                         else
                         {

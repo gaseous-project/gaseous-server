@@ -30,32 +30,54 @@ namespace gaseous_server
         {
             var count = Interlocked.Increment(ref executionCount);
 
-            //_logger.LogInformation(
-            //    "Timed Hosted Service is working. Count: {Count}", count);
+            // don't execute if the server first run state is not up to date
+            if (Config.FirstRunStatus != Config.FirstRunStatusWhenSet)
+            {
+                return;
+            }
+
+            // check if a database upgrade process is in the queue
+            ProcessQueue.QueueItemState[] upgradeStates = new ProcessQueue.QueueItemState[]
+            {
+                ProcessQueue.QueueItemState.Running,
+                ProcessQueue.QueueItemState.Stopped,
+                ProcessQueue.QueueItemState.NeverStarted
+            };
+            if (ProcessQueue.QueueItems.Any(qi => qi.ItemType == ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade && upgradeStates.Contains(qi.ItemState)))
+            {
+                Config.DatabaseConfiguration.UpgradeInProgress = true;
+            }
+            else
+            {
+                Config.DatabaseConfiguration.UpgradeInProgress = false;
+            }
 
             List<ProcessQueue.QueueItem> ActiveList = new List<ProcessQueue.QueueItem>();
             ActiveList.AddRange(ProcessQueue.QueueItems);
             foreach (ProcessQueue.QueueItem qi in ActiveList)
             {
-                if (qi.ItemState != ProcessQueue.QueueItemState.Disabled)
+                if (Config.DatabaseConfiguration.UpgradeInProgress == false || (Config.DatabaseConfiguration.UpgradeInProgress == true && qi.ItemType == ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade))
                 {
-                    if (CheckIfProcessIsBlockedByOthers(qi) == false)
+                    if (qi.ItemState != ProcessQueue.QueueItemState.Disabled)
                     {
-                        qi.BlockedState(false);
-                        if (DateTime.UtcNow > qi.NextRunTime || qi.Force == true)
+                        if (CheckIfProcessIsBlockedByOthers(qi) == false)
                         {
-                            // execute queued process
-                            _ = Task.Run(() => qi.Execute());
-
-                            if (qi.RemoveWhenStopped == true && qi.ItemState == ProcessQueue.QueueItemState.Stopped)
+                            qi.BlockedState(false);
+                            if (DateTime.UtcNow > qi.NextRunTime || qi.Force == true)
                             {
-                                ProcessQueue.QueueItems.Remove(qi);
+                                // execute queued process
+                                _ = Task.Run(() => qi.Execute());
+
+                                if (qi.RemoveWhenStopped == true && qi.ItemState == ProcessQueue.QueueItemState.Stopped)
+                                {
+                                    ProcessQueue.QueueItems.Remove(qi);
+                                }
                             }
                         }
-                    }
-                    else
-                    {
-                        qi.BlockedState(true);
+                        else
+                        {
+                            qi.BlockedState(true);
+                        }
                     }
                 }
             }
