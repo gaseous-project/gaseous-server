@@ -522,6 +522,50 @@ namespace gaseous_server.Classes
                     qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Game, "Game Metadata", null, true);
                 }
             }
+
+            // migrate favourites
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT * FROM Users;";
+            DataTable data = db.ExecuteCMD(sql);
+            foreach (DataRow row in data.Rows)
+            {
+                // get the user's favourites
+                sql = "SELECT * FROM Favourites WHERE UserId = @userid;";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>
+                {
+                    { "userid", row["Id"] }
+                };
+                DataTable favouritesData = db.ExecuteCMD(sql, dbDict);
+
+                // copy the users favourites into an array of long
+                List<long> favourites = new List<long>();
+                foreach (DataRow favouriteRow in favouritesData.Rows)
+                {
+                    favourites.Add((long)favouriteRow["GameId"]);
+                }
+
+                // delete the existing favourites
+                sql = "DELETE FROM Favourites WHERE UserId = @userid;";
+                dbDict.Clear();
+                dbDict.Add("userid", row["Id"]);
+                db.ExecuteNonQuery(sql, dbDict);
+
+                // lookup the metadata objects using the GameId, and add the metadataid as a new favourite
+                foreach (long gameId in favourites)
+                {
+                    sql = "SELECT DISTINCT ParentMapId FROM MetadataMapBridge WHERE MetadataSourceType = 1 AND MetadataSourceId = @gameid;";
+                    dbDict.Clear();
+                    dbDict.Add("gameid", gameId);
+                    DataTable metadataData = db.ExecuteCMD(sql, dbDict);
+                    if (metadataData.Rows.Count > 0)
+                    {
+                        Favourites metadataFavourites = new Favourites();
+                        metadataFavourites.SetFavourite((string)row["Id"], (long)metadataData.Rows[0]["ParentMapId"], true);
+                    }
+                }
+            }
+
+            
         }
     }
 }
