@@ -520,9 +520,13 @@ namespace gaseous_server.Classes
                     qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Platform, "Platform Metadata", null, true);
                     qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Signatures, "Signature Metadata", null, true);
                     qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Game, "Game Metadata", null, true);
+                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.DatabaseMigration_1031, "Database Migration 1031", null, true);
                 }
             }
+        }
 
+        public static async Task RunMigration1031()
+        {
             // migrate favourites
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM Users;";
@@ -565,7 +569,20 @@ namespace gaseous_server.Classes
                 }
             }
 
-            
+            // migrate media groups
+            sql = "SELECT DISTINCT RomMediaGroup.Id, Games_Roms.MetadataMapId FROM RomMediaGroup_Members JOIN RomMediaGroup ON RomMediaGroup_Members.GroupId = RomMediaGroup.Id JOIN Games_Roms ON RomMediaGroup_Members.RomId = Games_Roms.Id;";
+            data = db.ExecuteCMD(sql);
+            foreach (DataRow row in data.Rows)
+            {
+                // set the media group for each media group
+                sql = "UPDATE RomMediaGroup SET GameId = @gameid WHERE Id = @id;";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>
+                {
+                    { "gameid", row["MetadataMapId"] },
+                    { "id", row["Id"] }
+                };
+                db.ExecuteNonQuery(sql, dbDict);
+            }
         }
     }
 }
