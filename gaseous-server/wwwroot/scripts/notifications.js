@@ -150,7 +150,22 @@ class NotificationPanel {
         document.body.appendChild(this.panel);
 
         // create notification subpanels
-        // processing panel
+        // database upgrade panel
+        this.databaseUpgradePanel = document.createElement('div');
+        this.databaseUpgradePanel.classList.add('section');
+        this.databaseUpgradePanel.style.display = 'none';
+
+        const databaseUpgradeTitle = document.createElement('div');
+        databaseUpgradeTitle.classList.add('section-header');
+        databaseUpgradeTitle.innerHTML = 'Database Upgrade';
+        this.databaseUpgradePanel.appendChild(databaseUpgradeTitle);
+
+        this.databaseUpgradeBody = document.createElement('div');
+        this.databaseUpgradeBody.classList.add('section-body');
+        this.databaseUpgradeBody.classList.add('notification_body');
+        this.databaseUpgradePanel.appendChild(this.databaseUpgradeBody);
+
+        // import processing panel
         this.processingPanel = document.createElement('div');
         this.processingPanel.classList.add('section');
         this.processingPanel.style.display = 'none';
@@ -195,6 +210,7 @@ class NotificationPanel {
         this.noNotifications.appendChild(noNotificationsBody);
 
         // append the panels to the main panel
+        this.panel.appendChild(this.databaseUpgradePanel);
         this.panel.appendChild(this.processingPanel);
         this.panel.appendChild(this.completedPanel);
         this.panel.appendChild(this.noNotifications);
@@ -224,13 +240,77 @@ class NotificationPanel {
             return;
         }
 
+        let showDatabaseUpgrade = false;
         let showPending = false;
         let showProcessing = false;
         let showCompleted = false;
 
+        this.databaseUpgradeBody.innerHTML = '';
         this.processingBody.innerHTML = '';
         this.pendingBody.innerHTML = '';
         this.completedBody.innerHTML = '';
+
+        // check database upgrade notifications
+        if (notifications['databaseUpgrade']) {
+            const upgradeNotification = document.createElement('div');
+            upgradeNotification.classList.add('notification_item');
+
+            let upgradeLabel = document.createElement('span');
+            upgradeLabel.innerHTML = 'Upgrading database...';
+            upgradeNotification.appendChild(upgradeLabel);
+
+            let upgradeLabels = {
+                "MetadataRefresh_Platform": "Platform Metadata",
+                "MetadataRefresh_Signatures": "Signature Metadata",
+                "MetadataRefresh_Game": "Game Metadata",
+                "DatabaseMigration_1031": "Migrating user data to new database schema"
+            }
+
+            if (Object.keys(notifications['databaseUpgrade']).length > 0) {
+                let upgradeList = document.createElement('ul');
+                upgradeList.classList.add('password-rules');
+                for (const key of Object.keys(notifications['databaseUpgrade'])) {
+                    let subTask = notifications['databaseUpgrade'][key];
+
+                    let upgradeItem = document.createElement('li');
+                    // upgradeItem.classList.add('listitem');
+                    upgradeItem.classList.add('listitem-narrow');
+                    upgradeItem.classList.add('taskrow');
+                    switch (subTask['state']) {
+                        case 'NeverStarted':
+                            upgradeItem.classList.add('listitem-pending');
+                            break;
+                        case 'Running':
+                            upgradeItem.classList.add('listitem-inprogress');
+                            break;
+                        case 'Stopped':
+                            upgradeItem.classList.add('listitem-green');
+                            break;
+                    }
+
+                    upgradeItem.innerHTML = `${upgradeLabels[key] || key}`;
+                    if (subTask['progress'].split(' of ').length === 2) {
+                        const parts = subTask['progress'].split(' of ');
+                        upgradeItem.innerHTML += `<br /><progress value="${parts[0]}" max="${parts[1]}" style="width: 100%;"></progress>`;
+                    } else {
+                        if (subTask['state'] === 'Stopped') {
+                            upgradeItem.innerHTML += `<br /><progress value="1" max="1" style="width: 100%;"></progress>`;
+                        } else {
+                            upgradeItem.innerHTML += `<br /><progress value="0" max="1" style="width: 100%;"></progress>`;
+                        }
+                    }
+                    upgradeList.appendChild(upgradeItem);
+                }
+
+                upgradeNotification.appendChild(upgradeList);
+            }
+
+            let upgradeText = document.createElement('p');
+            upgradeText.innerHTML = 'The system is currently performing a database upgrade. This may take some time depending on the size of your library. Some features may not be available during the upgrade.';
+            upgradeNotification.appendChild(upgradeText);
+            this.databaseUpgradeBody.appendChild(upgradeNotification);
+            showDatabaseUpgrade = true;
+        }
 
         // check import notifications
         if (notifications['importQueue']) {
@@ -257,6 +337,13 @@ class NotificationPanel {
             }
         }
 
+        // update the visibility of the panels
+        if (showDatabaseUpgrade) {
+            this.databaseUpgradePanel.style.display = 'block';
+        } else {
+            this.databaseUpgradePanel.style.display = 'none';
+        }
+
         if (showProcessing || showPending) {
             this.processingPanel.style.display = 'block';
             if (showPending) {
@@ -279,7 +366,7 @@ class NotificationPanel {
             this.completedPanel.style.display = 'none';
         }
 
-        if (showPending === false && showProcessing === false && showCompleted === false) {
+        if (showDatabaseUpgrade === false && showPending === false && showProcessing === false && showCompleted === false) {
             this.noNotifications.style.display = 'block';
         } else {
             this.noNotifications.style.display = 'none';

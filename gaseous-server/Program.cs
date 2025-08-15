@@ -351,9 +351,10 @@ app.Use(async (context, next) =>
 Config.LibraryConfiguration.InitLibrary();
 
 // create unknown platform
-await Platforms.GetPlatform(0, FileSignature.MetadataSources.None);
-await Platforms.GetPlatform(0, FileSignature.MetadataSources.IGDB);
-await Platforms.GetPlatform(0, FileSignature.MetadataSources.TheGamesDb);
+foreach (FileSignature.MetadataSources source in Enum.GetValues(typeof(FileSignature.MetadataSources)))
+{
+    await Platforms.GetPlatform(0, source);
+}
 
 // extract platform map if not present
 await PlatformMapping.ExtractPlatformMap();

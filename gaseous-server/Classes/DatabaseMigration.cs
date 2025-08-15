@@ -517,10 +517,10 @@ namespace gaseous_server.Classes
             {
                 if (qi.ItemType == ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade)
                 {
-                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Platform, "Platform Metadata", null, true);
-                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Signatures, "Signature Metadata", null, true);
-                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Game, "Game Metadata", null, true);
-                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.DatabaseMigration_1031, "Database Migration 1031", null, true);
+                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Platform, "Platform Metadata", null, false);
+                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Signatures, "Signature Metadata", null, false);
+                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Game, "Game Metadata", null, false);
+                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.DatabaseMigration_1031, "Database Migration 1031", null, false);
                 }
             }
         }
