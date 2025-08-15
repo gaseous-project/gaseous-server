@@ -1518,7 +1518,7 @@
       },
       {
         "hash": "7f98d77d7a094ad7d069b74bd553ec98",
-        "description": "Game Genie add-on cartridge - Required for Game Genei Add-on emulation (Only supported on the fceumm core)",
+        "description": "Game Genie add-on cartridge - Required for Game Genie Add-on emulation (Only supported on the fceumm core)",
         "filename": "gamegenie.nes"
       }
     ]
