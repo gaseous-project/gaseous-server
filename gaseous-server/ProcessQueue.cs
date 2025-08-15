@@ -144,6 +144,7 @@ namespace gaseous_server
                     MetadataRefresh_Platform,
                     MetadataRefresh_Signatures,
                     MetadataRefresh_Game,
+                    DatabaseMigration_1031,
                     LibraryScanWorker
                 }
                 private string _CorrelationId;
@@ -322,6 +323,11 @@ namespace gaseous_server
                                 MetadataManagement metadataGame = new MetadataManagement(this);
                                 metadataGame.UpdateRomCounts();
                                 await metadataGame.RefreshGames(true);
+                                break;
+
+                            case TaskTypes.DatabaseMigration_1031:
+                                Logging.Log(Logging.LogType.Information, "Database Migration", "Running database migration 1031 for " + _TaskName);
+                                await DatabaseMigration.RunMigration1031();
                                 break;
 
                             case TaskTypes.LibraryScanWorker:
@@ -621,9 +627,9 @@ namespace gaseous_server
                                     }
 
                                     // set up metadata refresh subtasks
-                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Platform, "Platform Metadata", null, false);
-                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Signatures, "Signature Metadata", null, false);
-                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Game, "Game Metadata", null, false);
+                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Platform, "Platform Metadata", null, true);
+                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Signatures, "Signature Metadata", null, true);
+                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Game, "Game Metadata", null, true);
 
                                     _SaveLastRunTime = true;
 

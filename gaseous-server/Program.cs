@@ -37,8 +37,6 @@ db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.Conn
 
 // set up db
 db.InitDB();
-// create tables from types
-Classes.Metadata.Utility.TableBuilder.BuildTables();
 // create relation tables if they don't exist
 await Storage.CreateRelationsTables<IGDB.Models.Game>();
 await Storage.CreateRelationsTables<IGDB.Models.Platform>();
@@ -71,16 +69,13 @@ if (Directory.Exists(Config.LibraryConfiguration.LibraryUploadDirectory))
 }
 
 // kick off any delayed upgrade tasks
-// run 1002 background updates in the background on every start
-DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1002);
-DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1023);
 // start the task
 ProcessQueue.QueueItem queueItem = new ProcessQueue.QueueItem(
         ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade,
         1,
         new List<ProcessQueue.QueueItemType>
         {
-            ProcessQueue.QueueItemType.SignatureIngestor
+            ProcessQueue.QueueItemType.All
         },
         false,
         true
@@ -340,7 +335,7 @@ app.Use(async (context, next) =>
     string userIdentity;
     try
     {
-        userIdentity = context.User.Claims.Where(x => x.Type == System.Security.Claims.ClaimTypes.NameIdentifier).FirstOrDefault().Value;
+        userIdentity = context.User.Claims.FirstOrDefault(x => x.Type == System.Security.Claims.ClaimTypes.NameIdentifier)?.Value ?? "";
     }
     catch
     {
@@ -348,7 +343,7 @@ app.Use(async (context, next) =>
     }
     CallContext.SetData("CallingUser", userIdentity);
 
-    context.Response.Headers.Add("x-correlation-id", correlationId.ToString());
+    context.Response.Headers.Append("x-correlation-id", correlationId.ToString());
     await next();
 });
 
@@ -356,9 +351,10 @@ app.Use(async (context, next) =>
 Config.LibraryConfiguration.InitLibrary();
 
 // create unknown platform
-await Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.None);
-await Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.IGDB);
-await Platforms.GetPlatform(0, HasheousClient.Models.MetadataSources.TheGamesDb);
+foreach (FileSignature.MetadataSources source in Enum.GetValues(typeof(FileSignature.MetadataSources)))
+{
+    await Platforms.GetPlatform(0, source);
+}
 
 // extract platform map if not present
 await PlatformMapping.ExtractPlatformMap();
@@ -368,8 +364,8 @@ Bios.MigrateToNewFolderStructure();
 
 // add background tasks
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.SignatureIngestor)
-    );
+ProcessQueue.QueueItemType.SignatureIngestor)
+);
 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
     ProcessQueue.QueueItemType.TitleIngestor)
     );

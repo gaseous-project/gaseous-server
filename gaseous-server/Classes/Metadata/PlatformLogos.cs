@@ -12,7 +12,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static async Task<PlatformLogo?> GetPlatformLogo(long? Id, HasheousClient.Models.MetadataSources SourceType = HasheousClient.Models.MetadataSources.IGDB)
+        public static async Task<PlatformLogo?> GetPlatformLogo(long? Id, FileSignature.MetadataSources SourceType = FileSignature.MetadataSources.IGDB)
         {
             if ((Id == 0) || (Id == null))
             {

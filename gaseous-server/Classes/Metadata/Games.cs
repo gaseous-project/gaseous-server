@@ -11,8 +11,8 @@ namespace gaseous_server.Classes.Metadata
         /// <summary>
         /// Sources are in order: ScreenScaper, TheGamesDB
         /// </summary>
-        public static List<HasheousClient.Models.MetadataSources> clearLogoSources = new List<HasheousClient.Models.MetadataSources>{
-                HasheousClient.Models.MetadataSources.TheGamesDb
+        public static List<FileSignature.MetadataSources> clearLogoSources = new List<FileSignature.MetadataSources>{
+                FileSignature.MetadataSources.TheGamesDb
             };
 
         public Games()
@@ -26,7 +26,7 @@ namespace gaseous_server.Classes.Metadata
             { }
         }
 
-        public static async Task<Game?> GetGame(HasheousClient.Models.MetadataSources SourceType, long? Id, bool Massage = true, bool ForceRefresh = false)
+        public static async Task<Game?> GetGame(FileSignature.MetadataSources SourceType, long? Id, bool Massage = true, bool ForceRefresh = false)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -61,7 +61,7 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        public static async Task<Game?> GetGame(HasheousClient.Models.MetadataSources SourceType, string? Slug)
+        public static async Task<Game?> GetGame(FileSignature.MetadataSources SourceType, string? Slug)
         {
             Game? RetVal = await Metadata.GetMetadataAsync<Game>(SourceType, Slug, false);
             RetVal.MetadataSource = SourceType;
@@ -116,9 +116,9 @@ namespace gaseous_server.Classes.Metadata
             }
 
             // search for a clear logo
-            result.ClearLogo = new Dictionary<HasheousClient.Models.MetadataSources, List<long>>();
+            result.ClearLogo = new Dictionary<FileSignature.MetadataSources, List<long>>();
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            foreach (HasheousClient.Models.MetadataSources source in clearLogoSources)
+            foreach (FileSignature.MetadataSources source in clearLogoSources)
             {
                 foreach (MetadataMap metadataMap in metadataMaps)
                 {
@@ -140,7 +140,7 @@ namespace gaseous_server.Classes.Metadata
                         await GetGame(source, metadataMapItem.SourceId, false);
 
                         // found a valid source - check if there is a clear logo
-                        string sql = "SELECT * FROM ClearLogo WHERE SourceId = @sourceid AND Game = @gameid;";
+                        string sql = "SELECT * FROM Metadata_ClearLogo WHERE SourceId = @sourceid AND Game = @gameid;";
                         Dictionary<string, object> dbDict = new Dictionary<string, object>
                         {
                             { "sourceid", (int)source },
@@ -166,7 +166,7 @@ namespace gaseous_server.Classes.Metadata
             }
 
             // populate age group data
-            if (result.MetadataSource == HasheousClient.Models.MetadataSources.IGDB)
+            if (result.MetadataSource == FileSignature.MetadataSources.IGDB)
             {
                 await AgeGroups.GetAgeGroup(result);
             }
@@ -222,7 +222,7 @@ namespace gaseous_server.Classes.Metadata
                     break;
             }
 
-            string sql = "SELECT Game.Id, Game.`Name`, Game.Slug, Relation_Game_Platforms.PlatformsId AS PlatformsId, Game.Summary FROM gaseous.Game JOIN Relation_Game_Platforms ON Game.Id = Relation_Game_Platforms.GameId AND Game.SourceId = Relation_Game_Platforms.GameSourceId WHERE " + whereClause + ";";
+            string sql = "SELECT Game.Id, Game.`Name`, Game.Slug, Relation_Game_Platforms.PlatformsId AS PlatformsId, Game.Summary FROM gaseous.Metadata_Game AS `Game` JOIN Relation_Game_Platforms ON Game.Id = Relation_Game_Platforms.GameId AND Game.SourceId = Relation_Game_Platforms.GameSourceId WHERE " + whereClause + ";";
 
 
             // get Game metadata
@@ -254,9 +254,9 @@ namespace gaseous_server.Classes.Metadata
         {
             switch (Config.MetadataConfiguration.DefaultMetadataSource)
             {
-                case HasheousClient.Models.MetadataSources.None:
+                case FileSignature.MetadataSources.None:
                     return new Game[0];
-                case HasheousClient.Models.MetadataSources.IGDB:
+                case FileSignature.MetadataSources.IGDB:
                     if (Config.IGDB.UseHasheousProxy == false)
                     {
                         string searchBody = "";
@@ -322,7 +322,7 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        public static async Task<List<AvailablePlatformItem>> GetAvailablePlatformsAsync(string UserId, HasheousClient.Models.MetadataSources SourceType, long GameId)
+        public static async Task<List<AvailablePlatformItem>> GetAvailablePlatformsAsync(string UserId, FileSignature.MetadataSources SourceType, long GameId)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = @"
@@ -360,7 +360,7 @@ SELECT DISTINCT
 FROM
     view_Games_Roms
         LEFT JOIN
-    Platform ON view_Games_Roms.PlatformId = Platform.Id AND Platform.SourceId = view_Games_Roms.GameIdType
+    `Metadata_Platform` AS `Platform` ON view_Games_Roms.PlatformId = Platform.Id AND Platform.SourceId = view_Games_Roms.GameIdType
         LEFT JOIN
     User_RecentPlayedRoms ON User_RecentPlayedRoms.UserId = @userid
         AND User_RecentPlayedRoms.GameId = view_Games_Roms.MetadataMapId
@@ -644,7 +644,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
             public List<long>? PlatformIds { get; set; }
             public long? Id { get; set; }
             public long? MetadataMapId { get; set; }
-            public HasheousClient.Models.MetadataSources MetadataSource { get; set; }
+            public FileSignature.MetadataSources MetadataSource { get; set; }
             public long Index { get; set; }
             public string Alpha
             {

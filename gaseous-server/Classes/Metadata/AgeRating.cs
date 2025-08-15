@@ -14,7 +14,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static async Task<AgeRating?> GetAgeRating(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<AgeRating?> GetAgeRating(FileSignature.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -27,7 +27,7 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        public static async Task<GameAgeRating> GetConsolidatedAgeRating(HasheousClient.Models.MetadataSources SourceType, long RatingId)
+        public static async Task<GameAgeRating> GetConsolidatedAgeRating(FileSignature.MetadataSources SourceType, long RatingId)
         {
             GameAgeRating gameAgeRating = new GameAgeRating();
 

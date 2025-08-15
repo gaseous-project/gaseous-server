@@ -3,7 +3,7 @@ using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using IGDB.Models;
 
-namespace Classes.Metadata.Utility
+namespace gaseous_server.Classes.Metadata.Utility
 {
     public static class TableBuilder
     {
@@ -92,11 +92,33 @@ namespace Classes.Metadata.Utility
             // Get the table name from the class name
             string tableName = type.Name;
 
-            // Get the properties of the class
-            PropertyInfo[] properties = type.GetProperties();
-
             // Start building the SQL command
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
+            // check rename migration status
+            if (Config.ReadSetting<bool>($"RenameMigration_{tableName}", false) == false)
+            {
+                // rename the table if it exists
+                // Check if the table exists
+                string checkTableExistsQuery = $"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '{tableName}'";
+                var result = db.ExecuteCMD(checkTableExistsQuery);
+                if (Convert.ToInt32(result.Rows[0][0]) > 0)
+                {
+                    // The table exists, so we will rename it
+                    Console.WriteLine($"Table '{tableName}' already exists. Renaming to 'Metadata_{tableName}'...");
+
+                    string renameTableQuery = $"ALTER TABLE `{tableName}` RENAME TO `Metadata_{tableName}`";
+                    db.ExecuteNonQuery(renameTableQuery);
+                }
+
+                // mark the rename migration as done
+                Config.SetSetting($"RenameMigration_{tableName}", true);
+            }
+            // Update the table name to include the Metadata prefix
+            tableName = $"Metadata_{tableName}";
+
+            // Get the properties of the class
+            PropertyInfo[] properties = type.GetProperties();
 
             // Create the table with the basic structure if it does not exist
             string createTableQuery = $"CREATE TABLE IF NOT EXISTS `{tableName}` (`Id` BIGINT PRIMARY KEY, `dateAdded` DATETIME DEFAULT CURRENT_TIMESTAMP, `lastUpdated` DATETIME DEFAULT CURRENT_TIMESTAMP )";

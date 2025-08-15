@@ -1,6 +1,7 @@
 using System;
 using System.Data;
 using System.Reflection;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
@@ -61,12 +62,67 @@ namespace gaseous_server.Classes
                             }
                             break;
 
-                        case 1025:
+                        case 1027:
                             Logging.Log(Logging.LogType.Information, "Database", "Running pre-upgrade for schema version " + TargetSchemaVersion);
                             // create the basic relation tables
                             // this is a blocking task
                             await Storage.CreateRelationsTables<IGDB.Models.Game>();
                             await Storage.CreateRelationsTables<IGDB.Models.Platform>();
+
+                            // drop source id from all metadata tables if it exists
+                            var tablesToDropSourceId = new List<string>
+                            {
+                                "AgeGroup","AgeRating","AgeRatingContentDescription","AlternativeName","Artwork","Collection","Company","CompanyLogo","Cover","ExternalGame","Franchise","Game","GameMode","GameVideo","Genre","InvolvedCompany","MultiplayerMode","Platform","PlatformLogo","PlatformVersion","PlayerPerspective","ReleaseDate","Screenshot","Theme","GameLocalization","Region"
+                            };
+                            foreach (var table in tablesToDropSourceId)
+                            {
+                                // check if the column exists
+                                sql = $"SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = '{Config.DatabaseConfiguration.DatabaseName}' AND TABLE_NAME = '{table}' AND COLUMN_NAME = 'SourceId';";
+                                dbDict.Clear();
+                                data = await db.ExecuteCMDAsync(sql, dbDict);
+                                if (data.Rows.Count > 0)
+                                {
+                                    // column exists, drop it
+                                    sql = $"ALTER TABLE {table} DROP COLUMN SourceId;"; // MySQL does not support IF EXISTS in ALTER TABLE
+                                    await db.ExecuteCMDAsync(sql, dbDict);
+                                    Logging.Log(Logging.LogType.Information, "Database", $"Dropped SourceId column from {table} table.");
+                                }
+
+                                switch (table)
+                                {
+                                    case "ReleaseDate":
+                                        // check if month and/or year columns exist
+                                        sql = $"SELECT * FROM information_schema.COLUMNS WHERE TABLE_SCHEMA = '{Config.DatabaseConfiguration.DatabaseName}' AND TABLE_NAME = '{table}' AND COLUMN_NAME IN ('Month', 'Year');";
+                                        data = await db.ExecuteCMDAsync(sql, dbDict);
+                                        foreach (DataRow row in data.Rows)
+                                        {
+                                            sql = "";
+                                            if (row["COLUMN_NAME"].ToString() == "Month")
+                                            {
+                                                sql += "ALTER TABLE ReleaseDate DROP COLUMN Month, CHANGE `m` `Month` int(11) DEFAULT NULL;";
+                                            }
+                                            if (row["COLUMN_NAME"].ToString() == "Year")
+                                            {
+                                                sql += "ALTER TABLE ReleaseDate DROP COLUMN Year, CHANGE `y` `Year` int(11) DEFAULT NULL;";
+                                            }
+                                            if (!string.IsNullOrEmpty(sql))
+                                            {
+                                                await db.ExecuteCMDAsync(sql, dbDict);
+                                                Logging.Log(Logging.LogType.Information, "Database", $"Dropped {row["COLUMN_NAME"]} column from ReleaseDate table.");
+                                            }
+                                        }
+                                        break;
+                                }
+                            }
+                            break;
+
+                        case 1031:
+                            Logging.Log(Logging.LogType.Information, "Database", "Running pre-upgrade for schema version " + TargetSchemaVersion);
+                            // build tables for metadata storage
+                            Metadata.Utility.TableBuilder.BuildTables();
+                            sql = "RENAME TABLE AgeGroup TO Metadata_AgeGroup; RENAME TABLE ClearLogo TO Metadata_ClearLogo;";
+                            dbDict.Clear();
+                            await db.ExecuteCMDAsync(sql, dbDict);
                             break;
                     }
                     break;
@@ -160,6 +216,18 @@ namespace gaseous_server.Classes
                             break;
 
                         case 1024:
+                            // attempt to re-import signature dats
+
+                            // delete existing signature sources to allow re-import
+                            Logging.Log(Logging.LogType.Information, "Database Upgrade", "Deleting existing signature sources");
+                            sql = "DELETE FROM Signatures_Sources;";
+                            db.ExecuteNonQuery(sql);
+
+                            _ = MySql_1024_MigrateMetadataVersion();
+
+                            break;
+
+                        case 1027:
                             // create profiles for all existing users
                             sql = "SELECT * FROM Users;";
                             data = db.ExecuteCMD(sql);
@@ -271,6 +339,18 @@ namespace gaseous_server.Classes
                             // migrating metadata is a safe background task
                             BackgroundUpgradeTargetSchemaVersions.Add(1024);
                             break;
+
+                        case 1031:
+                            // update Metadata_Platform SourceId to 0
+                            sql = "UPDATE Metadata_Platform SET SourceId = 0;";
+                            db.ExecuteNonQuery(sql);
+
+                            // update Gmes_Roms to MetadataId = 0
+                            sql = "UPDATE Games_Roms SET GameId = 0;";
+                            db.ExecuteNonQuery(sql);
+
+                            DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1031);
+                            break;
                     }
                     break;
             }
@@ -280,15 +360,22 @@ namespace gaseous_server.Classes
         {
             foreach (int TargetSchemaVersion in BackgroundUpgradeTargetSchemaVersions)
             {
-                switch (TargetSchemaVersion)
+                try
                 {
-                    case 1002:
-                        MySql_1002_MigrateMetadataVersion();
-                        break;
+                    switch (TargetSchemaVersion)
+                    {
+                        case 1002:
+                            MySql_1002_MigrateMetadataVersion();
+                            break;
 
-                    case 1024:
-                        await MySql_1024_MigrateMetadataVersion();
-                        break;
+                        case 1031:
+                            MySql_1031_MigrateMetadataVersion();
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.Log(Logging.LogType.Warning, "Database Upgrade", "Error during background upgrade for schema version " + TargetSchemaVersion, ex);
                 }
             }
         }
@@ -420,6 +507,81 @@ namespace gaseous_server.Classes
                 await ImportGame.StoreGame(library, hash, signature, platform, (string)row["Path"], (long)row["Id"]);
 
                 count += 1;
+            }
+        }
+
+        public static void MySql_1031_MigrateMetadataVersion()
+        {
+            // get the database migration task
+            foreach (ProcessQueue.QueueItem qi in ProcessQueue.QueueItems)
+            {
+                if (qi.ItemType == ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade)
+                {
+                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Platform, "Platform Metadata", null, false);
+                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Signatures, "Signature Metadata", null, false);
+                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Game, "Game Metadata", null, false);
+                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.DatabaseMigration_1031, "Database Migration 1031", null, false);
+                }
+            }
+        }
+
+        public static async Task RunMigration1031()
+        {
+            // migrate favourites
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "SELECT * FROM Users;";
+            DataTable data = db.ExecuteCMD(sql);
+            foreach (DataRow row in data.Rows)
+            {
+                // get the user's favourites
+                sql = "SELECT * FROM Favourites WHERE UserId = @userid;";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>
+                {
+                    { "userid", row["Id"] }
+                };
+                DataTable favouritesData = db.ExecuteCMD(sql, dbDict);
+
+                // copy the users favourites into an array of long
+                List<long> favourites = new List<long>();
+                foreach (DataRow favouriteRow in favouritesData.Rows)
+                {
+                    favourites.Add((long)favouriteRow["GameId"]);
+                }
+
+                // delete the existing favourites
+                sql = "DELETE FROM Favourites WHERE UserId = @userid;";
+                dbDict.Clear();
+                dbDict.Add("userid", row["Id"]);
+                db.ExecuteNonQuery(sql, dbDict);
+
+                // lookup the metadata objects using the GameId, and add the metadataid as a new favourite
+                foreach (long gameId in favourites)
+                {
+                    sql = "SELECT DISTINCT ParentMapId FROM MetadataMapBridge WHERE MetadataSourceType = 1 AND MetadataSourceId = @gameid;";
+                    dbDict.Clear();
+                    dbDict.Add("gameid", gameId);
+                    DataTable metadataData = db.ExecuteCMD(sql, dbDict);
+                    if (metadataData.Rows.Count > 0)
+                    {
+                        Favourites metadataFavourites = new Favourites();
+                        metadataFavourites.SetFavourite((string)row["Id"], (long)metadataData.Rows[0]["ParentMapId"], true);
+                    }
+                }
+            }
+
+            // migrate media groups
+            sql = "SELECT DISTINCT RomMediaGroup.Id, Games_Roms.MetadataMapId FROM RomMediaGroup_Members JOIN RomMediaGroup ON RomMediaGroup_Members.GroupId = RomMediaGroup.Id JOIN Games_Roms ON RomMediaGroup_Members.RomId = Games_Roms.Id;";
+            data = db.ExecuteCMD(sql);
+            foreach (DataRow row in data.Rows)
+            {
+                // set the media group for each media group
+                sql = "UPDATE RomMediaGroup SET GameId = @gameid WHERE Id = @id;";
+                Dictionary<string, object> dbDict = new Dictionary<string, object>
+                {
+                    { "gameid", row["MetadataMapId"] },
+                    { "id", row["Id"] }
+                };
+                db.ExecuteNonQuery(sql, dbDict);
             }
         }
     }

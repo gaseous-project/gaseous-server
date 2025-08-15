@@ -67,6 +67,31 @@ namespace gaseous_server.Controllers
                 notifications.Add("importQueue", importQueueStatus);
             }
 
+            // get database upgrade status
+            Dictionary<string, Dictionary<string, string>> upgradeStatus = new Dictionary<string, Dictionary<string, string>>();
+            foreach (var item in ProcessQueue.QueueItems)
+            {
+                if (item.ItemType == ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade)
+                {
+                    if (item.SubTasks.Count > 0)
+                    {
+                        foreach (var subTask in item.SubTasks)
+                        {
+                            upgradeStatus.Add(subTask.TaskType.ToString(), new Dictionary<string, string>
+                            {
+                                { "state", subTask.State.ToString() },
+                                { "progressText", subTask.CurrentState.ToString() },
+                                { "progress", subTask.CurrentStateProgress.ToString() }
+                            });
+                        }
+                    }
+                }
+            }
+            if (upgradeStatus.Count > 0)
+            {
+                notifications.Add("databaseUpgrade", upgradeStatus);
+            }
+
             return Ok(notifications);
         }
     }

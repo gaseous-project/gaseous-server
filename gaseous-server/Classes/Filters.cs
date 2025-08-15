@@ -37,7 +37,7 @@ namespace gaseous_server.Classes
             switch (filterType)
             {
                 case FilterType.Platforms:
-                    sql = "SELECT Platform.Id, Platform.`Name`, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT Game.Id, view_Games_Roms.PlatformId, COUNT(view_Games_Roms.Id) AS RomCount FROM Game LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + ageRestriction_Platform + ") GROUP BY Game.Id , view_Games_Roms.PlatformId HAVING RomCount > 0) Game JOIN Platform ON Game.PlatformId = Platform.Id AND Platform.SourceId = 0 GROUP BY Platform.`Name`;";
+                    sql = "SELECT Platform.Id, Platform.`Name`, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT Game.Id, view_Games_Roms.PlatformId, COUNT(view_Games_Roms.Id) AS RomCount FROM `Metadata_Game` AS `Game` LEFT JOIN `Metadata_AgeGroup` AS `AgeGroup` ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + ageRestriction_Platform + ") GROUP BY Game.Id , view_Games_Roms.PlatformId HAVING RomCount > 0) Game JOIN `Metadata_Platform` AS `Platform` ON Game.PlatformId = Platform.Id AND Platform.SourceId = 0 GROUP BY Platform.`Name`;";
 
                     DataTable dbResponse = await db.ExecuteCMDAsync(sql, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 300));
 
@@ -50,7 +50,7 @@ namespace gaseous_server.Classes
                     return returnList;
 
                 case FilterType.AgeGroupings:
-                    sql = "SELECT Game.AgeGroupId, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT Game.Id, AgeGroup.AgeGroupId, COUNT(view_Games_Roms.Id) AS RomCount FROM Game LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + ageRestriction_Platform + ") GROUP BY Game.Id HAVING RomCount > 0) Game GROUP BY Game.AgeGroupId ORDER BY Game.AgeGroupId DESC";
+                    sql = "SELECT Game.AgeGroupId, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT Game.Id, AgeGroup.AgeGroupId, COUNT(view_Games_Roms.Id) AS RomCount FROM `Metadata_Game` AS `Game` LEFT JOIN `Metadata_AgeGroup` AS `AgeGroup` ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + ageRestriction_Platform + ") GROUP BY Game.Id HAVING RomCount > 0) Game GROUP BY Game.AgeGroupId ORDER BY Game.AgeGroupId DESC";
                     dbResponse = await db.ExecuteCMDAsync(sql, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 300));
 
                     foreach (DataRow dr in dbResponse.Rows)
@@ -120,7 +120,7 @@ namespace gaseous_server.Classes
                 ageRestriction_Generic += " OR view_Games.AgeGroupId IS NULL";
             }
 
-            string sql = "SELECT Platform.Id, Platform.`Name`, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT Game.Id, view_Games_Roms.PlatformId, COUNT(view_Games_Roms.Id) AS RomCount FROM Game LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + ageRestriction_Platform + ") GROUP BY Game.Id , view_Games_Roms.PlatformId HAVING RomCount > 0) Game JOIN Platform ON Game.PlatformId = Platform.Id AND Platform.SourceId = 0 GROUP BY Platform.`Name`;";
+            string sql = "SELECT Platform.Id, Platform.`Name`, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT Game.Id, view_Games_Roms.PlatformId, COUNT(view_Games_Roms.Id) AS RomCount FROM `Metadata_Game` AS `Game` LEFT JOIN `Metadata_AgeGroup` AS `AgeGroup` ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + ageRestriction_Platform + ") GROUP BY Game.Id , view_Games_Roms.PlatformId HAVING RomCount > 0) Game JOIN `Metadata_Platform` AS `Platform` ON Game.PlatformId = Platform.Id AND Platform.SourceId = 0 GROUP BY Platform.`Name`;";
 
             DataTable dbResponse = await db.ExecuteCMDAsync(sql, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 300));
 
@@ -150,7 +150,7 @@ namespace gaseous_server.Classes
 
             // age groups
             List<FilterItem> agegroupings = new List<FilterItem>();
-            sql = "SELECT Game.AgeGroupId, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT Game.Id, AgeGroup.AgeGroupId, COUNT(view_Games_Roms.Id) AS RomCount FROM Game LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + ageRestriction_Platform + ") GROUP BY Game.Id HAVING RomCount > 0) Game GROUP BY Game.AgeGroupId ORDER BY Game.AgeGroupId DESC";
+            sql = "SELECT Game.AgeGroupId, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT Game.Id, AgeGroup.AgeGroupId, COUNT(view_Games_Roms.Id) AS RomCount FROM `Metadata_Game` AS `Game` LEFT JOIN `Metadata_AgeGroup` AS `AgeGroup` ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + ageRestriction_Platform + ") GROUP BY Game.Id HAVING RomCount > 0) Game GROUP BY Game.AgeGroupId ORDER BY Game.AgeGroupId DESC";
             dbResponse = await db.ExecuteCMDAsync(sql, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 300));
 
             foreach (DataRow dr in dbResponse.Rows)
@@ -222,7 +222,7 @@ namespace gaseous_server.Classes
 
         private static async Task<DataTable> GetGenericFilterItem(Database db, string Name, string AgeRestriction)
         {
-            string sql = "SELECT Game.GameIdType, <ITEMNAME>.Id, <ITEMNAME>.`Name`, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT view_Games_Roms.GameIdType, Game.Id, AgeGroup.AgeGroupId, COUNT(view_Games_Roms.Id) AS RomCount FROM Game LEFT JOIN AgeGroup ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + AgeRestriction + ") GROUP BY Game.Id HAVING RomCount > 0) Game JOIN Relation_Game_<ITEMNAME>s ON Game.Id = Relation_Game_<ITEMNAME>s.GameId AND Game.GameIdType = Relation_Game_<ITEMNAME>s.GameSourceId JOIN <ITEMNAME> ON Relation_Game_<ITEMNAME>s.<ITEMNAME>sId = <ITEMNAME>.Id GROUP BY GameIdType, <ITEMNAME>.`Name` ORDER BY <ITEMNAME>.`Name`;";
+            string sql = "SELECT Game.GameIdType, <ITEMNAME>.Id, <ITEMNAME>.`Name`, COUNT(Game.Id) AS GameCount FROM (SELECT DISTINCT view_Games_Roms.GameIdType, Game.Id, AgeGroup.AgeGroupId, COUNT(view_Games_Roms.Id) AS RomCount FROM `Metadata_Game` AS `Game` LEFT JOIN `Metadata_AgeGroup` AS `AgeGroup` ON Game.Id = AgeGroup.GameId LEFT JOIN view_Games_Roms ON Game.Id = view_Games_Roms.GameId WHERE (" + AgeRestriction + ") GROUP BY Game.Id HAVING RomCount > 0) Game JOIN Relation_Game_<ITEMNAME>s ON Game.Id = Relation_Game_<ITEMNAME>s.GameId AND Game.GameIdType = Relation_Game_<ITEMNAME>s.GameSourceId JOIN `Metadata_<ITEMNAME>` AS `<ITEMNAME>` ON Relation_Game_<ITEMNAME>s.<ITEMNAME>sId = <ITEMNAME>.Id GROUP BY GameIdType, <ITEMNAME>.`Name` ORDER BY <ITEMNAME>.`Name`;";
             sql = sql.Replace("<ITEMNAME>", Name);
             DataTable dbResponse = await db.ExecuteCMDAsync(sql, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 300));
 

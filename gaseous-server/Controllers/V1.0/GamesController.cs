@@ -124,7 +124,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<AlternativeName>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameAlternativeNames(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource)
+        public async Task<ActionResult> GameAlternativeNames(long MetadataMapId, FileSignature.MetadataSources MetadataSource)
         {
             try
             {
@@ -192,7 +192,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<AgeRatings.GameAgeRating>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameAgeClassification(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource)
+        public async Task<ActionResult> GameAgeClassification(long MetadataMapId, FileSignature.MetadataSources MetadataSource)
         {
             try
             {
@@ -226,7 +226,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<Artwork>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameArtwork(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource)
+        public async Task<ActionResult> GameArtwork(long MetadataMapId, FileSignature.MetadataSources MetadataSource)
         {
             try
             {
@@ -258,7 +258,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(Artwork), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameArtwork(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource, long ArtworkId)
+        public async Task<ActionResult> GameArtwork(long MetadataMapId, FileSignature.MetadataSources MetadataSource, long ArtworkId)
         {
             try
             {
@@ -295,7 +295,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(Cover), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameCover(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource)
+        public async Task<ActionResult> GameCover(long MetadataMapId, FileSignature.MetadataSources MetadataSource)
         {
             try
             {
@@ -331,7 +331,7 @@ namespace gaseous_server.Controllers
         [Route("{MetadataMapId}/{MetadataSource}/{ImageType}/{ImageId}/image/{size}/{imagename}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameImage(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource, ImageHandling.MetadataImageType imageType, long ImageId, Communications.IGDBAPI_ImageSize size, string imagename = "")
+        public async Task<ActionResult> GameImage(long MetadataMapId, FileSignature.MetadataSources MetadataSource, ImageHandling.MetadataImageType imageType, long ImageId, Communications.IGDBAPI_ImageSize size, string imagename = "")
         {
             try
             {
@@ -476,7 +476,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<GameMode>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameMode(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource)
+        public async Task<ActionResult> GameMode(long MetadataMapId, FileSignature.MetadataSources MetadataSource)
         {
             try
             {
@@ -513,7 +513,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<Genre>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameGenre(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource)
+        public async Task<ActionResult> GameGenre(long MetadataMapId, FileSignature.MetadataSources MetadataSource)
         {
             try
             {
@@ -552,7 +552,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<Theme>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameThemes(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource)
+        public async Task<ActionResult> GameThemes(long MetadataMapId, FileSignature.MetadataSources MetadataSource)
         {
             try
             {
@@ -591,7 +591,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<Dictionary<string, object>>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameInvolvedCompanies(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource)
+        public async Task<ActionResult> GameInvolvedCompanies(long MetadataMapId, FileSignature.MetadataSources MetadataSource)
         {
             try
             {
@@ -644,7 +644,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(Dictionary<string, object>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameInvolvedCompanies(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource, long CompanyId)
+        public async Task<ActionResult> GameInvolvedCompanies(long MetadataMapId, FileSignature.MetadataSources MetadataSource, long CompanyId)
         {
             try
             {
@@ -688,7 +688,7 @@ namespace gaseous_server.Controllers
         [Route("{MetadataMapId}/{MetadataSource}/companies/{CompanyId}/image")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameCompanyImage(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource, long CompanyId)
+        public async Task<ActionResult> GameCompanyImage(long MetadataMapId, FileSignature.MetadataSources MetadataSource, long CompanyId)
         {
             try
             {
@@ -896,7 +896,7 @@ namespace gaseous_server.Controllers
                 {
                     foreach (MetadataMap.MetadataMapItem metadataMapItem in metadataMapItems)
                     {
-                        if (metadataMapItem.SourceType != HasheousClient.Models.MetadataSources.None)
+                        if (metadataMapItem.SourceType != FileSignature.MetadataSources.None)
                         {
                             // check if existingMetadataMap.MetadataMapItems contains metadataMapItem.SourceType
                             MetadataMap.MetadataMapItem existingMetadataMapItem = existingMetadataMap.MetadataMapItems.FirstOrDefault(x => x.SourceType == metadataMapItem.SourceType);
@@ -912,7 +912,7 @@ namespace gaseous_server.Controllers
                         }
                         else
                         {
-                            MetadataMap.MetadataMapItem existingMetadataMapItem = existingMetadataMap.MetadataMapItems.FirstOrDefault(x => x.SourceType == HasheousClient.Models.MetadataSources.None);
+                            MetadataMap.MetadataMapItem existingMetadataMapItem = existingMetadataMap.MetadataMapItems.FirstOrDefault(x => x.SourceType == FileSignature.MetadataSources.None);
                             MetadataManagement.UpdateMetadataMapItem(MetadataMapId, existingMetadataMapItem.SourceType, existingMetadataMapItem.SourceId, metadataMapItem.Preferred);
                         }
                     }
@@ -936,7 +936,7 @@ namespace gaseous_server.Controllers
         [Route("{MetadataMapId}/{MetadataSource}/platforms")]
         [ProducesResponseType(typeof(List<Games.AvailablePlatformItem>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GamePlatforms(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource)
+        public async Task<ActionResult> GamePlatforms(long MetadataMapId, FileSignature.MetadataSources MetadataSource)
         {
             try
             {
@@ -965,7 +965,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<ReleaseDate>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameReleaseDates(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource)
+        public async Task<ActionResult> GameReleaseDates(long MetadataMapId, FileSignature.MetadataSources MetadataSource)
         {
             try
             {
@@ -1478,7 +1478,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<Screenshot>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameScreenshot(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource)
+        public async Task<ActionResult> GameScreenshot(long MetadataMapId, FileSignature.MetadataSources MetadataSource)
         {
             try
             {
@@ -1510,7 +1510,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(Screenshot), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameScreenshot(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource, long ScreenshotId)
+        public async Task<ActionResult> GameScreenshot(long MetadataMapId, FileSignature.MetadataSources MetadataSource, long ScreenshotId)
         {
             try
             {
@@ -1546,7 +1546,7 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(typeof(List<GameVideo>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "7Days")]
-        public async Task<ActionResult> GameVideo(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource)
+        public async Task<ActionResult> GameVideo(long MetadataMapId, FileSignature.MetadataSources MetadataSource)
         {
             try
             {

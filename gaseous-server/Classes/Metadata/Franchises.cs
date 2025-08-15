@@ -10,7 +10,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static async Task<Franchise?> GetFranchises(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<Franchise?> GetFranchises(FileSignature.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {

@@ -3004,6 +3004,14 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     padding-left: 30px;
 }
 
+.listitem-narrow {
+    padding-left: 25px;
+}
+
+.listitem-none {
+    list-style-type: none;
+}
+
 .listitem-green {
     background-image: url('/images/tick.svg');
     background-repeat: no-repeat;
@@ -3016,6 +3024,20 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     background-repeat: no-repeat;
     background-position: 1px 1px;
     background-size: 16px 16px;
+}
+
+.listitem-inprogress {
+    background-image: url('/images/play-icon.svg');
+    background-repeat: no-repeat;
+    background-position: 3px 6px;
+    background-size: 12px 12px;
+}
+
+.listitem-pending {
+    background-image: url('/images/pending.svg');
+    background-repeat: no-repeat;
+    background-position: 0 0;
+    background-size: 18px 18px;
 }
 
 #fileSelector {

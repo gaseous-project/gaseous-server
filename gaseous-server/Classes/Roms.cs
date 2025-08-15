@@ -65,12 +65,12 @@ namespace gaseous_server.Classes
 			}
 
 			// platform query
-			sqlPlatform = "SELECT DISTINCT Games_Roms.PlatformId, Platform.`Name` FROM Games_Roms LEFT JOIN Platform ON Games_Roms.PlatformId = Platform.Id WHERE GameId = @id ORDER BY Platform.`Name`;";
+			sqlPlatform = "SELECT DISTINCT Games_Roms.PlatformId, Platform.`Name` FROM Games_Roms LEFT JOIN `Metadata_Platform` AS `Platform` ON Games_Roms.PlatformId = Platform.Id WHERE GameId = @id ORDER BY Platform.`Name`;";
 
 			if (PlatformId == -1)
 			{
 				// data query
-				sql = "SELECT DISTINCT view_Games_Roms.*, Platform.`Name` AS platformname, Game.`Name` AS gamename, GameState.RomId AS SavedStateRomId" + UserFields + " FROM view_Games_Roms LEFT JOIN Platform ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN Game ON view_Games_Roms.GameId = Game.Id LEFT JOIN GameState ON (view_Games_Roms.Id = GameState.RomId AND GameState.UserId = @userid AND GameState.IsMediaGroup = 0) " + UserJoin + " WHERE view_Games_Roms.MetadataMapId = @id" + NameSearchWhere + " ORDER BY Platform.`Name`, view_Games_Roms.`Name`;";
+				sql = "SELECT DISTINCT view_Games_Roms.*, Platform.`Name` AS platformname, Game.`Name` AS gamename, GameState.RomId AS SavedStateRomId" + UserFields + " FROM view_Games_Roms LEFT JOIN `Metadata_Platform` AS `Platform` ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN Game ON view_Games_Roms.GameId = Game.Id LEFT JOIN GameState ON (view_Games_Roms.Id = GameState.RomId AND GameState.UserId = @userid AND GameState.IsMediaGroup = 0) " + UserJoin + " WHERE view_Games_Roms.MetadataMapId = @id" + NameSearchWhere + " ORDER BY Platform.`Name`, view_Games_Roms.`Name`;";
 
 				// count query
 				sqlCount = "SELECT COUNT(view_Games_Roms.Id) AS RomCount FROM view_Games_Roms WHERE view_Games_Roms.MetadataMapId = @id" + NameSearchWhere + ";";
@@ -94,7 +94,7 @@ namespace gaseous_server.Classes
 				JOIN
 					GameLibraries ON Games_Roms.LibraryId = GameLibraries.Id
 				LEFT JOIN
-					Platform ON Games_Roms.PlatformId = Platform.Id AND Platform.SourceId = @platformsource
+					`Metadata_Platform` AS `Platform` ON Games_Roms.PlatformId = Platform.Id AND Platform.SourceId = @platformsource
 				LEFT JOIN
 					view_GamesWithRoms ON view_GamesWithRoms.MetadataMapId = Games_Roms.MetadataMapId
 				LEFT JOIN
@@ -109,7 +109,7 @@ namespace gaseous_server.Classes
 				sqlCount = "SELECT COUNT(Games_Roms.Id) AS RomCount FROM Games_Roms WHERE Games_Roms.MetadataMapId = @id AND Games_Roms.PlatformId = @platformid" + NameSearchWhere + ";";
 
 				dbDict.Add("platformid", PlatformId);
-				dbDict.Add("platformsource", (int)HasheousClient.Models.MetadataSources.None);
+				dbDict.Add("platformsource", (int)FileSignature.MetadataSources.None);
 			}
 			DataTable romDT = await db.ExecuteCMDAsync(sql, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks));
 
@@ -141,7 +141,7 @@ namespace gaseous_server.Classes
 		public static async Task<GameRomItem> GetRom(long RomId)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "SELECT DISTINCT view_Games_Roms.*, Platform.`Name` AS platformname, view_GamesWithRoms.`Name` AS gamename FROM view_Games_Roms LEFT JOIN Platform ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN view_GamesWithRoms ON view_Games_Roms.MetadataMapId = view_GamesWithRoms.MetadataMapId WHERE view_Games_Roms.Id = @id";
+			string sql = "SELECT DISTINCT view_Games_Roms.*, Platform.`Name` AS platformname, view_GamesWithRoms.`Name` AS gamename FROM view_Games_Roms LEFT JOIN `Metadata_Platform` AS `Platform` ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN view_GamesWithRoms ON view_Games_Roms.MetadataMapId = view_GamesWithRoms.MetadataMapId WHERE view_Games_Roms.Id = @id";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 			dbDict.Add("id", RomId);
 			DataTable romDT = await db.ExecuteCMDAsync(sql, dbDict);
@@ -161,7 +161,7 @@ namespace gaseous_server.Classes
 		public static async Task<GameRomItem> GetRom(string MD5)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "SELECT DISTINCT view_Games_Roms.*, Platform.`Name` AS platformname, view_GamesWithRoms.`Name` AS gamename FROM view_Games_Roms LEFT JOIN Platform ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN view_GamesWithRoms ON view_Games_Roms.MetadataMapId = view_GamesWithRoms.MetadataMapId WHERE view_Games_Roms.MD5 = @id";
+			string sql = "SELECT DISTINCT view_Games_Roms.*, Platform.`Name` AS platformname, view_GamesWithRoms.`Name` AS gamename FROM view_Games_Roms LEFT JOIN `Metadata_Platform` AS `Platform` ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN view_GamesWithRoms ON view_Games_Roms.MetadataMapId = view_GamesWithRoms.MetadataMapId WHERE view_Games_Roms.MD5 = @id";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 			dbDict.Add("id", MD5);
 			DataTable romDT = await db.ExecuteCMDAsync(sql, dbDict);
@@ -184,7 +184,7 @@ namespace gaseous_server.Classes
 			HasheousClient.Models.Metadata.IGDB.Platform platform = await Classes.Metadata.Platforms.GetPlatform(PlatformId);
 
 			// ensure metadata for gameid is present
-			Models.Game game = await Classes.Metadata.Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, GameId);
+			Models.Game game = await Classes.Metadata.Games.GetGame(FileSignature.MetadataSources.IGDB, GameId);
 
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "UPDATE Games_Roms SET PlatformId=@platformid, MetadataMapId=@gameid WHERE Id = @id";
@@ -297,8 +297,8 @@ namespace gaseous_server.Classes
 				Id = (long)romDR["id"],
 				PlatformId = (long)romDR["platformid"],
 				Platform = (string)romDR["platformname"],
-				MetadataMapId = (long)romDR["metadatamapid"],
-				MetadataSource = (HasheousClient.Models.MetadataSources)(int)romDR["metadatasource"],
+				MetadataMapId = (long)Common.ReturnValueIfNull(romDR["metadatamapid"], 0),
+				MetadataSource = (FileSignature.MetadataSources)(int)romDR["metadatasource"],
 				GameId = (long)romDR["gameid"],
 				Game = (string)Common.ReturnValueIfNull(romDR["gamename"], ""),
 				Name = (string)romDR["name"],
@@ -352,7 +352,7 @@ namespace gaseous_server.Classes
 			public long PlatformId { get; set; }
 			public string Platform { get; set; }
 			public long MetadataMapId { get; set; }
-			public HasheousClient.Models.MetadataSources MetadataSource { get; set; }
+			public FileSignature.MetadataSources MetadataSource { get; set; }
 			public long GameId { get; set; }
 			public string Game { get; set; }
 			public string? Path { get; set; }

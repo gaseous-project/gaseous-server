@@ -11,7 +11,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static async Task<AlternativeName?> GetAlternativeNames(HasheousClient.Models.MetadataSources SourceType, long? Id)
+        public static async Task<AlternativeName?> GetAlternativeNames(FileSignature.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {

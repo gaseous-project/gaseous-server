@@ -77,6 +77,51 @@ function setupBanner() {
         let notificationState = 0;
 
         if (data) {
+            if (data['databaseUpgrade']) {
+                // this alert should only been shown when the database upgrade notification has changed state
+                // store this alert in localStorage, and then only display if it if the notification has changed
+                let showDatabaseUpgradeNotification = false;
+
+                notificationState = 1; // set the notification state to 1, as we updates in progress
+
+                // only show the notification if it's been more than 5 minutes since the last notification
+                let lastNotification = localStorage.getItem('DatabaseUpgradeNotification');
+                if (lastNotification) {
+                    lastNotification = JSON.parse(lastNotification);
+                    let lastNotificationTime = new Date(lastNotification.timestamp);
+
+                    // is current time greater than lastNotificationTime?
+                    let currentTime = new Date();
+                    if (currentTime > lastNotificationTime) {
+                        showDatabaseUpgradeNotification = true;
+                    }
+                } else {
+                    showDatabaseUpgradeNotification = true; // no previous notification, so show the notification
+                }
+
+                if (showDatabaseUpgradeNotification) {
+                    // we had a change in the notification, show the notification and then store the new notification in localStorage
+                    let notificationMsg = new Notification(
+                        'Database Upgrade In Progress',
+                        'Performance may be degraded while the database is being upgraded, while favourites and game saves may be missing. Please wait until the upgrade is complete.',
+                        undefined,
+                        undefined,
+                        undefined,
+                        'DatabaseUpgrade'
+                    );
+                    notificationMsg.Show();
+
+                    // get the date and time and add 5 minutes to it
+                    let nextUpdateDateTime = new Date();
+                    nextUpdateDateTime.setMinutes(nextUpdateDateTime.getMinutes() + 5);
+
+                    // store the database upgrade notification time in localStorage
+                    localStorage.setItem('DatabaseUpgradeNotification', JSON.stringify(nextUpdateDateTime));
+                }
+            } else {
+                // remove the database upgrade notification from localStorage if it exists
+                localStorage.removeItem('DatabaseUpgradeNotification');
+            }
             if (data['importQueue']) {
                 if (data['importQueue']['Pending'] || data['importQueue']['Processing']) {
                     notificationState = 1;

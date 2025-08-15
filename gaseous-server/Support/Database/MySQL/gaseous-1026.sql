@@ -1,15 +1,27 @@
-CREATE TABLE `ClearLogo` (
-    `Id` bigint(20) NOT NULL,
-    `SourceId` int(11) NOT NULL DEFAULT 1,
-    `AlphaChannel` tinyint(1) DEFAULT NULL,
-    `Animated` tinyint(1) DEFAULT NULL,
-    `Checksum` varchar(45) DEFAULT NULL,
-    `Game` bigint(20) DEFAULT NULL,
-    `Height` int(11) DEFAULT NULL,
-    `ImageId` varchar(45) DEFAULT NULL,
-    `Url` varchar(255) DEFAULT NULL,
-    `Width` int(11) DEFAULT NULL,
-    `dateAdded` datetime DEFAULT NULL,
-    `lastUpdated` datetime DEFAULT NULL,
-    PRIMARY KEY (`Id`, `SourceId`)
-);
+CREATE OR REPLACE VIEW `view_Signatures_Games` AS
+SELECT
+    `Signatures_Games`.`Id` AS `Id`,
+    `Signatures_Games`.`Name` AS `Name`,
+    `Signatures_Games`.`Description` AS `Description`,
+    `Signatures_Games`.`Year` AS `Year`,
+    `Signatures_Games`.`PublisherId` AS `PublisherId`,
+    `Signatures_Publishers`.`Publisher` AS `Publisher`,
+    `Signatures_Games`.`Demo` AS `Demo`,
+    `Signatures_Games`.`SystemId` AS `PlatformId`,
+    `Signatures_Platforms`.`Platform` AS `Platform`,
+    `Signatures_Games`.`SystemVariant` AS `SystemVariant`,
+    `Signatures_Games`.`Video` AS `Video`,
+    `Signatures_Games`.`Country` AS `Country`,
+    `Signatures_Games`.`Language` AS `Language`,
+    `Signatures_Games`.`Copyright` AS `Copyright`
+FROM (
+        (
+            `Signatures_Games`
+            LEFT JOIN `Signatures_Publishers` ON (
+                `Signatures_Games`.`PublisherId` = `Signatures_Publishers`.`Id`
+            )
+        )
+        JOIN `Signatures_Platforms` ON (
+            `Signatures_Games`.`SystemId` = `Signatures_Platforms`.`Id`
+        )
+    );

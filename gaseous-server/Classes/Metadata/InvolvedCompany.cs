@@ -18,7 +18,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                InvolvedCompany? RetVal = await Metadata.GetMetadataAsync<InvolvedCompany>(HasheousClient.Models.MetadataSources.IGDB, (long)Id, false);
+                InvolvedCompany? RetVal = await Metadata.GetMetadataAsync<InvolvedCompany>(FileSignature.MetadataSources.IGDB, (long)Id, false);
                 return RetVal;
             }
         }

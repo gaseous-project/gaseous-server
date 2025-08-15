@@ -1,3 +1,4 @@
+using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using HasheousClient.Models;
 
@@ -23,7 +24,7 @@ namespace gaseous_server.Models
 
         public class MetadataMapItem
         {
-            public HasheousClient.Models.MetadataSources SourceType { get; set; }
+            public FileSignature.MetadataSources SourceType { get; set; }
             public long SourceId { get; set; }
             public bool Preferred { get; set; }
             public string SourceSlug
@@ -33,7 +34,7 @@ namespace gaseous_server.Models
                     string slug = "";
                     switch (SourceType)
                     {
-                        case MetadataSources.IGDB:
+                        case FileSignature.MetadataSources.IGDB:
                             Game game = Games.GetGame(SourceType, (long)SourceId).Result;
                             if (game != null)
                             {
@@ -56,19 +57,19 @@ namespace gaseous_server.Models
                     string link = "";
                     switch (SourceType)
                     {
-                        case MetadataSources.IGDB:
+                        case FileSignature.MetadataSources.IGDB:
                             link = $"https://www.igdb.com/games/{SourceSlug}";
                             break;
 
-                        case MetadataSources.TheGamesDb:
+                        case FileSignature.MetadataSources.TheGamesDb:
                             link = $"https://thegamesdb.net/game.php?id={SourceId}";
                             break;
 
-                        case MetadataSources.RetroAchievements:
+                        case FileSignature.MetadataSources.RetroAchievements:
                             link = $"https://retroachievements.org/game/{SourceId}";
                             break;
 
-                        case MetadataSources.GiantBomb:
+                        case FileSignature.MetadataSources.GiantBomb:
                             link = $"https://www.giantbomb.com/games/3030-{SourceId}/";
                             break;
 
@@ -86,9 +87,9 @@ namespace gaseous_server.Models
                 {
                     return SourceType switch
                     {
-                        MetadataSources.None => true,
-                        MetadataSources.IGDB => true,
-                        MetadataSources.TheGamesDb => true,
+                        FileSignature.MetadataSources.None => true,
+                        FileSignature.MetadataSources.IGDB => true,
+                        FileSignature.MetadataSources.TheGamesDb => true,
                         _ => false,
                     };
                 }

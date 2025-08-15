@@ -204,13 +204,13 @@ namespace gaseous_server.Classes
             else
             {
                 determinedPlatform = await Metadata.Platforms.GetPlatform((long)library.DefaultPlatformId);
-                discoveredSignature.MetadataSources.AddPlatform((long)determinedPlatform.Id, determinedPlatform.Name, HasheousClient.Models.MetadataSources.None);
+                discoveredSignature.MetadataSources.AddPlatform((long)determinedPlatform.Id, determinedPlatform.Name, FileSignature.MetadataSources.None);
             }
 
             // get discovered game
             if (discoveredSignature.Flags.GameId == 0)
             {
-                discoveredSignature.MetadataSources.AddGame(0, discoveredSignature.Game.Name, HasheousClient.Models.MetadataSources.None);
+                discoveredSignature.MetadataSources.AddGame(0, discoveredSignature.Game.Name, FileSignature.MetadataSources.None);
             }
 
             return discoveredSignature;
@@ -414,28 +414,31 @@ namespace gaseous_server.Classes
                                 {
                                     foreach (HasheousClient.Models.MetadataItem metadataResult in HasheousResult.Platform.metadata)
                                     {
-                                        // only IGDB metadata is supported
-                                        if (metadataResult.Source == HasheousClient.Models.MetadataSources.IGDB)
+                                        if (Enum.TryParse<MetadataSources>(metadataResult.Source, out MetadataSources metadataSource))
                                         {
-                                            // check if the immutable id is a long
-                                            if (metadataResult.ImmutableId.Length > 0 && long.TryParse(metadataResult.ImmutableId, out long immutableId) == true)
+                                            // only IGDB metadata is supported
+                                            if (metadataSource == MetadataSources.IGDB)
                                             {
-                                                // use immutable id
-                                                Platform hasheousPlatform = await Platforms.GetPlatform(immutableId);
-                                                signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataResult.Source);
-                                            }
-                                            else
-                                            {
-                                                // immutable id is a string
-                                                Platform hasheousPlatform = await Platforms.GetPlatform(metadataResult.ImmutableId);
-                                                if (hasheousPlatform != null)
+                                                // check if the immutable id is a long
+                                                if (metadataResult.ImmutableId.Length > 0 && long.TryParse(metadataResult.ImmutableId, out long immutableId) == true)
                                                 {
-                                                    signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataResult.Source);
+                                                    // use immutable id
+                                                    Platform hasheousPlatform = await Platforms.GetPlatform(immutableId);
+                                                    signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataSource);
                                                 }
                                                 else
                                                 {
-                                                    // unresolvable immutableid - use unknown platform
-                                                    signature.MetadataSources.AddPlatform(0, "Unknown Platform", HasheousClient.Models.MetadataSources.None);
+                                                    // immutable id is a string
+                                                    Platform hasheousPlatform = await Platforms.GetPlatform(metadataResult.ImmutableId);
+                                                    if (hasheousPlatform != null)
+                                                    {
+                                                        signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataSource);
+                                                    }
+                                                    else
+                                                    {
+                                                        // unresolvable immutableid - use unknown platform
+                                                        signature.MetadataSources.AddPlatform(0, "Unknown Platform", MetadataSources.None);
+                                                    }
                                                 }
                                             }
                                         }
@@ -450,50 +453,53 @@ namespace gaseous_server.Classes
                                 {
                                     foreach (HasheousClient.Models.MetadataItem metadataResult in HasheousResult.Metadata)
                                     {
-                                        if (metadataResult.ImmutableId.Length > 0)
+                                        if (Enum.TryParse<MetadataSources>(metadataResult.Source, out MetadataSources metadataSource))
                                         {
-                                            switch (metadataResult.Source)
+                                            if (metadataResult.ImmutableId.Length > 0)
                                             {
-                                                case HasheousClient.Models.MetadataSources.IGDB:
-                                                    // check if the immutable id is a long
-                                                    if (metadataResult.ImmutableId.Length > 0 && long.TryParse(metadataResult.ImmutableId, out long immutableId) == true)
-                                                    {
-                                                        // use immutable id
-                                                        gaseous_server.Models.Game hasheousGame = await Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, immutableId);
-                                                        signature.MetadataSources.AddGame((long)hasheousGame.Id, hasheousGame.Name, metadataResult.Source);
-                                                    }
-                                                    else
-                                                    {
-                                                        // immutable id is a string
-                                                        gaseous_server.Models.Game hasheousGame = await Games.GetGame(HasheousClient.Models.MetadataSources.IGDB, metadataResult.ImmutableId);
-                                                        if (hasheousGame != null)
+                                                switch (metadataSource)
+                                                {
+                                                    case FileSignature.MetadataSources.IGDB:
+                                                        // check if the immutable id is a long
+                                                        if (metadataResult.ImmutableId.Length > 0 && long.TryParse(metadataResult.ImmutableId, out long immutableId) == true)
                                                         {
-                                                            signature.MetadataSources.AddGame((long)hasheousGame.Id, hasheousGame.Name, metadataResult.Source);
+                                                            // use immutable id
+                                                            gaseous_server.Models.Game hasheousGame = await Games.GetGame(FileSignature.MetadataSources.IGDB, immutableId);
+                                                            signature.MetadataSources.AddGame((long)hasheousGame.Id, hasheousGame.Name, metadataSource);
                                                         }
                                                         else
                                                         {
-                                                            // unresolvable immutable id - use unknown game
-                                                            signature.MetadataSources.AddGame(0, "Unknown Game", HasheousClient.Models.MetadataSources.None);
+                                                            // immutable id is a string
+                                                            gaseous_server.Models.Game hasheousGame = await Games.GetGame(FileSignature.MetadataSources.IGDB, metadataResult.ImmutableId);
+                                                            if (hasheousGame != null)
+                                                            {
+                                                                signature.MetadataSources.AddGame((long)hasheousGame.Id, hasheousGame.Name, metadataSource);
+                                                            }
+                                                            else
+                                                            {
+                                                                // unresolvable immutable id - use unknown game
+                                                                signature.MetadataSources.AddGame(0, "Unknown Game", FileSignature.MetadataSources.None);
+                                                            }
                                                         }
-                                                    }
-                                                    break;
+                                                        break;
 
-                                                default:
-                                                    if (long.TryParse(metadataResult.ImmutableId, out long id) == true)
-                                                    {
-                                                        signature.MetadataSources.AddGame(id, HasheousResult.Name, metadataResult.Source);
-                                                    }
-                                                    else
-                                                    {
-                                                        signature.MetadataSources.AddGame(0, "Unknown Game", HasheousClient.Models.MetadataSources.None);
-                                                    }
-                                                    break;
+                                                    default:
+                                                        if (long.TryParse(metadataResult.ImmutableId, out long id) == true)
+                                                        {
+                                                            signature.MetadataSources.AddGame(id, HasheousResult.Name, metadataSource);
+                                                        }
+                                                        else
+                                                        {
+                                                            signature.MetadataSources.AddGame(0, "Unknown Game", FileSignature.MetadataSources.None);
+                                                        }
+                                                        break;
+                                                }
                                             }
-                                        }
-                                        else
-                                        {
-                                            // unresolvable immutable id - use unknown game
-                                            signature.MetadataSources.AddGame(0, "Unknown Game", HasheousClient.Models.MetadataSources.None);
+                                            else
+                                            {
+                                                // unresolvable immutable id - use unknown game
+                                                signature.MetadataSources.AddGame(0, "Unknown Game", FileSignature.MetadataSources.None);
+                                            }
                                         }
                                     }
                                 }
@@ -623,6 +629,19 @@ namespace gaseous_server.Classes
             public string SHA256 { get; set; }
             public string CRC { get; set; }
             public bool isSignatureSelector { get; set; } = false;
+        }
+
+        public enum MetadataSources
+        {
+            None,
+            IGDB,
+            TheGamesDb,
+            RetroAchievements,
+            GiantBomb,
+            Steam,
+            GOG,
+            EpicGameStore,
+            Wikipedia
         }
     }
 }

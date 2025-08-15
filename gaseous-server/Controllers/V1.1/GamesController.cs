@@ -214,7 +214,7 @@ namespace gaseous_server.Controllers.v1_1
             whereParams.Add("userid", user.Id);
 
             List<string> joinClauses = new List<string>();
-            string joinClauseTemplate = "LEFT JOIN `Relation_Game_<Datatype>s` ON `Game`.`Id` = `Relation_Game_<Datatype>s`.`GameId` AND `Relation_Game_<Datatype>s`.`GameSourceId` = `Game`.`SourceId` LEFT JOIN `<Datatype>` ON `Relation_Game_<Datatype>s`.`<Datatype>sId` = `<Datatype>`.`Id`  AND `Relation_Game_<Datatype>s`.`GameSourceId` = `<Datatype>`.`SourceId`";
+            string joinClauseTemplate = "LEFT JOIN `Relation_Game_<Datatype>s` ON `Game`.`Id` = `Relation_Game_<Datatype>s`.`GameId` AND `Relation_Game_<Datatype>s`.`GameSourceId` = `Game`.`SourceId` LEFT JOIN `Metadata_<Datatype>` AS `<Datatype>` ON `Relation_Game_<Datatype>s`.`<Datatype>sId` = `<Datatype>`.`Id`  AND `Relation_Game_<Datatype>s`.`GameSourceId` = `<Datatype>`.`SourceId`";
             List<string> whereClauses = new List<string>();
             List<string> havingClauses = new List<string>();
 
@@ -662,12 +662,12 @@ FROM
         AND `RomGroupSavedFile`.`IsMediaGroup` = 1
         AND `RomGroupSavedFile`.`UserId` = @userid
         LEFT JOIN
-    `Game` ON `MetadataMapBridge`.`MetadataSourceType` = `Game`.`SourceId`
+    `Metadata_Game` AS `Game` ON `MetadataMapBridge`.`MetadataSourceType` = `Game`.`SourceId`
         AND `MetadataMapBridge`.`MetadataSourceId` = `Game`.`Id`
         LEFT JOIN
-	`AgeGroup` ON `Game`.`Id` = `AgeGroup`.`GameId` AND `Game`.`SourceId` = `AgeGroup`.`SourceId`
+	`Metadata_AgeGroup` AS `AgeGroup` ON `Game`.`Id` = `AgeGroup`.`GameId` AND `Game`.`SourceId` = `AgeGroup`.`SourceId`
         LEFT JOIN
-    `AlternativeName` ON `Game`.`Id` = `AlternativeName`.`Game` AND `Game`.`SourceId` = `AlternativeName`.`SourceId`
+    `Metadata_AlternativeName` AS `AlternativeName` ON `Game`.`Id` = `AlternativeName`.`Game` AND `Game`.`SourceId` = `AlternativeName`.`SourceId`
         LEFT JOIN
     (SELECT 
         `GameLocalization`.`Game`,
@@ -680,8 +680,8 @@ FROM
             `GameLocalization`.`Cover` AS `LocalizedCover`,
             `Region`.`Identifier`
     FROM
-        `GameLocalization`
-    JOIN `Region` ON `GameLocalization`.`Region` = `Region`.`Id`
+        `Metadata_GameLocalization` AS `GameLocalization`
+    JOIN `Metadata_Region` AS `Region` ON `GameLocalization`.`Region` = `Region`.`Id`
         AND `GameLocalization`.`SourceId` = `Region`.`SourceId`
     WHERE
         `Region`.`Identifier` = @lang) `LocalizedNames` ON `Game`.`Id` = `LocalizedNames`.`Game`
@@ -732,7 +732,7 @@ FROM
                 {
                     Models.Game retGame = Storage.BuildCacheObject<Models.Game>(new Models.Game(), dbResponse.Rows[i]);
                     retGame.MetadataMapId = (long)dbResponse.Rows[i]["MetadataMapId"];
-                    retGame.MetadataSource = (HasheousClient.Models.MetadataSources)dbResponse.Rows[i]["GameIdType"];
+                    retGame.MetadataSource = (FileSignature.MetadataSources)dbResponse.Rows[i]["GameIdType"];
 
                     Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
                     retMinGame.Index = indexInPage;

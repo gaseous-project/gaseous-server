@@ -46,7 +46,7 @@ namespace gaseous_server.Classes.Metadata
         /// <returns>
         /// The cache status of the record
         /// </returns>
-        public static CacheStatus GetCacheStatus(HasheousClient.Models.MetadataSources SourceType, string Endpoint, string Slug)
+        public static CacheStatus GetCacheStatus(FileSignature.MetadataSources SourceType, string Endpoint, string Slug)
         {
             return _GetCacheStatus(SourceType, Endpoint, "slug", Slug).Result;
         }
@@ -66,7 +66,7 @@ namespace gaseous_server.Classes.Metadata
         /// <returns>
         /// The cache status of the record
         /// </returns>
-        public static async Task<CacheStatus> GetCacheStatusAsync(HasheousClient.Models.MetadataSources SourceType, string Endpoint, string Slug)
+        public static async Task<CacheStatus> GetCacheStatusAsync(FileSignature.MetadataSources SourceType, string Endpoint, string Slug)
         {
             return await _GetCacheStatus(SourceType, Endpoint, "slug", Slug);
         }
@@ -86,7 +86,7 @@ namespace gaseous_server.Classes.Metadata
         /// <returns>
         /// The cache status of the record
         /// </returns>
-        public static CacheStatus GetCacheStatus(HasheousClient.Models.MetadataSources SourceType, string Endpoint, long Id)
+        public static CacheStatus GetCacheStatus(FileSignature.MetadataSources SourceType, string Endpoint, long Id)
         {
             return _GetCacheStatus(SourceType, Endpoint, "id", Id).Result;
         }
@@ -106,7 +106,7 @@ namespace gaseous_server.Classes.Metadata
         /// <returns>
         /// The cache status of the record
         /// </returns>
-        public static async Task<CacheStatus> GetCacheStatusAsync(HasheousClient.Models.MetadataSources SourceType, string Endpoint, long Id)
+        public static async Task<CacheStatus> GetCacheStatusAsync(FileSignature.MetadataSources SourceType, string Endpoint, long Id)
         {
             return await _GetCacheStatus(SourceType, Endpoint, "id", Id);
         }
@@ -143,11 +143,11 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        private static async Task<CacheStatus> _GetCacheStatus(HasheousClient.Models.MetadataSources SourceType, string Endpoint, string SearchField, object SearchValue)
+        private static async Task<CacheStatus> _GetCacheStatus(FileSignature.MetadataSources SourceType, string Endpoint, string SearchField, object SearchValue)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
-            string sql = "SELECT lastUpdated FROM " + Endpoint + " WHERE SourceId = @SourceType AND " + SearchField + " = @" + SearchField;
+            string sql = "SELECT lastUpdated FROM `Metadata_" + Endpoint + "` WHERE SourceId = @SourceType AND " + SearchField + " = @" + SearchField;
 
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("SourceType", SourceType);
@@ -186,7 +186,7 @@ namespace gaseous_server.Classes.Metadata
         /// <param name="UpdateRecord">
         /// Whether to update the record if it already exists
         /// </param>
-        public static async Task NewCacheValue<T>(HasheousClient.Models.MetadataSources SourceType, T ObjectToCache, bool UpdateRecord = false)
+        public static async Task NewCacheValue<T>(FileSignature.MetadataSources SourceType, T ObjectToCache, bool UpdateRecord = false)
         {
             // get the object type name
             string ObjectTypeName = ObjectToCache.GetType().Name;
@@ -280,11 +280,11 @@ namespace gaseous_server.Classes.Metadata
             string sql = "";
             if (UpdateRecord == false)
             {
-                sql = "INSERT INTO " + ObjectTypeName + " (" + fieldList + ") VALUES (" + valueList + ");";
+                sql = "INSERT INTO `Metadata_" + ObjectTypeName + "` (" + fieldList + ") VALUES (" + valueList + ");";
             }
             else
             {
-                sql = "UPDATE " + ObjectTypeName + " SET " + updateFieldValueList + " WHERE Id = @Id AND SourceId = @SourceId;";
+                sql = "UPDATE `Metadata_" + ObjectTypeName + "` SET " + updateFieldValueList + " WHERE Id = @Id AND SourceId = @SourceId;";
             }
 
             // execute sql
@@ -316,13 +316,13 @@ namespace gaseous_server.Classes.Metadata
         /// <exception cref="Exception">
         /// Thrown when no record is found that matches the search criteria
         /// </exception>
-        public static async Task<T> GetCacheValue<T>(HasheousClient.Models.MetadataSources SourceType, T? EndpointType, string SearchField, object SearchValue)
+        public static async Task<T> GetCacheValue<T>(FileSignature.MetadataSources SourceType, T? EndpointType, string SearchField, object SearchValue)
         {
             string Endpoint = EndpointType.GetType().Name;
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
-            string sql = "SELECT * FROM " + Endpoint + " WHERE SourceId = @SourceType AND " + SearchField + " = @" + SearchField;
+            string sql = "SELECT * FROM `Metadata_" + Endpoint + "` WHERE SourceId = @SourceType AND " + SearchField + " = @" + SearchField;
 
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             dbDict.Add("SourceType", SourceType);
@@ -413,7 +413,7 @@ namespace gaseous_server.Classes.Metadata
             return EndpointType;
         }
 
-        private static async Task StoreRelations(HasheousClient.Models.MetadataSources SourceType, string PrimaryTable, string SecondaryTable, long ObjectId, string Relations)
+        private static async Task StoreRelations(FileSignature.MetadataSources SourceType, string PrimaryTable, string SecondaryTable, long ObjectId, string Relations)
         {
             string TableName = "Relation_" + PrimaryTable + "_" + SecondaryTable;
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);

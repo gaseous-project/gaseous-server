@@ -7,7 +7,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class ImageHandling
     {
-        public static async Task<Dictionary<string, string>?> GameImage(long MetadataMapId, HasheousClient.Models.MetadataSources MetadataSource, MetadataImageType imageType, long ImageId, Communications.IGDBAPI_ImageSize size, string imagename = "")
+        public static async Task<Dictionary<string, string>?> GameImage(long MetadataMapId, FileSignature.MetadataSources MetadataSource, MetadataImageType imageType, long ImageId, Communications.IGDBAPI_ImageSize size, string imagename = "")
         {
             // validate imagename is not dangerous
             if (imagename.Contains("..") || imagename.Contains("/") || imagename.Contains("\\"))

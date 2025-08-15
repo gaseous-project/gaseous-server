@@ -19,10 +19,10 @@ namespace gaseous_server.Models
         public long MetadataMapId { get; set; }
 
         [NoDatabase]
-        public HasheousClient.Models.MetadataSources MetadataSource { get; set; }
+        public FileSignature.MetadataSources MetadataSource { get; set; }
 
         [NoDatabase]
-        public Dictionary<HasheousClient.Models.MetadataSources, List<long>> ClearLogo { get; set; }
+        public Dictionary<FileSignature.MetadataSources, List<long>> ClearLogo { get; set; }
     }
 
     internal class NoDatabaseAttribute : Attribute

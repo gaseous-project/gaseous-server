@@ -11,7 +11,6 @@ using NuGet.Common;
 using NuGet.LibraryModel;
 using static gaseous_server.Classes.Metadata.Games;
 using static gaseous_server.Classes.FileSignature;
-using HasheousClient.Models;
 using HasheousClient.Models.Metadata.IGDB;
 using Mono.TextTemplating;
 
@@ -637,7 +636,7 @@ namespace gaseous_server.Classes
 
         public static async Task<string> ComputeROMPath(long RomId)
         {
-            Classes.Roms.GameRomItem rom = Classes.Roms.GetRom(RomId).Result;
+            Classes.Roms.GameRomItem rom = await Classes.Roms.GetRom(RomId);
 
             // get metadata
             MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(rom.MetadataMapId)).PreferredMetadataMapItem;

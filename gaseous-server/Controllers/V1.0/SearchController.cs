@@ -68,7 +68,7 @@ namespace gaseous_server.Controllers
         {
             switch (Config.MetadataConfiguration.DefaultMetadataSource)
             {
-                case HasheousClient.Models.MetadataSources.IGDB:
+                case FileSignature.MetadataSources.IGDB:
                     if (Config.IGDB.UseHasheousProxy == false)
                     {
                         string searchBody = "";
@@ -89,15 +89,15 @@ namespace gaseous_server.Controllers
                             List<gaseous_server.Models.Game> games = new List<gaseous_server.Models.Game>();
                             foreach (gaseous_server.Models.Game game in results.ToList())
                             {
-                                Storage.CacheStatus cacheStatus = await Storage.GetCacheStatusAsync(HasheousClient.Models.MetadataSources.IGDB, "Game", (long)game.Id);
+                                Storage.CacheStatus cacheStatus = await Storage.GetCacheStatusAsync(FileSignature.MetadataSources.IGDB, "Game", (long)game.Id);
                                 switch (cacheStatus)
                                 {
                                     case Storage.CacheStatus.NotPresent:
-                                        await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.IGDB, game, false);
+                                        await Storage.NewCacheValue(FileSignature.MetadataSources.IGDB, game, false);
                                         break;
 
                                     case Storage.CacheStatus.Expired:
-                                        await Storage.NewCacheValue(HasheousClient.Models.MetadataSources.IGDB, game, true);
+                                        await Storage.NewCacheValue(FileSignature.MetadataSources.IGDB, game, true);
                                         break;
 
                                 }
