@@ -4,41 +4,44 @@ let notificationLoadEndCallbacks = [];
 let notificationLoadErrorCallbacks = [];
 
 // fetch the latest notifications from the server every 5 seconds
-setInterval(async () => {
-    if (notificationLoadStartCallbacks) {
-        for (const callback of notificationLoadStartCallbacks) {
-            callback();
+function startNotificationFetch() {
+    console.log('Fetching notifications every 5 seconds');
+    setInterval(async () => {
+        if (notificationLoadStartCallbacks) {
+            for (const callback of notificationLoadStartCallbacks) {
+                callback();
+            }
         }
-    }
-    await fetch('/api/v1.1/Notification').then(response => {
-        if (response.ok) {
-            return response.json();
-        } else {
-            console.error('Failed to fetch notifications:', response.statusText);
+        await fetch('/api/v1.1/Notification').then(response => {
+            if (response.ok) {
+                return response.json();
+            } else {
+                console.error('Failed to fetch notifications:', response.statusText);
+                if (notificationLoadEndCallbacks) {
+                    for (const callback of notificationLoadErrorCallbacks) {
+                        callback(response);
+                    }
+                }
+            }
+        }).then(data => {
+            if (data) {
+                notifications = data;
+                if (notificationLoadEndCallbacks) {
+                    for (const callback of notificationLoadEndCallbacks) {
+                        callback(data);
+                    }
+                }
+            }
+        }).catch(error => {
+            console.error('Error fetching notifications:', error);
             if (notificationLoadEndCallbacks) {
                 for (const callback of notificationLoadErrorCallbacks) {
-                    callback(response);
+                    callback(error);
                 }
             }
-        }
-    }).then(data => {
-        if (data) {
-            notifications = data;
-            if (notificationLoadEndCallbacks) {
-                for (const callback of notificationLoadEndCallbacks) {
-                    callback(data);
-                }
-            }
-        }
-    }).catch(error => {
-        console.error('Error fetching notifications:', error);
-        if (notificationLoadEndCallbacks) {
-            for (const callback of notificationLoadErrorCallbacks) {
-                callback(error);
-            }
-        }
-    });
-}, 5000);
+        });
+    }, 5000);
+}
 
 // function to add a notification
 class Notification {
