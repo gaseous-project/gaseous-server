@@ -82,6 +82,25 @@ class AccountWindow {
             let quip = QuipPreview.value;
         });
 
+        // load the enabled social login buttons
+        fetch('/api/v1/Account/social-login', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.includes('Password')) {
+                    this.dialog.modalElement.querySelector('#tab-tab2').style.display = '';
+                } else {
+                    this.dialog.modalElement.querySelector('#tab-tab2').style.display = 'none';
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching social login options:', error);
+            });
+
         // populate the previews with the existing profile images
         const response = await fetch("/api/v1.1/UserProfile/" + userProfile.profileId).then(async response => {
             if (!response.ok) {

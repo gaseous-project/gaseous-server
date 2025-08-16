@@ -169,6 +169,7 @@ namespace gaseous_server.Classes
                                 _config.IGDBConfiguration.ClientId = (string)Common.GetEnvVar("igdbclientid", _config.IGDBConfiguration.ClientId);
                                 _config.IGDBConfiguration.Secret = (string)Common.GetEnvVar("igdbclientsecret", _config.IGDBConfiguration.Secret);
 
+                                _config.SocialAuthConfiguration.PasswordLoginEnabled = bool.Parse((string)Common.GetEnvVar("passwordloginenabled", _config.SocialAuthConfiguration.PasswordLoginEnabled.ToString()));
                                 _config.SocialAuthConfiguration.GoogleClientId = (string)Common.GetEnvVar("googleclientid", _config.SocialAuthConfiguration.GoogleClientId);
                                 _config.SocialAuthConfiguration.GoogleClientSecret = (string)Common.GetEnvVar("googleclientsecret", _config.SocialAuthConfiguration.GoogleClientSecret);
                                 _config.SocialAuthConfiguration.MicrosoftClientId = (string)Common.GetEnvVar("microsoftclientid", _config.SocialAuthConfiguration.MicrosoftClientId);
@@ -869,6 +870,28 @@ namespace gaseous_server.Classes
 
             public class SocialAuth
             {
+                private static bool _PasswordLoginEnabled
+                {
+                    get
+                    {
+                        bool returnValue = true; // default to enabled
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("passwordloginenabled")))
+                        {
+                            returnValue = bool.Parse(Environment.GetEnvironmentVariable("passwordloginenabled"));
+                        }
+
+                        // password login can only be disabled if at least one other auth method is enabled
+                        if (!returnValue)
+                        {
+                            if (String.IsNullOrEmpty(_GoogleClientId) && String.IsNullOrEmpty(_MicrosoftClientId) && String.IsNullOrEmpty(_OIDCAuthority))
+                            {
+                                returnValue = true; // force password login to be enabled if no other auth methods are set
+                            }
+                        }
+                        return returnValue;
+                    }
+                }
+
                 private static string _GoogleClientId
                 {
                     get
@@ -973,6 +996,8 @@ namespace gaseous_server.Classes
                         }
                     }
                 }
+
+                public bool PasswordLoginEnabled = _PasswordLoginEnabled;
 
                 public string GoogleClientId = _GoogleClientId;
                 public string GoogleClientSecret = _GoogleClientSecret;

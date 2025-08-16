@@ -52,6 +52,9 @@ fetch('/api/v1/Account/social-login', {
         });
 
         // Show buttons based on the data received
+        if (data.includes('Password')) {
+            document.getElementById('social_login_button_password').style.display = '';
+        }
         if (data.includes('Google')) {
             document.getElementById('social_login_button_google').style.display = 'table-row';
         }

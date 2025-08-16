@@ -42,6 +42,13 @@ namespace gaseous_server.Controllers
         [Route("Login")]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
+            // Disable local password login when turned off
+            if (!Config.SocialAuthConfiguration.PasswordLoginEnabled)
+            {
+                Logging.Log(Logging.LogType.Warning, "Login", $"Password login attempt blocked for {model?.Email ?? "unknown"} from IP: {HttpContext.Connection.RemoteIpAddress}");
+                return NotFound(); // or: return Forbid();
+            }
+
             if (ModelState.IsValid)
             {
                 // This doesn't count login failures towards account lockout
@@ -142,6 +149,11 @@ namespace gaseous_server.Controllers
         [Authorize]
         public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
         {
+            if (!Config.SocialAuthConfiguration.PasswordLoginEnabled)
+            {
+                return Forbid(); // or NotFound();
+            }
+
             if (ModelState.IsValid)
             {
                 var user = await _userManager.GetUserAsync(User);
@@ -224,7 +236,18 @@ namespace gaseous_server.Controllers
                 {
                     return NotFound("User already exists");
                 }
-                var result = await _userManager.CreateAsync(user, model.Password);
+
+                IdentityResult result;
+                if (!Config.SocialAuthConfiguration.PasswordLoginEnabled)
+                {
+                    // Create without a password; user must link an external login
+                    result = await _userManager.CreateAsync(user);
+                }
+                else
+                {
+                    result = await _userManager.CreateAsync(user, model.Password);
+                }
+
                 if (result.Succeeded)
                 {
                     // add new users to the player role
@@ -394,6 +417,11 @@ namespace gaseous_server.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ResetPassword(string UserId, SetPasswordViewModel model)
         {
+            if (!Config.SocialAuthConfiguration.PasswordLoginEnabled)
+            {
+                return Forbid(); // or NotFound();
+            }
+
             if (ModelState.IsValid)
             {
                 // we can reset the users password
@@ -558,7 +586,10 @@ namespace gaseous_server.Controllers
             // This endpoint is used to check if social login is available
             List<string> availableLogins = new List<string>();
 
-            // Check if Google login is configured
+            if (Config.SocialAuthConfiguration.PasswordLoginEnabled)
+            {
+                availableLogins.Add("Password");
+            }
             if (Config.SocialAuthConfiguration.GoogleAuthEnabled)
             {
                 availableLogins.Add("Google");
