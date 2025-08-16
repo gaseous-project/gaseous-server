@@ -1886,31 +1886,55 @@ class SettingsCard {
             name: "General"
         },
         "/server": {
-            name: "Server Settings"
+            name: "Server Settings",
+            roles: [
+                "Admin"
+            ]
         },
         "/datasources": {
-            name: "Data Sources"
+            name: "Data Sources",
+            roles: [
+                "Admin"
+            ]
         },
         "/libraries": {
-            name: "Libraries"
+            name: "Libraries",
+            roles: [
+                "Admin"
+            ]
         },
         "/services": {
             name: "Services"
         },
         "/services/services-configure": {
-            name: "Service Configuration"
+            name: "Service Configuration",
+            roles: [
+                "Admin"
+            ]
         },
         "/users": {
-            name: "Users"
+            name: "Users",
+            roles: [
+                "Admin"
+            ]
         },
         "/users/user-management": {
-            name: "User Management"
+            name: "User Management",
+            roles: [
+                "Admin"
+            ]
         },
         "/platforms": {
-            name: "Platforms"
+            name: "Platforms",
+            roles: [
+                "Admin"
+            ]
         },
         "/firmware": {
-            name: "Firmware"
+            name: "Firmware",
+            roles: [
+                "Admin"
+            ]
         },
         "/about": {
             name: "About"
@@ -1992,6 +2016,19 @@ class SettingsCard {
             }
 
             let key = Object.keys(this.menuItems)[item];
+
+            if (this.menuItems[key].roles) {
+                this.menuItems[key].roles.forEach(role => {
+                    if (!userProfile.roles.includes(role)) {
+                        // user does not have the required role, skip this item
+                        key = null;
+                    }
+                });
+            }
+
+            if (key === null) {
+                continue;
+            }
 
             let menuItem = document.createElement('div');
             menuItem.classList.add('section-body');
@@ -2091,6 +2128,11 @@ class SettingsCard {
                     this.body.querySelector('#system_tasks_config').addEventListener('click', async () => {
                         this.SwitchPage('/services/services-configure');
                     });
+
+                    if (!userProfile.roles.includes('Admin')) {
+                        document.getElementById('system_tasks_config').style.display = 'none';
+                    }
+
                     break;
 
                 case 'services-configure':
@@ -2742,7 +2784,7 @@ class SettingsCard {
                                 break;
 
                             case 'correlationId':
-                                if (task.correlationId) {
+                                if (userProfile.roles && userProfile.roles.includes("Admin") && task.correlationId) {
                                     cell.innerHTML = `<img id="logLink" class="banner_button_image" src="/images/log.svg" onclick="window.location.href='/index.html?page=settings&sub=logs&correlationid=${task.correlationId}'" title="Logs" style="cursor: pointer;">`;
                                 } else {
                                     cell.innerHTML = '';
@@ -2843,12 +2885,17 @@ class SettingsCard {
                             let subState = states[subTask.state] || { text: subTask.state, icon: '' };
                             let subStateIcon = subState.icon ? `<img src='/images/${subState.icon}' class='banner_button_image' style='padding-top: 5px;' title='${subState.text}'>` : '';
 
+                            let subTaskLogLink = '';
+                            if (userProfile.roles && userProfile.roles.includes("Admin") && subTask.correlationId) {
+                                subTaskLogLink = subTask.correlationId ? `<img id="logLink" class="banner_button_image" src="/images/log.svg" onclick="window.location.href='/index.html?page=settings&sub=logs&correlationid=${subTask.correlationId}'" title="Logs" style="cursor: pointer;">` : '';
+                            }
+
                             let subRowData = [
                                 subStateIcon,
                                 subTask.taskName,
                                 subTask.currentStateProgress || '',
                                 subTask.currentStateProgress ? `<progress value="${subTask.currentStateProgress.split(" of ")[0]}" max="${subTask.currentStateProgress.split(" of ")[1]}">${subTask.currentStateProgress}</progress>` : '<progress value="0" max="100"></progress>',
-                                subTask.correlationId ? `<img id="logLink" class="banner_button_image" src="/images/log.svg" onclick="window.location.href='/index.html?page=settings&sub=logs&correlationid=${subTask.correlationId}'" title="Logs" style="cursor: pointer;">` : ''
+                                subTaskLogLink
                             ];
 
                             let subRowBody = document.createElement('tbody');
@@ -3433,8 +3480,9 @@ class SettingsCard {
                     if (userProfile.userId != user.id) {
                         editButton = document.createElement('a');
                         editButton.href = '#';
+                        let thisObject = this;
                         editButton.addEventListener('click', () => {
-                            let userEdit = new UserEdit(user.id, this.GetUsers);
+                            let userEdit = new UserEdit(user.id, async () => { await thisObject.GetUsers(); });
                             userEdit.open();
                         });
                         editButton.classList.add('romlink');

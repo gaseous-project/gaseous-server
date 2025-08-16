@@ -42,6 +42,13 @@ namespace gaseous_server.Controllers
         [Route("Login")]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
+            // Disable local password login when turned off
+            if (!Config.SocialAuthConfiguration.PasswordLoginEnabled)
+            {
+                Logging.Log(Logging.LogType.Warning, "Login", $"Password login attempt blocked for {model?.Email ?? "unknown"} from IP: {HttpContext.Connection.RemoteIpAddress}");
+                return NotFound(); // or: return Forbid();
+            }
+
             if (ModelState.IsValid)
             {
                 // This doesn't count login failures towards account lockout
@@ -142,6 +149,11 @@ namespace gaseous_server.Controllers
         [Authorize]
         public async Task<IActionResult> ChangePassword(ChangePasswordViewModel model)
         {
+            if (!Config.SocialAuthConfiguration.PasswordLoginEnabled)
+            {
+                return Forbid(); // or NotFound();
+            }
+
             if (ModelState.IsValid)
             {
                 var user = await _userManager.GetUserAsync(User);
@@ -224,7 +236,18 @@ namespace gaseous_server.Controllers
                 {
                     return NotFound("User already exists");
                 }
-                var result = await _userManager.CreateAsync(user, model.Password);
+
+                IdentityResult result;
+                if (!Config.SocialAuthConfiguration.PasswordLoginEnabled)
+                {
+                    // Create without a password; user must link an external login
+                    result = await _userManager.CreateAsync(user);
+                }
+                else
+                {
+                    result = await _userManager.CreateAsync(user, model.Password);
+                }
+
                 if (result.Succeeded)
                 {
                     // add new users to the player role
@@ -394,6 +417,11 @@ namespace gaseous_server.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> ResetPassword(string UserId, SetPasswordViewModel model)
         {
+            if (!Config.SocialAuthConfiguration.PasswordLoginEnabled)
+            {
+                return Forbid(); // or NotFound();
+            }
+
             if (ModelState.IsValid)
             {
                 // we can reset the users password
@@ -548,6 +576,262 @@ namespace gaseous_server.Controllers
             userTable.SetAvatar(user, new byte[0]);
 
             return Ok();
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        [Route("social-login")]
+        public IActionResult SocialLoginAvailable()
+        {
+            // This endpoint is used to check if social login is available
+            List<string> availableLogins = new List<string>();
+
+            if (Config.SocialAuthConfiguration.PasswordLoginEnabled)
+            {
+                availableLogins.Add("Password");
+            }
+            if (Config.SocialAuthConfiguration.GoogleAuthEnabled)
+            {
+                availableLogins.Add("Google");
+            }
+            if (Config.SocialAuthConfiguration.MicrosoftAuthEnabled)
+            {
+                availableLogins.Add("Microsoft");
+            }
+            if (Config.SocialAuthConfiguration.OIDCAuthEnabled)
+            {
+                availableLogins.Add("OIDC");
+            }
+
+            return Ok(availableLogins);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        [Route("signin-google")]
+        public IActionResult SignInGoogle(string returnUrl = "/")
+        {
+            var redirectUrl = Url.Action("GoogleResponse", "Account", new { ReturnUrl = returnUrl });
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties("Google", redirectUrl);
+            return Challenge(properties, "Google");
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        [Route("signin-microsoft")]
+        public IActionResult SignInMicrosoft(string returnUrl = "/")
+        {
+            var redirectUrl = Url.Action("MicrosoftResponse", "Account", new { ReturnUrl = returnUrl });
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties("Microsoft", redirectUrl);
+            return Challenge(properties, "Microsoft");
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        [Route("signin-oidc")]
+        public IActionResult SignInOIDC(string returnUrl = "/")
+        {
+            var redirectUrl = Url.Action("OIDCResponse", "Account", new { ReturnUrl = returnUrl });
+            var properties = _signInManager.ConfigureExternalAuthenticationProperties("OIDC", redirectUrl);
+            return Challenge(properties, "OIDC");
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        [Route("GoogleResponse")]
+        public async Task<IActionResult> GoogleResponse(string returnUrl = "/")
+        {
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
+                return RedirectToAction(nameof(Login));
+
+            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: true);
+            if (result.Succeeded)
+            {
+                return LocalRedirect(returnUrl);
+            }
+            else
+            {
+                // Get the email from the external provider
+                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+                if (email == null)
+                {
+                    return Unauthorized();
+                }
+
+                // Try to find an existing user with this email
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user != null)
+                {
+                    // Link the Google login to the existing user
+                    var addLoginResult = await _userManager.AddLoginAsync(user, info);
+                    if (addLoginResult.Succeeded)
+                    {
+                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        return LocalRedirect(returnUrl);
+                    }
+                    else
+                    {
+                        return Unauthorized(addLoginResult.Errors);
+                    }
+                }
+                else
+                {
+                    // No user exists, create a new one
+                    user = new ApplicationUser { UserName = email, Email = email };
+                    var identityResult = await _userManager.CreateAsync(user);
+                    if (identityResult.Succeeded)
+                    {
+                        await _userManager.AddLoginAsync(user, info);
+                        await _userManager.AddToRoleAsync(user, "Player");
+                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        return LocalRedirect(returnUrl);
+                    }
+                    return Unauthorized(identityResult.Errors);
+                }
+            }
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        [Route("MicrosoftResponse")]
+        public async Task<IActionResult> MicrosoftResponse(string returnUrl = "/")
+        {
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
+                return RedirectToAction(nameof(Login));
+
+            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: true);
+            if (result.Succeeded)
+            {
+                return LocalRedirect(returnUrl);
+            }
+            else
+            {
+                // Get the email from the external provider
+                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+                if (email == null)
+                {
+                    return Unauthorized();
+                }
+
+                // Try to find an existing user with this email
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user != null)
+                {
+                    // Link the Microsoft login to the existing user
+                    var addLoginResult = await _userManager.AddLoginAsync(user, info);
+                    if (addLoginResult.Succeeded)
+                    {
+                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        return LocalRedirect(returnUrl);
+                    }
+                    else
+                    {
+                        return Unauthorized(addLoginResult.Errors);
+                    }
+                }
+                else
+                {
+                    // No user exists, create a new one
+                    user = new ApplicationUser { UserName = email, Email = email };
+                    var identityResult = await _userManager.CreateAsync(user);
+                    if (identityResult.Succeeded)
+                    {
+                        await _userManager.AddLoginAsync(user, info);
+                        await _userManager.AddToRoleAsync(user, "Player");
+                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        return LocalRedirect(returnUrl);
+                    }
+                    return Unauthorized(identityResult.Errors);
+                }
+            }
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        [Route("OIDCResponse")]
+        public async Task<IActionResult> OIDCResponse(string returnUrl = "/")
+        {
+            var info = await _signInManager.GetExternalLoginInfoAsync();
+            if (info == null)
+                return RedirectToAction(nameof(Login));
+
+            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: true);
+            if (result.Succeeded)
+            {
+                return LocalRedirect(returnUrl);
+            }
+            else
+            {
+                // Get the email from the external provider
+                var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+                if (email == null)
+                {
+                    return Unauthorized();
+                }
+
+                // Try to find an existing user with this email
+                var user = await _userManager.FindByEmailAsync(email);
+                if (user != null)
+                {
+                    // Link the OIDC login to the existing user
+                    var addLoginResult = await _userManager.AddLoginAsync(user, info);
+                    if (addLoginResult.Succeeded)
+                    {
+                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        return LocalRedirect(returnUrl);
+                    }
+                    else
+                    {
+                        return Unauthorized(addLoginResult.Errors);
+                    }
+                }
+                else
+                {
+                    // No user exists, create a new one
+                    user = new ApplicationUser { UserName = email, Email = email };
+                    var identityResult = await _userManager.CreateAsync(user);
+                    if (identityResult.Succeeded)
+                    {
+                        await _userManager.AddLoginAsync(user, info);
+                        await _userManager.AddToRoleAsync(user, "Player");
+                        await _signInManager.SignInAsync(user, isPersistent: false);
+                        return LocalRedirect(returnUrl);
+                    }
+                    return Unauthorized(identityResult.Errors);
+                }
+            }
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        [Route("signout-oidc")]
+        public async Task<IActionResult> SignOutOIDC(string returnUrl = "/")
+        {
+            await _signInManager.SignOutAsync();
+            Logging.Log(Logging.LogType.Information, "Login", "User has signed out via OIDC.");
+            return LocalRedirect(returnUrl);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        [Route("signout-google")]
+        public async Task<IActionResult> SignOutGoogle(string returnUrl = "/")
+        {
+            await _signInManager.SignOutAsync();
+            Logging.Log(Logging.LogType.Information, "Login", "User has signed out via Google.");
+            return LocalRedirect(returnUrl);
+        }
+
+        [HttpGet]
+        [AllowAnonymous]
+        [Route("signout-microsoft")]
+        public async Task<IActionResult> SignOutMicrosoft(string returnUrl = "/")
+        {
+            await _signInManager.SignOutAsync();
+            Logging.Log(Logging.LogType.Information, "Login", "User has signed out via Microsoft.");
+            return LocalRedirect(returnUrl);
         }
     }
 }

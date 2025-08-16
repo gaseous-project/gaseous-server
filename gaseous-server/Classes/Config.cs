@@ -74,6 +74,14 @@ namespace gaseous_server.Classes
             }
         }
 
+        public static ConfigFile.SocialAuth SocialAuthConfiguration
+        {
+            get
+            {
+                return _config.SocialAuthConfiguration;
+            }
+        }
+
         public static string LogPath
         {
             get
@@ -152,12 +160,23 @@ namespace gaseous_server.Classes
                                 _config.DatabaseConfiguration.Password = (string)Common.GetEnvVar("dbpass", _config.DatabaseConfiguration.Password);
                                 _config.DatabaseConfiguration.DatabaseName = (string)Common.GetEnvVar("dbname", _config.DatabaseConfiguration.DatabaseName);
                                 _config.DatabaseConfiguration.Port = int.Parse((string)Common.GetEnvVar("dbport", _config.DatabaseConfiguration.Port.ToString()));
+
                                 _config.MetadataConfiguration.DefaultMetadataSource = (FileSignature.MetadataSources)Enum.Parse(typeof(FileSignature.MetadataSources), (string)Common.GetEnvVar("metadatasource", _config.MetadataConfiguration.DefaultMetadataSource.ToString()));
                                 _config.IGDBConfiguration.UseHasheousProxy = bool.Parse((string)Common.GetEnvVar("metadatausehasheousproxy", _config.IGDBConfiguration.UseHasheousProxy.ToString()));
                                 _config.MetadataConfiguration.SignatureSource = (HasheousClient.Models.MetadataModel.SignatureSources)Enum.Parse(typeof(HasheousClient.Models.MetadataModel.SignatureSources), (string)Common.GetEnvVar("signaturesource", _config.MetadataConfiguration.SignatureSource.ToString())); ;
                                 _config.MetadataConfiguration.HasheousHost = (string)Common.GetEnvVar("hasheoushost", _config.MetadataConfiguration.HasheousHost);
+
                                 _config.IGDBConfiguration.ClientId = (string)Common.GetEnvVar("igdbclientid", _config.IGDBConfiguration.ClientId);
                                 _config.IGDBConfiguration.Secret = (string)Common.GetEnvVar("igdbclientsecret", _config.IGDBConfiguration.Secret);
+
+                                _config.SocialAuthConfiguration.PasswordLoginEnabled = bool.Parse((string)Common.GetEnvVar("passwordloginenabled", _config.SocialAuthConfiguration.PasswordLoginEnabled.ToString()));
+                                _config.SocialAuthConfiguration.GoogleClientId = (string)Common.GetEnvVar("googleclientid", _config.SocialAuthConfiguration.GoogleClientId);
+                                _config.SocialAuthConfiguration.GoogleClientSecret = (string)Common.GetEnvVar("googleclientsecret", _config.SocialAuthConfiguration.GoogleClientSecret);
+                                _config.SocialAuthConfiguration.MicrosoftClientId = (string)Common.GetEnvVar("microsoftclientid", _config.SocialAuthConfiguration.MicrosoftClientId);
+                                _config.SocialAuthConfiguration.MicrosoftClientSecret = (string)Common.GetEnvVar("microsoftclientsecret", _config.SocialAuthConfiguration.MicrosoftClientSecret);
+                                _config.SocialAuthConfiguration.OIDCAuthority = (string)Common.GetEnvVar("oidcauthority", _config.SocialAuthConfiguration.OIDCAuthority);
+                                _config.SocialAuthConfiguration.OIDCClientId = (string)Common.GetEnvVar("oidcclientid", _config.SocialAuthConfiguration.OIDCClientId);
+                                _config.SocialAuthConfiguration.OIDCClientSecret = (string)Common.GetEnvVar("oidcclientsecret", _config.SocialAuthConfiguration.OIDCClientSecret);
                             }
                         }
                     }
@@ -439,6 +458,8 @@ namespace gaseous_server.Classes
             public MetadataAPI MetadataConfiguration = new MetadataAPI();
 
             public IGDB IGDBConfiguration = new IGDB();
+
+            public SocialAuth SocialAuthConfiguration = new SocialAuth();
 
             public Logging LoggingConfiguration = new Logging();
 
@@ -845,6 +866,175 @@ namespace gaseous_server.Classes
                 public int LogRetention = 7;
 
                 public bool AlwaysLogToDisk = false;
+            }
+
+            public class SocialAuth
+            {
+                private static bool _PasswordLoginEnabled
+                {
+                    get
+                    {
+                        bool returnValue = true; // default to enabled
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("passwordloginenabled")))
+                        {
+                            returnValue = bool.Parse(Environment.GetEnvironmentVariable("passwordloginenabled"));
+                        }
+
+                        // password login can only be disabled if at least one other auth method is enabled
+                        if (!returnValue)
+                        {
+                            if (String.IsNullOrEmpty(_GoogleClientId) && String.IsNullOrEmpty(_MicrosoftClientId) && String.IsNullOrEmpty(_OIDCAuthority))
+                            {
+                                returnValue = true; // force password login to be enabled if no other auth methods are set
+                            }
+                        }
+                        return returnValue;
+                    }
+                }
+
+                private static string _GoogleClientId
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("googleclientid")))
+                        {
+                            return Environment.GetEnvironmentVariable("googleclientid");
+                        }
+                        else
+                        {
+                            return "";
+                        }
+                    }
+                }
+
+                private static string _GoogleClientSecret
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("googleclientsecret")))
+                        {
+                            return Environment.GetEnvironmentVariable("googleclientsecret");
+                        }
+                        else
+                        {
+                            return "";
+                        }
+                    }
+                }
+
+                private static string _MicrosoftClientId
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("microsoftclientid")))
+                        {
+                            return Environment.GetEnvironmentVariable("microsoftclientid");
+                        }
+                        else
+                        {
+                            return "";
+                        }
+                    }
+                }
+
+                private static string _MicrosoftClientSecret
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("microsoftclientsecret")))
+                        {
+                            return Environment.GetEnvironmentVariable("microsoftclientsecret");
+                        }
+                        else
+                        {
+                            return "";
+                        }
+                    }
+                }
+
+                private static string _OIDCAuthority
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("oidcauthority")))
+                        {
+                            return Environment.GetEnvironmentVariable("oidcauthority");
+                        }
+                        else
+                        {
+                            return "";
+                        }
+                    }
+                }
+
+                public static string _OIDCClientId
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("oidcclientid")))
+                        {
+                            return Environment.GetEnvironmentVariable("oidcclientid");
+                        }
+                        else
+                        {
+                            return "";
+                        }
+                    }
+                }
+
+                public static string _OIDCClientSecret
+                {
+                    get
+                    {
+                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("oidcclientsecret")))
+                        {
+                            return Environment.GetEnvironmentVariable("oidcclientsecret");
+                        }
+                        else
+                        {
+                            return "";
+                        }
+                    }
+                }
+
+                public bool PasswordLoginEnabled = _PasswordLoginEnabled;
+
+                public string GoogleClientId = _GoogleClientId;
+                public string GoogleClientSecret = _GoogleClientSecret;
+
+                public string MicrosoftClientId = _MicrosoftClientId;
+                public string MicrosoftClientSecret = _MicrosoftClientSecret;
+
+                public string OIDCAuthority = _OIDCAuthority;
+                public string OIDCClientId = _OIDCClientId;
+                public string OIDCClientSecret = _OIDCClientSecret;
+
+                [JsonIgnore]
+                public bool GoogleAuthEnabled
+                {
+                    get
+                    {
+                        return !String.IsNullOrEmpty(GoogleClientId) && !String.IsNullOrEmpty(GoogleClientSecret);
+                    }
+                }
+
+                [JsonIgnore]
+                public bool MicrosoftAuthEnabled
+                {
+                    get
+                    {
+                        return !String.IsNullOrEmpty(MicrosoftClientId) && !String.IsNullOrEmpty(MicrosoftClientSecret);
+                    }
+                }
+
+                [JsonIgnore]
+                public bool OIDCAuthEnabled
+                {
+                    get
+                    {
+                        return !String.IsNullOrEmpty(OIDCAuthority) && !String.IsNullOrEmpty(OIDCClientId) && !String.IsNullOrEmpty(OIDCClientSecret);
+                    }
+                }
             }
         }
     }
