@@ -111,10 +111,14 @@ namespace Authentication
         /// </summary>
         /// <param name="normalizedUserName">User's name</param>
         /// <returns></returns>
-        public List<TUser> GetUserByName(string normalizedUserName)
+        public List<TUser> GetUserByName(string normalizedUserName, bool searchAsEmail)
         {
             List<TUser> users = new List<TUser>();
             string commandText = "Select * from Users LEFT JOIN (SELECT Id As ProfileId, UserId FROM UserProfiles) UserProfiles ON Users.Id = UserProfiles.UserId where NormalizedEmail = @name";
+            if (!searchAsEmail)
+            {
+                commandText = "Select * from Users LEFT JOIN (SELECT Id As ProfileId, UserId FROM UserProfiles) UserProfiles ON Users.Id = UserProfiles.UserId where NormalizedUserName = @name";
+            }
             Dictionary<string, object> parameters = new Dictionary<string, object>() { { "@name", normalizedUserName } };
 
             var rows = _database.ExecuteCMDDict(commandText, parameters);
@@ -180,7 +184,7 @@ namespace Authentication
 
         public TUser GetUserByEmail(string email)
         {
-            List<TUser> users = GetUserByName(email);
+            List<TUser> users = GetUserByName(email, true);
             if (users.Count == 0)
             {
                 return null;

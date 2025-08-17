@@ -39,7 +39,27 @@
     </div>
 </div>
 
-<div id="tab2" name="modalTab" data-tabname="Password">
+<div id="tab2" name="modalTab" data-tabname="Account">
+    <div class="section">
+        <div class="section-header">Username</div>
+        <div class="section-body">
+            <div class="account-modal-tab1">
+                <div style="flex-grow:1">
+                    <div>Current Username</div>
+                    <input type="text" id="current-username" name="current-username" style="width: 95%;"
+                        class="inputWithVerticalLabel" readonly />
+                    <div>New Username</div>
+                    <input type="text" id="new-username" name="username" style="width: 95%;"
+                        class="inputWithVerticalLabel" />
+                </div>
+                <div style="flex-grow:1">
+                    <p>Username requirements:</p>
+                    <div id="username-error"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="section">
         <div class="section-header">Change Password</div>
         <div class="section-body">

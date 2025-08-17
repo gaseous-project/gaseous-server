@@ -136,6 +136,12 @@ class AccountWindow {
             }
         });
 
+        // set up the user name form
+        this.username_current = this.dialog.modalElement.querySelector('#current-username');
+        this.username_current.value = userProfile.userName;
+        this.username_new = this.dialog.modalElement.querySelector('#new-username');
+        this.UsernameCheck = new UsernameCheck(this.username_new, this.dialog.modalElement.querySelector('#username-error'));
+
         // set up the password change form
         this.password_current = this.dialog.modalElement.querySelector('#current-password');
         this.password_new = this.dialog.modalElement.querySelector('#new-password');
@@ -145,6 +151,50 @@ class AccountWindow {
 
         // create the ok button
         let okButton = new ModalButton("OK", 1, this, async function (callingObject) {
+            // check if a new username has been entered
+            if (callingObject.username_new.value.length > 0 && callingObject.username_new.value !== userProfile.userName) {
+                // assume user wants to change their username
+                // check if the new username meets the rules
+                if (!UsernameCheck.CheckUsername(callingObject.UsernameCheck, callingObject.username_new)) {
+                    // display an error
+                    let warningDialog = new MessageBox("Username Change Error", "The new username does not meet the requirements.");
+                    warningDialog.open();
+                    return;
+                }
+
+                // requirements met, change the username
+                let model = {
+                    newUserName: callingObject.username_new.value
+                };
+                let changeSuccessfull = false;
+                await fetch("/api/v1.1/Account/ChangeUsername", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(model)
+                }).then(async response => {
+                    if (!response.ok) {
+                        // handle the error
+                        console.error("Error updating username:");
+                        console.error(response);
+                        let warningDialog = new MessageBox("Username Change Error", "The username change failed. Try a different username.");
+                        warningDialog.open();
+                        changeSuccessfull = false;
+                        return;
+                    } else {
+                        // clear the username field
+                        callingObject.username_new.value = "";
+                        callingObject.username_current.value = model.newUserName;
+                        userProfile.userName = model.newUserName;
+                        changeSuccessfull = true;
+                    }
+                });
+                if (changeSuccessfull == false) {
+                    return;
+                }
+            }
+
             // check if a current password has been entered
             if (callingObject.password_current.value.length > 0) {
                 // assume user wants to change their password
@@ -589,6 +639,97 @@ class EmailCheck {
         }
 
         return emailMeetsRules;
+    }
+}
+
+class UsernameCheck {
+    constructor(UsernameElement, ErrorElement) {
+        this.UsernameElement = UsernameElement;
+        this.ErrorElement = ErrorElement;
+
+        let CallingObject = this;
+
+        this.UsernameElement.addEventListener('input', function (event) {
+            UsernameCheck.CheckUsername(CallingObject, UsernameElement);
+        });
+
+        this.DisplayRules(ErrorElement);
+    }
+
+    DisplayRules(ErrorElement) {
+        this.errorList = document.createElement('ul');
+        this.errorList.className = 'password-rules';
+
+        this.listItemLength = document.createElement('li');
+        this.listItemLength.innerHTML = "Between 3 and 30 characters";
+        this.listItemLength.classList.add('listitem');
+        this.errorList.appendChild(this.listItemLength);
+
+        this.listItemCharacters = document.createElement('li');
+        this.listItemCharacters.innerHTML = "Only letters, numbers, underscores, dashes, periods, and at signs";
+        this.listItemCharacters.classList.add('listitem');
+        this.errorList.appendChild(this.listItemCharacters);
+
+        this.listItemUnique = document.createElement('li');
+        this.listItemUnique.innerHTML = "Username is unique";
+        this.listItemUnique.classList.add('listitem');
+        this.errorList.appendChild(this.listItemUnique);
+
+        ErrorElement.innerHTML = "";
+        ErrorElement.appendChild(this.errorList);
+
+        UsernameCheck.CheckUsername(this, this.UsernameElement);
+    }
+
+    static async CheckUsername(CallingObject, UsernameElement) {
+        let usernameMeetsRules = true;
+
+        // check username length
+        if (UsernameElement.value.length >= 3 && UsernameElement.value.length <= 30) {
+            CallingObject.listItemLength.classList.add('listitem-green');
+            CallingObject.listItemLength.classList.remove('listitem-red');
+        } else {
+            CallingObject.listItemLength.classList.add('listitem-red');
+            CallingObject.listItemLength.classList.remove('listitem-green');
+            usernameMeetsRules = false;
+        }
+
+        // check if username contains only valid characters
+        if (UsernameElement.value.match(/^[a-zA-Z0-9_.@-]+$/)) {
+            CallingObject.listItemCharacters.classList.add('listitem-green');
+            CallingObject.listItemCharacters.classList.remove('listitem-red');
+        } else {
+            CallingObject.listItemCharacters.classList.add('listitem-red');
+            CallingObject.listItemCharacters.classList.remove('listitem-green');
+            usernameMeetsRules = false;
+        }
+
+        // check if username is unique
+        await fetch("/api/v1.1/Account/Users/Test?Email=" + UsernameElement.value, {
+            method: 'GET'
+        }).then(async response => {
+            if (!await response.ok) {
+                // handle the error
+                console.error("Error checking username uniqueness:");
+                console.error(response);
+                CallingObject.listItemUnique.classList.add('listitem-red');
+                CallingObject.listItemUnique.classList.remove('listitem-green');
+                usernameMeetsRules = false;
+            } else {
+                let responseJson = await response.json();
+                if (responseJson === false) {
+                    CallingObject.listItemUnique.classList.add('listitem-green');
+                    CallingObject.listItemUnique.classList.remove('listitem-red');
+                    usernameMeetsRules = true;
+                } else {
+                    CallingObject.listItemUnique.classList.add('listitem-red');
+                    CallingObject.listItemUnique.classList.remove('listitem-green');
+                    usernameMeetsRules = false;
+                }
+            }
+        });
+
+        return usernameMeetsRules;
     }
 }
 

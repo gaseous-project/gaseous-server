@@ -206,7 +206,7 @@ namespace Authentication
                 throw new ArgumentException("Null or empty argument: normalizedUserName");
             }
 
-            List<ApplicationUser> result = userTable.GetUserByName(normalizedUserName) as List<ApplicationUser>;
+            List<ApplicationUser> result = userTable.GetUserByName(normalizedUserName, false) as List<ApplicationUser>;
 
             // Should I throw if > 1 user?
             if (result != null && result.Count == 1)

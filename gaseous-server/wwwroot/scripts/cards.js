@@ -3408,6 +3408,7 @@ class SettingsCard {
             }
         }).then(response => response.json())
             .then((result) => {
+                console.log(result);
                 let newTable = document.createElement('table');
                 newTable.className = 'romtable';
                 newTable.style.width = '100%';
@@ -3423,7 +3424,7 @@ class SettingsCard {
 
                 let headerCell2 = document.createElement('th');
                 headerCell2.classList.add('romcell');
-                headerCell2.innerHTML = 'Email';
+                headerCell2.innerHTML = 'User name';
                 headerRow.appendChild(headerCell2);
 
                 let headerCell3 = document.createElement('th');
@@ -3544,7 +3545,11 @@ class SettingsCard {
 
                     let userEmailCell = document.createElement('td');
                     userEmailCell.classList.add('romcell');
-                    userEmailCell.innerHTML = user.emailAddress;
+                    if (user.userName !== null && user.userName.length > 0 && user.userName !== user.emailAddress) {
+                        userEmailCell.innerHTML = user.userName;
+                    } else {
+                        userEmailCell.innerHTML = user.emailAddress;
+                    }
                     userRow.appendChild(userEmailCell);
 
                     let userRoleCell = document.createElement('td');
