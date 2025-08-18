@@ -51,7 +51,7 @@ namespace gaseous_server
                 DataRow row = data.Rows[0];
                 LibraryItem library = new LibraryItem((int)row["Id"], (string)row["Name"], (string)row["Path"], (long)row["DefaultPlatform"], Convert.ToBoolean((int)row["DefaultLibrary"]));
 
-                if (!Directory.Exists(library.Path))
+                if (!Directory.Exists(library.Path) && !(File.Exists(library.Path) && new FileInfo(library.Path).Attributes.HasFlag(FileAttributes.ReparsePoint)))
                 {
                     Directory.CreateDirectory(library.Path);
                 }
@@ -90,7 +90,7 @@ namespace gaseous_server
                 if (library.IsDefaultLibrary == true)
                 {
                     // check directory exists
-                    if (!Directory.Exists(library.Path))
+                    if (!Directory.Exists(library.Path) && !(File.Exists(library.Path) && new FileInfo(library.Path).Attributes.HasFlag(FileAttributes.ReparsePoint)))
                     {
                         Directory.CreateDirectory(library.Path);
                     }
@@ -222,9 +222,12 @@ namespace gaseous_server
                 _DefaultPlatformId = DefaultPlatformId;
                 _IsDefaultLibrary = IsDefaultLibrary;
 
-                if (!Directory.Exists(Path))
+                if (_IsDefaultLibrary)
                 {
-                    Directory.CreateDirectory(Path);
+                    if (!Directory.Exists(Path) && !(File.Exists(Path) && new FileInfo(Path).Attributes.HasFlag(FileAttributes.ReparsePoint)))
+                    {
+                        Directory.CreateDirectory(Path);
+                    }
                 }
             }
 
