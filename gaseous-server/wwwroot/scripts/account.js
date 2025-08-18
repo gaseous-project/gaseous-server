@@ -302,7 +302,7 @@ class AccountWindow {
                 // Build otpauth URL for TOTP
                 const issuerRaw = (document.title && document.title.trim().length > 0) ? document.title.trim() : window.location.host;
                 const issuerEnc = encodeURIComponent(issuerRaw);
-                let accountRaw = (window.userProfile && (userProfile.email || userProfile.userName)) || "";
+                let accountRaw = (userProfile && (userProfile.email || userProfile.userName)) || "";
                 if (!accountRaw || accountRaw.trim().length === 0) {
                     accountRaw = "user";
                 }
