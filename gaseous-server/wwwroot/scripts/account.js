@@ -938,7 +938,7 @@ class UsernameCheck {
             await fetch("/api/v1.1/Account/Users/Test?Email=" + UsernameElement.value, {
                 method: 'GET'
             }).then(async response => {
-                if (!await response.ok) {
+                if (!response.ok) {
                     // handle the error
                     console.error("Error checking username uniqueness:");
                     console.error(response);
@@ -950,7 +950,6 @@ class UsernameCheck {
                     if (responseJson === false) {
                         CallingObject.listItemUnique.classList.add('listitem-green');
                         CallingObject.listItemUnique.classList.remove('listitem-red');
-                        usernameMeetsRules = true;
                     } else {
                         CallingObject.listItemUnique.classList.add('listitem-red');
                         CallingObject.listItemUnique.classList.remove('listitem-green');
