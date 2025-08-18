@@ -12,3 +12,5 @@ CREATE TABLE IF NOT EXISTS `UserRecoveryCodes` (
     PRIMARY KEY (`UserId`, `CodeHash`),
     CONSTRAINT `FK_UserRecoveryCodes_Users` FOREIGN KEY (`UserId`) REFERENCES `Users` (`Id`) ON DELETE CASCADE ON UPDATE NO ACTION
 );
+
+ALTER TABLE `Users` ADD UNIQUE (`Email`), ADD UNIQUE (`UserName`);
