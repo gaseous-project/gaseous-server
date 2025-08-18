@@ -3408,7 +3408,6 @@ class SettingsCard {
             }
         }).then(response => response.json())
             .then((result) => {
-                console.log(result);
                 let newTable = document.createElement('table');
                 newTable.className = 'romtable';
                 newTable.style.width = '100%';
