@@ -2,6 +2,25 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "prepare-web",
+            "dependsOn": [
+                "kill-gaseous-server",
+                "build"
+            ],
+            "dependsOrder": "sequence",
+            "problemMatcher": []
+        },
+        {
+            "label": "kill-gaseous-server",
+            "type": "shell",
+            "command": "bash",
+            "args": [
+                "-lc",
+                "chmod +x ${workspaceFolder}/build/scripts/kill-gaseous-server.sh && ${workspaceFolder}/build/scripts/kill-gaseous-server.sh"
+            ],
+            "problemMatcher": []
+        },
+        {
             "label": "build",
             "command": "dotnet",
             "type": "process",

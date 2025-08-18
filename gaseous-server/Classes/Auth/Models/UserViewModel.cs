@@ -3,6 +3,7 @@ namespace Authentication
     public class UserViewModel
     {
         public string Id { get; set; }
+        public string UserName { get; set; }
         public string EmailAddress { get; set; }
         public bool LockoutEnabled { get; set; }
         public DateTimeOffset? LockoutEnd { get; set; }

@@ -37,6 +37,7 @@ services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
         })
     .AddUserStore<UserStore>()
     .AddRoleStore<RoleStore>()
+    .AddDefaultTokenProviders()
     ;
 services.AddScoped<UserStore>();
 services.AddScoped<RoleStore>();
@@ -56,6 +57,7 @@ if (cmdArgs.Length == 1)
     Console.WriteLine("Usage: gaseous-cli [command] [options]");
     Console.WriteLine("Commands:");
     Console.WriteLine("  user [command] [options] - Manage users");
+    Console.WriteLine("    2fa [subcommand] - 2FA operations: resetkey|getkey|enable|genrc|countrc|redeem");
     Console.WriteLine("  role [command] [options] - Manage roles");
     // Console.WriteLine("  backup [command] [options] - Manage backups");
     // Console.WriteLine("  restore [command] [options] - Restore backups");
@@ -71,6 +73,7 @@ if (cmdArgs[1] == "help")
     Console.WriteLine("Usage: gaseous-cli [command] [options]");
     Console.WriteLine("Commands:");
     Console.WriteLine("  user [command] [options] - Manage users");
+    Console.WriteLine("    2fa [subcommand] - 2FA operations: resetkey|getkey|enable|genrc|countrc|redeem");
     Console.WriteLine("  role [command] [options] - Manage roles");
     // Console.WriteLine("  backup [command] [options] - Manage backups");
     // Console.WriteLine("  restore [command] [options] - Restore backups");
@@ -92,6 +95,7 @@ if (cmdArgs[1] == "user")
         Console.WriteLine("  delete [username] - Delete a user");
         Console.WriteLine("  resetpassword [username] [password] - Reset a user's password");
         Console.WriteLine("  list - List all users");
+        Console.WriteLine("  2fa [subcommand] - Manage 2FA (resetkey|getkey|enable|genrc|countrc|redeem)");
         return;
     }
 
@@ -135,6 +139,99 @@ if (cmdArgs[1] == "user")
         Console.WriteLine("User created successfully with default role: Player");
 
         return;
+    }
+
+    // 2FA subcommands
+    if (cmdArgs[2] == "2fa")
+    {
+        // help
+        if (cmdArgs.Length < 4)
+        {
+            Console.WriteLine("2FA Management");
+            Console.WriteLine("Usage: gaseous-cli user 2fa [subcommand] [args]");
+            Console.WriteLine("Subcommands:");
+            Console.WriteLine("  enable [username] [true|false] - Enable/disable 2FA flag");
+            Console.WriteLine("  resetkey [username] - Reset authenticator key and print it");
+            Console.WriteLine("  getkey [username] - Display current authenticator key");
+            Console.WriteLine("  genrc [username] [count] - Generate new recovery codes and print them");
+            Console.WriteLine("  countrc [username] - Count remaining recovery codes");
+            Console.WriteLine("  redeem [username] [code] - Redeem a recovery code");
+            return;
+        }
+
+        var sub = cmdArgs[3].ToLowerInvariant();
+        UserTable<ApplicationUser> userTable = new UserTable<ApplicationUser>(db);
+        ApplicationUser user = userTable.GetUserByEmail(cmdArgs.Length > 4 ? cmdArgs[4] : "");
+        if (user == null)
+        {
+            Console.WriteLine("Error: User not found");
+            return;
+        }
+
+        if (sub == "enable")
+        {
+            if (cmdArgs.Length < 6)
+            {
+                Console.WriteLine("Error: Please provide true or false");
+                return;
+            }
+            bool enabled = bool.Parse(cmdArgs[5]);
+            await userManager.SetTwoFactorEnabledAsync(user, enabled);
+            Console.WriteLine($"TwoFactorEnabled set to {enabled}");
+            return;
+        }
+        else if (sub == "resetkey")
+        {
+            await userManager.ResetAuthenticatorKeyAsync(user);
+            var key = await userManager.GetAuthenticatorKeyAsync(user);
+            Console.WriteLine($"New Authenticator Key: {key}");
+            return;
+        }
+        else if (sub == "getkey")
+        {
+            var key = await userManager.GetAuthenticatorKeyAsync(user);
+            Console.WriteLine(key == null ? "(no key)" : key);
+            return;
+        }
+        else if (sub == "genrc")
+        {
+            int count = 5;
+            if (cmdArgs.Length >= 6) int.TryParse(cmdArgs[5], out count);
+            var codes = await userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, count);
+            Console.WriteLine("Generated recovery codes:");
+            foreach (var c in codes)
+            {
+                Console.WriteLine(c);
+            }
+            var remaining = await userManager.CountRecoveryCodesAsync(user);
+            Console.WriteLine($"Remaining code count: {remaining}");
+            return;
+        }
+        else if (sub == "countrc")
+        {
+            var remaining = await userManager.CountRecoveryCodesAsync(user);
+            Console.WriteLine(remaining);
+            return;
+        }
+        else if (sub == "redeem")
+        {
+            if (cmdArgs.Length < 6)
+            {
+                Console.WriteLine("Error: Please provide a recovery code to redeem");
+                return;
+            }
+            var code = cmdArgs[5];
+            var result = await userManager.RedeemTwoFactorRecoveryCodeAsync(user, code);
+            Console.WriteLine(result.Succeeded ? "Redeemed" : "Failed to redeem");
+            var remaining = await userManager.CountRecoveryCodesAsync(user);
+            Console.WriteLine($"Remaining code count: {remaining}");
+            return;
+        }
+        else
+        {
+            Console.WriteLine("Error: Unknown 2fa subcommand");
+            return;
+        }
     }
 
     // check if the user has entered the delete command

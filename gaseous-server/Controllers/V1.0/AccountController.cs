@@ -51,32 +51,111 @@ namespace gaseous_server.Controllers
 
             if (ModelState.IsValid)
             {
+                // Allow login with either username or email
+                var input = model.Email?.Trim();
+                if (string.IsNullOrWhiteSpace(input))
+                {
+                    Logging.Log(Logging.LogType.Warning, "Login", $"Empty username/email provided from IP: {HttpContext.Connection.RemoteIpAddress}");
+                    return Unauthorized();
+                }
+
+                // Resolve user by email first (if input looks like an email), then by username
+                ApplicationUser? user = null;
+                if (input.Contains('@'))
+                {
+                    user = await _userManager.FindByEmailAsync(input);
+                }
+                if (user == null)
+                {
+                    user = await _userManager.FindByNameAsync(input);
+                }
+
+                if (user == null)
+                {
+                    Logging.Log(Logging.LogType.Warning, "Login", $"Login failed for unknown user '{input}' from IP: {HttpContext.Connection.RemoteIpAddress}");
+                    return Unauthorized();
+                }
+
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: false);
+                var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, model.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
-                    Logging.Log(Logging.LogType.Information, "Login", model.Email + " has logged in, from IP: " + HttpContext.Connection.RemoteIpAddress?.ToString());
-                    return Ok(result.ToString());
+                    Logging.Log(Logging.LogType.Information, "Login", $"{user.UserName} has logged in, from IP: {HttpContext.Connection.RemoteIpAddress}");
+                    return Ok(new { success = true });
                 }
-                // if (result.RequiresTwoFactor)
-                // {
-                //     return RedirectToAction(nameof(SendCode), new { ReturnUrl = returnUrl, RememberMe = model.RememberMe });
-                // }
+                if (result.RequiresTwoFactor)
+                {
+                    // Return a hint to the client to prompt for 2FA code
+                    Logging.Log(Logging.LogType.Information, "Login", $"{user.UserName} requires two-factor authentication. IP: {HttpContext.Connection.RemoteIpAddress}");
+                    return Ok(new { requiresTwoFactor = true, rememberMe = model.RememberMe });
+                }
                 if (result.IsLockedOut)
                 {
-                    Logging.Log(Logging.LogType.Warning, "Login", model.Email + " was unable to login due to a locked account. Login attempt from IP: " + HttpContext.Connection.RemoteIpAddress?.ToString());
+                    Logging.Log(Logging.LogType.Warning, "Login", $"{user.UserName} was unable to login due to a locked account. Login attempt from IP: {HttpContext.Connection.RemoteIpAddress}");
                     return Unauthorized();
                 }
                 else
                 {
-                    Logging.Log(Logging.LogType.Critical, "Login", "An unknown error occurred during login by " + model.Email + ". Login attempt from IP: " + HttpContext.Connection.RemoteIpAddress?.ToString());
+                    Logging.Log(Logging.LogType.Critical, "Login", $"An unknown error occurred during login by {user.UserName}. Login attempt from IP: {HttpContext.Connection.RemoteIpAddress}");
                     return Unauthorized();
                 }
             }
 
             // If we got this far, something failed, redisplay form
-            Logging.Log(Logging.LogType.Critical, "Login", "An unknown error occurred during login by " + model.Email + ". Login attempt from IP: " + HttpContext.Connection.RemoteIpAddress?.ToString());
+            Logging.Log(Logging.LogType.Critical, "Login", $"An unknown error occurred during login. Login attempt from IP: {HttpContext.Connection.RemoteIpAddress}");
+            return Unauthorized();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [Route("Login2FA")]
+        public async Task<IActionResult> LoginTwoFactor(TwoFactorVerifyViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
+            // Normalize code (remove spaces/hyphens)
+            var code = model.Code.Replace(" ", string.Empty).Replace("-", string.Empty);
+
+            var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(code, model.RememberMe, model.RememberMachine);
+            if (result.Succeeded)
+            {
+                return Ok(new { success = true });
+            }
+            if (result.IsLockedOut)
+            {
+                Logging.Log(Logging.LogType.Warning, "Login", $"Two-factor lockout triggered for IP: {HttpContext.Connection.RemoteIpAddress}");
+                return Unauthorized();
+            }
+
+            return Unauthorized();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        [Route("LoginRecoveryCode")]
+        public async Task<IActionResult> LoginWithRecoveryCode(TwoFactorRecoveryViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
+            var code = model.RecoveryCode.Replace(" ", string.Empty);
+            var result = await _signInManager.TwoFactorRecoveryCodeSignInAsync(code);
+            if (result.Succeeded)
+            {
+                return Ok(new { success = true });
+            }
+            if (result.IsLockedOut)
+            {
+                Logging.Log(Logging.LogType.Warning, "Login", $"Recovery code sign-in lockout for IP: {HttpContext.Connection.RemoteIpAddress}");
+                return Unauthorized();
+            }
+
             return Unauthorized();
         }
 
@@ -185,6 +264,56 @@ namespace gaseous_server.Controllers
             return NotFound();
         }
 
+        [HttpPost]
+        [Route("ChangeUsername")]
+        [Authorize]
+        public async Task<IActionResult> ChangeUsername(ChangeUsernameViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            var desired = model.NewUserName?.Trim();
+            if (string.IsNullOrWhiteSpace(desired))
+            {
+                return BadRequest("Username cannot be empty.");
+            }
+
+            // If same username (case-insensitive), no change needed
+            if (string.Equals(user.UserName, desired, StringComparison.OrdinalIgnoreCase))
+            {
+                return Ok();
+            }
+
+            // Ensure uniqueness (case-insensitive via normalized lookup)
+            var existing = await _userManager.FindByNameAsync(desired);
+            if (existing != null && existing.Id != user.Id)
+            {
+                return Conflict("Username already in use.");
+            }
+
+            // Update username and normalized username
+            user.UserName = desired;
+            user.NormalizedUserName = desired.ToUpperInvariant();
+
+            var result = await _userManager.SetUserNameAsync(user, desired);
+            if (!result.Succeeded)
+            {
+                return BadRequest(result.Errors);
+            }
+
+            await _signInManager.RefreshSignInAsync(user);
+            Logging.Log(Logging.LogType.Information, "User Management", $"{User.FindFirstValue(ClaimTypes.NameIdentifier)} changed their username to '{desired}'.");
+            return Ok();
+        }
+
         [HttpGet]
         [Route("Users")]
         [Authorize(Roles = "Admin")]
@@ -196,6 +325,7 @@ namespace gaseous_server.Controllers
             {
                 UserViewModel user = new UserViewModel();
                 user.Id = rawUser.Id;
+                user.UserName = rawUser.UserName ?? rawUser.NormalizedEmail.ToLower();
                 user.EmailAddress = rawUser.NormalizedEmail.ToLower();
                 user.LockoutEnabled = rawUser.LockoutEnabled;
                 user.LockoutEnd = rawUser.LockoutEnd;
@@ -270,11 +400,19 @@ namespace gaseous_server.Controllers
 
         [HttpGet]
         [Route("Users/Test")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Player,Gamer,Admin")]
         public async Task<IActionResult> TestUserExists(string Email)
         {
+            // check if the user exists by email
             ApplicationUser? rawUser = await _userManager.FindByEmailAsync(Email);
 
+            // fall back to username if email is not found
+            if (rawUser == null)
+            {
+                rawUser = await _userManager.FindByNameAsync(Email);
+            }
+
+            // return true if user exists, false otherwise
             if (rawUser != null)
             {
                 return Ok(true);
@@ -645,7 +783,7 @@ namespace gaseous_server.Controllers
             if (info == null)
                 return RedirectToAction(nameof(Login));
 
-            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: true);
+            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: true, bypassTwoFactor: true);
             if (result.Succeeded)
             {
                 return LocalRedirect(returnUrl);
@@ -701,7 +839,7 @@ namespace gaseous_server.Controllers
             if (info == null)
                 return RedirectToAction(nameof(Login));
 
-            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: true);
+            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: true, bypassTwoFactor: true);
             if (result.Succeeded)
             {
                 return LocalRedirect(returnUrl);
@@ -757,7 +895,7 @@ namespace gaseous_server.Controllers
             if (info == null)
                 return RedirectToAction(nameof(Login));
 
-            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: true);
+            var result = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: true, bypassTwoFactor: true);
             if (result.Succeeded)
             {
                 return LocalRedirect(returnUrl);

@@ -7,7 +7,7 @@ using MySqlConnector;
 
 namespace Authentication
 {
-    public class UserStore : 
+    public class UserStore :
         IUserStore<ApplicationUser>,
         IUserRoleStore<ApplicationUser>,
         IUserLoginStore<ApplicationUser>,
@@ -18,7 +18,9 @@ namespace Authentication
         IUserEmailStore<ApplicationUser>,
         IUserPhoneNumberStore<ApplicationUser>,
         IUserTwoFactorStore<ApplicationUser>,
-        IUserLockoutStore<ApplicationUser>
+        IUserLockoutStore<ApplicationUser>,
+        IUserAuthenticatorKeyStore<ApplicationUser>,
+        IUserTwoFactorRecoveryCodeStore<ApplicationUser>
     {
         private Database database;
 
@@ -27,6 +29,8 @@ namespace Authentication
         private UserRolesTable userRolesTable;
         private UserLoginsTable userLoginsTable;
         private UserClaimsTable userClaimsTable;
+        private UserAuthenticatorKeysTable userAuthenticatorKeysTable;
+        private UserRecoveryCodesTable userRecoveryCodesTable;
 
         public UserStore()
         {
@@ -36,6 +40,8 @@ namespace Authentication
             userRolesTable = new UserRolesTable(database);
             userLoginsTable = new UserLoginsTable(database);
             userClaimsTable = new UserClaimsTable(database);
+            userAuthenticatorKeysTable = new UserAuthenticatorKeysTable(database);
+            userRecoveryCodesTable = new UserRecoveryCodesTable(database);
         }
 
         public UserStore(Database database)
@@ -46,6 +52,8 @@ namespace Authentication
             userRolesTable = new UserRolesTable(database);
             userLoginsTable = new UserLoginsTable(database);
             userClaimsTable = new UserClaimsTable(database);
+            userAuthenticatorKeysTable = new UserAuthenticatorKeysTable(database);
+            userRecoveryCodesTable = new UserRecoveryCodesTable(database);
         }
 
         public IQueryable<ApplicationUser> Users
@@ -206,7 +214,7 @@ namespace Authentication
                 throw new ArgumentException("Null or empty argument: normalizedUserName");
             }
 
-            List<ApplicationUser> result = userTable.GetUserByName(normalizedUserName) as List<ApplicationUser>;
+            List<ApplicationUser> result = userTable.GetUserByName(normalizedUserName, false) as List<ApplicationUser>;
 
             // Should I throw if > 1 user?
             if (result != null && result.Count == 1)
@@ -611,6 +619,43 @@ namespace Authentication
             userTable.Update(user);
 
             return Task.FromResult<IdentityResult>(IdentityResult.Success);
+        }
+
+        public Task<string?> GetAuthenticatorKeyAsync(ApplicationUser user, CancellationToken cancellationToken)
+        {
+            if (user == null) throw new ArgumentNullException(nameof(user));
+            return Task.FromResult(userAuthenticatorKeysTable.GetKey(user.Id));
+        }
+
+        public Task SetAuthenticatorKeyAsync(ApplicationUser user, string key, CancellationToken cancellationToken)
+        {
+            if (user == null) throw new ArgumentNullException(nameof(user));
+            userAuthenticatorKeysTable.SetKey(user.Id, key);
+            return Task.CompletedTask;
+        }
+
+        public Task ReplaceCodesAsync(ApplicationUser user, IEnumerable<string> recoveryCodes, CancellationToken cancellationToken)
+        {
+            if (user == null) throw new ArgumentNullException(nameof(user));
+            if (recoveryCodes == null) throw new ArgumentNullException(nameof(recoveryCodes));
+            // Store hashed codes; Identity passes hashed strings here.
+            userRecoveryCodesTable.ReplaceCodes(user.Id, recoveryCodes);
+            return Task.CompletedTask;
+        }
+
+        public Task<bool> RedeemCodeAsync(ApplicationUser user, string code, CancellationToken cancellationToken)
+        {
+            if (user == null) throw new ArgumentNullException(nameof(user));
+            if (code == null) throw new ArgumentNullException(nameof(code));
+            bool ok = userRecoveryCodesTable.RedeemCode(user.Id, code);
+            return Task.FromResult(ok);
+        }
+
+        public Task<int> CountCodesAsync(ApplicationUser user, CancellationToken cancellationToken)
+        {
+            if (user == null) throw new ArgumentNullException(nameof(user));
+            int count = userRecoveryCodesTable.CountCodes(user.Id);
+            return Task.FromResult(count);
         }
     }
 }

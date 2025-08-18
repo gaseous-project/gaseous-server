@@ -2921,7 +2921,7 @@ class SettingsCard {
     }
 
     async getBackgroundTaskTimers() {
-        fetch('/api/v1/System/Settings/BackgroundTasks/Configuration', {
+        fetch('/api/v1.1/System/Settings/BackgroundTasks/Configuration', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -3185,7 +3185,7 @@ class SettingsCard {
             );
         }
 
-        await fetch('/api/v1/System/Settings/BackgroundTasks/Configuration',
+        await fetch('/api/v1.1/System/Settings/BackgroundTasks/Configuration',
             {
                 method: 'POST',
                 headers: {
@@ -3423,7 +3423,7 @@ class SettingsCard {
 
                 let headerCell2 = document.createElement('th');
                 headerCell2.classList.add('romcell');
-                headerCell2.innerHTML = 'Email';
+                headerCell2.innerHTML = 'User name';
                 headerRow.appendChild(headerCell2);
 
                 let headerCell3 = document.createElement('th');
@@ -3544,7 +3544,11 @@ class SettingsCard {
 
                     let userEmailCell = document.createElement('td');
                     userEmailCell.classList.add('romcell');
-                    userEmailCell.innerHTML = user.emailAddress;
+                    if (user.userName !== null && user.userName.length > 0 && user.userName !== user.emailAddress) {
+                        userEmailCell.innerHTML = user.userName;
+                    } else {
+                        userEmailCell.innerHTML = user.emailAddress;
+                    }
                     userRow.appendChild(userEmailCell);
 
                     let userRoleCell = document.createElement('td');

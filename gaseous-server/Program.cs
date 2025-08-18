@@ -207,7 +207,7 @@ builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
             options.Password.RequireNonAlphanumeric = false;
             options.Password.RequireUppercase = true;
             options.Password.RequiredLength = 10;
-            options.User.AllowedUserNameCharacters = null;
+            options.User.AllowedUserNameCharacters = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-._@+";
             options.User.RequireUniqueEmail = true;
             options.SignIn.RequireConfirmedPhoneNumber = false;
             options.SignIn.RequireConfirmedEmail = false;
@@ -452,8 +452,8 @@ app.UseStaticFiles(new StaticFileOptions
                 if (queryItems["page"].ToString().ToLower() == "emulator")
                 {
                     // set the CORS header
-                    ctx.Context.Response.Headers.Add("Cross-Origin-Opener-Policy", "same-origin");
-                    ctx.Context.Response.Headers.Add("Cross-Origin-Embedder-Policy", "require-corp");
+                    ctx.Context.Response.Headers.Append("Cross-Origin-Opener-Policy", "same-origin");
+                    ctx.Context.Response.Headers.Append("Cross-Origin-Embedder-Policy", "require-corp");
                 }
             }
         }

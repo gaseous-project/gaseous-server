@@ -32,8 +32,7 @@ namespace Authentication
     public class LoginViewModel
     {
         [Required]
-        [EmailAddress]
-        [Display(Name = "Email")]
+        [Display(Name = "Email or Username")]
         public string Email { get; set; }
 
         [Required]
@@ -96,5 +95,34 @@ namespace Authentication
         [EmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; }
+    }
+
+    public class ChangeUsernameViewModel
+    {
+        [Required]
+        [StringLength(30, MinimumLength = 3, ErrorMessage = "The {0} must be between {2} and {1} characters long.")]
+        [RegularExpression("^[A-Za-z0-9_.@-]+$", ErrorMessage = "Only letters, numbers, underscores (_), dashes (-), periods (.), and at signs (@) are allowed.")]
+        [Display(Name = "New user name")]
+        public string NewUserName { get; set; }
+    }
+
+    public class TwoFactorVerifyViewModel
+    {
+        [Required]
+        [Display(Name = "Authenticator code")]
+        public string Code { get; set; }
+
+        [Display(Name = "Remember me?")]
+        public bool RememberMe { get; set; }
+
+        [Display(Name = "Remember this device")]
+        public bool RememberMachine { get; set; }
+    }
+
+    public class TwoFactorRecoveryViewModel
+    {
+        [Required]
+        [Display(Name = "Recovery code")]
+        public string RecoveryCode { get; set; }
     }
 }

@@ -97,7 +97,9 @@ namespace Authentication
                 user.LockoutEnabled = row["LockoutEnabled"] == "1" ? true : false;
                 user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEnd"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEnd"]);
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
-                user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true : false;
+                // Handle both "1"/"0" and "true"/"false" (case-insensitive) for TwoFactorEnabled
+                var twoFactorValue = row["TwoFactorEnabled"]?.ToString()?.ToLowerInvariant();
+                user.TwoFactorEnabled = twoFactorValue == "1" || twoFactorValue == "true";
                 user.SecurityProfile = GetSecurityProfile(user);
                 user.UserPreferences = GetPreferences(user);
                 user.ProfileId = string.IsNullOrEmpty((string?)row["ProfileId"]) ? Guid.Empty : Guid.Parse((string?)row["ProfileId"]);
@@ -111,10 +113,14 @@ namespace Authentication
         /// </summary>
         /// <param name="normalizedUserName">User's name</param>
         /// <returns></returns>
-        public List<TUser> GetUserByName(string normalizedUserName)
+        public List<TUser> GetUserByName(string normalizedUserName, bool searchAsEmail)
         {
             List<TUser> users = new List<TUser>();
             string commandText = "Select * from Users LEFT JOIN (SELECT Id As ProfileId, UserId FROM UserProfiles) UserProfiles ON Users.Id = UserProfiles.UserId where NormalizedEmail = @name";
+            if (!searchAsEmail)
+            {
+                commandText = "Select * from Users LEFT JOIN (SELECT Id As ProfileId, UserId FROM UserProfiles) UserProfiles ON Users.Id = UserProfiles.UserId where NormalizedUserName = @name";
+            }
             Dictionary<string, object> parameters = new Dictionary<string, object>() { { "@name", normalizedUserName } };
 
             var rows = _database.ExecuteCMDDict(commandText, parameters);
@@ -135,7 +141,9 @@ namespace Authentication
                 user.LockoutEnabled = row["LockoutEnabled"] == "1" ? true : false;
                 user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEnd"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEnd"]);
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
-                user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true : false;
+                // Handle both "1"/"0" and "true"/"false" (case-insensitive) for TwoFactorEnabled
+                var twoFactorValue = row["TwoFactorEnabled"]?.ToString()?.ToLowerInvariant();
+                user.TwoFactorEnabled = twoFactorValue == "1" || twoFactorValue == "true";
                 user.SecurityProfile = GetSecurityProfile(user);
                 user.UserPreferences = GetPreferences(user);
                 user.ProfileId = string.IsNullOrEmpty((string?)row["ProfileId"]) ? Guid.Empty : Guid.Parse((string?)row["ProfileId"]);
@@ -168,7 +176,9 @@ namespace Authentication
                 user.LockoutEnabled = row["LockoutEnabled"] == "1" ? true : false;
                 user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEnd"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEnd"]);
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
-                user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true : false;
+                // Handle both "1"/"0" and "true"/"false" (case-insensitive) for TwoFactorEnabled
+                var twoFactorValue = row["TwoFactorEnabled"]?.ToString()?.ToLowerInvariant();
+                user.TwoFactorEnabled = twoFactorValue == "1" || twoFactorValue == "true";
                 user.SecurityProfile = GetSecurityProfile(user);
                 user.UserPreferences = GetPreferences(user);
                 user.ProfileId = string.IsNullOrEmpty((string?)row["ProfileId"]) ? Guid.Empty : Guid.Parse((string?)row["ProfileId"]);
@@ -180,7 +190,7 @@ namespace Authentication
 
         public TUser GetUserByEmail(string email)
         {
-            List<TUser> users = GetUserByName(email);
+            List<TUser> users = GetUserByName(email, true);
             if (users.Count == 0)
             {
                 return null;

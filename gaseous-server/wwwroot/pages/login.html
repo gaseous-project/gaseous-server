@@ -40,7 +40,8 @@
                         <tbody id="social_login_button_password" style="display: none;">
                             <tr>
                                 <!-- <td>Email</td> -->
-                                <td><input type="email" id="login_email" style="width: 95%;" placeholder="Email" />
+                                <td><input type="text" id="login_email" style="width: 95%;"
+                                        placeholder="Email or Username" />
                                 </td>
                             </tr>
                             <tr>
@@ -56,6 +57,72 @@
                                     <button type="submit" value="Sign In" onclick="UserLogin();" name="submit"
                                         class="bigbutton">Sign
                                         In</button>
+                                </td>
+                            </tr>
+                        </tbody>
+
+                        <!-- 2FA code entry section -->
+                        <tbody id="twofactor_section" style="display: none;">
+                            <tr>
+                                <td style="text-align: center;">
+                                    <strong>Two‑Factor Authentication</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="text" id="twofactor_code" style="width: 95%;" maxlength="10"
+                                        placeholder="6-digit code" />
+                                </td>
+                            </tr>
+                            <tr id="twofactor_errorrow" style="display: none;">
+                                <td id="twofactor_errorlabel" style="color: red;"></td>
+                            </tr>
+                            <tr>
+                                <td style="padding-bottom: 10px;">
+                                    <button type="button" onclick="VerifyTwoFactor();" class="bigbutton">Verify</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center;">
+                                    <button type="button" style="width: 100%;" onclick="ShowRecoverySection();">Use a
+                                        recovery code</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center;">
+                                    <button type="button" style="width: 100%;" onclick="ShowPasswordSection();">Back to
+                                        password</button>
+                                </td>
+                            </tr>
+                        </tbody>
+
+                        <!-- Recovery code entry section -->
+                        <tbody id="recovery_section" style="display: none;">
+                            <tr>
+                                <td style="text-align: center;">
+                                    <strong>Use a Recovery Code</strong>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>
+                                    <input type="text" id="recovery_code" style="width: 95%;"
+                                        placeholder="Enter recovery code" />
+                                </td>
+                            </tr>
+                            <tr id="recovery_errorrow" style="display: none;">
+                                <td id="recovery_errorlabel" style="color: red;"></td>
+                            </tr>
+                            <tr>
+                                <td style="padding-bottom: 10px;">
+                                    <button type="button" onclick="VerifyRecoveryCode();"
+                                        class="bigbutton">Verify</button>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="text-align:center;">
+                                    <button type="button" style="width: 100%;" onclick="ShowTwoFactorSection();">Back to
+                                        authenticator
+                                        code</button>
                                 </td>
                             </tr>
                         </tbody>
