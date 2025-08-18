@@ -97,7 +97,9 @@ namespace Authentication
                 user.LockoutEnabled = row["LockoutEnabled"] == "1" ? true : false;
                 user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEnd"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEnd"]);
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
-                user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true : false;
+                // Handle both "1"/"0" and "true"/"false" (case-insensitive) for TwoFactorEnabled
+                var twoFactorValue = row["TwoFactorEnabled"]?.ToString()?.ToLowerInvariant();
+                user.TwoFactorEnabled = twoFactorValue == "1" || twoFactorValue == "true";
                 user.SecurityProfile = GetSecurityProfile(user);
                 user.UserPreferences = GetPreferences(user);
                 user.ProfileId = string.IsNullOrEmpty((string?)row["ProfileId"]) ? Guid.Empty : Guid.Parse((string?)row["ProfileId"]);
@@ -139,7 +141,9 @@ namespace Authentication
                 user.LockoutEnabled = row["LockoutEnabled"] == "1" ? true : false;
                 user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEnd"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEnd"]);
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
-                user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true : false;
+                // Handle both "1"/"0" and "true"/"false" (case-insensitive) for TwoFactorEnabled
+                var twoFactorValue = row["TwoFactorEnabled"]?.ToString()?.ToLowerInvariant();
+                user.TwoFactorEnabled = twoFactorValue == "1" || twoFactorValue == "true";
                 user.SecurityProfile = GetSecurityProfile(user);
                 user.UserPreferences = GetPreferences(user);
                 user.ProfileId = string.IsNullOrEmpty((string?)row["ProfileId"]) ? Guid.Empty : Guid.Parse((string?)row["ProfileId"]);
@@ -172,7 +176,9 @@ namespace Authentication
                 user.LockoutEnabled = row["LockoutEnabled"] == "1" ? true : false;
                 user.LockoutEnd = string.IsNullOrEmpty((string?)row["LockoutEnd"]) ? DateTime.Now : DateTime.Parse((string?)row["LockoutEnd"]);
                 user.AccessFailedCount = string.IsNullOrEmpty((string?)row["AccessFailedCount"]) ? 0 : int.Parse((string?)row["AccessFailedCount"]);
-                user.TwoFactorEnabled = row["TwoFactorEnabled"] == "1" ? true : false;
+                // Handle both "1"/"0" and "true"/"false" (case-insensitive) for TwoFactorEnabled
+                var twoFactorValue = row["TwoFactorEnabled"]?.ToString()?.ToLowerInvariant();
+                user.TwoFactorEnabled = twoFactorValue == "1" || twoFactorValue == "true";
                 user.SecurityProfile = GetSecurityProfile(user);
                 user.UserPreferences = GetPreferences(user);
                 user.ProfileId = string.IsNullOrEmpty((string?)row["ProfileId"]) ? Guid.Empty : Guid.Parse((string?)row["ProfileId"]);

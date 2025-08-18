@@ -83,3 +83,26 @@
         </div>
     </div>
 </div>
+
+<div id="tab3" name="modalTab" data-tabname="Two Factor Authentication">
+    <div class="section">
+        <div class="section-header">Two Factor Authentication</div>
+        <div class="section-body">
+            <div>Enable two-factor authentication for added security.</div>
+            <p>
+                <button id="enable-2fa" class="button">Enable 2FA</button>
+                <button id="disable-2fa" class="button">Disable 2FA</button>
+            </p>
+            <div id="2fa-status" style="margin-top: 10px;">
+                <p id="2fa-qrcode" style="display: none; background-color: #ffffff; padding: 10px;"></p>
+                <p id="2fa-secret-key" style="display: none;"></p>
+                <div id="2fa-confirmation" style="display: none; margin-top: 10px;">
+                    <div>Enter the code from your authenticator app:</div>
+                    <input type="text" id="2fa-code" name="2fa-code" class="inputWithVerticalLabel" />
+                    <button id="confirm-2fa" class="button">Confirm</button>
+                </div>
+                <p id="recovery-codes" style="display: none;"></p>
+            </div>
+        </div>
+    </div>
+</div>

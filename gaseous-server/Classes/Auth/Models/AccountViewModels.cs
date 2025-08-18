@@ -105,4 +105,24 @@ namespace Authentication
         [Display(Name = "New user name")]
         public string NewUserName { get; set; }
     }
+
+    public class TwoFactorVerifyViewModel
+    {
+        [Required]
+        [Display(Name = "Authenticator code")]
+        public string Code { get; set; }
+
+        [Display(Name = "Remember me?")]
+        public bool RememberMe { get; set; }
+
+        [Display(Name = "Remember this device")]
+        public bool RememberMachine { get; set; }
+    }
+
+    public class TwoFactorRecoveryViewModel
+    {
+        [Required]
+        [Display(Name = "Recovery code")]
+        public string RecoveryCode { get; set; }
+    }
 }

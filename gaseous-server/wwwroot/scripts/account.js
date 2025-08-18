@@ -83,7 +83,7 @@ class AccountWindow {
         });
 
         // load the enabled social login buttons
-        fetch('/api/v1/Account/social-login', {
+        fetch('/api/v1.1/Account/social-login', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -93,8 +93,10 @@ class AccountWindow {
             .then(data => {
                 if (data.includes('Password')) {
                     this.dialog.modalElement.querySelector('#tab-tab2').style.display = '';
+                    this.dialog.modalElement.querySelector('#tab-tab3').style.display = '';
                 } else {
                     this.dialog.modalElement.querySelector('#tab-tab2').style.display = 'none';
+                    this.dialog.modalElement.querySelector('#tab-tab3').style.display = 'none';
                 }
             })
             .catch(error => {
@@ -148,6 +150,233 @@ class AccountWindow {
         this.password_confirm = this.dialog.modalElement.querySelector('#confirm-new-password');
         this.password_error = this.dialog.modalElement.querySelector('#password-error');
         this.PasswordCheck = new PasswordCheck(this.password_new, this.password_confirm, this.password_error);
+
+        // set up the 2fa setup form
+        this.twoFactorButton_enable = this.dialog.modalElement.querySelector('#enable-2fa');
+        this.twoFactorButton_disable = this.dialog.modalElement.querySelector('#disable-2fa');
+        this.twoFactorRecoveryCodes = this.dialog.modalElement.querySelector('#recovery-codes');
+        this.twoFactorStatus = await fetch("/api/v1.1/TwoFactor/status").then(async response => {
+            if (!response.ok) {
+                // handle the error
+                console.error("Error fetching 2FA status:");
+                console.error(response);
+                return "Error";
+            } else {
+                const status = await response.json();
+                if (status.enabled) {
+                    this.twoFactorButton_enable.style.display = 'none';
+                    this.twoFactorButton_disable.style.display = '';
+
+                    // show the recovery code count
+                    this.twoFactorRecoveryCodes.style.display = '';
+                    this.twoFactorRecoveryCodes.innerHTML = `<strong>Recovery Codes:</strong> ${status.recoveryCodesLeft} available`;
+                    return "Enabled";
+                } else {
+                    this.twoFactorButton_enable.style.display = '';
+                    this.twoFactorButton_disable.style.display = 'none';
+                    this.twoFactorRecoveryCodes.style.display = 'none';
+                    return "Disabled";
+                }
+            }
+        });
+
+        this.twoFactorConfirmationButton = this.dialog.modalElement.querySelector('#confirm-2fa');
+        this.twoFactorConfirmationButton.addEventListener('click', async function () {
+            // confirm the user has set up their authenticator app
+            const confirmationCode = document.getElementById('2fa-code').value.trim();
+            if (confirmationCode.length === 0) {
+                let warningDialog = new MessageBox("2FA Confirmation Error", "Please enter the confirmation code from your authenticator app.");
+                warningDialog.open();
+                return;
+            }
+            // send the confirmation code to the server
+            const response = await fetch("/api/v1.1/TwoFactor/authenticator/confirm", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ code: confirmationCode })
+            }).then(async response => {
+                if (!response.ok) {
+                    // handle the error
+                    console.error("Error confirming 2FA setup:");
+                    console.error(response);
+                    let warningDialog = new MessageBox("2FA Confirmation Error", "The confirmation code is invalid or expired. Please try again.");
+                    warningDialog.open();
+                    return;
+                } else {
+                    // update the 2FA status
+                    AccountWindow.#ReloadProfile();
+                    let successDialog = new MessageBox("2FA Enabled", "2FA has been successfully enabled for your account.");
+                    successDialog.open();
+                    document.getElementById('enable-2fa').style.display = 'none';
+                    document.getElementById('disable-2fa').style.display = '';
+
+                    // display the recovery codes
+                    const recoveryCodesResponse = await fetch("/api/v1.1/TwoFactor/recovery/generate", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ count: 10 })
+                    });
+                    if (!recoveryCodesResponse.ok) {
+                        console.error("Error fetching recovery codes:");
+                        console.error(recoveryCodesResponse);
+                        let warningDialog = new MessageBox("Recovery Codes Error", "Couldn't fetch your recovery codes. Please try again later.");
+                        warningDialog.open();
+                        return;
+                    }
+                    const recoveryCodes = await recoveryCodesResponse.json();
+                    if (recoveryCodes && recoveryCodes.length > 0) {
+                        let recoveryCodesContainer = document.getElementById('recovery-codes');
+                        recoveryCodesContainer.innerHTML = "";
+
+                        let recoveryCodesSummary = document.createElement('p');
+                        recoveryCodesSummary.innerHTML = "Store these codes in a safe place. They can be used to access your account if you lose access to your authenticator app. They are one-time use only, and never shown again.";
+                        recoveryCodesContainer.appendChild(recoveryCodesSummary);
+
+                        recoveryCodes.forEach(code => {
+                            let codeElement = document.createElement('div');
+                            codeElement.classList.add('recovery-code');
+                            codeElement.textContent = code;
+                            recoveryCodesContainer.appendChild(codeElement);
+                        });
+                        recoveryCodesContainer.style.display = 'block';
+                    } else {
+                        let warningDialog = new MessageBox("Recovery Codes Error", "No recovery codes were returned. Please try again later.");
+                        warningDialog.open();
+                    }
+
+                    // close the confirmation input
+                    const confirmationContainer = document.getElementById('2fa-confirmation');
+                    if (confirmationContainer) {
+                        confirmationContainer.style.display = 'none';
+                    }
+                    // hide the QR code and secret key
+                    const qrCodeContainer = document.getElementById('2fa-qrcode');
+                    if (qrCodeContainer) {
+                        qrCodeContainer.innerHTML = "";
+                        qrCodeContainer.style.display = 'none';
+                    }
+                    const secretKeyContainer = document.getElementById('2fa-secret-key');
+                    if (secretKeyContainer) {
+                        secretKeyContainer.innerHTML = "";
+                        secretKeyContainer.style.display = 'none';
+                    }
+                }
+            });
+        });
+
+        this.twoFactorButton_enable.addEventListener('click', async function () {
+            // Reset/generate a new authenticator key, then render QR code and show the secret
+            try {
+                const resetResponse = await fetch("/api/v1.1/TwoFactor/authenticator/reset", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!resetResponse.ok) {
+                    console.error("Error resetting/generating authenticator key:", resetResponse);
+                    let warningDialog = new MessageBox("2FA Setup Error", "Couldn't generate a 2FA key. Please try again later.");
+                    warningDialog.open();
+                    return;
+                }
+
+                // API returns the secret key as plain text (string)
+                const contentType = resetResponse.headers.get('content-type') || '';
+                let secretKey;
+                if (contentType.includes('application/json')) {
+                    // Fallback if server ever changes to JSON
+                    const parsed = await resetResponse.json();
+                    secretKey = typeof parsed === 'string' ? parsed : (parsed?.secret || String(parsed));
+                } else {
+                    secretKey = await resetResponse.text();
+                }
+
+                // Normalize secret to Base32 (remove spaces/non-base32 chars, uppercase) for maximum compatibility
+                let normalizedSecret = (secretKey || "").toString().trim();
+                normalizedSecret = normalizedSecret.replace(/[^A-Z2-7=]/gi, '').toUpperCase();
+
+                // Build otpauth URL for TOTP
+                const issuerRaw = (document.title && document.title.trim().length > 0) ? document.title.trim() : window.location.host;
+                const issuerEnc = encodeURIComponent(issuerRaw);
+                let accountRaw = (window.userProfile && (userProfile.email || userProfile.userName)) || "";
+                if (!accountRaw || accountRaw.trim().length === 0) {
+                    accountRaw = "user";
+                }
+                const accountEnc = encodeURIComponent(accountRaw);
+                const label = `${issuerEnc}:${accountEnc}`;
+                // Use only required params for broad client compatibility (Authy, GA, etc.)
+                const otpAuthUrl = `otpauth://totp/${label}?secret=${normalizedSecret}&issuer=${issuerEnc}&digits=6&period=30`;
+
+                // Render QR code
+                const qrCodeContainer = document.getElementById('2fa-qrcode');
+                if (qrCodeContainer) {
+                    qrCodeContainer.innerHTML = "";
+                    new QRCode(qrCodeContainer, {
+                        text: otpAuthUrl,
+                        width: 128,
+                        height: 128,
+                        colorDark: "#000000",
+                        colorLight: "#ffffff",
+                        correctLevel: QRCode.CorrectLevel.H
+                    });
+                    qrCodeContainer.style.display = 'block';
+                }
+
+                // Show the raw secret key
+                const secretKeyContainer = document.getElementById('2fa-secret-key');
+                if (secretKeyContainer) {
+                    secretKeyContainer.innerHTML = `<strong>Secret Key:</strong> ${normalizedSecret}`;
+                    secretKeyContainer.style.display = 'block';
+                }
+
+                // Show confirmation input
+                const confirmationContainer = document.getElementById('2fa-confirmation');
+                const confirmationInput = document.getElementById('2fa-code');
+                if (confirmationContainer) {
+                    confirmationContainer.style.display = 'block';
+                    confirmationInput.value = ""; // Clear previous input
+                }
+            } catch (err) {
+                console.error("Unexpected error during 2FA setup:", err);
+                let warningDialog = new MessageBox("2FA Setup Error", "An unexpected error occurred. Please try again later.");
+                warningDialog.open();
+            }
+        });
+
+        this.twoFactorButton_disable.addEventListener('click', async function () {
+            // confirm the user wants to disable 2FA
+            let confirmation = confirm("Are you sure you want to disable 2FA? This will remove the extra security layer from your account.");
+            if (confirmation) {
+                // disable 2FA
+                const response = await fetch("/api/v1.1/TwoFactor/enable/false", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(async response => {
+                    if (!response.ok) {
+                        // handle the error
+                        console.error("Error disabling 2FA:");
+                        console.error(response);
+                        let warningDialog = new MessageBox("2FA Disable Error", "The 2FA disable failed. Please try again later.");
+                        warningDialog.open();
+                        return;
+                    } else {
+                        // update the 2FA status
+                        AccountWindow.#ReloadProfile();
+                        let successDialog = new MessageBox("2FA Disabled", "2FA has been successfully disabled for your account.");
+                        successDialog.open();
+                        document.getElementById('enable-2fa').style.display = '';
+                        document.getElementById('disable-2fa').style.display = 'none';
+                    }
+                });
+            }
+        });
+
 
         // create the ok button
         let okButton = new ModalButton("OK", 1, this, async function (callingObject) {
@@ -704,30 +933,36 @@ class UsernameCheck {
             usernameMeetsRules = false;
         }
 
-        // check if username is unique
-        await fetch("/api/v1.1/Account/Users/Test?Email=" + UsernameElement.value, {
-            method: 'GET'
-        }).then(async response => {
-            if (!await response.ok) {
-                // handle the error
-                console.error("Error checking username uniqueness:");
-                console.error(response);
-                CallingObject.listItemUnique.classList.add('listitem-red');
-                CallingObject.listItemUnique.classList.remove('listitem-green');
-                usernameMeetsRules = false;
-            } else {
-                let responseJson = await response.json();
-                if (responseJson === false) {
-                    CallingObject.listItemUnique.classList.add('listitem-green');
-                    CallingObject.listItemUnique.classList.remove('listitem-red');
-                    usernameMeetsRules = true;
-                } else {
+        // check if username is unique - skip if empty
+        if (UsernameElement.value.length > 0) {
+            await fetch("/api/v1.1/Account/Users/Test?Email=" + UsernameElement.value, {
+                method: 'GET'
+            }).then(async response => {
+                if (!await response.ok) {
+                    // handle the error
+                    console.error("Error checking username uniqueness:");
+                    console.error(response);
                     CallingObject.listItemUnique.classList.add('listitem-red');
                     CallingObject.listItemUnique.classList.remove('listitem-green');
                     usernameMeetsRules = false;
+                } else {
+                    let responseJson = await response.json();
+                    if (responseJson === false) {
+                        CallingObject.listItemUnique.classList.add('listitem-green');
+                        CallingObject.listItemUnique.classList.remove('listitem-red');
+                        usernameMeetsRules = true;
+                    } else {
+                        CallingObject.listItemUnique.classList.add('listitem-red');
+                        CallingObject.listItemUnique.classList.remove('listitem-green');
+                        usernameMeetsRules = false;
+                    }
                 }
-            }
-        });
+            });
+        } else {
+            CallingObject.listItemUnique.classList.add('listitem-red');
+            CallingObject.listItemUnique.classList.remove('listitem-green');
+            usernameMeetsRules = false;
+        }
 
         return usernameMeetsRules;
     }

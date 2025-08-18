@@ -2921,7 +2921,7 @@ class SettingsCard {
     }
 
     async getBackgroundTaskTimers() {
-        fetch('/api/v1/System/Settings/BackgroundTasks/Configuration', {
+        fetch('/api/v1.1/System/Settings/BackgroundTasks/Configuration', {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -3185,7 +3185,7 @@ class SettingsCard {
             );
         }
 
-        await fetch('/api/v1/System/Settings/BackgroundTasks/Configuration',
+        await fetch('/api/v1.1/System/Settings/BackgroundTasks/Configuration',
             {
                 method: 'POST',
                 headers: {

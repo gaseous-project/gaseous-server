@@ -8,7 +8,7 @@
             "name": ".NET Core Launch (web)",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "build",
+            "preLaunchTask": "prepare-web",
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/gaseous-server/bin/Debug/net8.0/gaseous-server.dll",
             "args": [],
