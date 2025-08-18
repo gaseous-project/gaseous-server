@@ -92,7 +92,10 @@ namespace gaseous_server.Controllers
         [HttpPost("authenticator/confirm")] // confirm code and enable 2FA
         public async Task<IActionResult> ConfirmAuthenticator([FromBody] ConfirmAuthenticatorRequest req)
         {
-            if (req == null || string.IsNullOrWhiteSpace(req.Code)) return BadRequest();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
 
             var user = await _userManager.GetUserAsync(User);
             if (user == null) return Unauthorized();
@@ -157,7 +160,11 @@ namespace gaseous_server.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> AdminDisableTwoFactor([FromBody] AdminDisable2FARequest req)
         {
-            if (req == null) return BadRequest();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest();
+            }
+
             ApplicationUser? target = null;
             if (!string.IsNullOrWhiteSpace(req.UserId))
             {

@@ -47,40 +47,27 @@ async function UserLogin() {
 }
 
 function ShowSocialButtons(visible) {
-    // check if social login buttons should be displayed
-    fetch('/api/v1/Account/social-login', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    })
-        .then(response => response.json())
-        .then(data => {
-            // Hide all social login buttons initially
-            let socialLoginButtons = document.querySelectorAll('[id^="social_login_button_"]');
-            socialLoginButtons.forEach(button => {
-                button.style.display = 'none';
-            });
 
-            if (visible) {
-                // Show buttons based on the data received
-                if (data.includes('Password')) {
-                    document.getElementById('social_login_button_password').style.display = '';
-                }
-                if (data.includes('Google')) {
-                    document.getElementById('social_login_button_google').style.display = 'table-row';
-                }
-                if (data.includes('Microsoft')) {
-                    document.getElementById('social_login_button_microsoft').style.display = 'table-row';
-                }
-                if (data.includes('OIDC')) {
-                    document.getElementById('social_login_button_oidc').style.display = 'table-row';
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Error fetching social login options:', error);
-        });
+    let socialLoginButtons = document.querySelectorAll('[id^="social_login_button_"]');
+    socialLoginButtons.forEach(button => {
+        button.style.display = 'none';
+    });
+
+    if (visible) {
+        // Show buttons based on the socialLoginButtonVisibility received
+        if (socialLoginButtonVisibility.includes('Password')) {
+            document.getElementById('social_login_button_password').style.display = '';
+        }
+        if (socialLoginButtonVisibility.includes('Google')) {
+            document.getElementById('social_login_button_google').style.display = 'table-row';
+        }
+        if (socialLoginButtonVisibility.includes('Microsoft')) {
+            document.getElementById('social_login_button_microsoft').style.display = 'table-row';
+        }
+        if (socialLoginButtonVisibility.includes('OIDC')) {
+            document.getElementById('social_login_button_oidc').style.display = 'table-row';
+        }
+    }
 }
 
 function SocialLogin(provider) {
@@ -205,5 +192,18 @@ backgroundImageHandler = new BackgroundImageRotator([
     '/images/gamebg3.jpg'
 ], 'bgImage_LessBlur', true);
 
-// hide all social login buttons
-ShowSocialButtons(true);
+let socialLoginButtonVisibility = [];
+fetch('/api/v1/Account/social-login', {
+    method: 'GET',
+    headers: {
+        'Content-Type': 'application/json'
+    }
+})
+    .then(response => response.json())
+    .then(data => {
+        socialLoginButtonVisibility = data;
+        ShowSocialButtons(true);
+    })
+    .catch(error => {
+        console.error('Error fetching social login options:', error);
+    });

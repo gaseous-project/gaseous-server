@@ -112,7 +112,7 @@ namespace gaseous_server.Controllers
         [Route("Login2FA")]
         public async Task<IActionResult> LoginTwoFactor(TwoFactorVerifyViewModel model)
         {
-            if (model == null || string.IsNullOrWhiteSpace(model.Code))
+            if (!ModelState.IsValid)
             {
                 return BadRequest();
             }
@@ -139,7 +139,7 @@ namespace gaseous_server.Controllers
         [Route("LoginRecoveryCode")]
         public async Task<IActionResult> LoginWithRecoveryCode(TwoFactorRecoveryViewModel model)
         {
-            if (model == null || string.IsNullOrWhiteSpace(model.RecoveryCode))
+            if (!ModelState.IsValid)
             {
                 return BadRequest();
             }
