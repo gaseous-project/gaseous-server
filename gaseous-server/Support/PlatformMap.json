@@ -1357,9 +1357,20 @@
     },
     "RetroPieDirectoryName": "",
     "WebEmulator": {
-      "Type": "",
-      "Core": "",
-      "AvailableWebEmulators": null
+      "Type": "EmulatorJS",
+      "Core": "dosbox-pure",
+      "AvailableWebEmulators": [
+        {
+          "EmulatorType": "EmulatorJS",
+          "AvailableWebEmulatorCores": [
+            {
+              "Core": "dosbox-pure",
+              "AlternateCoreName": "",
+              "Default": true
+            }
+          ]
+        }
+      ]
     },
     "Bios": []
   },
