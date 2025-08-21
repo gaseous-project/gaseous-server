@@ -2,6 +2,9 @@
 console.log(locale);
 moment.locale(locale);
 
+// clear logo provider preference order
+var logoProviders = ["ScreenScraper", "TheGamesDb"];
+
 function ajaxCall(endpoint, method, successFunction, errorFunction, body) {
     $.ajax({
 
@@ -1013,6 +1016,30 @@ async function BuildLaunchLink(engine, core, platformId, gameId, romId, isMediaG
     return returnLink;
 }
 
+let coreData = [];
+
+async function LoadCoreData() {
+    if (coreData.length > 0) {
+        return coreData; // already loaded
+    }
+
+    await fetch('/api/v1.1/PlatformMaps', {
+        method: 'GET',
+        headers: {
+            'Content-Type': 'application/json'
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            coreData = data;
+        })
+        .catch(error => {
+            console.error('Error loading core data:', error);
+        });
+
+    return coreData;
+}
+
 async function BuildGameLaunchLink(gamePlatformObject) {
     let launchLink = '/index.html?page=emulator&engine=<ENGINE>&core=<CORE>&platformid=<PLATFORMID>&gameid=<GAMEID>&romid=<ROMID>&mediagroup=<ISMEDIAGROUP>&rompath=<FILENAME>';
 
@@ -1050,103 +1077,100 @@ async function BuildGameLaunchLink(gamePlatformObject) {
     if (!validEngines.includes(engine)) {
         isValid = false;
         console.log('Engine is invalid!');
+        return returnLink;
     }
 
     // fetch valid cores from json file /emulators/EmulatorJS/data/cores.json
-    let validCores = [];
-    await fetch('/api/v1.1/PlatformMaps', {
-        method: 'GET',
-        headers: {
-            'Content-Type': 'application/json'
+    let validCores = await LoadCoreData();
+    if (validCores === undefined || validCores.length === 0) {
+        console.log('No valid cores found!');
+        isValid = false;
+        return returnLink;
+    } else {
+        for (const coreDef of validCores) {
+            if (!coreDef.webEmulator || !coreDef.webEmulator.availableWebEmulators) continue;
+
+            isValid = coreDef.webEmulator.availableWebEmulators.some(emulator => {
+                if (emulator.emulatorType !== engine) return false;
+
+                return emulator.availableWebEmulatorCores.some(emulatorCore =>
+                    emulatorCore.core === core || emulatorCore.alternateCoreName === core
+                );
+            });
+
+            if (isValid) break;
         }
-    })
-        .then(response => response.json())
-        .then(data => {
-            validCores = data;
+    }
 
-            for (const coreDef of validCores) {
-                if (!coreDef.webEmulator || !coreDef.webEmulator.availableWebEmulators) continue;
+    if (isValid === false) {
+        console.log('Core is invalid!');
+        return returnLink;
+    }
 
-                isValid = coreDef.webEmulator.availableWebEmulators.some(emulator => {
-                    if (emulator.emulatorType !== engine) return false;
+    // check if platformId is an int64
+    if (!Number(platformId)) {
+        isValid = false;
+        console.log('PlatformId is invalid!');
+        return returnLink;
+    }
 
-                    return emulator.availableWebEmulatorCores.some(emulatorCore =>
-                        emulatorCore.core === core || emulatorCore.alternateCoreName === core
-                    );
-                });
+    // check if gameId is a an int64
+    if (!Number(gameId)) {
+        isValid = false;
+        console.log('GameId is invalid!');
+        return returnLink;
+    }
 
-                if (isValid) break;
-            }
+    // check if romId is a an int64
+    if (!Number(romId)) {
+        isValid = false;
+        console.log('RomId is invalid!');
+        return returnLink;
+    }
 
-            if (isValid === false) {
-                console.log('Core is invalid!');
-            }
-
-            // check if platformId is an int64
-            if (!Number(platformId)) {
-                isValid = false;
-                console.log('PlatformId is invalid!');
-            }
-
-            // check if gameId is a an int64
-            if (!Number(gameId)) {
-                isValid = false;
-                console.log('GameId is invalid!');
-            }
-
-            // check if romId is a an int64
-            if (!Number(romId)) {
-                isValid = false;
-                console.log('RomId is invalid!');
-            }
-
-            // check if isMediaGroup is a boolean in a number format - if not, verify it is a boolean
-            if (isMediaGroup === 0 || isMediaGroup === 1) {
-                // value is a number, and is valid
-            } else {
-                if (isMediaGroup === true || isMediaGroup === false) {
-                    // value is a boolean, and is valid
-                } else {
-                    isValid = false;
-                    console.log('IsMediaGroup is invalid!');
-                }
-            }
-
-            // check if filename is a string
-            if (typeof (filename) != 'string') {
-                isValid = false;
-                console.log('Filename is invalid!');
-            }
-
-            if (isValid === false) {
-                console.log('Link is invalid!');
-            } else {
-
-                // generate the launch link
-                launchLink = launchLink.replace('<ENGINE>', engine);
-                launchLink = launchLink.replace('<CORE>', core);
-                launchLink = launchLink.replace('<PLATFORMID>', platformId);
-                launchLink = launchLink.replace('<GAMEID>', gameId);
-                launchLink = launchLink.replace('<ROMID>', romId);
-                if (isMediaGroup === true) {
-                    launchLink = launchLink.replace('<ISMEDIAGROUP>', 1);
-                    launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + encodeURI(gameId) + '/romgroup/' + encodeURI(romId) + '/' + encodeURI(filename) + '.zip');
-                } else {
-                    launchLink = launchLink.replace('<ISMEDIAGROUP>', 0);
-                    launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + encodeURI(gameId) + '/roms/' + encodeURI(romId) + '/' + encodeURI(filename));
-                }
-
-                console.log('Validated link: ' + launchLink);
-
-                returnLink = launchLink;
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
+    // check if isMediaGroup is a boolean in a number format - if not, verify it is a boolean
+    if (isMediaGroup === 0 || isMediaGroup === 1) {
+        // value is a number, and is valid
+    } else {
+        if (isMediaGroup === true || isMediaGroup === false) {
+            // value is a boolean, and is valid
+        } else {
             isValid = false;
-            console.log('Link is invalid!');
-            returnLink = '/index.html';
-        });
+            console.log('IsMediaGroup is invalid!');
+            return returnLink;
+        }
+    }
+
+    // check if filename is a string
+    if (typeof (filename) != 'string') {
+        isValid = false;
+        console.log('Filename is invalid!');
+        return returnLink;
+    }
+
+    if (isValid === false) {
+        console.log('Link is invalid!');
+        return returnLink;
+    } else {
+
+        // generate the launch link
+        launchLink = launchLink.replace('<ENGINE>', engine);
+        launchLink = launchLink.replace('<CORE>', core);
+        launchLink = launchLink.replace('<PLATFORMID>', platformId);
+        launchLink = launchLink.replace('<GAMEID>', gameId);
+        launchLink = launchLink.replace('<ROMID>', romId);
+        if (isMediaGroup === true) {
+            launchLink = launchLink.replace('<ISMEDIAGROUP>', 1);
+            launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + encodeURI(gameId) + '/romgroup/' + encodeURI(romId) + '/' + encodeURI(filename) + '.zip');
+        } else {
+            launchLink = launchLink.replace('<ISMEDIAGROUP>', 0);
+            launchLink = launchLink.replace('<FILENAME>', '/api/v1.1/Games/' + encodeURI(gameId) + '/roms/' + encodeURI(romId) + '/' + encodeURI(filename));
+        }
+
+        // console.log('Validated link: ' + launchLink);
+
+        returnLink = launchLink;
+    }
 
     return returnLink;
 }

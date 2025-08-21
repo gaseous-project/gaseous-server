@@ -315,7 +315,6 @@ class GameCard {
         }
 
         // set the cover art
-        let logoProviders = ["ScreenScraper", "TheGamesDb"];
         let clearLogoValid = false;
         if (gameData.clearLogo) {
             for (const provider of logoProviders) {
@@ -871,7 +870,7 @@ class GameCardPlatformItem {
 
         // add the game objects to the game list
         let firstGameItem = true;
-        this.gameObjects.forEach(element => {
+        this.gameObjects.forEach(async element => {
             let romItem = null;
 
             let outerGameItem = document.createElement('div');
@@ -963,18 +962,20 @@ class GameCardPlatformItem {
                 playButton.classList.add('platform_edit_button');
                 playButton.classList.add('platform_item_green');
                 playButton.innerHTML = '<img src="/images/play.svg" class="banner_button_image" />';
-                playButton.addEventListener('click', async (e) => {
-                    e.stopPropagation();
-                    let launchLink = await BuildGameLaunchLink(element);
-                    if (launchLink === null) {
-                        console.log('Error: Unable to validate launch link');
-                        console.log(element);
-                    } else {
-                        // launch the game
-                        window.location.href = launchLink;
-                    }
-                });
-                gameItem.appendChild(playButton);
+                let launchLink = await BuildGameLaunchLink(element);
+                if (launchLink !== null) {
+                    playButton.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        if (launchLink === null) {
+                            console.log('Error: Unable to validate launch link');
+                            console.log(element);
+                        } else {
+                            // launch the game
+                            window.location.href = launchLink;
+                        }
+                    });
+                    gameItem.appendChild(playButton);
+                }
             } else if (firstGameItem) {
                 // expand the edit button by default if there is no global play button visible
                 if (document.getElementById('card-launchgame').style.display !== '') {
@@ -1253,7 +1254,7 @@ class GameCardRomList {
                     // clear the media group container
                     this.mediaGroupContainer.innerHTML = '';
 
-                    data.forEach(element => {
+                    data.forEach(async element => {
                         let mediaGroupItem = document.createElement('div');
                         mediaGroupItem.classList.add('card-romlist-item');
                         mediaGroupItem.classList.add('card-romlist-item-media');
@@ -1410,29 +1411,32 @@ class GameCardRomList {
                             playButton.classList.add('platform_edit_button');
                             playButton.classList.add('platform_item_green');
                             playButton.innerHTML = '<img src="/images/play.svg" class="banner_button_image" />';
-                            playButton.addEventListener('click', async (e) => {
-                                e.stopPropagation();
 
-                                // create launch object
-                                let launchObject = {
-                                    "emulatorConfiguration": this.gamePlatformObject.emulatorConfiguration,
-                                    "id": this.gamePlatformObject.id,
-                                    "metadataMapId": this.gamePlatformObject.metadataMapId,
-                                    "romId": element.id,
-                                    "romName": this.gamePlatformObject.name,
-                                    "isMediaGroup": true
-                                };
-
-                                let launchLink = await BuildGameLaunchLink(launchObject);
-                                if (launchLink === null) {
-                                    console.log('Error: Unable to validate launch link');
-                                    console.log(element);
-                                } else {
-                                    // launch the game
-                                    window.location.href = launchLink;
-                                }
-                            });
-                            rightDiv.appendChild(playButton);
+                            // create launch object
+                            let launchObject = {
+                                "emulatorConfiguration": this.gamePlatformObject.emulatorConfiguration,
+                                "id": this.gamePlatformObject.id,
+                                "metadataMapId": this.gamePlatformObject.metadataMapId,
+                                "romId": element.id,
+                                "romName": this.gamePlatformObject.metadataGameName,
+                                "isMediaGroup": true
+                            };
+                            let launchLink = await BuildGameLaunchLink(launchObject);
+                            if (launchLink !== null) {
+                                playButton.addEventListener('click', async (e) => {
+                                    e.stopPropagation();
+                                    console.log(this.gamePlatformObject);
+                                    console.log(launchObject);
+                                    if (launchLink === null) {
+                                        console.log('Error: Unable to validate launch link');
+                                        console.log(element);
+                                    } else {
+                                        // launch the game
+                                        window.location.href = launchLink;
+                                    }
+                                });
+                                rightDiv.appendChild(playButton);
+                            }
                         }
 
                         this.mediaGroupContainer.appendChild(mediaGroupItem);
@@ -1455,7 +1459,7 @@ class GameCardRomList {
             }
         }).then(response => response.json()).then(data => {
             if (data.gameRomItems) {
-                data.gameRomItems.forEach(element => {
+                data.gameRomItems.forEach(async element => {
                     let romItem = document.createElement('div');
                     romItem.id = 'rom_item_' + element.id;
                     romItem.classList.add('card-romlist-item');
@@ -1624,29 +1628,31 @@ class GameCardRomList {
                     playButton.classList.add('platform_edit_button');
                     playButton.classList.add('platform_item_green');
                     playButton.innerHTML = '<img src="/images/play.svg" class="banner_button_image" />';
-                    playButton.addEventListener('click', async (e) => {
-                        e.stopPropagation();
 
-                        // create launch object
-                        let launchObject = {
-                            "emulatorConfiguration": this.gamePlatformObject.emulatorConfiguration,
-                            "id": this.gamePlatformObject.id,
-                            "metadataMapId": this.gamePlatformObject.metadataMapId,
-                            "romId": element.id,
-                            "romName": element.name,
-                            "isMediaGroup": false
-                        };
+                    // create launch object
+                    let launchObject = {
+                        "emulatorConfiguration": this.gamePlatformObject.emulatorConfiguration,
+                        "id": this.gamePlatformObject.id,
+                        "metadataMapId": this.gamePlatformObject.metadataMapId,
+                        "romId": element.id,
+                        "romName": element.name,
+                        "isMediaGroup": false
+                    };
 
-                        let launchLink = await BuildGameLaunchLink(launchObject);
-                        if (launchLink === null) {
-                            console.log('Error: Unable to validate launch link');
-                            console.log(element);
-                        } else {
-                            // launch the game
-                            window.location.href = launchLink;
-                        }
-                    });
-                    rightDiv.appendChild(playButton);
+                    let launchLink = await BuildGameLaunchLink(launchObject);
+                    if (launchLink !== null) {
+                        playButton.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            if (launchLink === null) {
+                                console.log('Error: Unable to validate launch link');
+                                console.log(element);
+                            } else {
+                                // launch the game
+                                window.location.href = launchLink;
+                            }
+                        });
+                        rightDiv.appendChild(playButton);
+                    }
 
                     this.romListContainer.appendChild(romItem);
                 });
