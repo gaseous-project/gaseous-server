@@ -3248,7 +3248,7 @@ class SettingsCard {
             .then((result) => {
                 let newTable = this.card.cardBody.querySelector('#settings_libraries');
                 newTable.innerHTML = '';
-
+                console.log(result);
                 for (let library of result) {
                     let container = document.createElement('div');
                     container.classList.add('section');
@@ -3281,6 +3281,7 @@ class SettingsCard {
                     if (!library.isDefaultLibrary) {
                         let deleteButton = document.createElement('a');
                         deleteButton.href = '#';
+                        deleteButton.style.marginRight = '10px';
                         deleteButton.addEventListener('click', () => {
                             let deleteLibrary = new MessageBox('Delete Library', 'Are you sure you want to delete this library?<br /><br /><strong>Warning</strong>: This cannot be undone!');
                             deleteLibrary.addButton(new ModalButton('OK', 2, deleteLibrary, async (callingObject) => {
@@ -3315,6 +3316,30 @@ class SettingsCard {
                         deleteButtonImage.title = 'Delete';
                         deleteButton.appendChild(deleteButtonImage);
                         controlsCell.appendChild(deleteButton);
+
+                        let editButton = document.createElement('a');
+                        editButton.href = '#';
+                        editButton.addEventListener('click', async () => {
+                            let newLibrary = new NewLibrary(this, library.id);
+                            await newLibrary.open();
+                            newLibrary.DialogName.innerHTML = "Edit Library";
+                            newLibrary.LibraryName.value = library.name;
+                            newLibrary.LibraryPath.value = library.path;
+                            newLibrary.LibraryPath.disabled = true;
+                            newLibrary.pathSelector.disabled = true;
+                            if (library.defaultPlatformId !== 0 && library.defaultPlatformId !== "0") {
+                                var newOption = new Option(library.defaultPlatformName, library.defaultPlatformId, true, true); // text, value, isSelected, isTriggered
+                                $(newLibrary.defaultPlatformSelector).append(newOption).trigger('change');
+                            }
+                            await this.drawLibrary();
+                        });
+                        let editButtonImage = document.createElement('img');
+                        editButtonImage.src = '/images/edit.svg';
+                        editButtonImage.className = 'banner_button_image';
+                        editButtonImage.alt = 'Edit';
+                        editButtonImage.title = 'Edit';
+                        editButton.appendChild(editButtonImage);
+                        controlsCell.appendChild(editButton);
                     }
 
                     let scanButton = document.createElement('img');
