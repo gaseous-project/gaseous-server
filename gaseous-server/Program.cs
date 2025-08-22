@@ -18,6 +18,8 @@ using System.IdentityModel.Tokens.Jwt;
 using Microsoft.AspNetCore.Authentication;
 using System.Security.Claims;
 using Microsoft.AspNetCore.HttpOverrides;
+using System.Net;
+using System.Linq;
 
 Logging.WriteToDiskOnly = true;
 Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server " + Assembly.GetExecutingAssembly().GetName().Version);
@@ -161,10 +163,61 @@ builder.Services.Configure<FormOptions>(options =>
 });
 builder.Services.Configure<ForwardedHeadersOptions>(options =>
 {
-    options.RequireHeaderSymmetry = false;
+    options.RequireHeaderSymmetry = Config.ReverseProxyConfiguration.RequireHeaderSymmetry;
     options.ForwardedHeaders = Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedFor | Microsoft.AspNetCore.HttpOverrides.ForwardedHeaders.XForwardedProto;
+
+    // Replace any defaults
     options.KnownProxies.Clear();
     options.KnownNetworks.Clear();
+
+    // Known proxies (IP addresses)
+    if (Config.ReverseProxyConfiguration.KnownProxies != null)
+    {
+        foreach (var proxy in Config.ReverseProxyConfiguration.KnownProxies)
+        {
+            if (IPAddress.TryParse(proxy, out var ip))
+            {
+                options.KnownProxies.Add(ip);
+            }
+            else if (!string.IsNullOrWhiteSpace(proxy))
+            {
+                Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", $"Invalid KnownProxy IP address '{proxy}' - skipping");
+            }
+        }
+    }
+
+    // Known networks (CIDR)
+    if (Config.ReverseProxyConfiguration.KnownNetworks != null)
+    {
+        foreach (var network in Config.ReverseProxyConfiguration.KnownNetworks)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(network)) continue;
+                var parts = network.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+                if (parts.Length != 2)
+                {
+                    Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", $"Invalid KnownNetwork '{network}' (expected CIDR like 10.0.0.0/8) - skipping");
+                    continue;
+                }
+                if (!IPAddress.TryParse(parts[0], out var prefix))
+                {
+                    Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", $"Invalid KnownNetwork address '{parts[0]}' - skipping");
+                    continue;
+                }
+                if (!int.TryParse(parts[1], out var prefixLen))
+                {
+                    Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", $"Invalid KnownNetwork prefix length '{parts[1]}' - skipping");
+                    continue;
+                }
+                options.KnownNetworks.Add(new Microsoft.AspNetCore.HttpOverrides.IPNetwork(prefix, prefixLen));
+            }
+            catch (Exception ex)
+            {
+                Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", $"Failed to add KnownNetwork '{network}'", ex);
+            }
+        }
+    }
 });
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -406,10 +459,8 @@ app.UseSwaggerUI(options =>
 );
 //}
 
-app.UseForwardedHeaders(new ForwardedHeadersOptions
-{
-    ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-});
+// Use the configured ForwardedHeadersOptions from DI (includes KnownProxies/Networks)
+app.UseForwardedHeaders();
 
 app.UseHttpsRedirection();
 
