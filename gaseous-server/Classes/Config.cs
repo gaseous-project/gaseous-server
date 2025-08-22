@@ -82,6 +82,14 @@ namespace gaseous_server.Classes
             }
         }
 
+        public static ConfigFile.ReverseProxy ReverseProxyConfiguration
+        {
+            get
+            {
+                return _config.ReverseProxyConfiguration;
+            }
+        }
+
         public static string LogPath
         {
             get
@@ -178,6 +186,24 @@ namespace gaseous_server.Classes
                                 _config.SocialAuthConfiguration.OIDCClientId = (string)Common.GetEnvVar("oidcclientid", _config.SocialAuthConfiguration.OIDCClientId);
                                 _config.SocialAuthConfiguration.OIDCClientSecret = (string)Common.GetEnvVar("oidcclientsecret", _config.SocialAuthConfiguration.OIDCClientSecret);
                             }
+                        }
+
+                        // reverse proxy configuration (known proxies/networks)
+                        // Comma-separated IPs/CIDRs via env when running in Docker
+                        var knownProxiesEnv = (string)Common.GetEnvVar("knownproxies", string.Join(",", _config.ReverseProxyConfiguration.KnownProxies ?? new List<string>()));
+                        if (!string.IsNullOrWhiteSpace(knownProxiesEnv))
+                        {
+                            _config.ReverseProxyConfiguration.KnownProxies = knownProxiesEnv
+                                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                                .ToList();
+                        }
+
+                        var knownNetworksEnv = (string)Common.GetEnvVar("knownnetworks", string.Join(",", _config.ReverseProxyConfiguration.KnownNetworks ?? new List<string>()));
+                        if (!string.IsNullOrWhiteSpace(knownNetworksEnv))
+                        {
+                            _config.ReverseProxyConfiguration.KnownNetworks = knownNetworksEnv
+                                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                                .ToList();
                         }
                     }
                     else
@@ -462,6 +488,8 @@ namespace gaseous_server.Classes
             public SocialAuth SocialAuthConfiguration = new SocialAuth();
 
             public Logging LoggingConfiguration = new Logging();
+
+            public ReverseProxy ReverseProxyConfiguration = new ReverseProxy();
 
             public class Database
             {
@@ -1035,6 +1063,20 @@ namespace gaseous_server.Classes
                         return !String.IsNullOrEmpty(OIDCAuthority) && !String.IsNullOrEmpty(OIDCClientId) && !String.IsNullOrEmpty(OIDCClientSecret);
                     }
                 }
+            }
+
+            public class ReverseProxy
+            {
+                // If you have an upstream reverse proxy (nginx/traefik/caddy), add its IPs here.
+                // Example: [ "127.0.0.1", "10.0.0.2" ]
+                public List<string> KnownProxies { get; set; } = new List<string>();
+
+                // Known networks in CIDR notation.
+                // Example: [ "10.0.0.0/8", "192.168.0.0/16" ]
+                public List<string> KnownNetworks { get; set; } = new List<string>();
+
+                // Aligns with ForwardedHeadersOptions.RequireHeaderSymmetry
+                public bool RequireHeaderSymmetry { get; set; } = false;
             }
         }
     }
