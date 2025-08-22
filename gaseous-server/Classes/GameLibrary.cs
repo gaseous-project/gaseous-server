@@ -136,6 +136,21 @@ namespace gaseous_server
             return library;
         }
 
+        public static async Task<LibraryItem> EditLibrary(int LibraryId, string Name, long DefaultPlatformId)
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = "UPDATE GameLibraries SET Name=@name, DefaultPlatform=@defaultplatform WHERE Id=@id;";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>();
+            dbDict.Add("name", Name);
+            dbDict.Add("defaultplatform", DefaultPlatformId);
+            dbDict.Add("id", LibraryId);
+            await db.ExecuteCMDAsync(sql, dbDict);
+
+            Logging.Log(Logging.LogType.Information, "Library Management", "Updated library " + Name);
+
+            return await GetLibrary(LibraryId);
+        }
+
         public static async Task DeleteLibrary(int LibraryId)
         {
             LibraryItem library = await GetLibrary(LibraryId);

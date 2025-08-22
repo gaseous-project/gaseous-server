@@ -89,6 +89,32 @@ namespace gaseous_server.Controllers
 
         [MapToApiVersion("1.0")]
         [MapToApiVersion("1.1")]
+        [HttpPatch("{LibraryId}")]
+        [ProducesResponseType(typeof(GameLibrary.LibraryItem), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult> EditLibrary(int LibraryId, string Name, long DefaultPlatformId)
+        {
+            try
+            {
+                return Ok(await GameLibrary.EditLibrary(LibraryId, Name, DefaultPlatformId));
+            }
+            catch (GameLibrary.LibraryNotFound exLNF)
+            {
+                return NotFound(exLNF.ToString());
+            }
+            catch (GameLibrary.PathExists exPE)
+            {
+                return Conflict("Path already used in another library");
+            }
+            catch (GameLibrary.PathNotFound exPNF)
+            {
+                return NotFound("Path not found");
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
         [HttpPost("{LibraryId}/Scan")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]

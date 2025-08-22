@@ -1,6 +1,8 @@
 class NewLibrary {
-    constructor(parent) {
+    constructor(parent, editLibraryId = 0) {
         this.parent = parent;
+        this.editLibraryId = editLibraryId;
+        this.editMode = editLibraryId > 0; // if editLibraryId is set, we are in edit mode
     }
 
     async open() {
@@ -12,7 +14,8 @@ class NewLibrary {
         this.dialog.modalElement.style = 'width: 600px; height: unset; min-width: unset; min-height: 215px; max-width: unset; max-height: unset;';
 
         // setup the dialog
-        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "New Library";
+        this.DialogName = this.dialog.modalElement.querySelector('#modal-header-text');
+        this.DialogName.innerHTML = "New Library";
 
         // set up the library name field
         this.LibraryName = this.dialog.modalElement.querySelector('#librarynew_name');
@@ -27,8 +30,8 @@ class NewLibrary {
         });
 
         // setup the path selector button
-        let pathSelector = this.dialog.modalElement.querySelector('#librarynew_pathSelect');
-        pathSelector.addEventListener('click', async () => {
+        this.pathSelector = this.dialog.modalElement.querySelector('#librarynew_pathSelect');
+        this.pathSelector.addEventListener('click', async () => {
             let fileOpen = new FileOpen(
                 async () => {
                     this.LibraryPath.value = fileOpen.SelectedPath;
@@ -75,6 +78,11 @@ class NewLibrary {
             }
         });
 
+        $(this.defaultPlatformSelector).on("select2:select", async (e) => {
+            // when a platform is selected, validate the dialog
+            await this.validate();
+        });
+
         // add ok button
         let okButton = new ModalButton("OK", 1, this, async (callingObject) => {
             if (await this.validate()) {
@@ -85,10 +93,18 @@ class NewLibrary {
                     defaultPlatform = defaultPlatformSelector[0].id;
                 }
 
+                let url = `/api/v1.1/Library?Name=${encodeURIComponent(this.LibraryName.value)}&DefaultPlatformId=${defaultPlatform}&Path=${encodeURIComponent(this.LibraryPath.value)}`;
+                let urlMethod = 'POST';
+                if (this.editMode) {
+                    // if in edit mode, we need to update the library
+                    url = `/api/v1.1/Library/${this.editLibraryId}?Name=${encodeURIComponent(this.LibraryName.value)}&DefaultPlatformId=${defaultPlatform}`;
+                    urlMethod = 'PATCH';
+                }
+
                 // make the ajax call to create the library
-                fetch('/api/v1.1/Library?Name=' + encodeURIComponent(this.LibraryName.value) + '&DefaultPlatformId=' + defaultPlatform + '&Path=' + encodeURIComponent(this.LibraryPath.value),
+                fetch(url,
                     {
-                        method: 'POST',
+                        method: urlMethod,
                         headers: {
                             'Content-Type': 'application/json'
                         }
