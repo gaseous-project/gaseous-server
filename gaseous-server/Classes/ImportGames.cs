@@ -306,11 +306,19 @@ namespace gaseous_server.Classes
                 gaseous_server.Models.Signatures_Games discoveredSignature = fileSignature.GetFileSignatureAsync(GameLibrary.GetDefaultLibrary, Hash, fi, FilePath).Result;
                 if (discoveredSignature.Flags.GameId == 0)
                 {
-                    HasheousClient.Models.Metadata.IGDB.Game? discoveredGame = SearchForGame(discoveredSignature, discoveredSignature.Flags.PlatformId, false).Result;
-                    if (discoveredGame != null && discoveredGame.Id != null)
+                    try
                     {
-                        discoveredSignature.MetadataSources.AddGame((long)discoveredGame.Id, discoveredGame.Name, MetadataSources.IGDB);
+                        HasheousClient.Models.Metadata.IGDB.Game? discoveredGame = SearchForGame(discoveredSignature, discoveredSignature.Flags.PlatformId, false).Result;
+                        if (discoveredGame != null && discoveredGame.Id != null)
+                        {
+                            discoveredSignature.MetadataSources.AddGame((long)discoveredGame.Id, discoveredGame.Name, MetadataSources.IGDB);
+                        }
                     }
+                    catch (Exception ex)
+                    {
+                        Logging.Log(Logging.LogType.Warning, "Import Game", "  Error searching for game in IGDB: " + ex.Message);
+                    }
+
                 }
 
                 // add to database

@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/dotnet:1-9.0-noble
+FROM mcr.microsoft.com/devcontainers/dotnet:1-8.0-noble
 
 # update apt-get
 RUN apt-get update && curl -fsSL https://deb.nodesource.com/setup_20.x | bash - 
