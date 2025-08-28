@@ -75,6 +75,7 @@
         let FirstRunStatus = "0";
         var AgeRatingMappings = {};
         let emulatorDebugMode = "false";
+        let supportedMetadataSources = [];
 
         let backgroundImageHandler = undefined;
 
@@ -110,6 +111,7 @@
                         DBSchemaVersion = versionFile.DBSchemaVersion;
                         FirstRunStatus = versionFile.FirstRunStatus;
                         emulatorDebugMode = versionFile.emulatorDebugMode;
+                        supportedMetadataSources = versionFile.SupportedMetadataSources;
 
                         // load age rating mappings
                         AgeRatingMappings = await fetch('/images/Ratings/AgeGroupMap.json')

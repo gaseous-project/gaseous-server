@@ -114,6 +114,9 @@ ORDER BY Platform.`Name`; ";
                 },
                 {
                     "emulatorDebugMode", Config.ReadSetting<string>("emulatorDebugMode", false.ToString()).ToLower()
+                },
+                {
+                    "SupportedMetadataSources", Models.MetadataMapSupportedDataSources.SupportedMetadataSources
                 }
             };
 
