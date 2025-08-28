@@ -406,12 +406,21 @@ namespace gaseous_server.Classes
                         {
                             preferred = true;
                         }
-                        MetadataManagement.AddMetadataMapItem((long)map.Id, source, signatureSource.Id, preferred);
+                        MetadataManagement.AddMetadataMapItem((long)map.Id, source, signatureSource.Id, preferred, false, signatureSource.Id);
                     }
                     else
                     {
-                        // update the source in the map - do not modify the preferred status
-                        MetadataManagement.UpdateMetadataMapItem((long)map.Id, source, signatureSource.Id, null);
+                        // update the source in the map - do not modify the preferred status, and only update if the source is not marked as manual
+                        if (mapSource.IsManual == false)
+                        {
+                            // only update if the source is not marked as manual
+                            MetadataManagement.UpdateMetadataMapItem((long)map.Id, source, signatureSource.Id, null, null, signatureSource.Id);
+                        }
+                        else
+                        {
+                            // source is marked as manual - only update the automatic source id
+                            MetadataManagement.UpdateMetadataMapItem((long)map.Id, source, null, null, null, signatureSource.Id);
+                        }
                     }
                 }
             }

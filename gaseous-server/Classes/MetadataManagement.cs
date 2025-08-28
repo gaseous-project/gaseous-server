@@ -98,7 +98,7 @@ namespace gaseous_server.Classes
 			long gameId = (long)dt.Rows[0][0];
 
 			// add default metadata sources
-			AddMetadataMapItem(metadataMapId, FileSignature.MetadataSources.None, gameId, true);
+			AddMetadataMapItem(metadataMapId, FileSignature.MetadataSources.None, gameId, true, false, gameId);
 
 			// return the new metadata map
 			MetadataMap RetVal = GetMetadataMap(metadataMapId).Result;
@@ -121,10 +121,15 @@ namespace gaseous_server.Classes
 		/// <param name="preferred">
 		/// Whether the metadata source is preferred.
 		/// </param>
+		/// <param name="IsManual">
+		/// Whether this metadata source was maunally configured by the user. Prevents automatic updates. Can be modified by the user.
+		/// </param>
+		/// <param name="AutomaticMetadataSourceId">
+		/// The unique identifier for the data source as provided by the automatic metadata fetcher.
 		/// <remarks>
 		/// If the metadata source is preferred, all other metadata sources for the same metadata map will be set to not preferred.
 		/// </remarks>
-		public static void AddMetadataMapItem(long metadataMapId, FileSignature.MetadataSources sourceType, long sourceId, bool preferred)
+		public static void AddMetadataMapItem(long metadataMapId, FileSignature.MetadataSources sourceType, long sourceId, bool preferred, bool IsManual, long AutomaticMetadataSourceId)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
@@ -134,7 +139,9 @@ namespace gaseous_server.Classes
 				{ "@sourceType", sourceType },
 				{ "@sourceId", sourceId },
 				{ "@preferred", preferred },
-				{ "@processedatimport", false }
+				{ "@processedatimport", false },
+				{ "@isManual", IsManual },
+				{ "@automaticMetadataSourceId", AutomaticMetadataSourceId }
 			};
 
 			if (preferred == true)
@@ -144,11 +151,35 @@ namespace gaseous_server.Classes
 				db.ExecuteCMD(sql, dbDict);
 			}
 
-			sql = "INSERT IGNORE INTO MetadataMapBridge (ParentMapId, MetadataSourceType, MetadataSourceId, Preferred, ProcessedAtImport) VALUES (@metadataMapId, @sourceType, @sourceId, @preferred, @processedatimport);";
+			sql = "INSERT IGNORE INTO MetadataMapBridge (ParentMapId, MetadataSourceType, MetadataSourceId, Preferred, ProcessedAtImport, IsManual, AutomaticMetadataSourceId) VALUES (@metadataMapId, @sourceType, @sourceId, @preferred, @processedatimport, @isManual, @automaticMetadataSourceId);";
 			db.ExecuteCMD(sql, dbDict);
 		}
 
-		public static void UpdateMetadataMapItem(long metadataMapId, FileSignature.MetadataSources SourceType, long sourceId, bool? preferred = null)
+		/// <summary>
+		/// Updates a metadata map item in the database.
+		/// </summary>
+		/// <param name="metadataMapId">
+		/// The ID of the metadata map to which the item belongs.
+		/// </param>
+		/// <param name="SourceType">
+		/// The type of the metadata source.
+		/// </param>
+		/// <param name="sourceId">
+		/// The ID of the metadata source.
+		/// </param>
+		/// <param name="preferred">
+		/// Whether the metadata source is preferred.
+		/// </param>
+		/// <param name="IsManual">
+		/// Whether this metadata source was maunally configured by the user. Prevents automatic updates. Can be modified by the user.
+		/// </param>
+		/// <param name="AutomaticMetadataSourceId">
+		/// The unique identifier for the data source as provided by the automatic metadata fetcher.
+		/// </param>
+		/// /// <remarks>
+		/// If the metadata source is preferred, all other metadata sources for the same metadata map will be set to not preferred.
+		/// </remarks>
+		public static void UpdateMetadataMapItem(long metadataMapId, FileSignature.MetadataSources SourceType, long? sourceId = null, bool? preferred = null, bool? IsManual = null, long? AutomaticMetadataSourceId = null)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
@@ -157,20 +188,43 @@ namespace gaseous_server.Classes
 				{ "@metadataMapId", metadataMapId },
 				{ "@sourceType", SourceType },
 				{ "@sourceId", sourceId },
-				{ "@preferred", preferred }
+				{ "@preferred", preferred },
+				{ "@isManual", IsManual },
+				{ "@automaticMetadataSourceId", AutomaticMetadataSourceId }
 			};
+
+			List<string> whereClauses = new List<string>();
+			if (sourceId != null)
+			{
+				whereClauses.Add("MetadataSourceId = @sourceId");
+			}
+			if (IsManual != null)
+			{
+				whereClauses.Add("IsManual = @isManual");
+			}
+			if (AutomaticMetadataSourceId != null)
+			{
+				whereClauses.Add("AutomaticMetadataSourceId = @automaticMetadataSourceId");
+			}
+
+			string whereClause = string.Join(", ", whereClauses);
 
 			if (preferred == true)
 			{
-				// set all other items to not preferred
-				sql = "UPDATE MetadataMapBridge SET Preferred = 0 WHERE ParentMapId = @metadataMapId; UPDATE MetadataMapBridge SET MetadataSourceId = @sourceId, Preferred = @preferred WHERE ParentMapId = @metadataMapId AND MetadataSourceType = @sourceType;";
+				// set all other items to not preferred, and update this one to preferred
+				sql = "UPDATE MetadataMapBridge SET Preferred = 0 WHERE ParentMapId = @metadataMapId; UPDATE MetadataMapBridge SET Preferred = @preferred WHERE ParentMapId = @metadataMapId AND MetadataSourceType = @sourceType;";
 				db.ExecuteCMD(sql, dbDict);
 			}
-			else
+
+			// only make changes if there is something to change
+			if (whereClause == "")
 			{
-				sql = "UPDATE MetadataMapBridge SET MetadataSourceId = @sourceId WHERE ParentMapId = @metadataMapId AND MetadataSourceType = @sourceType;";
-				db.ExecuteCMD(sql, dbDict);
+				return;
 			}
+
+			// update the metadata map item
+			sql = $"UPDATE MetadataMapBridge SET {whereClause} WHERE ParentMapId = @metadataMapId AND MetadataSourceType = @sourceType;";
+			db.ExecuteCMD(sql, dbDict);
 		}
 
 		/// <summary>
@@ -254,7 +308,9 @@ namespace gaseous_server.Classes
 					{
 						SourceType = (FileSignature.MetadataSources)dr["MetadataSourceType"],
 						SourceId = (long)dr["MetadataSourceId"],
-						Preferred = (bool)dr["Preferred"]
+						Preferred = (bool)dr["Preferred"],
+						AutomaticMetadataSourceId = dr["AutomaticMetadataSourceId"] == DBNull.Value ? null : (long?)dr["AutomaticMetadataSourceId"],
+						IsManual = (bool)dr["IsManual"]
 					};
 
 					if (!BlockedMetadataSource.Contains(metadataMapItem.SourceType))
@@ -330,7 +386,9 @@ namespace gaseous_server.Classes
 				{
 					SourceType = (FileSignature.MetadataSources)dt.Rows[0]["MetadataSourceType"],
 					SourceId = (long)dt.Rows[0]["MetadataSourceId"],
-					Preferred = (bool)dt.Rows[0]["Preferred"]
+					Preferred = (bool)dt.Rows[0]["Preferred"],
+					AutomaticMetadataSourceId = dt.Rows[0]["AutomaticMetadataSourceId"] == DBNull.Value ? null : (long?)dt.Rows[0]["AutomaticMetadataSourceId"],
+					IsManual = (bool)dt.Rows[0]["IsManual"]
 				};
 
 				return metadataMapItem;
