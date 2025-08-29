@@ -14,6 +14,13 @@ namespace gaseous_server.Classes
         {
             get
             {
+                // Allow override via environment variable for services/containers
+                var overridePath = Environment.GetEnvironmentVariable("GASEOUS_CONFIG_PATH");
+                if (!string.IsNullOrWhiteSpace(overridePath))
+                {
+                    return overridePath;
+                }
+
                 return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".gaseous-server");
             }
         }
@@ -22,7 +29,7 @@ namespace gaseous_server.Classes
         {
             get
             {
-                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".gaseous-server", "config.json");
+                return Path.Combine(ConfigurationPath, "config.json");
             }
         }
 
@@ -30,7 +37,7 @@ namespace gaseous_server.Classes
         {
             get
             {
-                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".gaseous-server", "config.json.backup");
+                return Path.Combine(ConfigurationPath, "config.json.backup");
             }
         }
 
@@ -38,7 +45,7 @@ namespace gaseous_server.Classes
         {
             get
             {
-                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".gaseous-server", "platformmap.json");
+                return Path.Combine(ConfigurationPath, "platformmap.json");
             }
         }
 

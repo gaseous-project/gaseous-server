@@ -20,6 +20,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.HttpOverrides;
 using System.Net;
 using System.Linq;
+using Microsoft.Extensions.Hosting.WindowsServices;
 
 Logging.WriteToDiskOnly = true;
 Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server " + Assembly.GetExecutingAssembly().GetName().Version);
@@ -93,6 +94,21 @@ ProcessQueue.QueueItems.Add(queueItem);
 
 // set up server
 var builder = WebApplication.CreateBuilder(args);
+
+// Enable Windows Service support when running on Windows as a service
+if (OperatingSystem.IsWindows())
+{
+    builder.Host.UseWindowsService(options =>
+    {
+        options.ServiceName = "Gaseous Server";
+    });
+
+    // When running as a Windows Service there is no console; route logs to Windows Event Log too.
+    // Suppress CA1416 analyzer as this is guarded by a runtime OS check.
+#pragma warning disable CA1416
+    builder.Logging.AddEventLog();
+#pragma warning restore CA1416
+}
 
 // Add services to the container.
 builder.Services.AddControllers().AddJsonOptions(x =>
