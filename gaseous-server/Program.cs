@@ -27,6 +27,12 @@ using Microsoft.Extensions.Hosting.WindowsServices;
 // set up server
 var builder = WebApplication.CreateBuilder(args);
 
+// Bind Kestrel to the configured HTTP port
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenAnyIP(Config.ServerPort);
+});
+
 // Enable Windows Service support when running on Windows as a service
 if (OperatingSystem.IsWindows())
 {

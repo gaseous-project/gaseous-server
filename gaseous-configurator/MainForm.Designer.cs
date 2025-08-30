@@ -19,6 +19,8 @@ namespace gaseous_configurator
             this.txtHost = new System.Windows.Forms.TextBox();
             this.lblPort = new System.Windows.Forms.Label();
             this.numPort = new System.Windows.Forms.NumericUpDown();
+            this.lblWebPort = new System.Windows.Forms.Label();
+            this.numWebPort = new System.Windows.Forms.NumericUpDown();
             this.lblUser = new System.Windows.Forms.Label();
             this.txtUser = new System.Windows.Forms.TextBox();
             this.lblPass = new System.Windows.Forms.Label();
@@ -33,10 +35,12 @@ namespace gaseous_configurator
             this.btnRestartService = new System.Windows.Forms.Button();
             this.btnRemoveService = new System.Windows.Forms.Button();
             this.btnOpenLogs = new System.Windows.Forms.Button();
+            this.btnOpenBrowser = new System.Windows.Forms.Button();
             this.statusStrip = new System.Windows.Forms.StatusStrip();
             this.serviceStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             this.actionStatusLabel = new System.Windows.Forms.ToolStripStatusLabel();
             ((System.ComponentModel.ISupportInitialize)(this.numPort)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numWebPort)).BeginInit();
             this.statusStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -83,6 +87,37 @@ namespace gaseous_configurator
             this.numPort.TabIndex = 3;
             this.numPort.Value = new decimal(new int[] {
             3306,
+            0,
+            0,
+            0});
+            // 
+            // lblWebPort
+            // 
+            this.lblWebPort.AutoSize = true;
+            this.lblWebPort.Location = new System.Drawing.Point(12, 201);
+            this.lblWebPort.Name = "lblWebPort";
+            this.lblWebPort.Size = new System.Drawing.Size(57, 15);
+            this.lblWebPort.TabIndex = 19;
+            this.lblWebPort.Text = "Web Port";
+            // 
+            // numWebPort
+            // 
+            this.numWebPort.Location = new System.Drawing.Point(120, 199);
+            this.numWebPort.Maximum = new decimal(new int[] {
+            65535,
+            0,
+            0,
+            0});
+            this.numWebPort.Minimum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numWebPort.Name = "numWebPort";
+            this.numWebPort.Size = new System.Drawing.Size(120, 23);
+            this.numWebPort.TabIndex = 20;
+            this.numWebPort.Value = new decimal(new int[] {
+            5198,
             0,
             0,
             0});
@@ -138,7 +173,7 @@ namespace gaseous_configurator
             // 
             // btnSave
             // 
-            this.btnSave.Location = new System.Drawing.Point(416, 200);
+            this.btnSave.Location = new System.Drawing.Point(416, 230);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(90, 30);
             this.btnSave.TabIndex = 11;
@@ -150,7 +185,7 @@ namespace gaseous_configurator
             // 
             this.lblStatus.AutoSize = true;
             this.lblStatus.ForeColor = System.Drawing.SystemColors.GrayText;
-            this.lblStatus.Location = new System.Drawing.Point(12, 240);
+            this.lblStatus.Location = new System.Drawing.Point(12, 270);
             this.lblStatus.Name = "lblStatus";
             this.lblStatus.Size = new System.Drawing.Size(0, 15);
             this.lblStatus.TabIndex = 13;
@@ -167,40 +202,40 @@ namespace gaseous_configurator
             // 
             // btnStartService
             // 
-            this.btnStartService.Location = new System.Drawing.Point(204, 200);
+            this.btnStartService.Location = new System.Drawing.Point(204, 230);
             this.btnStartService.Name = "btnStartService";
             this.btnStartService.Size = new System.Drawing.Size(110, 30);
-            this.btnStartService.TabIndex = 10;
+            this.btnStartService.TabIndex = 12;
             this.btnStartService.Text = "Start Service";
             this.btnStartService.UseVisualStyleBackColor = true;
             this.btnStartService.Click += new System.EventHandler(this.btnStartService_Click);
             // 
             // btnStopService
             // 
-            this.btnStopService.Location = new System.Drawing.Point(108, 200);
+            this.btnStopService.Location = new System.Drawing.Point(108, 230);
             this.btnStopService.Name = "btnStopService";
             this.btnStopService.Size = new System.Drawing.Size(90, 30);
-            this.btnStopService.TabIndex = 15;
+            this.btnStopService.TabIndex = 13;
             this.btnStopService.Text = "Stop";
             this.btnStopService.UseVisualStyleBackColor = true;
             this.btnStopService.Click += new System.EventHandler(this.btnStopService_Click);
             // 
             // btnRestartService
             // 
-            this.btnRestartService.Location = new System.Drawing.Point(12, 200);
+            this.btnRestartService.Location = new System.Drawing.Point(12, 230);
             this.btnRestartService.Name = "btnRestartService";
             this.btnRestartService.Size = new System.Drawing.Size(90, 30);
-            this.btnRestartService.TabIndex = 16;
+            this.btnRestartService.TabIndex = 14;
             this.btnRestartService.Text = "Restart";
             this.btnRestartService.UseVisualStyleBackColor = true;
             this.btnRestartService.Click += new System.EventHandler(this.btnRestartService_Click);
             // 
             // btnRemoveService
             // 
-            this.btnRemoveService.Location = new System.Drawing.Point(320, 200);
+            this.btnRemoveService.Location = new System.Drawing.Point(320, 230);
             this.btnRemoveService.Name = "btnRemoveService";
             this.btnRemoveService.Size = new System.Drawing.Size(90, 30);
-            this.btnRemoveService.TabIndex = 17;
+            this.btnRemoveService.TabIndex = 15;
             this.btnRemoveService.Text = "Remove";
             this.btnRemoveService.UseVisualStyleBackColor = true;
             this.btnRemoveService.Click += new System.EventHandler(this.btnRemoveService_Click);
@@ -215,12 +250,22 @@ namespace gaseous_configurator
             this.btnOpenLogs.UseVisualStyleBackColor = true;
             this.btnOpenLogs.Click += new System.EventHandler(this.btnOpenLogs_Click);
             // 
+            // btnOpenBrowser
+            // 
+            this.btnOpenBrowser.Location = new System.Drawing.Point(282, 8);
+            this.btnOpenBrowser.Name = "btnOpenBrowser";
+            this.btnOpenBrowser.Size = new System.Drawing.Size(110, 26);
+            this.btnOpenBrowser.TabIndex = 21;
+            this.btnOpenBrowser.Text = "Open Web";
+            this.btnOpenBrowser.UseVisualStyleBackColor = true;
+            this.btnOpenBrowser.Click += new System.EventHandler(this.btnOpenBrowser_Click);
+            // 
             // statusStrip
             // 
             this.statusStrip.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.serviceStatusLabel,
             this.actionStatusLabel});
-            this.statusStrip.Location = new System.Drawing.Point(0, 248);
+            this.statusStrip.Location = new System.Drawing.Point(0, 278);
             this.statusStrip.Name = "statusStrip";
             this.statusStrip.Size = new System.Drawing.Size(520, 22);
             this.statusStrip.SizingGrip = false;
@@ -246,7 +291,8 @@ namespace gaseous_configurator
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(520, 270);
+            this.ClientSize = new System.Drawing.Size(520, 300);
+            this.Controls.Add(this.btnOpenBrowser);
             this.Controls.Add(this.statusStrip);
             this.Controls.Add(this.btnOpenLogs);
             this.Controls.Add(this.btnRemoveService);
@@ -256,6 +302,8 @@ namespace gaseous_configurator
             this.Controls.Add(this.lblStatus);
             this.Controls.Add(this.lblPath);
             this.Controls.Add(this.btnSave);
+            this.Controls.Add(this.numWebPort);
+            this.Controls.Add(this.lblWebPort);
             this.Controls.Add(this.txtDb);
             this.Controls.Add(this.lblDb);
             this.Controls.Add(this.txtPass);
@@ -273,6 +321,7 @@ namespace gaseous_configurator
             this.Text = "Gaseous Configurator";
             this.Load += new System.EventHandler(this.MainForm_Load);
             ((System.ComponentModel.ISupportInitialize)(this.numPort)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numWebPort)).EndInit();
             this.statusStrip.ResumeLayout(false);
             this.statusStrip.PerformLayout();
             this.ResumeLayout(false);
@@ -301,5 +350,8 @@ namespace gaseous_configurator
     private System.Windows.Forms.StatusStrip statusStrip;
     private System.Windows.Forms.ToolStripStatusLabel serviceStatusLabel;
     private System.Windows.Forms.ToolStripStatusLabel actionStatusLabel;
+    private System.Windows.Forms.Label lblWebPort;
+    private System.Windows.Forms.NumericUpDown numWebPort;
+    private System.Windows.Forms.Button btnOpenBrowser;
     }
 }

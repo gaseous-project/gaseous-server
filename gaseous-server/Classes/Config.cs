@@ -25,6 +25,12 @@ namespace gaseous_server.Classes
             }
         }
 
+        public static int ServerPort
+        {
+            get { return _config.ServerPort; }
+            set { _config.ServerPort = value; }
+        }
+
         static string ConfigurationFilePath
         {
             get
@@ -497,6 +503,23 @@ namespace gaseous_server.Classes
             public Logging LoggingConfiguration = new Logging();
 
             public ReverseProxy ReverseProxyConfiguration = new ReverseProxy();
+
+            // Port the web server listens on (Kestrel). Default 5198.
+            private static int _DefaultServerPort
+            {
+                get
+                {
+                    try
+                    {
+                        var env = Environment.GetEnvironmentVariable("webport");
+                        if (!string.IsNullOrWhiteSpace(env) && int.TryParse(env, out var p)) return p;
+                    }
+                    catch { }
+                    return 5198;
+                }
+            }
+
+            public int ServerPort = _DefaultServerPort;
 
             public class Database
             {
