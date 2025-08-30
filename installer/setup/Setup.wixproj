@@ -2,9 +2,9 @@
   <PropertyGroup>
     <OutputType>Package</OutputType>
     <Platform>x64</Platform>
-    <ProductVersion>1.0.0</ProductVersion>
+  <ProductVersion Condition="'$(ProductVersion)'==''">$(Version)</ProductVersion>
     <CompanyName>gaseous-project</CompanyName>
-  <DefineConstants>PublishDir=$(MSBuildThisFileDirectory)publish\win-x64\</DefineConstants>
+  <DefineConstants>PublishDir=$(MSBuildThisFileDirectory)publish\win-x64\;ProductVersion=$(ProductVersion)</DefineConstants>
     <DisableValidation>true</DisableValidation>
     <EnableDefaultItems>false</EnableDefaultItems>
   </PropertyGroup>

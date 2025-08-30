@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
-  <Package Name="Gaseous Server" Language="1033" Version="1.0.0" Manufacturer="gaseous-project" UpgradeCode="{7B6A2DF2-7C89-4B6A-9F75-7A8E21D6F111}">
+  <Package Name="Gaseous Server" Language="1033" Version="$(var.ProductVersion)" Manufacturer="gaseous-project" UpgradeCode="{7B6A2DF2-7C89-4B6A-9F75-7A8E21D6F111}">
   <MediaTemplate EmbedCab="yes" CabinetTemplate="cab{0}.cab" />
 
     <!-- Install to ProgramFiles64Folder\Gaseous Server -->
