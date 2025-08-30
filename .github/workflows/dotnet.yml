@@ -11,14 +11,16 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Setup .NET
-        uses: actions/setup-dotnet@v1
+        uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x
       - name: Sign in to Nuget
         run: dotnet nuget add source --username michael-j-green --password ${{ secrets.NUGETKEY }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/gaseous-project/index.json"
       - name: Restore dependencies
         run: dotnet restore
-      - name: Build
-        run: dotnet build --no-restore
+      - name: Build server
+        run: dotnet build ./gaseous-server/gaseous-server.csproj --no-restore -c Release
+      - name: Build CLI
+        run: dotnet build ./gaseous-cli/gaseous-cli.csproj --no-restore -c Release
