@@ -27,12 +27,6 @@ using Microsoft.Extensions.Hosting.WindowsServices;
 // set up server
 var builder = WebApplication.CreateBuilder(args);
 
-// Bind Kestrel to the configured HTTP port
-builder.WebHost.ConfigureKestrel(options =>
-{
-    options.ListenAnyIP(Config.ServerPort);
-});
-
 // Enable Windows Service support when running on Windows as a service
 if (OperatingSystem.IsWindows())
 {
@@ -40,6 +34,12 @@ if (OperatingSystem.IsWindows())
     {
         // Use the short service name without spaces; display name is set during service creation
         options.ServiceName = "GaseousServer";
+    });
+
+    // Bind Kestrel to the configured HTTP port
+    builder.WebHost.ConfigureKestrel(options =>
+    {
+        options.ListenAnyIP(Config.ServerPort);
     });
 
     // When running as a Windows Service there is no console; route logs to Windows Event Log too.
