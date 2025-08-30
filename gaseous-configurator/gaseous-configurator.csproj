@@ -1,0 +1,16 @@
+<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <EnableWindowsTargeting>true</EnableWindowsTargeting>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  <ApplicationIcon>..\gaseous-server\wwwroot\favicon.ico</ApplicationIcon>
+  <!-- Allow RID-specific publishes (e.g., win-x64) when invoked from gaseous-server publish -->
+  <RuntimeIdentifiers>win-x64;win-arm64</RuntimeIdentifiers>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\gaseous-server\gaseous-server.csproj" />
+  </ItemGroup>
+</Project>

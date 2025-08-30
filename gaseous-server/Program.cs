@@ -22,75 +22,7 @@ using System.Net;
 using System.Linq;
 using Microsoft.Extensions.Hosting.WindowsServices;
 
-Logging.WriteToDiskOnly = true;
-Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server " + Assembly.GetExecutingAssembly().GetName().Version);
-
-Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionStringNoDatabase);
-
-// check db availability
-bool dbOnline = false;
-do
-{
-    Logging.Log(Logging.LogType.Information, "Startup", "Waiting for database...");
-    if (db.TestConnection() == true)
-    {
-        dbOnline = true;
-    }
-    else
-    {
-        Thread.Sleep(30000);
-    }
-} while (dbOnline == false);
-
-db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-
-// set up db
-db.InitDB();
-// create relation tables if they don't exist
-await Storage.CreateRelationsTables<IGDB.Models.Game>();
-await Storage.CreateRelationsTables<IGDB.Models.Platform>();
-
-// populate db with static data for lookups
-await AgeRatings.PopulateAgeMapAsync();
-
-// load app settings
-Config.InitSettings();
-// write updated settings back to the config file
-Config.UpdateConfig();
-
-// update default library path
-await GameLibrary.UpdateDefaultLibraryPathAsync();
-
-// set api metadata source from config
-Communications.MetadataSource = Config.MetadataConfiguration.DefaultMetadataSource;
-
-// set up hasheous client
-HasheousClient.WebApp.HttpHelper.BaseUri = Config.MetadataConfiguration.HasheousHost;
-
-// clean up storage
-if (Directory.Exists(Config.LibraryConfiguration.LibraryTempDirectory))
-{
-    Directory.Delete(Config.LibraryConfiguration.LibraryTempDirectory, true);
-}
-if (Directory.Exists(Config.LibraryConfiguration.LibraryUploadDirectory))
-{
-    Directory.Delete(Config.LibraryConfiguration.LibraryUploadDirectory, true);
-}
-
-// kick off any delayed upgrade tasks
-// start the task
-ProcessQueue.QueueItem queueItem = new ProcessQueue.QueueItem(
-        ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade,
-        1,
-        new List<ProcessQueue.QueueItemType>
-        {
-            ProcessQueue.QueueItemType.All
-        },
-        false,
-        true
-    );
-queueItem.ForceExecute();
-ProcessQueue.QueueItems.Add(queueItem);
+// Defer heavy startup work so Windows Service can report RUNNING quickly
 
 // set up server
 var builder = WebApplication.CreateBuilder(args);
@@ -267,6 +199,7 @@ builder.Services.AddSwaggerGen(options =>
     }
 );
 builder.Services.AddHostedService<TimedHostedService>();
+builder.Services.AddHostedService<StartupInitializer>();
 
 // identity
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
@@ -482,23 +415,7 @@ app.UseHttpsRedirection();
 
 app.UseResponseCaching();
 
-// set up system roles
-using (var scope = app.Services.CreateScope())
-{
-    var roleManager = scope.ServiceProvider.GetRequiredService<RoleStore>();
-    var roles = new[] { "Admin", "Gamer", "Player" };
-
-    foreach (var role in roles)
-    {
-        if (await roleManager.FindByNameAsync(role, CancellationToken.None) == null)
-        {
-            ApplicationRole applicationRole = new ApplicationRole();
-            applicationRole.Name = role;
-            applicationRole.NormalizedName = role.ToUpper();
-            await roleManager.CreateAsync(applicationRole, CancellationToken.None);
-        }
-    }
-}
+// Heavy initialization moved to StartupInitializer (BackgroundService)
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -551,60 +468,13 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// setup library directories
-Config.LibraryConfiguration.InitLibrary();
+// Heavy initialization moved to StartupInitializer (BackgroundService)
 
-// create unknown platform
-foreach (FileSignature.MetadataSources source in Enum.GetValues(typeof(FileSignature.MetadataSources)))
+// Start the web server explicitly so we only report RUNNING after Kestrel is accepting connections
+await app.StartAsync();
+try
 {
-    await Platforms.GetPlatform(0, source);
+    Logging.Log(Logging.LogType.Information, "Startup", "Web server is ready to accept connections.");
 }
-
-// extract platform map if not present
-await PlatformMapping.ExtractPlatformMap();
-
-// migrate old firmware directory structure to new style
-Bios.MigrateToNewFolderStructure();
-
-// add background tasks
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-ProcessQueue.QueueItemType.SignatureIngestor)
-);
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.TitleIngestor)
-    );
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.ImportQueueProcessor,
-    1,
-    false
-));
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.MetadataRefresh)
-    );
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.OrganiseLibrary)
-    );
-ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.LibraryScan)
-    );
-
-// maintenance tasks
-ProcessQueue.QueueItem dailyMaintenance = new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.DailyMaintainer
-    );
-ProcessQueue.QueueItems.Add(dailyMaintenance);
-
-ProcessQueue.QueueItem weeklyMaintenance = new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.WeeklyMaintainer
-    );
-ProcessQueue.QueueItems.Add(weeklyMaintenance);
-
-ProcessQueue.QueueItem tempCleanup = new ProcessQueue.QueueItem(
-    ProcessQueue.QueueItemType.TempCleanup
-    );
-ProcessQueue.QueueItems.Add(tempCleanup);
-
-Logging.WriteToDiskOnly = false;
-
-// start the app
-await app.RunAsync();
+catch { /* logging should not block startup */ }
+await app.WaitForShutdownAsync();

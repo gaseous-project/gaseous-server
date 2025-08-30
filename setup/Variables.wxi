@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Include>
-  <?define DbHost=localhost ?>
-  <?define DbPort=3306 ?>
-  <?define DbUser=gaseous ?>
-  <?define InstallDirName=Gaseous Server ?>
-</Include>

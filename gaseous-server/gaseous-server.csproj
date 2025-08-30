@@ -101,4 +101,27 @@
     </ItemGroup>
     <Copy SourceFiles="@(CliFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Condition="Exists('$(CliOwnPublishDir)')" />
   </Target>
+
+  <!-- Ensure gaseous-configurator is published alongside gaseous-server on Windows builds -->
+  <Target Name="PublishGaseousConfigurator" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == '' Or $([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win'))">
+    <PropertyGroup>
+      <ConfiguratorPublishDir>$(PublishDir)</ConfiguratorPublishDir>
+      <!-- Compute configurator project publish directory; include RID segment if present -->
+      <ConfiguratorRidSegment Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)/</ConfiguratorRidSegment>
+      <ConfiguratorOwnPublishDir>$(MSBuildProjectDirectory)/../gaseous-configurator/bin/$(Configuration)/net8.0-windows/$(ConfiguratorRidSegment)publish/</ConfiguratorOwnPublishDir>
+    </PropertyGroup>
+
+    <!-- Publish gaseous-configurator with the same key publish properties -->
+    <MSBuild
+      Projects="..\gaseous-configurator\gaseous-configurator.csproj"
+      Targets="Publish"
+  Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=$(SelfContained);PublishSingleFile=$(PublishSingleFile);PublishTrimmed=$(PublishTrimmed);PublishDir=$(ConfiguratorOwnPublishDir)" />
+
+    <!-- As a fallback, copy the configurator publish output into the server publish dir -->
+    <ItemGroup>
+      <ConfiguratorFiles Include="$(ConfiguratorOwnPublishDir)**/*.*" />
+    </ItemGroup>
+    <Message Importance="High" Text="Copying gaseous-configurator from '$(ConfiguratorOwnPublishDir)' to '$(PublishDir)'" />
+    <Copy SourceFiles="@(ConfiguratorFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Condition="Exists('$(ConfiguratorOwnPublishDir)')" />
+  </Target>
 </Project>
