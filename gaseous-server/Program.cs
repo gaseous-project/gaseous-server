@@ -38,7 +38,8 @@ if (OperatingSystem.IsWindows())
 {
     builder.Host.UseWindowsService(options =>
     {
-        options.ServiceName = "Gaseous Server";
+        // Use the short service name without spaces; display name is set during service creation
+        options.ServiceName = "GaseousServer";
     });
 
     // When running as a Windows Service there is no console; route logs to Windows Event Log too.

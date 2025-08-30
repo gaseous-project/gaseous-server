@@ -143,6 +143,50 @@
 				"-c",
 				"Release"
 			]
+		},
+		{
+			"label": "Build MSI",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Users\\michael.green\\source\\repos\\gaseous-server\\installer\\setup\\Setup.wixproj",
+				"-c",
+				"Release"
+			]
+		},
+		{
+			"label": "Build MSI",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Users\\michael.green\\source\\repos\\gaseous-server\\installer\\setup\\Setup.wixproj",
+				"-c",
+				"Release"
+			]
+		},
+		{
+			"label": "Build MSI",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Users\\michael.green\\source\\repos\\gaseous-server\\installer\\setup\\Setup.wixproj",
+				"-c",
+				"Release"
+			]
+		},
+		{
+			"label": "Build MSI",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Users\\michael.green\\source\\repos\\gaseous-server\\installer\\setup\\Setup.wixproj",
+				"-c",
+				"Release"
+			]
 		}
 	]
 }

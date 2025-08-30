@@ -14,7 +14,8 @@ namespace gaseous_configurator
     public partial class MainForm : Form
     {
         private readonly System.Windows.Forms.Timer _statusTimer = new System.Windows.Forms.Timer();
-        private const string ServiceName = "Gaseous Server";
+    // Short service name (no spaces) for SCM APIs
+    private const string ServiceName = "GaseousServer";
         private static readonly HttpClient _http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false })
         {
             Timeout = TimeSpan.FromSeconds(2)
@@ -38,6 +39,9 @@ namespace gaseous_configurator
 
         private void MainForm_Load(object? sender, EventArgs e)
         {
+            // Migrate legacy service name ("Gaseous Server") to new short name ("GaseousServer")
+            try { MigrateLegacyServiceIfNeededAsync().GetAwaiter().GetResult(); } catch {}
+
             // Display effective config path
             lblPath.Text = "Config: " + Config.ConfigurationPath;
 
@@ -53,6 +57,87 @@ namespace gaseous_configurator
             // Start status polling
             _ = RefreshServiceStatusAsync();
             _statusTimer.Start();
+        }
+
+        private async Task MigrateLegacyServiceIfNeededAsync()
+        {
+            const string oldName = "Gaseous Server";
+            const string newName = ServiceName; // "GaseousServer"
+            try
+            {
+                var services = ServiceController.GetServices();
+                bool oldExists = services.Any(s => s.ServiceName.Equals(oldName, StringComparison.OrdinalIgnoreCase));
+                bool newExists = services.Any(s => s.ServiceName.Equals(newName, StringComparison.OrdinalIgnoreCase));
+                if (!oldExists || newExists) return;
+
+                SetActionStatus(Color.DarkGray, "Migrating service name...");
+
+                // Stop old if running
+                try
+                {
+                    using var scOld = new ServiceController(oldName);
+                    scOld.Refresh();
+                    if (scOld.Status == ServiceControllerStatus.Running || scOld.Status == ServiceControllerStatus.Paused)
+                    {
+                        try { scOld.Stop(); } catch {}
+                        try { scOld.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30)); } catch {}
+                    }
+                }
+                catch { }
+
+                // Locate gaseous-server.exe; prefer same directory as configurator
+                var baseDir = System.IO.Path.GetDirectoryName(Application.ExecutablePath) ?? AppContext.BaseDirectory;
+                string exePath = System.IO.Path.Combine(baseDir, "gaseous-server.exe");
+                if (!System.IO.File.Exists(exePath))
+                {
+                    var candidates = new[]
+                    {
+                        System.IO.Path.Combine(baseDir, "..", "gaseous-server", "bin", "Release", "net8.0", "gaseous-server.exe"),
+                        System.IO.Path.Combine(baseDir, "..", "gaseous-server", "bin", "Debug", "net8.0", "gaseous-server.exe")
+                    };
+                    exePath = candidates.FirstOrDefault(System.IO.File.Exists) ?? exePath;
+                }
+
+                // Create new short-name service if binary is present
+                if (System.IO.File.Exists(exePath))
+                {
+                    var scCreate = new System.Diagnostics.ProcessStartInfo("sc.exe", $"create \"{newName}\" binPath= \"{exePath}\" start= auto DisplayName= \"Gaseous Server\"")
+                    {
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true
+                    };
+                    using (var p2 = System.Diagnostics.Process.Start(scCreate))
+                    {
+                        if (p2 != null)
+                        {
+                            await p2.WaitForExitAsync();
+                            // ignore non-zero; we'll still attempt to delete old
+                        }
+                    }
+                }
+
+                // Delete legacy service name
+                try
+                {
+                    var del = new System.Diagnostics.ProcessStartInfo("sc.exe", $"delete \"{oldName}\"")
+                    {
+                        UseShellExecute = false,
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        CreateNoWindow = true
+                    };
+                    using (var p = System.Diagnostics.Process.Start(del))
+                    {
+                        if (p != null) await p.WaitForExitAsync();
+                    }
+                }
+                catch { }
+
+                SetActionStatus(Color.DarkGreen, "Service name migrated");
+            }
+            catch { }
         }
 
         private void btnSave_Click(object? sender, EventArgs e)
@@ -122,7 +207,8 @@ namespace gaseous_configurator
                     }
 
                     // Create the service via sc.exe create referencing the existing executable
-                    var scCreate = new System.Diagnostics.ProcessStartInfo("sc.exe", $"create \"{ServiceName}\" binPath= \"{exePath}\" start= auto DisplayName= \"{ServiceName}\"")
+                    // Create with short name but friendly display name
+                    var scCreate = new System.Diagnostics.ProcessStartInfo("sc.exe", $"create \"{ServiceName}\" binPath= \"{exePath}\" start= auto DisplayName= \"Gaseous Server\"")
                     {
                         UseShellExecute = false,
                         RedirectStandardOutput = true,

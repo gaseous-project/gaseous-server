@@ -1,0 +1,33 @@
+<Project Sdk="WixToolset.Sdk/4.0.4">
+  <PropertyGroup>
+    <OutputType>Package</OutputType>
+    <Platform>x64</Platform>
+    <ProductVersion>1.0.0</ProductVersion>
+    <CompanyName>gaseous-project</CompanyName>
+  <DefineConstants>PublishDir=$(MSBuildThisFileDirectory)publish\win-x64\</DefineConstants>
+    <DisableValidation>true</DisableValidation>
+    <EnableDefaultItems>false</EnableDefaultItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+  <PackageReference Include="WixToolset.Util.wixext" Version="4.0.4" />
+  </ItemGroup>
+
+  <!-- Publish server (includes configurator via project publish targets) into a local folder before harvesting -->
+  <Target Name="PublishServer" BeforeTargets="Build">
+    <Message Text="Publishing gaseous-server (Release, win-x64) for MSI harvesting..." Importance="High" />
+  <Exec Command='dotnet publish "$(MSBuildThisFileDirectory)..\..\gaseous-server\gaseous-server.csproj" -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o "$(MSBuildThisFileDirectory)publish\win-x64"' />
+  <MakeDir Directories="$(MSBuildThisFileDirectory)publish\win-x64\scripts\" />
+  <Copy SourceFiles="$(MSBuildThisFileDirectory)scripts\CreateWebUrl.ps1;$(MSBuildThisFileDirectory)scripts\StopRemoveService.ps1" DestinationFolder="$(MSBuildThisFileDirectory)publish\win-x64\scripts\" />
+  </Target>
+
+  <Target Name="GenerateHarvest" DependsOnTargets="PublishServer" BeforeTargets="Build">
+    <Message Text="Generating WiX harvest fragment..." Importance="High" />
+    <Exec Command='powershell -NoProfile -ExecutionPolicy Bypass -File "$(MSBuildThisFileDirectory)GenerateHarvest.ps1" -PublishDir "$(MSBuildThisFileDirectory)publish\win-x64" -OutFile "$(MSBuildThisFileDirectory)obj\harvest\Harvest.wxs"' />
+  </Target>
+
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)obj\harvest\Harvest.wxs" />
+    <Compile Include="Product.wxs" />
+  </ItemGroup>
+</Project>
