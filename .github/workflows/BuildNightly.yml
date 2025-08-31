@@ -26,15 +26,16 @@ jobs:
       - name: Archive modified repo
         run: |
           tar \
+            --warning=no-file-changed \
             --exclude=.git \
             --exclude='**/bin' \
             --exclude='**/obj' \
-            -czf repo.tgz .
+            -czf "$RUNNER_TEMP/repo.tgz" .
       - name: Upload modified repo
         uses: actions/upload-artifact@v4
         with:
           name: repo-from-staging
-          path: repo.tgz
+          path: ${{ runner.temp }}/repo.tgz
           retention-days: 1
 
   StandardDockerImage:
@@ -47,7 +48,7 @@ jobs:
           name: repo-from-staging
           path: .
       - name: Extract repo
-        run: tar -xzf repo.tgz
+        run: tar -xzf repo.tgz && rm repo.tgz
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
@@ -86,7 +87,7 @@ jobs:
           name: repo-from-staging
           path: .
       - name: Extract repo
-        run: tar -xzf repo.tgz
+        run: tar -xzf repo.tgz && rm repo.tgz
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
       - name: Set up Docker Buildx
