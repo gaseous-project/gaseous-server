@@ -92,7 +92,7 @@
     <!-- Publish gaseous-cli with the same key publish properties -->
     <MSBuild
       Projects="..\gaseous-cli\gaseous-cli.csproj"
-      Targets="Publish"
+      Targets="Restore;Publish"
       Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=$(SelfContained);PublishSingleFile=$(PublishSingleFile);PublishTrimmed=$(PublishTrimmed);PublishDir=$(CliPublishDir)" />
 
     <!-- As a fallback, copy the CLI publish output into the server publish dir -->
@@ -114,7 +114,7 @@
     <!-- Publish gaseous-configurator with the same key publish properties -->
     <MSBuild
       Projects="..\gaseous-configurator\gaseous-configurator.csproj"
-      Targets="Publish"
+      Targets="Restore;Publish"
   Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=$(SelfContained);PublishSingleFile=$(PublishSingleFile);PublishTrimmed=$(PublishTrimmed);PublishDir=$(ConfiguratorOwnPublishDir)" />
 
     <!-- As a fallback, copy the configurator publish output into the server publish dir -->

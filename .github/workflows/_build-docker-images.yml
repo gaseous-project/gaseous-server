@@ -1,0 +1,141 @@
+name: Reusable - Build Docker Images
+
+on:
+  workflow_call:
+    inputs:
+      version_tag:
+        description: Docker tag to use for the version (e.g., nightly or v1.2.3)
+        required: true
+        type: string
+      tag_to_version:
+        description: Value to pass to TagToVersion -t (e.g., 0.0.0-nightly or github.ref)
+        required: true
+        type: string
+      include_latest:
+        description: Also tag and push :latest (and :latest-embeddeddb) variants
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  Staging:
+    name: Prepare repo for Docker build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'true'
+      - name: Install dotnet tool
+        run: dotnet tool install -g dotnetCampus.TagToVersion
+      - name: Set tag to version
+        run: dotnet TagToVersion -t "${{ inputs.tag_to_version }}"
+      - name: Archive modified repo
+        run: |
+          tar \
+            --warning=no-file-changed \
+            --exclude=.git \
+            --exclude=NuGet.Config \
+            --exclude=nuget.config \
+            --exclude='**/bin' \
+            --exclude='**/obj' \
+            -czf "$RUNNER_TEMP/repo.tgz" .
+      - name: Upload modified repo
+        uses: actions/upload-artifact@v4
+        with:
+          name: repo-from-staging
+          path: ${{ runner.temp }}/repo.tgz
+          retention-days: 1
+
+  BuildDockerImages:
+    name: Build and push (${{ matrix.variant }})
+    needs: Staging
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
+    strategy:
+      matrix:
+        include:
+          - variant: standard
+            dockerfile: ./build/Dockerfile
+            tagsuffix: ""
+          - variant: embeddeddb
+            dockerfile: ./build/Dockerfile-EmbeddedDB
+            tagsuffix: "-embeddeddb"
+    steps:
+      - name: Download modified repo
+        uses: actions/download-artifact@v4
+        with:
+          name: repo-from-staging
+          path: .
+      - name: Extract repo
+        run: tar -xzf repo.tgz && rm repo.tgz
+      - name: Write temporary nuget.config for GitHub Packages
+        shell: bash
+        run: |
+          cat > nuget.config <<'EOF'
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+              <add key="github" value="https://nuget.pkg.github.com/gaseous-project/index.json" />
+            </packageSources>
+            <packageSourceCredentials>
+              <github>
+                <add key="Username" value="michael-j-green" />
+                <add key="ClearTextPassword" value="${{ secrets.NUGETKEY }}" />
+              </github>
+            </packageSourceCredentials>
+          </configuration>
+          EOF
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Login to GitHub Package Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: compute-tags
+        name: Compute tags
+        shell: bash
+        run: |
+          tags=$(printf "%s\n%s" \
+            "gaseousgames/gaseousserver:${{ inputs.version_tag }}${{ matrix.tagsuffix }}" \
+            "ghcr.io/gaseous-project/gaseousserver:${{ inputs.version_tag }}${{ matrix.tagsuffix }}")
+          if [[ "${{ inputs.include_latest }}" == 'true' && "${{ matrix.tagsuffix }}" == '' ]]; then
+            tags=$(printf "%s\n%s\n%s" \
+              "$tags" \
+              "gaseousgames/gaseousserver:latest" \
+              "ghcr.io/gaseous-project/gaseousserver:latest")
+          fi
+          {
+            echo "tags<<EOF"
+            echo "$tags"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+      - name: Build and push image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          pull: true
+          provenance: true
+          sbom: true
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.compute-tags.outputs.tags }}
