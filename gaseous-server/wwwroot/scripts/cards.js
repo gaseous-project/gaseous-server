@@ -1689,10 +1689,29 @@ class GameCardRomList {
             }
         }).then(response => response.json());
 
+        // add missing supported metadata sources to the map
+        supportedMetadataSources.forEach(sourceElement => {
+            let element = metadataMap.metadataMapItems.find(item => item.sourceType === sourceElement);
+            if (!element) {
+                metadataMap.metadataMapItems.push({
+                    automaticMetadataSourceId: '',
+                    isManual: true,
+                    sourceType: sourceElement,
+                    sourceId: '',
+                    sourceSlug: '',
+                    link: '',
+                    preferred: false,
+                    supportedDataSource: true
+                });
+            }
+        });
+
+        console.log(metadataMap.metadataMapItems);
+
         metadataMap.metadataMapItems.forEach(element => {
-            if (element.supportedDataSource === false) {
-                return; // skip unsupported data sources
-            };
+            if (supportedMetadataSources.includes(element.sourceType) === false) {
+                return;
+            }
 
             let itemSection = document.createElement('div');
             itemSection.className = 'section';
@@ -1715,7 +1734,7 @@ class GameCardRomList {
 
                 element.preferred = true;
             });
-            if (element.preferred == true) {
+            if (element.preferred === true) {
                 itemSectionHeaderRadio.checked = true;
             }
             itemSectionHeader.appendChild(itemSectionHeaderRadio);
@@ -1744,21 +1763,83 @@ class GameCardRomList {
                     break;
 
                 default:
-                    let contentLabel2 = document.createElement('div');
-                    contentLabel2.innerHTML = 'ID: ' + element.sourceId;
-                    itemSectionContent.appendChild(contentLabel2);
+                    let contentTable = document.createElement('table');
+                    contentTable.style.width = '100%';
 
-                    let contentLabel3 = document.createElement('div');
-                    contentLabel3.innerHTML = 'Slug: ' + element.sourceSlug;
-                    itemSectionContent.appendChild(contentLabel3);
+                    let contentTableIdRow = document.createElement('tr');
+
+                    let contentTableIdCellLabel = document.createElement('td');
+                    contentTableIdCellLabel.style.width = '50px';
+                    contentTableIdCellLabel.innerHTML = 'Id:';
+                    contentTableIdRow.appendChild(contentTableIdCellLabel);
+
+                    let contentTableIdCellInput = document.createElement('td');
+                    let contentInput = document.createElement('input');
+                    contentInput.type = 'text';
+                    contentInput.value = element.sourceId;
+                    contentInput.placeholder = element.sourceId;
+                    contentInput.style.width = '95%';
+                    contentTableIdCellInput.appendChild(contentInput);
+
+                    contentTableIdRow.appendChild(contentTableIdCellInput);
+
+                    let contentTableIdCellManual = document.createElement('td');
+                    let contentInputManual = document.createElement('input');
+                    contentInputManual.type = 'checkbox';
+                    contentInputManual.checked = element.isManual;
+                    contentInputManual.title = 'Manual Entry';
+                    contentInput.addEventListener('input', (e) => {
+                        element.sourceId = e.target.value;
+                        element.sourceSlug = e.target.value;
+
+                        if (contentInput.value !== element.automaticMetadataSourceId) {
+                            element.isManual = true;
+                            contentInputManual.checked = true;
+                        } else {
+                            element.isManual = false;
+                            contentInputManual.checked = false;
+                        }
+                    });
+                    contentInputManual.addEventListener('change', (e) => {
+                        element.isManual = e.target.checked;
+                        if (element.isManual === false) {
+                            contentInput.value = element.automaticMetadataSourceId;
+                        } else {
+                            contentInput.value = element.sourceId;
+                        }
+                        element.sourceId = contentInput.value;
+                    });
+                    contentTableIdCellManual.appendChild(contentInputManual);
+
+                    let contentTableIdCellManualLabel = document.createElement('label');
+                    contentTableIdCellManualLabel.htmlFor = contentInputManual.id;
+                    contentTableIdCellManualLabel.style.marginLeft = '5px';
+                    contentTableIdCellManualLabel.style.marginRight = '20px';
+                    contentTableIdCellManualLabel.innerHTML = 'Manual';
+                    contentTableIdCellManual.appendChild(contentTableIdCellManualLabel);
+
+                    contentTableIdRow.appendChild(contentTableIdCellManual);
+
+                    contentTable.appendChild(contentTableIdRow);
 
                     if (element.link) {
                         if (element.link.length > 0) {
-                            let contentLabel4 = document.createElement('div');
-                            contentLabel4.innerHTML = 'Link: <a href="' + element.link + '" target="_blank" rel="noopener noreferrer" class="romlink">' + element.link + '</a>';
-                            itemSectionContent.appendChild(contentLabel4);
+                            let contentTableLinkRow = document.createElement('tr');
+
+                            let contentTableLinkCellLabel = document.createElement('td');
+                            contentTableLinkCellLabel.innerHTML = 'Link:';
+                            contentTableLinkRow.appendChild(contentTableLinkCellLabel);
+
+                            let contentTableLinkCellLink = document.createElement('td');
+                            contentTableLinkCellLink.innerHTML = '<a href="' + element.link + '" target="_blank" rel="noopener noreferrer" class="romlink">' + element.link + '</a>';
+                            contentTableLinkCellLink.colSpan = 3;
+                            contentTableLinkRow.appendChild(contentTableLinkCellLink);
+
+                            contentTable.appendChild(contentTableLinkRow);
                         }
                     }
+
+                    itemSectionContent.appendChild(contentTable);
                     break;
 
             }
@@ -1771,6 +1852,21 @@ class GameCardRomList {
         // setup the buttons
         let okButton = new ModalButton('OK', 1, this.gamePlatformObject, async function (callingObject) {
             let model = metadataMap.metadataMapItems;
+
+            // process the model to ensure only one preferred is set
+            let preferredSet = false;
+            model.forEach(item => {
+                if (item.preferred === true) {
+                    if (preferredSet === false) {
+                        preferredSet = true;
+                    } else {
+                        item.preferred = false;
+                    }
+                }
+            });
+
+            // process the model to ensure unsupported data sources are not included
+            model = model.filter(item => supportedMetadataSources.includes(item.sourceType));
 
             await fetch('/api/v1.1/Games/' + callingObject.metadataMapId + '/metadata', {
                 method: 'PUT',

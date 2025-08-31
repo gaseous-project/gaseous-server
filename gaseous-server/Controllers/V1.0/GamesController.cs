@@ -19,6 +19,7 @@ using static gaseous_server.Classes.Metadata.AgeRatings;
 using Asp.Versioning;
 using static gaseous_server.Models.PlatformMapping;
 using HasheousClient.Models.Metadata.IGDB;
+using HasheousClient;
 
 namespace gaseous_server.Controllers
 {
@@ -903,17 +904,17 @@ namespace gaseous_server.Controllers
 
                             if (existingMetadataMapItem != null)
                             {
-                                MetadataManagement.UpdateMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, metadataMapItem.SourceId, metadataMapItem.Preferred);
+                                MetadataManagement.UpdateMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, (long)metadataMapItem.SourceId, metadataMapItem.Preferred, metadataMapItem.IsManual);
                             }
                             else
                             {
-                                MetadataManagement.AddMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, metadataMapItem.SourceId, metadataMapItem.Preferred);
+                                MetadataManagement.AddMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, (long)metadataMapItem.SourceId, metadataMapItem.Preferred, metadataMapItem.IsManual, (long)metadataMapItem.SourceId);
                             }
                         }
                         else
                         {
                             MetadataMap.MetadataMapItem existingMetadataMapItem = existingMetadataMap.MetadataMapItems.FirstOrDefault(x => x.SourceType == FileSignature.MetadataSources.None);
-                            MetadataManagement.UpdateMetadataMapItem(MetadataMapId, existingMetadataMapItem.SourceType, existingMetadataMapItem.SourceId, metadataMapItem.Preferred);
+                            MetadataManagement.UpdateMetadataMapItem(MetadataMapId, existingMetadataMapItem.SourceType, (long)existingMetadataMapItem.SourceId, metadataMapItem.Preferred);
                         }
                     }
 
@@ -945,7 +946,7 @@ namespace gaseous_server.Controllers
                 if (user != null)
                 {
                     MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                    return Ok(await Games.GetAvailablePlatformsAsync(user.Id, metadataMap.SourceType, metadataMap.SourceId));
+                    return Ok(await Games.GetAvailablePlatformsAsync(user.Id, metadataMap.SourceType, (long)metadataMap.SourceId));
                 }
                 else
                 {
@@ -1032,34 +1033,6 @@ namespace gaseous_server.Controllers
                 Classes.Roms.GameRomItem rom = await Classes.Roms.GetRom(RomId);
                 if (rom.MetadataMapId == MetadataMapId)
                 {
-                    return Ok(rom);
-                }
-                else
-                {
-                    return NotFound();
-                }
-            }
-            catch
-            {
-                return NotFound();
-            }
-        }
-
-        [MapToApiVersion("1.0")]
-        [MapToApiVersion("1.1")]
-        [HttpPatch]
-        [Authorize(Roles = "Admin,Gamer")]
-        [Route("{MetadataMapId}/roms/{RomId}")]
-        [ProducesResponseType(typeof(Classes.Roms.GameRomItem), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameRomRename(long MetadataMapId, long RomId, long NewPlatformId, long NewGameId)
-        {
-            try
-            {
-                Classes.Roms.GameRomItem rom = await Classes.Roms.GetRom(RomId);
-                if (rom.GameId == MetadataMapId)
-                {
-                    rom = await Classes.Roms.UpdateRomAsync(RomId, NewPlatformId, NewGameId);
                     return Ok(rom);
                 }
                 else

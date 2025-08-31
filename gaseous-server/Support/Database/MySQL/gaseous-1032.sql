@@ -14,3 +14,7 @@ CREATE TABLE IF NOT EXISTS `UserRecoveryCodes` (
 );
 
 ALTER TABLE `Users` ADD UNIQUE (`Email`), ADD UNIQUE (`UserName`);
+
+ALTER TABLE `MetadataMapBridge`
+ADD COLUMN `IsManual` TINYINT(1) NOT NULL DEFAULT 0,
+ADD COLUMN `AutomaticMetadataSourceId` BIGINT NULL;

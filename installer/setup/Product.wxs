@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
+  <Package Name="Gaseous Server" Language="1033" Version="$(var.ProductVersion)" Manufacturer="gaseous-project" UpgradeCode="{7B6A2DF2-7C89-4B6A-9F75-7A8E21D6F111}">
+  <MediaTemplate EmbedCab="yes" CabinetTemplate="cab{0}.cab" />
+
+    <!-- Install to ProgramFiles64Folder\Gaseous Server -->
+    <StandardDirectory Id="ProgramFiles64Folder">
+      <Directory Id="INSTALLFOLDER" Name="Gaseous Server" />
+    </StandardDirectory>
+
+    <!-- Start Menu folder -->
+    <StandardDirectory Id="ProgramMenuFolder">
+      <Directory Id="GaseousMenu" Name="Gaseous Server" />
+    </StandardDirectory>
+
+    <Feature Id="MainFeature" Title="Gaseous Server" Level="1">
+      <ComponentGroupRef Id="AppFiles" />
+      <ComponentRef Id="StartMenuShortcuts" />
+  <ComponentRef Id="ServiceCleanup" />
+    </Feature>
+
+    <!-- Start Menu shortcuts: Configurator; web URL created dynamically by custom action -->
+    <Component Id="StartMenuShortcuts" Directory="GaseousMenu">
+      <Shortcut Id="OpenConfiguratorShortcut" Name="Gaseous Configurator" Target="[INSTALLFOLDER]gaseous-configurator.exe" WorkingDirectory="INSTALLFOLDER" />
+      <!-- Ensure dynamically created URL is removed on uninstall -->
+      <RemoveFile Id="RemoveWebUrl" Name="Gaseous Server Web.url" On="uninstall" />
+      <RemoveFolder Id="RemoveGaseousMenu" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\gaseous-project\Gaseous Server" Name="installed" Value="1" Type="integer" KeyPath="yes" />
+    </Component>
+
+    <!-- Service control as a safety net: stop and delete 'Gaseous Server' on uninstall -->
+    <Component Id="ServiceCleanup" Directory="INSTALLFOLDER">
+      <RegistryValue Root="HKCU" Key="Software\gaseous-project\Gaseous Server" Name="svc" Value="1" Type="integer" KeyPath="yes" />
+  <ServiceControl Id="StopDeleteGaseousServiceNew" Name="GaseousServer" Stop="both" Remove="uninstall" Wait="yes" />
+  <ServiceControl Id="StopDeleteGaseousServiceLegacy" Name="Gaseous Server" Stop="both" Remove="uninstall" Wait="yes" />
+    </Component>
+
+    <InstallExecuteSequence>
+      <Custom Action="LaunchConfigurator" After="InstallFinalize" Condition="NOT Installed" />
+      <Custom Action="CreateOrUpdateWebUrl" After="InstallFinalize" Condition="NOT REMOVE" />
+  <Custom Action="StopRemoveServiceExec" Before="RemoveFiles" Condition='Installed AND (REMOVE=&quot;ALL&quot; OR REMOVE~=&quot;ALL&quot;)' />
+    </InstallExecuteSequence>
+
+  </Package>
+
+  <!-- Define custom actions using WixQuietExec with SetProperty per WiX v4 -->
+  <Fragment>
+  <!-- Launch configurator after install using WixShellExec -->
+  <SetProperty Id="WixShellExecTarget" Value="[INSTALLFOLDER]gaseous-configurator.exe" Before="LaunchConfigurator" Sequence="execute" />
+  <CustomAction Id="LaunchConfigurator" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" DllEntry="WixShellExec" Execute="immediate" Return="ignore" />
+
+  <!-- Stop and remove service during uninstall (deferred, no impersonation); set WixSilentExecCmdLine which WixSilentExec consumes -->
+  <SetProperty Id="WixSilentExecCmdLine" Value='[System64Folder]WindowsPowerShell\v1.0\powershell.exe -NoLogo -NonInteractive -NoProfile -ExecutionPolicy Bypass -File &quot;[INSTALLFOLDER]scripts\StopRemoveService.ps1&quot; -InstallFolder &quot;[INSTALLFOLDER]&quot; -ServiceName &quot;GaseousServer&quot;' Before="StopRemoveServiceExec" Sequence="execute" />
+  <CustomAction Id="StopRemoveServiceExec" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" DllEntry="WixSilentExec" Execute="deferred" Impersonate="no" Return="ignore" />
+
+  <!-- Create or update Start Menu web URL shortcut via external script (short command to avoid ICE03) -->
+  <SetProperty Id="WixQuietExecCmdLine" Value="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;[INSTALLFOLDER]scripts\\CreateWebUrl.ps1&quot;" Before="CreateOrUpdateWebUrl" Sequence="execute" />
+  <CustomAction Id="CreateOrUpdateWebUrl" BinaryRef="Wix4UtilCA_$(sys.BUILDARCHSHORT)" DllEntry="WixQuietExec" Execute="immediate" Return="ignore" />
+  </Fragment>
+
+</Wix>

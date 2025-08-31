@@ -875,7 +875,7 @@ namespace gaseous_server.Classes.Metadata
                             }
                     }
 
-                default:
+                case FileSignature.MetadataSources.IGDB:
                     var results = await comms.APIComm<T>(SourceType, (Communications.MetadataEndpoint)Enum.Parse(typeof(Communications.MetadataEndpoint), type, true), Id);
 
                     // check for errors
@@ -885,6 +885,10 @@ namespace gaseous_server.Classes.Metadata
                     }
 
                     return results.FirstOrDefault<T>();
+
+                default:
+                    // unsupported source type - fail silently
+                    return null;
             }
         }
 

@@ -5,6 +5,8 @@ VisualStudioVersion = 25.0.1704.4
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "gaseous-server", "gaseous-server\gaseous-server.csproj", "{A01D2EFF-C82E-473B-84D7-7C25E736F5D2}"
 EndProject
+Project("{B410D715-5F00-4EFD-BA8A-78F3F5E4C0A3}") = "installer-setup", "installer\setup\Setup.wixproj", "{F2E47B9E-6F3A-4E36-B3C8-6B075F2D9D75}"
+EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{17FA6F12-8532-420C-9489-CB8FDE42137C}"
 	ProjectSection(SolutionItems) = preProject
 		docker-compose.yml = docker-compose.yml
@@ -23,6 +25,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "screenshots", "screenshots"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-cli", "gaseous-cli\gaseous-cli.csproj", "{419CC4E4-8932-4E4A-B027-5521AA0CBA85}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "gaseous-configurator", "gaseous-configurator\gaseous-configurator.csproj", "{C6A3A0D2-76AA-4C14-9A7B-7A8E6D7C9A11}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -37,6 +41,14 @@ Global
 		{419CC4E4-8932-4E4A-B027-5521AA0CBA85}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{419CC4E4-8932-4E4A-B027-5521AA0CBA85}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{419CC4E4-8932-4E4A-B027-5521AA0CBA85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C6A3A0D2-76AA-4C14-9A7B-7A8E6D7C9A11}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C6A3A0D2-76AA-4C14-9A7B-7A8E6D7C9A11}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C6A3A0D2-76AA-4C14-9A7B-7A8E6D7C9A11}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C6A3A0D2-76AA-4C14-9A7B-7A8E6D7C9A11}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F2E47B9E-6F3A-4E36-B3C8-6B075F2D9D75}.Debug|Any CPU.ActiveCfg = Debug|x64
+		{F2E47B9E-6F3A-4E36-B3C8-6B075F2D9D75}.Debug|Any CPU.Build.0 = Debug|x64
+		{F2E47B9E-6F3A-4E36-B3C8-6B075F2D9D75}.Release|Any CPU.ActiveCfg = Release|x64
+		{F2E47B9E-6F3A-4E36-B3C8-6B075F2D9D75}.Release|Any CPU.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
