@@ -12,101 +12,10 @@ permissions:
   id-token: write
 
 jobs:
-  Staging:
-    name: Prepare repo for Docker build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          submodules: 'true'
-      - name: Install dotnet tool
-        run: dotnet tool install -g dotnetCampus.TagToVersion
-      - name: Set tag to version  
-        run: dotnet TagToVersion -t 0.0.0-nightly
-      - name: Archive modified repo
-        run: |
-          tar \
-            --warning=no-file-changed \
-            --exclude=.git \
-            --exclude=NuGet.Config \
-            --exclude=nuget.config \
-            --exclude='**/bin' \
-            --exclude='**/obj' \
-            -czf "$RUNNER_TEMP/repo.tgz" .
-      - name: Upload modified repo
-        uses: actions/upload-artifact@v4
-        with:
-          name: repo-from-staging
-          path: ${{ runner.temp }}/repo.tgz
-          retention-days: 1
-
-  BuildDockerImages:
-    name: Build and push (${{ matrix.variant }})
-    needs: Staging
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        include:
-          - variant: standard
-            dockerfile: ./build/Dockerfile
-            tagsuffix: ""
-          - variant: embeddeddb
-            dockerfile: ./build/Dockerfile-EmbeddedDB
-            tagsuffix: "-embeddeddb"
-    steps:
-      - name: Download modified repo
-        uses: actions/download-artifact@v4
-        with:
-          name: repo-from-staging
-          path: .
-      - name: Extract repo
-        run: tar -xzf repo.tgz && rm repo.tgz
-      - name: Write temporary nuget.config for GitHub Packages
-        shell: bash
-        run: |
-          cat > nuget.config <<'EOF'
-          <?xml version="1.0" encoding="utf-8"?>
-          <configuration>
-            <packageSources>
-              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
-              <add key="github" value="https://nuget.pkg.github.com/gaseous-project/index.json" />
-            </packageSources>
-            <packageSourceCredentials>
-              <github>
-                <add key="Username" value="michael-j-green" />
-                <add key="ClearTextPassword" value="${{ secrets.NUGETKEY }}" />
-              </github>
-            </packageSourceCredentials>
-          </configuration>
-          EOF
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Login to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Login to GitHub Package Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and push image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: ${{ matrix.dockerfile }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-          pull: true
-          provenance: true
-          sbom: true
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: |
-            gaseousgames/gaseousserver:nightly${{ matrix.tagsuffix }}
-            ghcr.io/gaseous-project/gaseousserver:nightly${{ matrix.tagsuffix }}
+  call-reusable:
+    uses: ./.github/workflows/_build-docker-images.yml
+    with:
+      version_tag: nightly
+      tag_to_version: 0.0.0-nightly
+      include_latest: false
+    secrets: inherit
