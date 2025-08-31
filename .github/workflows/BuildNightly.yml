@@ -53,10 +53,10 @@ jobs:
           path: .
       - name: Extract repo
         run: tar -xzf repo.tgz && rm repo.tgz
-      - name: Write temporary NuGet.Config for GitHub Packages
+      - name: Write temporary nuget.config for GitHub Packages
         shell: bash
         run: |
-          cat > NuGet.Config <<'EOF'
+          cat > nuget.config <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <configuration>
             <packageSources>
@@ -109,10 +109,10 @@ jobs:
           path: .
       - name: Extract repo
         run: tar -xzf repo.tgz && rm repo.tgz
-      - name: Write temporary NuGet.Config for GitHub Packages
+      - name: Write temporary nuget.config for GitHub Packages
         shell: bash
         run: |
-          cat > NuGet.Config <<'EOF'
+          cat > nuget.config <<'EOF'
           <?xml version="1.0" encoding="utf-8"?>
           <configuration>
             <packageSources>
