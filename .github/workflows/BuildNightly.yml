@@ -13,6 +13,7 @@ permissions:
 
 jobs:
   Staging:
+    name: Prepare repo for Docker build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -39,6 +40,7 @@ jobs:
           retention-days: 1
 
   StandardDockerImage:
+    name: Build and push standard Docker image
     needs: Staging
     runs-on: ubuntu-latest
     steps:
@@ -78,6 +80,7 @@ jobs:
             ghcr.io/gaseous-project/gaseousserver:nightly
 
   EmbeddedDBDockerImage:
+    name: Build and push embedded DB Docker image
     needs: Staging
     runs-on: ubuntu-latest
     steps:
