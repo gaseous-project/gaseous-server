@@ -14,6 +14,7 @@ permissions:
 
 jobs:
   call-reusable:
+    name: Build Pre-release Docker Image
     uses: ./.github/workflows/_build-docker-images.yml
     with:
       version_tag: ${{ github.ref_name }}
