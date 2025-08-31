@@ -1,4 +1,4 @@
-<Project Sdk="WixToolset.Sdk/4.0.4">
+<Project Sdk="WixToolset.Sdk/6.0.2">
   <PropertyGroup>
     <OutputType>Package</OutputType>
     <Platform>x64</Platform>
@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-  <PackageReference Include="WixToolset.Util.wixext" Version="4.0.4" />
+  <PackageReference Include="WixToolset.Util.wixext" Version="6.0.2" />
   </ItemGroup>
 
   <!-- Publish server (includes configurator via project publish targets) into a local folder before harvesting -->
