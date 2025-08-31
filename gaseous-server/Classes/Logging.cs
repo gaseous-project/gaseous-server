@@ -3,13 +3,33 @@ using System.Data;
 using System.Diagnostics;
 using System.Reflection;
 using System.Reflection.Metadata.Ecma335;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages;
 namespace gaseous_server.Classes
 {
     public class Logging
     {
         private static DateTime lastDiskRetentionSweep = DateTime.UtcNow;
         public static bool WriteToDiskOnly { get; set; } = false;
+        private const string WindowsEventLogSource = "GaseousServer";
+        private const string WindowsEventLogName = "Application";
+
+        // Determines if the process is running as a Windows Service
+        private static bool IsRunningAsWindowsService()
+        {
+            if (!OperatingSystem.IsWindows())
+                return false;
+
+            try
+            {
+                // Only available on Windows; analyzer suppression as we guard at runtime
+#pragma warning disable CA1416
+                return Microsoft.Extensions.Hosting.WindowsServices.WindowsServiceHelpers.IsWindowsService();
+#pragma warning restore CA1416
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
         static public void Log(LogType EventType, string ServerProcess, string Message, Exception? ExceptionValue = null, bool LogToDiskOnly = false)
         {
@@ -48,31 +68,31 @@ namespace gaseous_server.Classes
                 {
                     TraceOutput += Environment.NewLine + logItem.ExceptionValue.ToString();
                 }
-                string consoleColour = "";
-                switch (logItem.EventType)
+                if (IsRunningAsWindowsService())
                 {
-                    case LogType.Information:
-                        // Console.ForegroundColor = ConsoleColor.Blue;
-                        consoleColour = "\u001b[1;34m]";
-                        break;
-
-                    case LogType.Warning:
-                        // Console.ForegroundColor = ConsoleColor.Yellow;
-                        consoleColour = "\u001b[1;33m]";
-                        break;
-
-                    case LogType.Critical:
-                        // Console.ForegroundColor = ConsoleColor.Red;
-                        consoleColour = "\u001b[1;31m]";
-                        break;
-
-                    case LogType.Debug:
-                        // Console.ForegroundColor = ConsoleColor.Magenta;
-                        consoleColour = "\u001b[1;36m]";
-                        break;
-
+                    WriteToWindowsEventLog(logItem, TraceOutput);
                 }
-                Console.WriteLine(consoleColour + TraceOutput);
+                else
+                {
+                    // Colorize only for console output
+                    string consoleColour = "";
+                    switch (logItem.EventType)
+                    {
+                        case LogType.Information:
+                            consoleColour = "\u001b[1;34m]";
+                            break;
+                        case LogType.Warning:
+                            consoleColour = "\u001b[1;33m]";
+                            break;
+                        case LogType.Critical:
+                            consoleColour = "\u001b[1;31m]";
+                            break;
+                        case LogType.Debug:
+                            consoleColour = "\u001b[1;36m]";
+                            break;
+                    }
+                    Console.WriteLine(consoleColour + TraceOutput);
+                }
                 // Console.ResetColor();
 
                 if (WriteToDiskOnly == true)
@@ -324,6 +344,57 @@ namespace gaseous_server.Classes
             }
 
             return logs;
+        }
+
+        // Writes to Windows Event Log when running as a Windows Service. No-ops on other platforms.
+        private static void WriteToWindowsEventLog(LogItem logItem, string traceOutput)
+        {
+            if (!OperatingSystem.IsWindows())
+            {
+                Console.WriteLine(traceOutput);
+                return;
+            }
+
+            try
+            {
+#pragma warning disable CA1416
+                // Try to ensure the source exists. This may require elevation; ignore failures.
+                try
+                {
+                    if (!EventLog.SourceExists(WindowsEventLogSource))
+                    {
+                        var data = new EventSourceCreationData(WindowsEventLogSource, WindowsEventLogName);
+                        EventLog.CreateEventSource(data);
+                    }
+                }
+                catch { /* ignore source creation errors */ }
+
+                var entryType = EventLogEntryType.Information;
+                switch (logItem.EventType)
+                {
+                    case LogType.Warning:
+                        entryType = EventLogEntryType.Warning;
+                        break;
+                    case LogType.Critical:
+                        entryType = EventLogEntryType.Error;
+                        break;
+                    case LogType.Debug:
+                        entryType = EventLogEntryType.Information;
+                        break;
+                    case LogType.Information:
+                    default:
+                        entryType = EventLogEntryType.Information;
+                        break;
+                }
+
+                EventLog.WriteEntry(WindowsEventLogSource, traceOutput, entryType);
+#pragma warning restore CA1416
+            }
+            catch (Exception ex)
+            {
+                // Fall back to disk if writing to Event Log fails (e.g., insufficient rights)
+                LogToDisk(logItem, traceOutput, ex);
+            }
         }
 
         public enum LogType

@@ -4,6 +4,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>gaseous_server</RootNamespace>
+  <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'https' " />
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'http' " />
@@ -21,7 +22,7 @@
     <PackageReference Include="gaseous-signature-parser" Version="2.4.1" />
     <PackageReference Include="gaseous.IGDB" Version="1.0.5" />
     <PackageReference Include="hasheous-client" Version="1.4.1" />
-    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.8.0" />
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.8.1" />
     <PackageReference Include="sharpcompress" Version="0.40.0" />
     <PackageReference Include="Squid-Box.SevenZipSharp" Version="1.6.2.24" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
@@ -34,6 +35,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.19" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="8.0.19" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.19" />
+  <!-- Enable Windows Service hosting and EventLog logging when running on Windows -->
+  <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="8.0.0" />
+  <PackageReference Include="Microsoft.Extensions.Logging.EventLog" Version="8.0.0" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Controllers\" />
@@ -74,4 +78,50 @@
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-*.sql" />
     <EmbeddedResource Include="wwwroot\images\Ratings\AgeGroupMap.json" />
   </ItemGroup>
+
+  <!-- Ensure gaseous-cli is published alongside gaseous-server -->
+  <Target Name="PublishGaseousCli" AfterTargets="Publish">
+    <!-- Resolve destination; PublishDir usually ends with a slash -->
+    <PropertyGroup>
+  <CliPublishDir>$(PublishDir)</CliPublishDir>
+  <!-- Compute CLI project publish directory; include RID segment if present -->
+  <CliRidSegment Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)/</CliRidSegment>
+  <CliOwnPublishDir>$(MSBuildProjectDirectory)/../gaseous-cli/bin/$(Configuration)/$(TargetFramework)/$(CliRidSegment)publish/</CliOwnPublishDir>
+    </PropertyGroup>
+
+    <!-- Publish gaseous-cli with the same key publish properties -->
+    <MSBuild
+      Projects="..\gaseous-cli\gaseous-cli.csproj"
+      Targets="Publish"
+      Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=$(SelfContained);PublishSingleFile=$(PublishSingleFile);PublishTrimmed=$(PublishTrimmed);PublishDir=$(CliPublishDir)" />
+
+    <!-- As a fallback, copy the CLI publish output into the server publish dir -->
+    <ItemGroup>
+      <CliFiles Include="$(CliOwnPublishDir)**/*.*" />
+    </ItemGroup>
+    <Copy SourceFiles="@(CliFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Condition="Exists('$(CliOwnPublishDir)')" />
+  </Target>
+
+  <!-- Ensure gaseous-configurator is published alongside gaseous-server on Windows builds -->
+  <Target Name="PublishGaseousConfigurator" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == '' Or $([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win'))">
+    <PropertyGroup>
+      <ConfiguratorPublishDir>$(PublishDir)</ConfiguratorPublishDir>
+      <!-- Compute configurator project publish directory; include RID segment if present -->
+      <ConfiguratorRidSegment Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)/</ConfiguratorRidSegment>
+      <ConfiguratorOwnPublishDir>$(MSBuildProjectDirectory)/../gaseous-configurator/bin/$(Configuration)/net8.0-windows/$(ConfiguratorRidSegment)publish/</ConfiguratorOwnPublishDir>
+    </PropertyGroup>
+
+    <!-- Publish gaseous-configurator with the same key publish properties -->
+    <MSBuild
+      Projects="..\gaseous-configurator\gaseous-configurator.csproj"
+      Targets="Publish"
+  Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=$(SelfContained);PublishSingleFile=$(PublishSingleFile);PublishTrimmed=$(PublishTrimmed);PublishDir=$(ConfiguratorOwnPublishDir)" />
+
+    <!-- As a fallback, copy the configurator publish output into the server publish dir -->
+    <ItemGroup>
+      <ConfiguratorFiles Include="$(ConfiguratorOwnPublishDir)**/*.*" />
+    </ItemGroup>
+    <Message Importance="High" Text="Copying gaseous-configurator from '$(ConfiguratorOwnPublishDir)' to '$(PublishDir)'" />
+    <Copy SourceFiles="@(ConfiguratorFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Condition="Exists('$(ConfiguratorOwnPublishDir)')" />
+  </Target>
 </Project>

@@ -1,60 +1,192 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "prepare-web",
-            "dependsOn": [
-                "kill-gaseous-server",
-                "build"
-            ],
-            "dependsOrder": "sequence",
-            "problemMatcher": []
-        },
-        {
-            "label": "kill-gaseous-server",
-            "type": "shell",
-            "command": "bash",
-            "args": [
-                "-lc",
-                "chmod +x ${workspaceFolder}/build/scripts/kill-gaseous-server.sh && ${workspaceFolder}/build/scripts/kill-gaseous-server.sh"
-            ],
-            "problemMatcher": []
-        },
-        {
-            "label": "build",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "build",
-                "${workspaceFolder}/gaseous-server/gaseous-server.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "publish",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "publish",
-                "${workspaceFolder}/gaseous-server/gaseous-server.csproj",
-                "/property:GenerateFullPaths=true",
-                "/consoleloggerparameters:NoSummary"
-            ],
-            "problemMatcher": "$msCompile"
-        },
-        {
-            "label": "watch",
-            "command": "dotnet",
-            "type": "process",
-            "args": [
-                "watch",
-                "run",
-                "--project",
-                "${workspaceFolder}/gaseous-server/gaseous-server.csproj"
-            ],
-            "problemMatcher": "$msCompile"
-        }
-    ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "prepare-web",
+			"dependsOn": [
+				"kill-gaseous-server",
+				"build"
+			],
+			"dependsOrder": "sequence",
+			"problemMatcher": []
+		},
+		{
+			"label": "kill-gaseous-server",
+			"type": "shell",
+			"command": "bash",
+			"args": [
+				"-lc",
+				"chmod +x ${workspaceFolder}/build/scripts/kill-gaseous-server.sh && ${workspaceFolder}/build/scripts/kill-gaseous-server.sh"
+			],
+			"problemMatcher": []
+		},
+		{
+			"label": "build",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"build",
+				"${workspaceFolder}/gaseous-server/gaseous-server.csproj",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "publish",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"publish",
+				"${workspaceFolder}/gaseous-server/gaseous-server.csproj",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "watch",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"watch",
+				"run",
+				"--project",
+				"${workspaceFolder}/gaseous-server/gaseous-server.csproj"
+			],
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "build (dotnet)",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Users\\michael.green\\source\\repos\\gaseous-server\\Gaseous.sln",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			]
+		},
+		{
+			"label": "rebuild (dotnet)",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Users\\michael.green\\source\\repos\\gaseous-server\\Gaseous.sln",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			]
+		},
+		{
+			"label": "build solution after status strip change",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Users\\michael.green\\source\\repos\\gaseous-server\\Gaseous.sln",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			]
+		},
+		{
+			"label": "build solution with dual status panels",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Users\\michael.green\\source\\repos\\gaseous-server\\Gaseous.sln",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			]
+		},
+		{
+			"label": "build after startup initializer",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Users\\michael.green\\source\\repos\\gaseous-server\\Gaseous.sln",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			]
+		},
+		{
+			"label": "rebuild after cleaning ProgramHost",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Users\\michael.green\\source\\repos\\gaseous-server\\Gaseous.sln",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			]
+		},
+		{
+			"label": "rebuild confirm after removing ProgramHost",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Users\\michael.green\\source\\repos\\gaseous-server\\Gaseous.sln",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			]
+		},
+		{
+			"label": "dotnet publish gaseous-server",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"publish",
+				"c:\\Users\\michael.green\\source\\repos\\gaseous-server\\gaseous-server\\gaseous-server.csproj",
+				"-c",
+				"Release"
+			]
+		},
+		{
+			"label": "Build MSI",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Users\\michael.green\\source\\repos\\gaseous-server\\installer\\setup\\Setup.wixproj",
+				"-c",
+				"Release"
+			]
+		},
+		{
+			"label": "Build MSI",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Users\\michael.green\\source\\repos\\gaseous-server\\installer\\setup\\Setup.wixproj",
+				"-c",
+				"Release"
+			]
+		},
+		{
+			"label": "Build MSI",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Users\\michael.green\\source\\repos\\gaseous-server\\installer\\setup\\Setup.wixproj",
+				"-c",
+				"Release"
+			]
+		},
+		{
+			"label": "Build MSI",
+			"type": "shell",
+			"command": "dotnet",
+			"args": [
+				"build",
+				"c:\\Users\\michael.green\\source\\repos\\gaseous-server\\installer\\setup\\Setup.wixproj",
+				"-c",
+				"Release"
+			]
+		}
+	]
 }

@@ -14,15 +14,28 @@ namespace gaseous_server.Classes
         {
             get
             {
+                // Allow override via environment variable for services/containers
+                var overridePath = Environment.GetEnvironmentVariable("GASEOUS_CONFIG_PATH");
+                if (!string.IsNullOrWhiteSpace(overridePath))
+                {
+                    return overridePath;
+                }
+
                 return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".gaseous-server");
             }
+        }
+
+        public static int ServerPort
+        {
+            get { return _config.ServerPort; }
+            set { _config.ServerPort = value; }
         }
 
         static string ConfigurationFilePath
         {
             get
             {
-                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".gaseous-server", "config.json");
+                return Path.Combine(ConfigurationPath, "config.json");
             }
         }
 
@@ -30,7 +43,7 @@ namespace gaseous_server.Classes
         {
             get
             {
-                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".gaseous-server", "config.json.backup");
+                return Path.Combine(ConfigurationPath, "config.json.backup");
             }
         }
 
@@ -38,7 +51,7 @@ namespace gaseous_server.Classes
         {
             get
             {
-                return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".gaseous-server", "platformmap.json");
+                return Path.Combine(ConfigurationPath, "platformmap.json");
             }
         }
 
@@ -490,6 +503,23 @@ namespace gaseous_server.Classes
             public Logging LoggingConfiguration = new Logging();
 
             public ReverseProxy ReverseProxyConfiguration = new ReverseProxy();
+
+            // Port the web server listens on (Kestrel). Default 5198.
+            private static int _DefaultServerPort
+            {
+                get
+                {
+                    try
+                    {
+                        var env = Environment.GetEnvironmentVariable("webport");
+                        if (!string.IsNullOrWhiteSpace(env) && int.TryParse(env, out var p)) return p;
+                    }
+                    catch { }
+                    return 5198;
+                }
+            }
+
+            public int ServerPort = _DefaultServerPort;
 
             public class Database
             {
