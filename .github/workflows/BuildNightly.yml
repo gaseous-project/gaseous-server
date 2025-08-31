@@ -25,7 +25,8 @@ jobs:
       - name: Sign in to Nuget
         run: dotnet nuget add source --username michael-j-green --password ${{ secrets.NUGETKEY }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/gaseous-project/index.json"
       - name: Restore dependencies
-        run: dotnet restore
+        run: dotnet restore gaseous-server/gaseous-server.csproj
+
   StandardDockerImage:
     needs: Staging
     runs-on: ubuntu-latest
@@ -60,6 +61,7 @@ jobs:
           tags: |
             gaseousgames/gaseousserver:nightly
             ghcr.io/gaseous-project/gaseousserver:nightly
+
   EmbeddedDBDockerImage:
     needs: Staging
     runs-on: ubuntu-latest
