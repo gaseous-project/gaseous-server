@@ -91,6 +91,11 @@ jobs:
         with:
           context: .
           file: ./build/Dockerfile
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          pull: true
+          provenance: true
+          sbom: true
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
@@ -147,6 +152,11 @@ jobs:
         with:
           context: .
           file: ./build/Dockerfile-EmbeddedDB
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          pull: true
+          provenance: true
+          sbom: true
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
