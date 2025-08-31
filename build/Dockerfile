@@ -1,5 +1,4 @@
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
-ARG TARGETOS
 ARG TARGETARCH
 ARG BUILDPLATFORM
 WORKDIR /App
@@ -8,23 +7,14 @@ EXPOSE 80
 RUN echo "Target: $TARGETARCH"
 RUN echo "Build: $BUILDPLATFORM"
 
-# Copy everything from build context (repo root)
-COPY . ./
+# Copy everything
+COPY .. ./
 
 # Build Gaseous Web Server
-# Restore and publish for the target platform (derive .NET RID from TARGETOS/TARGETARCH)
-RUN set -eu; \
-    case "$TARGETARCH" in \
-    amd64) DOTNET_ARCH=x64 ;; \
-    arm64) DOTNET_ARCH=arm64 ;; \
-    arm) DOTNET_ARCH=arm ;; \
-    *) echo "Unsupported TARGETARCH: $TARGETARCH" >&2; exit 1 ;; \
-    esac; \
-    RID="${TARGETOS:-linux}-${DOTNET_ARCH}"; \
-    echo "Restoring for RID=$RID"; \
-    dotnet restore "gaseous-server/gaseous-server.csproj" -r "$RID"; \
-    echo "Publishing for RID=$RID"; \
-    dotnet publish "gaseous-server/gaseous-server.csproj" -r "$RID" --self-contained true -c Release -o out
+# Restore as distinct layers
+RUN dotnet restore "gaseous-server/gaseous-server.csproj" -a $TARGETARCH
+# Build and publish a release
+RUN dotnet publish "gaseous-server/gaseous-server.csproj" --use-current-runtime --self-contained true -c Release -o out -a $TARGETARCH
 
 # update apt-get
 RUN apt-get update && apt upgrade -y
@@ -59,7 +49,7 @@ ENV dbpass=${dbpass}
 
 # install supervisord
 RUN apt-get update && apt-get install -y supervisor
-COPY build/standard/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY ../build/standard/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN mkdir -p /var/run/supervisord
 RUN mkdir -p /var/log/supervisord
 
@@ -70,7 +60,7 @@ RUN apt-get install -y curl
 RUN apt-get clean && rm -rf /var/lib/apt/lists
 
 # copy entrypoint
-COPY build/standard/entrypoint.sh /usr/sbin/entrypoint.sh
+COPY ../build/standard/entrypoint.sh /usr/sbin/entrypoint.sh
 RUN chmod +x /usr/sbin/entrypoint.sh
 
 # volumes
