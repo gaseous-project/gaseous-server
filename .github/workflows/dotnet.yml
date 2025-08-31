@@ -7,8 +7,15 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  packages: write
+  contents: read
+  attestations: write
+  id-token: write
+
 jobs:
   build:
+    name: Build Dotnet
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
