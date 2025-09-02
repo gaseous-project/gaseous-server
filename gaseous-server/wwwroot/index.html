@@ -274,14 +274,53 @@
             console.log("Gaseous Games started successfully");
         }
 
-        function DeleteAllDatabases() {
-            indexedDB.deleteDatabase('gaseous');
-            indexedDB.deleteDatabase('EmulatorJS-roms');
-            indexedDB.deleteDatabase('EmulatorJS-bios');
-            indexedDB.deleteDatabase('EmulatorJS-core');
-            indexedDB.deleteDatabase('/data/saves');
+        async function DeleteAllDatabases() {
+            const asyncTasks = [];
+            try {
+                // Best-effort: enumerate and delete ALL IndexedDB databases (if supported)
+                if (indexedDB && typeof indexedDB.databases === 'function') {
+                    const t = indexedDB.databases().then((dbs) => {
+                        if (Array.isArray(dbs)) {
+                            dbs.forEach(db => {
+                                if (db && db.name) {
+                                    try { indexedDB.deleteDatabase(db.name); } catch (e) { console.warn('IDB delete failed for', db.name, e); }
+                                }
+                            });
+                        }
+                    }).catch(() => {/* no-op */ });
+                    asyncTasks.push(t);
+                }
+            } catch (e) { /* no-op */ }
 
-            localStorage.clear();
+            // Fallback: delete known databases used by the app
+            try { indexedDB.deleteDatabase('gaseous'); } catch { }
+            try { indexedDB.deleteDatabase('EmulatorJS-roms'); } catch { }
+            try { indexedDB.deleteDatabase('EmulatorJS-bios'); } catch { }
+            try { indexedDB.deleteDatabase('EmulatorJS-core'); } catch { }
+            try { indexedDB.deleteDatabase('/data/saves'); } catch { }
+
+            // Clear Web Storage
+            try { localStorage.clear(); } catch { }
+            try { sessionStorage.clear(); } catch { }
+
+            // Clear Cache Storage (PWA assets, fetch caches) if available
+            if ('caches' in window) {
+                try {
+                    const t = caches.keys().then(keys => Promise.all(keys.map(k => caches.delete(k)))).catch(() => { /* ignore */ });
+                    asyncTasks.push(t);
+                } catch { /* ignore */ }
+            }
+
+            // Unregister any active Service Workers (they can repopulate caches)
+            if ('serviceWorker' in navigator) {
+                try {
+                    const t = navigator.serviceWorker.getRegistrations().then(regs => Promise.all(regs.map(r => r.unregister()))).catch(() => { /* ignore */ });
+                    asyncTasks.push(t);
+                } catch { /* ignore */ }
+            }
+
+            // Wait for best-effort async cleanup to settle
+            try { await Promise.allSettled(asyncTasks); } catch { /* ignore */ }
         }
 
         window.document.addEventListener('DOMContentLoaded', startApp);

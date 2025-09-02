@@ -646,6 +646,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
             public long? MetadataMapId { get; set; }
             public FileSignature.MetadataSources MetadataSource { get; set; }
             public long Index { get; set; }
+            public DateTime? LastUpdated { get; set; }
             public string Alpha
             {
                 get

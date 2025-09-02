@@ -159,7 +159,8 @@ class Filtering {
                 "sortAscending": true
             },
             "HasSavedGame": false,
-            "IsFavourite": false
+            "IsFavourite": false,
+            "lastUpdated": "2025-09-02T14:02:00"
         }
 
         if (filter['search']) {
@@ -319,6 +320,8 @@ class Filtering {
             }
             throw new Error('Failed to load games');
         }).then(data => {
+            console.log(data);
+
             if (data.count) {
                 this.GameCount = data.count;
             }

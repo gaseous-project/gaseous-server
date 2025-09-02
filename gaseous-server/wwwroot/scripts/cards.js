@@ -1865,6 +1865,26 @@ class GameCardRomList {
                 }
             });
 
+            // process the model to convert sourceId to a Number as API expects a Number rather than a string
+            model.forEach(item => {
+                if (item.sourceId) {
+                    if (!isNaN(item.sourceId)) {
+                        item.sourceId = Number(item.sourceId);
+                    } else {
+                        // set the sourceId to 0 to indicate no mapping
+                        item.sourceId = 0;
+                    }
+                } else {
+                    // set the sourceId to 0 to indicate no mapping
+                    item.sourceId = 0;
+                }
+
+                // if automaticMetadataSourceId is blank, set to sourceId
+                if (!item.automaticMetadataSourceId || item.automaticMetadataSourceId.length === 0) {
+                    item.automaticMetadataSourceId = item.sourceId;
+                }
+            });
+
             // process the model to ensure unsupported data sources are not included
             model = model.filter(item => supportedMetadataSources.includes(item.sourceType));
 

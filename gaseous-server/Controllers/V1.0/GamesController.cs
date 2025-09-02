@@ -904,11 +904,19 @@ namespace gaseous_server.Controllers
 
                             if (existingMetadataMapItem != null)
                             {
-                                MetadataManagement.UpdateMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, (long)metadataMapItem.SourceId, metadataMapItem.Preferred, metadataMapItem.IsManual);
+                                if (metadataMapItem.SourceId == 0)
+                                {
+                                    // if sourceId is 0, reset to automatic
+                                    MetadataManagement.UpdateMetadataMapItem(MetadataMapId, existingMetadataMapItem.SourceType, (long)existingMetadataMapItem.AutomaticMetadataSourceId, false, false);
+                                }
+                                else
+                                {
+                                    MetadataManagement.UpdateMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, (long)metadataMapItem.SourceId, metadataMapItem.Preferred, metadataMapItem.IsManual);
+                                }
                             }
                             else
                             {
-                                MetadataManagement.AddMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, (long)metadataMapItem.SourceId, metadataMapItem.Preferred, metadataMapItem.IsManual, (long)metadataMapItem.SourceId);
+                                MetadataManagement.AddMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, (long)metadataMapItem.SourceId, metadataMapItem.Preferred, metadataMapItem.IsManual, 0);
                             }
                         }
                         else

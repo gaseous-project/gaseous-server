@@ -16,14 +16,18 @@ function setupBanner() {
     let userMenuLogoff = document.getElementById("banner_user_logoff");
     if (userMenuLogoff) {
         userMenuLogoff.addEventListener('click', async () => {
+            // Call server to end session, then perform client-side privacy cleanup before redirecting
             ajaxCall(
                 '/api/v1.1/Account/LogOff',
                 'POST',
-                function (result) {
-                    location.replace("/index.html");
+                async function () {
+                    try { await DeleteAllDatabases(); } catch { }
+                    // Small delay to allow async deletions to start
+                    setTimeout(() => { location.replace('/index.html'); }, 150);
                 },
-                function (error) {
-                    location.replace("/index.html");
+                async function () {
+                    try { await DeleteAllDatabases(); } catch { }
+                    setTimeout(() => { location.replace('/index.html'); }, 150);
                 }
             );
         });

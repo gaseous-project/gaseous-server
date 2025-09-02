@@ -166,6 +166,7 @@ namespace gaseous_server.Controllers.v1_1
             public bool IsFavourite { get; set; }
             public int MinPlayTime { get; set; } = -1;
             public int MaxPlayTime { get; set; } = -1;
+            public DateTime? LastUpdated { get; set; } = null;
 
 
             public class GameRatingItem
@@ -201,7 +202,8 @@ namespace gaseous_server.Controllers.v1_1
                     RatingCount,
                     DateAdded,
                     LastPlayed,
-                    TimePlayed
+                    TimePlayed,
+                    LastUpdated
                 }
             }
         }
@@ -225,6 +227,12 @@ namespace gaseous_server.Controllers.v1_1
             {
                 whereClauses.Add("(MATCH(`Game`.`Name`) AGAINST (@GameName IN BOOLEAN MODE) OR MATCH(`AlternativeName`.`Name`) AGAINST (@GameName IN BOOLEAN MODE))");
                 whereParams.Add("@GameName", "(*" + model.Name + "*) (" + model.Name + ") ");
+            }
+
+            if (model.LastUpdated != null)
+            {
+                havingClauses.Add("LastUpdated > @lastupdated");
+                whereParams.Add("lastupdated", model.LastUpdated);
             }
 
             if (model.HasSavedGame == true)
@@ -520,6 +528,9 @@ namespace gaseous_server.Controllers.v1_1
                     case GameSearchModel.GameSortingItem.SortField.DateAdded:
                         orderByField = "DateAdded";
                         break;
+                    case GameSearchModel.GameSortingItem.SortField.LastUpdated:
+                        orderByField = "LastUpdated";
+                        break;
                     case GameSearchModel.GameSortingItem.SortField.LastPlayed:
                         orderByField = "LastPlayed";
                         break;
@@ -610,7 +621,12 @@ namespace gaseous_server.Controllers.v1_1
     `RomCounts`.`DateAdded`,
     `RomCounts`.`DateUpdated`,
     IFNULL(`UserTimeTracking`.`TimePlayed`, 0) AS `TimePlayed`,
-    `UserTimeTracking`.`LastPlayed`
+    `UserTimeTracking`.`LastPlayed`,
+    GREATEST(
+        COALESCE(`MetadataMap`.`lastUpdated`, '1970-01-01 00:00:00'),
+        COALESCE(`Game`.`lastUpdated`, '1970-01-01 00:00:00'),
+        COALESCE(`RomCounts`.`DateUpdated`, '1970-01-01 00:00:00')
+    ) AS `LastUpdated`
 FROM
     `MetadataMap`
         LEFT JOIN
@@ -735,6 +751,21 @@ FROM
                     retGame.MetadataSource = (FileSignature.MetadataSources)dbResponse.Rows[i]["GameIdType"];
 
                     Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
+                    var lastUpdatedObj = dbResponse.Rows[i]["LastUpdated"];
+                    DateTime lastUpdated;
+                    if (lastUpdatedObj is DateTime dt)
+                    {
+                        lastUpdated = dt;
+                    }
+                    else if (lastUpdatedObj != DBNull.Value && DateTime.TryParse(lastUpdatedObj.ToString(), out var parsed))
+                    {
+                        lastUpdated = parsed;
+                    }
+                    else
+                    {
+                        lastUpdated = DateTime.MinValue;
+                    }
+                    retMinGame.LastUpdated = lastUpdated;
                     retMinGame.Index = indexInPage;
                     indexInPage += 1;
                     if (
