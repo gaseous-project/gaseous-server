@@ -159,8 +159,7 @@ class Filtering {
                 "sortAscending": true
             },
             "HasSavedGame": false,
-            "IsFavourite": false,
-            "lastUpdated": "2025-09-02T14:02:00"
+            "IsFavourite": false
         }
 
         if (filter['search']) {
