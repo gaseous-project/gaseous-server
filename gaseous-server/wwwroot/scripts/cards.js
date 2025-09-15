@@ -722,28 +722,49 @@ class GameCard {
             headers: {
                 'Content-Type': 'application/json'
             }
-        }).then(response => response.json()).then(data => {
+        }).then(response => response.json()).then(async data => {
             if (data) {
-                // sort data by name attribute, then by metadataGameName attribute
+                // sort data by:
+                // 1. name (ascending, case-insensitive)
+                // 2. lastPlayed (descending - most recent first) when both have a value
+                //    Items with a lastPlayed value come before items without one.
+                // 3. metadataGameName (ascending, case-insensitive) only when BOTH lastPlayed values are null/undefined
                 data.sort((a, b) => {
-                    let nameA = a.name.toUpperCase();
-                    let nameB = b.name.toUpperCase();
-                    let metadataGameNameA = a.metadataGameName.toUpperCase();
-                    let metadataGameNameB = b.metadataGameName.toUpperCase();
+                    const nameA = (a.name || '').toUpperCase();
+                    const nameB = (b.name || '').toUpperCase();
 
-                    if (nameA < nameB) {
-                        return -1;
-                    } else if (nameA > nameB) {
-                        return 1;
-                    } else {
-                        if (metadataGameNameA < metadataGameNameB) {
+                    if (nameA < nameB) return -1;
+                    if (nameA > nameB) return 1;
+
+                    // Names are equal, move to lastPlayed logic
+                    const hasLastPlayedA = !!a.lastPlayed;
+                    const hasLastPlayedB = !!b.lastPlayed;
+
+                    if (hasLastPlayedA && hasLastPlayedB) {
+                        // Both have lastPlayed -> compare dates (newest first)
+                        const dateA = new Date(a.lastPlayed);
+                        const dateB = new Date(b.lastPlayed);
+                        if (!isNaN(dateA) && !isNaN(dateB)) {
+                            if (dateA > dateB) return -1;
+                            if (dateA < dateB) return 1;
+                        } else if (!isNaN(dateA) && isNaN(dateB)) {
                             return -1;
-                        } else if (metadataGameNameA > metadataGameNameB) {
+                        } else if (isNaN(dateA) && !isNaN(dateB)) {
                             return 1;
-                        } else {
-                            return 0;
                         }
+                        // fall through if equal/invalid -> no return, continue to metadataGameName
+                    } else if (hasLastPlayedA && !hasLastPlayedB) {
+                        return -1; // a before b
+                    } else if (!hasLastPlayedA && hasLastPlayedB) {
+                        return 1; // b before a
                     }
+
+                    // Either both missing lastPlayed or both lastPlayed equal -> compare metadataGameName
+                    const metaA = (a.metadataGameName || '').toUpperCase();
+                    const metaB = (b.metadataGameName || '').toUpperCase();
+                    if (metaA < metaB) return -1;
+                    if (metaA > metaB) return 1;
+                    return 0;
                 });
 
                 let platforms = {};
@@ -765,7 +786,7 @@ class GameCard {
                     }
                 });
 
-                if (mostRecentPlatform && mostRecentPlatform.lastPlayed) {
+                if (mostRecentPlatform?.lastPlayed) {
                     // set the most recent platform
                     let mostRecentPlatformName = this.card.cardBody.querySelector('#card-launchgame');
                     mostRecentPlatformName.classList.add('platform_edit_button');
@@ -798,7 +819,7 @@ class GameCard {
                         platformItem.Add(element);
                     });
 
-                    let platformItemElement = platformItem.BuildItem();
+                    let platformItemElement = await platformItem.BuildItem();
                     cardPlatforms.appendChild(platformItemElement);
                 }
 
@@ -830,7 +851,7 @@ class GameCardPlatformItem {
         this.gameObjects.push(gameObject);
     }
 
-    BuildItem() {
+    async BuildItem() {
         // create the platform item
         // the platform item is a two column div - the left column contains the platform logo, the right column contains the game list
         let platformItem = document.createElement('div');
@@ -870,7 +891,9 @@ class GameCardPlatformItem {
 
         // add the game objects to the game list
         let firstGameItem = true;
-        this.gameObjects.forEach(async element => {
+        for (let i = 0; i < this.gameObjects.length; i++) {
+            const element = this.gameObjects[i];
+            // this.gameObjects.forEach(element => {
             let romItem = null;
 
             let outerGameItem = document.createElement('div');
@@ -949,8 +972,6 @@ class GameCardPlatformItem {
                 gameItem.appendChild(platformStateManagerButton);
             }
 
-
-
             outerGameItem.appendChild(gameItem);
 
             // create the game item play button
@@ -985,7 +1006,7 @@ class GameCardPlatformItem {
             firstGameItem = false;
 
             gameList.appendChild(outerGameItem);
-        });
+        };
 
         return platformItem;
     }

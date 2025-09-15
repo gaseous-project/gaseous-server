@@ -556,7 +556,10 @@ class EmulatorStateManager {
                 if (result.length === 0) {
                     thisObject.statesBox.innerHTML = 'No saved states found.';
                 } else {
-                    result.forEach(async (state) => {
+                    console.log(result);
+                    for (let i = 0; i < result.length; i++) {
+                        let state = result[i];
+
                         let stateBox = document.createElement('div');
                         stateBox.id = 'stateBox_' + state.id;
                         stateBox.className = 'saved_state_box romrow';
@@ -664,7 +667,7 @@ class EmulatorStateManager {
                         stateBox.appendChild(stateMainPanel);
 
                         thisObject.statesBox.appendChild(stateBox);
-                    });
+                    }
                 }
             }
         });

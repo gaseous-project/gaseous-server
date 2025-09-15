@@ -274,9 +274,9 @@ namespace gaseous_server.Classes
             DataTable importDB = db.ExecuteCMD(sql, dbDict);
             if ((Int64)importDB.Rows[0]["count"] > 0)
             {
-                // import source was the import directory
                 if (FilePath.StartsWith(Config.LibraryConfiguration.LibraryImportDirectory))
                 {
+                    // import source was the import directory
                     Logging.Log(Logging.LogType.Warning, "Import Game", "  " + FilePath + " already in database - moving to " + Config.LibraryConfiguration.LibraryImportDuplicatesDirectory);
 
                     string targetPathWithFileName = FilePath.Replace(Config.LibraryConfiguration.LibraryImportDirectory, Config.LibraryConfiguration.LibraryImportDuplicatesDirectory);
@@ -288,11 +288,13 @@ namespace gaseous_server.Classes
                     }
                     File.Move(FilePath, targetPathWithFileName, true);
                 }
-
-                // import source was the upload directory
-                if (FilePath.StartsWith(Config.LibraryConfiguration.LibraryUploadDirectory))
+                else if (FilePath.StartsWith(Config.LibraryConfiguration.LibraryUploadDirectory))
                 {
+                    // import source was the upload directory
                     Logging.Log(Logging.LogType.Warning, "Import Game", "  " + FilePath + " already in database - skipping import");
+
+                    // delete the file
+                    File.Delete(FilePath);
                 }
 
                 GameFileInfo.Add("status", "duplicate");

@@ -18,7 +18,7 @@ var emuBackground = '';
 // statistics
 var SessionId = undefined;
 
-function SetupPage() {
+async function SetupPage() {
     if (IsMediaGroupInt == 1) { IsMediaGroup = true; }
     if (getQueryString('stateid', 'int')) {
         StateUrl = '/api/v1.1/StateManager/' + romId + '/' + getQueryString('stateid', 'int') + '/State/savestate.state?StateOnly=true&IsMediaGroup=' + IsMediaGroup;
@@ -26,7 +26,11 @@ function SetupPage() {
 
     console.log("Loading rom url: " + decodeURIComponent(getQueryString('rompath', 'string')));
 
-    ajaxCall('/api/v1.1/Games/' + gameId, 'GET', function (result) {
+    try {
+        const res = await fetch('/api/v1.1/Games/' + gameId, { method: 'GET' });
+        if (!res.ok) throw new Error('Failed to load game: ' + res.status + ' ' + res.statusText);
+        const result = await res.json();
+
         gameData = result;
         contentSource = gameData.metadataSource;
 
@@ -35,10 +39,16 @@ function SetupPage() {
         }
 
         emuGameTitle = gameData.name;
-    });
+    } catch (err) {
+        console.error('Error fetching game data', err);
+    }
 
-    ajaxCall('/api/v1.1/Bios/' + platformId, 'GET', function (result) {
-        if (result.length == 0) {
+    try {
+        const res = await fetch('/api/v1.1/Bios/' + platformId, { method: 'GET' });
+        if (!res.ok) throw new Error('Failed to load BIOS: ' + res.status + ' ' + res.statusText);
+        const result = await res.json();
+
+        if (Array.isArray(result) && result.length === 0) {
             emuBios = '';
         } else {
             emuBios = '/api/v1.1/Bios/zip/' + platformId + '/' + gameId + '?filtered=true';
@@ -49,11 +59,13 @@ function SetupPage() {
             case 'EmulatorJS':
                 console.log("Emulator: " + getQueryString('engine', 'string'));
                 console.log("Core: " + getQueryString('core', 'string'));
-
                 $('#emulator').load('/emulators/EmulatorJS.html?v=' + AppVersion);
                 break;
         }
-    });
+    } catch (e) {
+        console.error('Error fetching BIOS', e);
+        emuBios = '';
+    }
 
     setInterval(SaveStatistics, 60000);
 }
@@ -72,21 +84,30 @@ function rotateBackground() {
 function SaveStatistics() {
     var model;
     if (SessionId == undefined) {
-        ajaxCall(
-            '/api/v1.1/Statistics/Games/' + gameId + '/' + platformId + '/' + romId + '?IsMediaGroup=' + IsMediaGroup,
-            'POST',
-            function (success) {
-                SessionId = success.sessionId;
+        (async () => {
+            try {
+                const res = await fetch('/api/v1.1/Statistics/Games/' + gameId + '/' + platformId + '/' + romId + '?IsMediaGroup=' + IsMediaGroup, {
+                    method: 'POST'
+                });
+                if (!res.ok) throw new Error('Failed to create session: ' + res.status + ' ' + res.statusText);
+                const data = await res.json();
+                SessionId = data.sessionId;
+            } catch (err) {
+                console.error('Error creating statistics session', err);
             }
-        );
+        })();
     } else {
-        ajaxCall(
-            '/api/v1.1/Statistics/Games/' + gameId + '/' + platformId + '/' + romId + '/' + SessionId + '?IsMediaGroup=' + IsMediaGroup,
-            'PUT',
-            function (success) {
-
+        (async () => {
+            try {
+                const res = await fetch(
+                    '/api/v1.1/Statistics/Games/' + gameId + '/' + platformId + '/' + romId + '/' + SessionId + '?IsMediaGroup=' + IsMediaGroup,
+                    { method: 'PUT' }
+                );
+                if (!res.ok) throw new Error('Failed to update statistics: ' + res.status + ' ' + res.statusText);
+            } catch (err) {
+                console.error('Error updating statistics session', err);
             }
-        );
+        })();
     }
 }
 
