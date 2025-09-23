@@ -316,7 +316,7 @@
         flex-grow: 1;
         margin-left: 0px;
         height: unset;
-        width: fit-content;
+        width: unset;
     }
 
     .card-romlist-item {
