@@ -28,6 +28,10 @@ namespace gaseous_server.Models
     {
         public long AttachmentId { get; set; }
         public string FileName { get; set; }
+        [System.Text.Json.Serialization.JsonIgnore]
+        [System.Xml.Serialization.XmlIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public string FileSystemFilename { get; set; }
         public ContentManager.ContentType ContentType { get; set; }
         public long Size { get; set; }
         public DateTime UploadedAt { get; set; }

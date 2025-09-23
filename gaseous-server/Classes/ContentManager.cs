@@ -1,6 +1,8 @@
 using System.Data;
 using System.Threading.Tasks;
 using gaseous_server.Models;
+using System.Diagnostics;
+using System.Globalization;
 
 namespace gaseous_server.Classes.Content
 {
@@ -9,6 +11,9 @@ namespace gaseous_server.Classes.Content
     /// </summary>
     public class ContentManager
     {
+        private const string AttachmentIdParam = "@attachmentid";
+        private const string RoleAdmin = "Admin";
+        private const string SystemUserId = "System";
         /// <summary>
         /// Enumerates the supported types of content.
         /// </summary>
@@ -70,12 +75,12 @@ namespace gaseous_server.Classes.Content
             } },
             { ContentType.AudioSample, new ContentConfiguration() {
                 LimitToPlatformIds = new List<long>{ 52 },
-                AllowedRoles = new List<string>{"Admin"},
+                AllowedRoles = new List<string>{ RoleAdmin },
                 IsUserManaged = false
             } },
             { ContentType.GlobalManual, new ContentConfiguration() {
                 LimitToPlatformIds = new List<long>(),
-                AllowedRoles = new List<string>{"Admin" },
+                AllowedRoles = new List<string>{ RoleAdmin },
                 IsUserManaged = false
             } },
             { ContentType.Photo, new ContentConfiguration() {
@@ -153,8 +158,8 @@ namespace gaseous_server.Classes.Content
             else if (user == null && contentModel.ContentType == ContentType.GlobalManual)
             {
                 // Global manuals can be added without a user, but only by Admins
-                userId = "System";
-                userRoles.Add("Admin");
+                userId = SystemUserId;
+                userRoles.Add(RoleAdmin);
             }
             else if (user == null)
             {
@@ -186,7 +191,7 @@ namespace gaseous_server.Classes.Content
             }
 
             // save file to disk
-            string userDirectory = userId == "System" ? "Global" : userId;
+            string userDirectory = userId == SystemUserId ? "Global" : userId;
             string contentDir = contentType == ContentType.GlobalManual ? "manuals" : contentType.ToString().ToLower() + "s";
             string dirPath = Path.Combine(Config.LibraryConfiguration.LibraryContentDirectory, userDirectory, contentDir);
             if (!Directory.Exists(dirPath))
@@ -226,138 +231,171 @@ namespace gaseous_server.Classes.Content
                 throw new InvalidOperationException("Failed to insert content metadata into the database.");
             }
         }
-
         private static void ValidateContent(ref ContentType contentType, ref byte[] contentData)
         {
-            // if the content is a screenshot or photo, validate it's a valid image and convert it to PNG if it's not already. Annimated GIFs should be converted to MP4 if possible.
-            // if the content is a video, validate it's a valid video format and convert it to MP4 if it's not already
-            // if the content is a note, validate it's valid text (UTF-8)
-            // if the content is a global manual, validate it's a valid PDF
-            // if the content is an audio sample, validate it's a valid zip file
             switch (contentType)
             {
                 case ContentType.Screenshot:
                 case ContentType.Photo:
-                    try
-                    {
-                        // Detect GIF (header GIF87a / GIF89a)
-                        bool isGif = contentData.Length >= 6 &&
-                                     contentData[0] == 'G' && contentData[1] == 'I' && contentData[2] == 'F' &&
-                                     contentData[3] == '8' &&
-                                     (contentData[4] == '7' || contentData[4] == '9') &&
-                                     contentData[5] == 'a';
-
-                        bool converted = false;
-
-                        if (isGif)
-                        {
-                            using (var gifStream = new MemoryStream(contentData))
-                            {
-                                var collection = new ImageMagick.MagickImageCollection();
-                                collection.Read(gifStream);
-
-                                // Animated if more than one frame
-                                if (collection.Count > 1)
-                                {
-                                    // Coalesce to ensure full frames
-                                    collection.Coalesce();
-
-                                    using var mp4Stream = new MemoryStream();
-                                    // Convert to MP4 (requires ffmpeg delegate in environment)
-                                    collection.Write(mp4Stream, ImageMagick.MagickFormat.Mp4);
-                                    contentData = mp4Stream.ToArray();
-                                    contentType = ContentType.Video;
-                                    converted = true;
-                                }
-                                collection.Dispose();
-                            }
-                        }
-
-                        if (!converted)
-                        {
-                            // Static image (including non-animated GIF) -> normalize to PNG
-                            using var inputStream = new MemoryStream(contentData);
-                            using var image = new ImageMagick.MagickImage(inputStream);
-                            image.Format = ImageMagick.MagickFormat.Png;
-                            using var ms = new MemoryStream();
-                            image.Write(ms);
-                            contentData = ms.ToArray();
-                        }
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidOperationException("Invalid image data.", ex);
-                    }
-
+                    ValidateImageContent(ref contentType, ref contentData);
+                    break;
                 case ContentType.Video:
-                    try
-                    {
-                        // Detect MP4 via 'ftyp' box at offset 4
-                        bool isMp4 = contentData.Length > 12 &&
-                                     contentData[4] == (byte)'f' &&
-                                     contentData[5] == (byte)'t' &&
-                                     contentData[6] == (byte)'y' &&
-                                     contentData[7] == (byte)'p';
-
-                        if (!isMp4)
-                        {
-                            // Attempt to load as a sequence (e.g., animated GIF or other supported container)
-                            using var inputStream = new MemoryStream(contentData);
-                            var collection = new ImageMagick.MagickImageCollection();
-                            collection.Read(inputStream);
-
-                            if (collection.Count == 0)
-                                throw new InvalidOperationException("No frames detected in video source.");
-
-                            // Ensure frames are full
-                            collection.Coalesce();
-
-                            using var outputStream = new MemoryStream();
-                            // Write to MP4 (requires ImageMagick build with proper delegate support)
-                            collection.Write(outputStream, ImageMagick.MagickFormat.Mp4);
-                            contentData = outputStream.ToArray();
-
-                            collection.Dispose();
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidOperationException("Invalid or unsupported video data.", ex);
-                    }
+                    ValidateVideoContent(ref contentData);
                     break;
-
                 case ContentType.Note:
-                    // Check if content is valid UTF-8 text
-                    try
-                    {
-                        var text = System.Text.Encoding.UTF8.GetString(contentData);
-                        contentData = System.Text.Encoding.UTF8.GetBytes(text); // re-encode to ensure valid UTF-8
-                        break;
-                    }
-                    catch (Exception ex)
-                    {
-                        throw new InvalidOperationException("Invalid text data.", ex);
-                    }
-
+                    ValidateNoteContent(ref contentData);
+                    break;
                 case ContentType.GlobalManual:
-                    // Check for PDF file signature (%PDF-)
-                    if (contentData.Length < 5 || !(contentData[0] == '%' && contentData[1] == 'P' && contentData[2] == 'D' && contentData[3] == 'F' && contentData[4] == '-'))
-                    {
-                        throw new InvalidOperationException("Invalid PDF data.");
-                    }
+                    ValidatePdfContent(contentData);
                     break;
-
                 case ContentType.AudioSample:
-                    // Check for ZIP file signature (PK\x03\x04)
-                    if (contentData.Length < 4 || !(contentData[0] == 'P' && contentData[1] == 'K' && contentData[2] == 3 && contentData[3] == 4))
-                    {
-                        throw new InvalidOperationException("Invalid ZIP data.");
-                    }
+                    ValidateAudioSample(contentData);
                     break;
-
                 default:
                     throw new InvalidOperationException("Unsupported content type.");
+            }
+        }
+
+        private static void ValidateImageContent(ref ContentType contentType, ref byte[] contentData)
+        {
+            try
+            {
+                bool isGif = contentData.Length >= 6 &&
+                             contentData[0] == 'G' && contentData[1] == 'I' && contentData[2] == 'F' &&
+                             contentData[3] == '8' &&
+                             (contentData[4] == '7' || contentData[4] == '9') &&
+                             contentData[5] == 'a';
+                bool converted = false;
+                if (isGif)
+                {
+                    using var gifStream = new MemoryStream(contentData);
+                    var collection = new ImageMagick.MagickImageCollection();
+                    collection.Read(gifStream);
+                    if (collection.Count > 1)
+                    {
+                        try
+                        {
+                            // Collect frame delays (in 1/100s of a second units per GIF spec)
+                            var delays = collection.Select(f => (int)f.AnimationDelay).Where(d => d > 0).ToList();
+                            double avgDelay = delays.Any() ? delays.Average() : 10d; // default 10 (i.e. 100ms) if missing
+                            double derivedFps = 100.0 / avgDelay; // 100 * (1/avgDelayHundredths) = frames per second
+                            if (derivedFps < 5) derivedFps = 5;
+                            if (derivedFps > 60) derivedFps = 60;
+
+                            // Prefer an integer fps for ffmpeg stability
+                            int targetFps = (int)Math.Round(derivedFps);
+                            if (targetFps < 5) targetFps = 5;
+                            if (targetFps > 60) targetFps = 60;
+
+                            // Execute ffmpeg conversion
+                            byte[]? mp4Bytes = ConvertGifToMp4WithFfmpeg(contentData, targetFps);
+                            if (mp4Bytes != null && mp4Bytes.Length > 0)
+                            {
+                                contentData = mp4Bytes;
+                                contentType = ContentType.Video;
+                                converted = true;
+                            }
+                            else
+                            {
+                                Logging.Log(Logging.LogType.Warning, "Content Manager", "Animated GIF conversion to MP4 failed: empty output. Falling back to PNG.");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Log(Logging.LogType.Warning, "Content Manager", $"Animated GIF conversion to MP4 failed: {ex.Message}. Falling back to PNG.");
+                        }
+                    }
+                    collection.Dispose();
+                }
+                if (!converted)
+                {
+                    using var inputStream = new MemoryStream(contentData);
+                    using var image = new ImageMagick.MagickImage(inputStream);
+                    image.Format = ImageMagick.MagickFormat.Png;
+                    using var ms = new MemoryStream();
+                    image.Write(ms);
+                    contentData = ms.ToArray();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Invalid image data.", ex);
+            }
+        }
+
+        private static void ValidateVideoContent(ref byte[] contentData)
+        {
+            try
+            {
+                bool isMp4 = contentData.Length > 12 &&
+                             contentData[4] == (byte)'f' &&
+                             contentData[5] == (byte)'t' &&
+                             contentData[6] == (byte)'y' &&
+                             contentData[7] == (byte)'p';
+                if (!isMp4)
+                {
+                    using var inputStream = new MemoryStream(contentData);
+                    var collection = new ImageMagick.MagickImageCollection();
+                    collection.Read(inputStream);
+                    if (collection.Count == 0)
+                        throw new InvalidOperationException("No frames detected in video source.");
+                    collection.Coalesce();
+                    // Ensure even dimensions
+                    int width = (int)collection[0].Width;
+                    int height = (int)collection[0].Height;
+                    int newWidth = (width % 2 == 0) ? width : width + 1;
+                    int newHeight = (height % 2 == 0) ? height : height + 1;
+                    if (newWidth != width || newHeight != height)
+                    {
+                        var normalized = new ImageMagick.MagickImageCollection();
+                        foreach (var frame in collection)
+                        {
+                            var canvas = new ImageMagick.MagickImage(ImageMagick.MagickColors.Transparent, (uint)newWidth, (uint)newHeight);
+                            canvas.Composite(frame, 0, 0);
+                            canvas.AnimationDelay = frame.AnimationDelay;
+                            normalized.Add(canvas);
+                        }
+                        collection.Dispose();
+                        collection = normalized;
+                    }
+                    using var outputStream = new MemoryStream();
+                    collection.Write(outputStream, ImageMagick.MagickFormat.Mp4);
+                    contentData = outputStream.ToArray();
+                    collection.Dispose();
+                }
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Invalid or unsupported video data.", ex);
+            }
+        }
+
+        private static void ValidateNoteContent(ref byte[] contentData)
+        {
+            try
+            {
+                var text = System.Text.Encoding.UTF8.GetString(contentData);
+                contentData = System.Text.Encoding.UTF8.GetBytes(text);
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException("Invalid text data.", ex);
+            }
+        }
+
+        private static void ValidatePdfContent(byte[] contentData)
+        {
+            if (contentData.Length < 5 || !(contentData[0] == '%' && contentData[1] == 'P' && contentData[2] == 'D' && contentData[3] == 'F' && contentData[4] == '-'))
+            {
+                throw new InvalidOperationException("Invalid PDF data.");
+            }
+        }
+
+        private static void ValidateAudioSample(byte[] contentData)
+        {
+            if (contentData.Length < 4 || !(contentData[0] == 'P' && contentData[1] == 'K' && contentData[2] == 3 && contentData[3] == 4))
+            {
+                throw new InvalidOperationException("Invalid ZIP data.");
             }
         }
 
@@ -422,10 +460,10 @@ namespace gaseous_server.Classes.Content
         {
             // return the requested attachment if the user has access to it
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM MetadataMap_Attachments WHERE AttachmentID = @attachmentid AND ((UserId = @userid OR UserId = @systemuserid) OR IsShared = @isshared);";
+            string sql = $"SELECT * FROM MetadataMap_Attachments WHERE AttachmentID = {AttachmentIdParam} AND ((UserId = @userid OR UserId = @systemuserid) OR IsShared = @isshared);";
             var parameters = new Dictionary<string, object>
             {
-                { "@attachmentid", attachmentId },
+                { AttachmentIdParam, attachmentId },
                 { "@userid", user.Id },
                 { "@systemuserid", "System" },
                 { "@isshared", true }
@@ -439,18 +477,51 @@ namespace gaseous_server.Classes.Content
             return BuildContentView(result.Rows[0]);
         }
 
+        /// <summary>
+        /// Retrieves the binary data of a specific content attachment by its ID if the user has access to it.
+        /// </summary>
+        /// <param name="attachmentId">The ID of the content attachment to retrieve.</param>
+        /// <param name="user">The user requesting the content; used for access control.</param>
+        /// <returns>The binary data of the content attachment.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the attachment is not found, access is denied, or the file is missing.</exception>
+        public static async Task<byte[]> GetMetadataItemContentData(long attachmentId, Authentication.ApplicationUser user)
+        {
+            // return the requested attachment data if the user has access to it
+            var contentView = await GetMetadataItemContent(attachmentId, user);
+            if (contentView == null)
+            {
+                throw new InvalidOperationException("Attachment not found or access denied.");
+            }
+
+            string userDirectory = contentView.UploadedByUserId == "System" ? "Global" : contentView.UploadedByUserId;
+            string contentDir = contentView.ContentType == ContentType.GlobalManual ? "manuals" : contentView.ContentType.ToString().ToLower() + "s";
+            string dirPath = Path.Combine(Config.LibraryConfiguration.LibraryContentDirectory, userDirectory, contentDir);
+            string filePath = Path.Combine(dirPath, contentView.FileSystemFilename);
+            if (!System.IO.File.Exists(filePath))
+            {
+                throw new InvalidOperationException("Attachment file not found on disk.");
+            }
+
+            byte[] fileData = await System.IO.File.ReadAllBytesAsync(filePath);
+            return fileData;
+        }
+
         private static ContentViewModel BuildContentView(DataRow row)
         {
             var contentView = new ContentViewModel
             {
                 AttachmentId = Convert.ToInt64(row["AttachmentID"]),
                 FileName = Convert.ToString(row["Filename"]) ?? "",
+                FileSystemFilename = Convert.ToString(row["FileSystemFilename"]) ?? "",
                 ContentType = (ContentType)Convert.ToInt32(row["AttachmentType"]),
                 Size = Convert.ToInt64(row["Size"]),
                 UploadedAt = Convert.ToDateTime(row["DateCreated"]),
                 UploadedByUserId = Convert.ToString(row["UserId"]) ?? "",
                 IsShared = Convert.ToBoolean(row["IsShared"])
             };
+
+            // remove any file extensions from the FileName
+            contentView.FileName = System.IO.Path.GetFileNameWithoutExtension(contentView.FileName);
 
             // get uploader profile - if UserId is "System", set to null
             string userId = Convert.ToString(row["UserId"]) ?? "";
@@ -460,8 +531,18 @@ namespace gaseous_server.Classes.Content
             }
             else
             {
-                var userProfile = new UserProfile();
-                contentView.UploadedBy = userProfile.GetUserProfile(userId).Result;
+                // get the user account from the userId
+                var userStore = new Authentication.UserStore();
+                var user = userStore.FindByIdAsync(userId, CancellationToken.None).Result;
+                if (user == null)
+                {
+                    contentView.UploadedBy = null;
+                }
+                else
+                {
+                    var userProfile = new UserProfile();
+                    contentView.UploadedBy = userProfile.GetUserProfile(user.ProfileId.ToString()).Result;
+                }
             }
 
             return contentView;
@@ -532,10 +613,10 @@ namespace gaseous_server.Classes.Content
 
             // delete the database record
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "DELETE FROM MetadataMap_Attachments WHERE AttachmentID = @attachmentid;";
+            string sql = $"DELETE FROM MetadataMap_Attachments WHERE AttachmentID = {AttachmentIdParam};";
             var parameters = new Dictionary<string, object>
             {
-                { "@attachmentid", attachmentId }
+                { AttachmentIdParam, attachmentId }
             };
             await db.ExecuteCMDAsync(sql, parameters);
         }
@@ -579,11 +660,11 @@ namespace gaseous_server.Classes.Content
 
                 // update isShared
                 Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                string sql = "UPDATE MetadataMap_Attachments SET IsShared = @isshared WHERE AttachmentID = @attachmentid;";
+                string sql = $"UPDATE MetadataMap_Attachments SET IsShared = @isshared WHERE AttachmentID = {AttachmentIdParam};";
                 var parameters = new Dictionary<string, object>
                 {
                     { "@isshared", isShared.Value },
-                    { "@attachmentid", attachmentId }
+                    { AttachmentIdParam, attachmentId }
                 };
                 await db.ExecuteCMDAsync(sql, parameters);
 
@@ -601,11 +682,11 @@ namespace gaseous_server.Classes.Content
                     case ContentType.GlobalManual:
                         // update the filename field in the database
                         Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                        string sql = "UPDATE MetadataMap_Attachments SET Filename = @filename WHERE AttachmentID = @attachmentid;";
+                        string sql = $"UPDATE MetadataMap_Attachments SET Filename = @filename WHERE AttachmentID = {AttachmentIdParam};";
                         var parameters = new Dictionary<string, object>
                         {
                             { "@filename", content },
-                            { "@attachmentid", attachmentId }
+                            { AttachmentIdParam, attachmentId }
                         };
                         await db.ExecuteCMDAsync(sql, parameters);
 
@@ -626,6 +707,93 @@ namespace gaseous_server.Classes.Content
             }
 
             return existingContent;
+        }
+
+        /// <summary>
+        /// Convert an animated GIF (byte array) to MP4 using an installed ffmpeg binary. Returns null if conversion fails.
+        /// </summary>
+        /// <param name="gifBytes">Source GIF bytes.</param>
+        /// <param name="fps">Target frames per second (5-60 recommended).</param>
+        /// <returns>MP4 bytes or null on failure.</returns>
+        private static byte[]? ConvertGifToMp4WithFfmpeg(byte[] gifBytes, int fps)
+        {
+            try
+            {
+                // Ensure fps bounds
+                if (fps < 5) fps = 5;
+                if (fps > 60) fps = 60;
+
+                // Check for ffmpeg availability
+                string ffmpegPath = "ffmpeg"; // rely on PATH
+                try
+                {
+                    var check = Process.Start(new ProcessStartInfo
+                    {
+                        FileName = ffmpegPath,
+                        Arguments = "-version",
+                        RedirectStandardOutput = true,
+                        RedirectStandardError = true,
+                        UseShellExecute = false,
+                        CreateNoWindow = true
+                    });
+                    if (check == null)
+                        return null;
+                    check.WaitForExit(3000);
+                    if (check.ExitCode != 0)
+                        return null;
+                }
+                catch
+                {
+                    // ffmpeg not available
+                    return null;
+                }
+
+                string tempDir = Path.Combine(Path.GetTempPath(), "gaseous_gifconv");
+                Directory.CreateDirectory(tempDir);
+                string inputPath = Path.Combine(tempDir, Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture) + ".gif");
+                string outputPath = Path.Combine(tempDir, Guid.NewGuid().ToString("N", CultureInfo.InvariantCulture) + ".mp4");
+                File.WriteAllBytes(inputPath, gifBytes);
+
+                // Build ffmpeg arguments:
+                //  -y overwrite
+                //  -i input.gif
+                //  -vf scale filter to ensure even dimensions and chosen fps
+                //  -movflags +faststart for streaming friendliness
+                //  -pix_fmt yuv420p for compatibility
+                string args = $"-hide_banner -loglevel error -y -i \"{inputPath}\" -vf \"scale=trunc(iw/2)*2:trunc(ih/2)*2,fps={fps}\" -movflags +faststart -pix_fmt yuv420p -an \"{outputPath}\"";
+
+                var psi = new ProcessStartInfo
+                {
+                    FileName = ffmpegPath,
+                    Arguments = args,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                };
+                using var proc = Process.Start(psi);
+                if (proc == null)
+                    return null;
+                // Capture stderr in case of error for logging
+                string stdErr = proc.StandardError.ReadToEnd();
+                proc.WaitForExit(30000); // 30s timeout for safety
+                if (proc.ExitCode != 0 || !File.Exists(outputPath))
+                {
+                    Logging.Log(Logging.LogType.Warning, "Content Manager", $"ffmpeg GIF->MP4 conversion failed (exit {proc.ExitCode}): {stdErr}");
+                    return null;
+                }
+
+                byte[] mp4 = File.ReadAllBytes(outputPath);
+                // Cleanup (best effort)
+                try { File.Delete(inputPath); } catch { }
+                try { File.Delete(outputPath); } catch { }
+                return mp4;
+            }
+            catch (Exception ex)
+            {
+                Logging.Log(Logging.LogType.Warning, "Content Manager", $"ffmpeg GIF->MP4 conversion exception: {ex.Message}");
+                return null;
+            }
         }
     }
 }
