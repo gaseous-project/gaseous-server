@@ -223,6 +223,13 @@ EJS_Buttons = {
                 .then(result => {
                     console.log("Upload complete");
                     console.log(result);
+                    // show a notification
+                    const notification = new Notification(
+                        'Screenshot Saved',
+                        'Screenshot has been saved to the media library.',
+                        `/api/v1.1/ContentManager/${gameId}/${result.attachmentId}/data`
+                    );
+                    notification.Show();
                 })
                 .catch(error => {
                     console.log("An error occurred");
