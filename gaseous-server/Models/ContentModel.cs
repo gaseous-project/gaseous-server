@@ -1,4 +1,5 @@
 using System.Net.Mime;
+using gaseous_server.Classes;
 using gaseous_server.Classes.Content;
 
 namespace gaseous_server.Models
@@ -26,6 +27,8 @@ namespace gaseous_server.Models
 
     public class ContentViewModel
     {
+        public long MetadataId { get; set; }
+        public MetadataMap? Metadata { get; set; }
         public long AttachmentId { get; set; }
         public string FileName { get; set; }
         [System.Text.Json.Serialization.JsonIgnore]

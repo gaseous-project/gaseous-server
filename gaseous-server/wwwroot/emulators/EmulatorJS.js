@@ -126,7 +126,7 @@ EJS_Buttons = {
                     for (const provider of logoProviders) {
                         if (gameData.clearLogo[provider]) {
                             imgType = 'clearlogo';
-                            imgId = gameData.clearLogo[provider];
+                            imgId = gameData.clearLogo[provider][0];
                             imgProvider = provider;
                             break;
                         }

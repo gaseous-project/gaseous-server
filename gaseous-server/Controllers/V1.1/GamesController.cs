@@ -708,7 +708,7 @@ FROM
                 whereParams["lang"] = "";
             }
 
-            DataTable dbResponse = await db.ExecuteCMDAsync(sql + limiter, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
+            DataTable dbResponse = await db.ExecuteCMDAsync(sql + limiter, whereParams, new DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
 
             // get count
             int? RecordCount = null;
@@ -775,7 +775,7 @@ FROM
             Dictionary<string, GameReturnPackage.AlphaListItem>? AlphaList = null;
             if (returnSummary == true)
             {
-                dbResponse = await db.ExecuteCMDAsync(sql, whereParams, new Database.DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
+                dbResponse = await db.ExecuteCMDAsync(sql, whereParams, new DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
 
                 RecordCount = dbResponse.Rows.Count;
 

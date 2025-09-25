@@ -443,7 +443,7 @@ namespace gaseous_server.Classes.Content
             List<ContentViewModel> contents = new List<ContentViewModel>();
             foreach (DataRow row in result.Rows)
             {
-                contents.Add(BuildContentView(row));
+                contents.Add(await BuildContentView(row));
             }
 
             return contents;
@@ -474,7 +474,7 @@ namespace gaseous_server.Classes.Content
             {
                 throw new InvalidOperationException("Attachment not found or access denied.");
             }
-            return BuildContentView(result.Rows[0]);
+            return await BuildContentView(result.Rows[0]);
         }
 
         /// <summary>
@@ -506,10 +506,12 @@ namespace gaseous_server.Classes.Content
             return fileData;
         }
 
-        private static ContentViewModel BuildContentView(DataRow row)
+        private async static Task<ContentViewModel> BuildContentView(DataRow row)
         {
             var contentView = new ContentViewModel
             {
+                MetadataId = Convert.ToInt64(row["MetadataMapID"]),
+                Metadata = await MetadataManagement.GetMetadataMap(Convert.ToInt64(row["MetadataMapID"])),
                 AttachmentId = Convert.ToInt64(row["AttachmentID"]),
                 FileName = Convert.ToString(row["Filename"]) ?? "",
                 FileSystemFilename = Convert.ToString(row["FileSystemFilename"]) ?? "",
@@ -519,6 +521,12 @@ namespace gaseous_server.Classes.Content
                 UploadedByUserId = Convert.ToString(row["UserId"]) ?? "",
                 IsShared = Convert.ToBoolean(row["IsShared"])
             };
+
+            // remoove unwanted data from Metadata
+            if (contentView.Metadata != null)
+            {
+                contentView.Metadata.MetadataMapItems = null;
+            }
 
             // remove any file extensions from the FileName
             contentView.FileName = System.IO.Path.GetFileNameWithoutExtension(contentView.FileName);
@@ -533,7 +541,7 @@ namespace gaseous_server.Classes.Content
             {
                 // get the user account from the userId
                 var userStore = new Authentication.UserStore();
-                var user = userStore.FindByIdAsync(userId, CancellationToken.None).Result;
+                var user = await userStore.FindByIdAsync(userId, CancellationToken.None);
                 if (user == null)
                 {
                     contentView.UploadedBy = null;
@@ -541,7 +549,7 @@ namespace gaseous_server.Classes.Content
                 else
                 {
                     var userProfile = new UserProfile();
-                    contentView.UploadedBy = userProfile.GetUserProfile(user.ProfileId.ToString()).Result;
+                    contentView.UploadedBy = await userProfile.GetUserProfile(user.ProfileId.ToString());
                 }
             }
 

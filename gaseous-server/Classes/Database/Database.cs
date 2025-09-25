@@ -1,4 +1,4 @@
-﻿using System;
+﻿
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
@@ -68,6 +68,8 @@ namespace gaseous_server.Classes
 				_ConnectorType = value;
 			}
 		}
+
+		private static MemoryCache DatabaseMemoryCache = new MemoryCache();
 
 		public void InitDB()
 		{
@@ -446,6 +448,10 @@ namespace gaseous_server.Classes
 		private DataTable _ExecuteCMD(string Command, Dictionary<string, object> Parameters, DatabaseMemoryCacheOptions? CacheOptions, int Timeout = 30, string ConnectionString = "")
 		{
 			string CacheKey = Command + string.Join(";", Parameters.Select(x => string.Join("=", x.Key, x.Value)));
+			if (CacheOptions?.CacheKey != null)
+			{
+				CacheKey = CacheOptions.CacheKey;
+			}
 
 			if (CacheOptions is object && CacheOptions.CacheEnabled)
 			{
@@ -538,155 +544,6 @@ namespace gaseous_server.Classes
 						break;
 					}
 			}
-		}
-
-		public static class DatabaseMemoryCache
-		{
-			private class MemoryCacheItem
-			{
-				public MemoryCacheItem(object CacheObject)
-				{
-					cacheObject = CacheObject;
-				}
-
-				public MemoryCacheItem(object CacheObject, int ExpirationSeconds)
-				{
-					cacheObject = CacheObject;
-					expirationSeconds = ExpirationSeconds;
-				}
-
-				/// <summary>
-				/// The time the object was added to the cache in ticks
-				/// </summary>
-				public long addedTime { get; } = Environment.TickCount64;
-
-				/// <summary>
-				/// The time the object will expire in ticks
-				/// </summary>
-				public long expirationTime
-				{
-					get
-					{
-						return addedTime + _expirationTicks;
-					}
-				}
-
-				/// <summary>
-				/// The number of seconds the object will be cached
-				/// </summary>
-				public int expirationSeconds
-				{
-					get
-					{
-						return (int)TimeSpan.FromTicks(_expirationTicks).Seconds;
-					}
-					set
-					{
-						_expirationTicks = (long)TimeSpan.FromSeconds(value).Ticks;
-					}
-				}
-
-				private long _expirationTicks = (long)TimeSpan.FromSeconds(2).Ticks;
-
-				/// <summary>
-				/// The object to be cached
-				/// </summary>
-				public object cacheObject { get; set; }
-			}
-			private static Dictionary<string, MemoryCacheItem> MemoryCache = new Dictionary<string, MemoryCacheItem>();
-			private static Timer CacheTimer = new Timer(CacheTimerCallback, null, 0, 1000);
-
-			private static void CacheTimerCallback(object? state)
-			{
-				ClearExpiredCache();
-			}
-
-			public static object? GetCacheObject(string CacheKey)
-			{
-				try
-				{
-					if (MemoryCache.ContainsKey(CacheKey))
-					{
-						if (MemoryCache[CacheKey].expirationTime < Environment.TickCount)
-						{
-							MemoryCache.Remove(CacheKey);
-							return null;
-						}
-						else
-						{
-							return MemoryCache[CacheKey].cacheObject;
-						}
-					}
-					else
-					{
-						return null;
-					}
-				}
-				catch
-				{
-					return null;
-				}
-			}
-			public static void SetCacheObject(string CacheKey, object CacheObject, int ExpirationSeconds = 2)
-			{
-				try
-				{
-					if (MemoryCache.ContainsKey(CacheKey))
-					{
-						MemoryCache.Remove(CacheKey);
-					}
-					MemoryCache.Add(CacheKey, new MemoryCacheItem(CacheObject, ExpirationSeconds));
-				}
-				catch (Exception ex)
-				{
-					Logging.Log(Logging.LogType.Debug, "Database", "Error while setting cache object", ex);
-					ClearCache();
-				}
-			}
-			public static void RemoveCacheObject(string CacheKey)
-			{
-				if (MemoryCache.ContainsKey(CacheKey))
-				{
-					MemoryCache.Remove(CacheKey);
-				}
-			}
-			public static void ClearCache()
-			{
-				MemoryCache.Clear();
-			}
-			private static void ClearExpiredCache()
-			{
-				try
-				{
-					long currTime = Environment.TickCount64;
-
-					Dictionary<string, MemoryCacheItem> ExpiredItems = MemoryCache;
-					foreach (string key in ExpiredItems.Keys)
-					{
-						if (MemoryCache[key].expirationTime < currTime)
-						{
-							Console.WriteLine("\x1b[95mPurging expired cache item " + key + ". Added: " + MemoryCache[key].addedTime + ". Expired: " + MemoryCache[key].expirationTime);
-							MemoryCache.Remove(key);
-						}
-					}
-				}
-				catch (Exception ex)
-				{
-					Logging.Log(Logging.LogType.Debug, "Database", "Error while clearing expired cache", ex);
-				}
-			}
-		}
-
-		public class DatabaseMemoryCacheOptions
-		{
-			public DatabaseMemoryCacheOptions(bool CacheEnabled = false, int ExpirationSeconds = 1)
-			{
-				this.CacheEnabled = CacheEnabled;
-				this.ExpirationSeconds = ExpirationSeconds;
-			}
-
-			public bool CacheEnabled { get; set; }
-			public int ExpirationSeconds { get; set; }
 		}
 
 		public int GetDatabaseSchemaVersion()

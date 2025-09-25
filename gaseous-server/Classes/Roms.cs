@@ -111,12 +111,12 @@ namespace gaseous_server.Classes
 				dbDict.Add("platformid", PlatformId);
 				dbDict.Add("platformsource", (int)FileSignature.MetadataSources.None);
 			}
-			DataTable romDT = await db.ExecuteCMDAsync(sql, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks));
+			DataTable romDT = await db.ExecuteCMDAsync(sql, dbDict, new DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks));
 
 			if (romDT.Rows.Count > 0)
 			{
 				// set count of roms
-				var rowCountList = await db.ExecuteCMDDictAsync(sqlCount, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks));
+				var rowCountList = await db.ExecuteCMDDictAsync(sqlCount, dbDict, new DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks));
 				Dictionary<string, object> rowCount = rowCountList[0];
 				GameRoms.Count = int.Parse((string)rowCount["RomCount"]);
 

@@ -33,6 +33,9 @@ namespace gaseous_server.Classes
 			UserManualLink
 		}
 
+		// static memory cache for database queries
+		private static MemoryCache DatabaseMemoryCache = new MemoryCache(500);
+
 		/// <summary>
 		/// Creates a new metadata map, if one with the same platformId and name does not already exist.
 		/// </summary>
@@ -225,6 +228,10 @@ namespace gaseous_server.Classes
 			// update the metadata map item
 			sql = $"UPDATE MetadataMapBridge SET {whereClause} WHERE ParentMapId = @metadataMapId AND MetadataSourceType = @sourceType;";
 			db.ExecuteCMD(sql, dbDict);
+
+			// clear the cache for this metadata map if present
+			DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
+			
 		}
 
 		/// <summary>
@@ -244,6 +251,14 @@ namespace gaseous_server.Classes
 		/// </remarks>
 		private static async Task<MetadataMap?> GetMetadataMap(long platformId, string name)
 		{
+			// check the cache first
+			long? cachedMetadataMap = (long?)DatabaseMemoryCache.GetCacheObject("MetadataMap_PlatformId_" + platformId.ToString() + "_Name_" + name.Trim());
+
+			if (cachedMetadataMap != null)
+			{
+				return await GetMetadataMap((long)cachedMetadataMap);
+			}
+
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>()
@@ -258,6 +273,9 @@ namespace gaseous_server.Classes
 
 			if (dt.Rows.Count > 0)
 			{
+				// add to cache
+				DatabaseMemoryCache.SetCacheObject("MetadataMap_PlatformId_" + platformId.ToString() + "_Name_" + name.Trim(), (long)dt.Rows[0]["Id"], 3600);
+
 				return await GetMetadataMap((long)dt.Rows[0]["Id"]);
 			}
 
@@ -278,16 +296,21 @@ namespace gaseous_server.Classes
 		/// </remarks>
 		public static async Task<MetadataMap?> GetMetadataMap(long metadataMapId)
 		{
+			// check the cache first
+			MetadataMap? cachedMetadataMap = (MetadataMap?)DatabaseMemoryCache.GetCacheObject("MetadataMap_" + metadataMapId.ToString());
+			if (cachedMetadataMap != null)
+			{
+				return cachedMetadataMap;
+			}
+
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>()
 			{
 				{ "@metadataMapId", metadataMapId }
 			};
-			DataTable dt = new DataTable();
 
-			sql = "SELECT * FROM MetadataMap WHERE Id = @metadataMapId;";
-			dt = await db.ExecuteCMDAsync(sql, dbDict);
+			string sql = "SELECT * FROM MetadataMap JOIN MetadataMapBridge ON MetadataMap.Id = MetadataMapBridge.ParentMapId WHERE Id = @metadataMapId;";
+			DataTable dt = await db.ExecuteCMDAsync(sql, dbDict);
 
 			if (dt.Rows.Count > 0)
 			{
@@ -298,9 +321,6 @@ namespace gaseous_server.Classes
 					SignatureGameName = dt.Rows[0]["SignatureGameName"].ToString(),
 					MetadataMapItems = new List<MetadataMap.MetadataMapItem>()
 				};
-
-				sql = "SELECT * FROM MetadataMapBridge WHERE ParentMapId = @metadataMapId;";
-				dt = await db.ExecuteCMDAsync(sql, dbDict);
 
 				foreach (DataRow dr in dt.Rows)
 				{
@@ -319,12 +339,25 @@ namespace gaseous_server.Classes
 					}
 				}
 
+				// add to cache
+				DatabaseMemoryCache.SetCacheObject("MetadataMap_" + metadataMapId.ToString(), metadataMap, 3600);
+
 				return metadataMap;
 			}
 
 			return null;
 		}
 
+		/// <summary>
+		/// Sets supplemental metadata for a metadata map (e.g., user manual link) and clears the related cache so future reads get updated values.
+		/// </summary>
+		/// <param name="metadataMapId">The unique identifier of the metadata map to update.</param>
+		/// <param name="dataType">The type of support data being stored (currently only UserManualLink).</param>
+		/// <param name="data">The value to store for the specified support data type.</param>
+		/// <remarks>
+		/// If the metadata map does not exist the method returns without making changes.
+		/// Cache for the metadata map is cleared before and after the update to ensure consistency.
+		/// </remarks>
 		public static void SetMetadataSupportData(long metadataMapId, MetadataMapSupportDataTypes dataType, string data)
 		{
 			// verify the metadata map exists
@@ -334,6 +367,10 @@ namespace gaseous_server.Classes
 				return;
 			}
 
+			// clear the cache for this metadata map if present
+			DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
+
+			// update the metadata map
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>()
@@ -349,6 +386,9 @@ namespace gaseous_server.Classes
 					db.ExecuteCMD(sql, dbDict);
 					break;
 			}
+
+			// clear the cache for this metadata map if present
+			DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
 		}
 
 		/// <summary>
@@ -368,6 +408,13 @@ namespace gaseous_server.Classes
 		/// </remarks>
 		public static MetadataMap.MetadataMapItem? GetMetadataMapFromSourceId(FileSignature.MetadataSources sourceType, long sourceId)
 		{
+			// check the cache first
+			MetadataMap.MetadataMapItem? cachedMetadataMapItem = (MetadataMap.MetadataMapItem?)DatabaseMemoryCache.GetCacheObject("MetadataMapItem_" + sourceType.ToString() + "_" + sourceId.ToString());
+			if (cachedMetadataMapItem != null)
+			{
+				return cachedMetadataMapItem;
+			}
+
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>()
@@ -391,6 +438,9 @@ namespace gaseous_server.Classes
 					IsManual = (bool)dt.Rows[0]["IsManual"]
 				};
 
+				// add to cache
+				DatabaseMemoryCache.SetCacheObject("MetadataMapItem_" + sourceType.ToString() + "_" + sourceId.ToString(), metadataMapItem, 3600);
+
 				return metadataMapItem;
 			}
 
@@ -411,6 +461,13 @@ namespace gaseous_server.Classes
 		/// </returns>
 		public static long? GetMetadataMapIdFromSourceId(FileSignature.MetadataSources sourceType, long sourceId, bool preferred = true)
 		{
+			// check the cache first
+			long? cachedMetadataMapId = (long?)DatabaseMemoryCache.GetCacheObject("MetadataMapId_" + sourceType.ToString() + "_" + sourceId.ToString() + "_" + preferred.ToString());
+			if (cachedMetadataMapId != null)
+			{
+				return cachedMetadataMapId;
+			}
+
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>()
@@ -428,6 +485,9 @@ namespace gaseous_server.Classes
 
 			if (dt.Rows.Count > 0)
 			{
+				// add to cache
+				DatabaseMemoryCache.SetCacheObject("MetadataMapId_" + sourceType.ToString() + "_" + sourceId.ToString() + "_" + preferred.ToString(), (long)dt.Rows[0]["ParentMapId"], 3600);
+
 				return (long)dt.Rows[0]["ParentMapId"];
 			}
 
@@ -441,6 +501,13 @@ namespace gaseous_server.Classes
 		/// <returns></returns>
 		public static async Task<List<long>> GetAssociatedMetadataMapIds(long metadataMapId)
 		{
+			// check the cache first
+			List<long>? cachedMetadataMap = (List<long>?)DatabaseMemoryCache.GetCacheObject("AssociatedMetadataMapIds_" + metadataMapId.ToString());
+			if (cachedMetadataMap != null)
+			{
+				return cachedMetadataMap;
+			}
+
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>()
@@ -460,6 +527,9 @@ namespace gaseous_server.Classes
 					metadataMapIds.Add(associatedMetadataMapId);
 				}
 			}
+
+			// add to cache
+			DatabaseMemoryCache.SetCacheObject("AssociatedMetadataMapIds_" + metadataMapId.ToString(), metadataMapIds, 3600);
 
 			return metadataMapIds;
 		}
