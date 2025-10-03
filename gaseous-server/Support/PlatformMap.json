@@ -1742,7 +1742,7 @@
           "EmulatorType": "EmulatorJS",
           "AvailableWebEmulatorCores": [
             {
-              "Core": "gb",
+              "Core": "gba",
               "AlternateCoreName": "mgba",
               "Default": true
             }
