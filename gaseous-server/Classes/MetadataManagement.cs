@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
 using gaseous_server.Models;
+using System.Linq;
 using HasheousClient.Models;
 using HasheousClient.Models.Metadata.IGDB;
 
@@ -33,8 +34,52 @@ namespace gaseous_server.Classes
 			UserManualLink
 		}
 
-		// static memory cache for database queries
-		private static MemoryCache DatabaseMemoryCache = new MemoryCache(500);
+		// static memory cache for database queries (snapshot cloning enabled so retrieved objects can be safely mutated)
+		private static MemoryCache DatabaseMemoryCache = new MemoryCache(
+			maxSize: 500,
+			cloneOnSet: true,
+			cloneOnGet: true,
+			cloner: CloneForCache
+		);
+
+		/// <summary>
+		/// Custom clone delegate used by the in-memory cache to snapshot supported object types.
+		/// Ensures internal collections are copied so callers cannot mutate the cached instance.
+		/// </summary>
+		private static object CloneForCache(object source)
+		{
+			try
+			{
+				if (source is MetadataMap mm)
+				{
+					return new MetadataMap
+					{
+						Id = mm.Id,
+						PlatformId = mm.PlatformId,
+						SignatureGameName = mm.SignatureGameName,
+						MetadataMapItems = mm.MetadataMapItems?.Select(i => new MetadataMap.MetadataMapItem
+						{
+							SourceType = i.SourceType,
+							SourceId = i.SourceId,
+							AutomaticMetadataSourceId = i.AutomaticMetadataSourceId,
+							Preferred = i.Preferred,
+							IsManual = i.IsManual
+						}).ToList()
+					};
+				}
+				else if (source is List<long> longList)
+				{
+					return new List<long>(longList); // shallow copy list of value types
+				}
+				// Return original for unsupported types (they'll either be immutable or not mutated downstream)
+				return source;
+			}
+			catch
+			{
+				// Fail open: if cloning fails, return original reference (better than throwing inside cache path)
+				return source;
+			}
+		}
 
 		/// <summary>
 		/// Creates a new metadata map, if one with the same platformId and name does not already exist.
@@ -104,7 +149,7 @@ namespace gaseous_server.Classes
 			AddMetadataMapItem(metadataMapId, FileSignature.MetadataSources.None, gameId, true, false, gameId);
 
 			// return the new metadata map
-			MetadataMap RetVal = GetMetadataMap(metadataMapId).Result;
+			MetadataMap? RetVal = GetMetadataMap(metadataMapId).Result;
 			Processing = false;
 			return RetVal;
 		}
@@ -190,10 +235,10 @@ namespace gaseous_server.Classes
 			{
 				{ "@metadataMapId", metadataMapId },
 				{ "@sourceType", SourceType },
-				{ "@sourceId", sourceId },
-				{ "@preferred", preferred },
-				{ "@isManual", IsManual },
-				{ "@automaticMetadataSourceId", AutomaticMetadataSourceId }
+				{ "@sourceId", sourceId ?? (object)DBNull.Value },
+				{ "@preferred", preferred ?? (object)DBNull.Value },
+				{ "@isManual", IsManual ?? (object)DBNull.Value },
+				{ "@automaticMetadataSourceId", AutomaticMetadataSourceId ?? (object)DBNull.Value }
 			};
 
 			List<string> whereClauses = new List<string>();
@@ -231,7 +276,7 @@ namespace gaseous_server.Classes
 
 			// clear the cache for this metadata map if present
 			DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
-			
+
 		}
 
 		/// <summary>
@@ -318,7 +363,7 @@ namespace gaseous_server.Classes
 				{
 					Id = (long)dt.Rows[0]["Id"],
 					PlatformId = (long)dt.Rows[0]["PlatformId"],
-					SignatureGameName = dt.Rows[0]["SignatureGameName"].ToString(),
+					SignatureGameName = dt.Rows[0]["SignatureGameName"]?.ToString() ?? string.Empty,
 					MetadataMapItems = new List<MetadataMap.MetadataMapItem>()
 				};
 
@@ -337,6 +382,11 @@ namespace gaseous_server.Classes
 					{
 						metadataMap.MetadataMapItems.Add(metadataMapItem);
 					}
+				}
+
+				if (metadataMap.MetadataMapItems == null || metadataMap.MetadataMapItems.Count == 0)
+				{
+					throw new Exception("Metadata map has no metadata map items.");
 				}
 
 				// add to cache
@@ -389,62 +439,6 @@ namespace gaseous_server.Classes
 
 			// clear the cache for this metadata map if present
 			DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
-		}
-
-		/// <summary>
-		/// Get the MetadataMapItem for the provided metadata source, and source id
-		/// </summary>
-		/// <param name="sourceType">
-		/// The type of the metadata source.
-		/// </param>
-		/// <param name="sourceId">
-		/// The ID of the metadata source.
-		/// </param>
-		/// <returns>
-		/// The MetadataMapItem, or null if it does not exist.
-		/// </returns>
-		/// <remarks>
-		/// This method will return the MetadataMapItem with the given sourceType and sourceId.
-		/// </remarks>
-		public static MetadataMap.MetadataMapItem? GetMetadataMapFromSourceId(FileSignature.MetadataSources sourceType, long sourceId)
-		{
-			// check the cache first
-			MetadataMap.MetadataMapItem? cachedMetadataMapItem = (MetadataMap.MetadataMapItem?)DatabaseMemoryCache.GetCacheObject("MetadataMapItem_" + sourceType.ToString() + "_" + sourceId.ToString());
-			if (cachedMetadataMapItem != null)
-			{
-				return cachedMetadataMapItem;
-			}
-
-			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "";
-			Dictionary<string, object> dbDict = new Dictionary<string, object>()
-			{
-				{ "@sourceType", sourceType },
-				{ "@sourceId", sourceId }
-			};
-			DataTable dt = new DataTable();
-
-			sql = "SELECT * FROM MetadataMapBridge WHERE MetadataSourceType = @sourceType AND MetadataSourceId = @sourceId;";
-			dt = db.ExecuteCMD(sql, dbDict);
-
-			if (dt.Rows.Count > 0)
-			{
-				MetadataMap.MetadataMapItem metadataMapItem = new MetadataMap.MetadataMapItem()
-				{
-					SourceType = (FileSignature.MetadataSources)dt.Rows[0]["MetadataSourceType"],
-					SourceId = (long)dt.Rows[0]["MetadataSourceId"],
-					Preferred = (bool)dt.Rows[0]["Preferred"],
-					AutomaticMetadataSourceId = dt.Rows[0]["AutomaticMetadataSourceId"] == DBNull.Value ? null : (long?)dt.Rows[0]["AutomaticMetadataSourceId"],
-					IsManual = (bool)dt.Rows[0]["IsManual"]
-				};
-
-				// add to cache
-				DatabaseMemoryCache.SetCacheObject("MetadataMapItem_" + sourceType.ToString() + "_" + sourceId.ToString(), metadataMapItem, 3600);
-
-				return metadataMapItem;
-			}
-
-			return null;
 		}
 
 		/// <summary>
@@ -537,8 +531,7 @@ namespace gaseous_server.Classes
 		Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 		public async Task RefreshMetadata(bool forceRefresh = false)
 		{
-			string sql = "";
-			DataTable dt = new DataTable();
+			// removed unused local variables sql/dt
 
 			// disabling forceRefresh
 			forceRefresh = false;
@@ -574,7 +567,7 @@ namespace gaseous_server.Classes
 					FileSignature.MetadataSources metadataSource = FileSignature.MetadataSources.None;
 
 					// fetch the platform metadata
-					Platform platform = await Metadata.Platforms.GetPlatform((long)dr["id"], metadataSource);
+					Platform? platform = await Metadata.Platforms.GetPlatform((long)dr["id"], metadataSource);
 
 					// fetch the platform metadata from Hasheous
 					if ((long)dr["id"] != 0)
@@ -593,7 +586,7 @@ namespace gaseous_server.Classes
 					}
 
 					// force platformLogo refresh
-					if (platform.PlatformLogo != null)
+					if (platform != null && platform.PlatformLogo != null)
 					{
 						await Metadata.PlatformLogos.GetPlatformLogo(platform.PlatformLogo, metadataSource);
 					}
@@ -744,8 +737,10 @@ namespace gaseous_server.Classes
 				SetStatus(StatusCounter, dt.Rows.Count, "Refreshing metadata for game " + dr["name"]);
 
 				MetadataMap? metadataMap = await GetMetadataMap((long)dr["Id"]);
-
-				await _RefreshSpecificGame(metadataMap, forceRefresh);
+				if (metadataMap != null)
+				{
+					await _RefreshSpecificGame(metadataMap, forceRefresh);
+				}
 
 				StatusCounter += 1;
 			}
@@ -783,8 +778,11 @@ namespace gaseous_server.Classes
 				});
 
 				// refresh the game metadata
-				MetadataMap metadataMap = await GetMetadataMap((long)dr["Id"]);
-				await _RefreshSpecificGame(metadataMap, false);
+				MetadataMap? metadataMap = await GetMetadataMap((long)dr["Id"]);
+				if (metadataMap != null)
+				{
+					await _RefreshSpecificGame(metadataMap, false);
+				}
 
 				// remove the game from the in progress list
 				inProgressRefreshes.RemoveAll(x => x["Id"].ToString() == dr["Id"].ToString());
@@ -828,13 +826,10 @@ namespace gaseous_server.Classes
 					{
 						foreach (long ageRatingId in game.AgeRatings)
 						{
-							AgeRating ageRating = await Metadata.AgeRatings.GetAgeRating(item.SourceType, ageRatingId);
+							AgeRating? ageRating = await Metadata.AgeRatings.GetAgeRating(item.SourceType, ageRatingId);
 							if (ageRating != null)
 							{
-								if (ageRating.Organization != null)
-								{
-									await Metadata.AgeRatingOrganizations.GetAgeRatingOrganization(item.SourceType, (long)ageRating.Organization);
-								}
+								await Metadata.AgeRatingOrganizations.GetAgeRatingOrganization(item.SourceType, (long)ageRating.Organization);
 								if (ageRating.RatingCategory != null)
 								{
 									await Metadata.AgeRatingCategorys.GetAgeRatingCategory(item.SourceType, (long)ageRating.RatingCategory);
@@ -887,7 +882,7 @@ namespace gaseous_server.Classes
 					{
 						foreach (long gameLocalizationId in game.GameLocalizations)
 						{
-							GameLocalization gameLocalization = await Metadata.GameLocalizations.GetGame_Locatization(item.SourceType, gameLocalizationId);
+							GameLocalization? gameLocalization = await Metadata.GameLocalizations.GetGame_Locatization(item.SourceType, gameLocalizationId);
 
 							if (gameLocalization != null)
 							{

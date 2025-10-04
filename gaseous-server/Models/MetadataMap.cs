@@ -32,10 +32,17 @@ namespace gaseous_server.Models
     /// </summary>
     public class MetadataMap
     {
+        /// <summary>Unique identifier of the metadata map.</summary>
         public long Id { get; set; }
+        /// <summary>Associated platform id.</summary>
         public long PlatformId { get; set; }
-        public string SignatureGameName { get; set; }
-        public List<MetadataMapItem> MetadataMapItems { get; set; }
+        /// <summary>Canonical signature game name.</summary>
+        public string SignatureGameName { get; set; } = string.Empty;
+        // Initialize the list to avoid null references in most usage paths. Some callers intentionally
+        // create trimmed copies (e.g., for lightweight content views) and may null this out, so mark nullable.
+        /// <summary>Collection of metadata items (may be null in trimmed views).</summary>
+        public List<MetadataMapItem>? MetadataMapItems { get; set; } = new List<MetadataMapItem>();
+        /// <summary>The preferred metadata map item (first with Preferred=true) or null.</summary>
         public MetadataMapItem? PreferredMetadataMapItem
         {
             get
@@ -48,6 +55,7 @@ namespace gaseous_server.Models
             }
         }
 
+        /// <summary>Represents a single metadata source entry within a metadata map.</summary>
         public class MetadataMapItem
         {
             /// <summary>
@@ -82,23 +90,29 @@ namespace gaseous_server.Models
             {
                 get
                 {
-                    string slug = "";
+                    string slugLocal = string.Empty;
                     switch (SourceType)
                     {
                         case FileSignature.MetadataSources.IGDB:
-                            Game game = Games.GetGame(SourceType, (long)SourceId).Result;
-                            if (game != null)
+                            if (SourceId != null)
                             {
-                                slug = game.Slug;
+                                Game? game = Games.GetGame(SourceType, (long)SourceId).Result;
+                                if (game != null && !string.IsNullOrEmpty(game.Slug))
+                                {
+                                    slugLocal = game.Slug;
+                                }
                             }
                             break;
 
                         default:
-                            slug = SourceId.ToString();
+                            if (SourceId != null)
+                            {
+                                slugLocal = SourceId.Value.ToString();
+                            }
                             break;
                     }
 
-                    return slug;
+                    return slugLocal;
                 }
             }
 
@@ -109,31 +123,31 @@ namespace gaseous_server.Models
             {
                 get
                 {
-                    string link = "";
+                    string linkLocal = string.Empty;
                     switch (SourceType)
                     {
                         case FileSignature.MetadataSources.IGDB:
-                            link = $"https://www.igdb.com/games/{SourceSlug}";
+                            linkLocal = $"https://www.igdb.com/games/{SourceSlug}";
                             break;
 
                         case FileSignature.MetadataSources.TheGamesDb:
-                            link = $"https://thegamesdb.net/game.php?id={SourceId}";
+                            if (SourceId != null) linkLocal = $"https://thegamesdb.net/game.php?id={SourceId}";
                             break;
 
                         case FileSignature.MetadataSources.RetroAchievements:
-                            link = $"https://retroachievements.org/game/{SourceId}";
+                            if (SourceId != null) linkLocal = $"https://retroachievements.org/game/{SourceId}";
                             break;
 
                         case FileSignature.MetadataSources.GiantBomb:
-                            link = $"https://www.giantbomb.com/games/3030-{SourceId}/";
+                            if (SourceId != null) linkLocal = $"https://www.giantbomb.com/games/3030-{SourceId}/";
                             break;
 
                         default:
-                            link = "";
+                            linkLocal = string.Empty;
                             break;
                     }
 
-                    return link;
+                    return linkLocal;
                 }
             }
 

@@ -239,6 +239,37 @@ class GameCard {
         // store the card object in the session storage
         sessionStorage.setItem("Card." + this.card.cardType + ".Id", this.gameId);
 
+        // set up content tabs
+        this.contentTabs = this.card.cardBody.querySelector('#card-tabs');
+        this.contentTabsScreenshots = this.contentTabs.querySelector('#card-tabs-screenshots');
+        this.contentTabsMyContent = this.contentTabs.querySelector('#card-tabs-mycontent');
+        this.screenshots = this.card.cardBody.querySelector('#card-screenshots');
+        this.screenshotsSection = this.card.cardBody.querySelector('#card-screenshots-section');
+
+        this.contentTabList = [];
+        this.contentTabList.push(this.contentTabsScreenshots);
+        this.contentTabList.push(this.contentTabsMyContent);
+        this.contentTabList.forEach(tab => {
+            tab.addEventListener('click', () => {
+                // hide all content sections
+                this.contentTabList.forEach(t => {
+                    t.classList.remove('card-tab-selected');
+                    const sectionName = t.getAttribute('data-section');
+                    const section = this.card.cardBody.querySelector(`#card-${sectionName}-section`);
+                    if (section) {
+                        section.style.display = 'none';
+                    }
+                });
+                // show the selected content section
+                tab.classList.add('card-tab-selected');
+                const sectionName = tab.getAttribute('data-section');
+                const section = this.card.cardBody.querySelector(`#card-${sectionName}-section`);
+                if (section) {
+                    section.style.display = '';
+                }
+            });
+        });
+
         // fetch the game data
         const response = await fetch("/api/v1.1/Games/" + this.gameId, {
             method: "GET",
@@ -554,9 +585,7 @@ class GameCard {
         }
 
         // display the screenshots
-        let screenshots = this.card.cardBody.querySelector('#card-screenshots');
-        let screenshotsSection = this.card.cardBody.querySelector('#card-screenshots-section');
-        if (screenshots) {
+        if (this.screenshots) {
             if (gameData.videos && gameData.videos.length > 0) {
                 await fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/videos`, {
                     method: 'GET',
@@ -587,8 +616,11 @@ class GameCard {
                         videoYouTubeIcon.classList.add('card-screenshot-youtube-icon');
                         videoItem.appendChild(videoYouTubeIcon);
 
-                        screenshots.appendChild(videoItem);
+                        this.screenshots.appendChild(videoItem);
                     });
+                    this.contentTabsScreenshots.style.display = '';
+                    this.contentTabsScreenshots.innerText = gameData.metadataSource;
+                    this.screenshotsSection.style.display = '';
                 });
             }
             if (gameData.screenshots) {
@@ -606,9 +638,10 @@ class GameCard {
                         await this.#ShowScreenshots(this.metadataSource, this.gameId, 'screenshot_' + screenshot);
                     });
 
-                    screenshots.appendChild(screenshotItem);
+                    this.screenshots.appendChild(screenshotItem);
                 });
-                screenshotsSection.style.display = '';
+                this.contentTabsScreenshots.style.display = '';
+                this.screenshotsSection.style.display = '';
             }
         }
 
@@ -717,6 +750,7 @@ class GameCard {
         });
 
         // get the available game platforms
+        let metadataIds = [];
         await fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/platforms`, {
             method: 'GET',
             headers: {
@@ -814,6 +848,7 @@ class GameCard {
                 let cardPlatforms = this.card.cardBody.querySelector('#card-platforms');
 
                 for (const [key, value] of Object.entries(platforms)) {
+                    metadataIds.push(...value.map(v => v.metadataMapId));
                     let platformItem = new GameCardPlatformItem(value[0].name, key);
                     value.forEach(element => {
                         platformItem.Add(element);
@@ -826,6 +861,58 @@ class GameCard {
                 // show the platform section
                 let platformSection = this.card.cardBody.querySelector('#card-platforms-section');
                 platformSection.style.display = '';
+            }
+        });
+
+        // get user graphical content
+        fetch(`/api/v1.1/ContentManager/?metadataids=${metadataIds.join(",")}&contentTypes=Screenshot,Photo,Video`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json()).then(data => {
+            if (data) {
+                console.log(data);
+                if (data.length > 0) {
+                    // show content tabs
+                    this.contentTabs.style.display = '';
+                    this.contentTabsMyContent.style.display = '';
+
+                    // load content elements
+                    let myContent = this.card.cardBody.querySelector('#card-mycontent');
+                    data.forEach(element => {
+                        let contentItem = document.createElement('li');
+                        contentItem.classList.add('card-screenshot-item');
+                        switch (element.contentType) {
+                            case 'Screenshot':
+                            case 'Photo':
+                                contentItem.style.backgroundImage = `url(/api/v1.1/ContentManager/attachment/${element.attachmentId}/data)`;
+                                contentItem.alt = element.name;
+                                contentItem.title = element.name;
+                                break;
+                            case 'Video':
+                                contentItem.style.textAlign = 'center';
+
+                                let contentItemVideo = document.createElement('video');
+                                contentItemVideo.style.objectFit = 'contain';
+                                contentItemVideo.style.height = '100%';
+                                contentItemVideo.src = `/api/v1.1/ContentManager/attachment/${element.attachmentId}/data`;
+                                contentItemVideo.setAttribute('muted', '');
+                                contentItemVideo.setAttribute('loop', '');
+                                contentItemVideo.addEventListener('mouseover', () => {
+                                    contentItemVideo.play();
+                                });
+                                contentItemVideo.addEventListener('mouseout', () => {
+                                    contentItemVideo.pause();
+                                    contentItemVideo.currentTime = 0;
+                                });
+                                contentItem.appendChild(contentItemVideo);
+                                break;
+                        }
+                        myContent.appendChild(contentItem);
+                    });
+                    this.contentTabs.style.display = '';
+                }
             }
         });
 

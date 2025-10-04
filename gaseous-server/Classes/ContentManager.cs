@@ -405,9 +405,11 @@ namespace gaseous_server.Classes.Content
         /// <param name="metadataIds">List of metadata item IDs to retrieve content for.</param>
         /// <param name="user">The user requesting the content; used for access control.</param>
         /// <param name="contentTypes">Optional list of content types to filter by; if null, all types are returned.</param>
+        /// <param name="page">The page number for pagination (1-based).</param>
+        /// <param name="pageSize">The number of items per page for pagination.</param>
         /// <returns>List of ContentViewModel representing the accessible content attachments.</returns>
         /// <exception cref="ArgumentException">Thrown if parameters are invalid.</exception>
-        public static async Task<List<ContentViewModel>> GetMetadataItemContents(List<long> metadataIds, Authentication.ApplicationUser user, List<ContentType>? contentTypes)
+        public static async Task<List<ContentViewModel>> GetMetadataItemContents(List<long> metadataIds, Authentication.ApplicationUser user, List<ContentType>? contentTypes, int page = 1, int pageSize = 50)
         {
             if (metadataIds == null || metadataIds.Count == 0)
             {
@@ -432,12 +434,14 @@ namespace gaseous_server.Classes.Content
 
             // get the data
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM MetadataMap_Attachments WHERE MetadataMapID IN (" + string.Join(",", metadataIds) + ") AND AttachmentType IN (" + string.Join(",", contentTypes.Select(ct => (int)ct)) + ") AND (UserId = @userid OR UserId = @systemuserid) OR IsShared = @isshared;";
+            string sql = "SELECT * FROM MetadataMap_Attachments WHERE MetadataMapID IN (" + string.Join(",", metadataIds) + ") AND AttachmentType IN (" + string.Join(",", contentTypes.Select(ct => (int)ct)) + ") AND (UserId = @userid OR UserId = @systemuserid) OR IsShared = @isshared ORDER BY DateCreated DESC LIMIT @offset, @pagesize;";
             var parameters = new Dictionary<string, object>
             {
                 { "@userid", user.Id },
                 { "@systemuserid", "System" },
-                { "@isshared", true }
+                { "@isshared", true },
+                { "@offset", (page - 1) * pageSize },
+                { "@pagesize", pageSize }
             };
             var result = await db.ExecuteCMDAsync(sql, parameters);
             List<ContentViewModel> contents = new List<ContentViewModel>();
@@ -522,10 +526,19 @@ namespace gaseous_server.Classes.Content
                 IsShared = Convert.ToBoolean(row["IsShared"])
             };
 
-            // remoove unwanted data from Metadata
+            // remove unwanted heavy collection data from Metadata WITHOUT mutating the cached instance
             if (contentView.Metadata != null)
             {
-                contentView.Metadata.MetadataMapItems = null;
+                // Create a lightweight shallow copy so the cached MetadataMap remains intact
+                var original = contentView.Metadata;
+                contentView.Metadata = new MetadataMap
+                {
+                    Id = original.Id,
+                    PlatformId = original.PlatformId,
+                    SignatureGameName = original.SignatureGameName,
+                    // Intentionally omit MetadataMapItems (set to null) for this trimmed view
+                    MetadataMapItems = null
+                };
             }
 
             // remove any file extensions from the FileName

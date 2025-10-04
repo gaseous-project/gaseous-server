@@ -210,7 +210,7 @@ EJS_Buttons = {
                 "Filename": `screenshot_${new Date().toISOString().replace(/[:.]/g, '-')}.png`
             }
 
-            let url = `/api/v1.1/ContentManager/${gameId}`;
+            let url = `/api/v1.1/ContentManager/fileupload/bytearray?metadataid=${gameId}`;
 
             fetch(url, {
                 method: 'POST',
@@ -227,7 +227,7 @@ EJS_Buttons = {
                     const notification = new Notification(
                         'Screenshot Saved',
                         'Screenshot has been saved to the media library.',
-                        `/api/v1.1/ContentManager/${gameId}/${result.attachmentId}/data`
+                        `/api/v1.1/ContentManager/attachment/${result.attachmentId}/data`
                     );
                     notification.Show();
                 })

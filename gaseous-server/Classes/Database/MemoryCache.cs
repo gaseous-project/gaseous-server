@@ -23,6 +23,10 @@ namespace gaseous_server.Classes
         private MemoryCacheItem? _lruTail = null; // least recently used
         private readonly int _maxSize = 0; // 0 = unlimited
         private long _lastStatsLogTick = Environment.TickCount64;
+        // Optional snapshotting support
+        private readonly bool _cloneOnSet = false;
+        private readonly bool _cloneOnGet = false;
+        private readonly Func<object, object>? _cloner = null; // custom clone delegate
 
         /// <summary>
         /// Represents a cached item with its associated object and expiration details.
@@ -35,26 +39,17 @@ namespace gaseous_server.Classes
             /// <param name="CacheObject">
             /// The object instance to be cached.
             /// </param>
-            public MemoryCacheItem(string key, object CacheObject)
-            {
-                Key = key;
-                cacheObject = CacheObject;
-            }
-
             /// <summary>
             /// Initializes a new instance of the MemoryCacheItem class with the specified object to cache and expiration time.
             /// </summary>
-            /// <param name="CacheObject">
-            /// The object instance to be cached.
-            /// </param>
-            /// <param name="ExpirationSeconds">
-            /// The number of seconds before the cached object expires.
-            /// </param>
+            /// <param name="key">The cache key.</param>
+            /// <param name="CacheObject">The object instance to be cached.</param>
+            /// <param name="ExpirationSeconds">The number of seconds before the cached object expires.</param>
             public MemoryCacheItem(string key, object CacheObject, int ExpirationSeconds)
             {
                 Key = key;
                 cacheObject = CacheObject;
-                expirationSeconds = ExpirationSeconds;
+                SetExpirationSeconds(ExpirationSeconds);
             }
 
             /// <summary>
@@ -76,17 +71,8 @@ namespace gaseous_server.Classes
             /// <summary>
             /// The number of seconds the object will be cached
             /// </summary>
-            public int expirationSeconds
-            {
-                get
-                {
-                    return (int)TimeSpan.FromTicks(_expirationTicks).TotalSeconds;
-                }
-                set
-                {
-                    _expirationTicks = TimeSpan.FromSeconds(value).Ticks;
-                }
-            }
+            public int GetExpirationSeconds() => (int)TimeSpan.FromTicks(_expirationTicks).TotalSeconds;
+            public void SetExpirationSeconds(int seconds) => _expirationTicks = TimeSpan.FromSeconds(seconds).Ticks;
             private long _expirationTicks = TimeSpan.FromSeconds(2).Ticks;
 
             /// <summary>
@@ -125,7 +111,9 @@ namespace gaseous_server.Classes
 
         // Static initializer ensures the timer starts as soon as the type is first referenced.
         private readonly ConcurrentMemoryCache memoryCache;
-        private readonly Timer cacheTimer;
+        // timer kept alive by reference in this field list; we don't access it elsewhere
+        private readonly Timer _timer;
+        private const string LogCategory = "Cache";
 
         /// <summary>
         /// Initializes a new MemoryCache with unlimited size (time-based expiration only).
@@ -140,7 +128,36 @@ namespace gaseous_server.Classes
         {
             _maxSize = maxSize < 0 ? 0 : maxSize;
             memoryCache = new ConcurrentMemoryCache();
-            cacheTimer = new Timer(CacheTimerCallback, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+            _timer = new Timer(CacheTimerCallback, null, TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        }
+
+        /// <summary>
+        /// Initializes a new MemoryCache with size limit and optional cloning behavior.
+        /// </summary>
+        /// <param name="maxSize">Maximum number of items (0 = unlimited).</param>
+        /// <param name="cloneOnSet">If true a snapshot copy of the value is created when inserting into cache.</param>
+        /// <param name="cloneOnGet">If true a fresh copy of the cached value is returned on every Get.</param>
+        /// <param name="cloner">Custom clone delegate. If null and cloning enabled, a JSON deep clone is attempted.</param>
+        public MemoryCache(int maxSize, bool cloneOnSet, bool cloneOnGet, Func<object, object>? cloner = null) : this(maxSize)
+        {
+            _cloneOnSet = cloneOnSet;
+            _cloneOnGet = cloneOnGet;
+            _cloner = cloner ?? (_cloneOnSet || _cloneOnGet ? DefaultDeepClone : null);
+        }
+
+        private static object DefaultDeepClone(object source)
+        {
+            // Fallback deep clone via System.Text.Json (handles simple POCO graphs). Streams / non-serializable members will be defaulted.
+            try
+            {
+                var type = source.GetType();
+                var json = System.Text.Json.JsonSerializer.Serialize(source, type);
+                return System.Text.Json.JsonSerializer.Deserialize(json, type) ?? source; // if deserialize fails, return original to avoid null
+            }
+            catch
+            {
+                return source; // fail open – better to return original than throw inside cache path
+            }
         }
 
         private void CacheTimerCallback(object? state)
@@ -154,12 +171,12 @@ namespace gaseous_server.Classes
                 {
                     _lastStatsLogTick = now;
                     var stats = GetStats();
-                    Logging.Log(Logging.LogType.Information, "Cache", $"Stats: Items={stats.ItemCount}/{(stats.MaxSize == 0 ? (object)"inf" : stats.MaxSize)} Hits={stats.Hits} Misses={stats.Misses} HitRate={stats.HitRate:P2} Evictions={stats.Evictions} (Exp={stats.ExpirationEvictions}, Size={stats.SizeEvictions}) Requests={stats.Requests}");
+                    Logging.Log(Logging.LogType.Information, LogCategory, $"Stats: Items={stats.ItemCount}/{(stats.MaxSize == 0 ? (object)"inf" : stats.MaxSize)} Hits={stats.Hits} Misses={stats.Misses} HitRate={stats.HitRate:P2} Evictions={stats.Evictions} (Exp={stats.ExpirationEvictions}, Size={stats.SizeEvictions}) Requests={stats.Requests}");
                 }
             }
             catch (Exception ex)
             {
-                Logging.Log(Logging.LogType.Debug, "Cache", "Error while logging cache statistics", ex);
+                Logging.Log(Logging.LogType.Debug, LogCategory, "Error while logging cache statistics", ex);
             }
         }
 
@@ -201,7 +218,12 @@ namespace gaseous_server.Classes
                             MoveToHead(cacheItem);
                         }
                     }
-                    return cacheItem.cacheObject;
+                    var value = cacheItem.cacheObject;
+                    if (_cloneOnGet && _cloner != null && value != null)
+                    {
+                        value = _cloner(value);
+                    }
+                    return value;
                 }
                 // Miss (no key)
                 Interlocked.Increment(ref _misses);
@@ -241,6 +263,14 @@ namespace gaseous_server.Classes
                     }
                 }
 
+                if (CacheObject == null)
+                {
+                    return; // do not store null entries; treat as no-op
+                }
+                if (_cloneOnSet && _cloner != null)
+                {
+                    CacheObject = _cloner(CacheObject);
+                }
                 var newItem = new MemoryCacheItem(CacheKey, CacheObject, ExpirationSeconds);
                 memoryCache.Add(CacheKey, newItem);
                 if (_maxSize > 0)

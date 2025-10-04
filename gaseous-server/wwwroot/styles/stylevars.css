@@ -136,4 +136,9 @@
     --login-logospace-background: rgba(100, 100, 100, 0.7);
     --login-loginspace-background: rgba(79, 79, 79, 0.7);
     --login-logospace-label: rgb(255, 255, 255);
+
+    /* card tabs */
+    --card-tabs-selected-background: rgba(0, 0, 0, 0.1);
+    --card-tabs-selected-border: rgb(0, 0, 0);
+    --card-tabs-hover-background: rgba(0, 0, 0, 0.3);
 }

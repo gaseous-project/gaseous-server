@@ -46,7 +46,7 @@ namespace gaseous_server.Controllers.v1_1
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
         [ProducesResponseType(StatusCodes.Status413PayloadTooLarge)]
-        [Route("{metadataid}")]
+        [Route("fileupload/bytearray")]
         public async Task<ActionResult> UploadContentAsync(ContentModel model, long metadataid)
         {
             // get user
@@ -111,7 +111,7 @@ namespace gaseous_server.Controllers.v1_1
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
         [ProducesResponseType(StatusCodes.Status413PayloadTooLarge)]
-        [Route("{metadataid}/fileupload")]
+        [Route("fileupload/single")]
         [Consumes("multipart/form-data")]
         public async Task<ActionResult> UploadContentFileAsync(long metadataid, [FromForm] SingleContentUploadForm form)
         {
@@ -176,7 +176,7 @@ namespace gaseous_server.Controllers.v1_1
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status415UnsupportedMediaType)]
         [ProducesResponseType(StatusCodes.Status413PayloadTooLarge)]
-        [Route("{metadataid}/fileupload/multiple")]
+        [Route("fileupload/multiple")]
         [Consumes("multipart/form-data")]
         public async Task<ActionResult> UploadMultipleContentFilesAsync(long metadataid, [FromForm] MultiContentUploadForm form)
         {
@@ -225,16 +225,17 @@ namespace gaseous_server.Controllers.v1_1
         /// <summary>
         /// Retrieves a list of content attachments associated with the specified metadata item ID that the user has access to.
         /// </summary>
-        /// <param name="metadataid">The metadata item ID to retrieve content for.</param>
+        /// <param name="metadataids">Comma-separated list of metadata item IDs to retrieve content for.</param>
         /// <param name="contentTypes">Comma-separated list of content types to filter by; if empty, all types are returned.</param>
+        /// <param name="page">The page number for pagination (1-based).</param>
+        /// <param name="pageSize">The number of items per page for pagination.</param>
         /// <returns>List of ContentViewModel representing the accessible content attachments.</returns>
         [MapToApiVersion("1.1")]
         [HttpGet]
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [Route("{metadataid}")]
-        public async Task<ActionResult> GetContentsAsync(long metadataid, [Required] string contentTypes)
+        public async Task<ActionResult> GetContentsAsync([Required] string metadataids, [Required] string contentTypes, int page = 1, int pageSize = 50)
         {
             // get user
             var user = await _userManager.GetUserAsync(User);
@@ -255,7 +256,18 @@ namespace gaseous_server.Controllers.v1_1
 
             try
             {
-                var contents = await GetMetadataItemContents(new List<long> { metadataid }, user, contentTypeList);
+                // parse metadata ids into list of longs - ignore invalid entries
+                var idStrings = metadataids.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                var metadataIdList = new List<long>();
+                foreach (var idStr in idStrings)
+                {
+                    if (long.TryParse(idStr, out var id))
+                    {
+                        metadataIdList.Add(id);
+                    }
+                }
+
+                var contents = await GetMetadataItemContents(metadataIdList, user, contentTypeList, page, pageSize);
                 return Ok(contents);
             }
             catch (ArgumentException ex)
@@ -267,7 +279,6 @@ namespace gaseous_server.Controllers.v1_1
         /// <summary>
         /// Retrieves the raw binary data of a specific content attachment by its ID if the user has access to it.
         /// </summary>
-        /// <param name="metadatadaId">The metadata item ID the attachment is associated with (for routing purposes).</param>
         /// <param name="attachmentId">The ID of the content attachment to retrieve.</param>
         /// <returns>The raw binary data of the content attachment.</returns>
         [MapToApiVersion("1.1")]
@@ -275,8 +286,8 @@ namespace gaseous_server.Controllers.v1_1
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [Route("{metadataid}/{attachmentId}/data")]
-        public async Task<ActionResult> GetContentDataAsync(long metadataid, long attachmentId)
+        [Route("attachment/{attachmentId}/data")]
+        public async Task<ActionResult> GetContentDataAsync(long attachmentId)
         {
             // get user
             var user = await _userManager.GetUserAsync(User);
@@ -304,7 +315,6 @@ namespace gaseous_server.Controllers.v1_1
         /// <summary>
         /// Retrieves a specific content attachment by its ID if the user has access to it.
         /// </summary>
-        /// <param name="metadataid">The metadata item ID the attachment is associated with (for routing purposes).</param>
         /// <param name="attachmentId">The ID of the content attachment to retrieve.</param>
         /// <returns>The ContentViewModel representing the content attachment.</returns>
         [MapToApiVersion("1.1")]
@@ -312,8 +322,8 @@ namespace gaseous_server.Controllers.v1_1
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [Route("{metadataid}/{attachmentId}")]
-        public async Task<ActionResult> GetContentAsync(long metadataid, long attachmentId)
+        [Route("attachment/{attachmentId}")]
+        public async Task<ActionResult> GetContentAsync(long attachmentId)
         {
             // get user
             var user = await _userManager.GetUserAsync(User);
@@ -333,7 +343,6 @@ namespace gaseous_server.Controllers.v1_1
         /// <summary>
         /// Deletes a specific content attachment by its ID if the user has permission to delete it.
         /// </summary>
-        /// <param name="metadataid">The metadata item ID the attachment is associated with (for routing purposes).</param>
         /// <param name="attachmentId">The ID of the content attachment to delete.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         [MapToApiVersion("1.1")]
@@ -341,8 +350,8 @@ namespace gaseous_server.Controllers.v1_1
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [Route("{metadataid}/{attachmentId}")]
-        public async Task<ActionResult> DeleteContentAsync(long metadataid, long attachmentId)
+        [Route("attachment/{attachmentId}")]
+        public async Task<ActionResult> DeleteContentAsync(long attachmentId)
         {
             // get user
             var user = await _userManager.GetUserAsync(User);
@@ -362,7 +371,6 @@ namespace gaseous_server.Controllers.v1_1
         /// <summary>
         /// Updates properties of a specific content attachment if the user has permission to update it.
         /// </summary>
-        /// <param name="metadataid">The metadata item ID the attachment is associated with (for routing purposes).</param>
         /// <param name="attachmentId">The ID of the content attachment to update.</param>
         /// <param name="model">The update model containing properties to update.</param>
         /// <returns>The updated ContentViewModel representing the content attachment.</returns>
@@ -371,8 +379,8 @@ namespace gaseous_server.Controllers.v1_1
         [Authorize]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [Route("{metadataid}/{attachmentId}")]
-        public async Task<ActionResult> UpdateContentAsync(long metadataid, long attachmentId, [FromBody] ContentUpdateModel model)
+        [Route("attachment/{attachmentId}")]
+        public async Task<ActionResult> UpdateContentAsync(long attachmentId, [FromBody] ContentUpdateModel model)
         {
             // get user
             var user = await _userManager.GetUserAsync(User);
