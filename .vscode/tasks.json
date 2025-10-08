@@ -10,6 +10,29 @@
 			"dependsOrder": "sequence",
 			"problemMatcher": []
 		},
+		// Added explicit clean and full-rebuild sequence for debugging
+		{
+			"label": "clean",
+			"command": "dotnet",
+			"type": "process",
+			"args": [
+				"clean",
+				"${workspaceFolder}/gaseous-server/gaseous-server.csproj",
+				"/property:GenerateFullPaths=true",
+				"/consoleloggerparameters:NoSummary"
+			],
+			"problemMatcher": "$msCompile"
+		},
+		{
+			"label": "full-rebuild",
+			"dependsOn": [
+				"kill-gaseous-server",
+				"clean",
+				"build"
+			],
+			"dependsOrder": "sequence",
+			"problemMatcher": []
+		},
 		{
 			"label": "kill-gaseous-server",
 			"type": "shell",

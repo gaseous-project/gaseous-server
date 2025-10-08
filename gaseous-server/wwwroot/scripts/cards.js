@@ -241,34 +241,7 @@ class GameCard {
 
         // set up content tabs
         this.contentTabs = this.card.cardBody.querySelector('#card-tabs');
-        this.contentTabsScreenshots = this.contentTabs.querySelector('#card-tabs-screenshots');
-        this.contentTabsMyContent = this.contentTabs.querySelector('#card-tabs-mycontent');
-        this.screenshots = this.card.cardBody.querySelector('#card-screenshots');
-        this.screenshotsSection = this.card.cardBody.querySelector('#card-screenshots-section');
-
-        this.contentTabList = [];
-        this.contentTabList.push(this.contentTabsScreenshots);
-        this.contentTabList.push(this.contentTabsMyContent);
-        this.contentTabList.forEach(tab => {
-            tab.addEventListener('click', () => {
-                // hide all content sections
-                this.contentTabList.forEach(t => {
-                    t.classList.remove('card-tab-selected');
-                    const sectionName = t.getAttribute('data-section');
-                    const section = this.card.cardBody.querySelector(`#card-${sectionName}-section`);
-                    if (section) {
-                        section.style.display = 'none';
-                    }
-                });
-                // show the selected content section
-                tab.classList.add('card-tab-selected');
-                const sectionName = tab.getAttribute('data-section');
-                const section = this.card.cardBody.querySelector(`#card-${sectionName}-section`);
-                if (section) {
-                    section.style.display = '';
-                }
-            });
-        });
+        this.contentContents = this.card.cardBody.querySelector("#card-contents");
 
         // fetch the game data
         const response = await fetch("/api/v1.1/Games/" + this.gameId, {
@@ -584,67 +557,6 @@ class GameCard {
             ratingPanel.style.display = '';
         }
 
-        // display the screenshots
-        if (this.screenshots) {
-            if (gameData.videos && gameData.videos.length > 0) {
-                await fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/videos`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }).then(response => response.json()).then(videoData => {
-                    if (!videoData) {
-                        console.error(`Error fetching video data for game ${this.gameId}`);
-                        return;
-                    }
-
-                    videoData.forEach(element => {
-                        let videoItem = document.createElement('li');
-                        videoItem.classList.add('card-screenshot-item');
-                        videoItem.style.backgroundImage = `url(https://i.ytimg.com/vi/${element.video_id}/hqdefault.jpg)`;
-                        videoItem.alt = element.name;
-                        videoItem.title = element.name;
-
-                        videoItem.addEventListener('click', async (e) => {
-                            e.stopPropagation();
-
-                            // open the screenshot display dialog
-                            await this.#ShowScreenshots(this.metadataSource, this.gameId, 'video_' + element.id);
-                        });
-
-                        let videoYouTubeIcon = document.createElement('div');
-                        videoYouTubeIcon.classList.add('card-screenshot-youtube-icon');
-                        videoItem.appendChild(videoYouTubeIcon);
-
-                        this.screenshots.appendChild(videoItem);
-                    });
-                    this.contentTabsScreenshots.style.display = '';
-                    this.contentTabsScreenshots.innerText = gameData.metadataSource;
-                    this.screenshotsSection.style.display = '';
-                });
-            }
-            if (gameData.screenshots) {
-                gameData.screenshots.forEach(screenshot => {
-                    let screenshotItem = document.createElement('li');
-                    screenshotItem.classList.add('card-screenshot-item');
-                    screenshotItem.style.backgroundImage = `url(/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/screenshots/${screenshot}/image/screenshot_med/${screenshot}.jpg)`;
-                    screenshotItem.alt = gameData.name;
-                    screenshotItem.title = gameData.name;
-
-                    screenshotItem.addEventListener('click', async (e) => {
-                        e.stopPropagation();
-
-                        // open the screenshot display dialog
-                        await this.#ShowScreenshots(this.metadataSource, this.gameId, 'screenshot_' + screenshot);
-                    });
-
-                    this.screenshots.appendChild(screenshotItem);
-                });
-                this.contentTabsScreenshots.style.display = '';
-                this.screenshotsSection.style.display = '';
-            }
-        }
-
         // set the game summary
         let gameSummary = this.card.cardBody.querySelector('#card-summary');
         let gameSummarySection = this.card.cardBody.querySelector('#card-summary-section');
@@ -864,57 +776,152 @@ class GameCard {
             }
         });
 
+        // display the screenshots
+        this.screenshotItems = [];
+        this.screenshotItems[gameData.metadataSource] = [];
+        this.screenshotItemsCount = [];
+        this.screenshotItemsCount[gameData.metadataSource] = 0;
+        if (gameData.videos && gameData.videos.length > 0) {
+            this.screenshotItemsCount[gameData.metadataSource] += gameData.videos.length;
+
+            await fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/videos`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json()).then(videoData => {
+                if (!videoData) {
+                    console.error(`Error fetching video data for game ${this.gameId}`);
+                    return;
+                }
+
+                console.log(videoData);
+
+                videoData.forEach(element => {
+                    // create new screenshot item
+                    let screenshotItem = new ScreenshotItem('youtube', `https://www.youtube.com/watch?v=${element.video_id}`, gameData.name, '', null, null);
+                    this.screenshotItems[gameData.metadataSource].push(screenshotItem);
+                });
+            });
+        }
+        if (gameData.screenshots) {
+            this.screenshotItemsCount[gameData.metadataSource] += gameData.screenshots.length;
+
+            gameData.screenshots.forEach(screenshot => {
+                // create new screenshot item
+                let screenshotItem = new ScreenshotItem('screenshot', `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/screenshots/${screenshot}/image/original/${screenshot}.jpg`, gameData.name, '', null, null);
+                this.screenshotItems[gameData.metadataSource].push(screenshotItem);
+            });
+        }
+
         // get user graphical content
-        fetch(`/api/v1.1/ContentManager/?metadataids=${metadataIds.join(",")}&contentTypes=Screenshot,Photo,Video`, {
+        this.screenshotItems["My Content"] = [];
+        this.screenshotItemsCount["My Content"] = 0;
+        await fetch(`/api/v1.1/ContentManager/?metadataids=${metadataIds.join(",")}&contentTypes=Screenshot,Photo,Video`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             }
         }).then(response => response.json()).then(data => {
             if (data) {
+                this.screenshotItemsCount["My Content"] += data.totalCount;
                 console.log(data);
-                if (data.length > 0) {
-                    // show content tabs
-                    this.contentTabs.style.display = '';
-                    this.contentTabsMyContent.style.display = '';
-
+                if (data.items.length > 0) {
                     // load content elements
-                    let myContent = this.card.cardBody.querySelector('#card-mycontent');
-                    data.forEach(element => {
-                        let contentItem = document.createElement('li');
-                        contentItem.classList.add('card-screenshot-item');
-                        switch (element.contentType) {
-                            case 'Screenshot':
-                            case 'Photo':
-                                contentItem.style.backgroundImage = `url(/api/v1.1/ContentManager/attachment/${element.attachmentId}/data)`;
-                                contentItem.alt = element.name;
-                                contentItem.title = element.name;
-                                break;
-                            case 'Video':
-                                contentItem.style.textAlign = 'center';
-
-                                let contentItemVideo = document.createElement('video');
-                                contentItemVideo.style.objectFit = 'contain';
-                                contentItemVideo.style.height = '100%';
-                                contentItemVideo.src = `/api/v1.1/ContentManager/attachment/${element.attachmentId}/data`;
-                                contentItemVideo.setAttribute('muted', '');
-                                contentItemVideo.setAttribute('loop', '');
-                                contentItemVideo.addEventListener('mouseover', () => {
-                                    contentItemVideo.play();
-                                });
-                                contentItemVideo.addEventListener('mouseout', () => {
-                                    contentItemVideo.pause();
-                                    contentItemVideo.currentTime = 0;
-                                });
-                                contentItem.appendChild(contentItemVideo);
-                                break;
-                        }
-                        myContent.appendChild(contentItem);
+                    data.items.forEach(element => {
+                        // create new screenshot item
+                        let screenshotItem = new ScreenshotItem(element.contentType.toLowerCase(), `/api/v1.1/ContentManager/attachment/${element.attachmentId}/data`, element.metadata.signatureGameName, element.uploadedAt, element.uploadedBy);
+                        this.screenshotItems["My Content"].push(screenshotItem);
                     });
-                    this.contentTabs.style.display = '';
                 }
             }
         });
+
+        // build the screenshot section
+        let firstTab = true;
+        this.contentTabs.innerHTML = '';
+        this.contentContents.innerHTML = '';
+        for (const [key, value] of Object.entries(this.screenshotItems)) {
+            let tabName = key.toLowerCase().replaceAll(' ', '');
+            console.log(`Building screenshot tab: ${key} (${tabName})`);
+
+            if (this.screenshotItemsCount[key] === 0) {
+                console.log(`Skipping screenshot tab: ${key} (${tabName}) - no items`);
+                continue;
+            }
+
+            // create the tab
+            let tab = document.createElement('div');
+            tab.classList.add('card-tab');
+            if (firstTab) {
+                tab.classList.add('card-tab-selected');
+            }
+            tab.id = `card-tabs-${tabName}`;
+            tab.setAttribute('data-section', tabName);
+            tab.innerHTML = key;
+            this.contentTabs.appendChild(tab);
+
+            // create the section
+            let section = document.createElement('div');
+            section.id = `card-${tabName}-section`;
+            if (!firstTab) {
+                section.style.display = 'none';
+            }
+            section.classList.add('card-info-block');
+            section.classList.add('card-screenshots');
+
+            // add the screenshots to the container
+            let imgCount = 0;
+            for (let i = 0; i < value.length; i++) {
+                imgCount++;
+                let screenshotItem = value[i];
+                let previewElement = screenshotItem.createPreviewElement();
+                if (this.screenshotItemsCount[key] === 1) {
+                    previewElement.classList.add('card-screenshot-item-single');
+                } else if (imgCount <= 2) {
+                    previewElement.classList.add('card-screenshot-item-double');
+                } else {
+                    previewElement.classList.add('card-screenshot-item-small');
+                }
+                section.appendChild(previewElement);
+                if (imgCount >= 7) {
+                    // add a counter to show how many more images there are
+                    let moreCount = this.screenshotItemsCount[key] - imgCount;
+                    if (moreCount > 0) {
+                        let moreElement = document.createElement('div');
+                        moreElement.classList.add('card-screenshot-item-counter');
+                        moreElement.innerHTML = `+${moreCount}`;
+                        previewElement.appendChild(moreElement);
+                    }
+
+                    break;
+                }
+            };
+
+            this.contentContents.appendChild(section);
+
+            // add event listeners to the tabs
+            tab.addEventListener('click', () => {
+                // hide all content sections
+                this.card.cardBody.querySelectorAll('[data-section]').forEach(t => {
+                    t.classList.remove('card-tab-selected');
+                    const sectionName = t.getAttribute('data-section');
+                    const section = this.card.cardBody.querySelector(`#card-${sectionName}-section`);
+                    if (section) {
+                        section.style.display = 'none';
+                    }
+                });
+                // show the selected content section
+                tab.classList.add('card-tab-selected');
+                const sectionName = tab.getAttribute('data-section');
+                const section = this.card.cardBody.querySelector(`#card-${sectionName}-section`);
+                if (section) {
+                    section.style.display = '';
+                }
+            });
+
+            firstTab = false;
+        }
 
         // show the card
         this.card.Open();

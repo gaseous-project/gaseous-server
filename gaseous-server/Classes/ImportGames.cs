@@ -656,11 +656,34 @@ namespace gaseous_server.Classes
         public static async Task<string> ComputeROMPath(long RomId)
         {
             Classes.Roms.GameRomItem rom = await Classes.Roms.GetRom(RomId);
+            if (rom == null)
+            {
+                throw new Exception("Invalid RomId");
+            }
 
             // get metadata
-            MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(rom.MetadataMapId)).PreferredMetadataMapItem;
+            MetadataMap? metadataMap = await Classes.MetadataManagement.GetMetadataMap(rom.MetadataMapId);
+            if (metadataMap == null)
+            {
+                throw new Exception("No metadata map associated with rom");
+            }
+            MetadataMap.MetadataMapItem? metadataMapItem = metadataMap.PreferredMetadataMapItem;
+            if (metadataMapItem == null)
+            {
+                throw new Exception("No preferred metadata map item associated with rom");
+            }
+
             Platform? platform = await gaseous_server.Classes.Metadata.Platforms.GetPlatform(rom.PlatformId);
-            gaseous_server.Models.Game? game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+            if (platform == null)
+            {
+                throw new Exception("No platform associated with rom");
+            }
+
+            gaseous_server.Models.Game? game = await Classes.Metadata.Games.GetGame(metadataMapItem.SourceType, metadataMapItem.SourceId);
+            if (game == null)
+            {
+                throw new Exception("No game associated with rom");
+            }
 
             // build path
             string platformSlug = "Unknown Platform";
@@ -702,7 +725,15 @@ namespace gaseous_server.Classes
 
             if (File.Exists(romPath))
             {
-                string DestinationPath = await ComputeROMPath(RomId);
+                string DestinationPath = romPath;
+                try
+                {
+                    DestinationPath = await ComputeROMPath(RomId);
+                }
+                catch (Exception ex)
+                {
+                    Logging.Log(Logging.LogType.Information, "Move Game ROM", "Unable to move ROM", ex);
+                }
 
                 if (romPath == DestinationPath)
                 {
@@ -927,7 +958,17 @@ namespace gaseous_server.Classes
 
                     if (fileExists && !isSkippable && isSupportedExt)
                     {
-                        if (library.IsDefaultLibrary && romPath != await ComputeROMPath(romId))
+                        string computedPath = romPath;
+                        try
+                        {
+                            computedPath = await ComputeROMPath(romId);
+                        }
+                        catch (Exception ex)
+                        {
+                            Logging.Log(Logging.LogType.Warning, "Library Scan", "Unable to compute path", ex);
+                        }
+
+                        if (library.IsDefaultLibrary && romPath != computedPath)
                         {
                             Logging.Log(Logging.LogType.Information, "Library Scan", $"ROM at path {romPath} found, but needs to be moved");
                             await MoveGameFile(romId, false);

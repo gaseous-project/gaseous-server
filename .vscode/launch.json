@@ -2,30 +2,69 @@
     "version": "0.2.0",
     "configurations": [
         {
-            // Use IntelliSense to find out which attributes exist for C# debugging
-            // Use hover for the description of the existing attributes
-            // For further information visit https://github.com/OmniSharp/omnisharp-vscode/blob/master/debugger-launchjson.md
-            "name": ".NET Core Launch (web)",
+            "name": "Server (Web + Browser)",
             "type": "coreclr",
             "request": "launch",
-            "preLaunchTask": "prepare-web",
-            // If you have changed target frameworks, make sure to update the program path.
+            "preLaunchTask": "full-rebuild",
             "program": "${workspaceFolder}/gaseous-server/bin/Debug/net8.0/gaseous-server.dll",
             "args": [],
             "cwd": "${workspaceFolder}/gaseous-server",
             "stopAtEntry": false,
-            // Enable launching a web browser when ASP.NET Core starts. For more information: https://aka.ms/VSCode-CS-LaunchJson-WebBrowser
+            "console": "integratedTerminal",
             "serverReadyAction": {
                 "action": "openExternally",
                 "pattern": "\\bNow listening on:\\s+(http?://\\S+)"
             },
             "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_DETAILEDERRORS": "true"
+            },
+            "justMyCode": true,
+            "requireExactSource": false,
+            "enableStepFiltering": false
+        },
+        {
+            "name": "Server (Debug Exceptions)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "full-rebuild",
+            "program": "${workspaceFolder}/gaseous-server/bin/Debug/net8.0/gaseous-server.dll",
+            "cwd": "${workspaceFolder}/gaseous-server",
+            "stopAtEntry": false,
+            "console": "integratedTerminal",
+            "env": {
+                "ASPNETCORE_ENVIRONMENT": "Development",
+                "ASPNETCORE_DETAILEDERRORS": "true"
+            },
+            "justMyCode": false,
+            "requireExactSource": false,
+            "symbolOptions": {
+                "searchMicrosoftSymbolServer": true,
+                "searchNuGetOrgSymbolServer": true
+            },
+            "logging": {
+                "moduleLoad": false
+            }
+        },
+        {
+            "name": "Server (Stop at Entry)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "full-rebuild",
+            "program": "${workspaceFolder}/gaseous-server/bin/Debug/net8.0/gaseous-server.dll",
+            "cwd": "${workspaceFolder}/gaseous-server",
+            "stopAtEntry": true,
+            "console": "integratedTerminal",
+            "env": {
                 "ASPNETCORE_ENVIRONMENT": "Development"
             },
-            "sourceFileMap": {
-                "/Views": "${workspaceFolder}/Views"
-            },
-            "enableStepFiltering": false
+            "justMyCode": true
+        },
+        {
+            "name": "Attach by PID",
+            "type": "coreclr",
+            "request": "attach",
+            "processId": "${command:pickProcess}"
         },
         {
             "name": ".NET Core Attach",

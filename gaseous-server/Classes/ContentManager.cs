@@ -409,7 +409,7 @@ namespace gaseous_server.Classes.Content
         /// <param name="pageSize">The number of items per page for pagination.</param>
         /// <returns>List of ContentViewModel representing the accessible content attachments.</returns>
         /// <exception cref="ArgumentException">Thrown if parameters are invalid.</exception>
-        public static async Task<List<ContentViewModel>> GetMetadataItemContents(List<long> metadataIds, Authentication.ApplicationUser user, List<ContentType>? contentTypes, int page = 1, int pageSize = 50)
+        public static async Task<ContentViewModel> GetMetadataItemContents(List<long> metadataIds, Authentication.ApplicationUser user, List<ContentType>? contentTypes, int page = 1, int pageSize = 50)
         {
             if (metadataIds == null || metadataIds.Count == 0)
             {
@@ -421,10 +421,18 @@ namespace gaseous_server.Classes.Content
                 throw new ArgumentException("contentTypes cannot be null");
             }
 
+            ContentViewModel contentViewModel = new ContentViewModel
+            {
+                Items = new List<ContentViewModel.ContentViewItemModel>(),
+                TotalCount = 0,
+                Page = page,
+                PageSize = pageSize
+            };
+
             if (contentTypes.Count == 0)
             {
                 // if no content types specified, return empty list
-                return new List<ContentViewModel>();
+                return contentViewModel;
             }
 
             if (user == null)
@@ -432,25 +440,42 @@ namespace gaseous_server.Classes.Content
                 throw new ArgumentException("user cannot be null");
             }
 
+            // get total count for pagination
+            Database dbCount = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string countSql = "SELECT COUNT(*) FROM MetadataMap_Attachments WHERE MetadataMapID IN (" + string.Join(",", metadataIds) + ") AND AttachmentType IN (" + string.Join(",", contentTypes.Select(ct => (int)ct)) + ") AND (UserId = @userid OR UserId = @systemuserid);";
+            var countParameters = new Dictionary<string, object>
+            {
+                { "@userid", user.Id },
+                { "@systemuserid", "System" }
+            };
+            var countResult = await dbCount.ExecuteCMDAsync(countSql, countParameters);
+            if (countResult.Rows.Count > 0)
+            {
+                contentViewModel.TotalCount = Convert.ToInt32(countResult.Rows[0][0]);
+            }
+
             // get the data
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM MetadataMap_Attachments WHERE MetadataMapID IN (" + string.Join(",", metadataIds) + ") AND AttachmentType IN (" + string.Join(",", contentTypes.Select(ct => (int)ct)) + ") AND (UserId = @userid OR UserId = @systemuserid) OR IsShared = @isshared ORDER BY DateCreated DESC LIMIT @offset, @pagesize;";
+            string sql = "SELECT * FROM MetadataMap_Attachments WHERE MetadataMapID IN (" + string.Join(",", metadataIds) + ") AND AttachmentType IN (" + string.Join(",", contentTypes.Select(ct => (int)ct)) + ") AND (UserId = @userid OR UserId = @systemuserid) ORDER BY DateCreated DESC LIMIT @offset, @pagesize;";
+            Console.WriteLine(sql);
             var parameters = new Dictionary<string, object>
             {
                 { "@userid", user.Id },
                 { "@systemuserid", "System" },
-                { "@isshared", true },
                 { "@offset", (page - 1) * pageSize },
                 { "@pagesize", pageSize }
             };
             var result = await db.ExecuteCMDAsync(sql, parameters);
-            List<ContentViewModel> contents = new List<ContentViewModel>();
+            List<ContentViewModel.ContentViewItemModel> contents = new List<ContentViewModel.ContentViewItemModel>();
             foreach (DataRow row in result.Rows)
             {
                 contents.Add(await BuildContentView(row));
             }
 
-            return contents;
+            // add to view model
+            contentViewModel.Items = contents;
+
+            return contentViewModel;
         }
 
         /// <summary>
@@ -460,7 +485,7 @@ namespace gaseous_server.Classes.Content
         /// <param name="user">The user requesting the content; used for access control.</param>
         /// <returns>The ContentViewModel representing the content attachment.</returns>
         /// <exception cref="InvalidOperationException">Thrown if the attachment is not found or access is denied.</exception>
-        public static async Task<ContentViewModel> GetMetadataItemContent(long attachmentId, Authentication.ApplicationUser user)
+        public static async Task<ContentViewModel.ContentViewItemModel> GetMetadataItemContent(long attachmentId, Authentication.ApplicationUser user)
         {
             // return the requested attachment if the user has access to it
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -510,9 +535,9 @@ namespace gaseous_server.Classes.Content
             return fileData;
         }
 
-        private async static Task<ContentViewModel> BuildContentView(DataRow row)
+        private async static Task<ContentViewModel.ContentViewItemModel> BuildContentView(DataRow row)
         {
-            var contentView = new ContentViewModel
+            var contentView = new ContentViewModel.ContentViewItemModel
             {
                 MetadataId = Convert.ToInt64(row["MetadataMapID"]),
                 Metadata = await MetadataManagement.GetMetadataMap(Convert.ToInt64(row["MetadataMapID"])),
@@ -649,9 +674,9 @@ namespace gaseous_server.Classes.Content
         /// <param name="user">The user requesting the update; used for permission checks.</param>
         /// <param name="isShared">Optional new value for the IsShared property; can only be modified for shareable content types.</param>
         /// <param name="content">Optional new content: Note type updates a file on disk; Screenshot, Photo, Video, and GlobalManual types update the filename field, which is used as the content title in the frontend</param>
-        /// <returns>The updated ContentViewModel representing the content attachment.</returns>
+        /// <returns>The updated ContentViewModel.ContentViewItemModel representing the content attachment.</returns>
         /// <exception cref="InvalidOperationException">Thrown if the attachment is not found, the user lacks permission to update it, or if invalid updates are attempted.</exception>
-        public static async Task<ContentViewModel> UpdateMetadataItem(long attachmentId, Authentication.ApplicationUser user, bool? isShared = null, string? content = null)
+        public static async Task<ContentViewModel.ContentViewItemModel> UpdateMetadataItem(long attachmentId, Authentication.ApplicationUser user, bool? isShared = null, string? content = null)
         {
             // users can only update their own content
             // isShared can be modified for any user-owned content if the content type is shareable

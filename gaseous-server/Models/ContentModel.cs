@@ -27,65 +27,73 @@ namespace gaseous_server.Models
 
     public class ContentViewModel
     {
-        public long MetadataId { get; set; }
-        public MetadataMap? Metadata { get; set; }
-        public long AttachmentId { get; set; }
-        public string FileName { get; set; }
-        [System.Text.Json.Serialization.JsonIgnore]
-        [System.Xml.Serialization.XmlIgnore]
-        [Newtonsoft.Json.JsonIgnore]
-        public string FileSystemFilename { get; set; }
-        public ContentManager.ContentType ContentType { get; set; }
-        public long Size { get; set; }
-        public DateTime UploadedAt { get; set; }
-        public Models.UserProfile? UploadedBy { get; set; }
-        // for internal use only
-        [System.Text.Json.Serialization.JsonIgnore]
-        [System.Xml.Serialization.XmlIgnore]
-        [Newtonsoft.Json.JsonIgnore]
-        public string UploadedByUserId { get; set; }
-        public bool IsShared { get; set; }
-        public string FileExtension
+        public List<ContentViewItemModel> Items { get; set; } = new List<ContentViewItemModel>();
+        public int TotalCount { get; set; }
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+
+        public class ContentViewItemModel
         {
-            get
+            public long MetadataId { get; set; }
+            public MetadataMap? Metadata { get; set; }
+            public long AttachmentId { get; set; }
+            public string FileName { get; set; }
+            [System.Text.Json.Serialization.JsonIgnore]
+            [System.Xml.Serialization.XmlIgnore]
+            [Newtonsoft.Json.JsonIgnore]
+            public string FileSystemFilename { get; set; }
+            public ContentManager.ContentType ContentType { get; set; }
+            public long Size { get; set; }
+            public DateTime UploadedAt { get; set; }
+            public Models.UserProfile? UploadedBy { get; set; }
+            // for internal use only
+            [System.Text.Json.Serialization.JsonIgnore]
+            [System.Xml.Serialization.XmlIgnore]
+            [Newtonsoft.Json.JsonIgnore]
+            public string UploadedByUserId { get; set; }
+            public bool IsShared { get; set; }
+            public string FileExtension
             {
-                switch (ContentType)
+                get
                 {
-                    case ContentManager.ContentType.GlobalManual:
-                        return ".pdf";
-                    case ContentManager.ContentType.Screenshot:
-                    case ContentManager.ContentType.Photo:
-                        return ".png";
-                    case ContentManager.ContentType.Video:
-                        return ".mp4";
-                    case ContentManager.ContentType.AudioSample:
-                        return ".zip";
-                    case ContentManager.ContentType.Note:
-                        return ".txt";
-                    default:
-                        return System.IO.Path.GetExtension(FileName);
+                    switch (ContentType)
+                    {
+                        case ContentManager.ContentType.GlobalManual:
+                            return ".pdf";
+                        case ContentManager.ContentType.Screenshot:
+                        case ContentManager.ContentType.Photo:
+                            return ".png";
+                        case ContentManager.ContentType.Video:
+                            return ".mp4";
+                        case ContentManager.ContentType.AudioSample:
+                            return ".zip";
+                        case ContentManager.ContentType.Note:
+                            return ".txt";
+                        default:
+                            return System.IO.Path.GetExtension(FileName);
+                    }
                 }
             }
-        }
-        public string FileMimeType
-        {
-            get
+            public string FileMimeType
             {
-                switch (ContentType)
+                get
                 {
-                    case ContentManager.ContentType.GlobalManual:
-                        return MediaTypeNames.Application.Pdf;
-                    case ContentManager.ContentType.Screenshot:
-                    case ContentManager.ContentType.Photo:
-                        return "image/png";
-                    case ContentManager.ContentType.Video:
-                        return "video/mp4";
-                    case ContentManager.ContentType.AudioSample:
-                        return "application/zip";
-                    case ContentManager.ContentType.Note:
-                        return "text/plain";
-                    default:
-                        return "application/octet-stream";
+                    switch (ContentType)
+                    {
+                        case ContentManager.ContentType.GlobalManual:
+                            return MediaTypeNames.Application.Pdf;
+                        case ContentManager.ContentType.Screenshot:
+                        case ContentManager.ContentType.Photo:
+                            return "image/png";
+                        case ContentManager.ContentType.Video:
+                            return "video/mp4";
+                        case ContentManager.ContentType.AudioSample:
+                            return "application/zip";
+                        case ContentManager.ContentType.Note:
+                            return "text/plain";
+                        default:
+                            return "application/octet-stream";
+                    }
                 }
             }
         }

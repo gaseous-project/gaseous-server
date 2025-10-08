@@ -199,8 +199,12 @@ namespace gaseous_server.Classes
 				db.ExecuteCMD(sql, dbDict);
 			}
 
-			sql = "INSERT IGNORE INTO MetadataMapBridge (ParentMapId, MetadataSourceType, MetadataSourceId, Preferred, ProcessedAtImport, IsManual, AutomaticMetadataSourceId) VALUES (@metadataMapId, @sourceType, @sourceId, @preferred, @processedatimport, @isManual, @automaticMetadataSourceId);";
+			// Use INSERT ... ON DUPLICATE KEY UPDATE so that a preferred flag change is reflected even if the row exists
+			sql = "INSERT INTO MetadataMapBridge (ParentMapId, MetadataSourceType, MetadataSourceId, Preferred, ProcessedAtImport, IsManual, AutomaticMetadataSourceId) VALUES (@metadataMapId, @sourceType, @sourceId, @preferred, @processedatimport, @isManual, @automaticMetadataSourceId) ON DUPLICATE KEY UPDATE Preferred = VALUES(Preferred), IsManual = VALUES(IsManual), AutomaticMetadataSourceId = VALUES(AutomaticMetadataSourceId);";
 			db.ExecuteCMD(sql, dbDict);
+
+			// invalidate cache so subsequent GetMetadataMap sees the new/updated item
+			DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
 		}
 
 		/// <summary>
@@ -262,19 +266,21 @@ namespace gaseous_server.Classes
 				// set all other items to not preferred, and update this one to preferred
 				sql = "UPDATE MetadataMapBridge SET Preferred = 0 WHERE ParentMapId = @metadataMapId; UPDATE MetadataMapBridge SET Preferred = @preferred WHERE ParentMapId = @metadataMapId AND MetadataSourceType = @sourceType;";
 				db.ExecuteCMD(sql, dbDict);
+				// ensure cache invalidated even if no other fields are changing
+				DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
 			}
 
-			// only make changes if there is something to change
+			// only make changes to other fields if there is something to change
 			if (whereClause == "")
 			{
-				return;
+				return; // cache already cleared above if preferred was toggled
 			}
 
 			// update the metadata map item
 			sql = $"UPDATE MetadataMapBridge SET {whereClause} WHERE ParentMapId = @metadataMapId AND MetadataSourceType = @sourceType;";
 			db.ExecuteCMD(sql, dbDict);
 
-			// clear the cache for this metadata map if present
+			// clear the cache for this metadata map if present (covers non-preferred updates)
 			DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
 
 		}

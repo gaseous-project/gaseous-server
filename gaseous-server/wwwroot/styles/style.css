@@ -3801,34 +3801,44 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 .card-screenshots {
-    overflow: auto;
-    white-space: nowrap;
+    /* overflow: auto; */
+    /* white-space: nowrap; */
     padding: 0px;
-    scrollbar-width: none;
+    /* scrollbar-width: none; */
 }
 
 .card-screenshots:hover {
-    scrollbar-width: auto;
+    /* scrollbar-width: auto; */
 }
 
 .card-screenshot-item {
     display: inline-block;
-    margin-right: 10px;
     position: relative;
-    border-radius: var(--standard-radius);
-    border-width: 2px;
-    border-color: transparent;
-    border-style: solid;
     overflow: hidden;
-    padding: 0px;
-    /* width: 169px; */
-    /* height: 95px; */
-    width: 300px;
-    aspect-ratio: 16/9;
+    /* border-width: 1px; */
+    border-style: solid;
+    border-color: transparent;
+    /* border-radius: var(--standard-radius); */
+    padding: 0;
+    /* Maintain at most 5 per row; account for single 1px gap (right) */
+    box-sizing: border-box;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    margin-left: 0px;
+    margin-right: 2px;
+    /* 1px gap to the right/bottom only */
+    width: calc(20% - 2px);
+    /* width + right gap = 20% */
+    aspect-ratio: 16 / 9;
     background-color: black;
     background-position: center;
     background-repeat: no-repeat;
     background-size: contain;
+}
+
+.card-screenshot-item-small:nth-child(7n) {
+    margin-right: 0;
+    /* Last in each row has no extra gap */
 }
 
 .card-screenshot-item:hover {
@@ -3836,23 +3846,80 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     border-color: white;
 }
 
-.card-screenshot-item>img {
-    max-width: 200px;
-    max-height: 125px;
+/* Single screenshot takes full width */
+.card-screenshot-item-single {
+    width: calc(100% - 2px);
+    margin: 0px;
+    /* aspect-ratio: 16 / 9; */
 }
 
-.card-screenshot-item>.card-screenshot-youtube-icon {
+/* first two screenshots take double width */
+.card-screenshot-item-double {
+    width: calc(50% - 2px);
+    /* aspect-ratio: 16 / 9; */
+}
+
+.card-screenshot-item-double:nth-child(2n) {
+    margin-right: 0;
+    /* Last in each row has no extra gap */
+}
+
+/* Screenshot counter for more than 7 screenshots */
+.card-screenshot-item-counter {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    /* vertical centering */
+    justify-content: center;
+    /* horizontal centering */
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    font-size: 40px;
+    /* font-weight: bold; */
+    text-align: center;
+    padding: 0;
+    line-height: 1;
+    /* avoid line-height hacks */
+}
+
+/* Simplified screenshot type icons */
+.card-screenshot-item>.card-screenshot-icon {
     position: absolute;
     bottom: 5px;
     right: 5px;
     width: 28px;
     height: 20px;
-    margin: 0px;
-    background-image: url('/images/youtube.svg');
+    margin: 0;
     background-size: contain;
     background-repeat: no-repeat;
     background-position: center;
-    content: '';
+}
+
+/* Individual types */
+.card-screenshot-youtube-icon {
+    background-image: url('/images/youtube.svg');
+}
+
+.card-screenshot-video-icon {
+    background-image: url('/images/video.svg');
+}
+
+.card-screenshot-photo-icon {
+    background-image: url('/images/photo.svg');
+}
+
+.card-screenshot-screenshot-icon {
+    background-image: url('/images/screenshot.svg');
+}
+
+/* Apply invert to non-YouTube variants */
+.card-screenshot-video-icon,
+.card-screenshot-photo-icon,
+.card-screenshot-screenshot-icon {
+    filter: invert(1);
 }
 
 #card-summary {}

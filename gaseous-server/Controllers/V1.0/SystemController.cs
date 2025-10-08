@@ -548,7 +548,8 @@ ORDER BY Platform.`Name`; ";
                     this._Blocks = new List<ProcessQueue.QueueItemType>{
                         ProcessQueue.QueueItemType.OrganiseLibrary,
                         ProcessQueue.QueueItemType.LibraryScan,
-                        ProcessQueue.QueueItemType.LibraryScanWorker
+                        ProcessQueue.QueueItemType.LibraryScanWorker,
+                        ProcessQueue.QueueItemType.MetadataRefresh
                     };
                     break;
 
@@ -591,7 +592,8 @@ ORDER BY Platform.`Name`; ";
                     this._Blocks = new List<ProcessQueue.QueueItemType>{
                         ProcessQueue.QueueItemType.LibraryScan,
                         ProcessQueue.QueueItemType.LibraryScanWorker,
-                        ProcessQueue.QueueItemType.TitleIngestor
+                        ProcessQueue.QueueItemType.TitleIngestor,
+                        ProcessQueue.QueueItemType.MetadataRefresh
                     };
                     break;
 
@@ -613,7 +615,8 @@ ORDER BY Platform.`Name`; ";
                     this.DefaultAllowedEndHours = 23;
                     this.DefaultAllowedEndMinutes = 59;
                     this._Blocks = new List<ProcessQueue.QueueItemType>{
-                        ProcessQueue.QueueItemType.OrganiseLibrary
+                        ProcessQueue.QueueItemType.OrganiseLibrary,
+                        ProcessQueue.QueueItemType.MetadataRefresh
                     };
                     break;
 
