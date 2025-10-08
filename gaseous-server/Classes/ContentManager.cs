@@ -457,7 +457,6 @@ namespace gaseous_server.Classes.Content
             // get the data
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM MetadataMap_Attachments WHERE MetadataMapID IN (" + string.Join(",", metadataIds) + ") AND AttachmentType IN (" + string.Join(",", contentTypes.Select(ct => (int)ct)) + ") AND (UserId = @userid OR UserId = @systemuserid) ORDER BY DateCreated DESC LIMIT @offset, @pagesize;";
-            Console.WriteLine(sql);
             var parameters = new Dictionary<string, object>
             {
                 { "@userid", user.Id },
