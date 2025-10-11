@@ -2960,6 +2960,31 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     border-style: solid;
     filter: drop-shadow(1px 1px 3px #000);
     -webkit-filter: drop-shadow(1px 1px 3px #000);
+    pointer-events: none;
+}
+
+.avatar-image {
+    display: inline-block;
+    background-size: cover;
+    background-position: center;
+}
+
+.avatar-initials {
+    font-size: 1vmax;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.avatar-name {
+    display: inline-block;
+    vertical-align: top;
+    margin-left: 8px;
+    font-weight: bold;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .account-modal-tab1 {
@@ -3920,6 +3945,144 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 .card-screenshot-photo-icon,
 .card-screenshot-screenshot-icon {
     filter: invert(1);
+}
+
+.screenshot-content {
+    position: relative;
+    text-align: center;
+    vertical-align: middle;
+    top: 0px;
+    left: 0px;
+    right: 0px;
+    bottom: 0px;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.screenshot-left-arrow,
+.screenshot-right-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 40px;
+    font-size: 48px;
+    color: white;
+    border-radius: 50%;
+    cursor: pointer;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    z-index: +5;
+}
+
+.screenshot-left-arrow:hover,
+.screenshot-right-arrow:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.screenshot-left-arrow {
+    left: 50px;
+}
+
+.screenshot-right-arrow {
+    right: 50px;
+}
+
+.screenshot-screenshot-container {
+    position: absolute;
+    top: 50px;
+    left: 110px;
+    right: 110px;
+    bottom: 300px;
+
+    /* Fixed box: never expand based on contents */
+    overflow: hidden;
+    contain: size layout paint;
+
+    /* Center & allow child to scale within */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    /* Gap not needed if single item; keep/remove as desired */
+    gap: 0;
+
+    /* background to prevent background bleed-through */
+    background-color: black;
+
+    /* shadow to separate from background */
+    box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+    -webkit-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+    -moz-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
+}
+
+/* Make any direct media/content element fill available space without forcing container growth */
+.screenshot-screenshot-container>img,
+.screenshot-screenshot-container>video,
+.screenshot-screenshot-container>canvas,
+.screenshot-screenshot-container>picture,
+.screenshot-screenshot-container>iframe {
+    width: auto;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    display: block;
+    aspect-ratio: 16/9;
+}
+
+.screenshot-info-panel {
+    color: white;
+    position: absolute;
+    bottom: 180px;
+    left: 50%;
+    transform: translateX(-50%);
+    align-self: center;
+    width: 100%;
+    min-width: 300px;
+    max-width: 600px;
+    text-align: left;
+    height: 100px;
+    z-index: +1;
+}
+
+.screenshot-info-datetime {
+    float: right;
+}
+
+.screenshot-camera-roll-container {
+    position: absolute;
+    bottom: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: auto;
+    max-width: 80%;
+    height: 80px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    white-space: nowrap;
+}
+
+.screenshot-camera-roll-container>.screenshot-camera-roll-thumbnail {
+    height: 70px;
+    width: unset;
+    aspect-ratio: 16/9;
+}
+
+.screenshot-camera-roll-thumbnail-active {
+    border-width: 2px;
+    border-style: solid;
+    border-color: white;
+}
+
+.screenshot-camera-roll-thumbnail-inactive {
+    opacity: 0.35;
 }
 
 #card-summary {}

@@ -799,7 +799,7 @@ class GameCard {
 
                 videoData.forEach(element => {
                     // create new screenshot item
-                    let screenshotItem = new ScreenshotItem('youtube', `https://www.youtube.com/watch?v=${element.video_id}`, gameData.name, '', null, null);
+                    let screenshotItem = new ScreenshotItem('youtube', `https://www.youtube.com/watch?v=${element.video_id}`, element.name, null, null, this.gameId);
                     this.screenshotItems[gameData.metadataSource].push(screenshotItem);
                 });
             });
@@ -809,7 +809,7 @@ class GameCard {
 
             gameData.screenshots.forEach(screenshot => {
                 // create new screenshot item
-                let screenshotItem = new ScreenshotItem('screenshot', `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/screenshots/${screenshot}/image/original/${screenshot}.jpg`, gameData.name, '', null, null);
+                let screenshotItem = new ScreenshotItem('screenshot', `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/screenshots/${screenshot}/image/original/${screenshot}.jpg`, null, null, null, this.gameId);
                 this.screenshotItems[gameData.metadataSource].push(screenshotItem);
             });
         }
@@ -830,7 +830,7 @@ class GameCard {
                     // load content elements
                     data.items.forEach(element => {
                         // create new screenshot item
-                        let screenshotItem = new ScreenshotItem(element.contentType.toLowerCase(), `/api/v1.1/ContentManager/attachment/${element.attachmentId}/data`, element.metadata.signatureGameName, element.uploadedAt, element.uploadedBy);
+                        let screenshotItem = new ScreenshotItem(element.contentType.toLowerCase(), `/api/v1.1/ContentManager/attachment/${element.attachmentId}/data`, null, element.uploadedAt, null, this.gameId, element.uploadedBy);
                         this.screenshotItems["My Content"].push(screenshotItem);
                     });
                 }
@@ -883,7 +883,14 @@ class GameCard {
                 } else {
                     previewElement.classList.add('card-screenshot-item-small');
                 }
+
+                previewElement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    let screenshotViewer = new ScreenshotViewer(this.screenshotItems[key], i);
+                    screenshotViewer.GoTo();
+                });
                 section.appendChild(previewElement);
+
                 if (imgCount >= 7) {
                     // add a counter to show how many more images there are
                     let moreCount = this.screenshotItemsCount[key] - imgCount;
