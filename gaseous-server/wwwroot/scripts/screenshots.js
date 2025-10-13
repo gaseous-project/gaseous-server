@@ -167,14 +167,32 @@ class ScreenshotViewer {
     screenshots: An array of ScreenshotItem objects to be displayed.
     currentIndex: The index of the currently displayed screenshot in the screenshots array.
     startIndex: The index to start viewing from (default is 0).
+    totalImageCount: The total number of images available (for pagination).
+    loadMoreCallback: A callback function to load more screenshots when needed.
+    closeCallback: A callback function to be called when the viewer is closed.
+    uploadCallback: A callback function to handle uploads (if applicable).
+    deleteCallback: A callback function to handle deletions (if applicable).
     */
-    constructor(screenshots, startIndex = 0) {
+    constructor(screenshots, startIndex = 0, totalImageCount, loadMoreCallback, closeCallback, uploadCallback, deleteCallback) {
         this.screenshots = screenshots;
         this.currentIndex = 0;
         this.startIndex = startIndex;
+        this.totalImageCount = totalImageCount;
+        this.loadMoreCallback = loadMoreCallback;
+        this.closeCallback = closeCallback;
+        this.uploadCallback = uploadCallback;
+        this.deleteCallback = deleteCallback;
+        this.currentPage = 1;
+
+        console.log(screenshots);
 
         this.#initViewer();
     }
+
+    /*
+    Keeps track of pages already loaded to avoid duplicate loads
+    */
+    #loadedPages = [];
 
     /*
     #initViewer: Initializes the screenshot viewer by creating necessary DOM elements and setting up event listeners.
@@ -281,16 +299,16 @@ class ScreenshotViewer {
         document.body.appendChild(this.modalBackground);
 
         // create the camera roll thumbnails
-        this.#createCameraRoll();
+        this.createCameraRoll();
 
         // show the starting screenshot
         this.GoTo(this.startIndex);
     }
 
     /*
-    #createCameraRoll: Creates the camera roll thumbnails for all screenshots.
+    createCameraRoll: Creates the camera roll thumbnails for all screenshots.
     */
-    #createCameraRoll() {
+    createCameraRoll() {
         this.cameraRollContainer.innerHTML = ""; // clear existing thumbnails
 
         this.screenshots.forEach((screenshot, index) => {
@@ -323,6 +341,28 @@ class ScreenshotViewer {
             document.removeEventListener('keydown', this._handleKeyDown);
             this._keyListenerAttached = false;
         }
+
+        this.screenshots = [];
+        this.currentIndex = 0;
+        this.startIndex = 0;
+        this.currentPage = 1;
+        this.#loadedPages = [];
+        this.cameraRollContainer.innerHTML = "";
+        this.screenshotContainer.innerHTML = "";
+        this.titleElement.innerText = "";
+        this.dateTimeElement.innerText = "";
+        this.descriptionElement.innerText = "";
+        this.profileElement.innerText = "";
+
+        if (this.closeCallback) {
+            this.closeCallback();
+        }
+
+        if (this.modalBackground) {
+            this.modalBackground.remove();
+            this.modalBackground = null;
+            console.log("ScreenshotViewer closed and removed from DOM.");
+        }
     }
 
     /*
@@ -345,18 +385,37 @@ class ScreenshotViewer {
     GoTo: Navigates to a specific screenshot by index.
     index: The index of the screenshot to display.
     */
-    GoTo(index) {
+    async GoTo(index) {
         if (index === undefined) {
             index = this.startIndex;
         }
 
         if (index < 0 || index >= this.screenshots.length) {
-            console.error("Index out of bounds in ScreenshotViewer.GoTo:", index, this.screenshots);
+            console.error("Index out of bounds in ScreenshotViewer. GoTo: ", index, this.screenshots);
             return;
         }
 
         this.currentIndex = index;
         let screenshot = this.screenshots[index];
+
+        // If we've reached the end of the current screenshots, and there's a load more callback, invoke it
+        if (this.totalImageCount && this.screenshots.length < this.totalImageCount) {
+            if (index === this.screenshots.length - 1 && this.loadMoreCallback) {
+                // Avoid loading the same page multiple times
+                if (this.#loadedPages.includes(this.currentPage + 1)) {
+                    console.log(`Page ${this.currentPage + 1} already loaded, skipping loadMoreCallback.`);
+                    return;
+                }
+
+                this.currentPage += 1;
+                this.#loadedPages.push(this.currentPage);
+                console.log(`Loading more screenshots, page ${this.currentPage}`);
+                await this.loadMoreCallback(this.currentPage);
+
+                // Rebuild the camera roll with the new screenshots
+                this.createCameraRoll();
+            }
+        }
 
         // clear existing content
         this.screenshotContainer.innerHTML = "";

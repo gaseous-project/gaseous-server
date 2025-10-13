@@ -662,7 +662,7 @@ class GameCard {
         });
 
         // get the available game platforms
-        let metadataIds = [];
+        this.metadataIds = [];
         await fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/platforms`, {
             method: 'GET',
             headers: {
@@ -760,7 +760,7 @@ class GameCard {
                 let cardPlatforms = this.card.cardBody.querySelector('#card-platforms');
 
                 for (const [key, value] of Object.entries(platforms)) {
-                    metadataIds.push(...value.map(v => v.metadataMapId));
+                    this.metadataIds.push(...value.map(v => v.metadataMapId));
                     let platformItem = new GameCardPlatformItem(value[0].name, key);
                     value.forEach(element => {
                         platformItem.Add(element);
@@ -795,8 +795,6 @@ class GameCard {
                     return;
                 }
 
-                console.log(videoData);
-
                 videoData.forEach(element => {
                     // create new screenshot item
                     let screenshotItem = new ScreenshotItem('youtube', `https://www.youtube.com/watch?v=${element.video_id}`, element.name, null, null, this.gameId);
@@ -817,25 +815,7 @@ class GameCard {
         // get user graphical content
         this.screenshotItems["My Content"] = [];
         this.screenshotItemsCount["My Content"] = 0;
-        await fetch(`/api/v1.1/ContentManager/?metadataids=${metadataIds.join(",")}&contentTypes=Screenshot,Photo,Video`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then(response => response.json()).then(data => {
-            if (data) {
-                this.screenshotItemsCount["My Content"] += data.totalCount;
-                console.log(data);
-                if (data.items.length > 0) {
-                    // load content elements
-                    data.items.forEach(element => {
-                        // create new screenshot item
-                        let screenshotItem = new ScreenshotItem(element.contentType.toLowerCase(), `/api/v1.1/ContentManager/attachment/${element.attachmentId}/data`, null, element.uploadedAt, null, this.gameId, element.uploadedBy);
-                        this.screenshotItems["My Content"].push(screenshotItem);
-                    });
-                }
-            }
-        });
+        await this.#LoadUserContent(1);
 
         // build the screenshot section
         let firstTab = true;
@@ -886,8 +866,20 @@ class GameCard {
 
                 previewElement.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    let screenshotViewer = new ScreenshotViewer(this.screenshotItems[key], i);
-                    screenshotViewer.GoTo();
+                    let screenshotViewerContent = [];
+                    let screenshotViewerContentCount = 0;
+                    if (key === "My Content") {
+                        // provided by user
+                        screenshotViewerContent = this.screenshotItems["My Content"];
+                        screenshotViewerContentCount = this.screenshotItemsCount["My Content"];
+                    } else {
+                        // provided by metadata provider
+                        screenshotViewerContent = this.screenshotItems[key];
+                        screenshotViewerContentCount = this.screenshotItemsCount[key];
+                    }
+
+                    let screenshotViewer = new ScreenshotViewer(screenshotViewerContent, i, screenshotViewerContentCount, this.#LoadUserContent);
+                    // screenshotViewer.GoTo();
                 });
                 section.appendChild(previewElement);
 
@@ -937,6 +929,36 @@ class GameCard {
     async #ShowScreenshots(metadataSource, gameid, selectedImage) {
         let screenshotsDialog = new ScreenshotDisplay(metadataSource, gameid, selectedImage);
         await screenshotsDialog.open();
+    }
+
+    // Use an arrow function so that when passed as a callback (e.g. to ScreenshotViewer) it retains the correct
+    // lexical 'this' bound to the GameCard instance.
+    #LoadUserContent = async (page) => {
+        console.log(`Loading page ${page}`);
+        await fetch(`/api/v1.1/ContentManager/?metadataids=${this.metadataIds.join(",")}&contentTypes=Screenshot,Photo,Video&page=${page}&pageSize=50`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json()).then(data => {
+            if (page === 1) {
+                this.screenshotItems["My Content"] = [];
+                this.screenshotItemsCount["My Content"] = 0;
+            }
+            if (data) {
+                this.screenshotItemsCount["My Content"] = data.totalCount;
+                console.log(data);
+                if (data.items.length > 0) {
+                    // load content elements
+                    data.items.forEach(element => {
+                        // create new screenshot item
+                        let screenshotItem = new ScreenshotItem(element.contentType.toLowerCase(), `/api/v1.1/ContentManager/attachment/${element.attachmentId}/data`, null, element.uploadedAt, null, this.gameId, element.uploadedBy);
+                        this.screenshotItems["My Content"].push(screenshotItem);
+                    });
+                }
+                return this.screenshotItemsCount["My Content"];
+            }
+        });
     }
 }
 
