@@ -646,7 +646,7 @@ namespace gaseous_server.Classes.Content
             string userDirectory = existingContent.UploadedByUserId == "System" ? "Global" : existingContent.UploadedByUserId;
             string contentDir = existingContent.ContentType == ContentType.GlobalManual ? "manuals" : existingContent.ContentType.ToString().ToLower() + "s";
             string dirPath = Path.Combine(Config.LibraryConfiguration.LibraryContentDirectory, userDirectory, contentDir);
-            string filePath = Path.Combine(dirPath, existingContent.FileName);
+            string filePath = Path.Combine(dirPath, existingContent.FileSystemFilename);
             if (System.IO.File.Exists(filePath))
             {
                 System.IO.File.Delete(filePath);

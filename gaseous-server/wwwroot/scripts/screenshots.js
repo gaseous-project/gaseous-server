@@ -13,7 +13,9 @@ class ScreenshotItem {
     metadataId: The ID of the associated metadata.
     profile: The user profile object associated with the content item.
     */
-    constructor(type, url, title, uploadDate, description, metadataId, profile) {
+    constructor(id, source, type, url, title, uploadDate, description, metadataId, profile) {
+        this.id = id;
+        this.source = source;
         this.type = type;
         this.url = url;
         this.title = title;
@@ -45,6 +47,11 @@ class ScreenshotItem {
     #createScreenshotElement(baseClass, isFull = false) {
         let container = document.createElement('div');
         container.classList.add(baseClass);
+        container.setAttribute('data-id', this.id);
+        container.setAttribute('data-type', this.type);
+        if (this.source) {
+            container.setAttribute('data-source', this.source);
+        }
 
         switch (this.type) {
             case 'screenshot':
@@ -184,8 +191,6 @@ class ScreenshotViewer {
         this.deleteCallback = deleteCallback;
         this.currentPage = 1;
 
-        console.log(screenshots);
-
         this.#initViewer();
     }
 
@@ -245,6 +250,55 @@ class ScreenshotViewer {
         this.closeButton.innerHTML = "&times;";
         this.closeButton.addEventListener("click", () => this.Close());
         this.modalContent.appendChild(this.closeButton);
+
+        // create upload button if uploadCallback is provided
+        if (this.uploadCallback) {
+            this.uploadButton = document.createElement("div");
+            this.uploadButton.classList.add("screenshot-upload-button");
+            this.uploadButton.innerText = "Upload";
+            this.uploadButton.addEventListener("click", async () => {
+                let result = await this.uploadCallback();
+                if (result && result instanceof ScreenshotItem) {
+                    this.screenshots.push(result);
+                    this.createCameraRoll();
+                    this.GoTo(0); // Go to the newly uploaded screenshot
+                }
+            });
+            this.modalContent.appendChild(this.uploadButton);
+        }
+
+        // create delete button if deleteCallback is provided
+        if (this.deleteCallback) {
+            this.deleteButton = document.createElement("div");
+            this.deleteButton.classList.add("screenshot-delete-button");
+            this.deleteButton.innerText = "Delete";
+            this.deleteButton.addEventListener("click", async () => {
+                if (this.screenshots.length === 0) return;
+                let screenshotToDelete = this.screenshots[this.currentIndex];
+                let confirmed = confirm("Are you sure you want to delete this screenshot?");
+                if (confirmed) {
+                    let success = await this.deleteCallback(screenshotToDelete);
+                    if (success) {
+                        console.log("Screenshot deleted successfully.");
+                        console.log(success);
+                        this.screenshots.splice(this.currentIndex, 1);
+                        // Adjust currentIndex if needed
+                        if (this.currentIndex >= this.screenshots.length) {
+                            this.currentIndex = Math.max(0, this.screenshots.length - 1);
+                        }
+                        this.createCameraRoll();
+                        if (this.screenshots.length > 0) {
+                            this.GoTo(this.currentIndex);
+                        } else {
+                            this.Close();
+                        }
+                    } else {
+                        alert("Failed to delete the screenshot.");
+                    }
+                }
+            });
+            this.modalContent.appendChild(this.deleteButton);
+        }
 
         // create the left arrow
         this.leftArrow = document.createElement("div");

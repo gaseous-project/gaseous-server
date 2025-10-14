@@ -250,41 +250,41 @@ class GameCard {
                 "Content-Type": "application/json"
             }
         });
-        const gameData = await response.json();
-        this.metadataSource = gameData.metadataSource;
+        this.gameData = await response.json();
+        this.metadataSource = this.gameData.metadataSource;
 
         // dump the game data to the console for debugging
-        console.log(gameData);
+        console.log(this.gameData);
 
         // set the header
-        this.card.SetHeader(gameData.name, false);
+        this.card.SetHeader(this.gameData.name, false);
 
         // set the background image
-        if (gameData.artworks && gameData.artworks.length > 0) {
+        if (this.gameData.artworks && this.gameData.artworks.length > 0) {
             // // randomly select an artwork to display
-            let randomIndex = Math.floor(Math.random() * gameData.artworks.length);
-            let artwork = gameData.artworks[randomIndex];
-            // let artwork = gameData.artworks[0];
-            let artworkUrl = `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/artwork/${artwork}/image/original/${artwork}.jpg`;
+            let randomIndex = Math.floor(Math.random() * this.gameData.artworks.length);
+            let artwork = this.gameData.artworks[randomIndex];
+            // let artwork = this.gameData.artworks[0];
+            let artworkUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/artwork/${artwork}/image/original/${artwork}.jpg`;
             this.card.SetBackgroundImage(artworkUrl, true, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
                     ratingIgdbLogo.classList.add('card-info-rating-icon-black');
                 }
             });
-        } else if (gameData.screenshots && gameData.screenshots.length > 0) {
+        } else if (this.gameData.screenshots && this.gameData.screenshots.length > 0) {
             // randomly select a screenshot to display
-            let randomIndex = Math.floor(Math.random() * gameData.screenshots.length);
-            let screenshot = gameData.screenshots[randomIndex];
-            let screenshotUrl = `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/screenshots/${screenshot}/image/original/${screenshot}.jpg`;
+            let randomIndex = Math.floor(Math.random() * this.gameData.screenshots.length);
+            let screenshot = this.gameData.screenshots[randomIndex];
+            let screenshotUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/screenshots/${screenshot}/image/original/${screenshot}.jpg`;
             this.card.SetBackgroundImage(screenshotUrl, true, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
                     ratingIgdbLogo.classList.add('card-info-rating-icon-black');
                 }
             });
-        } else if (gameData.cover) {
-            let coverUrl = `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/cover/${gameData.cover}/image/original/${gameData.cover}.jpg`;
+        } else if (this.gameData.cover) {
+            let coverUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/cover/${this.gameData.cover}/image/original/${this.gameData.cover}.jpg`;
             this.card.SetBackgroundImage(coverUrl, true, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
@@ -306,23 +306,23 @@ class GameCard {
 
         // set the card attribution
         let cardAttribution = this.card.cardBody.querySelector('#card-metadataattribution');
-        switch (gameData.metadataSource) {
+        switch (this.gameData.metadataSource) {
             case "IGDB":
-                cardAttribution.innerHTML = `Data provided by ${gameData.metadataSource}. <a href="https://www.igdb.com/games/${gameData.slug}" class="romlink" target="_blank" rel="noopener noreferrer">Source</a>`;
+                cardAttribution.innerHTML = `Data provided by ${this.gameData.metadataSource}. <a href="https://www.igdb.com/games/${this.gameData.slug}" class="romlink" target="_blank" rel="noopener noreferrer">Source</a>`;
                 cardAttribution.style.display = '';
                 break;
 
             case "TheGamesDb":
-                cardAttribution.innerHTML = `Data provided by ${gameData.metadataSource}. <a href="https://thegamesdb.net/game.php?id=${gameData.id}" class="romlink" target="_blank" rel="noopener noreferrer">Source</a>`;
+                cardAttribution.innerHTML = `Data provided by ${this.gameData.metadataSource}. <a href="https://thegamesdb.net/game.php?id=${this.gameData.id}" class="romlink" target="_blank" rel="noopener noreferrer">Source</a>`;
                 cardAttribution.style.display = '';
                 break;
         }
 
         // set the cover art
         let clearLogoValid = false;
-        if (gameData.clearLogo) {
+        if (this.gameData.clearLogo) {
             for (const provider of logoProviders) {
-                if (gameData.clearLogo[provider] !== undefined) {
+                if (this.gameData.clearLogo[provider] !== undefined) {
                     clearLogoValid = true;
                     break;
                 }
@@ -333,8 +333,8 @@ class GameCard {
             let clearLogoImg = this.card.cardBody.querySelector('#card-clearlogo');
             if (clearLogoImg) {
                 for (const provider of logoProviders) {
-                    if (gameData.clearLogo[provider] !== undefined) {
-                        let providerIds = gameData.clearLogo[provider];
+                    if (this.gameData.clearLogo[provider] !== undefined) {
+                        let providerIds = this.gameData.clearLogo[provider];
                         let providerId = null;
                         // check if providerIds is an array
                         if (Array.isArray(providerIds)) {
@@ -344,14 +344,14 @@ class GameCard {
                         }
 
                         clearLogoImg.src = `/api/v1.1/Games/${this.gameId}/${provider}/clearlogo/${providerId}/image/original/${providerId}.png`;
-                        clearLogoImg.alt = gameData.name;
-                        clearLogoImg.title = gameData.name;
+                        clearLogoImg.alt = this.gameData.name;
+                        clearLogoImg.title = this.gameData.name;
                         clearLogoImg.style.display = '';
                         usingClearLogo = true;
 
                         cardTitleInfo.classList.add('card-title-info-clearlogo');
 
-                        if (provider !== gameData.metadataSource) {
+                        if (provider !== this.gameData.metadataSource) {
                             let logoAttribution = this.card.cardBody.querySelector('#card-logoattribution');
                             logoAttribution.innerHTML = `Logo provided by ${provider}`;
                             logoAttribution.style.display = '';
@@ -363,13 +363,13 @@ class GameCard {
         } else {
             let coverImg = this.card.cardBody.querySelector('#card-cover');
             if (coverImg) {
-                if (gameData.cover) {
-                    coverImg.src = `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/cover/${gameData.cover}/image/cover_big/${gameData.cover}.jpg`;
+                if (this.gameData.cover) {
+                    coverImg.src = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/cover/${this.gameData.cover}/image/cover_big/${this.gameData.cover}.jpg`;
                 } else {
                     coverImg.src = '/images/unknowngame.png';
                 }
-                coverImg.alt = gameData.name;
-                coverImg.title = gameData.name;
+                coverImg.alt = this.gameData.name;
+                coverImg.title = this.gameData.name;
                 coverImg.style.display = '';
             }
         }
@@ -378,15 +378,15 @@ class GameCard {
         if (!usingClearLogo) {
             let gameName = this.card.cardBody.querySelector('#card-title');
             if (gameName) {
-                gameName.innerHTML = gameData.name;
+                gameName.innerHTML = this.gameData.name;
                 gameName.style.display = '';
             }
         }
 
         // set the game rating
         let ageRating = this.card.cardBody.querySelector('#card-rating');
-        if (gameData.age_ratings) {
-            fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/agerating`, {
+        if (this.gameData.age_ratings) {
+            fetch(`/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/agerating`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json"
@@ -457,8 +457,8 @@ class GameCard {
         }
 
         // set the release date
-        if (gameData.first_release_date) {
-            let relDate = new Date(gameData.first_release_date);
+        if (this.gameData.first_release_date) {
+            let relDate = new Date(this.gameData.first_release_date);
             let year = new Intl.DateTimeFormat('en', { year: 'numeric' }).format(relDate);
             let releaseDate = this.card.cardBody.querySelector('#card-releasedate');
             releaseDate.innerHTML = year;
@@ -468,8 +468,8 @@ class GameCard {
         }
 
         // set the developers
-        if (gameData.involved_companies) {
-            fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/companies`, {
+        if (this.gameData.involved_companies) {
+            fetch(`/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/companies`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -495,8 +495,8 @@ class GameCard {
         }
 
         // set the genres
-        if (gameData.genres) {
-            fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/genre`, {
+        if (this.gameData.genres) {
+            fetch(`/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/genre`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -520,8 +520,8 @@ class GameCard {
         }
 
         // set the themes
-        if (gameData.themes) {
-            fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/themes`, {
+        if (this.gameData.themes) {
+            fetch(`/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/themes`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -545,9 +545,9 @@ class GameCard {
         }
 
         // set the game rating
-        if (gameData.total_rating) {
+        if (this.gameData.total_rating) {
             let rating = this.card.cardBody.querySelector('#card-userrating-igdb-value');
-            rating.innerHTML = Math.floor(gameData.total_rating) + '%';
+            rating.innerHTML = Math.floor(this.gameData.total_rating) + '%';
             rating.style.display = '';
 
             let ratingIgdb = this.card.cardBody.querySelector('#card-userrating-igdb');
@@ -560,11 +560,11 @@ class GameCard {
         // set the game summary
         let gameSummary = this.card.cardBody.querySelector('#card-summary');
         let gameSummarySection = this.card.cardBody.querySelector('#card-summary-section');
-        if (gameData.summary || gameData.storyline) {
-            if (gameData.summary) {
-                gameSummary.innerHTML = gameData.summary.replaceAll("\n", "<br />");
+        if (this.gameData.summary || this.gameData.storyline) {
+            if (this.gameData.summary) {
+                gameSummary.innerHTML = this.gameData.summary.replaceAll("\n", "<br />");
             } else {
-                gameSummary.innerHTML = gameData.storyLine.replaceAll("\n", "<br />");
+                gameSummary.innerHTML = this.gameData.storyLine.replaceAll("\n", "<br />");
             }
             gameSummarySection.style.display = '';
 
@@ -663,7 +663,7 @@ class GameCard {
 
         // get the available game platforms
         this.metadataIds = [];
-        await fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/platforms`, {
+        await fetch(`/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/platforms`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
@@ -778,13 +778,13 @@ class GameCard {
 
         // display the screenshots
         this.screenshotItems = [];
-        this.screenshotItems[gameData.metadataSource] = [];
+        this.screenshotItems[this.gameData.metadataSource] = [];
         this.screenshotItemsCount = [];
-        this.screenshotItemsCount[gameData.metadataSource] = 0;
-        if (gameData.videos && gameData.videos.length > 0) {
-            this.screenshotItemsCount[gameData.metadataSource] += gameData.videos.length;
+        this.screenshotItemsCount[this.gameData.metadataSource] = 0;
+        if (this.gameData.videos && this.gameData.videos.length > 0) {
+            this.screenshotItemsCount[this.gameData.metadataSource] += this.gameData.videos.length;
 
-            await fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/videos`, {
+            await fetch(`/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/videos`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -797,30 +797,77 @@ class GameCard {
 
                 videoData.forEach(element => {
                     // create new screenshot item
-                    let screenshotItem = new ScreenshotItem('youtube', `https://www.youtube.com/watch?v=${element.video_id}`, element.name, null, null, this.gameId);
-                    this.screenshotItems[gameData.metadataSource].push(screenshotItem);
+                    let screenshotItem = new ScreenshotItem(element.video_id, this.gameData.metadataSource, 'youtube', `https://www.youtube.com/watch?v=${element.video_id}`, element.name, null, null, this.gameId);
+                    this.screenshotItems[this.gameData.metadataSource].push(screenshotItem);
                 });
             });
         }
-        if (gameData.screenshots) {
-            this.screenshotItemsCount[gameData.metadataSource] += gameData.screenshots.length;
+        if (this.gameData.screenshots) {
+            this.screenshotItemsCount[this.gameData.metadataSource] += this.gameData.screenshots.length;
 
-            gameData.screenshots.forEach(screenshot => {
+            this.gameData.screenshots.forEach(screenshot => {
                 // create new screenshot item
-                let screenshotItem = new ScreenshotItem('screenshot', `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/screenshots/${screenshot}/image/original/${screenshot}.jpg`, null, null, null, this.gameId);
-                this.screenshotItems[gameData.metadataSource].push(screenshotItem);
+                let screenshotItem = new ScreenshotItem(screenshot, this.gameData.metadataSource, 'screenshot', `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/screenshots/${screenshot}/image/original/${screenshot}.jpg`, null, null, null, this.gameId);
+                this.screenshotItems[this.gameData.metadataSource].push(screenshotItem);
             });
         }
 
         // get user graphical content
-        this.screenshotItems["My Content"] = [];
-        this.screenshotItemsCount["My Content"] = 0;
         await this.#LoadUserContent(1);
 
+        // render the screenshot tab contents
+        this.RenderScreenshotTabContents();
+
+        // show the card
+        this.card.Open();
+    }
+
+    async #ShowScreenshots(metadataSource, gameid, selectedImage) {
+        let screenshotsDialog = new ScreenshotDisplay(metadataSource, gameid, selectedImage);
+        await screenshotsDialog.open();
+    }
+
+    // Use an arrow function so that when passed as a callback (e.g. to ScreenshotViewer) it retains the correct
+    // lexical 'this' bound to the GameCard instance.
+    #LoadUserContent = async (page) => {
+        console.log(`Loading page ${page}`);
+        await fetch(`/api/v1.1/ContentManager/?metadataids=${this.metadataIds.join(",")}&contentTypes=Screenshot,Photo,Video&page=${page}&pageSize=50`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json()).then(data => {
+            if (page === 1) {
+                this.screenshotItems["My Content"] = [];
+                this.screenshotItemsCount["My Content"] = 0;
+            }
+            if (data) {
+                this.screenshotItemsCount["My Content"] = data.totalCount;
+                console.log(data);
+                if (data.items.length > 0) {
+                    // load content elements
+                    data.items.forEach(element => {
+                        // create new screenshot item
+                        let screenshotItem = new ScreenshotItem(element.attachmentId, 'My Content', element.contentType.toLowerCase(), `/api/v1.1/ContentManager/attachment/${element.attachmentId}/data`, null, element.uploadedAt, null, this.gameId, element.uploadedBy);
+                        this.screenshotItems["My Content"].push(screenshotItem);
+                    });
+                }
+                return this.screenshotItemsCount["My Content"];
+            }
+        });
+    }
+
+    RenderScreenshotTabContents(selectedTab) {
         // build the screenshot section
         let firstTab = true;
         this.contentTabs.innerHTML = '';
         this.contentContents.innerHTML = '';
+
+        // if there is nothing in my content, update selectedTab to the metadata source
+        if ((this.screenshotItems["My Content"] === undefined || this.screenshotItemsCount["My Content"] === 0)) {
+            selectedTab = this.gameData.metadataSource;
+        }
+
         for (const [key, value] of Object.entries(this.screenshotItems)) {
             let tabName = key.toLowerCase().replaceAll(' ', '');
             console.log(`Building screenshot tab: ${key} (${tabName})`);
@@ -833,8 +880,10 @@ class GameCard {
             // create the tab
             let tab = document.createElement('div');
             tab.classList.add('card-tab');
-            if (firstTab) {
+            if ((selectedTab !== undefined && selectedTab !== null && key === selectedTab) ||
+                (selectedTab === undefined && firstTab)) {
                 tab.classList.add('card-tab-selected');
+                selectedTab = key;
             }
             tab.id = `card-tabs-${tabName}`;
             tab.setAttribute('data-section', tabName);
@@ -844,7 +893,7 @@ class GameCard {
             // create the section
             let section = document.createElement('div');
             section.id = `card-${tabName}-section`;
-            if (!firstTab) {
+            if (selectedTab !== key) {
                 section.style.display = 'none';
             }
             section.classList.add('card-info-block');
@@ -868,17 +917,51 @@ class GameCard {
                     e.stopPropagation();
                     let screenshotViewerContent = [];
                     let screenshotViewerContentCount = 0;
+                    let closeCallback = undefined;
+                    let uploadCallback = undefined;
+                    let deleteCallback = undefined;
                     if (key === "My Content") {
                         // provided by user
                         screenshotViewerContent = this.screenshotItems["My Content"];
                         screenshotViewerContentCount = this.screenshotItemsCount["My Content"];
+                        uploadCallback = () => { alert('Upload'); };
+                        deleteCallback = async (screenshotItem) => {
+                            if (!screenshotItem) {
+                                return;
+                            }
+
+                            let id = screenshotItem.id;
+
+                            // delete the item with the specified id from the server
+                            let retVal = false;
+
+                            await fetch(`/api/v1.1/ContentManager/attachment/${id}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            }).then(response => {
+                                if (response.ok) {
+                                    console.log(`Deleted content item ${id}`);
+                                    retVal = id;
+                                }
+                            });
+
+                            // refetch the user content
+                            await this.#LoadUserContent(1);
+
+                            // re-render the screenshot tab contents
+                            this.RenderScreenshotTabContents("My Content");
+
+                            return retVal;
+                        };
                     } else {
                         // provided by metadata provider
                         screenshotViewerContent = this.screenshotItems[key];
                         screenshotViewerContentCount = this.screenshotItemsCount[key];
                     }
 
-                    let screenshotViewer = new ScreenshotViewer(screenshotViewerContent, i, screenshotViewerContentCount, this.#LoadUserContent);
+                    let screenshotViewer = new ScreenshotViewer(screenshotViewerContent, i, screenshotViewerContentCount, this.#LoadUserContent, closeCallback, uploadCallback, deleteCallback);
                     // screenshotViewer.GoTo();
                 });
                 section.appendChild(previewElement);
@@ -921,44 +1004,6 @@ class GameCard {
 
             firstTab = false;
         }
-
-        // show the card
-        this.card.Open();
-    }
-
-    async #ShowScreenshots(metadataSource, gameid, selectedImage) {
-        let screenshotsDialog = new ScreenshotDisplay(metadataSource, gameid, selectedImage);
-        await screenshotsDialog.open();
-    }
-
-    // Use an arrow function so that when passed as a callback (e.g. to ScreenshotViewer) it retains the correct
-    // lexical 'this' bound to the GameCard instance.
-    #LoadUserContent = async (page) => {
-        console.log(`Loading page ${page}`);
-        await fetch(`/api/v1.1/ContentManager/?metadataids=${this.metadataIds.join(",")}&contentTypes=Screenshot,Photo,Video&page=${page}&pageSize=50`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then(response => response.json()).then(data => {
-            if (page === 1) {
-                this.screenshotItems["My Content"] = [];
-                this.screenshotItemsCount["My Content"] = 0;
-            }
-            if (data) {
-                this.screenshotItemsCount["My Content"] = data.totalCount;
-                console.log(data);
-                if (data.items.length > 0) {
-                    // load content elements
-                    data.items.forEach(element => {
-                        // create new screenshot item
-                        let screenshotItem = new ScreenshotItem(element.contentType.toLowerCase(), `/api/v1.1/ContentManager/attachment/${element.attachmentId}/data`, null, element.uploadedAt, null, this.gameId, element.uploadedBy);
-                        this.screenshotItems["My Content"].push(screenshotItem);
-                    });
-                }
-                return this.screenshotItemsCount["My Content"];
-            }
-        });
     }
 }
 

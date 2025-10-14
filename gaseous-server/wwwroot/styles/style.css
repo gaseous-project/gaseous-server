@@ -3961,6 +3961,36 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     background-color: rgba(0, 0, 0, 0.7);
 }
 
+.screenshot-upload-button,
+.screenshot-delete-button {
+    position: absolute;
+    top: 10px;
+    right: 35px;
+    width: 55px;
+    height: 20px;
+    color: white;
+    background-color: var(--button-background);
+    border-radius: var(--standard-radius);
+    border-width: 0px;
+    border-color: transparent;
+    border-style: solid;
+    overflow: hidden;
+    cursor: pointer;
+    text-align: center;
+    padding-top: 3px;
+    padding-bottom: 1px;
+    padding-left: 2px;
+    padding-right: 2px;
+}
+
+.screenshot-upload-button {
+    right: 45px;
+}
+
+.screenshot-delete-button {
+    right: 115px;
+}
+
 .screenshot-left-arrow,
 .screenshot-right-arrow {
     position: absolute;

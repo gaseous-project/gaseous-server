@@ -878,7 +878,9 @@ class BackgroundImageRotator {
         // fade out the current image
         $(bgImage).fadeIn(1000, function () {
             // remove the old image
-            currentImage.remove();
+            if (currentImage) {
+                currentImage.remove();
+            }
         });
 
         // clear the timer
