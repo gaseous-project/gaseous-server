@@ -4065,7 +4065,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     min-width: 300px;
     max-width: 600px;
     text-align: left;
-    height: 100px;
+    /* height: 100px; */
     z-index: +1;
 }
 
