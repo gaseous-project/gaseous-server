@@ -870,10 +870,9 @@ class GameCard {
 
         for (const [key, value] of Object.entries(this.screenshotItems)) {
             let tabName = key.toLowerCase().replaceAll(' ', '');
-            console.log(`Building screenshot tab: ${key} (${tabName})`);
 
+            // skip if there are no items
             if (this.screenshotItemsCount[key] === 0) {
-                console.log(`Skipping screenshot tab: ${key} (${tabName}) - no items`);
                 continue;
             }
 
@@ -918,13 +917,11 @@ class GameCard {
                     let screenshotViewerContent = [];
                     let screenshotViewerContentCount = 0;
                     let closeCallback = undefined;
-                    let uploadCallback = undefined;
                     let deleteCallback = undefined;
                     if (key === "My Content") {
                         // provided by user
                         screenshotViewerContent = this.screenshotItems["My Content"];
                         screenshotViewerContentCount = this.screenshotItemsCount["My Content"];
-                        uploadCallback = () => { alert('Upload'); };
                         deleteCallback = async (screenshotItem) => {
                             if (!screenshotItem) {
                                 return;
@@ -942,7 +939,6 @@ class GameCard {
                                 }
                             }).then(response => {
                                 if (response.ok) {
-                                    console.log(`Deleted content item ${id}`);
                                     retVal = id;
                                 }
                             });
@@ -961,7 +957,7 @@ class GameCard {
                         screenshotViewerContentCount = this.screenshotItemsCount[key];
                     }
 
-                    let screenshotViewer = new ScreenshotViewer(screenshotViewerContent, i, screenshotViewerContentCount, this.#LoadUserContent, closeCallback, uploadCallback, deleteCallback);
+                    let screenshotViewer = new ScreenshotViewer(screenshotViewerContent, i, screenshotViewerContentCount, this.#LoadUserContent, closeCallback, deleteCallback);
                     // screenshotViewer.GoTo();
                 });
                 section.appendChild(previewElement);

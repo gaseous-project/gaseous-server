@@ -177,17 +177,15 @@ class ScreenshotViewer {
     totalImageCount: The total number of images available (for pagination).
     loadMoreCallback: A callback function to load more screenshots when needed.
     closeCallback: A callback function to be called when the viewer is closed.
-    uploadCallback: A callback function to handle uploads (if applicable).
     deleteCallback: A callback function to handle deletions (if applicable).
     */
-    constructor(screenshots, startIndex = 0, totalImageCount, loadMoreCallback, closeCallback, uploadCallback, deleteCallback) {
+    constructor(screenshots, startIndex = 0, totalImageCount, loadMoreCallback, closeCallback, deleteCallback) {
         this.screenshots = screenshots;
         this.currentIndex = 0;
         this.startIndex = startIndex;
         this.totalImageCount = totalImageCount;
         this.loadMoreCallback = loadMoreCallback;
         this.closeCallback = closeCallback;
-        this.uploadCallback = uploadCallback;
         this.deleteCallback = deleteCallback;
         this.currentPage = 1;
 
@@ -251,22 +249,6 @@ class ScreenshotViewer {
         this.closeButton.addEventListener("click", () => this.Close());
         this.modalContent.appendChild(this.closeButton);
 
-        // create upload button if uploadCallback is provided
-        if (this.uploadCallback) {
-            this.uploadButton = document.createElement("div");
-            this.uploadButton.classList.add("screenshot-upload-button");
-            this.uploadButton.innerText = "Upload";
-            this.uploadButton.addEventListener("click", async () => {
-                let result = await this.uploadCallback();
-                if (result && result instanceof ScreenshotItem) {
-                    this.screenshots.push(result);
-                    this.createCameraRoll();
-                    this.GoTo(0); // Go to the newly uploaded screenshot
-                }
-            });
-            this.modalContent.appendChild(this.uploadButton);
-        }
-
         // create delete button if deleteCallback is provided
         if (this.deleteCallback) {
             this.deleteButton = document.createElement("div");
@@ -279,8 +261,6 @@ class ScreenshotViewer {
                 if (confirmed) {
                     let success = await this.deleteCallback(screenshotToDelete);
                     if (success) {
-                        console.log("Screenshot deleted successfully.");
-                        console.log(success);
                         this.screenshots.splice(this.currentIndex, 1);
                         // Adjust currentIndex if needed
                         if (this.currentIndex >= this.screenshots.length) {
@@ -415,7 +395,6 @@ class ScreenshotViewer {
         if (this.modalBackground) {
             this.modalBackground.remove();
             this.modalBackground = null;
-            console.log("ScreenshotViewer closed and removed from DOM.");
         }
     }
 
@@ -457,13 +436,11 @@ class ScreenshotViewer {
             if (index === this.screenshots.length - 1 && this.loadMoreCallback) {
                 // Avoid loading the same page multiple times
                 if (this.#loadedPages.includes(this.currentPage + 1)) {
-                    console.log(`Page ${this.currentPage + 1} already loaded, skipping loadMoreCallback.`);
                     return;
                 }
 
                 this.currentPage += 1;
                 this.#loadedPages.push(this.currentPage);
-                console.log(`Loading more screenshots, page ${this.currentPage}`);
                 await this.loadMoreCallback(this.currentPage);
 
                 // Rebuild the camera roll with the new screenshots

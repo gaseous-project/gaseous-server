@@ -3961,7 +3961,6 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     background-color: rgba(0, 0, 0, 0.7);
 }
 
-.screenshot-upload-button,
 .screenshot-delete-button {
     position: absolute;
     top: 10px;
@@ -3983,12 +3982,8 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     padding-right: 2px;
 }
 
-.screenshot-upload-button {
-    right: 45px;
-}
-
 .screenshot-delete-button {
-    right: 115px;
+    right: 50px;
 }
 
 .screenshot-left-arrow,
@@ -4042,14 +4037,6 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
     /* Gap not needed if single item; keep/remove as desired */
     gap: 0;
-
-    /* background to prevent background bleed-through */
-    background-color: black;
-
-    /* shadow to separate from background */
-    box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
-    -webkit-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
-    -moz-box-shadow: 5px 5px 19px 0px rgba(0, 0, 0, 0.44);
 }
 
 /* Make any direct media/content element fill available space without forcing container growth */
