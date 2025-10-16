@@ -125,8 +125,7 @@
     }
 }
 
-@media screen and (max-width: 749px) and (orientation: portrait),
-screen and (max-height: 699px) and (orientation: landscape) {
+@media screen and (max-width: 749px) {
 
     /* applies when the viewport is < 750px */
 
@@ -435,7 +434,10 @@ screen and (max-height: 699px) and (orientation: landscape) {
     .screenshot-right-arrow {
         display: none;
     }
+}
 
+@media screen and (max-width: 749px) and (orientation: portrait),
+screen and (max-height: 699px) and (orientation: landscape) {
     @media (orientation: portrait) {
 
         /* portrait-specific overrides for <=749px */
