@@ -68,6 +68,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="Microsoft.Build" Version="17.10.46" />
     <EmbeddedResource Include="Support\PlatformMap.json" Condition="'$(ExcludeConfigFilesFromBuildOutput)'!='true'">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
