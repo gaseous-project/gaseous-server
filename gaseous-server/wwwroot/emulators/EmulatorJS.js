@@ -38,7 +38,7 @@ function injectLoaderOnce() {
 GetCoreData(EJS_core)
     .then(data => {
         CoreData = data;
-        console.log(CoreData);
+        console.log('Core data:', CoreData);
 
         if (typeof SharedArrayBuffer !== 'undefined') {
             const requireThreads = !!(CoreData && CoreData.options && CoreData.options.requireThreads === true);
@@ -342,6 +342,48 @@ EJS_onGameStart = async function (e) {
     // load the save file
     EJS_emulator.gameManager.loadSaveFiles();
     // }
+}
+
+// if core is arcade, mame, fbneo, fbalpha2012_cps1, fbalpha2012_cps2, then load audio samples if available
+if (['arcade', 'mame', 'fbneo', 'fbalpha2012_cps1', 'fbalpha2012_cps2'].includes(getQueryString('core', 'string'))) {
+    let pathName = undefined;
+    switch (getQueryString('core', 'string')) {
+        case 'arcade':
+        case 'fbneo':
+            pathName = '/fbneo/samples/';
+            break;
+        case 'mame':
+            pathName = '/mame2003-plus/samples/';
+            break;
+        case 'fbalpha2012_cps1':
+            pathName = '/fbalpha2012_cps1/samples/';
+            break;
+        case 'fbalpha2012_cps2':
+            pathName = '/fbalpha2012_cps2/samples/';
+            break;
+    }
+
+    if (pathName !== undefined) {
+        let samplesArray = {};
+        fetch(`/api/v1.1/ContentManager/?metadataids=${gameId}&contentTypes=AudioSample`, {
+            method: 'GET'
+        })
+            .then(response => response.json())
+            .then(async data => {
+                console.log('Samples:', data);
+                let sampleIds = '';
+                for (let i = 0; i < data.items.length; i++) {
+                    if (sampleIds !== '') {
+                        sampleIds += ',';
+                    }
+                    sampleIds += data.items[i].attachmentId;
+                }
+                samplesArray[pathName] = `/api/v1.1/ContentManager/attachment/zipStream?attachmentIds=${sampleIds}`;
+
+                console.log('Samples Array:', samplesArray);
+                EJS_externalFiles = samplesArray;
+            });
+    }
 }
 
 // capture save RAM every minute

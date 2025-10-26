@@ -405,5 +405,71 @@ namespace gaseous_server.Controllers.v1_1
                 return NotFound(ex.Message);
             }
         }
+
+        /// <summary>
+        /// Retrieves a ZIP stream containing multiple content attachments specified by their IDs.
+        /// </summary>
+        /// <param name="attachmentIds">
+        /// Comma-separated list of content attachment IDs to include in the ZIP stream.
+        /// </param>
+        /// <returns>
+        /// A ZIP file stream containing the requested content attachments.
+        /// </returns>
+        [MapToApiVersion("1.1")]
+        [HttpGet]
+        [Authorize]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [Route("attachment/zipStream")]
+        public async Task<ActionResult> GetContentZipStreamAsync([FromQuery][Required] string attachmentIds)
+        {
+            // get user
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return NotFound(UserNotFoundMessage);
+
+            try
+            {
+                // parse attachment ids into list of longs - ignore invalid entries
+                var idStrings = attachmentIds.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                var attachmentIdList = new List<long>();
+                foreach (var idStr in idStrings)
+                {
+                    if (long.TryParse(idStr, out var id))
+                    {
+                        attachmentIdList.Add(id);
+                    }
+                }
+
+                // create zip stream
+                var zipStream = new MemoryStream();
+                using (var archive = new System.IO.Compression.ZipArchive(zipStream, System.IO.Compression.ZipArchiveMode.Create, true))
+                {
+                    // loop through ids and get content data
+                    foreach (long id in attachmentIdList)
+                    {
+                        var contentMeta = await GetMetadataItemContent(id, user);
+                        if (contentMeta == null) continue; // skip not found
+
+                        var contentData = await GetMetadataItemContentData(id, user);
+                        if (contentData != null)
+                        {
+                            var zipEntry = archive.CreateEntry($"{contentMeta.FileName}{contentMeta.FileExtension}", System.IO.Compression.CompressionLevel.Fastest);
+                            using (var entryStream = zipEntry.Open())
+                            {
+                                await entryStream.WriteAsync(contentData, 0, contentData.Length);
+                            }
+                        }
+                    }
+
+                    archive.Dispose();
+                    zipStream.Position = 0;
+                    return File(zipStream, "application/zip", "ContentAttachments.zip");
+                }
+            }
+            catch (InvalidOperationException ex)
+            {
+                return NotFound(ex.Message);
+            }
+        }
     }
 }
