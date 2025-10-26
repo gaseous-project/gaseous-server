@@ -62,16 +62,16 @@ class HomePageGameRow {
 
                     if (game.cover) {
                         let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg';
-                        if (backgroundImageHandler === undefined || backgroundImageHandler.URLList.length === 1) {
+                        if (backgroundImageHandler === undefined || (backgroundImageHandler && backgroundImageHandler.URLList && backgroundImageHandler.URLList.length === 1)) {
                             let urls = [];
                             urls.push(coverUrl);
-                            if (backgroundImageHandler !== undefined) {
+                            if (backgroundImageHandler !== undefined && backgroundImageHandler.URLList) {
                                 urls.push(backgroundImageHandler.URLList[0]);
                             }
                             console.log("Creating new BackgroundImageRotator");
                             backgroundImageHandler = new BackgroundImageRotator(urls, null, true, true);
                         } else {
-                            if (!backgroundImageHandler.URLList.includes(coverUrl)) {
+                            if (backgroundImageHandler && backgroundImageHandler.URLList && !backgroundImageHandler.URLList.includes(coverUrl)) {
                                 backgroundImageHandler.URLList.push(coverUrl);
                             }
                         }
@@ -87,7 +87,7 @@ class HomePageGameRow {
 
 let targetDiv = document.getElementById("gamehome");
 
-let gameRows = [];
+var gameRows = [];
 
 backgroundImageHandler = undefined;
 
@@ -155,12 +155,44 @@ async function populateRows() {
 
 populateRows();
 
-let coverURLList = [];
+var coverURLList = [];
 
 let profileDiv = document.getElementById("gameprofile");
 profileDiv.innerHTML = "";
 let profileCardContent = new ProfileCard(userProfile.profileId, false);
 profileDiv.appendChild(profileCardContent);
+
+// Register cleanup callback for home page
+if (typeof registerPageUnloadCallback === 'function') {
+    registerPageUnloadCallback('home', async () => {
+        console.log('Cleaning up home page...');
+
+        // Clear any loading intervals
+        if (typeof gameRows !== 'undefined' && gameRows) {
+            for (let row of gameRows) {
+                if (row.loadingInterval) {
+                    clearInterval(row.loadingInterval);
+                    row.loadingInterval = null;
+                }
+            }
+        }
+
+        // Clear URL list
+        if (typeof coverURLList !== 'undefined') {
+            coverURLList = [];
+        }
+
+        // Clean up background image handler
+        if (typeof backgroundImageHandler !== 'undefined' && backgroundImageHandler) {
+            if (backgroundImageHandler.RotationTimer) {
+                clearInterval(backgroundImageHandler.RotationTimer);
+            }
+            backgroundImageHandler = undefined;
+        }
+
+        console.log('Home page cleanup completed');
+    });
+}
 
 // setup preferences callbacks
 prefsDialog.OkCallbacks.push(async () => {

@@ -778,8 +778,10 @@ function BuildSpaceBar(LibrarySize, OtherSize, TotalSize) {
 
 class BackgroundImageRotator {
     constructor(URLList, CustomClass, Randomise, Rotate = true) {
-        this.URLList = URLList;
-        if (Randomise == true) {
+        // Defensive programming: ensure URLList is an array
+        this.URLList = URLList && Array.isArray(URLList) ? URLList : [];
+
+        if (Randomise == true && this.URLList.length > 0) {
             this.CurrentIndex = randomIntFromInterval(0, this.URLList.length - 1);
         } else {
             this.CurrentIndex = 0;

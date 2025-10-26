@@ -61,14 +61,22 @@ function setupBanner() {
     let bannerLibrary = document.getElementById("banner_library");
     if (bannerLibrary) {
         bannerLibrary.addEventListener('click', () => {
-            window.location.href = '/index.html?page=library';
+            if (typeof navigateToPage === 'function') {
+                navigateToPage('library');
+            } else {
+                window.location.href = '/index.html?page=library';
+            }
         });
     }
 
     let bannerHome = document.getElementById("banner_home");
     if (bannerHome) {
         bannerHome.addEventListener('click', () => {
-            window.location.href = '/index.html?page=home';
+            if (typeof navigateToPage === 'function') {
+                navigateToPage('home');
+            } else {
+                window.location.href = '/index.html?page=home';
+            }
         });
     }
 

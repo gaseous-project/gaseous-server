@@ -1,4 +1,4 @@
-let loadedPages = [];
+var loadedPages = [];
 
 async function SetupPage() {
     // setup view controls
@@ -392,17 +392,72 @@ function CalculateTileSize() {
     return null;
 }
 
-let filter = new Filtering();
+var filter = new Filtering();
 filter.GetSummary = true;
 
-let coverURLList = [];
+var coverURLList = [];
 
-let lastScrollTop = localStorage.getItem('Library.ScrollPosition') || 0;
-let scrollTimer = null;
+var lastScrollTop = localStorage.getItem('Library.ScrollPosition') || 0;
+var scrollTimer = null;
 
 // setup preferences callbacks
 prefsDialog.OkCallbacks.push(async () => {
     await filter.ApplyFilter();
 });
+
+// Register cleanup callback for library page
+if (typeof registerPageUnloadCallback === 'function') {
+    registerPageUnloadCallback('library', async () => {
+        console.log('Cleaning up library page...');
+
+        // Clear scroll timer
+        if (typeof scrollTimer !== 'undefined' && scrollTimer) {
+            clearTimeout(scrollTimer);
+            scrollTimer = null;
+        }
+
+        // Save current scroll position
+        localStorage.setItem('Library.ScrollPosition', window.scrollY);
+
+        // Clean up filter
+        if (typeof filter !== 'undefined' && filter) {
+            // Clear any ongoing filter operations
+            if (filter.executeCallback) {
+                filter.executeCallback = null;
+            }
+            if (filter.applyCallback) {
+                filter.applyCallback = null;
+            }
+            if (filter.executeBeginCallback) {
+                filter.executeBeginCallback = null;
+            }
+            if (filter.executeCompleteCallback) {
+                filter.executeCompleteCallback = null;
+            }
+        }
+
+        // Clear URL list
+        if (typeof coverURLList !== 'undefined') {
+            coverURLList = [];
+        }
+
+        // Reset loaded pages array
+        if (typeof loadedPages !== 'undefined') {
+            loadedPages = [];
+        }
+
+        // Clean up background image handler
+        if (typeof backgroundImageHandler !== 'undefined' && backgroundImageHandler) {
+            if (backgroundImageHandler.RotationTimer) {
+                clearInterval(backgroundImageHandler.RotationTimer);
+            }
+            backgroundImageHandler = undefined;
+        }
+
+        // Remove scroll event listener - this will be handled by general cleanup
+
+        console.log('Library page cleanup completed');
+    });
+}
 
 SetupPage();
