@@ -239,6 +239,10 @@ class GameCard {
         // store the card object in the session storage
         sessionStorage.setItem("Card." + this.card.cardType + ".Id", this.gameId);
 
+        // set up content tabs
+        this.contentTabs = this.card.cardBody.querySelector('#card-tabs');
+        this.contentContents = this.card.cardBody.querySelector("#card-contents");
+
         // fetch the game data
         const response = await fetch("/api/v1.1/Games/" + this.gameId, {
             method: "GET",
@@ -246,41 +250,41 @@ class GameCard {
                 "Content-Type": "application/json"
             }
         });
-        const gameData = await response.json();
-        this.metadataSource = gameData.metadataSource;
+        this.gameData = await response.json();
+        this.metadataSource = this.gameData.metadataSource;
 
         // dump the game data to the console for debugging
-        console.log(gameData);
+        console.log(this.gameData);
 
         // set the header
-        this.card.SetHeader(gameData.name, false);
+        this.card.SetHeader(this.gameData.name, false);
 
         // set the background image
-        if (gameData.artworks && gameData.artworks.length > 0) {
+        if (this.gameData.artworks && this.gameData.artworks.length > 0) {
             // // randomly select an artwork to display
-            let randomIndex = Math.floor(Math.random() * gameData.artworks.length);
-            let artwork = gameData.artworks[randomIndex];
-            // let artwork = gameData.artworks[0];
-            let artworkUrl = `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/artwork/${artwork}/image/original/${artwork}.jpg`;
+            let randomIndex = Math.floor(Math.random() * this.gameData.artworks.length);
+            let artwork = this.gameData.artworks[randomIndex];
+            // let artwork = this.gameData.artworks[0];
+            let artworkUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/artwork/${artwork}/image/original/${artwork}.jpg`;
             this.card.SetBackgroundImage(artworkUrl, true, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
                     ratingIgdbLogo.classList.add('card-info-rating-icon-black');
                 }
             });
-        } else if (gameData.screenshots && gameData.screenshots.length > 0) {
+        } else if (this.gameData.screenshots && this.gameData.screenshots.length > 0) {
             // randomly select a screenshot to display
-            let randomIndex = Math.floor(Math.random() * gameData.screenshots.length);
-            let screenshot = gameData.screenshots[randomIndex];
-            let screenshotUrl = `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/screenshots/${screenshot}/image/original/${screenshot}.jpg`;
+            let randomIndex = Math.floor(Math.random() * this.gameData.screenshots.length);
+            let screenshot = this.gameData.screenshots[randomIndex];
+            let screenshotUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/screenshots/${screenshot}/image/original/${screenshot}.jpg`;
             this.card.SetBackgroundImage(screenshotUrl, true, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
                     ratingIgdbLogo.classList.add('card-info-rating-icon-black');
                 }
             });
-        } else if (gameData.cover) {
-            let coverUrl = `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/cover/${gameData.cover}/image/original/${gameData.cover}.jpg`;
+        } else if (this.gameData.cover) {
+            let coverUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/cover/${this.gameData.cover}/image/original/${this.gameData.cover}.jpg`;
             this.card.SetBackgroundImage(coverUrl, true, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
@@ -302,23 +306,23 @@ class GameCard {
 
         // set the card attribution
         let cardAttribution = this.card.cardBody.querySelector('#card-metadataattribution');
-        switch (gameData.metadataSource) {
+        switch (this.gameData.metadataSource) {
             case "IGDB":
-                cardAttribution.innerHTML = `Data provided by ${gameData.metadataSource}. <a href="https://www.igdb.com/games/${gameData.slug}" class="romlink" target="_blank" rel="noopener noreferrer">Source</a>`;
+                cardAttribution.innerHTML = `Data provided by ${this.gameData.metadataSource}. <a href="https://www.igdb.com/games/${this.gameData.slug}" class="romlink" target="_blank" rel="noopener noreferrer">Source</a>`;
                 cardAttribution.style.display = '';
                 break;
 
             case "TheGamesDb":
-                cardAttribution.innerHTML = `Data provided by ${gameData.metadataSource}. <a href="https://thegamesdb.net/game.php?id=${gameData.id}" class="romlink" target="_blank" rel="noopener noreferrer">Source</a>`;
+                cardAttribution.innerHTML = `Data provided by ${this.gameData.metadataSource}. <a href="https://thegamesdb.net/game.php?id=${this.gameData.id}" class="romlink" target="_blank" rel="noopener noreferrer">Source</a>`;
                 cardAttribution.style.display = '';
                 break;
         }
 
         // set the cover art
         let clearLogoValid = false;
-        if (gameData.clearLogo) {
+        if (this.gameData.clearLogo) {
             for (const provider of logoProviders) {
-                if (gameData.clearLogo[provider] !== undefined) {
+                if (this.gameData.clearLogo[provider] !== undefined) {
                     clearLogoValid = true;
                     break;
                 }
@@ -329,8 +333,8 @@ class GameCard {
             let clearLogoImg = this.card.cardBody.querySelector('#card-clearlogo');
             if (clearLogoImg) {
                 for (const provider of logoProviders) {
-                    if (gameData.clearLogo[provider] !== undefined) {
-                        let providerIds = gameData.clearLogo[provider];
+                    if (this.gameData.clearLogo[provider] !== undefined) {
+                        let providerIds = this.gameData.clearLogo[provider];
                         let providerId = null;
                         // check if providerIds is an array
                         if (Array.isArray(providerIds)) {
@@ -340,14 +344,14 @@ class GameCard {
                         }
 
                         clearLogoImg.src = `/api/v1.1/Games/${this.gameId}/${provider}/clearlogo/${providerId}/image/original/${providerId}.png`;
-                        clearLogoImg.alt = gameData.name;
-                        clearLogoImg.title = gameData.name;
+                        clearLogoImg.alt = this.gameData.name;
+                        clearLogoImg.title = this.gameData.name;
                         clearLogoImg.style.display = '';
                         usingClearLogo = true;
 
                         cardTitleInfo.classList.add('card-title-info-clearlogo');
 
-                        if (provider !== gameData.metadataSource) {
+                        if (provider !== this.gameData.metadataSource) {
                             let logoAttribution = this.card.cardBody.querySelector('#card-logoattribution');
                             logoAttribution.innerHTML = `Logo provided by ${provider}`;
                             logoAttribution.style.display = '';
@@ -359,13 +363,13 @@ class GameCard {
         } else {
             let coverImg = this.card.cardBody.querySelector('#card-cover');
             if (coverImg) {
-                if (gameData.cover) {
-                    coverImg.src = `/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/cover/${gameData.cover}/image/cover_big/${gameData.cover}.jpg`;
+                if (this.gameData.cover) {
+                    coverImg.src = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/cover/${this.gameData.cover}/image/cover_big/${this.gameData.cover}.jpg`;
                 } else {
                     coverImg.src = '/images/unknowngame.png';
                 }
-                coverImg.alt = gameData.name;
-                coverImg.title = gameData.name;
+                coverImg.alt = this.gameData.name;
+                coverImg.title = this.gameData.name;
                 coverImg.style.display = '';
             }
         }
@@ -374,15 +378,15 @@ class GameCard {
         if (!usingClearLogo) {
             let gameName = this.card.cardBody.querySelector('#card-title');
             if (gameName) {
-                gameName.innerHTML = gameData.name;
+                gameName.innerHTML = this.gameData.name;
                 gameName.style.display = '';
             }
         }
 
         // set the game rating
         let ageRating = this.card.cardBody.querySelector('#card-rating');
-        if (gameData.age_ratings) {
-            fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/agerating`, {
+        if (this.gameData.age_ratings) {
+            fetch(`/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/agerating`, {
                 method: "GET",
                 headers: {
                     "Content-Type": "application/json"
@@ -453,8 +457,8 @@ class GameCard {
         }
 
         // set the release date
-        if (gameData.first_release_date) {
-            let relDate = new Date(gameData.first_release_date);
+        if (this.gameData.first_release_date) {
+            let relDate = new Date(this.gameData.first_release_date);
             let year = new Intl.DateTimeFormat('en', { year: 'numeric' }).format(relDate);
             let releaseDate = this.card.cardBody.querySelector('#card-releasedate');
             releaseDate.innerHTML = year;
@@ -464,8 +468,8 @@ class GameCard {
         }
 
         // set the developers
-        if (gameData.involved_companies) {
-            fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/companies`, {
+        if (this.gameData.involved_companies) {
+            fetch(`/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/companies`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -491,8 +495,8 @@ class GameCard {
         }
 
         // set the genres
-        if (gameData.genres) {
-            fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/genre`, {
+        if (this.gameData.genres) {
+            fetch(`/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/genre`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -516,8 +520,8 @@ class GameCard {
         }
 
         // set the themes
-        if (gameData.themes) {
-            fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/themes`, {
+        if (this.gameData.themes) {
+            fetch(`/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/themes`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
@@ -541,9 +545,9 @@ class GameCard {
         }
 
         // set the game rating
-        if (gameData.total_rating) {
+        if (this.gameData.total_rating) {
             let rating = this.card.cardBody.querySelector('#card-userrating-igdb-value');
-            rating.innerHTML = Math.floor(gameData.total_rating) + '%';
+            rating.innerHTML = Math.floor(this.gameData.total_rating) + '%';
             rating.style.display = '';
 
             let ratingIgdb = this.card.cardBody.querySelector('#card-userrating-igdb');
@@ -553,73 +557,14 @@ class GameCard {
             ratingPanel.style.display = '';
         }
 
-        // display the screenshots
-        let screenshots = this.card.cardBody.querySelector('#card-screenshots');
-        let screenshotsSection = this.card.cardBody.querySelector('#card-screenshots-section');
-        if (screenshots) {
-            if (gameData.videos && gameData.videos.length > 0) {
-                await fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/videos`, {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }).then(response => response.json()).then(videoData => {
-                    if (!videoData) {
-                        console.error(`Error fetching video data for game ${this.gameId}`);
-                        return;
-                    }
-
-                    videoData.forEach(element => {
-                        let videoItem = document.createElement('li');
-                        videoItem.classList.add('card-screenshot-item');
-                        videoItem.style.backgroundImage = `url(https://i.ytimg.com/vi/${element.video_id}/hqdefault.jpg)`;
-                        videoItem.alt = element.name;
-                        videoItem.title = element.name;
-
-                        videoItem.addEventListener('click', async (e) => {
-                            e.stopPropagation();
-
-                            // open the screenshot display dialog
-                            await this.#ShowScreenshots(this.metadataSource, this.gameId, 'video_' + element.id);
-                        });
-
-                        let videoYouTubeIcon = document.createElement('div');
-                        videoYouTubeIcon.classList.add('card-screenshot-youtube-icon');
-                        videoItem.appendChild(videoYouTubeIcon);
-
-                        screenshots.appendChild(videoItem);
-                    });
-                });
-            }
-            if (gameData.screenshots) {
-                gameData.screenshots.forEach(screenshot => {
-                    let screenshotItem = document.createElement('li');
-                    screenshotItem.classList.add('card-screenshot-item');
-                    screenshotItem.style.backgroundImage = `url(/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/screenshots/${screenshot}/image/screenshot_med/${screenshot}.jpg)`;
-                    screenshotItem.alt = gameData.name;
-                    screenshotItem.title = gameData.name;
-
-                    screenshotItem.addEventListener('click', async (e) => {
-                        e.stopPropagation();
-
-                        // open the screenshot display dialog
-                        await this.#ShowScreenshots(this.metadataSource, this.gameId, 'screenshot_' + screenshot);
-                    });
-
-                    screenshots.appendChild(screenshotItem);
-                });
-                screenshotsSection.style.display = '';
-            }
-        }
-
         // set the game summary
         let gameSummary = this.card.cardBody.querySelector('#card-summary');
         let gameSummarySection = this.card.cardBody.querySelector('#card-summary-section');
-        if (gameData.summary || gameData.storyline) {
-            if (gameData.summary) {
-                gameSummary.innerHTML = gameData.summary.replaceAll("\n", "<br />");
+        if (this.gameData.summary || this.gameData.storyline) {
+            if (this.gameData.summary) {
+                gameSummary.innerHTML = this.gameData.summary.replaceAll("\n", "<br />");
             } else {
-                gameSummary.innerHTML = gameData.storyLine.replaceAll("\n", "<br />");
+                gameSummary.innerHTML = this.gameData.storyLine.replaceAll("\n", "<br />");
             }
             gameSummarySection.style.display = '';
 
@@ -717,33 +662,55 @@ class GameCard {
         });
 
         // get the available game platforms
-        await fetch(`/api/v1.1/Games/${this.gameId}/${gameData.metadataSource}/platforms`, {
+        this.metadataIds = [];
+        await fetch(`/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/platforms`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json'
             }
-        }).then(response => response.json()).then(data => {
+        }).then(response => response.json()).then(async data => {
             if (data) {
-                // sort data by name attribute, then by metadataGameName attribute
+                // sort data by:
+                // 1. name (ascending, case-insensitive)
+                // 2. lastPlayed (descending - most recent first) when both have a value
+                //    Items with a lastPlayed value come before items without one.
+                // 3. metadataGameName (ascending, case-insensitive) only when BOTH lastPlayed values are null/undefined
                 data.sort((a, b) => {
-                    let nameA = a.name.toUpperCase();
-                    let nameB = b.name.toUpperCase();
-                    let metadataGameNameA = a.metadataGameName.toUpperCase();
-                    let metadataGameNameB = b.metadataGameName.toUpperCase();
+                    const nameA = (a.name || '').toUpperCase();
+                    const nameB = (b.name || '').toUpperCase();
 
-                    if (nameA < nameB) {
-                        return -1;
-                    } else if (nameA > nameB) {
-                        return 1;
-                    } else {
-                        if (metadataGameNameA < metadataGameNameB) {
+                    if (nameA < nameB) return -1;
+                    if (nameA > nameB) return 1;
+
+                    // Names are equal, move to lastPlayed logic
+                    const hasLastPlayedA = !!a.lastPlayed;
+                    const hasLastPlayedB = !!b.lastPlayed;
+
+                    if (hasLastPlayedA && hasLastPlayedB) {
+                        // Both have lastPlayed -> compare dates (newest first)
+                        const dateA = new Date(a.lastPlayed);
+                        const dateB = new Date(b.lastPlayed);
+                        if (!isNaN(dateA) && !isNaN(dateB)) {
+                            if (dateA > dateB) return -1;
+                            if (dateA < dateB) return 1;
+                        } else if (!isNaN(dateA) && isNaN(dateB)) {
                             return -1;
-                        } else if (metadataGameNameA > metadataGameNameB) {
+                        } else if (isNaN(dateA) && !isNaN(dateB)) {
                             return 1;
-                        } else {
-                            return 0;
                         }
+                        // fall through if equal/invalid -> no return, continue to metadataGameName
+                    } else if (hasLastPlayedA && !hasLastPlayedB) {
+                        return -1; // a before b
+                    } else if (!hasLastPlayedA && hasLastPlayedB) {
+                        return 1; // b before a
                     }
+
+                    // Either both missing lastPlayed or both lastPlayed equal -> compare metadataGameName
+                    const metaA = (a.metadataGameName || '').toUpperCase();
+                    const metaB = (b.metadataGameName || '').toUpperCase();
+                    if (metaA < metaB) return -1;
+                    if (metaA > metaB) return 1;
+                    return 0;
                 });
 
                 let platforms = {};
@@ -765,7 +732,7 @@ class GameCard {
                     }
                 });
 
-                if (mostRecentPlatform && mostRecentPlatform.lastPlayed) {
+                if (mostRecentPlatform?.lastPlayed) {
                     // set the most recent platform
                     let mostRecentPlatformName = this.card.cardBody.querySelector('#card-launchgame');
                     mostRecentPlatformName.classList.add('platform_edit_button');
@@ -793,12 +760,13 @@ class GameCard {
                 let cardPlatforms = this.card.cardBody.querySelector('#card-platforms');
 
                 for (const [key, value] of Object.entries(platforms)) {
+                    this.metadataIds.push(...value.map(v => v.metadataMapId));
                     let platformItem = new GameCardPlatformItem(value[0].name, key);
                     value.forEach(element => {
                         platformItem.Add(element);
                     });
 
-                    let platformItemElement = platformItem.BuildItem();
+                    let platformItemElement = await platformItem.BuildItem();
                     cardPlatforms.appendChild(platformItemElement);
                 }
 
@@ -808,6 +776,48 @@ class GameCard {
             }
         });
 
+        // display the screenshots
+        this.screenshotItems = [];
+        this.screenshotItems[this.gameData.metadataSource] = [];
+        this.screenshotItemsCount = [];
+        this.screenshotItemsCount[this.gameData.metadataSource] = 0;
+        if (this.gameData.videos && this.gameData.videos.length > 0) {
+            this.screenshotItemsCount[this.gameData.metadataSource] += this.gameData.videos.length;
+
+            await fetch(`/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/videos`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json()).then(videoData => {
+                if (!videoData) {
+                    console.error(`Error fetching video data for game ${this.gameId}`);
+                    return;
+                }
+
+                videoData.forEach(element => {
+                    // create new screenshot item
+                    let screenshotItem = new ScreenshotItem(element.video_id, this.gameData.metadataSource, 'youtube', `https://www.youtube.com/watch?v=${element.video_id}`, element.name, null, null, this.gameId);
+                    this.screenshotItems[this.gameData.metadataSource].push(screenshotItem);
+                });
+            });
+        }
+        if (this.gameData.screenshots) {
+            this.screenshotItemsCount[this.gameData.metadataSource] += this.gameData.screenshots.length;
+
+            this.gameData.screenshots.forEach(screenshot => {
+                // create new screenshot item
+                let screenshotItem = new ScreenshotItem(screenshot, this.gameData.metadataSource, 'screenshot', `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/screenshots/${screenshot}/image/original/${screenshot}.jpg`, null, null, null, this.gameId);
+                this.screenshotItems[this.gameData.metadataSource].push(screenshotItem);
+            });
+        }
+
+        // get user graphical content
+        await this.#LoadUserContent(1);
+
+        // render the screenshot tab contents
+        this.RenderScreenshotTabContents();
+
         // show the card
         this.card.Open();
     }
@@ -815,6 +825,180 @@ class GameCard {
     async #ShowScreenshots(metadataSource, gameid, selectedImage) {
         let screenshotsDialog = new ScreenshotDisplay(metadataSource, gameid, selectedImage);
         await screenshotsDialog.open();
+    }
+
+    // Use an arrow function so that when passed as a callback (e.g. to ScreenshotViewer) it retains the correct
+    // lexical 'this' bound to the GameCard instance.
+    #LoadUserContent = async (page) => {
+        console.log(`Loading page ${page}`);
+        await fetch(`/api/v1.1/ContentManager/?metadataids=${this.metadataIds.join(",")}&contentTypes=Screenshot,Photo,Video&page=${page}&pageSize=50`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json()).then(data => {
+            if (page === 1) {
+                this.screenshotItems["My Content"] = [];
+                this.screenshotItemsCount["My Content"] = 0;
+            }
+            if (data) {
+                this.screenshotItemsCount["My Content"] = data.totalCount;
+                if (data.items.length > 0) {
+                    // load content elements
+                    data.items.forEach(element => {
+                        // create new screenshot item
+                        let screenshotItem = new ScreenshotItem(element.attachmentId, 'My Content', element.contentType.toLowerCase(), `/api/v1.1/ContentManager/attachment/${element.attachmentId}/data`, null, element.uploadedAt, null, this.gameId, element.uploadedBy);
+                        this.screenshotItems["My Content"].push(screenshotItem);
+                    });
+                }
+                return this.screenshotItemsCount["My Content"];
+            }
+        });
+    }
+
+    RenderScreenshotTabContents(selectedTab) {
+        // build the screenshot section
+        let firstTab = true;
+        this.contentTabs.innerHTML = '';
+        this.contentContents.innerHTML = '';
+
+        // if there is nothing in my content, update selectedTab to the metadata source
+        if ((this.screenshotItems["My Content"] === undefined || this.screenshotItemsCount["My Content"] === 0)) {
+            selectedTab = this.gameData.metadataSource;
+        }
+
+        for (const [key, value] of Object.entries(this.screenshotItems)) {
+            let tabName = key.toLowerCase().replaceAll(' ', '');
+
+            // skip if there are no items
+            if (this.screenshotItemsCount[key] === 0) {
+                continue;
+            }
+
+            // create the tab
+            let tab = document.createElement('div');
+            tab.classList.add('card-tab');
+            if ((selectedTab !== undefined && selectedTab !== null && key === selectedTab) ||
+                (selectedTab === undefined && firstTab)) {
+                tab.classList.add('card-tab-selected');
+                selectedTab = key;
+            }
+            tab.id = `card-tabs-${tabName}`;
+            tab.setAttribute('data-section', tabName);
+            tab.innerHTML = key;
+            this.contentTabs.appendChild(tab);
+
+            // create the section
+            let section = document.createElement('div');
+            section.id = `card-${tabName}-section`;
+            if (selectedTab !== key) {
+                section.style.display = 'none';
+            }
+            section.classList.add('card-info-block');
+            section.classList.add('card-screenshots');
+
+            // add the screenshots to the container
+            let imgCount = 0;
+            for (let i = 0; i < value.length; i++) {
+                imgCount++;
+                let screenshotItem = value[i];
+                let previewElement = screenshotItem.createPreviewElement();
+                if (this.screenshotItemsCount[key] === 1) {
+                    previewElement.classList.add('card-screenshot-item-single');
+                } else if (imgCount <= 2) {
+                    previewElement.classList.add('card-screenshot-item-double');
+                } else {
+                    previewElement.classList.add('card-screenshot-item-small');
+                }
+
+                previewElement.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    let screenshotViewerContent = [];
+                    let screenshotViewerContentCount = 0;
+                    let closeCallback = undefined;
+                    let deleteCallback = undefined;
+                    if (key === "My Content") {
+                        // provided by user
+                        screenshotViewerContent = this.screenshotItems["My Content"];
+                        screenshotViewerContentCount = this.screenshotItemsCount["My Content"];
+                        deleteCallback = async (screenshotItem) => {
+                            if (!screenshotItem) {
+                                return;
+                            }
+
+                            let id = screenshotItem.id;
+
+                            // delete the item with the specified id from the server
+                            let retVal = false;
+
+                            await fetch(`/api/v1.1/ContentManager/attachment/${id}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            }).then(response => {
+                                if (response.ok) {
+                                    retVal = id;
+                                }
+                            });
+
+                            // refetch the user content
+                            await this.#LoadUserContent(1);
+
+                            // re-render the screenshot tab contents
+                            this.RenderScreenshotTabContents("My Content");
+
+                            return retVal;
+                        };
+                    } else {
+                        // provided by metadata provider
+                        screenshotViewerContent = this.screenshotItems[key];
+                        screenshotViewerContentCount = this.screenshotItemsCount[key];
+                    }
+
+                    let screenshotViewer = new ScreenshotViewer(screenshotViewerContent, i, screenshotViewerContentCount, this.#LoadUserContent, closeCallback, deleteCallback);
+                    // screenshotViewer.GoTo();
+                });
+                section.appendChild(previewElement);
+
+                if (imgCount >= 7) {
+                    // add a counter to show how many more images there are
+                    let moreCount = this.screenshotItemsCount[key] - imgCount;
+                    if (moreCount > 0) {
+                        let moreElement = document.createElement('div');
+                        moreElement.classList.add('card-screenshot-item-counter');
+                        moreElement.innerHTML = `+${moreCount}`;
+                        previewElement.appendChild(moreElement);
+                    }
+
+                    break;
+                }
+            };
+
+            this.contentContents.appendChild(section);
+
+            // add event listeners to the tabs
+            tab.addEventListener('click', () => {
+                // hide all content sections
+                this.card.cardBody.querySelectorAll('[data-section]').forEach(t => {
+                    t.classList.remove('card-tab-selected');
+                    const sectionName = t.getAttribute('data-section');
+                    const section = this.card.cardBody.querySelector(`#card-${sectionName}-section`);
+                    if (section) {
+                        section.style.display = 'none';
+                    }
+                });
+                // show the selected content section
+                tab.classList.add('card-tab-selected');
+                const sectionName = tab.getAttribute('data-section');
+                const section = this.card.cardBody.querySelector(`#card-${sectionName}-section`);
+                if (section) {
+                    section.style.display = '';
+                }
+            });
+
+            firstTab = false;
+        }
     }
 }
 
@@ -830,7 +1014,7 @@ class GameCardPlatformItem {
         this.gameObjects.push(gameObject);
     }
 
-    BuildItem() {
+    async BuildItem() {
         // create the platform item
         // the platform item is a two column div - the left column contains the platform logo, the right column contains the game list
         let platformItem = document.createElement('div');
@@ -870,7 +1054,9 @@ class GameCardPlatformItem {
 
         // add the game objects to the game list
         let firstGameItem = true;
-        this.gameObjects.forEach(async element => {
+        for (let i = 0; i < this.gameObjects.length; i++) {
+            const element = this.gameObjects[i];
+            // this.gameObjects.forEach(element => {
             let romItem = null;
 
             let outerGameItem = document.createElement('div');
@@ -949,8 +1135,6 @@ class GameCardPlatformItem {
                 gameItem.appendChild(platformStateManagerButton);
             }
 
-
-
             outerGameItem.appendChild(gameItem);
 
             // create the game item play button
@@ -985,7 +1169,7 @@ class GameCardPlatformItem {
             firstGameItem = false;
 
             gameList.appendChild(outerGameItem);
-        });
+        };
 
         return platformItem;
     }
@@ -1001,10 +1185,61 @@ class GameCardRomList {
         this.Body = document.createElement('div');
         this.Body.classList.add('card-romlist');
 
+        // create a row of tabs for ROMs and Content
+        this.contentTabs = document.createElement('div');
+        this.contentTabs.classList.add('card-romlist-tabs');
+
+        // create the ROMs tab
+        this.romsTab = document.createElement('div');
+        this.romsTab.classList.add('card-tab');
+        this.romsTab.classList.add('card-tab-selected');
+        this.romsTab.id = 'card-romlist-roms-tab';
+        this.romsTab.setAttribute('data-section', 'roms');
+        this.romsTab.innerHTML = 'ROMs';
+        this.contentTabs.appendChild(this.romsTab);
+
+        // create the Content tab
+        this.contentTab = document.createElement('div');
+        this.contentTab.classList.add('card-tab');
+        this.contentTab.id = 'card-romlist-content-tab';
+        this.contentTab.setAttribute('data-section', 'content');
+        this.contentTab.innerHTML = 'Content';
+        this.contentTabs.appendChild(this.contentTab);
+
+        // add event listeners to the tabs
+        this.romListTabs = this.contentTabs.querySelectorAll('[data-section]');
+        this.romListTabs.forEach(t => {
+            t.addEventListener('click', () => {
+                // hide all content sections
+                this.romListTabs.forEach(tab => {
+                    tab.classList.remove('card-tab-selected');
+                    const sectionName = tab.getAttribute('data-section');
+                    const sections = this.Body.querySelectorAll(`.card-romlist-${sectionName}-section`);
+                    if (sections) {
+                        sections.forEach(section => {
+                            section.style.display = 'none';
+                        });
+                    }
+                });
+                // show the selected content section
+                t.classList.add('card-tab-selected');
+                const sectionName = t.getAttribute('data-section');
+                const sections = this.Body.querySelectorAll(`.card-romlist-${sectionName}-section`);
+                if (sections) {
+                    sections.forEach(section => {
+                        section.style.display = '';
+                    });
+                }
+            });
+        });
+
+        this.Body.appendChild(this.contentTabs);
+
         // create the media group container
         this.mediaGroupContainer = document.createElement('div');
         this.mediaGroupContainer.classList.add('card-romlist-group');
         this.mediaGroupContainer.classList.add('card-romlist-group-header');
+        this.mediaGroupContainer.classList.add('card-romlist-roms-section');
         this.Body.appendChild(this.mediaGroupContainer);
         this.Body.style.display = 'none';
         this.LoadMediaGroups();
@@ -1013,12 +1248,14 @@ class GameCardRomList {
         this.romListContainer = document.createElement('div');
         this.romListContainer.classList.add('card-romlist-group');
         this.romListContainer.classList.add('card-romlist-group-header');
+        this.romListContainer.classList.add('card-romlist-roms-section');
         this.Body.appendChild(this.romListContainer);
         this.LoadRoms();
 
         // create the mangement buttons
         this.managementButtons = document.createElement('div');
         this.managementButtons.classList.add('card-romlist-management');
+        this.managementButtons.classList.add('card-romlist-roms-section');
         this.Body.appendChild(this.managementButtons);
 
         // create the edit button
@@ -1147,6 +1384,55 @@ class GameCardRomList {
             this.ShowEmulatorConfigureModal();
         });
         this.managementButtons.appendChild(this.configureEmulatorButton);
+
+        if (userProfile.roles.includes("Admin")) {
+            // create the content container upload buttons
+            this.contentUploadButtons = document.createElement('div');
+            this.contentUploadButtons.classList.add('card-romlist-group');
+            this.contentUploadButtons.classList.add('card-romlist-group-header');
+            this.contentUploadButtons.classList.add('card-romlist-content-section');
+            this.contentUploadButtons.style.display = 'none';
+
+            // upload audio sample button - only show on arcade platforms
+            if (this.gamePlatformObject.id === 52) {
+                this.uploadAudioButton = document.createElement('button');
+                this.uploadAudioButton.classList.add('modal-button');
+                this.uploadAudioButton.classList.add('card-romlist-management-button');
+                this.uploadAudioButton.innerHTML = 'Upload Audio Sample';
+                this.uploadAudioButton.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    let uploadDialog = new ContentUploadDialog(this.gamePlatformObject.metadataMapId, 'AudioSample', this.Refresh.bind(this));
+                    await uploadDialog.open();
+                    this.Refresh();
+                });
+                this.contentUploadButtons.appendChild(this.uploadAudioButton);
+            }
+
+            // upload manual button
+            this.uploadManualButton = document.createElement('button');
+            this.uploadManualButton.classList.add('modal-button');
+            this.uploadManualButton.classList.add('card-romlist-management-button');
+            this.uploadManualButton.innerHTML = 'Upload Manual';
+            this.uploadManualButton.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                let uploadDialog = new ContentUploadDialog(this.gamePlatformObject.metadataMapId, 'GlobalManual', this.Refresh.bind(this));
+                await uploadDialog.open();
+                // this.Refresh();
+            });
+            this.contentUploadButtons.appendChild(this.uploadManualButton);
+        }
+
+        // create the upload content button
+        this.Body.appendChild(this.contentUploadButtons);
+
+        // create the content container
+        this.contentContainer = document.createElement('div');
+        this.contentContainer.classList.add('card-romlist-group');
+        this.contentContainer.classList.add('card-romlist-group-header');
+        this.contentContainer.classList.add('card-romlist-content-section');
+        this.contentContainer.style.display = 'none';
+        this.Body.appendChild(this.contentContainer);
+        this.LoadContent();
     }
 
     SetEditMode(mode) {
@@ -1660,11 +1946,138 @@ class GameCardRomList {
         });
     }
 
+    LoadContent() {
+        // load any additional content
+        console.log('Loading additional content for platform ' + this.gamePlatformObject.name);
+        this.contentContainer.innerHTML = '';
+        fetch(`/api/v1.1/ContentManager/?metadataids=${this.gamePlatformObject.metadataMapId}&contentTypes=AudioSample,GlobalManual&pageSize=50`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json()).then(data => {
+            console.log(data);
+            if (data.totalCount === 0) {
+                let noContentLabel = document.createElement('div');
+                noContentLabel.classList.add('card-romlist-no-content');
+                noContentLabel.innerHTML = 'No additional content available for this ROM.';
+                this.contentContainer.appendChild(noContentLabel);
+            } else {
+                let contentTable = document.createElement('table');
+                contentTable.classList.add('section');
+                contentTable.classList.add('romtable');
+                contentTable.setAttribute('cellspacing', '0');
+                this.contentContainer.appendChild(contentTable);
+
+                let contentTableHeader = document.createElement('tr');
+                contentTableHeader.classList.add('romrow');
+                contentTable.appendChild(contentTableHeader);
+
+                let contentTableHeaderName = document.createElement('th');
+                contentTableHeaderName.classList.add('romcell');
+                contentTableHeaderName.innerHTML = 'Name';
+                contentTableHeader.appendChild(contentTableHeaderName);
+
+                let contentTableHeaderSize = document.createElement('th');
+                contentTableHeaderSize.innerHTML = 'Size';
+                contentTableHeaderSize.classList.add('romcell');
+                contentTableHeader.appendChild(contentTableHeaderSize);
+
+                let contentTableHeaderType = document.createElement('th');
+                contentTableHeaderType.innerHTML = 'Type';
+                contentTableHeaderType.classList.add('romcell');
+                contentTableHeader.appendChild(contentTableHeaderType);
+
+                let contentTableHeaderAction = document.createElement('th');
+                contentTableHeaderAction.innerHTML = '';
+                contentTableHeaderAction.classList.add('romcell');
+                contentTableHeader.appendChild(contentTableHeaderAction);
+
+                data.items.forEach(element => {
+                    let contentTableRow = document.createElement('tr');
+                    contentTableRow.classList.add('romrow');
+                    contentTable.appendChild(contentTableRow);
+
+                    let contentTableName = document.createElement('td');
+                    contentTableName.classList.add('romcell');
+                    contentTableName.innerHTML = element.fileName + element.fileExtension;
+                    contentTableRow.appendChild(contentTableName);
+
+                    let contentTableSize = document.createElement('td');
+                    contentTableSize.classList.add('romcell');
+                    contentTableSize.innerHTML = formatBytes(element.size);
+                    contentTableRow.appendChild(contentTableSize);
+
+                    let contentTableType = document.createElement('td');
+                    contentTableType.classList.add('romcell');
+                    switch (element.contentType) {
+                        case 'AudioSample':
+                            contentTableType.innerHTML = 'Audio Sample';
+                            break;
+                        case 'GlobalManual':
+                            contentTableType.innerHTML = 'Manual';
+                            break;
+                        default:
+                            contentTableType.innerHTML = element.contentType;
+                            break;
+                    }
+                    contentTableRow.appendChild(contentTableType);
+
+                    let contentTableAction = document.createElement('td');
+                    contentTableAction.classList.add('romcell');
+
+                    let contentTableActionDownload = document.createElement('img');
+                    contentTableActionDownload.src = '/images/download.svg';
+                    contentTableActionDownload.classList.add('banner_button_image');
+                    contentTableActionDownload.style.cursor = 'pointer';
+                    contentTableAction.appendChild(contentTableActionDownload);
+
+                    let contentTableActionDelete = document.createElement('img');
+                    contentTableActionDelete.src = '/images/delete.svg';
+                    contentTableActionDelete.classList.add('banner_button_image');
+                    contentTableActionDelete.style.cursor = 'pointer';
+                    contentTableActionDelete.style.marginLeft = '10px';
+                    contentTableAction.appendChild(contentTableActionDelete);
+
+                    contentTableRow.appendChild(contentTableAction);
+
+                    contentTableActionDownload.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        // download and open the content in a new tab
+                        let downloadLink = `/api/v1.1/ContentManager/attachment/${element.attachmentId}/data`;
+                        window.open(downloadLink, '_blank');
+                    });
+
+                    if (userProfile.roles.includes("Admin")) {
+                        contentTableActionDelete.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            // delete the content
+                            fetch(`/api/v1.1/ContentManager/attachment/${element.attachmentId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            }).then(response => {
+                                if (response.status === 200) {
+                                    this.Refresh();
+                                } else {
+                                    console.log('Error deleting content item: ' + response.statusText);
+                                }
+                            });
+                        });
+                    }
+                });
+            }
+        });
+    }
+
     Refresh() {
         this.mediaGroupContainer.innerHTML = '';
         this.romListContainer.innerHTML = '';
+        this.contentContainer.innerHTML = '';
         this.LoadMediaGroups();
         this.LoadRoms();
+        this.LoadContent();
     }
 
     async ShowMetadataMappingModal() {

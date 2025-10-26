@@ -556,7 +556,10 @@ class EmulatorStateManager {
                 if (result.length === 0) {
                     thisObject.statesBox.innerHTML = 'No saved states found.';
                 } else {
-                    result.forEach(async (state) => {
+                    console.log(result);
+                    for (let i = 0; i < result.length; i++) {
+                        let state = result[i];
+
                         let stateBox = document.createElement('div');
                         stateBox.id = 'stateBox_' + state.id;
                         stateBox.className = 'saved_state_box romrow';
@@ -664,7 +667,7 @@ class EmulatorStateManager {
                         stateBox.appendChild(stateMainPanel);
 
                         thisObject.statesBox.appendChild(stateBox);
-                    });
+                    }
                 }
             }
         });
@@ -794,5 +797,69 @@ class ScreenshotDisplay {
                 });
             }
         }
+    }
+}
+
+class ContentUploadDialog {
+    constructor(metadataId, contentType, closeCallback) {
+        this.metadataId = metadataId;
+        this.contentType = contentType;
+        this.closeCallback = closeCallback;
+    }
+
+    async open() {
+        // Create the modal
+        this.dialog = await new Modal("contentupload");
+        await this.dialog.BuildModal();
+
+        // override the dialog size
+        this.dialog.modalElement.style = 'width: 350px; height: 150px; min-width: unset; min-height: unset; max-width: unset; max-height: unset;';
+
+        // setup the dialog
+        this.dialog.modalElement.classList.add('modal-content-upload');
+        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Upload Content";
+        this.panel = this.dialog.modalElement.querySelector('#modal-body');
+        this.panel.setAttribute('style', 'overflow-x: auto; overflow-y: hidden; padding: 20px; position: relative;');
+
+        // setup the upload box
+        this.uploadBox = this.dialog.modalElement.querySelector('#contentUploadBox');
+        this.uploadBox.addEventListener('change', async () => {
+            let file = this.uploadBox.files[0];
+            let formData = new FormData();
+            formData.append('file', file);
+            formData.append('ContentType', this.contentType);
+
+            console.log("Uploading content file");
+
+            let thisObject = this;
+            fetch('/api/v1.1/ContentManager/fileupload/single?metadataid=' + this.metadataId, {
+                method: 'POST',
+                body: formData
+            })
+                .then(response => response.json())
+                .then(async data => {
+                    console.log('Success:', data);
+                    alert("Content uploaded successfully.");
+
+                    if (this.closeCallback) {
+                        this.closeCallback();
+                    }
+
+                    thisObject.dialog.close();
+                })
+                .catch(async error => {
+                    console.error("Error:", error);
+                    alert("Error uploading content: " + error);
+                });
+        });
+
+        // add the buttons
+        let closeButton = new ModalButton("Cancel", 0, this, async function (callingObject) {
+            callingObject.dialog.close();
+        });
+        this.dialog.addButton(closeButton);
+
+        // show the dialog
+        this.dialog.open();
     }
 }

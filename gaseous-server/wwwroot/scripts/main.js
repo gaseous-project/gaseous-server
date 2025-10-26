@@ -842,6 +842,10 @@ class BackgroundImageRotator {
             BgImage.classList.add(this.CustomClass);
         }
         BgImage.style.backgroundImage = "url('" + URL + "')";
+
+        // remove default background colour
+        document.getElementsByTagName('html')[0].removeAttribute('style');
+
         return BgImage;
     }
 
@@ -874,7 +878,9 @@ class BackgroundImageRotator {
         // fade out the current image
         $(bgImage).fadeIn(1000, function () {
             // remove the old image
-            currentImage.remove();
+            if (currentImage) {
+                currentImage.remove();
+            }
         });
 
         // clear the timer

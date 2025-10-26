@@ -73,14 +73,16 @@ class Notification {
 
     Show() {
         if (this.noteId === undefined) {
-            this.noteId = Math.random().toString(36).slice(2, 11);
+            this.noteId = Math.random().toString(36).slice(2, 11).replaceAll('.', '');
         }
 
         // if the notification id already exists, remove all existing notifications with the same ID
-        const existingNotifications = document.querySelectorAll(`.${this.noteId}`);
-        existingNotifications.forEach(notification => {
-            notification.remove();
-        });
+        let existingNotifications = document.querySelectorAll(`.${this.noteId}`);
+        if (existingNotifications.length > 0) {
+            existingNotifications.forEach(notification => {
+                notification.remove();
+            });
+        }
 
         // create the notification box
         this.noteBox = document.createElement('div');

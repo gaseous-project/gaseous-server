@@ -316,7 +316,7 @@
         flex-grow: 1;
         margin-left: 0px;
         height: unset;
-        width: fit-content;
+        width: unset;
     }
 
     .card-romlist-item {
@@ -428,6 +428,51 @@
 
     .card-settings-content-box-smallscreen-invisible {
         display: none;
+    }
+
+    .screenshot-left-arrow,
+    .screenshot-right-arrow {
+        display: none;
+    }
+}
+
+@media screen and (max-width: 749px) and (orientation: portrait),
+screen and (max-height: 699px) and (orientation: landscape) {
+    @media (orientation: portrait) {
+
+        /* portrait-specific overrides for <=749px */
+        .screenshot-info-panel {
+            max-width: 80%;
+        }
+
+        .screenshot-screenshot-container {
+            left: 10px;
+            right: 10px;
+        }
+    }
+
+    @media (orientation: landscape) {
+
+        /* landscape-specific overrides for <=749px */
+        .screenshot-screenshot-container {
+            left: 10px;
+            right: 10px;
+            top: 40px;
+            bottom: 110px;
+        }
+
+        .screenshot-info-panel {
+            bottom: 60px;
+        }
+
+        .screenshot-camera-roll-container {
+            bottom: 10px;
+            height: 45px;
+        }
+
+        .screenshot-camera-roll-container>.screenshot-camera-roll-thumbnail {
+            height: 40px;
+        }
     }
 }
 

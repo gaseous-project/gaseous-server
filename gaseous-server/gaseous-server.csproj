@@ -4,6 +4,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>gaseous_server</RootNamespace>
+    <DebugType>portable</DebugType>
+    <Optimize>false</Optimize>
   <RuntimeIdentifiers>win-x64;linux-x64</RuntimeIdentifiers>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'https' " />
@@ -90,10 +92,7 @@
     </PropertyGroup>
 
     <!-- Publish gaseous-cli with the same key publish properties -->
-    <MSBuild
-      Projects="..\gaseous-cli\gaseous-cli.csproj"
-      Targets="Restore;Publish"
-      Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=$(SelfContained);PublishSingleFile=$(PublishSingleFile);PublishTrimmed=$(PublishTrimmed);PublishDir=$(CliPublishDir)" />
+    <MSBuild Projects="..\gaseous-cli\gaseous-cli.csproj" Targets="Restore;Publish" Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=$(SelfContained);PublishSingleFile=$(PublishSingleFile);PublishTrimmed=$(PublishTrimmed);PublishDir=$(CliPublishDir)" />
 
     <!-- As a fallback, copy the CLI publish output into the server publish dir -->
     <ItemGroup>
@@ -112,10 +111,7 @@
     </PropertyGroup>
 
     <!-- Publish gaseous-configurator with the same key publish properties -->
-    <MSBuild
-      Projects="..\gaseous-configurator\gaseous-configurator.csproj"
-      Targets="Restore;Publish"
-  Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=$(SelfContained);PublishSingleFile=$(PublishSingleFile);PublishTrimmed=$(PublishTrimmed);PublishDir=$(ConfiguratorOwnPublishDir)" />
+    <MSBuild Projects="..\gaseous-configurator\gaseous-configurator.csproj" Targets="Restore;Publish" Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=$(SelfContained);PublishSingleFile=$(PublishSingleFile);PublishTrimmed=$(PublishTrimmed);PublishDir=$(ConfiguratorOwnPublishDir)" />
 
     <!-- As a fallback, copy the configurator publish output into the server publish dir -->
     <ItemGroup>

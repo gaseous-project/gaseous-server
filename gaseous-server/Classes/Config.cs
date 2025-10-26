@@ -702,6 +702,14 @@ namespace gaseous_server.Classes
                     }
                 }
 
+                public string LibraryContentDirectory
+                {
+                    get
+                    {
+                        return Path.Combine(LibraryRootDirectory, "Content");
+                    }
+                }
+
                 public string LibraryTempDirectory
                 {
                     get
@@ -784,6 +792,7 @@ namespace gaseous_server.Classes
                     if (!Directory.Exists(LibraryFirmwareDirectory)) { Directory.CreateDirectory(LibraryFirmwareDirectory); }
                     if (!Directory.Exists(LibraryUploadDirectory)) { Directory.CreateDirectory(LibraryUploadDirectory); }
                     if (!Directory.Exists(LibraryMetadataDirectory)) { Directory.CreateDirectory(LibraryMetadataDirectory); }
+                    if (!Directory.Exists(LibraryContentDirectory)) { Directory.CreateDirectory(LibraryContentDirectory); }
                     if (!Directory.Exists(LibraryTempDirectory)) { Directory.CreateDirectory(LibraryTempDirectory); }
                     if (!Directory.Exists(LibraryCollectionsDirectory)) { Directory.CreateDirectory(LibraryCollectionsDirectory); }
                     if (!Directory.Exists(LibrarySignaturesDirectory)) { Directory.CreateDirectory(LibrarySignaturesDirectory); }

@@ -111,12 +111,12 @@ namespace gaseous_server.Classes
 				dbDict.Add("platformid", PlatformId);
 				dbDict.Add("platformsource", (int)FileSignature.MetadataSources.None);
 			}
-			DataTable romDT = await db.ExecuteCMDAsync(sql, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks));
+			DataTable romDT = await db.ExecuteCMDAsync(sql, dbDict, new DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks));
 
 			if (romDT.Rows.Count > 0)
 			{
 				// set count of roms
-				var rowCountList = await db.ExecuteCMDDictAsync(sqlCount, dbDict, new Database.DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks));
+				var rowCountList = await db.ExecuteCMDDictAsync(sqlCount, dbDict, new DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromMinutes(1).Ticks));
 				Dictionary<string, object> rowCount = rowCountList[0];
 				GameRoms.Count = int.Parse((string)rowCount["RomCount"]);
 
@@ -292,6 +292,24 @@ namespace gaseous_server.Classes
 				}
 			}
 
+#if DEBUG
+			try
+			{
+				Console.WriteLine("romDR dump start ---------------------------");
+				foreach (DataColumn col in romDR.Table.Columns)
+				{
+					object value = romDR[col];
+					string display = value == DBNull.Value ? "NULL" : value.ToString();
+					Console.WriteLine($"{col.ColumnName}: {display}");
+				}
+				Console.WriteLine("romDR dump end -----------------------------");
+			}
+			catch (Exception ex)
+			{
+				Console.WriteLine("Error dumping romDR: " + ex.Message);
+			}
+#endif
+
 			GameRomItem romItem = new GameRomItem
 			{
 				Id = (long)romDR["id"],
@@ -299,7 +317,7 @@ namespace gaseous_server.Classes
 				Platform = (string)romDR["platformname"],
 				MetadataMapId = (long)Common.ReturnValueIfNull(romDR["metadatamapid"], 0),
 				MetadataSource = (FileSignature.MetadataSources)(int)romDR["metadatasource"],
-				GameId = (long)romDR["gameid"],
+				GameId = (long)Common.ReturnValueIfNull(romDR["gameid"], (long)0),
 				Game = (string)Common.ReturnValueIfNull(romDR["gamename"], ""),
 				Name = (string)romDR["name"],
 				Size = (long)romDR["size"],

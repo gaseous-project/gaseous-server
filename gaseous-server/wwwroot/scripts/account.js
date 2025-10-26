@@ -583,12 +583,13 @@ class AccountWindow {
 }
 
 class Avatar {
-    constructor(ProfileId, ElementWidth, ElementHeight, ShowProfileCard = false) {
+    constructor(ProfileId, ElementWidth, ElementHeight, ShowProfileCard = false, ShowName = false) {
         this.ProfileId = ProfileId;
         this.ElementWidth = ElementWidth;
         this.ElementHeight = ElementHeight;
         this.ShowProfileCard = ShowProfileCard;
-        this.Avatar = document.createElement('div');
+        this.ShowName = ShowName;
+        this.Avatar = document.createElement('span');
         const response = this.#FetchProfile(this);
 
         if (this.ShowProfileCard === true) {
@@ -629,17 +630,26 @@ class Avatar {
                 if (profile) {
                     let newAvatarImg;
                     newAvatarImg = document.createElement('div');
+                    newAvatarImg.classList.add('avatar');
                     if (profile.avatar) {
-                        newAvatarImg.style = "background-image: url('/api/v1.1/UserProfile/" + callingObject.ProfileId + "/Avatar/" + profile.avatar.fileName + profile.avatar.extension + "'); background-size: cover; background-position: center; border-radius: 50%; pointer-events: none; height: " + callingObject.ElementHeight + "px; width: " + callingObject.ElementWidth + "px;";
+                        newAvatarImg.classList.add('avatar-image');
+                        newAvatarImg.style = "background-image: url('/api/v1.1/UserProfile/" + callingObject.ProfileId + "/Avatar/" + profile.avatar.fileName + profile.avatar.extension + "'); height: " + callingObject.ElementHeight + "px; width: " + callingObject.ElementWidth + "px;";
                     } else {
+                        newAvatarImg.classList.add('avatar-initials');
                         newAvatarImg.innerHTML = profile.displayName[0].toUpperCase();
                         let backgroundColor = intToRGB(hashCode(profile.displayName));
-                        newAvatarImg.style = "background-color: #" + backgroundColor + "; font-size: 1vmax; display: flex; justify-content: center; align-items: center; border-radius: 50%; pointer-events: none; height: " + callingObject.ElementHeight + "px; width: " + callingObject.ElementWidth + "px;";
+                        newAvatarImg.style = "background-color: #" + backgroundColor + "; height: " + callingObject.ElementHeight + "px; width: " + callingObject.ElementWidth + "px;";
                     }
 
-                    newAvatarImg.classList.add('avatar');
-
                     callingObject.Avatar.appendChild(newAvatarImg);
+
+                    if (callingObject.ShowName === true) {
+                        // create a div to the right of the avatar to show the display name
+                        let NameDiv = document.createElement('div');
+                        NameDiv.classList.add('avatar-name');
+                        NameDiv.innerHTML = profile.displayName;
+                        callingObject.Avatar.appendChild(NameDiv);
+                    }
                 }
             }
         });

@@ -16,6 +16,9 @@ namespace gaseous_server.Models
 {
     public class PlatformMapping
     {
+        // static memory cache for database queries
+        private static MemoryCache DatabaseMemoryCache = new MemoryCache();
+
         /// <summary>
         /// Updates the platform map from the embedded platform map resource
         /// </summary>
@@ -128,6 +131,13 @@ namespace gaseous_server.Models
         {
             get
             {
+                // check the cache first
+                List<PlatformMapItem>? cachedPlatformMap = (List<PlatformMapItem>?)DatabaseMemoryCache.GetCacheObject("PlatformMap");
+                if (cachedPlatformMap != null)
+                {
+                    return cachedPlatformMap;
+                }
+
                 Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
                 string sql = "SELECT * FROM PlatformMap";
                 DataTable data = db.ExecuteCMD(sql);
@@ -171,6 +181,9 @@ namespace gaseous_server.Models
 
                 platformMaps.Sort((x, y) => x.IGDBName.CompareTo(y.IGDBName));
 
+                // add to cache
+                DatabaseMemoryCache.SetCacheObject("PlatformMap", platformMaps, 3600);
+
                 return platformMaps;
             }
         }
@@ -182,6 +195,17 @@ namespace gaseous_server.Models
         /// <returns>The platform map item.</returns>
         public static async Task<PlatformMapItem> GetPlatformMap(long Id)
         {
+            // check the cache first
+            List<PlatformMapItem>? cachedPlatformMap= (List<PlatformMapItem>?)DatabaseMemoryCache.GetCacheObject("PlatformMap");
+            if (cachedPlatformMap != null)
+            {
+                PlatformMapItem? cachedItem = cachedPlatformMap.FirstOrDefault(x => x.IGDBId == Id);
+                if (cachedItem != null)
+                {
+                    return cachedItem;
+                }
+            }
+
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM PlatformMap WHERE Id = @Id";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
@@ -313,7 +337,7 @@ namespace gaseous_server.Models
             }
 
             // clear cache
-            Database.DatabaseMemoryCache.RemoveCacheObject("PlatformMap");
+            DatabaseMemoryCache.ClearCache();
         }
 
         public static async Task WriteAvailableEmulators(PlatformMapItem item)
