@@ -287,6 +287,7 @@ namespace gaseous_server.Controllers.v1_1
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Route("attachment/{attachmentId}/data")]
+        [Route("attachment/{attachmentId}/data/{filename?}")]
         public async Task<ActionResult> GetContentDataAsync(long attachmentId)
         {
             // get user
@@ -300,7 +301,15 @@ namespace gaseous_server.Controllers.v1_1
                 if (contentMeta == null) return NotFound("Content not found");
 
                 // return the raw data
-                Response.Headers["Content-Disposition"] = $"attachment; filename=\"{contentMeta.FileName}{contentMeta.FileExtension}\"";
+                var inlineTypes = new[] { "application/pdf", "image/png", "image/jpeg", "image/gif" };
+                if (inlineTypes.Contains(contentMeta.FileMimeType))
+                {
+                    Response.Headers["Content-Disposition"] = $"inline; filename=\"{contentMeta.FileName}{contentMeta.FileExtension}\"";
+                }
+                else
+                {
+                    Response.Headers["Content-Disposition"] = $"attachment; filename=\"{contentMeta.FileName}{contentMeta.FileExtension}\"";
+                }
                 Response.Headers["Content-Length"] = contentMeta.Size.ToString();
 
                 var content = await GetMetadataItemContentData(attachmentId, user);

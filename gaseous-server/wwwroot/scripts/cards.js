@@ -843,7 +843,6 @@ class GameCard {
             }
             if (data) {
                 this.screenshotItemsCount["My Content"] = data.totalCount;
-                console.log(data);
                 if (data.items.length > 0) {
                     // load content elements
                     data.items.forEach(element => {
@@ -1186,10 +1185,61 @@ class GameCardRomList {
         this.Body = document.createElement('div');
         this.Body.classList.add('card-romlist');
 
+        // create a row of tabs for ROMs and Content
+        this.contentTabs = document.createElement('div');
+        this.contentTabs.classList.add('card-romlist-tabs');
+
+        // create the ROMs tab
+        this.romsTab = document.createElement('div');
+        this.romsTab.classList.add('card-tab');
+        this.romsTab.classList.add('card-tab-selected');
+        this.romsTab.id = 'card-romlist-roms-tab';
+        this.romsTab.setAttribute('data-section', 'roms');
+        this.romsTab.innerHTML = 'ROMs';
+        this.contentTabs.appendChild(this.romsTab);
+
+        // create the Content tab
+        this.contentTab = document.createElement('div');
+        this.contentTab.classList.add('card-tab');
+        this.contentTab.id = 'card-romlist-content-tab';
+        this.contentTab.setAttribute('data-section', 'content');
+        this.contentTab.innerHTML = 'Content';
+        this.contentTabs.appendChild(this.contentTab);
+
+        // add event listeners to the tabs
+        this.romListTabs = this.contentTabs.querySelectorAll('[data-section]');
+        this.romListTabs.forEach(t => {
+            t.addEventListener('click', () => {
+                // hide all content sections
+                this.romListTabs.forEach(tab => {
+                    tab.classList.remove('card-tab-selected');
+                    const sectionName = tab.getAttribute('data-section');
+                    const sections = this.Body.querySelectorAll(`.card-romlist-${sectionName}-section`);
+                    if (sections) {
+                        sections.forEach(section => {
+                            section.style.display = 'none';
+                        });
+                    }
+                });
+                // show the selected content section
+                t.classList.add('card-tab-selected');
+                const sectionName = t.getAttribute('data-section');
+                const sections = this.Body.querySelectorAll(`.card-romlist-${sectionName}-section`);
+                if (sections) {
+                    sections.forEach(section => {
+                        section.style.display = '';
+                    });
+                }
+            });
+        });
+
+        this.Body.appendChild(this.contentTabs);
+
         // create the media group container
         this.mediaGroupContainer = document.createElement('div');
         this.mediaGroupContainer.classList.add('card-romlist-group');
         this.mediaGroupContainer.classList.add('card-romlist-group-header');
+        this.mediaGroupContainer.classList.add('card-romlist-roms-section');
         this.Body.appendChild(this.mediaGroupContainer);
         this.Body.style.display = 'none';
         this.LoadMediaGroups();
@@ -1198,12 +1248,14 @@ class GameCardRomList {
         this.romListContainer = document.createElement('div');
         this.romListContainer.classList.add('card-romlist-group');
         this.romListContainer.classList.add('card-romlist-group-header');
+        this.romListContainer.classList.add('card-romlist-roms-section');
         this.Body.appendChild(this.romListContainer);
         this.LoadRoms();
 
         // create the mangement buttons
         this.managementButtons = document.createElement('div');
         this.managementButtons.classList.add('card-romlist-management');
+        this.managementButtons.classList.add('card-romlist-roms-section');
         this.Body.appendChild(this.managementButtons);
 
         // create the edit button
@@ -1332,6 +1384,55 @@ class GameCardRomList {
             this.ShowEmulatorConfigureModal();
         });
         this.managementButtons.appendChild(this.configureEmulatorButton);
+
+        if (userProfile.roles.includes("Admin")) {
+            // create the content container upload buttons
+            this.contentUploadButtons = document.createElement('div');
+            this.contentUploadButtons.classList.add('card-romlist-group');
+            this.contentUploadButtons.classList.add('card-romlist-group-header');
+            this.contentUploadButtons.classList.add('card-romlist-content-section');
+            this.contentUploadButtons.style.display = 'none';
+
+            // upload audio sample button - only show on arcade platforms
+            if (this.gamePlatformObject.id === 52) {
+                this.uploadAudioButton = document.createElement('button');
+                this.uploadAudioButton.classList.add('modal-button');
+                this.uploadAudioButton.classList.add('card-romlist-management-button');
+                this.uploadAudioButton.innerHTML = 'Upload Audio Sample';
+                this.uploadAudioButton.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    let uploadDialog = new ContentUploadDialog(this.gamePlatformObject.metadataMapId, 'AudioSample', this.Refresh.bind(this));
+                    await uploadDialog.open();
+                    this.Refresh();
+                });
+                this.contentUploadButtons.appendChild(this.uploadAudioButton);
+            }
+
+            // upload manual button
+            this.uploadManualButton = document.createElement('button');
+            this.uploadManualButton.classList.add('modal-button');
+            this.uploadManualButton.classList.add('card-romlist-management-button');
+            this.uploadManualButton.innerHTML = 'Upload Manual';
+            this.uploadManualButton.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                let uploadDialog = new ContentUploadDialog(this.gamePlatformObject.metadataMapId, 'GlobalManual', this.Refresh.bind(this));
+                await uploadDialog.open();
+                // this.Refresh();
+            });
+            this.contentUploadButtons.appendChild(this.uploadManualButton);
+        }
+
+        // create the upload content button
+        this.Body.appendChild(this.contentUploadButtons);
+
+        // create the content container
+        this.contentContainer = document.createElement('div');
+        this.contentContainer.classList.add('card-romlist-group');
+        this.contentContainer.classList.add('card-romlist-group-header');
+        this.contentContainer.classList.add('card-romlist-content-section');
+        this.contentContainer.style.display = 'none';
+        this.Body.appendChild(this.contentContainer);
+        this.LoadContent();
     }
 
     SetEditMode(mode) {
@@ -1845,11 +1946,138 @@ class GameCardRomList {
         });
     }
 
+    LoadContent() {
+        // load any additional content
+        console.log('Loading additional content for platform ' + this.gamePlatformObject.name);
+        this.contentContainer.innerHTML = '';
+        fetch(`/api/v1.1/ContentManager/?metadataids=${this.gamePlatformObject.metadataMapId}&contentTypes=AudioSample,GlobalManual&pageSize=50`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json()).then(data => {
+            console.log(data);
+            if (data.totalCount === 0) {
+                let noContentLabel = document.createElement('div');
+                noContentLabel.classList.add('card-romlist-no-content');
+                noContentLabel.innerHTML = 'No additional content available for this ROM.';
+                this.contentContainer.appendChild(noContentLabel);
+            } else {
+                let contentTable = document.createElement('table');
+                contentTable.classList.add('section');
+                contentTable.classList.add('romtable');
+                contentTable.setAttribute('cellspacing', '0');
+                this.contentContainer.appendChild(contentTable);
+
+                let contentTableHeader = document.createElement('tr');
+                contentTableHeader.classList.add('romrow');
+                contentTable.appendChild(contentTableHeader);
+
+                let contentTableHeaderName = document.createElement('th');
+                contentTableHeaderName.classList.add('romcell');
+                contentTableHeaderName.innerHTML = 'Name';
+                contentTableHeader.appendChild(contentTableHeaderName);
+
+                let contentTableHeaderSize = document.createElement('th');
+                contentTableHeaderSize.innerHTML = 'Size';
+                contentTableHeaderSize.classList.add('romcell');
+                contentTableHeader.appendChild(contentTableHeaderSize);
+
+                let contentTableHeaderType = document.createElement('th');
+                contentTableHeaderType.innerHTML = 'Type';
+                contentTableHeaderType.classList.add('romcell');
+                contentTableHeader.appendChild(contentTableHeaderType);
+
+                let contentTableHeaderAction = document.createElement('th');
+                contentTableHeaderAction.innerHTML = '';
+                contentTableHeaderAction.classList.add('romcell');
+                contentTableHeader.appendChild(contentTableHeaderAction);
+
+                data.items.forEach(element => {
+                    let contentTableRow = document.createElement('tr');
+                    contentTableRow.classList.add('romrow');
+                    contentTable.appendChild(contentTableRow);
+
+                    let contentTableName = document.createElement('td');
+                    contentTableName.classList.add('romcell');
+                    contentTableName.innerHTML = element.fileName + element.fileExtension;
+                    contentTableRow.appendChild(contentTableName);
+
+                    let contentTableSize = document.createElement('td');
+                    contentTableSize.classList.add('romcell');
+                    contentTableSize.innerHTML = formatBytes(element.size);
+                    contentTableRow.appendChild(contentTableSize);
+
+                    let contentTableType = document.createElement('td');
+                    contentTableType.classList.add('romcell');
+                    switch (element.contentType) {
+                        case 'AudioSample':
+                            contentTableType.innerHTML = 'Audio Sample';
+                            break;
+                        case 'GlobalManual':
+                            contentTableType.innerHTML = 'Manual';
+                            break;
+                        default:
+                            contentTableType.innerHTML = element.contentType;
+                            break;
+                    }
+                    contentTableRow.appendChild(contentTableType);
+
+                    let contentTableAction = document.createElement('td');
+                    contentTableAction.classList.add('romcell');
+
+                    let contentTableActionDownload = document.createElement('img');
+                    contentTableActionDownload.src = '/images/download.svg';
+                    contentTableActionDownload.classList.add('banner_button_image');
+                    contentTableActionDownload.style.cursor = 'pointer';
+                    contentTableAction.appendChild(contentTableActionDownload);
+
+                    let contentTableActionDelete = document.createElement('img');
+                    contentTableActionDelete.src = '/images/delete.svg';
+                    contentTableActionDelete.classList.add('banner_button_image');
+                    contentTableActionDelete.style.cursor = 'pointer';
+                    contentTableActionDelete.style.marginLeft = '10px';
+                    contentTableAction.appendChild(contentTableActionDelete);
+
+                    contentTableRow.appendChild(contentTableAction);
+
+                    contentTableActionDownload.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        // download and open the content in a new tab
+                        let downloadLink = `/api/v1.1/ContentManager/attachment/${element.attachmentId}/data`;
+                        window.open(downloadLink, '_blank');
+                    });
+
+                    if (userProfile.roles.includes("Admin")) {
+                        contentTableActionDelete.addEventListener('click', async (e) => {
+                            e.stopPropagation();
+                            // delete the content
+                            fetch(`/api/v1.1/ContentManager/attachment/${element.attachmentId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'Content-Type': 'application/json'
+                                }
+                            }).then(response => {
+                                if (response.status === 200) {
+                                    this.Refresh();
+                                } else {
+                                    console.log('Error deleting content item: ' + response.statusText);
+                                }
+                            });
+                        });
+                    }
+                });
+            }
+        });
+    }
+
     Refresh() {
         this.mediaGroupContainer.innerHTML = '';
         this.romListContainer.innerHTML = '';
+        this.contentContainer.innerHTML = '';
         this.LoadMediaGroups();
         this.LoadRoms();
+        this.LoadContent();
     }
 
     async ShowMetadataMappingModal() {

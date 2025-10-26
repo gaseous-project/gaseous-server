@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using gaseous_server.Models;
 using System.Diagnostics;
 using System.Globalization;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace gaseous_server.Classes.Content
 {
@@ -151,26 +152,15 @@ namespace gaseous_server.Classes.Content
             // get user roles if user is provided
             string userId = "";
             List<string> userRoles = new List<string>();
-            if (user == null && contentModel.ContentType != ContentType.GlobalManual)
+            if (user == null)
             {
-                throw new InvalidOperationException("User must be provided for non-global manual content types.");
+                throw new InvalidOperationException("User must be provided.");
             }
-            else if (user == null && contentModel.ContentType == ContentType.GlobalManual)
-            {
-                // Global manuals can be added without a user, but only by Admins
-                userId = SystemUserId;
-                userRoles.Add(RoleAdmin);
-            }
-            else if (user == null)
-            {
-                throw new InvalidOperationException("User must be provided for non-global manual content types.");
-            }
-            else
-            {
-                var userStore = new Authentication.UserStore();
-                userRoles = (await userStore.GetRolesAsync(user, new CancellationToken())).ToList();
-                userId = user.Id;
-            }
+
+            // get user roles
+            var userStore = new Authentication.UserStore();
+            userRoles = (await userStore.GetRolesAsync(user, new CancellationToken())).ToList();
+            userId = user.Id;
 
             // validate content type is allowed
             if (!IsContentTypeUploadable(contentModel.ContentType, platformId, userRoles))
@@ -188,6 +178,17 @@ namespace gaseous_server.Classes.Content
             catch (Exception ex)
             {
                 throw new InvalidOperationException("Content validation failed: " + ex.Message, ex);
+            }
+
+            var contentTypeConfig = ContentConfigurations[contentType];
+            if (!contentTypeConfig.IsUserManaged)
+            {
+                // if content is system managed, only allow Admin users to upload
+                if (!userRoles.Contains(RoleAdmin))
+                {
+                    throw new InvalidOperationException("Only Admin users can upload system managed content.");
+                }
+                userId = SystemUserId; // set userId to System for system managed content
             }
 
             // save file to disk
