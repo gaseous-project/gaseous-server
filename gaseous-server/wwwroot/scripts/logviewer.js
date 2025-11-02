@@ -268,8 +268,6 @@ class LogViewer {
     }
 
     ExecuteSearch() {
-        console.log(this.model);
-
         fetch('/api/v1.1/Logs', {
             method: 'POST',
             headers: {
@@ -278,7 +276,6 @@ class LogViewer {
             body: JSON.stringify(this.model)
         }).then(response => response.json())
             .then(data => {
-                console.log(data);
                 for (const logEntry of data) {
                     if (this.model.StartIndex === undefined || this.model.PageNumber === 1) {
                         this.model.StartIndex = logEntry.id;
