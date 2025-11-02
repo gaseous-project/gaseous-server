@@ -177,7 +177,7 @@
                     await pageUnloadCallbacks[currentPage]();
                     console.log(`${currentPage} page cleanup completed`);
                 } catch (error) {
-                    console.error(`Error during ${currentPage} page cleanup:`, error);
+                    console.error('Error during %s page cleanup:', currentPage, error);
                 }
             }
 
