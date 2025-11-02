@@ -99,6 +99,14 @@ namespace gaseous_server
                     subTask.RemoveWhenStopped = RemoveWhenCompleted;
                     SubTasks.Add(subTask);
 
+                    Logging.Log(Logging.LogType.Information, "Queue Item", "Added subtask " + TaskName + " of type " + TaskType.ToString() + " with correlation id " + correlationId.ToString(), null, false, new Dictionary<string, object>
+                    {
+                        { "ParentQueueItem", _ItemType.ToString() },
+                        { "SubTaskType", TaskType.ToString() },
+                        { "SubTaskName", TaskName },
+                        { "SubTaskCorrelationId", correlationId.ToString() }
+                    });
+
                     return correlationId;
                 }
                 else
