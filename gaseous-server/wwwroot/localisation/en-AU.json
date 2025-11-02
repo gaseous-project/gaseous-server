@@ -1,0 +1,10 @@
+{
+    "name": "English (Australia)",
+    "nativeName": "English (Australia)",
+    "code": "en-AU",
+    "pluralRule": "n != 1",
+    "direction": "ltr",
+    "strings": {
+        "gaseous_subtitle": "The Retro Game Emulator Server, Mate"
+    }
+}

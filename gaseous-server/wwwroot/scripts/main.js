@@ -1,6 +1,4 @@
-﻿var locale = window.navigator.userLanguage || window.navigator.language;
-console.log(locale);
-moment.locale(locale);
+﻿// moment.locale(lang.locale);
 
 // clear logo provider preference order
 var logoProviders = ["ScreenScraper", "TheGamesDb"];

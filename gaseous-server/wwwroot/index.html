@@ -29,6 +29,7 @@
         let scriptLinks = [
             "/scripts/filtering.js",
             "/scripts/rendergames.js",
+            "/scripts/language.js",
             "/scripts/main.js",
             "/scripts/simpleUpload.min.js",
             "/scripts/qrcode.min.js",
@@ -82,6 +83,9 @@
         let backgroundImageHandler = undefined;
         let currentPage = null;
         let pageUnloadCallbacks = {};
+
+        // load language files
+        window.lang = undefined; // placeholder for lang object
 
         // Enhanced LoadPageContent function with proper unloading for SPA behavior
         async function LoadPageContent(page, targetDiv) {
@@ -290,6 +294,7 @@
                         // get version information
                         let versionFile = await response.json();
                         AppVersion = versionFile.AppVersion;
+                        localStorage.setItem('System.AppVersion', AppVersion);
                         DBSchemaVersion = versionFile.DBSchemaVersion;
                         FirstRunStatus = versionFile.FirstRunStatus;
                         emulatorDebugMode = versionFile.emulatorDebugMode;
@@ -343,6 +348,11 @@
                         console.log("Starting Gaseous");
                         console.log("App Version: " + AppVersion);
                         console.log("First Run Status: " + FirstRunStatus);
+
+                        // initialize language if not already done
+                        if (!window.lang) { window.lang = new language(); }
+                        await window.lang.Init(true);
+
                         switch (FirstRunStatus) {
                             case 0:
                             case "0":

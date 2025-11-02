@@ -1,0 +1,11 @@
+{
+    "name": "English",
+    "nativeName": "English",
+    "code": "en",
+    "pluralRule": "n != 1",
+    "direction": "ltr",
+    "strings": {
+        "gaseous_title": "Gaseous",
+        "gaseous_subtitle": "The Retro Game Emulator Server"
+    }
+}
