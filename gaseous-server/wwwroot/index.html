@@ -36,6 +36,7 @@
             "/scripts/cards.js",
             "/scripts/usermgmt.js",
             "/scripts/platforms.js",
+            "/scripts/logviewer.js",
             "/scripts/emulatorconfig.js",
             "/scripts/preferences.js",
             "/scripts/account.js",
@@ -79,10 +80,18 @@
         let supportedMetadataSources = [];
 
         let backgroundImageHandler = undefined;
+        let currentPage = null;
+        let pageUnloadCallbacks = {};
 
+        // Enhanced LoadPageContent function with proper unloading for SPA behavior
         async function LoadPageContent(page, targetDiv) {
             if (targetDiv == undefined || targetDiv == null || targetDiv == '') {
                 targetDiv = 'content';
+            }
+
+            // For home/library pages, implement proper SPA page unloading
+            if (['home', 'library'].includes(page) && targetDiv === 'content') {
+                await unloadCurrentPage();
             }
 
             // load page content
@@ -90,15 +99,187 @@
             let pageContentContent = await pageContentResponse.text();
             document.getElementById(targetDiv).innerHTML = pageContentContent;
 
-            // load page script
-            let pageScriptLink = '/pages/' + page + '.js';
-            let script = document.createElement('script');
-            script.type = 'text/javascript';
-            script.src = pageScriptLink + '?v=' + AppVersion;
-            script.async = false;
-            document.head.appendChild(script);
+            // Store current page for tracking
+            if (targetDiv === 'content') {
+                currentPage = page;
+            }
 
-            backgroundImageHandler = new BackgroundImageRotator();
+            // For SPA pages, load script differently to avoid variable conflicts
+            if (['home', 'library'].includes(page) && targetDiv === 'content') {
+                // Load script content and execute in a way that avoids global variable conflicts
+                let pageScriptResponse = await fetch('/pages/' + page + '.js' + '?v=' + AppVersion);
+                let pageScriptContent = await pageScriptResponse.text();
+
+                // Wrap the script content to avoid global variable conflicts
+                let wrappedScript = `
+                (function() {
+                    // Clear any existing page variables to avoid conflicts
+                    if (typeof coverURLList !== 'undefined') {
+                        delete window.coverURLList;
+                    }
+                    if (typeof filter !== 'undefined') {
+                        delete window.filter;
+                    }
+                    if (typeof gameRows !== 'undefined') {
+                        delete window.gameRows;
+                    }
+                    if (typeof scrollTimer !== 'undefined') {
+                        delete window.scrollTimer;
+                    }
+                    if (typeof loadedPages !== 'undefined') {
+                        delete window.loadedPages;
+                    }
+                    if (typeof backgroundImageHandler !== 'undefined') {
+                        // Stop any background image rotation timer
+                        if (backgroundImageHandler && backgroundImageHandler.RotationTimer) {
+                            clearInterval(backgroundImageHandler.RotationTimer);
+                        }
+                        delete window.backgroundImageHandler;
+                    }
+                    
+                    // Execute the page script
+                    ${pageScriptContent}
+                })();
+                `;
+
+                // Create and execute the script
+                let script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.text = wrappedScript;
+                document.head.appendChild(script);
+
+                // Remove the script element after execution
+                document.head.removeChild(script);
+            } else {
+                // Standard script loading for non-SPA pages
+                let pageScriptLink = '/pages/' + page + '.js';
+                let script = document.createElement('script');
+                script.type = 'text/javascript';
+                script.src = pageScriptLink + '?v=' + AppVersion;
+                script.async = false;
+                document.head.appendChild(script);
+            }
+
+            // Note: backgroundImageHandler is initialized by individual pages as needed
+        }
+
+        // Function to unload current page with proper cleanup
+        async function unloadCurrentPage() {
+            if (!currentPage || !['home', 'library'].includes(currentPage)) {
+                return;
+            }
+
+            console.log(`Unloading page: ${currentPage}`);
+
+            // Call page-specific unload callback if it exists
+            if (pageUnloadCallbacks[currentPage] && typeof pageUnloadCallbacks[currentPage] === 'function') {
+                try {
+                    await pageUnloadCallbacks[currentPage]();
+                    console.log(`${currentPage} page cleanup completed`);
+                } catch (error) {
+                    console.error('Error during %s page cleanup:', currentPage, error);
+                }
+            }
+
+            // General cleanup for all pages
+            await performGeneralCleanup();
+        }
+
+        // General cleanup function
+        async function performGeneralCleanup() {
+            // Clear intervals and timeouts that might be running
+            const highestTimeoutId = setTimeout(() => { }, 0);
+            for (let i = 0; i < highestTimeoutId; i++) {
+                clearTimeout(i);
+            }
+
+            const highestIntervalId = setInterval(() => { }, 0);
+            for (let i = 0; i < highestIntervalId; i++) {
+                clearInterval(i);
+            }
+
+            // Clear event listeners on elements that might have been added dynamically
+            const contentDiv = document.getElementById('content');
+            if (contentDiv) {
+                // Remove all event listeners by cloning and replacing the element
+                const newContentDiv = contentDiv.cloneNode(true);
+                contentDiv.parentNode.replaceChild(newContentDiv, contentDiv);
+            }
+
+            // Clear any jQuery lazy loading instances
+            if (typeof $.fn.lazy !== 'undefined') {
+                try {
+                    $('.lazy').each(function () {
+                        if ($(this).data('plugin_lazy')) {
+                            $(this).lazy('destroy');
+                        }
+                    });
+                } catch (error) {
+                    console.warn('Error cleaning up lazy loading:', error);
+                }
+            }
+
+            // Clear any select2 instances
+            if (typeof $.fn.select2 !== 'undefined') {
+                try {
+                    $('.select2-hidden-accessible').select2('destroy');
+                } catch (error) {
+                    console.warn('Error cleaning up select2 instances:', error);
+                }
+            }
+
+            // Clear page-specific global variables
+            if (typeof window.coverURLList !== 'undefined') {
+                window.coverURLList = [];
+            }
+            if (typeof window.filter !== 'undefined') {
+                window.filter = null;
+            }
+            if (typeof window.gameRows !== 'undefined') {
+                window.gameRows = [];
+            }
+            if (typeof window.scrollTimer !== 'undefined') {
+                if (window.scrollTimer) {
+                    clearTimeout(window.scrollTimer);
+                }
+                window.scrollTimer = null;
+            }
+            if (typeof window.loadedPages !== 'undefined') {
+                window.loadedPages = [];
+            }
+            if (typeof window.backgroundImageHandler !== 'undefined') {
+                // Stop any background image rotation timer
+                if (window.backgroundImageHandler && window.backgroundImageHandler.RotationTimer) {
+                    clearInterval(window.backgroundImageHandler.RotationTimer);
+                }
+                window.backgroundImageHandler = undefined;
+            }
+
+            // Force garbage collection hint (if available)
+            if (window.gc) {
+                window.gc();
+            }
+        }
+
+        // Function for pages to register their cleanup callbacks
+        function registerPageUnloadCallback(pageName, callback) {
+            pageUnloadCallbacks[pageName] = callback;
+        }
+
+        // Enhanced navigation function for SPA behavior
+        async function navigateToPage(page) {
+            if (['home', 'library'].includes(page) && ['home', 'library'].includes(currentPage)) {
+                // SPA navigation between home and library
+                console.log(`SPA navigation from ${currentPage} to ${page}`);
+                await LoadPageContent(page, 'content');
+
+                // Update URL without page reload
+                const newUrl = `/index.html?page=${page}`;
+                window.history.pushState({ page: page }, '', newUrl);
+            } else {
+                // Standard navigation for other pages
+                window.location.href = `/index.html?page=${page}`;
+            }
         }
 
         async function startApp() {
@@ -210,6 +391,11 @@
                                                     console.log("Loading page: " + pageSelection);
                                                     await LoadPageContent(pageSelection, 'content');
 
+                                                    // Set initial state for browser navigation
+                                                    if (['home', 'library'].includes(pageSelection)) {
+                                                        window.history.replaceState({ page: pageSelection }, '', window.location.href);
+                                                    }
+
                                                     // restore any open game cards
                                                     if (['home', 'library'].includes(pageSelection)) {
                                                         let gameCard = sessionStorage.getItem('Card.game.Id');
@@ -242,6 +428,20 @@
                                                             if (modalBackgrounds.length > 0) {
                                                                 let modalBackground = modalBackgrounds[modalBackgrounds.length - 1];
                                                                 modalBackground.parentNode.removeChild(modalBackground);
+                                                            }
+                                                        }
+                                                    });
+
+                                                    // Add browser back/forward navigation support for SPA
+                                                    window.addEventListener('popstate', async (event) => {
+                                                        if (event.state && event.state.page) {
+                                                            console.log('Browser navigation to:', event.state.page);
+                                                            await LoadPageContent(event.state.page, 'content');
+                                                        } else {
+                                                            // Fallback to query string if no state
+                                                            let pageFromUrl = getQueryString('page', 'string');
+                                                            if (pageFromUrl && ['home', 'library'].includes(pageFromUrl)) {
+                                                                await LoadPageContent(pageFromUrl, 'content');
                                                             }
                                                         }
                                                     });

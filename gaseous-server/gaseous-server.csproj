@@ -21,10 +21,10 @@
   <ItemGroup>
     <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.0" />
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="8.1.0" />
-    <PackageReference Include="gaseous-signature-parser" Version="2.4.2" />
+    <PackageReference Include="gaseous-signature-parser" Version="2.4.4" />
     <PackageReference Include="gaseous.IGDB" Version="1.0.5" />
     <PackageReference Include="hasheous-client" Version="1.4.2" />
-    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.9.0" />
+    <PackageReference Include="Magick.NET-Q8-AnyCPU" Version="14.9.1" />
     <PackageReference Include="sharpcompress" Version="0.41.0" />
     <PackageReference Include="Squid-Box.SevenZipSharp" Version="1.6.2.24" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.6" />
@@ -70,7 +70,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Microsoft.Build" Version="17.10.46" />
+    <PackageReference Include="Microsoft.Build" Version="17.11.48" />
     <EmbeddedResource Include="Support\PlatformMap.json" Condition="'$(ExcludeConfigFilesFromBuildOutput)'!='true'">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>

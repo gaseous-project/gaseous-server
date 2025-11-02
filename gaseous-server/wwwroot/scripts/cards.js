@@ -2451,6 +2451,12 @@ class SettingsCard {
                 "Admin"
             ]
         },
+        "/logs": {
+            name: "Logs",
+            roles: [
+                "Admin"
+            ]
+        },
         "/about": {
             name: "About"
         }
@@ -2559,7 +2565,7 @@ class SettingsCard {
         }
     }
 
-    async SwitchPage(pagePath, initialLoad = false) {
+    async SwitchPage(pagePath, initialLoad = false, model = null) {
         // split the page path to get the page name - page name to load is the last part of the path
         let pagePathParts = pagePath.split('/');
         let page = pagePathParts[pagePathParts.length - 1];
@@ -2686,6 +2692,22 @@ class SettingsCard {
                 case 'firmware':
                     let bios = new BiosTable(this.body.querySelector('#table_firmware'));
                     await bios.loadBios();
+                    break;
+
+                case 'logs':
+                    if (model) {
+                        this.LoadLogs(
+                            model.information,
+                            model.warning,
+                            model.critical,
+                            model.startDateTime,
+                            model.endDateTime,
+                            model.searchText,
+                            model.correlationId
+                        );
+                    } else {
+                        this.LoadLogs();
+                    }
                     break;
 
                 case 'about':
@@ -3300,7 +3322,19 @@ class SettingsCard {
 
                             case 'correlationId':
                                 if (userProfile.roles && userProfile.roles.includes("Admin") && task.correlationId) {
-                                    cell.innerHTML = `<img id="logLink" class="banner_button_image" src="/images/log.svg" onclick="window.location.href='/index.html?page=settings&sub=logs&correlationid=${task.correlationId}'" title="Logs" style="cursor: pointer;">`;
+                                    cell.innerHTML = '';
+                                    const logLinkImg = document.createElement('img');
+                                    logLinkImg.id = 'logLink';
+                                    logLinkImg.className = 'banner_button_image';
+                                    logLinkImg.src = '/images/log.svg';
+                                    logLinkImg.title = 'Logs';
+                                    logLinkImg.alt = 'Logs';
+                                    logLinkImg.style.cursor = 'pointer';
+                                    logLinkImg.addEventListener('click', () => {
+                                        // window.location.href = `/index.html?page=settings&sub=logs&correlationid=${task.correlationId}`;
+                                        this.SwitchPage('/logs', null, { correlationId: task.correlationId });
+                                    });
+                                    cell.appendChild(logLinkImg);
                                 } else {
                                     cell.innerHTML = '';
                                 }
@@ -4267,5 +4301,12 @@ class SettingsCard {
                 warningDialog.open();
             });
         }
+    }
+
+    LoadLogs(information = null, warning = null, critical = null, startDateTime = null, endDateTime = null, searchText = null, correlationId = null) {
+        let logViewer = new LogViewer(information, warning, critical, startDateTime, endDateTime, searchText, correlationId);
+        let logsBody = this.card.cardBody.querySelector('#logsbody');
+        logsBody.innerHTML = '';
+        logsBody.appendChild(logViewer.Render());
     }
 }

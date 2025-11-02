@@ -162,6 +162,17 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
+                // check if endpoint is non-expiring
+                List<string> NonExpiringEndpoints = new List<string>
+                {
+                    "Artwork", "ClearLogo", "CompanyLogo", "Cover", "Genre", "GameType", "GameVideo", "Genre", "Keyword", "Language", "MultiplayerMode", "PlatformLogo", "PlayerPerspective", "Region", "Theme"
+                };
+                if (NonExpiringEndpoints.Contains(Endpoint))
+                {
+                    return CacheStatus.Current;
+                }
+
+                // check last updated time
                 DateTime CacheExpiryTime = DateTime.UtcNow.AddHours(-168);
                 if ((DateTime)dt.Rows[0]["lastUpdated"] < CacheExpiryTime)
                 {

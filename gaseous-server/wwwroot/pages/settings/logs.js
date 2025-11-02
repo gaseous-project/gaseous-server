@@ -1,5 +1,5 @@
 let lastStartIndex = 0;
-let currentPage = 1;
+let logsCurrentPage = 1;
 let searchModel = {};
 
 function initLogs() {
@@ -27,14 +27,14 @@ function loadLogs(StartIndex, PageNumber) {
     let model = {}
 
     if (StartIndex && PageNumber) {
-        currentPage += 1;
+        logsCurrentPage += 1;
 
         // get saved search model
         model = searchModel;
         model.StartIndex = StartIndex;
         model.PageNumber = PageNumber;
     } else {
-        currentPage = 1;
+        logsCurrentPage = 1;
 
         // create search model
         let statusList = [];
@@ -64,6 +64,7 @@ function loadLogs(StartIndex, PageNumber) {
             "SearchText": searchText,
             "CorrelationId": correlationId
         }
+        console.log(model);
         searchModel = model;
     }
 
@@ -72,7 +73,7 @@ function loadLogs(StartIndex, PageNumber) {
         'POST',
         function (result) {
             let newTable = document.getElementById('settings_events_table');
-            if (currentPage == 1) {
+            if (logsCurrentPage == 1) {
                 newTable.innerHTML = '';
 
                 newTable.appendChild(
