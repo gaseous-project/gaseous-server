@@ -449,6 +449,14 @@ screen and (max-height: 699px) and (orientation: landscape) {
             left: 10px;
             right: 10px;
         }
+
+        .emulator_pausemask-image {
+            width: 50%;
+        }
+
+        .emulator_pausemask-pausedlabel {
+            width: 90%;
+        }
     }
 
     @media (orientation: landscape) {
