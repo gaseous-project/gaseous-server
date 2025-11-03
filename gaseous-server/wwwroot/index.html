@@ -29,7 +29,6 @@
         let scriptLinks = [
             "/scripts/filtering.js",
             "/scripts/rendergames.js",
-            "/scripts/language.js",
             "/scripts/main.js",
             "/scripts/simpleUpload.min.js",
             "/scripts/qrcode.min.js",
@@ -344,14 +343,16 @@
                             await new Promise(r => setTimeout(r, 100));
                         } while (typeof getQueryString !== "function");
 
+                        // Initialize language module
+                        const { default: Language } = await import('/scripts/language.js?v=' + AppVersion);
+                        window.lang = new Language();
+                        await window.lang.Init(true);
+                        moment.locale(window.lang.locale);
+
                         // start the application
                         console.log("Starting Gaseous");
                         console.log("App Version: " + AppVersion);
                         console.log("First Run Status: " + FirstRunStatus);
-
-                        // initialize language if not already done
-                        if (!window.lang) { window.lang = new language(); }
-                        await window.lang.Init(true);
 
                         switch (FirstRunStatus) {
                             case 0:

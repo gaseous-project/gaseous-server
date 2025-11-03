@@ -1,0 +1,10 @@
+{
+    "name": "English (American English)",
+    "nativeName": "English (American English)",
+    "code": "en-US",
+    "pluralRule": "n != 1",
+    "direction": "ltr",
+    "strings": {
+        
+    }
+}

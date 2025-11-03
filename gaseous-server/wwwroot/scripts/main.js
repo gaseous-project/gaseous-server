@@ -1,6 +1,4 @@
-﻿// moment.locale(lang.locale);
-
-// clear logo provider preference order
+﻿// clear logo provider preference order
 var logoProviders = ["ScreenScraper", "TheGamesDb"];
 
 function ajaxCall(endpoint, method, successFunction, errorFunction, body) {

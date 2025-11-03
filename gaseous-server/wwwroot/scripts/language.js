@@ -117,13 +117,13 @@ class language {
 
     translateAllElements() {
         document.querySelectorAll("[data-i18n]").forEach(elem => {
-            let key = elem.getAttribute("data-i18n");
+            let key = elem.dataset.i18n;
             elem.innerHTML = this.translate(key);
         });
     }
 
     translateElement(elem) {
-        let key = elem.getAttribute("data-i18n");
+        let key = elem.dataset.i18n;
         elem.innerHTML = this.translate(key);
     }
 
@@ -133,3 +133,6 @@ class language {
         localStorage.setItem(`Language.MissingTranslation.${this.locale}.${key}`, key);
     }
 }
+
+// Export the class as the default export
+export default language;
