@@ -116,6 +116,19 @@ namespace gaseous_server.Classes
             }
         }
 
+        public static string LocalisationPath
+        {
+            get
+            {
+                string localisationPath = Path.Combine(ConfigurationPath, "Localisation");
+                if (!Directory.Exists(localisationPath))
+                {
+                    Directory.CreateDirectory(localisationPath);
+                }
+                return localisationPath;
+            }
+        }
+
         public static string LogFilePath
         {
             get
