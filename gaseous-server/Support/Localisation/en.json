@@ -4,9 +4,9 @@
     "code": "en",
     "pluralRule": "n != 1",
     "direction": "ltr",
-    "type": "base",
+    "type": "Base",
     "strings": {
-        "gaseous_title": "Gaseous",
-        "gaseous_subtitle": "The Retro Game Emulator Server"
-    }
+        "gaseous_title": "Gaseous"
+    },
+    "serverstrings": {}
 }

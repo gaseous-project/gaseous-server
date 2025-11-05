@@ -5,6 +5,9 @@ using gaseous_server.Models;
 
 namespace gaseous_server.Controllers.v1_1
 {
+    /// <summary>
+    /// API controller providing localisation (language/locale) resources and handling overlay inheritance of locale files.
+    /// </summary>
     [Route("api/v{version:apiVersion}/[controller]")]
     [ApiVersion("1.1")]
     [ApiController]
@@ -33,96 +36,20 @@ namespace gaseous_server.Controllers.v1_1
                 return BadRequest("Locale cannot be empty");
             }
 
-            // create the language path
-            string langPath = Path.Combine(Config.LocalisationPath, locale + ".json");
-
-            // check if the file exists
-            if (!System.IO.File.Exists(langPath))
+            // sanitise the input locale
+            string sanitisedLocale = Localisation.SanitiseLocale(locale);
+            if (string.IsNullOrEmpty(sanitisedLocale))
             {
-                // try to extract from resources
-                try
-                {
-                    langPath = await ExtractLocaleFromResourceAsync(locale);
-                }
-                catch (FileNotFoundException)
-                {
-                    return NotFound("Locale file not found: " + locale);
-                }
+                throw new ArgumentException("Invalid locale", nameof(locale));
             }
 
-            // read the file asynchronously
-            string langJson = await System.IO.File.ReadAllTextAsync(langPath);
-            LocaleFileModel langFile = Newtonsoft.Json.JsonConvert.DeserializeObject<LocaleFileModel>(langJson)!;
-
-            if (langFile.Type == LocaleFileModel.LocaleFileType.Overlay)
+            LocaleFileModel localeFile = Localisation.GetLanguageFile(locale);
+            if (localeFile == null)
             {
-                // load the base language file
-                string baseLangPath = Path.Combine(Config.LocalisationPath, langFile.ParentLanguage + ".json");
-
-                // check if the file exists
-                if (!System.IO.File.Exists(baseLangPath))
-                {
-                    // try to extract from resources
-                    try
-                    {
-                        baseLangPath = await ExtractLocaleFromResourceAsync(langFile.ParentLanguage);
-                    }
-                    catch (FileNotFoundException)
-                    {
-                        return NotFound("Locale file not found: " + locale);
-                    }
-                }
-
-                if (System.IO.File.Exists(baseLangPath))
-                {
-                    string baseLangJson = await System.IO.File.ReadAllTextAsync(baseLangPath);
-                    LocaleFileModel baseLangFile = Newtonsoft.Json.JsonConvert.DeserializeObject<LocaleFileModel>(baseLangJson)!;
-
-                    // merge base strings with overlay strings
-                    if (baseLangFile.Strings != null)
-                    {
-                        foreach (var kvp in baseLangFile.Strings)
-                        {
-                            // only add the base string if it doesn't exist in the overlay
-                            if (langFile.Strings == null || !langFile.Strings.ContainsKey(kvp.Key))
-                            {
-                                langFile.Strings ??= new Dictionary<string, string>();
-                                langFile.Strings[kvp.Key] = kvp.Value;
-                            }
-                        }
-                    }
-                }
+                return NotFound("Locale file not found");
             }
 
-            return Ok(langFile);
-        }
-        
-        /// <summary>
-        /// Extracts the locale file from embedded resources to the localisation directory if it exists.
-        /// </summary>
-        /// <param name="locale">The language or locale such as 'en' or 'en-US'. Note: this is assumed to have been sanitised upstream.</param>
-        /// <returns>The full path to the extracted locale file</returns>
-        private static async Task<string> ExtractLocaleFromResourceAsync(string locale)
-        {
-            // extract the language file from app resources if it exists there
-            string langPath = Path.Combine(Config.LocalisationPath, locale + ".json");
-            string resourceName = "gaseous_server.Support.Localisation." + locale + ".json";
-            using (var stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
-            {
-                if (stream != null)
-                {
-                    using (var reader = new StreamReader(stream))
-                    {
-                        string resourceContent = await reader.ReadToEndAsync();
-                        await System.IO.File.WriteAllTextAsync(langPath, resourceContent);
-                    }
-                } else
-                {
-                    throw new FileNotFoundException("Locale resource not found: " + resourceName);
-                }
-            }
-
-            return langPath;
+            return Ok(localeFile);
         }
     }
 }

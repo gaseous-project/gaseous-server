@@ -4,8 +4,7 @@
     "code": "en-US",
     "pluralRule": "n != 1",
     "direction": "ltr",
-    "type": "overlay",
-    "strings": {
-        
-    }
+    "type": "Overlay",
+    "strings": {},
+    "serverstrings": {}
 }

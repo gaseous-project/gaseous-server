@@ -1,5 +1,34 @@
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
+
 namespace gaseous_server.Models
 {
+    /// <summary>
+    /// Represents a locale item containing display names, code, and internal status for localization management.
+    /// </summary>
+    public class LocaleFileItem
+    {
+        /// <summary>
+        /// Gets or sets the English display name for the locale item.
+        /// </summary>
+        public string? Name { get; set; }
+
+        /// <summary>
+        /// Gets or sets the native (localized) display name for the locale item.
+        /// </summary>
+        public string? NativeName { get; set; }
+
+        /// <summary>
+        /// Gets or sets the locale code (e.g., "en-US", "fr-FR") for this item.
+        /// </summary>
+        public string? Code { get; set; }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this locale item is internal-only.
+        /// </summary>
+        public bool IsInternal { get; set; }
+    }
+
     /// <summary>
     /// Represents a locale file model containing localization data and metadata for internationalization support.
     /// </summary>
@@ -56,6 +85,13 @@ namespace gaseous_server.Models
         /// Gets or sets a dictionary containing key-value pairs of localized strings.
         /// </summary>
         public Dictionary<string, string>? Strings { get; set; }
+
+        /// <summary>
+        /// Gets or sets a dictionary containing server-specific localized strings. Used for localization on the server side in system logs and messages. Note: this is independent of client-facing strings, and only used for logging server messages.
+        /// </summary>
+        [System.Text.Json.Serialization.JsonIgnore]
+        [Newtonsoft.Json.JsonIgnore]
+        public Dictionary<string, string>? ServerStrings { get; set; }
 
         /// <summary>
         /// Defines the types of locale files available in the system.

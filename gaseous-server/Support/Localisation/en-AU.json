@@ -4,8 +4,7 @@
     "code": "en-AU",
     "pluralRule": "n != 1",
     "direction": "ltr",
-    "type": "overlay",
-    "strings": {
-        "gaseous_subtitle": "The Retro Game Emulator Server, Mate"
-    }
+    "type": "Overlay",
+    "strings": {},
+    "serverstrings": {}
 }
