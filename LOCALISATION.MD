@@ -1,6 +1,6 @@
 # Localisation in gaseous-server
 
-The gaseous-server provides an extensible localisation (internationalisation) system that supports base language files, overlay locale variants, server-only strings and pluralisation.
+The gaseous-server provides an extensible localisation (internationalisation) system that supports base language files, overlay locale variants, server-only strings and pluralisation (including multi-category forms: one, few, many, other).
 
 ## Locale File Overview
 
@@ -62,16 +62,25 @@ Localisation.Translate("gaseous_title");
 Localisation.Translate("game.count.other", new[]{ count.ToString() });
 ```
 
-Plural-aware translation (after plural support update):
+Plural-aware translation (multi-category support enabled):
 ```csharp
 Localisation.TranslatePlural("game.count", count, new[]{ count.ToString() });
 ```
-This method resolves to either `game.count.one` or `game.count.other` based on the locale's plural rule expression.
+This method resolves to `game.count.<category>` where `<category>` may be one, few, many, or other depending on configured rules (falling back to legacy one/other when advanced rules are absent).
 
 ## Pluralisation Model
-The `pluralRule` field defines a boolean expression evaluated against the variable `n` (the absolute numeric count). If the expression evaluates to `true`, the plural form "other" is chosen; if `false`, the singular form "one" is chosen.
+Pluralisation can be configured in two ways:
 
-Typical English rule:
+1. Legacy binary form using `pluralRule` (boolean expression over `n`).
+  - If expression evaluates to `true` -> use `other` variant.
+  - If expression evaluates to `false` -> use `one` variant.
+2. Advanced multi-category form using `pluralRules` (a JSON object mapping category to expression).
+  - Categories currently supported: `one`, `few`, `many`, `other`.
+  - Each expression is evaluated; the first category in priority order that returns `true` is selected.
+  - Evaluation priority order: one, few, many, other.
+  - If no category matches, legacy fallback logic is applied (or `other`).
+
+Typical English binary rule:
 ```
 n != 1
 ```
@@ -90,9 +99,14 @@ If an expression cannot be parsed or evaluated safely, the fallback is:
 - Otherwise plural
 
 ### Key Naming Convention for Plurals
-Provide two keys under `strings` for pluralisable messages:
+Legacy (binary): Provide two keys under `strings` for pluralisable messages:
 - `<base>.one`
 - `<base>.other`
+
+Advanced multi-category (optional additional keys):
+- `<base>.few`
+- `<base>.many`
+- `<base>.other` (always recommended)
 
 Example:
 ```json
@@ -100,15 +114,27 @@ Example:
 "user.count.other": "{0} users"
 ```
 
-If either variant is missing:
-- Falls back to the existing variant.
-- If none exist, returns the base key (`user.count`).
+Fallback order when resolving plural forms:
+1. Matched category key (e.g. `<base>.few`).
+2. Other category keys in order: one, few, many, other (excluding matched).
+3. Base key `<base>` if present.
+4. Return the resolved category key string (as a last resort) so caller can see missing translation.
 
 ### Adding a New Locale
 1. Create `xx.json` for the language (Base) with required metadata and strings.
 2. (Optional) Create `xx-YY.json` (Overlay) for region-specific adjustments.
-3. Ensure `pluralRule` matches the language's plural logic (simplified to two forms for now).
-4. Restart the server (locale loaded at startup).
+3. For binary pluralisation add `pluralRule` (e.g. `"pluralRule": "n != 1"`).
+4. For multi-category pluralisation add `pluralRules` object, e.g.:
+```json
+"pluralRules": {
+  "one": "n == 1",
+  "few": "n >= 2 && n <= 4",
+  "many": "n >= 5",
+  "other": "n == 0"
+}
+```
+5. Provide matching key variants in `strings`.
+6. Restart the server (locale loaded at startup).
 
 ### Server Strings (`serverstrings`)
 These are internal-only localisation values (ignored in API responses) intended for logs or diagnostics.
@@ -133,13 +159,13 @@ message = Localisation.TranslatePlural("game.count", count, new[]{ count.ToStrin
 2. Plural variant missing -> fallback to other variant.
 3. Base and variants missing -> return original key.
 
-## Extending Plural Support
-To support more than two plural forms (e.g., `zero`, `few`, `many`):
-- Adopt CLDR plural classifications.
-- Store rule set mapping from category to boolean expression.
-- Lookup keys like `<base>.few`.
+## Extending Plural Support Further
+The current advanced implementation can be extended by adding more categories (e.g. zero) simply by:
+1. Adding expressions for the new category in `pluralRules`.
+2. Adding `<base>.zero` key in the locale file.
+3. Updating evaluation order in code if priority needed.
 
-This is out of scope for current implementation but the design can evolve incrementally.
+For full CLDR compliance you could map categories directly from CLDR rules into expressions and maintain their standard evaluation order.
 
 ---
 Generated documentation for plural rule and localisation architecture.

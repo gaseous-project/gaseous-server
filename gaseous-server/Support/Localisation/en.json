@@ -3,10 +3,20 @@
     "nativeName": "English",
     "code": "en",
     "pluralRule": "n != 1",
+    "pluralRules": {
+        "one": "n == 1",
+        "few": "n >= 2 && n <= 4",
+        "many": "n >= 5",
+        "other": "n == 0"
+    },
     "direction": "ltr",
     "type": "Base",
     "strings": {
-        "gaseous_title": "Gaseous"
+        "gaseous_title": "Gaseous",
+        "game.count.one": "{0} game",
+        "game.count.few": "{0} games",
+        "game.count.many": "{0} games",
+        "game.count.other": "{0} games"
     },
     "serverstrings": {}
 }

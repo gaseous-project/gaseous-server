@@ -87,15 +87,15 @@ namespace gaseous_server.Classes
         /// <summary>
         /// Translates a localisation key with pluralisation support based on a numeric count.
         /// </summary>
-    /// <param name="baseKey">The base localisation key without the .one/.other suffix.</param>
-    /// <param name="count">The numeric count used to decide plural form.</param>
-    /// <param name="args">Optional formatting arguments applied via string.Format.</param>
-    /// <returns>The translated pluralised string, or a fallback if not found.</returns>
-    /// <remarks>
-    /// Uses the locale's PluralRule expression (boolean over n) to select between baseKey.one and baseKey.other.
-    /// If PluralRule evaluation returns false then singular (one) is chosen; if true, plural (other) is chosen.
-    /// Falls back gracefully through: requested variant, alternate variant, baseKey, then returns the resolved variant key name.
-    /// </remarks>
+        /// <param name="baseKey">The base localisation key without the .one/.other suffix.</param>
+        /// <param name="count">The numeric count used to decide plural form.</param>
+        /// <param name="args">Optional formatting arguments applied via string.Format.</param>
+        /// <returns>The translated pluralised string, or a fallback if not found.</returns>
+        /// <remarks>
+        /// Uses the locale's PluralRule expression (boolean over n) to select between baseKey.one and baseKey.other.
+        /// If PluralRule evaluation returns false then singular (one) is chosen; if true, plural (other) is chosen.
+        /// Falls back gracefully through: requested variant, alternate variant, baseKey, then returns the resolved variant key name.
+        /// </remarks>
         public static string TranslatePlural(string baseKey, long count, string[]? args = null)
         {
             // ensure locale loaded
@@ -109,26 +109,55 @@ namespace gaseous_server.Classes
                 return baseKey; // nothing loaded
             }
 
-            // Determine plural variant using PluralRule
-            string rule = localeFile.PluralRule ?? "n != 1"; // default English behaviour
-            bool isPlural = EvaluatePluralRule(rule, count);
-            string desiredKey = isPlural ? baseKey + ".other" : baseKey + ".one";
-            string altKey = isPlural ? baseKey + ".one" : baseKey + ".other";
+            string? resolvedKey = null;
+
+            // Advanced plural rules: evaluate categories in priority order
+            if (localeFile.PluralRules != null && localeFile.PluralRules.Count > 0)
+            {
+                // Define evaluation order; user may supply subset.
+                string[] order = new[] { "one", "few", "many", "other" };
+                var matchedCategory = order.FirstOrDefault(cat => localeFile.PluralRules.ContainsKey(cat) && EvaluatePluralRule(localeFile.PluralRules[cat], count));
+                if (matchedCategory != null)
+                {
+                    resolvedKey = baseKey + "." + matchedCategory;
+                }
+            }
+
+            // Legacy binary rule fallback if no category matched or no advanced rules
+            if (resolvedKey == null)
+            {
+                string rule = localeFile.PluralRule ?? "n != 1"; // default behaviour
+                bool isPlural = EvaluatePluralRule(rule, count);
+                resolvedKey = isPlural ? baseKey + ".other" : baseKey + ".one";
+            }
+
+            // Attempt retrieval; build fallback chain of alternative categories
+            List<string> fallbackKeys = new List<string>();
+            fallbackKeys.Add(resolvedKey);
+
+            // Add other plural forms for fallback (excluding already added)
+            string[] allCats = { "one", "few", "many", "other" };
+            foreach (var cat in allCats)
+            {
+                string k = baseKey + "." + cat;
+                if (!fallbackKeys.Contains(k)) fallbackKeys.Add(k);
+            }
+            // baseKey itself
+            fallbackKeys.Add(baseKey);
 
             string? value = null;
-            if (!localeFile.Strings.TryGetValue(desiredKey, out value))
+            foreach (var k in fallbackKeys)
             {
-                // try alternate variant
-                if (!localeFile.Strings.TryGetValue(altKey, out value))
+                if (localeFile.Strings.TryGetValue(k, out value))
                 {
-                    // try base key
-                    localeFile.Strings.TryGetValue(baseKey, out value);
+                    resolvedKey = k;
+                    break;
                 }
             }
 
             if (value == null)
             {
-                return desiredKey; // final fallback: return the resolved key string
+                return resolvedKey ?? baseKey; // final fallback: category key name or baseKey
             }
 
             if (args != null && args.Length > 0)
@@ -139,8 +168,7 @@ namespace gaseous_server.Classes
                 }
                 catch (FormatException)
                 {
-                    // if formatting fails, return unformatted value
-                    return value;
+                    return value; // return unformatted
                 }
             }
 
@@ -174,7 +202,7 @@ namespace gaseous_server.Classes
         private static List<string> TokenizeExpression(string expr)
         {
             var tokens = new List<string>();
-            for (int i = 0; i < expr.Length; )
+            for (int i = 0; i < expr.Length;)
             {
                 char c = expr[i];
                 if (char.IsWhiteSpace(c)) { i++; continue; }
