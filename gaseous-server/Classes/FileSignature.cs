@@ -20,7 +20,7 @@ namespace gaseous_server.Classes
     {
         public async Task<Signatures_Games> GetFileSignatureAsync(GameLibrary.LibraryItem library, HashObject hash, FileInfo fi, string GameFileImportPath)
         {
-            Logging.Log(Logging.LogType.Information, "Get Signature", "Getting signature for file: " + GameFileImportPath);
+            Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.getting_signature_for_file", null, new string[] { GameFileImportPath });
             gaseous_server.Models.Signatures_Games discoveredSignature = new gaseous_server.Models.Signatures_Games();
             discoveredSignature = await _GetFileSignatureAsync(hash, fi.Name, fi.Extension, fi.Length, GameFileImportPath, false);
 
@@ -33,21 +33,21 @@ namespace gaseous_server.Classes
                 // extract the zip file and search the contents
 
                 string ExtractPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, library.Id.ToString(), Path.GetRandomFileName());
-                Logging.Log(Logging.LogType.Information, "Get Signature", "Decompressing " + GameFileImportPath + " to " + ExtractPath + " examine contents");
+                Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.decompressing_file_to_path", null, new string[] { GameFileImportPath, ExtractPath });
                 if (!Directory.Exists(ExtractPath)) { Directory.CreateDirectory(ExtractPath); }
                 try
                 {
                     switch (ImportedFileExtension)
                     {
                         case ".zip":
-                            Logging.Log(Logging.LogType.Information, "Get Signature", "Decompressing using zip");
+                            Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.decompressing_using_zip");
                             try
                             {
                                 using (var archive = SharpCompress.Archives.Zip.ZipArchive.Open(GameFileImportPath))
                                 {
                                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                                     {
-                                        Logging.Log(Logging.LogType.Information, "Get Signature", "Extracting file: " + entry.Key);
+                                        Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.extracting_file", null, new string[] { entry.Key });
                                         entry.WriteToDirectory(ExtractPath, new ExtractionOptions()
                                         {
                                             ExtractFullPath = true,
@@ -58,20 +58,20 @@ namespace gaseous_server.Classes
                             }
                             catch (Exception zipEx)
                             {
-                                Logging.Log(Logging.LogType.Warning, "Get Signature", "Unzip error", zipEx);
+                                Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.unzip_error", null, null, zipEx);
                                 throw;
                             }
                             break;
 
                         case ".rar":
-                            Logging.Log(Logging.LogType.Information, "Get Signature", "Decompressing using rar");
+                            Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.decompressing_using_rar");
                             try
                             {
                                 using (var archive = RarArchive.Open(GameFileImportPath))
                                 {
                                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                                     {
-                                        Logging.Log(Logging.LogType.Information, "Get Signature", "Extracting file: " + entry.Key);
+                                        Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.extracting_file", null, new string[] { entry.Key });
                                         entry.WriteToDirectory(ExtractPath, new ExtractionOptions()
                                         {
                                             ExtractFullPath = true,
@@ -82,20 +82,20 @@ namespace gaseous_server.Classes
                             }
                             catch (Exception zipEx)
                             {
-                                Logging.Log(Logging.LogType.Warning, "Get Signature", "Unrar error", zipEx);
+                                Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.unrar_error", null, null, zipEx);
                                 throw;
                             }
                             break;
 
                         case ".7z":
-                            Logging.Log(Logging.LogType.Information, "Get Signature", "Decompressing using 7z");
+                            Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.decompressing_using_7z");
                             try
                             {
                                 using (var archive = SharpCompress.Archives.SevenZip.SevenZipArchive.Open(GameFileImportPath))
                                 {
                                     foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                                     {
-                                        Logging.Log(Logging.LogType.Information, "Get Signature", "Extracting file: " + entry.Key);
+                                        Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.extracting_file", null, new string[] { entry.Key });
                                         entry.WriteToDirectory(ExtractPath, new ExtractionOptions()
                                         {
                                             ExtractFullPath = true,
@@ -106,13 +106,13 @@ namespace gaseous_server.Classes
                             }
                             catch (Exception zipEx)
                             {
-                                Logging.Log(Logging.LogType.Warning, "Get Signature", "7z error", zipEx);
+                                Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.sevenzip_error", null, null, zipEx);
                                 throw;
                             }
                             break;
                     }
 
-                    Logging.Log(Logging.LogType.Information, "Get Signature", "Processing decompressed files for signature matches");
+                    Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.processing_decompressed_files_for_signature_matches");
                     // loop through contents until we find the first signature match
                     List<ArchiveData> archiveFiles = new List<ArchiveData>();
                     bool signatureFound = false;
@@ -125,7 +125,7 @@ namespace gaseous_server.Classes
                             FileInfo zfi = new FileInfo(file);
                             HashObject zhash = new HashObject(file);
 
-                            Logging.Log(Logging.LogType.Information, "Get Signature", "Checking signature of decompressed file " + file);
+                            Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.checking_signature_of_decompressed_file", null, new string[] { file });
 
                             if (zfi != null)
                             {
@@ -187,7 +187,7 @@ namespace gaseous_server.Classes
                 }
                 catch (Exception ex)
                 {
-                    Logging.Log(Logging.LogType.Critical, "Get Signature", "Error processing compressed file: " + GameFileImportPath, ex);
+                    Logging.LogKey(Logging.LogType.Critical, "process.get_signature", "getsignature.error_processing_compressed_file", null, new string[] { GameFileImportPath }, ex);
                 }
             }
 
@@ -204,13 +204,17 @@ namespace gaseous_server.Classes
             else
             {
                 determinedPlatform = await Metadata.Platforms.GetPlatform((long)library.DefaultPlatformId);
-                discoveredSignature.MetadataSources.AddPlatform((long)determinedPlatform.Id, determinedPlatform.Name, FileSignature.MetadataSources.None);
+                if (determinedPlatform != null && determinedPlatform.Id.HasValue)
+                {
+                    discoveredSignature.MetadataSources.AddPlatform((long)determinedPlatform.Id, determinedPlatform.Name ?? "Unknown Platform", FileSignature.MetadataSources.None);
+                }
             }
 
             // get discovered game
             if (discoveredSignature.Flags.GameId == 0)
             {
-                discoveredSignature.MetadataSources.AddGame(0, discoveredSignature.Game.Name, FileSignature.MetadataSources.None);
+                string gameName = discoveredSignature.Game?.Name ?? "Unknown Game";
+                discoveredSignature.MetadataSources.AddGame(0, gameName, FileSignature.MetadataSources.None);
             }
 
             return discoveredSignature;
@@ -218,7 +222,7 @@ namespace gaseous_server.Classes
 
         private async Task<Signatures_Games> _GetFileSignatureAsync(HashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath, bool IsInZip)
         {
-            Logging.Log(Logging.LogType.Information, "Import Game", "Checking signature for file: " + GameFileImportPath + "\nMD5 hash: " + hash.md5hash + "\nSHA1 hash: " + hash.sha1hash + "\nSHA256 hash: " + hash.sha256hash + "\nCRC32 hash: " + hash.crc32hash);
+            Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.checking_signature_for_file", null, new string[] { GameFileImportPath, hash.md5hash, hash.sha1hash, hash.sha256hash, hash.crc32hash });
 
 
             gaseous_server.Models.Signatures_Games? discoveredSignature = null;
@@ -227,26 +231,26 @@ namespace gaseous_server.Classes
             switch (Config.MetadataConfiguration.SignatureSource)
             {
                 case HasheousClient.Models.MetadataModel.SignatureSources.LocalOnly:
-                    Logging.Log(Logging.LogType.Information, "Import Game", "Hasheous disabled - searching local database only");
+                    Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.hasheous_disabled_searching_local_only");
 
                     discoveredSignature = await _GetFileSignatureFromDatabase(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
 
                     break;
 
                 case HasheousClient.Models.MetadataModel.SignatureSources.Hasheous:
-                    Logging.Log(Logging.LogType.Information, "Import Game", "Hasheous enabled - searching Hashesous and then local database if not found");
+                    Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.hasheous_enabled_searching_remote_then_local");
 
                     discoveredSignature = await _GetFileSignatureFromHasheous(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
 
                     if (discoveredSignature == null)
                     {
-                        Logging.Log(Logging.LogType.Information, "Import Game", "Signature not found in Hasheous - checking local database");
+                        Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.signature_not_found_remote_checking_local");
 
                         discoveredSignature = await _GetFileSignatureFromDatabase(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
                     }
                     else
                     {
-                        Logging.Log(Logging.LogType.Information, "Import Game", "Signature retrieved from Hasheous for game: " + discoveredSignature.Game.Name);
+                        Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.signature_retrieved_remote_for_game", null, new string[] { discoveredSignature.Game.Name });
                     }
                     break;
 
@@ -255,17 +259,27 @@ namespace gaseous_server.Classes
             if (discoveredSignature == null)
             {
                 // construct a signature from file data
-                Logging.Log(Logging.LogType.Information, "Import Game", "Signature not found in local database or Hasheous (if enabled) - generating from file data");
+                Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.signature_not_found_generating_from_file_data");
 
                 discoveredSignature = await _GetFileSignatureFromFileData(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
 
-                Logging.Log(Logging.LogType.Information, "Import Game", "Signature generated from provided file for game: " + discoveredSignature.Game.Name);
+                Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.signature_generated_for_game", null, new string[] { discoveredSignature.Game.Name });
             }
 
             gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, ImageExtension, false);
 
-            Logging.Log(Logging.LogType.Information, "Import Game", "  Determined import file as: " + discoveredSignature.Game.Name + " (" + discoveredSignature.Game.Year + ") " + discoveredSignature.Game.System);
-            Logging.Log(Logging.LogType.Information, "Import Game", "  Platform determined to be: " + discoveredSignature.Flags.PlatformName + " (" + discoveredSignature.Flags.PlatformId + ")");
+            string gameNameArg = discoveredSignature.Game?.Name ?? "";
+            int parsedYear = 0;
+            if (!string.IsNullOrWhiteSpace(discoveredSignature.Game?.Year))
+            {
+                int.TryParse(discoveredSignature.Game.Year, out parsedYear);
+            }
+            string gameYearArg = parsedYear.ToString();
+            string gameSystemArg = discoveredSignature.Game?.System ?? "";
+            Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.determined_import_file_as", null, new string[] { gameNameArg, gameYearArg, gameSystemArg });
+            string platformNameArg = discoveredSignature.Flags?.PlatformName ?? "";
+            string platformIdArg = (discoveredSignature.Flags?.PlatformId ?? 0).ToString();
+            Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.platform_determined_to_be", null, new string[] { platformNameArg, platformIdArg });
 
             return discoveredSignature;
         }
@@ -275,7 +289,7 @@ namespace gaseous_server.Classes
             // check 1: do we have a signature for it?
             gaseous_server.Classes.SignatureManagement sc = new SignatureManagement();
 
-            Logging.Log(Logging.LogType.Information, "Get Signature", "Checking local database for: " + hash.sha256hash);
+            Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.checking_local_database_for_hash", null, new string[] { hash.sha256hash });
 
             List<gaseous_server.Models.Signatures_Games> signatures = await sc.GetSignature(hash);
 
@@ -347,7 +361,7 @@ namespace gaseous_server.Classes
                         FileInfo cacheFile = new FileInfo(cacheFilePath);
                         if (cacheFile.LastWriteTimeUtc > DateTime.UtcNow.AddDays(-30))
                         {
-                            Logging.Log(Logging.LogType.Information, "Get Signature", "Using cached signature from Hasheous");
+                            Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.using_cached_signature_from_hasheous");
                             HasheousResult = Newtonsoft.Json.JsonConvert.DeserializeObject<HasheousClient.Models.LookupItemModel>(await File.ReadAllTextAsync(cacheFilePath));
                         }
                     }
@@ -376,23 +390,23 @@ namespace gaseous_server.Classes
                     {
                         if (ex.Message.Contains("404"))
                         {
-                            Logging.Log(Logging.LogType.Information, "Get Signature", "No signature found in Hasheous");
+                            Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.no_signature_found_in_hasheous");
                         }
                         else if (ex.Message.Contains("403"))
                         {
-                            Logging.Log(Logging.LogType.Warning, "Get Signature", "Hasheous API key is invalid or expired - using cached signature");
+                            Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.hasheous_api_key_invalid_or_expired_using_cached_signature");
                         }
                         else
                         {
 
                             if (File.Exists(cacheFilePath))
                             {
-                                Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous - using cached signature", ex);
+                                Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.error_retrieving_signature_from_hasheous_using_cached_signature", null, null, ex);
                                 HasheousResult = Newtonsoft.Json.JsonConvert.DeserializeObject<HasheousClient.Models.LookupItemModel>(await File.ReadAllTextAsync(cacheFilePath));
                             }
                             else
                             {
-                                Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous", ex);
+                                Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.error_retrieving_signature_from_hasheous", null, null, ex);
                             }
                         }
                     }
@@ -533,24 +547,24 @@ namespace gaseous_server.Classes
                         {
                             if (ex.Message.Contains("404 (Not Found)"))
                             {
-                                Logging.Log(Logging.LogType.Information, "Get Signature", "No signature found in Hasheous");
+                                Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.no_signature_found_in_hasheous");
                             }
                             else
                             {
-                                Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous", ex);
+                                Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.error_retrieving_signature_from_hasheous", null, null, ex);
                                 throw;
                             }
                         }
                         else
                         {
-                            Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous", ex);
+                            Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.error_retrieving_signature_from_hasheous", null, null, ex);
                             throw;
                         }
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logging.Log(Logging.LogType.Warning, "Get Signature", "Error retrieving signature from Hasheous", ex);
+                    Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.error_retrieving_signature_from_hasheous", null, null, ex);
                 }
             }
 

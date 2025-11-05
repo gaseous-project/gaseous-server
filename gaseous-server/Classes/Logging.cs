@@ -74,6 +74,7 @@ namespace gaseous_server.Classes
         /// <param name="ExceptionValue">Optional exception whose details are recorded.</param>
         /// <param name="LogToDiskOnly">If true, bypass non-disk sinks even if enabled globally.</param>
         /// <param name="AdditionalData">Optional structured key/value metadata captured with the log.</param>
+        [Obsolete("Use LogKey(processKey, messageKey, ...) for localized logging. This method will be removed in a future release.")]
         static public void Log(LogType EventType, string ServerProcess, string Message, Exception? ExceptionValue = null, bool LogToDiskOnly = false, Dictionary<string, object>? AdditionalData = null)
         {
             LogItem logItem = new LogItem
@@ -87,6 +88,46 @@ namespace gaseous_server.Classes
             };
 
             _ = Task.Run(() => WriteLogAsync(logItem, LogToDiskOnly));
+        }
+
+        /// <summary>
+        /// Adds a log entry using localisation keys for process and message, translating internally.
+        /// Prefer this overload for new code instead of performing Localisation.Translate at call sites.
+        /// </summary>
+        /// <param name="eventType">Severity / classification of the log entry.</param>
+        /// <param name="processKey">Localisation key for the logical process/component (server strings).</param>
+        /// <param name="messageKey">Localisation key for the log message (server strings).</param>
+        /// <param name="processArgs">Optional formatting arguments for process translation.</param>
+        /// <param name="messageArgs">Optional formatting arguments for message translation.</param>
+        /// <param name="exceptionValue">Optional exception to record.</param>
+        /// <param name="logToDiskOnly">If true, bypass non-disk sinks.</param>
+        /// <param name="additionalData">Optional structured metadata.</param>
+        public static void LogKey(LogType eventType, string processKey, string messageKey, string[]? processArgs = null, string[]? messageArgs = null, Exception? exceptionValue = null, bool logToDiskOnly = false, Dictionary<string, object>? additionalData = null)
+        {
+            string resolvedProcess = SafeTranslate(processKey, processArgs);
+            string resolvedMessage = SafeTranslate(messageKey, messageArgs);
+            // Internal call to legacy Log retained for sink consolidation; suppression prevents warning spam.
+#pragma warning disable CS0618
+            Log(eventType, resolvedProcess, resolvedMessage, exceptionValue, logToDiskOnly, additionalData);
+#pragma warning restore CS0618
+        }
+
+        /// <summary>
+        /// Safely translates a localisation key (server strings) with optional formatting arguments.
+        /// Returns the key itself if translation fails or key not found.
+        /// </summary>
+        private static string SafeTranslate(string key, string[]? args)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(key)) return "";
+                string value = Localisation.Translate(key, args, true);
+                return value ?? key;
+            }
+            catch
+            {
+                return key; // fallback to key literal
+            }
         }
 
         /// <summary>

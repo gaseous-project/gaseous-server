@@ -24,14 +24,13 @@ namespace gaseous_server
             try
             {
                 Logging.WriteToDiskOnly = true;
-                var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "";
-                Logging.Log(Logging.LogType.Information, "Startup", Localisation.Translate("startup.starting_server", new[]{ version }));
+                Logging.LogKey(Logging.LogType.Information, "process.startup", "startup.starting_server", null, new string[] { Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "" });
 
                 // Wait for DB online
                 var db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionStringNoDatabase);
                 while (!stoppingToken.IsCancellationRequested)
                 {
-                    Logging.Log(Logging.LogType.Information, "Startup", Localisation.Translate("startup.waiting_for_database"));
+                    Logging.LogKey(Logging.LogType.Information, "process.startup", "startup.waiting_for_database");
                     if (db.TestConnection()) break;
                     await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
                 }
@@ -109,7 +108,7 @@ namespace gaseous_server
                 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.TempCleanup));
 
                 Logging.WriteToDiskOnly = false;
-                Logging.Log(Logging.LogType.Information, "Startup", Localisation.Translate("startup.initialization_complete"));
+                Logging.LogKey(Logging.LogType.Information, "process.startup", "startup.initialization_complete");
             }
             catch (OperationCanceledException)
             {
@@ -117,7 +116,7 @@ namespace gaseous_server
             }
             catch (Exception ex)
             {
-                Logging.Log(Logging.LogType.Critical, "Startup", Localisation.Translate("startup.initialization_failed"), ex);
+                Logging.LogKey(Logging.LogType.Critical, "process.startup", "startup.initialization_failed", null, null, ex);
             }
         }
     }

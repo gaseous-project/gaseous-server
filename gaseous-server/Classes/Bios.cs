@@ -26,7 +26,7 @@ namespace gaseous_server.Classes
                     if (biosItem.hash == Hash.md5hash)
                     {
                         string biosPath = Path.Combine(Config.LibraryConfiguration.LibraryFirmwareDirectory, biosItem.hash + ".bios");
-                        Logging.Log(Logging.LogType.Information, "Import BIOS File", "  " + FilePath + " is a BIOS file - moving to " + biosPath);
+                        Logging.LogKey(Logging.LogType.Information, "process.import_bios_file", "importbiosfile.is_a_bios_file_moving_to", null, new string[] { FilePath, biosPath });
 
                         File.Move(FilePath, biosItem.biosPath, true);
 

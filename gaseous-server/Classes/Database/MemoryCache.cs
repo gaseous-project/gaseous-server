@@ -171,12 +171,12 @@ namespace gaseous_server.Classes
                 {
                     _lastStatsLogTick = now;
                     var stats = GetStats();
-                    Logging.Log(Logging.LogType.Information, LogCategory, $"Stats: Items={stats.ItemCount}/{(stats.MaxSize == 0 ? (object)"inf" : stats.MaxSize)} Hits={stats.Hits} Misses={stats.Misses} HitRate={stats.HitRate:P2} Evictions={stats.Evictions} (Exp={stats.ExpirationEvictions}, Size={stats.SizeEvictions}) Requests={stats.Requests}");
+                    Logging.LogKey(Logging.LogType.Information, "process.cache", "cache.stats", null, new[] { stats.ItemCount.ToString(), (stats.MaxSize == 0 ? "inf" : stats.MaxSize.ToString()), stats.Hits.ToString(), stats.Misses.ToString(), stats.HitRate.ToString("P2"), stats.Evictions.ToString(), stats.ExpirationEvictions.ToString(), stats.SizeEvictions.ToString(), stats.Requests.ToString() });
                 }
             }
             catch (Exception ex)
             {
-                Logging.Log(Logging.LogType.Debug, LogCategory, "Error while logging cache statistics", ex);
+                Logging.LogKey(Logging.LogType.Debug, "process.cache", "cache.error_logging_cache_statistics", null, null, ex);
             }
         }
 
@@ -284,7 +284,7 @@ namespace gaseous_server.Classes
             }
             catch (Exception ex)
             {
-                Logging.Log(Logging.LogType.Debug, "Cache", "Error while setting cache object", ex);
+                Logging.LogKey(Logging.LogType.Debug, "process.cache", "cache.error_setting_cache_object", null, null, ex);
                 ClearCache();
             }
         }
@@ -381,7 +381,7 @@ namespace gaseous_server.Classes
             }
             catch (Exception ex)
             {
-                Logging.Log(Logging.LogType.Debug, "Cache", "Error while clearing expired cache", ex);
+                Logging.LogKey(Logging.LogType.Debug, "process.cache", "cache.error_clearing_expired_cache", null, null, ex);
             }
         }
 

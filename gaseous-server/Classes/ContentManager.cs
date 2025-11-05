@@ -298,12 +298,12 @@ namespace gaseous_server.Classes.Content
                             }
                             else
                             {
-                                Logging.Log(Logging.LogType.Warning, "Content Manager", "Animated GIF conversion to MP4 failed: empty output. Falling back to PNG.");
+                                Logging.LogKey(Logging.LogType.Warning, "process.content_manager", "contentmanager.animated_gif_conversion_empty_output_fallback_png");
                             }
                         }
                         catch (Exception ex)
                         {
-                            Logging.Log(Logging.LogType.Warning, "Content Manager", $"Animated GIF conversion to MP4 failed: {ex.Message}. Falling back to PNG.");
+                            Logging.LogKey(Logging.LogType.Warning, "process.content_manager", "contentmanager.animated_gif_conversion_exception_fallback_png", null, new string[] { ex.Message });
                         }
                     }
                     collection.Dispose();
@@ -654,7 +654,7 @@ namespace gaseous_server.Classes.Content
             }
             else
             {
-                Logging.Log(Logging.LogType.Warning, "Content Manager", $"File {filePath} not found when attempting to delete attachment {attachmentId}.");
+                Logging.LogKey(Logging.LogType.Warning, "process.content_manager", "contentmanager.file_not_found_attempting_delete_attachment", null, new string[] { filePath, attachmentId.ToString() });
             }
 
             // delete the database record
@@ -825,7 +825,7 @@ namespace gaseous_server.Classes.Content
                 proc.WaitForExit(30000); // 30s timeout for safety
                 if (proc.ExitCode != 0 || !File.Exists(outputPath))
                 {
-                    Logging.Log(Logging.LogType.Warning, "Content Manager", $"ffmpeg GIF->MP4 conversion failed (exit {proc.ExitCode}): {stdErr}");
+                    Logging.LogKey(Logging.LogType.Warning, "process.content_manager", "contentmanager.ffmpeg_gif_to_mp4_conversion_failed", null, new string[] { proc.ExitCode.ToString(), stdErr });
                     return null;
                 }
 
@@ -837,7 +837,7 @@ namespace gaseous_server.Classes.Content
             }
             catch (Exception ex)
             {
-                Logging.Log(Logging.LogType.Warning, "Content Manager", $"ffmpeg GIF->MP4 conversion exception: {ex.Message}");
+                Logging.LogKey(Logging.LogType.Warning, "process.content_manager", "contentmanager.ffmpeg_gif_to_mp4_conversion_exception", null, new string[] { ex.Message });
                 return null;
             }
         }

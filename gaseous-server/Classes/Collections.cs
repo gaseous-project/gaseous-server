@@ -140,7 +140,7 @@ namespace gaseous_server.Classes
                 dbDict.Add("builtstatus", CollectionItem.CollectionBuildStatus.WaitingForBuild);
                 if (File.Exists(CollectionZipFile))
                 {
-                    Logging.Log(Logging.LogType.Warning, "Collections", "Deleting existing build of collection: " + item.Name);
+                    Logging.LogKey(Logging.LogType.Warning, "process.collections", "collections.deleting_existing_build", null, new string[] { item.Name });
                     File.Delete(CollectionZipFile);
                 }
             }
@@ -486,7 +486,7 @@ namespace gaseous_server.Classes
             CollectionItem collectionItem = GetCollection(CollectionId, userid);
             if (collectionItem.BuildStatus == CollectionItem.CollectionBuildStatus.WaitingForBuild)
             {
-                Logging.Log(Logging.LogType.Information, "Collections", "Beginning build of collection: " + collectionItem.Name);
+                Logging.LogKey(Logging.LogType.Information, "process.collections", "collections.beginning_build", null, new string[] { collectionItem.Name });
 
                 CollectionContents collectionContents = GetCollectionContent(collectionItem, userid);
 
@@ -511,7 +511,7 @@ namespace gaseous_server.Classes
                     // clean up if needed
                     if (File.Exists(ZipFilePath))
                     {
-                        Logging.Log(Logging.LogType.Warning, "Collections", "Deleting existing build of collection: " + collectionItem.Name);
+                        Logging.LogKey(Logging.LogType.Warning, "process.collections", "collections.deleting_existing_build", null, new string[] { collectionItem.Name });
                         File.Delete(ZipFilePath);
                     }
 
@@ -540,7 +540,7 @@ namespace gaseous_server.Classes
                             {
                                 if (File.Exists(biosItem.biosPath))
                                 {
-                                    Logging.Log(Logging.LogType.Information, "Collections", "Copying BIOS file: " + biosItem.filename);
+                                    Logging.LogKey(Logging.LogType.Information, "process.collections", "collections.copying_bios_file", null, new string[] { biosItem.filename });
                                     File.Copy(biosItem.biosPath, Path.Combine(ZipBiosPath, biosItem.filename), true);
                                 }
                             }
@@ -612,7 +612,7 @@ namespace gaseous_server.Classes
                                 {
                                     if (File.Exists(gameRomItem.Path))
                                     {
-                                        Logging.Log(Logging.LogType.Information, "Collections", "Copying ROM: " + gameRomItem.Name);
+                                        Logging.LogKey(Logging.LogType.Information, "process.collections", "collections.copying_rom", null, new string[] { gameRomItem.Name });
                                         File.Copy(gameRomItem.Path, Path.Combine(ZipGamePath, gameRomItem.Name), true);
                                     }
                                 }
@@ -621,7 +621,7 @@ namespace gaseous_server.Classes
                     }
 
                     // compress to zip
-                    Logging.Log(Logging.LogType.Information, "Collections", "Compressing collection");
+                    Logging.LogKey(Logging.LogType.Information, "process.collections", "collections.compressing_collection");
                     switch (collectionItem.ArchiveType)
                     {
                         case CollectionItem.ArchiveTypes.Zip:
@@ -641,7 +641,7 @@ namespace gaseous_server.Classes
                     // clean up
                     if (Directory.Exists(ZipFileTempPath))
                     {
-                        Logging.Log(Logging.LogType.Information, "Collections", "Cleaning up");
+                        Logging.LogKey(Logging.LogType.Information, "process.collections", "collections.cleaning_up");
                         Directory.Delete(ZipFileTempPath, true);
                     }
 
@@ -666,7 +666,7 @@ namespace gaseous_server.Classes
                     dbDict["bs"] = CollectionItem.CollectionBuildStatus.Failed;
                     db.ExecuteCMD(sql, dbDict);
 
-                    Logging.Log(Logging.LogType.Critical, "Collection Builder", "Collection building has failed", ex);
+                    Logging.LogKey(Logging.LogType.Critical, "process.collection_builder", "collections.build_failed", null, null, ex);
                 }
             }
         }

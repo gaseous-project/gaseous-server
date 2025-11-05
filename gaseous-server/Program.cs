@@ -136,7 +136,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
             }
             else if (!string.IsNullOrWhiteSpace(proxy))
             {
-                Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", Localisation.Translate("forwardedheaders.invalid_knownproxy_ip", new[]{ proxy }));
+                Logging.LogKey(Logging.LogType.Warning, "process.forwardedheaders", "forwardedheaders.invalid_knownproxy_ip", null, new string[] { proxy });
             }
         }
     }
@@ -152,24 +152,24 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
                 var parts = network.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                 if (parts.Length != 2)
                 {
-                    Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", Localisation.Translate("forwardedheaders.invalid_knownnetwork", new[]{ network }));
+                    Logging.LogKey(Logging.LogType.Warning, "process.forwardedheaders", "forwardedheaders.invalid_knownnetwork", null, new string[] { network });
                     continue;
                 }
                 if (!IPAddress.TryParse(parts[0], out var prefix))
                 {
-                    Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", Localisation.Translate("forwardedheaders.invalid_knownnetwork_address", new[]{ parts[0] }));
+                    Logging.LogKey(Logging.LogType.Warning, "process.forwardedheaders", "forwardedheaders.invalid_knownnetwork_address", null, new string[] { parts[0] });
                     continue;
                 }
                 if (!int.TryParse(parts[1], out var prefixLen))
                 {
-                    Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", Localisation.Translate("forwardedheaders.invalid_knownnetwork_prefixlen", new[]{ parts[1] }));
+                    Logging.LogKey(Logging.LogType.Warning, "process.forwardedheaders", "forwardedheaders.invalid_knownnetwork_prefixlen", null, new string[] { parts[1] });
                     continue;
                 }
                 options.KnownNetworks.Add(new Microsoft.AspNetCore.HttpOverrides.IPNetwork(prefix, prefixLen));
             }
             catch (Exception ex)
             {
-                Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", Localisation.Translate("forwardedheaders.failed_add_knownnetwork", new[]{ network }), ex);
+                Logging.LogKey(Logging.LogType.Warning, "process.forwardedheaders", "forwardedheaders.failed_add_knownnetwork", null, new string[] { network }, ex);
             }
         }
     }
@@ -472,12 +472,6 @@ app.Use(async (context, next) =>
     CallContext.SetData("CallingUser", userIdentity);
 
     context.Response.Headers.Append("x-correlation-id", correlationId.ToString());
-    // Log the incoming request (method and path) with localisation
-    try
-    {
-        Logging.Log(Logging.LogType.Debug, "HTTP Request", Localisation.Translate("request.received", new string[]{ context.Request.Method, context.Request.Path }));
-    }
-    catch { /* do not block request on logging */ }
     await next();
 });
 
@@ -487,7 +481,7 @@ app.Use(async (context, next) =>
 await app.StartAsync();
 try
 {
-    Logging.Log(Logging.LogType.Information, "Startup", Localisation.Translate("startup.web_server_ready"));
+    Logging.LogKey(Logging.LogType.Information, "process.startup", "startup.web_server_ready");
 }
 catch { /* logging should not block startup */ }
 await app.WaitForShutdownAsync();

@@ -96,8 +96,6 @@ namespace gaseous_server.Models
         /// <summary>
         /// Gets or sets a dictionary containing server-specific localized strings. Used for localization on the server side in system logs and messages. Note: this is independent of client-facing strings, and only used for logging server messages.
         /// </summary>
-        [System.Text.Json.Serialization.JsonIgnore]
-        [Newtonsoft.Json.JsonIgnore]
         public Dictionary<string, string>? ServerStrings { get; set; }
 
         /// <summary>

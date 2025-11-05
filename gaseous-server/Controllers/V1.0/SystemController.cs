@@ -200,7 +200,7 @@ ORDER BY Platform.`Name`; ";
                         if (taskItem.UserManageable == true)
                         {
                             // update task enabled
-                            Logging.Log(Logging.LogType.Information, "Update Background Task", "Updating task " + TaskConfiguration.Task + " with enabled value " + TaskConfiguration.Enabled.ToString());
+                            Logging.LogKey(Logging.LogType.Information, "process.update_background_task", "updatebackgroundtask.updating_task_enabled_value", new string[] { TaskConfiguration.Task, TaskConfiguration.Enabled.ToString() });
 
                             Config.SetSetting<string>("Enabled_" + TaskConfiguration.Task, TaskConfiguration.Enabled.ToString());
 
@@ -216,7 +216,7 @@ ORDER BY Platform.`Name`; ";
                             // update task interval
                             if (TaskConfiguration.Interval >= taskItem.MinimumAllowedInterval)
                             {
-                                Logging.Log(Logging.LogType.Information, "Update Background Task", "Updating task " + TaskConfiguration.Task + " with new interval " + TaskConfiguration.Interval);
+                                Logging.LogKey(Logging.LogType.Information, "process.update_background_task", "updatebackgroundtask.updating_task_new_interval", new string[] { TaskConfiguration.Task, TaskConfiguration.Interval.ToString() });
 
                                 Config.SetSetting<string>("Interval_" + TaskConfiguration.Task, TaskConfiguration.Interval.ToString());
 
@@ -231,11 +231,11 @@ ORDER BY Platform.`Name`; ";
                             }
                             else
                             {
-                                Logging.Log(Logging.LogType.Warning, "Update Background Task", "Interval " + TaskConfiguration.Interval.ToString() + " for task " + TaskConfiguration.Task + " is below the minimum allowed value of " + taskItem.MinimumAllowedInterval + ". Skipping.");
+                                Logging.LogKey(Logging.LogType.Warning, "process.update_background_task", "updatebackgroundtask.interval_below_minimum_skipping", new string[] { TaskConfiguration.Interval.ToString(), TaskConfiguration.Task, taskItem.MinimumAllowedInterval.ToString() });
                             }
 
                             // update task weekdays
-                            Logging.Log(Logging.LogType.Information, "Update Background Task", "Updating task " + TaskConfiguration.Task + " with new weekdays " + String.Join(", ", TaskConfiguration.AllowedDays));
+                            Logging.LogKey(Logging.LogType.Information, "process.update_background_task", "updatebackgroundtask.updating_task_new_weekdays", new string[] { TaskConfiguration.Task, String.Join(", ", TaskConfiguration.AllowedDays) });
 
                             Config.SetSetting<string>("AllowedDays_" + TaskConfiguration.Task, Newtonsoft.Json.JsonConvert.SerializeObject(TaskConfiguration.AllowedDays));
 
@@ -249,7 +249,7 @@ ORDER BY Platform.`Name`; ";
                             }
 
                             // update task hours
-                            Logging.Log(Logging.LogType.Information, "Update Background Task", "Updating task " + TaskConfiguration.Task + " with new hours " + TaskConfiguration.AllowedStartHours + ":" + TaskConfiguration.AllowedStartMinutes.ToString("00") + " to " + TaskConfiguration.AllowedEndHours + ":" + TaskConfiguration.AllowedEndMinutes.ToString("00"));
+                            Logging.LogKey(Logging.LogType.Information, "process.update_background_task", "updatebackgroundtask.updating_task_new_hours", new string[] { TaskConfiguration.Task, TaskConfiguration.AllowedStartHours.ToString(), TaskConfiguration.AllowedStartMinutes.ToString("00"), TaskConfiguration.AllowedEndHours.ToString(), TaskConfiguration.AllowedEndMinutes.ToString("00") });
 
                             Config.SetSetting<string>("AllowedStartHours_" + TaskConfiguration.Task, TaskConfiguration.AllowedStartHours.ToString());
                             Config.SetSetting<string>("AllowedStartMinutes_" + TaskConfiguration.Task, TaskConfiguration.AllowedStartMinutes.ToString());
@@ -271,13 +271,13 @@ ORDER BY Platform.`Name`; ";
                         }
                         else
                         {
-                            Logging.Log(Logging.LogType.Warning, "Update Background Task", "Unable to update non-user manageable task " + TaskConfiguration.Task + ". Skipping.");
+                            Logging.LogKey(Logging.LogType.Warning, "process.update_background_task", "updatebackgroundtask.unable_to_update_non_user_manageable", new string[] { TaskConfiguration.Task });
                         }
                     }
                     catch
                     {
                         // task name not defined
-                        Logging.Log(Logging.LogType.Warning, "Update Background Task", "Task " + TaskConfiguration.Task + " is not user definable. Skipping.");
+                        Logging.LogKey(Logging.LogType.Warning, "process.update_background_task", "updatebackgroundtask.task_not_user_definable_skipping", new string[] { TaskConfiguration.Task });
                     }
                 }
             }
@@ -433,18 +433,18 @@ ORDER BY Platform.`Name`; ";
                             break;
 
                         default:
-                            Logging.Log(Logging.LogType.Warning, "GetSystemSetting", "Unknown system setting: " + kvp.Key);
+                            Logging.LogKey(Logging.LogType.Warning, "process.system_setting", "systemsetting.unknown_system_setting", null, new string[] { kvp.Key });
                             return BadRequest("Unknown system setting: " + kvp.Key);
                     }
                 }
                 catch (Exception ex)
                 {
-                    Logging.Log(Logging.LogType.Warning, "GetSystemSetting", "Error setting system setting " + kvp.Key + ": " + ex.Message);
+                    Logging.LogKey(Logging.LogType.Warning, "process.system_setting", "systemsetting.error_setting_system_setting", null, new string[] { kvp.Key, ex.Message });
                     return BadRequest("Error setting system setting: " + ex.Message);
                 }
 
                 // Update the configuration file
-                Logging.Log(Logging.LogType.Information, "GetSystemSetting", "Updating system setting " + kvp.Value);
+                Logging.LogKey(Logging.LogType.Information, "process.system_setting", "systemsetting.updating_system_setting", null, new string[] { kvp.Value?.ToString() ?? "" });
                 Config.UpdateConfig();
             }
 

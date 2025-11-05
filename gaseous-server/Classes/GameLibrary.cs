@@ -129,7 +129,7 @@ namespace gaseous_server
 
             int newLibraryId = (int)(long)data.Rows[0][0];
 
-            Logging.Log(Logging.LogType.Information, "Library Management", "Created library " + Name + " at directory " + PathName);
+            Logging.LogKey(Logging.LogType.Information, "process.library_management", "librarymanagement.created_library_at_directory", null, new string[] { Name, PathName });
 
             LibraryItem library = await GetLibrary(newLibraryId);
 
@@ -146,7 +146,7 @@ namespace gaseous_server
             dbDict.Add("id", LibraryId);
             await db.ExecuteCMDAsync(sql, dbDict);
 
-            Logging.Log(Logging.LogType.Information, "Library Management", "Updated library " + Name);
+            Logging.LogKey(Logging.LogType.Information, "process.library_management", "librarymanagement.updated_library", null, new string[] { Name });
 
             return await GetLibrary(LibraryId);
         }
@@ -164,7 +164,7 @@ namespace gaseous_server
                         (item.ItemType == ProcessQueue.QueueItemType.LibraryScanWorker && item.ItemState == ProcessQueue.QueueItemState.Running)
                     )
                     {
-                        Logging.Log(Logging.LogType.Warning, "Library Management", "Unable to delete libraries while a library scan is running. Wait until the the library scan is completed and try again.");
+                        Logging.LogKey(Logging.LogType.Warning, "process.library_management", "librarymanagement.unable_to_delete_libraries_while_scan_running");
                         throw new CannotDeleteLibraryWhileScanIsActive();
                     }
                 }
@@ -175,11 +175,11 @@ namespace gaseous_server
                 dbDict.Add("id", LibraryId);
                 await db.ExecuteCMDAsync(sql, dbDict);
 
-                Logging.Log(Logging.LogType.Information, "Library Management", "Deleted library " + library.Name + " at path " + library.Path);
+                Logging.LogKey(Logging.LogType.Information, "process.library_management", "librarymanagement.deleted_library_at_path", null, new string[] { library.Name, library.Path });
             }
             else
             {
-                Logging.Log(Logging.LogType.Warning, "Library Management", "Unable to delete the default library.");
+                Logging.LogKey(Logging.LogType.Warning, "process.library_management", "librarymanagement.unable_to_delete_default_library");
                 throw new CannotDeleteDefaultLibrary();
             }
         }

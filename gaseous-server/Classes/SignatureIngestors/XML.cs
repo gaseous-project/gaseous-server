@@ -61,7 +61,7 @@ namespace gaseous_server.SignatureIngestors.XML
 
                 SetStatus(i + 1, PathContents.Length, "Processing signature file: " + XMLFile);
 
-                Logging.Log(Logging.LogType.Information, "Signature Ingest", "(" + (i + 1) + " / " + PathContents.Length + ") Processing " + XMLType.ToString() + " DAT file: " + XMLFile);
+                Logging.LogKey(Logging.LogType.Information, "process.signature_ingest", "signatureingest.processing_dat_file", null, new string[] { (i + 1).ToString(), PathContents.Length.ToString(), XMLType.ToString(), XMLFile });
 
                 string? DBFile = null;
                 if (XMLDBSearchPath != null)
@@ -75,7 +75,7 @@ namespace gaseous_server.SignatureIngestors.XML
                                 if (tempDBFileName == Path.GetFileNameWithoutExtension(XMLFile))
                                 {
                                     DBFile = DBPathContents[x];
-                                    Logging.Log(Logging.LogType.Information, "Signature Ingest", "Using DB file: " + DBFile);
+                                    Logging.LogKey(Logging.LogType.Information, "process.signature_ingest", "signatureingest.using_db_file", null, new string[] { DBFile });
                                     break;
                                 }
                             }
@@ -187,7 +187,7 @@ namespace gaseous_server.SignatureIngestors.XML
 
                                                 if (countryId == -1)
                                                 {
-                                                    Logging.Log(Logging.LogType.Warning, "Signature Ingest", "Unable to locate country id for " + country.Trim());
+                                                    Logging.LogKey(Logging.LogType.Warning, "process.signature_ingest", "signatureingest.unable_to_locate_country_id_for", null, new string[] { country.Trim() });
                                                     sql = "INSERT INTO Country (`Code`, `Value`) VALUES (@code, @name); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
                                                     Dictionary<string, object> countryDict = new Dictionary<string, object>{
                                                         { "code", country.Trim() },
@@ -219,7 +219,7 @@ namespace gaseous_server.SignatureIngestors.XML
 
                                                 if (languageId == -1)
                                                 {
-                                                    Logging.Log(Logging.LogType.Warning, "Signature Ingest", "Unable to locate language id for " + language.Trim());
+                                                    Logging.LogKey(Logging.LogType.Warning, "process.signature_ingest", "signatureingest.unable_to_locate_language_id_for", null, new string[] { language.Trim() });
                                                     sql = "INSERT INTO Language (`Code`, `Value`) VALUES (@code, @name); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
                                                     Dictionary<string, object> langDict = new Dictionary<string, object>{
                                                         { "code", language.Trim() },
@@ -439,12 +439,12 @@ namespace gaseous_server.SignatureIngestors.XML
                     }
                     catch (Exception ex)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Signature Ingest", "Error ingesting " + XMLType.ToString() + " file: " + XMLFile, ex);
+                        Logging.LogKey(Logging.LogType.Warning, "process.signature_ingest", "signatureingest.error_ingesting_file", null, new string[] { XMLType.ToString(), XMLFile }, ex);
                     }
                 }
                 else
                 {
-                    Logging.Log(Logging.LogType.Information, "Signature Ingest", "Rejecting already imported " + XMLType.ToString() + " file: " + XMLFile);
+                    Logging.LogKey(Logging.LogType.Information, "process.signature_ingest", "signatureingest.rejecting_already_imported_file", null, new string[] { XMLType.ToString(), XMLFile });
                     File.Move(XMLFile, Path.Combine(ProcessedDirectory, Path.GetFileName(XMLFile)));
                     if (DBFile != null)
                     {

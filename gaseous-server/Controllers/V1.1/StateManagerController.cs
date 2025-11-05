@@ -59,11 +59,11 @@ namespace gaseous_server.Controllers.v1_1
 
             if (IsMediaGroup == false)
             {
-                Logging.Log(Logging.LogType.Information, "Save State", "Saved state for rom id " + RomId + ". State size: " + uploadState.StateByteArrayBase64.Length + " Compressed size: " + CompressedState.Length);
+                Logging.LogKey(Logging.LogType.Information, "process.save_state", "savestate.saved_state_for_rom", null, new string[] { RomId.ToString(), uploadState.StateByteArrayBase64.Length.ToString(), CompressedState.Length.ToString() });
             }
             else
             {
-                Logging.Log(Logging.LogType.Information, "Save State", "Saved state for media group id " + RomId + ". State size: " + uploadState.StateByteArrayBase64.Length + " Compressed size: " + CompressedState.Length);
+                Logging.LogKey(Logging.LogType.Information, "process.save_state", "savestate.saved_state_for_media_group", null, new string[] { RomId.ToString(), uploadState.StateByteArrayBase64.Length.ToString(), CompressedState.Length.ToString() });
             }
 
             return Ok(await GetStateAsync(RomId, (long)(ulong)data.Rows[0][0], IsMediaGroup));

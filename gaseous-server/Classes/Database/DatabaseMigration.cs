@@ -22,7 +22,7 @@ namespace gaseous_server.Classes
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             DataTable data;
 
-            Logging.Log(Logging.LogType.Information, "Database", "Checking for pre-upgrade for schema version " + TargetSchemaVersion);
+            Logging.LogKey(Logging.LogType.Information, "process.database", "database.checking_pre_upgrade_for_schema_version", null, new[] { TargetSchemaVersion.ToString() });
 
             switch (DatabaseType)
             {
@@ -30,7 +30,7 @@ namespace gaseous_server.Classes
                     switch (TargetSchemaVersion)
                     {
                         case 1005:
-                            Logging.Log(Logging.LogType.Information, "Database", "Running pre-upgrade for schema version " + TargetSchemaVersion);
+                            Logging.LogKey(Logging.LogType.Information, "process.database", "database.running_pre_upgrade_for_schema_version", null, new[] { TargetSchemaVersion.ToString() });
 
                             // there was a mistake at dbschema version 1004-1005
                             // the first preview release of v1.7 reused dbschema version 1004
@@ -41,7 +41,7 @@ namespace gaseous_server.Classes
                             data = await db.ExecuteCMDAsync(sql, dbDict);
                             if (data.Rows.Count == 0)
                             {
-                                Logging.Log(Logging.LogType.Information, "Database", "Schema version " + TargetSchemaVersion + " requires a table which is missing.");
+                                Logging.LogKey(Logging.LogType.Information, "process.database", "database.schema_version_requires_missing_table", null, new[] { TargetSchemaVersion.ToString() });
 
                                 string resourceName = "gaseous_server.Support.Database.MySQL.gaseous-fix-1005.sql";
                                 string dbScript = "";
@@ -55,7 +55,7 @@ namespace gaseous_server.Classes
                                         dbScript = await reader.ReadToEndAsync();
 
                                         // apply schema!
-                                        Logging.Log(Logging.LogType.Information, "Database", "Applying schema version fix prior to version 1005");
+                                        Logging.LogKey(Logging.LogType.Information, "process.database", "database.applying_schema_version_fix_prior_to", null, new[] { "1005" });
                                         await db.ExecuteCMDAsync(dbScript, dbDict, 180);
                                     }
                                 }
@@ -63,7 +63,7 @@ namespace gaseous_server.Classes
                             break;
 
                         case 1027:
-                            Logging.Log(Logging.LogType.Information, "Database", "Running pre-upgrade for schema version " + TargetSchemaVersion);
+                            Logging.LogKey(Logging.LogType.Information, "process.database", "database.running_pre_upgrade_for_schema_version", null, new[] { TargetSchemaVersion.ToString() });
                             // create the basic relation tables
                             // this is a blocking task
                             await Storage.CreateRelationsTables<IGDB.Models.Game>();
@@ -85,7 +85,7 @@ namespace gaseous_server.Classes
                                     // column exists, drop it
                                     sql = $"ALTER TABLE {table} DROP COLUMN SourceId;"; // MySQL does not support IF EXISTS in ALTER TABLE
                                     await db.ExecuteCMDAsync(sql, dbDict);
-                                    Logging.Log(Logging.LogType.Information, "Database", $"Dropped SourceId column from {table} table.");
+                                    Logging.LogKey(Logging.LogType.Information, "process.database", "database.dropped_sourceid_column_from_table", null, new[] { table });
                                 }
 
                                 switch (table)
@@ -108,7 +108,7 @@ namespace gaseous_server.Classes
                                             if (!string.IsNullOrEmpty(sql))
                                             {
                                                 await db.ExecuteCMDAsync(sql, dbDict);
-                                                Logging.Log(Logging.LogType.Information, "Database", $"Dropped {row["COLUMN_NAME"]} column from ReleaseDate table.");
+                                                Logging.LogKey(Logging.LogType.Information, "process.database", "database.dropped_column_from_releasedate_table", null, new[] { row["COLUMN_NAME"].ToString() ?? "" });
                                             }
                                         }
                                         break;
@@ -117,7 +117,7 @@ namespace gaseous_server.Classes
                             break;
 
                         case 1031:
-                            Logging.Log(Logging.LogType.Information, "Database", "Running pre-upgrade for schema version " + TargetSchemaVersion);
+                            Logging.LogKey(Logging.LogType.Information, "process.database", "database.running_pre_upgrade_for_schema_version", null, new[] { TargetSchemaVersion.ToString() });
                             // build tables for metadata storage
                             Metadata.Utility.TableBuilder.BuildTables();
                             sql = "RENAME TABLE AgeGroup TO Metadata_AgeGroup; RENAME TABLE ClearLogo TO Metadata_ClearLogo;";
@@ -175,7 +175,7 @@ namespace gaseous_server.Classes
 
                         case 1023:
                             // load country list
-                            Logging.Log(Logging.LogType.Information, "Database Upgrade", "Adding country look up table contents");
+                            Logging.LogKey(Logging.LogType.Information, "process.database", "database.adding_country_lookup_table_contents");
 
                             string countryResourceName = "gaseous_server.Support.Country.txt";
                             using (Stream stream = assembly.GetManifestResourceStream(countryResourceName))
@@ -195,7 +195,7 @@ namespace gaseous_server.Classes
                             }
 
                             // load language list
-                            Logging.Log(Logging.LogType.Information, "Database Upgrade", "Adding language look up table contents");
+                            Logging.LogKey(Logging.LogType.Information, "process.database", "database.adding_language_lookup_table_contents");
 
                             string languageResourceName = "gaseous_server.Support.Language.txt";
                             using (Stream stream = assembly.GetManifestResourceStream(languageResourceName))
@@ -219,7 +219,7 @@ namespace gaseous_server.Classes
                             // attempt to re-import signature dats
 
                             // delete existing signature sources to allow re-import
-                            Logging.Log(Logging.LogType.Information, "Database Upgrade", "Deleting existing signature sources");
+                            Logging.LogKey(Logging.LogType.Information, "process.database", "database.deleting_existing_signature_sources");
                             sql = "DELETE FROM Signatures_Sources;";
                             db.ExecuteNonQuery(sql);
 
@@ -311,7 +311,7 @@ namespace gaseous_server.Classes
                                         }
                                     }
 
-                                    Logging.Log(Logging.LogType.Information, "Database Upgrade", "Updating ROM path from " + existingPath + " to " + newPath);
+                                    Logging.LogKey(Logging.LogType.Information, "process.database", "database.updating_rom_path_from_to", null, new[] { existingPath, newPath });
 
                                     sql = "UPDATE Games_Roms SET RelativePath = @newpath WHERE Id = @id;";
                                     dbDict = new Dictionary<string, object>
@@ -375,7 +375,7 @@ namespace gaseous_server.Classes
                 }
                 catch (Exception ex)
                 {
-                    Logging.Log(Logging.LogType.Warning, "Database Upgrade", "Error during background upgrade for schema version " + TargetSchemaVersion, ex);
+                    Logging.LogKey(Logging.LogType.Warning, "process.database", "database.error_during_background_upgrade_for_schema_version", null, new[] { TargetSchemaVersion.ToString() }, ex);
                 }
             }
         }
@@ -391,7 +391,7 @@ namespace gaseous_server.Classes
             DataTable data = db.ExecuteCMD(sql);
             if (data.Rows.Count > 0)
             {
-                Logging.Log(Logging.LogType.Information, "Signature Ingestor - Database Update", "Updating " + data.Rows.Count + " database entries");
+                Logging.LogKey(Logging.LogType.Information, "process.signature_ingest", "database.update_updating_database_entries_total", null, new[] { data.Rows.Count.ToString() });
                 int Counter = 0;
                 int LastCounterCheck = 0;
                 foreach (DataRow row in data.Rows)
@@ -470,7 +470,7 @@ namespace gaseous_server.Classes
                     if ((Counter - LastCounterCheck) > 10)
                     {
                         LastCounterCheck = Counter;
-                        Logging.Log(Logging.LogType.Information, "Signature Ingestor - Database Update", "Updating " + Counter + " / " + data.Rows.Count + " database entries");
+                        Logging.LogKey(Logging.LogType.Information, "process.signature_ingest", "database.update_updating_database_entries_progress", null, new[] { Counter.ToString(), data.Rows.Count.ToString() });
                     }
                     Counter += 1;
                 }
@@ -487,7 +487,7 @@ namespace gaseous_server.Classes
             long count = 1;
             foreach (DataRow row in data.Rows)
             {
-                Logging.Log(Logging.LogType.Information, "Database Migration", "Updating ROM table for ROM (" + count + " / " + data.Rows.Count + "): " + (string)row["Name"]);
+                Logging.LogKey(Logging.LogType.Information, "process.database", "database.migration_updating_rom_table_for_rom", null, new[] { count.ToString(), data.Rows.Count.ToString(), (string)row["Name"] });
 
                 GameLibrary.LibraryItem library = await GameLibrary.GetLibrary((int)row["LibraryId"]);
                 HashObject hash = new HashObject()

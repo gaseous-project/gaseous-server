@@ -1254,7 +1254,7 @@ namespace gaseous_server.Controllers
                 }
                 catch (Exception ex)
                 {
-                    Logging.Log(Logging.LogType.Critical, "Rom Group", "An error occurred", ex);
+                    Logging.LogKey(Logging.LogType.Critical, "process.rom_group", "timered_event.error_occurred", null, null, ex);
                     return NotFound();
                 }
             }

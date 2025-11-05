@@ -45,7 +45,7 @@ namespace gaseous_server.Controllers
             // Disable local password login when turned off
             if (!Config.SocialAuthConfiguration.PasswordLoginEnabled)
             {
-                Logging.Log(Logging.LogType.Warning, "Login", $"Password login attempt blocked for {model?.Email ?? "unknown"} from IP: {HttpContext.Connection.RemoteIpAddress}");
+                Logging.LogKey(Logging.LogType.Warning, "process.login", "login.password_attempt_blocked", null, new[] { model?.Email ?? "unknown", HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown" });
                 return NotFound(); // or: return Forbid();
             }
 
@@ -55,7 +55,7 @@ namespace gaseous_server.Controllers
                 var input = model.Email?.Trim();
                 if (string.IsNullOrWhiteSpace(input))
                 {
-                    Logging.Log(Logging.LogType.Warning, "Login", $"Empty username/email provided from IP: {HttpContext.Connection.RemoteIpAddress}");
+                    Logging.LogKey(Logging.LogType.Warning, "process.login", "login.empty_username_or_email", null, new[] { HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown" });
                     return Unauthorized();
                 }
 
@@ -72,7 +72,7 @@ namespace gaseous_server.Controllers
 
                 if (user == null)
                 {
-                    Logging.Log(Logging.LogType.Warning, "Login", $"Login failed for unknown user '{input}' from IP: {HttpContext.Connection.RemoteIpAddress}");
+                    Logging.LogKey(Logging.LogType.Warning, "process.login", "login.failed_unknown_user", null, new[] { input ?? "unknown", HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown" });
                     return Unauthorized();
                 }
 
@@ -81,29 +81,29 @@ namespace gaseous_server.Controllers
                 var result = await _signInManager.PasswordSignInAsync(user.UserName, model.Password, model.RememberMe, lockoutOnFailure: false);
                 if (result.Succeeded)
                 {
-                    Logging.Log(Logging.LogType.Information, "Login", $"{user.UserName} has logged in, from IP: {HttpContext.Connection.RemoteIpAddress}");
+                    Logging.LogKey(Logging.LogType.Information, "process.login", "login.user_logged_in", null, new[] { user.UserName, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown" });
                     return Ok(new { success = true });
                 }
                 if (result.RequiresTwoFactor)
                 {
                     // Return a hint to the client to prompt for 2FA code
-                    Logging.Log(Logging.LogType.Information, "Login", $"{user.UserName} requires two-factor authentication. IP: {HttpContext.Connection.RemoteIpAddress}");
+                    Logging.LogKey(Logging.LogType.Information, "process.login", "login.requires_two_factor", null, new[] { user.UserName, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown" });
                     return Ok(new { requiresTwoFactor = true, rememberMe = model.RememberMe });
                 }
                 if (result.IsLockedOut)
                 {
-                    Logging.Log(Logging.LogType.Warning, "Login", $"{user.UserName} was unable to login due to a locked account. Login attempt from IP: {HttpContext.Connection.RemoteIpAddress}");
+                    Logging.LogKey(Logging.LogType.Warning, "process.login", "login.locked_out", null, new[] { user.UserName, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown" });
                     return Unauthorized();
                 }
                 else
                 {
-                    Logging.Log(Logging.LogType.Critical, "Login", $"An unknown error occurred during login by {user.UserName}. Login attempt from IP: {HttpContext.Connection.RemoteIpAddress}");
+                    Logging.LogKey(Logging.LogType.Critical, "process.login", "login.unknown_error_user", null, new[] { user.UserName, HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown" });
                     return Unauthorized();
                 }
             }
 
             // If we got this far, something failed, redisplay form
-            Logging.Log(Logging.LogType.Critical, "Login", $"An unknown error occurred during login. Login attempt from IP: {HttpContext.Connection.RemoteIpAddress}");
+            Logging.LogKey(Logging.LogType.Critical, "process.login", "login.unknown_error", null, new[] { HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown" });
             return Unauthorized();
         }
 
@@ -127,7 +127,7 @@ namespace gaseous_server.Controllers
             }
             if (result.IsLockedOut)
             {
-                Logging.Log(Logging.LogType.Warning, "Login", $"Two-factor lockout triggered for IP: {HttpContext.Connection.RemoteIpAddress}");
+                Logging.LogKey(Logging.LogType.Warning, "process.login", "login.two_factor_lockout", null, new[] { HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown" });
                 return Unauthorized();
             }
 
@@ -152,7 +152,7 @@ namespace gaseous_server.Controllers
             }
             if (result.IsLockedOut)
             {
-                Logging.Log(Logging.LogType.Warning, "Login", $"Recovery code sign-in lockout for IP: {HttpContext.Connection.RemoteIpAddress}");
+                Logging.LogKey(Logging.LogType.Warning, "process.login", "login.recovery_code_lockout", null, new[] { HttpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown" });
                 return Unauthorized();
             }
 
@@ -167,7 +167,7 @@ namespace gaseous_server.Controllers
             await _signInManager.SignOutAsync();
             if (userName != null)
             {
-                Logging.Log(Logging.LogType.Information, "Login", userName + " has logged out");
+                Logging.LogKey(Logging.LogType.Information, "process.login", "login.user_logged_out", null, new[] { userName });
             }
             return Ok();
         }
@@ -310,7 +310,7 @@ namespace gaseous_server.Controllers
             }
 
             await _signInManager.RefreshSignInAsync(user);
-            Logging.Log(Logging.LogType.Information, "User Management", $"{User.FindFirstValue(ClaimTypes.NameIdentifier)} changed their username to '{desired}'.");
+            Logging.LogKey(Logging.LogType.Information, "process.login", "login.user_changed_username", null, new string[] { User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "", desired });
             return Ok();
         }
 
@@ -383,7 +383,7 @@ namespace gaseous_server.Controllers
                     // add new users to the player role
                     await _userManager.AddToRoleAsync(user, "Player");
 
-                    Logging.Log(Logging.LogType.Information, "User Management", User.FindFirstValue(ClaimTypes.Name) + " created user " + model.Email + " with password.");
+                    Logging.LogKey(Logging.LogType.Information, "process.login", "login.user_created_user_with_password", null, new string[] { User.FindFirstValue(ClaimTypes.Name) ?? "", model.Email });
 
                     return Ok(result);
                 }
@@ -469,7 +469,7 @@ namespace gaseous_server.Controllers
             else
             {
                 await _userManager.DeleteAsync(user);
-                Logging.Log(Logging.LogType.Information, "User Management", User.FindFirstValue(ClaimTypes.Name) + " deleted user " + user.Email);
+                Logging.LogKey(Logging.LogType.Information, "process.login", "login.user_deleted_user", null, new string[] { User.FindFirstValue(ClaimTypes.Name) ?? "", user.Email ?? "" });
                 return Ok();
             }
         }
@@ -948,7 +948,7 @@ namespace gaseous_server.Controllers
         public async Task<IActionResult> SignOutOIDC(string returnUrl = "/")
         {
             await _signInManager.SignOutAsync();
-            Logging.Log(Logging.LogType.Information, "Login", "User has signed out via OIDC.");
+            Logging.LogKey(Logging.LogType.Information, "process.login", "login.user_signed_out_oidc");
             return LocalRedirect(returnUrl);
         }
 
@@ -958,7 +958,7 @@ namespace gaseous_server.Controllers
         public async Task<IActionResult> SignOutGoogle(string returnUrl = "/")
         {
             await _signInManager.SignOutAsync();
-            Logging.Log(Logging.LogType.Information, "Login", "User has signed out via Google.");
+            Logging.LogKey(Logging.LogType.Information, "process.login", "login.user_signed_out_google");
             return LocalRedirect(returnUrl);
         }
 
@@ -968,7 +968,7 @@ namespace gaseous_server.Controllers
         public async Task<IActionResult> SignOutMicrosoft(string returnUrl = "/")
         {
             await _signInManager.SignOutAsync();
-            Logging.Log(Logging.LogType.Information, "Login", "User has signed out via Microsoft.");
+            Logging.LogKey(Logging.LogType.Information, "process.login", "login.user_signed_out_microsoft");
             return LocalRedirect(returnUrl);
         }
     }

@@ -15,7 +15,7 @@ namespace gaseous_server.Classes
         /// </summary>
         public const string DefaultLocale = "en-AU";
 
-        private static string _currentLocale = DefaultLocale;
+        private static string _currentLocale = Config.ServerLanguage;
 
         private static ConcurrentDictionary<string, LocaleFileModel> _loadedLocales = new ConcurrentDictionary<string, LocaleFileModel>();
 

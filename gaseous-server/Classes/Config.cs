@@ -31,6 +31,12 @@ namespace gaseous_server.Classes
             set { _config.ServerPort = value; }
         }
 
+        public static string ServerLanguage
+        {
+            get { return _config.ServerLanguage; }
+            set { _config.ServerLanguage = value; }
+        }
+
         static string ConfigurationFilePath
         {
             get
@@ -321,7 +327,7 @@ namespace gaseous_server.Classes
                 }
                 catch (InvalidCastException castEx)
                 {
-                    Logging.Log(Logging.LogType.Warning, "Settings", "Exception when reading server setting " + SettingName + ". Resetting to default.", castEx);
+                    Logging.LogKey(Logging.LogType.Warning, "process.settings", "settings.exception_when_reading_server_setting_resetting_to_default", null, new string[] { SettingName }, castEx);
 
                     // delete broken setting and return the default
                     // this error is probably generated during an upgrade
@@ -333,7 +339,7 @@ namespace gaseous_server.Classes
                 }
                 catch (Exception ex)
                 {
-                    Logging.Log(Logging.LogType.Critical, "Settings", "Exception when reading server setting " + SettingName + ".", ex);
+                    Logging.LogKey(Logging.LogType.Critical, "process.settings", "settings.exception_when_reading_server_setting", null, new string[] { SettingName }, ex);
                 }
             }
         }
@@ -358,7 +364,7 @@ namespace gaseous_server.Classes
 
                     try
                     {
-                        Logging.Log(Logging.LogType.Debug, "Database", "Reading setting '" + SettingName + "'");
+                        Logging.LogKey(Logging.LogType.Debug, "process.database", "database.reading_setting", null, new string[] { SettingName });
 
                         if (Database.schema_version >= 1016)
                         {
@@ -407,14 +413,14 @@ namespace gaseous_server.Classes
                     }
                     catch (Exception ex)
                     {
-                        Logging.Log(Logging.LogType.Critical, "Database", "Failed reading setting " + SettingName, ex);
+                        Logging.LogKey(Logging.LogType.Critical, "process.database", "database.failed_reading_setting", null, new string[] { SettingName }, ex);
                         throw;
                     }
                 }
             }
             catch (InvalidCastException castEx)
             {
-                Logging.Log(Logging.LogType.Warning, "Settings", "Exception when reading server setting " + SettingName + ". Resetting to default.", castEx);
+                Logging.LogKey(Logging.LogType.Warning, "process.settings", "settings.exception_when_reading_server_setting_resetting_to_default", null, new string[] { SettingName }, castEx);
 
                 // delete broken setting and return the default
                 // this error is probably generated during an upgrade
@@ -433,7 +439,7 @@ namespace gaseous_server.Classes
             }
             catch (Exception ex)
             {
-                Logging.Log(Logging.LogType.Critical, "Settings", "Exception when reading server setting " + SettingName + ".", ex);
+                Logging.LogKey(Logging.LogType.Critical, "process.settings", "settings.exception_when_reading_server_setting", null, new string[] { SettingName }, ex);
                 throw;
             }
         }
@@ -479,7 +485,7 @@ namespace gaseous_server.Classes
                 };
             }
 
-            Logging.Log(Logging.LogType.Debug, "Database", "Storing setting '" + SettingName + "' to value: '" + Value + "'");
+            Logging.LogKey(Logging.LogType.Debug, "process.database", "database.storing_setting_to_value", null, new string[] { SettingName, Value?.ToString() ?? "" });
             try
             {
                 db.ExecuteCMD(sql, dbDict);
@@ -495,7 +501,7 @@ namespace gaseous_server.Classes
             }
             catch (Exception ex)
             {
-                Logging.Log(Logging.LogType.Critical, "Database", "Failed storing setting" + SettingName, ex);
+                Logging.LogKey(Logging.LogType.Critical, "process.database", "database.failed_storing_setting", null, new string[] { SettingName }, ex);
                 throw;
             }
         }
@@ -533,6 +539,18 @@ namespace gaseous_server.Classes
             }
 
             public int ServerPort = _DefaultServerPort;
+
+            private static string _ServerLanguage
+            {
+                get
+                {
+                    var env = Environment.GetEnvironmentVariable("serverlanguage");
+                    if (!string.IsNullOrWhiteSpace(env)) return env;
+                    return Localisation.DefaultLocale;
+                }
+            }
+
+            public string ServerLanguage = _ServerLanguage;
 
             public class Database
             {
