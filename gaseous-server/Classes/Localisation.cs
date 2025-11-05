@@ -85,6 +85,206 @@ namespace gaseous_server.Classes
         }
 
         /// <summary>
+        /// Translates a localisation key with pluralisation support based on a numeric count.
+        /// </summary>
+    /// <param name="baseKey">The base localisation key without the .one/.other suffix.</param>
+    /// <param name="count">The numeric count used to decide plural form.</param>
+    /// <param name="args">Optional formatting arguments applied via string.Format.</param>
+    /// <returns>The translated pluralised string, or a fallback if not found.</returns>
+    /// <remarks>
+    /// Uses the locale's PluralRule expression (boolean over n) to select between baseKey.one and baseKey.other.
+    /// If PluralRule evaluation returns false then singular (one) is chosen; if true, plural (other) is chosen.
+    /// Falls back gracefully through: requested variant, alternate variant, baseKey, then returns the resolved variant key name.
+    /// </remarks>
+        public static string TranslatePlural(string baseKey, long count, string[]? args = null)
+        {
+            // ensure locale loaded
+            if (!_loadedLocales.ContainsKey(_currentLocale))
+            {
+                GetLanguageFile(_currentLocale);
+            }
+
+            if (!_loadedLocales.TryGetValue(_currentLocale, out var localeFile) || localeFile?.Strings == null)
+            {
+                return baseKey; // nothing loaded
+            }
+
+            // Determine plural variant using PluralRule
+            string rule = localeFile.PluralRule ?? "n != 1"; // default English behaviour
+            bool isPlural = EvaluatePluralRule(rule, count);
+            string desiredKey = isPlural ? baseKey + ".other" : baseKey + ".one";
+            string altKey = isPlural ? baseKey + ".one" : baseKey + ".other";
+
+            string? value = null;
+            if (!localeFile.Strings.TryGetValue(desiredKey, out value))
+            {
+                // try alternate variant
+                if (!localeFile.Strings.TryGetValue(altKey, out value))
+                {
+                    // try base key
+                    localeFile.Strings.TryGetValue(baseKey, out value);
+                }
+            }
+
+            if (value == null)
+            {
+                return desiredKey; // final fallback: return the resolved key string
+            }
+
+            if (args != null && args.Length > 0)
+            {
+                try
+                {
+                    return string.Format(value, args);
+                }
+                catch (FormatException)
+                {
+                    // if formatting fails, return unformatted value
+                    return value;
+                }
+            }
+
+            return value;
+        }
+
+        /// <summary>
+        /// Evaluates a simple plural rule expression against the given count.
+        /// </summary>
+        /// <param name="expression">Boolean expression referencing 'n'. Example: "n != 1".</param>
+        /// <param name="n">The numeric count.</param>
+        /// <returns>True if expression evaluates to true; otherwise false. Invalid expressions default to (n != 1).</returns>
+        private static bool EvaluatePluralRule(string expression, long n)
+        {
+            // Very small, safe evaluator supporting: n, integers, parentheses, ==, !=, <, <=, >, >=, &&, ||
+            // Tokenize
+            try
+            {
+                var tokens = TokenizeExpression(expression);
+                int index = 0;
+                bool result = ParseOr(tokens, ref index, n);
+                return result;
+            }
+            catch
+            {
+                // fallback rule
+                return n != 1;
+            }
+        }
+
+        private static List<string> TokenizeExpression(string expr)
+        {
+            var tokens = new List<string>();
+            for (int i = 0; i < expr.Length; )
+            {
+                char c = expr[i];
+                if (char.IsWhiteSpace(c)) { i++; continue; }
+                if (char.IsDigit(c))
+                {
+                    int start = i;
+                    while (i < expr.Length && char.IsDigit(expr[i])) i++;
+                    tokens.Add(expr.Substring(start, i - start));
+                    continue;
+                }
+                if (char.IsLetter(c))
+                {
+                    int start = i;
+                    while (i < expr.Length && char.IsLetter(expr[i])) i++;
+                    tokens.Add(expr.Substring(start, i - start));
+                    continue;
+                }
+                // operators / parentheses
+                if (i + 1 < expr.Length)
+                {
+                    string two = expr.Substring(i, 2);
+                    if (two == "==" || two == "!=" || two == "<=" || two == ">=" || two == "&&" || two == "||")
+                    {
+                        tokens.Add(two);
+                        i += 2;
+                        continue;
+                    }
+                }
+                tokens.Add(c.ToString());
+                i++;
+            }
+            return tokens;
+        }
+
+        // Recursive descent parser: or -> and -> comparison -> primary
+        private static bool ParseOr(List<string> tokens, ref int index, long n)
+        {
+            bool left = ParseAnd(tokens, ref index, n);
+            while (index < tokens.Count && tokens[index] == "||")
+            {
+                index++; // skip '||'
+                bool right = ParseAnd(tokens, ref index, n);
+                left = left || right;
+            }
+            return left;
+        }
+
+        private static bool ParseAnd(List<string> tokens, ref int index, long n)
+        {
+            bool left = ParseComparison(tokens, ref index, n);
+            while (index < tokens.Count && tokens[index] == "&&")
+            {
+                index++; // skip '&&'
+                bool right = ParseComparison(tokens, ref index, n);
+                left = left && right;
+            }
+            return left;
+        }
+
+        private static bool ParseComparison(List<string> tokens, ref int index, long n)
+        {
+            long leftValue = ParseValue(tokens, ref index, n);
+            if (index >= tokens.Count) return leftValue != 1; // if no operator, treat number as boolean (non 1 => plural)
+            string op = tokens[index];
+            if (!(op == "==" || op == "!=" || op == "<" || op == "<=" || op == ">" || op == ">="))
+            {
+                // not a comparison operator, treat leftValue
+                return leftValue != 1;
+            }
+            index++; // consume operator
+            long rightValue = ParseValue(tokens, ref index, n);
+            return op switch
+            {
+                "==" => leftValue == rightValue,
+                "!=" => leftValue != rightValue,
+                "<" => leftValue < rightValue,
+                "<=" => leftValue <= rightValue,
+                ">" => leftValue > rightValue,
+                ">=" => leftValue >= rightValue,
+                _ => false
+            };
+        }
+
+        private static long ParseValue(List<string> tokens, ref int index, long n)
+        {
+            if (index >= tokens.Count) return 0;
+            string token = tokens[index];
+            if (token == "(")
+            {
+                index++; // consume '('
+                bool inner = ParseOr(tokens, ref index, n);
+                if (index < tokens.Count && tokens[index] == ")") index++; // consume ')'
+                return inner ? 1 : 0;
+            }
+            if (token.Equals("n", StringComparison.OrdinalIgnoreCase))
+            {
+                index++;
+                return n;
+            }
+            if (long.TryParse(token, out var value))
+            {
+                index++;
+                return value;
+            }
+            // unknown token
+            index++;
+            return 0;
+        }
+
+        /// <summary>
         /// Sanitises a locale string by removing invalid characters and enforcing a standard format.
         /// </summary>
         /// <param name="locale">The input locale string to sanitise. The locale can be either the language (example: en), or the language and region (example: en-AU)</param>
@@ -135,7 +335,7 @@ namespace gaseous_server.Classes
             if (!_loadedLocales.ContainsKey("en"))
             {
                 LocaleFileModel enLocale = LoadLocaleFromResources("en");
-                LocaleFileModel enFileLocale = null;
+                LocaleFileModel? enFileLocale = null;
                 try
                 {
                     enFileLocale = LoadLocaleFromFile("en");
@@ -154,9 +354,12 @@ namespace gaseous_server.Classes
                 }
                 else
                 {
-                    englishLocale = enLocale;
+                    englishLocale = enLocale!; // enLocale must not be null here otherwise resource load failed earlier
                 }
-                _loadedLocales.TryAdd("en", englishLocale);
+                if (englishLocale != null)
+                {
+                    _loadedLocales.TryAdd("en", englishLocale);
+                }
             }
             else
             {
@@ -207,7 +410,11 @@ namespace gaseous_server.Classes
             // merge the localeData with English to ensure all strings are present
             if (localeData.Code != "en")
             {
-                localeData = MergeLocaleFiles(englishLocale, localeData);
+                if (englishLocale != null)
+                {
+                    localeData = MergeLocaleFiles(englishLocale, localeData);
+                }
+                // if englishLocale unexpectedly null, skip merge (localeData already loaded)
             }
 
             // check if locale is defined in loaded locales cache, and add it if not
@@ -229,7 +436,11 @@ namespace gaseous_server.Classes
                 using (var reader = new StreamReader(stream))
                 {
                     string json = reader.ReadToEnd();
-                    LocaleFileModel localeFile = Newtonsoft.Json.JsonConvert.DeserializeObject<LocaleFileModel>(json);
+                    LocaleFileModel? localeFile = Newtonsoft.Json.JsonConvert.DeserializeObject<LocaleFileModel>(json);
+                    if (localeFile == null)
+                    {
+                        throw new InvalidDataException("Failed to deserialize locale resource JSON: " + resourceName);
+                    }
 
                     if (localeFile.Type == LocaleFileModel.LocaleFileType.Overlay)
                     {
@@ -252,7 +463,11 @@ namespace gaseous_server.Classes
             }
 
             string json = System.IO.File.ReadAllText(filePath);
-            LocaleFileModel localeFile = Newtonsoft.Json.JsonConvert.DeserializeObject<LocaleFileModel>(json);
+            LocaleFileModel? localeFile = Newtonsoft.Json.JsonConvert.DeserializeObject<LocaleFileModel>(json);
+            if (localeFile == null)
+            {
+                throw new InvalidDataException("Failed to deserialize locale file JSON: " + filePath);
+            }
 
             if (localeFile.Type == LocaleFileModel.LocaleFileType.Overlay)
             {
