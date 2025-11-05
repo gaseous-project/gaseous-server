@@ -57,46 +57,44 @@ namespace gaseous_server.Classes
             }
         }
 
-        /// <summary>
-        /// Translates a localisation key using the current locale, optionally formatting the result with arguments.
-        /// </summary>
-        /// <param name="key">The localisation string key to look up.</param>
-        /// <param name="args">Optional formatting arguments applied via string.Format if provided.</param>
-        /// <returns>The translated (and formatted) string, or the original key if no translation is found.</returns>
-        public static string Translate(string key, string[]? args = null)
+    /// <summary>
+    /// Translates a localisation key using the current locale from either client-facing strings or server-only strings.
+    /// </summary>
+        /// <param name="key">The localisation key to look up.</param>
+        /// <param name="args">Optional formatting arguments applied via string.Format.</param>
+        /// <param name="useServerStrings">If true, lookup is performed against ServerStrings; otherwise against Strings.</param>
+        /// <returns>Translated (and formatted) value or the key when not found.</returns>
+        public static string Translate(string key, string[]? args = null, bool useServerStrings = false)
         {
             // check if the current locale is loaded
             if (!_loadedLocales.ContainsKey(_currentLocale))
             {
                 GetLanguageFile(_currentLocale);
             }
-
-            if (_loadedLocales.TryGetValue(_currentLocale, out var localeFile) && localeFile?.Strings != null && localeFile.Strings.TryGetValue(key, out var value))
+            if (_loadedLocales.TryGetValue(_currentLocale, out var localeFile) && localeFile != null)
             {
-                if (args != null && args.Length > 0)
+                var dict = GetActiveDictionary(localeFile, useServerStrings);
+                if (dict != null && dict.TryGetValue(key, out var value))
                 {
-                    return string.Format(value, args);
+                    if (args != null && args.Length > 0)
+                    {
+                        try { return string.Format(value, args); } catch (FormatException) { return value; }
+                    }
+                    return value;
                 }
-                return value;
             }
-
-            // return the key if not found
-            return key;
+            return key; // fallback
         }
 
         /// <summary>
-        /// Translates a localisation key with pluralisation support based on a numeric count.
+        /// Translates a pluralisable localisation key selecting category form from either Strings or ServerStrings.
         /// </summary>
-        /// <param name="baseKey">The base localisation key without the .one/.other suffix.</param>
-        /// <param name="count">The numeric count used to decide plural form.</param>
-        /// <param name="args">Optional formatting arguments applied via string.Format.</param>
-        /// <returns>The translated pluralised string, or a fallback if not found.</returns>
-        /// <remarks>
-        /// Uses the locale's PluralRule expression (boolean over n) to select between baseKey.one and baseKey.other.
-        /// If PluralRule evaluation returns false then singular (one) is chosen; if true, plural (other) is chosen.
-        /// Falls back gracefully through: requested variant, alternate variant, baseKey, then returns the resolved variant key name.
-        /// </remarks>
-        public static string TranslatePlural(string baseKey, long count, string[]? args = null)
+        /// <param name="baseKey">Base key without category suffix.</param>
+        /// <param name="count">Numeric count used for rule evaluation.</param>
+        /// <param name="args">Optional formatting arguments.</param>
+        /// <param name="useServerStrings">If true lookup uses ServerStrings; otherwise Strings.</param>
+        /// <returns>Pluralised translation or fallback key string.</returns>
+        public static string TranslatePlural(string baseKey, long count, string[]? args = null, bool useServerStrings = false)
         {
             // ensure locale loaded
             if (!_loadedLocales.ContainsKey(_currentLocale))
@@ -104,9 +102,15 @@ namespace gaseous_server.Classes
                 GetLanguageFile(_currentLocale);
             }
 
-            if (!_loadedLocales.TryGetValue(_currentLocale, out var localeFile) || localeFile?.Strings == null)
+            if (!_loadedLocales.TryGetValue(_currentLocale, out var localeFile) || localeFile == null)
             {
-                return baseKey; // nothing loaded
+                return baseKey; // locale not loaded
+            }
+
+            var dict = GetActiveDictionary(localeFile, useServerStrings);
+            if (dict == null)
+            {
+                return baseKey;
             }
 
             string? resolvedKey = null;
@@ -148,11 +152,7 @@ namespace gaseous_server.Classes
             string? value = null;
             foreach (var k in fallbackKeys)
             {
-                if (localeFile.Strings.TryGetValue(k, out value))
-                {
-                    resolvedKey = k;
-                    break;
-                }
+                if (dict.TryGetValue(k, out value)) { resolvedKey = k; break; }
             }
 
             if (value == null)
@@ -162,17 +162,18 @@ namespace gaseous_server.Classes
 
             if (args != null && args.Length > 0)
             {
-                try
-                {
-                    return string.Format(value, args);
-                }
-                catch (FormatException)
-                {
-                    return value; // return unformatted
-                }
+                try { return string.Format(value, args); } catch (FormatException) { return value; }
             }
-
             return value;
+        }
+
+        /// <summary>
+        /// Returns appropriate dictionary (Strings or ServerStrings) based on flag.
+        /// </summary>
+        private static Dictionary<string,string>? GetActiveDictionary(LocaleFileModel localeFile, bool useServerStrings)
+        {
+            if (useServerStrings) return localeFile.ServerStrings;
+            return localeFile.Strings;
         }
 
         /// <summary>
