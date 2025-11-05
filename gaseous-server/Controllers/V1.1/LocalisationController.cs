@@ -14,6 +14,18 @@ namespace gaseous_server.Controllers.v1_1
     public class LocalisationController : ControllerBase
     {
         /// <summary>
+        /// Returns the server default language/locale configured.
+        /// </summary>
+        /// <returns>JSON object with serverLanguage property.</returns>
+        [MapToApiVersion("1.1")]
+        [HttpGet("server-language")]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        public IActionResult GetServerLanguage()
+        {
+            return Ok(new { serverLanguage = Config.ServerLanguage });
+        }
+
+        /// <summary>
         /// Retrieves the locale file for the specified locale code.
         /// </summary>
         /// <param name="locale">The language or locale code (e.g., "en-US" or "fr"). Defaults to "en-US".</param>

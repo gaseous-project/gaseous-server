@@ -9,8 +9,9 @@ class Language {
     #missingKeys = new Set();      // aggregate missing keys
     #isReady = false;              // initialization flag
     locale = 'en';                 // current effective locale
-    #localeChain = [];             // ordered chain of attempted locale files
     #pluralRules = null;           // Intl.PluralRules instance
+    #advancedPluralRules = null;   // map of plural category -> expression string
+    #binaryPluralRule = null;      // simple plural rule expression (e.g. "n != 1")
 
     async Init(forceLoad = false) {
         // If already initialized and not forced, skip.
@@ -21,7 +22,7 @@ class Language {
 
         // Try cache first (unless forcing reload).
         if (!this.#loadFromCache(forceLoad)) {
-            await this.#loadSingleLocaleWithFallback();
+            await this.#loadSingleLocale();
             this.#persistCache();
         }
 
@@ -41,29 +42,66 @@ class Language {
         this.translateAllElements();
     }
 
-    // Translate with optional interpolation params
-    translate(key, params = null) {
-        let value = this.#languageData[key];
-        if (value == null) {
+    // Translate with optional interpolation params or positional args (array)
+    // Supports two styles to mirror server behaviour:
+    //  - Positional: value contains {0} {1} ... and caller passes an array.
+    //  - Named: value contains {{name}} tokens and caller passes an object.
+    translate(key, args = null) {
+        const direct = this.#languageData[key];
+        if (direct == null) {
             this.#recordMissingKey(key);
-            return key; // fallback displays key
+            return key;
         }
-        if (params) {
-            // manual token replacement to avoid regex complexity flags
-            for (const k of Object.keys(params)) {
-                const token = `{{${k}}}`;
-                if (value.includes(token)) value = value.split(token).join(String(params[k]));
-            }
-        }
-        return value;
+        return this.#formatValue(direct, args);
     }
 
-    // Pluralization helper expecting keys like `${base}.one`, `${base}.other` etc.
-    plural(baseKey, count, params = {}) {
-        if (!this.#pluralRules) this.#pluralRules = new Intl.PluralRules(this.locale);
-        const category = this.#pluralRules.select(count); // e.g. one, other
-        const key = `${baseKey}.${category}`;
-        return this.translate(key, { ...params, count });
+    // Pluralisation aligned with server logic in Localisation.TranslatePlural
+    // Order: evaluate advanced pluralRules (zero, one, few, many, other) first; else binary pluralRule (default n != 1)
+    // Fallback chain: resolvedKey -> all category variants -> baseKey
+    plural(baseKey, count, args = null) {
+        let resolvedKey = null;
+        const rules = this.#advancedPluralRules;
+        if (rules && typeof rules === 'object' && Object.keys(rules).length > 0) {
+            const order = ['zero', 'one', 'few', 'many', 'other'];
+            for (const cat of order) {
+                if (Object.prototype.hasOwnProperty.call(rules, cat)) {
+                    if (this.#evaluatePluralRule(rules[cat], count)) {
+                        resolvedKey = `${baseKey}.${cat}`;
+                        break;
+                    }
+                }
+            }
+        }
+        if (!resolvedKey) {
+            const rule = this.#binaryPluralRule || 'n != 1';
+            const isPlural = this.#evaluatePluralRule(rule, count);
+            resolvedKey = isPlural ? `${baseKey}.other` : `${baseKey}.one`;
+        }
+
+        const fallbackKeys = [];
+        const seen = new Set();
+        const push = k => { if (!seen.has(k)) { seen.add(k); fallbackKeys.push(k); } };
+        push(resolvedKey);
+        for (const cat of ['zero', 'one', 'few', 'many', 'other']) push(`${baseKey}.${cat}`);
+        push(baseKey);
+
+        let value = null; let usedKey = null;
+        for (const k of fallbackKeys) {
+            if (this.#languageData[k] != null) { value = this.#languageData[k]; usedKey = k; break; }
+        }
+        if (value == null) {
+            // record only base key as missing to avoid noise
+            this.#recordMissingKey(baseKey);
+            return baseKey;
+        }
+        // merge count into named arguments if object form used
+        if (args && !Array.isArray(args) && typeof args === 'object' && !Object.prototype.hasOwnProperty.call(args, 'count')) {
+            args = { ...args, count };
+        } else if (!args) {
+            // allow positional usage where {0} is count
+            args = [count];
+        }
+        return this.#formatValue(value, args);
     }
 
     // Translate all DOM elements with data-i18n
@@ -79,8 +117,8 @@ class Language {
         const key = elem.dataset.i18n;
         if (!key) return;
         const params = this.#extractParams(elem);
-    const translated = this.translate(key, params);
-    const wantsHtml = elem.dataset.i18nHtml !== undefined;
+        const translated = this.translate(key, params);
+        const wantsHtml = elem.dataset.i18nHtml !== undefined;
         if (wantsHtml) {
             elem.innerHTML = translated; // trusted / controlled translations only
         } else {
@@ -127,7 +165,6 @@ class Language {
         const missingObj = this.#getMissingKeysObject();
         return {
             locale: this.locale,
-            localeChain: this.#localeChain.slice(),
             keysLoaded: Object.keys(this.#languageData).length,
             missingCount: Object.keys(missingObj).length,
             missingKeys: Object.keys(missingObj)
@@ -156,7 +193,7 @@ class Language {
         } catch { return {}; }
     }
 
-    // (Removed multi-file chain logic – server now returns fully merged locale file)
+    // Server returns fully merged locale file; no fallback chain logic required.
 
     async #fetchLanguageFile(langCode) {
         const version = localStorage.getItem('System.AppVersion') || '1.0.0';
@@ -196,6 +233,8 @@ class Language {
             pluralRule: data.pluralRule,
             direction: data.direction || 'ltr'
         };
+        this.#advancedPluralRules = data.pluralRules || null; // dictionary of category -> expression
+        this.#binaryPluralRule = data.pluralRule || null;
     }
 
     #normalizeLocale(input) {
@@ -221,8 +260,9 @@ class Language {
         this.#isReady = false;
         this.#languageData = {};
         this.#languageSettings = {};
-        this.#localeChain = [];
         this.#pluralRules = null;
+        this.#advancedPluralRules = null;
+        this.#binaryPluralRule = null;
     }
 
     #deriveInitialLocale() {
@@ -246,7 +286,6 @@ class Language {
             if (storedVersion === appVersion) {
                 this.#languageData = stored;
                 this.#languageSettings = JSON.parse(localStorage.getItem(`Language.${this.locale}.Settings`)) || {};
-                this.#localeChain = [this.locale];
                 console.log(`Loaded language data for ${this.locale} from local storage.`);
                 return true;
             }
@@ -254,27 +293,60 @@ class Language {
         return false;
     }
 
-    async #loadSingleLocaleWithFallback() {
-        // Attempt desired locale first; on failure try its base (if variant), then fallback to 'en'.
-        const desired = this.locale;
-        const { baseLang, variant } = this.#splitLocale(desired);
-        const attempts = [desired];
-        if (variant) attempts.push(baseLang); // base language of the locale
-        if (!attempts.includes('en')) attempts.push('en');
-        this.#localeChain = [];
-        for (const code of attempts) {
+    async #loadSingleLocale() {
+        // Attempt selected locale, then server language, finally hardcoded 'en-AU'.
+        try {
+            const data = await this.#fetchLanguageFile(this.locale);
+            this.#assignLanguageData(data);
+            document.documentElement.removeAttribute('data-fallback');
+            return;
+        } catch (primaryError) {
+            console.warn(`Primary locale '${this.locale}' failed: ${primaryError.message}`);
+        }
+
+        // Server language fallback
+        let serverLang = null;
+        try { serverLang = await this.#fetchServerLanguage(); } catch { /* ignore */ }
+        if (serverLang && serverLang !== this.locale) {
             try {
-                const data = await this.#fetchLanguageFile(code);
-                this.#assignLanguageData(data);
-                this.#localeChain.push(code);
-                // Stop after first successful fetch because server response is complete.
+                const data2 = await this.#fetchLanguageFile(serverLang);
+                this.#assignLanguageData(data2);
+                this.locale = serverLang;
+                localStorage.setItem('Language.Selected', serverLang);
+                document.documentElement.setAttribute('data-fallback', 'true');
+                console.warn(`Fell back to server language '${serverLang}'.`);
                 return;
-            } catch (err) {
-                console.warn(err.message || `Failed to load locale ${code}`);
-                this.#localeChain.push(code + ':failed');
+            } catch (serverErr) {
+                console.error(`Server language '${serverLang}' failed: ${serverErr.message}`);
             }
         }
-        throw new Error('Failed to load any locale file (attempts: ' + attempts.join(', ') + ')');
+
+        // Final guaranteed fallback to en-AU
+        const finalFallback = 'en-AU';
+        if (finalFallback !== this.locale && finalFallback !== serverLang) {
+            try {
+                const data3 = await this.#fetchLanguageFile(finalFallback);
+                this.#assignLanguageData(data3);
+                this.locale = finalFallback;
+                localStorage.setItem('Language.Selected', finalFallback);
+                document.documentElement.setAttribute('data-fallback', 'true');
+                console.warn(`Fell back to final locale '${finalFallback}'.`);
+                return;
+            } catch (finalErr) {
+                console.error(`Final fallback '${finalFallback}' failed: ${finalErr.message}`);
+            }
+        }
+
+        throw new Error('All locale loading attempts failed (selected, server language, en-AU).');
+    }
+
+    async #fetchServerLanguage() {
+        try {
+            const res = await fetch('/api/v1.1/Localisation/server-language', { cache: 'no-cache' });
+            if (!res.ok) return null;
+            const json = await res.json();
+            return this.#normalizeLocale(json.serverLanguage || 'en');
+        } catch { return null; }
     }
 
     #persistCache() {
@@ -298,10 +370,7 @@ class Language {
         }
     }
 
-    #splitLocale(locale) {
-        const parts = locale.split('-');
-        return { baseLang: parts[0].toLowerCase(), variant: parts.length > 1 ? parts.slice(1).join('-') : null };
-    }
+    // Removed #splitLocale since no fallback chain logic is needed.
 
     #extractParams(elem) {
         // data-i18n-params="key1:value1;key2:value2" simple format
@@ -312,6 +381,93 @@ class Language {
             if (k) acc[k.trim()] = (v || '').trim();
             return acc;
         }, {});
+    }
+
+    // Formatting helper: supports positional {0} style and named {{name}} style concurrently.
+    #formatValue(value, args) {
+        if (args == null) return value;
+        let out = value;
+        if (Array.isArray(args)) {
+            // positional replacement; naive but safe
+            for (let i = 0; i < args.length; i++) {
+                const token = new RegExp('\\{' + i + '\\}', 'g');
+                out = out.replace(token, String(args[i]));
+            }
+        } else if (typeof args === 'object') {
+            for (const k of Object.keys(args)) {
+                const token = `{{${k}}}`;
+                if (out.includes(token)) out = out.split(token).join(String(args[k]));
+            }
+        }
+        return out;
+    }
+
+    // Plural rule expression evaluator (supports n, integers, (), ==, !=, <, <=, >, >=, &&, ||)
+    #evaluatePluralRule(expression, n) {
+        try {
+            const tokens = this.#tokenizeRule(expression);
+            let index = 0;
+            return this.#parseOr(tokens, () => index, v => { index = v; }, n);
+        } catch {
+            return n !== 1; // default
+        }
+    }
+    #tokenizeRule(expr) {
+        const tokens = [];
+        for (let i = 0; i < expr.length;) {
+            const c = expr[i];
+            if (/\s/.test(c)) { i++; continue; }
+            if (/[0-9]/.test(c)) {
+                let start = i; while (i < expr.length && /[0-9]/.test(expr[i])) i++; tokens.push(expr.slice(start, i)); continue;
+            }
+            if (/[A-Za-z]/.test(c)) {
+                let start = i; while (i < expr.length && /[A-Za-z]/.test(expr[i])) i++; tokens.push(expr.slice(start, i)); continue;
+            }
+            const two = expr.slice(i, i + 2);
+            if (["==", "!=", "<=", ">=", "&&", "||"].includes(two)) { tokens.push(two); i += 2; continue; }
+            tokens.push(c); i++;
+        }
+        return tokens;
+    }
+    #parseOr(tokens, getIndex, setIndex, n) {
+        let left = this.#parseAnd(tokens, getIndex, setIndex, n);
+        while (getIndex() < tokens.length && tokens[getIndex()] === '||') { setIndex(getIndex() + 1); const right = this.#parseAnd(tokens, getIndex, setIndex, n); left = left || right; }
+        return left;
+    }
+    #parseAnd(tokens, getIndex, setIndex, n) {
+        let left = this.#parseComparison(tokens, getIndex, setIndex, n);
+        while (getIndex() < tokens.length && tokens[getIndex()] === '&&') { setIndex(getIndex() + 1); const right = this.#parseComparison(tokens, getIndex, setIndex, n); left = left && right; }
+        return left;
+    }
+    #parseComparison(tokens, getIndex, setIndex, n) {
+        let leftVal = this.#parseValue(tokens, getIndex, setIndex, n);
+        if (getIndex() >= tokens.length) return leftVal !== 1;
+        const op = tokens[getIndex()];
+        if (!['==', '!=', '<', '<=', '>', '>='].includes(op)) return leftVal !== 1;
+        setIndex(getIndex() + 1);
+        const rightVal = this.#parseValue(tokens, getIndex, setIndex, n);
+        switch (op) {
+            case '==': return leftVal === rightVal;
+            case '!=': return leftVal !== rightVal;
+            case '<': return leftVal < rightVal;
+            case '<=': return leftVal <= rightVal;
+            case '>': return leftVal > rightVal;
+            case '>=': return leftVal >= rightVal;
+        }
+        return false;
+    }
+    #parseValue(tokens, getIndex, setIndex, n) {
+        if (getIndex() >= tokens.length) return 0;
+        const t = tokens[getIndex()];
+        if (t === '(') {
+            setIndex(getIndex() + 1);
+            const inner = this.#parseOr(tokens, getIndex, setIndex, n);
+            if (getIndex() < tokens.length && tokens[getIndex()] === ')') setIndex(getIndex() + 1);
+            return inner ? 1 : 0;
+        }
+        if (/^n$/i.test(t)) { setIndex(getIndex() + 1); return n; }
+        if (/^[0-9]+$/.test(t)) { setIndex(getIndex() + 1); return parseInt(t, 10); }
+        setIndex(getIndex() + 1); return 0;
     }
 }
 

@@ -12,14 +12,7 @@
     },
     "direction": "ltr",
     "type": "Base",
-    "strings": {
-        "gaseous_title": "Gaseous",
-        "game.count.zero": "No games",
-        "game.count.one": "{0} game",
-        "game.count.few": "{0} games",
-        "game.count.many": "{0} games",
-        "game.count.other": "{0} games"
-    },
+    "strings": {},
     "serverstrings": {
         "process.startup": "Startup",
         "process.forwardedheaders": "ForwardedHeaders",
