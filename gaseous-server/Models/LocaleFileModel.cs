@@ -71,12 +71,12 @@ namespace gaseous_server.Models
         /// </summary>
         public string? PluralRule { get; set; }
 
-    /// <summary>
-    /// Gets or sets advanced plural rules mapping category name to boolean expression over n. Example:
-    /// { "one": "n == 1", "few": "n &gt;= 2 &amp;&amp; n &lt;= 4", "many": "n &gt;= 5", "other": "n == 0" }
-    /// If provided this takes precedence over the legacy PluralRule (binary singular/plural).
-    /// </summary>
-    public Dictionary<string, string>? PluralRules { get; set; }
+        /// <summary>
+        /// Gets or sets advanced plural rules mapping category name to boolean expression over n. Example:
+        /// { "one": "n == 1", "few": "n &gt;= 2 &amp;&amp; n &lt;= 4", "many": "n &gt;= 5", "other": "n == 0" }
+        /// If provided this takes precedence over the legacy PluralRule (binary singular/plural).
+        /// </summary>
+        public Dictionary<string, string>? PluralRules { get; set; }
 
         /// <summary>
         /// Gets or sets the text direction for the locale (e.g., "ltr" for left-to-right, "rtl" for right-to-left).

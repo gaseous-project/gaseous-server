@@ -7,8 +7,8 @@
         "zero": "n == 0",
         "one": "n == 1",
         "few": "n >= 2 && n <= 4",
-    "many": "n >= 5 && n < 100",
-    "other": "n >= 100"
+        "many": "n >= 5 && n < 100",
+        "other": "n >= 100"
     },
     "direction": "ltr",
     "type": "Base",
