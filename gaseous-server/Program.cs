@@ -136,7 +136,7 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
             }
             else if (!string.IsNullOrWhiteSpace(proxy))
             {
-                Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", $"Invalid KnownProxy IP address '{proxy}' - skipping");
+                Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", Localisation.Translate("forwardedheaders.invalid_knownproxy_ip", new[]{ proxy }));
             }
         }
     }
@@ -152,24 +152,24 @@ builder.Services.Configure<ForwardedHeadersOptions>(options =>
                 var parts = network.Split('/', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
                 if (parts.Length != 2)
                 {
-                    Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", $"Invalid KnownNetwork '{network}' (expected CIDR like 10.0.0.0/8) - skipping");
+                    Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", Localisation.Translate("forwardedheaders.invalid_knownnetwork", new[]{ network }));
                     continue;
                 }
                 if (!IPAddress.TryParse(parts[0], out var prefix))
                 {
-                    Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", $"Invalid KnownNetwork address '{parts[0]}' - skipping");
+                    Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", Localisation.Translate("forwardedheaders.invalid_knownnetwork_address", new[]{ parts[0] }));
                     continue;
                 }
                 if (!int.TryParse(parts[1], out var prefixLen))
                 {
-                    Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", $"Invalid KnownNetwork prefix length '{parts[1]}' - skipping");
+                    Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", Localisation.Translate("forwardedheaders.invalid_knownnetwork_prefixlen", new[]{ parts[1] }));
                     continue;
                 }
                 options.KnownNetworks.Add(new Microsoft.AspNetCore.HttpOverrides.IPNetwork(prefix, prefixLen));
             }
             catch (Exception ex)
             {
-                Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", $"Failed to add KnownNetwork '{network}'", ex);
+                Logging.Log(Logging.LogType.Warning, "ForwardedHeaders", Localisation.Translate("forwardedheaders.failed_add_knownnetwork", new[]{ network }), ex);
             }
         }
     }
@@ -481,7 +481,7 @@ app.Use(async (context, next) =>
 await app.StartAsync();
 try
 {
-    Logging.Log(Logging.LogType.Information, "Startup", "Web server is ready to accept connections.");
+    Logging.Log(Logging.LogType.Information, "Startup", Localisation.Translate("startup.web_server_ready"));
 }
 catch { /* logging should not block startup */ }
 await app.WaitForShutdownAsync();

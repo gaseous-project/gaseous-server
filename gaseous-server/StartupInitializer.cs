@@ -24,13 +24,14 @@ namespace gaseous_server
             try
             {
                 Logging.WriteToDiskOnly = true;
-                Logging.Log(Logging.LogType.Information, "Startup", "Starting Gaseous Server " + Assembly.GetExecutingAssembly().GetName().Version);
+                var version = Assembly.GetExecutingAssembly().GetName().Version?.ToString() ?? "";
+                Logging.Log(Logging.LogType.Information, "Startup", Localisation.Translate("startup.starting_server", new[]{ version }));
 
                 // Wait for DB online
                 var db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionStringNoDatabase);
                 while (!stoppingToken.IsCancellationRequested)
                 {
-                    Logging.Log(Logging.LogType.Information, "Startup", "Waiting for database...");
+                    Logging.Log(Logging.LogType.Information, "Startup", Localisation.Translate("startup.waiting_for_database"));
                     if (db.TestConnection()) break;
                     await Task.Delay(TimeSpan.FromSeconds(30), stoppingToken);
                 }
@@ -108,7 +109,7 @@ namespace gaseous_server
                 ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.TempCleanup));
 
                 Logging.WriteToDiskOnly = false;
-                Logging.Log(Logging.LogType.Information, "Startup", "Startup initialization complete.");
+                Logging.Log(Logging.LogType.Information, "Startup", Localisation.Translate("startup.initialization_complete"));
             }
             catch (OperationCanceledException)
             {
@@ -116,7 +117,7 @@ namespace gaseous_server
             }
             catch (Exception ex)
             {
-                Logging.Log(Logging.LogType.Critical, "Startup", "Startup initialization failed", ex);
+                Logging.Log(Logging.LogType.Critical, "Startup", Localisation.Translate("startup.initialization_failed"), ex);
             }
         }
     }

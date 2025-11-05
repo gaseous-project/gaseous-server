@@ -20,5 +20,16 @@
         "game.count.many": "{0} games",
         "game.count.other": "{0} games"
     },
-    "serverstrings": {}
+    "serverstrings": {
+        "startup.starting_server": "Starting Gaseous Server {0}",
+        "startup.waiting_for_database": "Waiting for database...",
+        "startup.initialization_complete": "Startup initialization complete.",
+        "startup.initialization_failed": "Startup initialization failed",
+        "startup.web_server_ready": "Web server is ready to accept connections.",
+        "forwardedheaders.invalid_knownproxy_ip": "Invalid KnownProxy IP address '{0}' - skipping",
+        "forwardedheaders.invalid_knownnetwork": "Invalid KnownNetwork '{0}' (expected CIDR like 10.0.0.0/8) - skipping",
+        "forwardedheaders.invalid_knownnetwork_address": "Invalid KnownNetwork address '{0}' - skipping",
+        "forwardedheaders.invalid_knownnetwork_prefixlen": "Invalid KnownNetwork prefix length '{0}' - skipping",
+        "forwardedheaders.failed_add_knownnetwork": "Failed to add KnownNetwork '{0}'"
+    }
 }
