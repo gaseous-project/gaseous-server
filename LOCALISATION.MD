@@ -1,6 +1,6 @@
 # Localisation in gaseous-server
 
-The gaseous-server provides an extensible localisation (internationalisation) system that supports base language files, overlay locale variants, server-only strings and pluralisation (including multi-category forms: one, few, many, other).
+The gaseous-server provides an extensible localisation (internationalisation) system that supports base language files, overlay locale variants, server-only strings and pluralisation (including multi-category forms: zero, one, few, many, other).
 
 ## Locale File Overview
 
@@ -66,7 +66,7 @@ Plural-aware translation (multi-category support enabled):
 ```csharp
 Localisation.TranslatePlural("game.count", count, new[]{ count.ToString() });
 ```
-This method resolves to `game.count.<category>` where `<category>` may be one, few, many, or other depending on configured rules (falling back to legacy one/other when advanced rules are absent).
+This method resolves to `game.count.<category>` where `<category>` may be zero, one, few, many, or other depending on configured rules (falling back to legacy one/other when advanced rules are absent).
 
 ## Pluralisation Model
 Pluralisation can be configured in two ways:
@@ -75,9 +75,9 @@ Pluralisation can be configured in two ways:
   - If expression evaluates to `true` -> use `other` variant.
   - If expression evaluates to `false` -> use `one` variant.
 2. Advanced multi-category form using `pluralRules` (a JSON object mapping category to expression).
-  - Categories currently supported: `one`, `few`, `many`, `other`.
+  - Categories currently supported: `zero`, `one`, `few`, `many`, `other`.
   - Each expression is evaluated; the first category in priority order that returns `true` is selected.
-  - Evaluation priority order: one, few, many, other.
+  - Evaluation priority order: zero, one, few, many, other.
   - If no category matches, legacy fallback logic is applied (or `other`).
 
 Typical English binary rule:
@@ -104,6 +104,7 @@ Legacy (binary): Provide two keys under `strings` for pluralisable messages:
 - `<base>.other`
 
 Advanced multi-category (optional additional keys):
+- `<base>.zero`
 - `<base>.few`
 - `<base>.many`
 - `<base>.other` (always recommended)
@@ -116,7 +117,7 @@ Example:
 
 Fallback order when resolving plural forms:
 1. Matched category key (e.g. `<base>.few`).
-2. Other category keys in order: one, few, many, other (excluding matched).
+2. Other category keys in order: zero, one, few, many, other (excluding matched).
 3. Base key `<base>` if present.
 4. Return the resolved category key string (as a last resort) so caller can see missing translation.
 
@@ -127,10 +128,11 @@ Fallback order when resolving plural forms:
 4. For multi-category pluralisation add `pluralRules` object, e.g.:
 ```json
 "pluralRules": {
+  "zero": "n == 0",
   "one": "n == 1",
   "few": "n >= 2 && n <= 4",
   "many": "n >= 5",
-  "other": "n == 0"
+  "other": "n == 0" // acts as catch-all in this example
 }
 ```
 5. Provide matching key variants in `strings`.

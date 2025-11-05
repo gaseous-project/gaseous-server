@@ -115,7 +115,7 @@ namespace gaseous_server.Classes
             if (localeFile.PluralRules != null && localeFile.PluralRules.Count > 0)
             {
                 // Define evaluation order; user may supply subset.
-                string[] order = new[] { "one", "few", "many", "other" };
+                string[] order = new[] { "zero", "one", "few", "many", "other" };
                 var matchedCategory = order.FirstOrDefault(cat => localeFile.PluralRules.ContainsKey(cat) && EvaluatePluralRule(localeFile.PluralRules[cat], count));
                 if (matchedCategory != null)
                 {
@@ -136,7 +136,7 @@ namespace gaseous_server.Classes
             fallbackKeys.Add(resolvedKey);
 
             // Add other plural forms for fallback (excluding already added)
-            string[] allCats = { "one", "few", "many", "other" };
+            string[] allCats = { "zero", "one", "few", "many", "other" };
             foreach (var cat in allCats)
             {
                 string k = baseKey + "." + cat;

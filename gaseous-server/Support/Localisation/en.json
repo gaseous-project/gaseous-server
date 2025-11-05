@@ -4,15 +4,17 @@
     "code": "en",
     "pluralRule": "n != 1",
     "pluralRules": {
+        "zero": "n == 0",
         "one": "n == 1",
         "few": "n >= 2 && n <= 4",
-        "many": "n >= 5",
-        "other": "n == 0"
+    "many": "n >= 5 && n < 100",
+    "other": "n >= 100"
     },
     "direction": "ltr",
     "type": "Base",
     "strings": {
         "gaseous_title": "Gaseous",
+        "game.count.zero": "No games",
         "game.count.one": "{0} game",
         "game.count.few": "{0} games",
         "game.count.many": "{0} games",
