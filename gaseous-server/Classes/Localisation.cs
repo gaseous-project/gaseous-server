@@ -57,14 +57,14 @@ namespace gaseous_server.Classes
             }
         }
 
-    /// <summary>
-    /// Translates a localisation key using the current locale from either client-facing strings or server-only strings.
-    /// </summary>
+        /// <summary>
+        /// Translates a localisation key using the current locale from either client-facing strings or server-only strings.
+        /// </summary>
         /// <param name="key">The localisation key to look up.</param>
         /// <param name="args">Optional formatting arguments applied via string.Format.</param>
         /// <param name="useServerStrings">If true, lookup is performed against ServerStrings; otherwise against Strings.</param>
         /// <returns>Translated (and formatted) value or the key when not found.</returns>
-        public static string Translate(string key, string[]? args = null, bool useServerStrings = false)
+        public static string Translate(string key, string[]? args = null, bool useServerStrings = true)
         {
             // check if the current locale is loaded
             if (!_loadedLocales.ContainsKey(_currentLocale))
@@ -94,7 +94,7 @@ namespace gaseous_server.Classes
         /// <param name="args">Optional formatting arguments.</param>
         /// <param name="useServerStrings">If true lookup uses ServerStrings; otherwise Strings.</param>
         /// <returns>Pluralised translation or fallback key string.</returns>
-        public static string TranslatePlural(string baseKey, long count, string[]? args = null, bool useServerStrings = false)
+        public static string TranslatePlural(string baseKey, long count, string[]? args = null, bool useServerStrings = true)
         {
             // ensure locale loaded
             if (!_loadedLocales.ContainsKey(_currentLocale))
@@ -170,7 +170,7 @@ namespace gaseous_server.Classes
         /// <summary>
         /// Returns appropriate dictionary (Strings or ServerStrings) based on flag.
         /// </summary>
-        private static Dictionary<string,string>? GetActiveDictionary(LocaleFileModel localeFile, bool useServerStrings)
+        private static Dictionary<string, string>? GetActiveDictionary(LocaleFileModel localeFile, bool useServerStrings)
         {
             if (useServerStrings) return localeFile.ServerStrings;
             return localeFile.Strings;

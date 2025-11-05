@@ -30,6 +30,7 @@
         "forwardedheaders.invalid_knownnetwork": "Invalid KnownNetwork '{0}' (expected CIDR like 10.0.0.0/8) - skipping",
         "forwardedheaders.invalid_knownnetwork_address": "Invalid KnownNetwork address '{0}' - skipping",
         "forwardedheaders.invalid_knownnetwork_prefixlen": "Invalid KnownNetwork prefix length '{0}' - skipping",
-        "forwardedheaders.failed_add_knownnetwork": "Failed to add KnownNetwork '{0}'"
+        "forwardedheaders.failed_add_knownnetwork": "Failed to add KnownNetwork '{0}'",
+        "request.received": "Received {0} {1}"
     }
 }

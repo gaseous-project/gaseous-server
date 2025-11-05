@@ -472,6 +472,12 @@ app.Use(async (context, next) =>
     CallContext.SetData("CallingUser", userIdentity);
 
     context.Response.Headers.Append("x-correlation-id", correlationId.ToString());
+    // Log the incoming request (method and path) with localisation
+    try
+    {
+        Logging.Log(Logging.LogType.Debug, "HTTP Request", Localisation.Translate("request.received", new string[]{ context.Request.Method, context.Request.Path }));
+    }
+    catch { /* do not block request on logging */ }
     await next();
 });
 
