@@ -25,8 +25,7 @@
         "banner.notification.database_upgrade.title": "Database Upgrade In Progress",
         "banner.notification.database_upgrade.body": "Performance may be degraded while the database is being upgraded, while favourites and game saves may be missing. Please wait until the upgrade is complete.",
         "banner.notification.game_imported.title": "Game Imported",
-        "banner.notification.game_imported.body": "New games have been imported. Reload the library to see them."
-        ,
+        "banner.notification.game_imported.body": "New games have been imported. Reload the library to see them.",
         "console.unloading_page": "Unloading page: {0}",
         "console.page_cleanup_completed": "{0} page cleanup completed",
         "console.spa_navigation": "SPA navigation from {0} to {1}",

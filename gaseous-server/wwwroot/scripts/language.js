@@ -121,6 +121,7 @@ class Language {
         const wantsHtml = elem.dataset.i18nHtml !== undefined;
         if (wantsHtml) {
             elem.innerHTML = translated; // trusted / controlled translations only
+            elem.style.backgroundColor = 'yellow';
         } else {
             elem.textContent = translated;
         }
