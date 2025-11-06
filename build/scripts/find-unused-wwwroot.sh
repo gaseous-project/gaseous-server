@@ -77,11 +77,16 @@ for p in $ALL_PAGE_BASES; do
   fi
 done
 
-# Scripts referenced via scriptLinks array
+# Scripts referenced via scriptLinks array plus explicit <script src> tags
+# 1. scriptLinks array entries
 SCRIPT_LINKS=$(grep -A50 "scriptLinks" "$WWWROOT/index.html" | grep -E '"/scripts/[^" ]+\.js"' | sed -E 's/.*"\/scripts\/([^" ]+\.js)".*/\1/' | sort -u)
-# Add language.js imported dynamically
+# 2. language.js imported dynamically
 SCRIPT_LINKS+=$'\n'"language.js"
-REFERENCED_SCRIPTS=$(echo "$SCRIPT_LINKS" | sort -u)
+# 3. <script src="/scripts/..."> tags in index.html and all pages/*.html
+HTML_SCRIPT_TAG_SOURCES=$(grep -R -E '<script[^>]+src="/scripts/[^" ]+\.js"' "$WWWROOT/index.html" "$WWWROOT/pages" 2>/dev/null | sed -E 's/.*src="\/scripts\/([^" ]+\.js)".*/\1/' | sort -u || true)
+SCRIPT_LINKS+=$'\n'"$HTML_SCRIPT_TAG_SOURCES"
+# Consolidate unique referenced scripts
+REFERENCED_SCRIPTS=$(echo "$SCRIPT_LINKS" | tr '\n' '\n' | grep -v '^$' | sort -u)
 
 # All top-level scripts
 ALL_SCRIPTS=$(find "$WWWROOT/scripts" -maxdepth 1 -type f -name '*.js' -printf '%f\n' | sort -u)
