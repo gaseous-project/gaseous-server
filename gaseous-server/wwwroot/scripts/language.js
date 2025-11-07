@@ -400,6 +400,8 @@ class Language {
                 if (out.includes(token)) out = out.split(token).join(String(args[k]));
             }
         }
+        out = "**" + out + "**"; // debug wrapper to visualize missing replacements
+        console.log('Formatted value: ' + out);
         return out;
     }
 

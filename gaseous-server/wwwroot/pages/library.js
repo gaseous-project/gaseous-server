@@ -46,10 +46,10 @@ async function SetupPage() {
                 if (freshLoad === true) {
                     // render game chrome objects
                     let gameCountElement = document.getElementById('games_library_recordcount');
-                    if (filter.GameCount == 1) {
-                        gameCountElement.innerText = '1 game';
-                    } else {
-                        gameCountElement.innerText = filter.GameCount + ' games';
+                        if (filter.GameCount == 1) {
+                            gameCountElement.innerText = window.lang.translate('library.game_count.one', [filter.GameCount]);
+                        } else {
+                            gameCountElement.innerText = window.lang.translate('library.game_count.other', [filter.GameCount]);
                     }
 
                     // build alphabet pager
@@ -136,7 +136,7 @@ async function SetupPage() {
                     // restore the scroll position
                     let scrollPosition = localStorage.getItem('Library.ScrollPosition');
                     if (scrollPosition) {
-                        console.log('restoring scroll position: ' + scrollPosition);
+                            console.log(window.lang.translate('console.restoring_scroll_position', [scrollPosition]));
                         window.scrollTo(0, scrollPosition);
                     }
                 }
@@ -153,7 +153,7 @@ async function SetupPage() {
                         if (charCount > 3) {
                             charCount = 0;
                         }
-                        loadingElement.innerHTML = 'Loading' + '.'.repeat(charCount) + '&nbsp;'.repeat(3 - charCount);
+                            loadingElement.innerHTML = window.lang.translate('generic.loading') + '.'.repeat(charCount) + '&nbsp;'.repeat(3 - charCount);
                     }, 1000);
                     gamesElement.appendChild(loadingElement);
                 }

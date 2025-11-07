@@ -34,7 +34,8 @@ class HomePageGameRow {
             if (charCount > 3) {
                 charCount = 0;
             }
-            this.games.innerHTML = '<p>Loading' + '.'.repeat(charCount) + '&nbsp;'.repeat(3 - charCount) + '</p>';
+            // Internationalised loading indicator: base word from translations, dots remain for animation.
+            this.games.innerHTML = '<p>' + window.lang.translate('generic.loading') + '.'.repeat(charCount) + '&nbsp;'.repeat(3 - charCount) + '</p>';
         }, 1000);
 
         let gameFilter = new Filtering();
@@ -44,7 +45,7 @@ class HomePageGameRow {
             this.games.innerHTML = "";
 
             if (games.length === 0) {
-                this.games.innerHTML = "<p>No games found.</p>";
+                this.games.innerHTML = '<p>' + window.lang.translate('home.no_games_found') + '</p>';
             } else {
                 this.games.classList.remove("section-body");
                 let scroller = document.createElement("ul");
@@ -68,7 +69,7 @@ class HomePageGameRow {
                             if (backgroundImageHandler !== undefined && backgroundImageHandler.URLList) {
                                 urls.push(backgroundImageHandler.URLList[0]);
                             }
-                            console.log("Creating new BackgroundImageRotator");
+                            console.log(window.lang.translate('console.creating_background_image_rotator'));
                             backgroundImageHandler = new BackgroundImageRotator(urls, null, true, true);
                         } else {
                             if (backgroundImageHandler && backgroundImageHandler.URLList && !backgroundImageHandler.URLList.includes(coverUrl)) {
@@ -91,7 +92,7 @@ var gameRows = [];
 
 backgroundImageHandler = undefined;
 
-gameRows.push(new HomePageGameRow("Favourites",
+gameRows.push(new HomePageGameRow(window.lang.translate('home.favourites'),
     {
         "orderBy": "NameThe",
         "orderDirection": "Ascending",
@@ -102,7 +103,7 @@ gameRows.push(new HomePageGameRow("Favourites",
     }
 ));
 
-gameRows.push(new HomePageGameRow("Saved Games",
+gameRows.push(new HomePageGameRow(window.lang.translate('home.saved_games'),
     {
         "orderBy": "NameThe",
         "orderDirection": "Ascending",
@@ -113,7 +114,7 @@ gameRows.push(new HomePageGameRow("Saved Games",
     }
 ));
 
-gameRows.push(new HomePageGameRow("Recently Played Games",
+gameRows.push(new HomePageGameRow(window.lang.translate('home.recently_played_games'),
     {
         "playTime": { "min": 1, "max": null },
         "orderBy": "LastPlayed",
@@ -122,7 +123,7 @@ gameRows.push(new HomePageGameRow("Recently Played Games",
     }
 ));
 
-gameRows.push(new HomePageGameRow("Recently Added Games",
+gameRows.push(new HomePageGameRow(window.lang.translate('home.recently_added_games'),
     {
         "orderBy": "DateAdded",
         "orderDirection": "Descending",
@@ -130,7 +131,7 @@ gameRows.push(new HomePageGameRow("Recently Added Games",
     }
 ));
 
-gameRows.push(new HomePageGameRow("Top Rated Games",
+gameRows.push(new HomePageGameRow(window.lang.translate('home.top_rated_games'),
     {
         "orderBy": "Rating",
         "orderDirection": "Descending",
@@ -165,7 +166,7 @@ profileDiv.appendChild(profileCardContent);
 // Register cleanup callback for home page
 if (typeof registerPageUnloadCallback === 'function') {
     registerPageUnloadCallback('home', async () => {
-        console.log('Cleaning up home page...');
+    console.log(window.lang.translate('console.cleaning_up_home_page'));
 
         // Clear any loading intervals
         if (typeof gameRows !== 'undefined' && gameRows) {
@@ -190,7 +191,7 @@ if (typeof registerPageUnloadCallback === 'function') {
             backgroundImageHandler = undefined;
         }
 
-        console.log('Home page cleanup completed');
+    console.log(window.lang.translate('console.home_page_cleanup_completed'));
     });
 }
 

@@ -1,12 +1,12 @@
-﻿<input id="collection_name" type="text" placeholder="Collection Name" style="width: 80%; font-size: 2em;" />
-<input id="collection_description" type="text" placeholder="Description" style="width: 80%; margin-top: 5px;" />
+﻿<input id="collection_name" type="text" placeholder="" style="width: 80%; font-size: 2em;" />
+<input id="collection_description" type="text" placeholder="" style="width: 80%; margin-top: 5px;" />
 
 <div style="position: absolute; top: 90px; right: 5px; left: 10px; bottom: 5px;">
     <div style="position: relative; width: 100%; height: 100%;">
         <table style="position: absolute; top: 0px; left: 0px; bottom: 0px; width: 40%;">
             <tr>
                 <td>
-                    <h3>Filter</h3>
+                    <h3 id="collectionedit_filter_header"></h3>
                 </td>
             </tr>
         </table>
@@ -14,28 +14,28 @@
             style="position: absolute; top: 40px; left: 0px; bottom: 5px; width: 40%; max-width: 40%; overflow-x: scroll;">
             <table style="width: 100%;">
                 <tr>
-                    <th style="width: 25%;">Platforms</th>
+                    <th style="width: 25%;" id="collectionedit_platforms_header"></th>
                     <td><select id="collection_platform" style="width: 100%;" multiple="multiple"></select></td>
                 </tr>
                 <tr>
-                    <th>Genres</th>
+                    <th id="collectionedit_genres_header"></th>
                     <td><select id="collection_genres" style="width: 100%;" multiple="multiple"></select></td>
                 </tr>
                 <tr>
-                    <th>Players</th>
+                    <th id="collectionedit_players_header"></th>
                     <td><select id="collection_players" style="width: 100%;" multiple="multiple"></select></td>
                 </tr>
                 <tr>
-                    <th>Player Perspectives</th>
+                    <th id="collectionedit_playerperspectives_header"></th>
                     <td><select id="collection_playerperspectives" style="width: 100%;" multiple="multiple"></select>
                     </td>
                 </tr>
                 <tr>
-                    <th>Themes</th>
+                    <th id="collectionedit_themes_header"></th>
                     <td><select id="collection_themes" style="width: 100%;" multiple="multiple"></select></td>
                 </tr>
                 <tr>
-                    <th>Rating</th>
+                    <th id="collectionedit_rating_header"></th>
                     <td>
                         <input id="collection_userrating_min" type="number" placeholder="0" min="0" max="100">
                         <input id="collection_userrating_max" type="number" placeholder="100" min="0" max="100">
@@ -47,24 +47,24 @@
                     </td>
                 </tr>
                 <tr>
-                    <th>Maximum ROMs per platform</th>
+                    <th id="collectionedit_maxroms_header"></th>
                     <td><input id="collection_maxroms" type="number" placeholder="0"></td>
                 </tr>
                 <tr>
-                    <th>Maximum size per platform (bytes)</th>
+                    <th id="collectionedit_maxplatformsize_header"></th>
                     <td><input id="collection_maxplatformsize" type="number" placeholder="0" step="1048576"
                             oninput="DisplayFormattedBytes('collection_maxplatformsize', 'maxplatformsize_label');"><span
                             id="maxplatformsize_label" style="margin-left: 10px;"></span></td>
                 </tr>
                 <tr>
-                    <th>Maximum collection size (bytes)</th>
+                    <th id="collectionedit_maxcollectionsize_header"></th>
                     <td><input id="collection_maxcollectionsize" type="number" placeholder="0" step="1048576"
                             oninput="DisplayFormattedBytes('collection_maxcollectionsize', 'maxcollectionsize_label');"><span
                             id="maxcollectionsize_label" style="margin-left: 10px;"></span></td>
                     </td>
                 </tr>
                 <tr>
-                    <th>Directory Layout</th>
+                    <th id="collectionedit_directorylayout_header"></th>
                     <td>
                         <select id="collection_directorylayout" style="width: 100%;"
                             data-minimum-results-for-search="Infinity" onchange="DisplayDirectoryLabel();">
@@ -92,7 +92,7 @@
                 </tr>
                 <tr>
                     <th>
-                        Include BIOS files (if available)
+                        <span id="collectionedit_includebios_header"></span>
                     </th>
                     <td>
                         <select id="collection_includebios" style="width: 100%;"
@@ -105,7 +105,7 @@
                 <tr id="collection_includebios_label">
                     <td></td>
                     <td>
-                        BIOS files for each platform will be stored in /BIOS
+                        <span id="collection_includebios_label_text">BIOS files for each platform will be stored in /BIOS</span>
                     </td>
                 </tr>
                 <!-- <tr>
@@ -125,7 +125,7 @@
         <table style="position: absolute; top: 0px; right: 0px; bottom: 0px; width: 60%;">
             <tr>
                 <td>
-                    <h3>Collection</h3>
+                    <h3 id="collectionedit_collection_header"></h3>
                 </td>
             </tr>
         </table>
@@ -141,9 +141,9 @@
         </div>
         <div id="collectionedit_previewbox_controls"
             style="position: absolute; right: 10px; bottom: 0px; width: 60%; height: 25px; text-align: right;">
-            <button id="collectionedit_preview" onclick="GetPreview();">Preview</button>
-            <button id="collectionedit_cancel" onclick="closeDialog();">Cancel</button>
-            <button id="collectionedit_ok" onclick="SaveCollection();">Ok</button>
+            <button id="collectionedit_preview" onclick="GetPreview();"></button>
+            <button id="collectionedit_cancel" onclick="closeDialog();"></button>
+            <button id="collectionedit_ok" onclick="SaveCollection();"></button>
         </div>
     </div>
 </div>
@@ -443,7 +443,7 @@
             "alwaysInclude": alwaysInclude
         }
 
-        console.log("Item: " + JSON.stringify(item));
+    console.log(globalThis.lang.translate('collection.edit.item_debug', [JSON.stringify(item)]));
 
         return item;
     }
@@ -638,7 +638,7 @@
             container.appendChild(collectionTable);
 
             var collectionSize = document.getElementById('collectionedit_previewbox_size');
-            collectionSize.innerHTML = "Estimated uncompressed collection size: " + formatBytes(data.collectionProjectedSizeBytes);
+            collectionSize.innerHTML = globalThis.lang.translate('collection.edit.estimated_uncompressed_size', [formatBytes(data.collectionProjectedSizeBytes)]);
         }
 
         $('#collectionedit_previewbox .lazy').Lazy({
@@ -648,6 +648,28 @@
             appendScroll: $('#collectionedit_previewbox')
         });
     }
+    // Apply translations to placeholders, headers, buttons after DOM ready
+    try {
+        document.getElementById('collection_name').setAttribute('placeholder', globalThis.lang.translate('collection.edit.collection_name_placeholder'));
+        document.getElementById('collection_description').setAttribute('placeholder', globalThis.lang.translate('collection.edit.description_placeholder'));
+        document.getElementById('collectionedit_filter_header').innerText = globalThis.lang.translate('collection.edit.filter_header');
+        document.getElementById('collectionedit_platforms_header').innerText = globalThis.lang.translate('collection.edit.platforms_header');
+        document.getElementById('collectionedit_genres_header').innerText = globalThis.lang.translate('collection.edit.genres_header');
+        document.getElementById('collectionedit_players_header').innerText = globalThis.lang.translate('collection.edit.players_header');
+        document.getElementById('collectionedit_playerperspectives_header').innerText = globalThis.lang.translate('collection.edit.playerperspectives_header');
+        document.getElementById('collectionedit_themes_header').innerText = globalThis.lang.translate('collection.edit.themes_header');
+        document.getElementById('collectionedit_rating_header').innerText = globalThis.lang.translate('collection.edit.rating_header');
+        document.getElementById('collectionedit_maxroms_header').innerText = globalThis.lang.translate('collection.edit.maxroms_header');
+        document.getElementById('collectionedit_maxplatformsize_header').innerText = globalThis.lang.translate('collection.edit.maxplatformsize_header');
+        document.getElementById('collectionedit_maxcollectionsize_header').innerText = globalThis.lang.translate('collection.edit.maxcollectionsize_header');
+        document.getElementById('collectionedit_directorylayout_header').innerText = globalThis.lang.translate('collection.edit.directorylayout_header');
+        document.getElementById('collectionedit_includebios_header').innerText = globalThis.lang.translate('collection.edit.includebios_header');
+        document.getElementById('collectionedit_collection_header').innerText = globalThis.lang.translate('collection.edit.collection_header');
+        document.getElementById('collectionedit_preview').innerText = globalThis.lang.translate('collection.edit.preview_button');
+        document.getElementById('collectionedit_cancel').innerText = globalThis.lang.translate('generic.cancel');
+        document.getElementById('collectionedit_ok').innerText = globalThis.lang.translate('generic.ok');
+        document.getElementById('collection_includebios_label_text').innerText = globalThis.lang.translate('collection.edit.includebios_label_text');
+    } catch (e) { console.log(globalThis.lang.translate('console.error_generic', [e])); }
 
     function DisplayFormattedBytes(inputElement, labelElement) {
         var src = document.getElementById(inputElement);

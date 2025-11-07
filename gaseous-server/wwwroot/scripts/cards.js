@@ -428,7 +428,7 @@ class GameCard {
                                         ratingIcon.title = dataElement.ratingTitle;
                                         ratingIcon.classList.add('card-rating-icon');
 
-                                        let description = AgeRatingMappings.RatingBoards[dataElement.ratingBoard.name].Name + '\nRating: ' + organizationRatingKey;
+                                        let description = AgeRatingMappings.RatingBoards[dataElement.ratingBoard.name].Name + '\n' + window.lang.translate('card.rating.label', organizationRatingKey);
                                         if (dataElement.descriptions && dataElement.descriptions.length > 0) {
                                             description += '\n\nDescription:';
                                             dataElement.descriptions.forEach(element => {
@@ -630,8 +630,8 @@ class GameCard {
             let gameFavIcon = document.createElement('img');
             gameFavIcon.id = "gamestatistics_favourite";
             gameFavIcon.className = "favouriteicon";
-            gameFavIcon.title = "Favourite";
-            gameFavIcon.alt = "Favourite";
+            gameFavIcon.title = window.lang.translate('card.game.favourite');
+            gameFavIcon.alt = window.lang.translate('card.game.favourite');
 
             if (data === true) {
                 gameFavIcon.setAttribute("src", '/images/favourite-filled.svg');
@@ -1195,7 +1195,7 @@ class GameCardRomList {
         this.romsTab.classList.add('card-tab-selected');
         this.romsTab.id = 'card-romlist-roms-tab';
         this.romsTab.setAttribute('data-section', 'roms');
-        this.romsTab.innerHTML = 'ROMs';
+    this.romsTab.innerHTML = window.lang.translate('card.tabs.roms');
         this.contentTabs.appendChild(this.romsTab);
 
         // create the Content tab
@@ -1203,7 +1203,7 @@ class GameCardRomList {
         this.contentTab.classList.add('card-tab');
         this.contentTab.id = 'card-romlist-content-tab';
         this.contentTab.setAttribute('data-section', 'content');
-        this.contentTab.innerHTML = 'Content';
+    this.contentTab.innerHTML = window.lang.translate('card.tabs.content');
         this.contentTabs.appendChild(this.contentTab);
 
         // add event listeners to the tabs
@@ -1263,7 +1263,7 @@ class GameCardRomList {
             this.createMediaGroupButton = document.createElement('button');
             this.createMediaGroupButton.classList.add('modal-button');
             this.createMediaGroupButton.classList.add('card-romlist-management-button');
-            this.createMediaGroupButton.innerHTML = 'Create Media Group';
+            this.createMediaGroupButton.innerHTML = window.lang.translate('card.management.create_media_group');
             this.createMediaGroupButton.style.display = 'none';
             this.createMediaGroupButton.disabled = true;
             this.createMediaGroupButton.addEventListener('click', async (e) => {
@@ -1287,11 +1287,11 @@ class GameCardRomList {
                     body: JSON.stringify(romIds)
                 }).then(response => response.json()).then(data => {
                     if (data) {
-                        console.log('Media group created');
+                        console.log(window.lang.translate('card.management.create_media_group') + ' ' + window.lang.translate('generic.enabled'));
                         this.SetEditMode(true);
                         this.Refresh();
                     } else {
-                        console.log('Error creating media group');
+                        console.log(window.lang.translate('card.error.unable_to_validate_launch_link'));
                     }
                 });
             });
@@ -1300,7 +1300,7 @@ class GameCardRomList {
             this.deleteButton = document.createElement('button');
             this.deleteButton.classList.add('modal-button');
             this.deleteButton.classList.add('card-romlist-management-button');
-            this.deleteButton.innerHTML = 'Delete';
+            this.deleteButton.innerHTML = window.lang.translate('card.management.delete');
             this.deleteButton.style.display = 'none';
             this.deleteButton.disabled = true;
             this.deleteButton.addEventListener('click', async (e) => {
@@ -1309,8 +1309,8 @@ class GameCardRomList {
                 let checkboxes = this.Body.querySelectorAll('[name="rom_item"][data-metadatamapid="' + this.gamePlatformObject.metadataMapId + '"]');
 
                 // create a delete dialog
-                let deleteDialog = new MessageBox('Delete Selected ROMs and Media Groups', 'Are you sure you want to delete the selected ROMs and Media Groups?');
-                let deleteDialogDeleteButton = new ModalButton('Delete', 2, this, async (e) => {
+                let deleteDialog = new MessageBox(window.lang.translate('card.dialog.delete_media_groups_and_roms.title'), window.lang.translate('card.dialog.delete_media_groups_and_roms.message'));
+                let deleteDialogDeleteButton = new ModalButton(window.lang.translate('card.management.delete'), 2, this, async (e) => {
                     checkboxes.forEach(checkbox => {
                         if (checkbox.checked) {
                             let deleteUrl = '';
@@ -1326,12 +1326,10 @@ class GameCardRomList {
                                 }
                             }).then(response => response.json()).then(data => {
                                 if (data) {
-                                    console.log('Deleted');
-
+                                    console.log(window.lang.translate('card.management.deleted'));
                                     this.SetEditMode(true);
-                                    this.Refresh();
                                 } else {
-                                    console.log('Error deleting');
+                                    console.log(window.lang.translate('card.management.error_deleting'));
                                 }
                             });
                         }
@@ -1341,7 +1339,7 @@ class GameCardRomList {
                 });
                 deleteDialog.addButton(deleteDialogDeleteButton);
 
-                let deleteDialogCancelButton = new ModalButton('Cancel', 0, this, async (e) => {
+                let deleteDialogCancelButton = new ModalButton(window.lang.translate('generic.cancel'), 0, this, async (e) => {
                     deleteDialog.msgDialog.close();
                 });
                 deleteDialog.addButton(deleteDialogCancelButton);
@@ -1353,7 +1351,7 @@ class GameCardRomList {
             this.editButton = document.createElement('button');
             this.editButton.classList.add('modal-button');
             this.editButton.classList.add('card-romlist-management-button');
-            this.editButton.innerHTML = 'Edit';
+            this.editButton.innerHTML = window.lang.translate('card.management.edit');
             this.editButton.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 this.SetEditMode();
@@ -1366,7 +1364,7 @@ class GameCardRomList {
             this.metadataMappingButton = document.createElement('button');
             this.metadataMappingButton.classList.add('modal-button');
             this.metadataMappingButton.classList.add('card-romlist-management-button');
-            this.metadataMappingButton.innerHTML = 'Metadata';
+            this.metadataMappingButton.innerHTML = window.lang.translate('card.management.metadata');
             this.metadataMappingButton.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 this.ShowMetadataMappingModal();
@@ -1378,7 +1376,7 @@ class GameCardRomList {
         this.configureEmulatorButton = document.createElement('button');
         this.configureEmulatorButton.classList.add('modal-button');
         this.configureEmulatorButton.classList.add('card-romlist-management-button');
-        this.configureEmulatorButton.innerHTML = 'Emulator';
+    this.configureEmulatorButton.innerHTML = window.lang.translate('card.buttons.emulator');
         this.configureEmulatorButton.addEventListener('click', async (e) => {
             e.stopPropagation();
             this.ShowEmulatorConfigureModal();
@@ -1398,7 +1396,7 @@ class GameCardRomList {
                 this.uploadAudioButton = document.createElement('button');
                 this.uploadAudioButton.classList.add('modal-button');
                 this.uploadAudioButton.classList.add('card-romlist-management-button');
-                this.uploadAudioButton.innerHTML = 'Upload Audio Sample';
+                this.uploadAudioButton.innerHTML = window.lang.translate('card.management.upload_audio_sample');
                 this.uploadAudioButton.addEventListener('click', async (e) => {
                     e.stopPropagation();
                     let uploadDialog = new ContentUploadDialog(this.gamePlatformObject.metadataMapId, 'AudioSample', this.Refresh.bind(this));
@@ -1412,7 +1410,7 @@ class GameCardRomList {
             this.uploadManualButton = document.createElement('button');
             this.uploadManualButton.classList.add('modal-button');
             this.uploadManualButton.classList.add('card-romlist-management-button');
-            this.uploadManualButton.innerHTML = 'Upload Manual';
+            this.uploadManualButton.innerHTML = window.lang.translate('card.management.upload_manual');
             this.uploadManualButton.addEventListener('click', async (e) => {
                 e.stopPropagation();
                 let uploadDialog = new ContentUploadDialog(this.gamePlatformObject.metadataMapId, 'GlobalManual', this.Refresh.bind(this));
@@ -1450,7 +1448,7 @@ class GameCardRomList {
             this.deleteButton.style.display = '';
             this.metadataMappingButton.style.display = 'none';
             this.configureEmulatorButton.style.display = 'none';
-            this.editButton.innerHTML = 'Done';
+            this.editButton.innerHTML = window.lang.translate('card.management.done');
         } else {
             this.editMode = false;
             favIconDisplay = 'block';
@@ -1459,7 +1457,7 @@ class GameCardRomList {
             this.deleteButton.style.display = 'none';
             this.metadataMappingButton.style.display = '';
             this.configureEmulatorButton.style.display = '';
-            this.editButton.innerHTML = 'Edit';
+            this.editButton.innerHTML = window.lang.translate('card.management.edit');
         }
 
         // hide all favourite buttons for this rom list
@@ -1845,14 +1843,14 @@ class GameCardRomList {
                     // create the rom size
                     let romSizeLabel = document.createElement('div');
                     romSizeLabel.classList.add('card-romlist-size');
-                    romSizeLabel.innerHTML = 'Size: ' + formatBytes(element.size);
+                    romSizeLabel.innerHTML = window.lang.translate('card.rom.size_prefix') + formatBytes(element.size);
                     romName.appendChild(romSizeLabel);
 
                     // create the rom type
                     if (element.romTypeMedia) {
                         let romTypeLabel = document.createElement('div');
                         romTypeLabel.classList.add('card-romlist-type');
-                        romTypeLabel.innerHTML = 'Media: ' + element.romTypeMedia;
+                        romTypeLabel.innerHTML = window.lang.translate('card.rom.media_prefix') + element.romTypeMedia;
                         romName.appendChild(romTypeLabel);
                     }
 
@@ -1860,7 +1858,7 @@ class GameCardRomList {
                     if (element.romUserLastUsed) {
                         let lastUsedLabel = document.createElement('div');
                         lastUsedLabel.classList.add('card-romlist-lastused');
-                        lastUsedLabel.innerHTML = 'Most recently used ROM';
+                        lastUsedLabel.innerHTML = window.lang.translate('card.rom.most_recently_used');
                         romName.appendChild(lastUsedLabel);
                     }
 
@@ -1948,7 +1946,7 @@ class GameCardRomList {
 
     LoadContent() {
         // load any additional content
-        console.log('Loading additional content for platform ' + this.gamePlatformObject.name);
+    console.log(window.lang.translate('card.content.loading_additional_for_platform', { platform: this.gamePlatformObject.name }));
         this.contentContainer.innerHTML = '';
         fetch(`/api/v1.1/ContentManager/?metadataids=${this.gamePlatformObject.metadataMapId}&contentTypes=AudioSample,GlobalManual&pageSize=50`, {
             method: 'GET',
@@ -1960,7 +1958,7 @@ class GameCardRomList {
             if (data.totalCount === 0) {
                 let noContentLabel = document.createElement('div');
                 noContentLabel.classList.add('card-romlist-no-content');
-                noContentLabel.innerHTML = 'No additional content available for this ROM.';
+                noContentLabel.innerHTML = window.lang.translate('card.content.none_available_for_rom');
                 this.contentContainer.appendChild(noContentLabel);
             } else {
                 let contentTable = document.createElement('table');
@@ -2061,7 +2059,7 @@ class GameCardRomList {
                                 if (response.status === 200) {
                                     this.Refresh();
                                 } else {
-                                    console.log('Error deleting content item: ' + response.statusText);
+                                    console.log(window.lang.translate('card.content.error_deleting') + response.statusText);
                                 }
                             });
                         });
@@ -2089,7 +2087,7 @@ class GameCardRomList {
         metadataModal.modalElement.classList.add('modal-metadataconfiguration');
 
         // set the title
-        metadataModal.modalElement.querySelector('#modal-header-text').innerHTML = this.gamePlatformObject.name + ' Metadata Mapping';
+    metadataModal.modalElement.querySelector('#modal-header-text').innerHTML = window.lang.translate('card.metadata.mapping_title', { platform: this.gamePlatformObject.name });
 
         // set the content
         let metadataContent = metadataModal.modalElement.querySelector('#modal-body');
@@ -2263,7 +2261,7 @@ class GameCardRomList {
 
 
         // setup the buttons
-        let okButton = new ModalButton('OK', 1, this.gamePlatformObject, async function (callingObject) {
+    let okButton = new ModalButton(window.lang.translate('generic.ok'), 1, this.gamePlatformObject, async function (callingObject) {
             let model = metadataMap.metadataMapItems;
 
             // process the model to ensure only one preferred is set
@@ -2293,7 +2291,7 @@ class GameCardRomList {
         });
         metadataModal.addButton(okButton);
 
-        let cancelButton = new ModalButton('Cancel', 0, metadataModal, async function (callingObject) {
+    let cancelButton = new ModalButton(window.lang.translate('generic.cancel'), 0, metadataModal, async function (callingObject) {
             metadataModal.close();
         });
         metadataModal.addButton(cancelButton);
@@ -2346,7 +2344,7 @@ class GameCardRomList {
         mappingContent.appendChild(emuConfig.panel);
 
         // setup the buttons
-        let resetButton = new ModalButton('Reset to Default', 0, this, async function (callingObject) {
+    let resetButton = new ModalButton(window.lang.translate('card.emulator.reset_to_default'), 0, this, async function (callingObject) {
             await fetch('/api/v1.1/Games/' + callingObject.gamePlatformObject.metadataMapId + '/emulatorconfiguration/' + callingObject.gamePlatformObject.id, {
                 method: 'DELETE'
             });
@@ -2358,7 +2356,7 @@ class GameCardRomList {
         });
         mappingModal.addButton(resetButton);
 
-        let okButton = new ModalButton('OK', 1, this, async function (callingObject) {
+    let okButton = new ModalButton(window.lang.translate('generic.ok'), 1, this, async function (callingObject) {
             let model = {
                 EmulatorType: emuConfig.PlatformMap.webEmulator.type,
                 Core: emuConfig.PlatformMap.webEmulator.core,
@@ -2381,7 +2379,7 @@ class GameCardRomList {
         });
         mappingModal.addButton(okButton);
 
-        let cancelButton = new ModalButton('Cancel', 0, mappingModal, async function (callingObject) {
+    let cancelButton = new ModalButton(window.lang.translate('generic.cancel'), 0, mappingModal, async function (callingObject) {
             mappingModal.close();
         });
         mappingModal.addButton(cancelButton);
@@ -2398,67 +2396,67 @@ class SettingsCard {
 
     menuItems = {
         "/home": {
-            name: "General"
+            name: window.lang.translate('card.settings.menu.general')
         },
         "/server": {
-            name: "Server Settings",
+            name: window.lang.translate('card.settings.menu.server_settings'),
             roles: [
                 "Admin"
             ]
         },
         "/datasources": {
-            name: "Data Sources",
+            name: window.lang.translate('card.settings.menu.data_sources'),
             roles: [
                 "Admin"
             ]
         },
         "/libraries": {
-            name: "Libraries",
+            name: window.lang.translate('card.settings.menu.libraries'),
             roles: [
                 "Admin"
             ]
         },
         "/services": {
-            name: "Services"
+            name: window.lang.translate('card.settings.menu.services')
         },
         "/services/services-configure": {
-            name: "Service Configuration",
+            name: window.lang.translate('card.settings.menu.service_configuration'),
             roles: [
                 "Admin"
             ]
         },
         "/users": {
-            name: "Users",
+            name: window.lang.translate('card.settings.menu.users'),
             roles: [
                 "Admin"
             ]
         },
         "/users/user-management": {
-            name: "User Management",
+            name: window.lang.translate('card.settings.menu.user_management'),
             roles: [
                 "Admin"
             ]
         },
         "/platforms": {
-            name: "Platforms",
+            name: window.lang.translate('card.settings.menu.platforms'),
             roles: [
                 "Admin"
             ]
         },
         "/firmware": {
-            name: "Firmware",
+            name: window.lang.translate('card.settings.menu.firmware'),
             roles: [
                 "Admin"
             ]
         },
         "/logs": {
-            name: "Logs",
+            name: window.lang.translate('card.settings.menu.logs'),
             roles: [
                 "Admin"
             ]
         },
         "/about": {
-            name: "About"
+            name: window.lang.translate('card.settings.menu.about')
         }
     }
 
@@ -2469,7 +2467,7 @@ class SettingsCard {
         this.card.BuildCard();
 
         // set the header
-        this.card.SetHeader("Settings", true);
+    this.card.SetHeader(window.lang.translate('card.settings.header'), true);
 
         // set the background
         this.card.cardBackgroundContainer.style.display = 'none';
@@ -3436,7 +3434,7 @@ class SettingsCard {
 
                             let subTaskLogLink = '';
                             if (userProfile.roles && userProfile.roles.includes("Admin") && subTask.correlationId) {
-                                subTaskLogLink = subTask.correlationId ? `<img id="logLink" class="banner_button_image" src="/images/log.svg" onclick="window.location.href='/index.html?page=settings&sub=logs&correlationid=${subTask.correlationId}'" title="Logs" style="cursor: pointer;">` : '';
+                                subTaskLogLink = subTask.correlationId ? `<img id="logLink" class="banner_button_image" src="/images/log.svg" onclick="window.location.href='/index.html?page=settings&sub=logs&correlationid=${subTask.correlationId}'" title="${window.lang.translate('card.settings.menu.logs')}" style="cursor: pointer;">` : '';
                             }
 
                             let subRowData = [
@@ -3827,7 +3825,7 @@ class SettingsCard {
                         deleteButton.style.marginRight = '10px';
                         deleteButton.addEventListener('click', () => {
                             let deleteLibrary = new MessageBox('Delete Library', 'Are you sure you want to delete this library?<br /><br /><strong>Warning</strong>: This cannot be undone!');
-                            deleteLibrary.addButton(new ModalButton('OK', 2, deleteLibrary, async (callingObject) => {
+                            deleteLibrary.addButton(new ModalButton(window.lang.translate('generic.ok'), 2, deleteLibrary, async (callingObject) => {
                                 await fetch('/api/v1.1/Library/' + library.id, {
                                     method: 'DELETE',
                                     headers: {
@@ -3846,7 +3844,7 @@ class SettingsCard {
                             }));
 
 
-                            deleteLibrary.addButton(new ModalButton('Cancel', 0, deleteLibrary, function (callingObject) {
+                            deleteLibrary.addButton(new ModalButton(window.lang.translate('generic.cancel'), 0, deleteLibrary, function (callingObject) {
                                 callingObject.msgDialog.close();
                             }));
 
@@ -3892,7 +3890,7 @@ class SettingsCard {
                     scanButton.alt = 'Start Scan';
                     scanButton.addEventListener('click', function () {
                         let scanLibrary = new MessageBox('Scan Library', 'Are you sure you want to scan this library?');
-                        scanLibrary.addButton(new ModalButton('OK', 2, scanLibrary, async (callingObject) => {
+                        scanLibrary.addButton(new ModalButton(window.lang.translate('generic.ok'), 2, scanLibrary, async (callingObject) => {
                             await fetch('/api/v1.1/Library/' + library.id + '/Scan', {
                                 method: 'POST',
                                 headers: {
@@ -3910,7 +3908,7 @@ class SettingsCard {
                                 );
                         }));
 
-                        scanLibrary.addButton(new ModalButton('Cancel', 0, scanLibrary, function (callingObject) {
+                        scanLibrary.addButton(new ModalButton(window.lang.translate('generic.cancel'), 0, scanLibrary, function (callingObject) {
                             callingObject.msgDialog.close();
                         }));
 
@@ -4089,8 +4087,8 @@ class SettingsCard {
                                     warningDialogError.open();
                                 }
                             };
-                            warningDialog.addButton(new ModalButton("OK", 2, warningDialog, handleDelete));
-                            warningDialog.addButton(new ModalButton("Cancel", 0, warningDialog, function (callingObject) {
+                            warningDialog.addButton(new ModalButton(window.lang.translate('generic.ok'), 2, warningDialog, handleDelete));
+                            warningDialog.addButton(new ModalButton(window.lang.translate('generic.cancel'), 0, warningDialog, function (callingObject) {
                                 callingObject.msgDialog.close();
                             }));
                             warningDialog.open();
@@ -4196,10 +4194,10 @@ class SettingsCard {
                         true,
                         [
                             '',
-                            'Platform',
-                            'Supported File Extensions',
-                            'Unique File Extensions',
-                            'Has Web Emulator',
+                            window.lang.translate('card.settings.table.platform'),
+                            window.lang.translate('card.settings.table.extension'),
+                            window.lang.translate('card.settings.table.uniques'),
+                            window.lang.translate('card.settings.table.has_web_emulator'),
                             ''
                         ],
                         '',
@@ -4221,7 +4219,7 @@ class SettingsCard {
 
                     let hasWebEmulator = '';
                     if (platform.webEmulator.type.length > 0) {
-                        hasWebEmulator = 'Yes';
+                        hasWebEmulator = window.lang.translate('generic.enabled');
                     }
 
                     let platformEditButton = null;
@@ -4289,13 +4287,13 @@ class SettingsCard {
             // Setup the reset to defaults button
             this.card.cardBody.querySelector('#resetmapping').addEventListener('click', () => {
                 let warningDialog = new MessageBox("Platform Mapping Reset", "This will reset the platform mappings to the default values. Are you sure you want to continue?");
-                warningDialog.addButton(new ModalButton("OK", 2, warningDialog, async (callingObject) => {
+                warningDialog.addButton(new ModalButton(window.lang.translate('generic.ok'), 2, warningDialog, async (callingObject) => {
                     this.loadPlatformMapping(true);
                     callingObject.msgDialog.close();
-                    let completedDialog = new MessageBox("Platform Mapping Reset", "All platform mappings have been reset to default values.");
+                    let completedDialog = new MessageBox(window.lang.translate('card.management.platform_mapping_reset_title'), window.lang.translate('card.management.platform_mapping_reset_message'));
                     completedDialog.open();
                 }));
-                warningDialog.addButton(new ModalButton("Cancel", 0, warningDialog, async (callingObject) => {
+                warningDialog.addButton(new ModalButton(window.lang.translate('generic.cancel'), 0, warningDialog, async (callingObject) => {
                     callingObject.msgDialog.close();
                 }));
                 warningDialog.open();

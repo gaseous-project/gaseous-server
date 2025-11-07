@@ -24,11 +24,11 @@ async function SetupPage() {
         StateUrl = '/api/v1.1/StateManager/' + romId + '/' + getQueryString('stateid', 'int') + '/State/savestate.state?StateOnly=true&IsMediaGroup=' + IsMediaGroup;
     }
 
-    console.log("Loading rom url: " + decodeURIComponent(getQueryString('rompath', 'string')));
+    console.log(window.lang.translate('console.loading_rom_url', [decodeURIComponent(getQueryString('rompath', 'string'))]));
 
     try {
-        const res = await fetch('/api/v1.1/Games/' + gameId, { method: 'GET' });
-        if (!res.ok) throw new Error('Failed to load game: ' + res.status + ' ' + res.statusText);
+    const res = await fetch('/api/v1.1/Games/' + gameId, { method: 'GET' });
+    if (!res.ok) throw new Error(window.lang.translate('console.failed_load_game', [res.status, res.statusText]));
         const result = await res.json();
 
         gameData = result;
@@ -40,30 +40,30 @@ async function SetupPage() {
 
         emuGameTitle = gameData.name;
     } catch (err) {
-        console.error('Error fetching game data', err);
+        console.error(window.lang.translate('console.error_fetching_game_data'), err);
     }
 
     try {
-        const res = await fetch('/api/v1.1/Bios/' + platformId, { method: 'GET' });
-        if (!res.ok) throw new Error('Failed to load BIOS: ' + res.status + ' ' + res.statusText);
+    const res = await fetch('/api/v1.1/Bios/' + platformId, { method: 'GET' });
+    if (!res.ok) throw new Error(window.lang.translate('console.failed_load_bios', [res.status, res.statusText]));
         const result = await res.json();
 
         if (Array.isArray(result) && result.length === 0) {
             emuBios = '';
         } else {
             emuBios = '/api/v1.1/Bios/zip/' + platformId + '/' + gameId + '?filtered=true';
-            console.log("Using BIOS link: " + emuBios);
+            console.log(window.lang.translate('console.using_bios_link', [emuBios]));
         }
 
         switch (getQueryString('engine', 'string')) {
             case 'EmulatorJS':
-                console.log("Emulator: " + getQueryString('engine', 'string'));
-                console.log("Core: " + getQueryString('core', 'string'));
+                console.log(window.lang.translate('console.emulator_engine', [getQueryString('engine', 'string')]));
+                console.log(window.lang.translate('console.emulator_core', [getQueryString('core', 'string')]));
                 $('#emulator').load('/emulators/EmulatorJS.html?v=' + AppVersion);
                 break;
         }
     } catch (e) {
-        console.error('Error fetching BIOS', e);
+        console.error(window.lang.translate('console.error_fetching_bios'), e);
         emuBios = '';
     }
 
@@ -89,11 +89,11 @@ function SaveStatistics() {
                 const res = await fetch('/api/v1.1/Statistics/Games/' + gameId + '/' + platformId + '/' + romId + '?IsMediaGroup=' + IsMediaGroup, {
                     method: 'POST'
                 });
-                if (!res.ok) throw new Error('Failed to create session: ' + res.status + ' ' + res.statusText);
+                if (!res.ok) throw new Error(window.lang.translate('console.failed_create_session', [res.status, res.statusText]));
                 const data = await res.json();
                 SessionId = data.sessionId;
             } catch (err) {
-                console.error('Error creating statistics session', err);
+                console.error(window.lang.translate('console.error_creating_statistics_session'), err);
             }
         })();
     } else {
@@ -103,9 +103,9 @@ function SaveStatistics() {
                     '/api/v1.1/Statistics/Games/' + gameId + '/' + platformId + '/' + romId + '/' + SessionId + '?IsMediaGroup=' + IsMediaGroup,
                     { method: 'PUT' }
                 );
-                if (!res.ok) throw new Error('Failed to update statistics: ' + res.status + ' ' + res.statusText);
+                if (!res.ok) throw new Error(window.lang.translate('console.failed_update_statistics', [res.status, res.statusText]));
             } catch (err) {
-                console.error('Error updating statistics session', err);
+                console.error(window.lang.translate('console.error_updating_statistics_session'), err);
             }
         })();
     }

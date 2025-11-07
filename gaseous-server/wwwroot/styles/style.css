@@ -3925,7 +3925,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 
 /* Individual types */
 .card-screenshot-youtube-icon {
-    background-image: url('/images/youtube.svg');
+    background-image: url('/images/YouTube.svg');
 }
 
 .card-screenshot-video-icon {
