@@ -201,11 +201,14 @@
         "datasources.hasheous_configuration_header": "Hasheous Configuration",
         "datasources.hasheous_host_label": "Hasheous Host",
         "datasources.submit_updates_label": "Submit updates to Hasheous when fixing ROM matches",
-        "datasources.hasheous_api_key_label": "Hasheous API key"
-    ,"firmware.availability_header": "Firmware Availability"
-    ,"firmware.display_label": "Display:" 
-    ,"firmware.filter.available": "Available"
-    ,"firmware.filter.unavailable": "Unavailable"
+        "datasources.hasheous_api_key_label": "Hasheous API key",
+        "firmware.availability_header": "Firmware Availability",
+        "firmware.display_label": "Display:",
+        "firmware.filter.available": "Available",
+        "firmware.filter.unavailable": "Unavailable"
+    ,"homesettings.library_header": "Library"
+    ,"homesettings.database_header": "Database"
+    ,"homesettings.local_database_signatures_header": "Local Database Signatures"
     },
     "serverstrings": {
         "process.startup": "Startup",
