@@ -205,10 +205,11 @@
         "firmware.availability_header": "Firmware Availability",
         "firmware.display_label": "Display:",
         "firmware.filter.available": "Available",
-        "firmware.filter.unavailable": "Unavailable"
-    ,"homesettings.library_header": "Library"
-    ,"homesettings.database_header": "Database"
-    ,"homesettings.local_database_signatures_header": "Local Database Signatures"
+        "firmware.filter.unavailable": "Unavailable",
+        "homesettings.library_header": "Library",
+        "homesettings.database_header": "Database",
+        "homesettings.local_database_signatures_header": "Local Database Signatures"
+    ,"librariesettings.new_library_button": "New Library"
     },
     "serverstrings": {
         "process.startup": "Startup",
