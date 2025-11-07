@@ -192,16 +192,20 @@
         "about.redump": "Redump",
         "about.whdload": "WHDLoad",
         "about.retro_achievements": "Retro Achievements",
-        "about.logo_credit": "The Gaseous logo was designed by Tom1243"
-    ,"datasources.signature_sources_header": "Signature Sources"
-    ,"datasources.signature_source_label": "Signature Source"
-    ,"datasources.signature_source.local_only": "Local Only"
-    ,"datasources.signature_source.hasheous": "Hasheous"
-    ,"datasources.default_metadata_source_header": "Default Metadata Source"
-    ,"datasources.hasheous_configuration_header": "Hasheous Configuration"
-    ,"datasources.hasheous_host_label": "Hasheous Host"
-    ,"datasources.submit_updates_label": "Submit updates to Hasheous when fixing ROM matches"
-    ,"datasources.hasheous_api_key_label": "Hasheous API key"
+        "about.logo_credit": "The Gaseous logo was designed by Tom1243",
+        "datasources.signature_sources_header": "Signature Sources",
+        "datasources.signature_source_label": "Signature Source",
+        "datasources.signature_source.local_only": "Local Only",
+        "datasources.signature_source.hasheous": "Hasheous",
+        "datasources.default_metadata_source_header": "Default Metadata Source",
+        "datasources.hasheous_configuration_header": "Hasheous Configuration",
+        "datasources.hasheous_host_label": "Hasheous Host",
+        "datasources.submit_updates_label": "Submit updates to Hasheous when fixing ROM matches",
+        "datasources.hasheous_api_key_label": "Hasheous API key"
+    ,"firmware.availability_header": "Firmware Availability"
+    ,"firmware.display_label": "Display:" 
+    ,"firmware.filter.available": "Available"
+    ,"firmware.filter.unavailable": "Unavailable"
     },
     "serverstrings": {
         "process.startup": "Startup",

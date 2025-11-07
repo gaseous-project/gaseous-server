@@ -1,14 +1,14 @@
 <div class="section">
-    <div class="section-header">Firmware Availablility <span id="firmware_totalcount" style="float: right;"></span>
+    <div class="section-header" data-i18n="firmware.availability_header">Firmware Availability <span id="firmware_totalcount" style="float: right;"></span>
     </div>
     <div class="section-body">
         <p>
-            Display:
+            <span data-i18n="firmware.display_label">Display:</span>
         <ul style="list-style-type:none;">
-            <li><input type="checkbox" id="firmware_showavailable" checked="checked" /><label
-                    for="firmware_showavailable"> Available</label></li>
-            <li><input type="checkbox" id="firmware_showunavailable" checked="checked" /><label
-                    for="firmware_showunavailable"> Unavailable</label></li>
+        <li><input type="checkbox" id="firmware_showavailable" checked="checked" /><label
+            for="firmware_showavailable" data-i18n="firmware.filter.available"> Available</label></li>
+        <li><input type="checkbox" id="firmware_showunavailable" checked="checked" /><label
+            for="firmware_showunavailable" data-i18n="firmware.filter.unavailable"> Unavailable</label></li>
         </ul>
         </p>
         <table id="table_firmware" class="romtable" cellspacing="0">
