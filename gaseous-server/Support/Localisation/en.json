@@ -224,10 +224,21 @@
         "serversettings.enable_debug_mode_label": "Enable debug mode",
         "serviceconfiguration.button.reset_to_default": "Reset to Default",
         "serviceconfiguration.button.save": "Save",
-        "servicesettings.configure_services_label": "Configure services"
-        ,
+        "servicesettings.configure_services_label": "Configure services",
         "usersettings.new_user_button": "New User",
         "usersettings.new_user_value": "New User"
+        ,
+        "card.game.last_played_label": "Last Played",
+        "card.game.play_time_label": "Play Time",
+        "card.game.play_button_label": "Play",
+        "card.game.screenshots_and_videos_header": "Screenshots and Videos",
+        "card.game.summary_header": "Summary",
+        "card.game.read_more_link": "Read more",
+        "card.game.available_platforms_header": "Available Platforms",
+        "card.game.cover_art_alt": "Coverart",
+        "card.game.logo_alt": "Logo",
+        "card.game.play_alt": "Play",
+        "card.game.igdb_alt": "IGDB"
     },
     "serverstrings": {
         "process.startup": "Startup",
