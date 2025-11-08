@@ -223,9 +223,11 @@
         "serversettings.emulator_header": "Emulator",
         "serversettings.enable_debug_mode_label": "Enable debug mode",
         "serviceconfiguration.button.reset_to_default": "Reset to Default",
-        "serviceconfiguration.button.save": "Save"
-        ,
+        "serviceconfiguration.button.save": "Save",
         "servicesettings.configure_services_label": "Configure services"
+        ,
+        "usersettings.new_user_button": "New User",
+        "usersettings.new_user_value": "New User"
     },
     "serverstrings": {
         "process.startup": "Startup",
