@@ -15,10 +15,15 @@
     "strings": {
         "index.title": "Gaseous",
         "banner.notifications": "Notifications",
+        "banner.notifications.alt": "Notifications",
         "banner.settings": "Settings",
+        "banner.settings.alt": "Settings",
         "banner.upload": "Upload",
+        "banner.upload.alt": "Upload",
         "banner.library": "Library",
+        "banner.library.alt": "Library",
         "banner.home": "Home",
+        "banner.home.alt": "Home",
         "banner.profile_and_account": "Profile and Account",
         "banner.preferences": "Preferences",
         "banner.sign_out": "Sign Out",
@@ -263,13 +268,17 @@
         "accountmodal.confirm_2fa_button": "Confirm",
         "accountmodal.clear_avatar_button": "Clear",
         "accountmodal.clear_background_button": "Clear",
-        "biosmodal.add_bios_firmware_button": "Add BIOS/Firmware"
-    ,"emulatorstatemodal.tab.load": "Load"
-    ,"emulatorstatemodal.tab.upload_state": "Upload State"
-    ,"emulatorstatemodal.section.srm_file_header": "SRM File"
-    ,"emulatorstatemodal.button.purge_srm": "Purge SRM"
-    ,"emulatorstatemodal.section.load_state_header": "Load State"
-    ,"emulatorstatemodal.section.upload_state_header": "Upload State"
+        "biosmodal.add_bios_firmware_button": "Add BIOS/Firmware",
+        "emulatorstatemodal.tab.load": "Load",
+        "emulatorstatemodal.tab.upload_state": "Upload State",
+        "emulatorstatemodal.section.srm_file_header": "SRM File",
+        "emulatorstatemodal.button.purge_srm": "Purge SRM",
+        "emulatorstatemodal.section.load_state_header": "Load State",
+        "emulatorstatemodal.section.upload_state_header": "Upload State"
+    ,"first2igdbadvancedmodal.use_hasheous_api_proxy_label": "Use Hasheous API Proxy"
+    ,"first2igdbadvancedmodal.use_igdb_api_label": "Use IGDB API"
+    ,"first2igdbadvancedmodal.igdb_client_id_placeholder": "IGDB Client ID"
+    ,"first2igdbadvancedmodal.igdb_client_secret_placeholder": "IGDB Client Secret"
     },
     "serverstrings": {
         "process.startup": "Startup",
