@@ -237,8 +237,7 @@
         "card.game.cover_art_alt": "Coverart",
         "card.game.logo_alt": "Logo",
         "card.game.play_alt": "Play",
-        "card.game.igdb_alt": "IGDB"
-        ,
+        "card.game.igdb_alt": "IGDB",
         "accountmodal.tab.profile": "Profile",
         "accountmodal.tab.account": "Account",
         "accountmodal.tab.two_factor_authentication": "Two Factor Authentication",
@@ -263,7 +262,8 @@
         "accountmodal.enter_code_label": "Enter the code from your authenticator app:",
         "accountmodal.confirm_2fa_button": "Confirm",
         "accountmodal.clear_avatar_button": "Clear",
-        "accountmodal.clear_background_button": "Clear"
+    "accountmodal.clear_background_button": "Clear",
+    "biosmodal.add_bios_firmware_button": "Add BIOS/Firmware"
     },
     "serverstrings": {
         "process.startup": "Startup",
