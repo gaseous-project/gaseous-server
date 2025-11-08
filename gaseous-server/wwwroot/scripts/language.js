@@ -147,7 +147,12 @@ class Language {
                     const [attrName, attrKey] = pair.split(':').map(s => s.trim());
                     if (!attrName || !attrKey) continue;
                     const attrValue = this.translate(attrKey, params);
-                    if (attrValue !== attrKey) elem.setAttribute(attrName, attrValue);
+                    if (attrValue !== attrKey) {
+                        elem.setAttribute(attrName, attrValue);
+                    } else {
+                        // attribute translation missing
+                        this.#recordMissingKey(attrKey);
+                    }
                 }
             } else if (hasTextKey) {
                 // Legacy behaviour: attrs list like "placeholder,value" -> attr keys derived from text key
@@ -155,7 +160,11 @@ class Language {
                 for (const attrName of parts) {
                     const derivedKey = `${textKey}.${attrName}`;
                     const attrValue = this.translate(derivedKey, params);
-                    if (attrValue !== derivedKey) elem.setAttribute(attrName, attrValue);
+                    if (attrValue !== derivedKey) {
+                        elem.setAttribute(attrName, attrValue);
+                    } else {
+                        this.#recordMissingKey(derivedKey);
+                    }
                 }
             }
         }
