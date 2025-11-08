@@ -327,6 +327,10 @@
         "rominfomodal.signature_matched_from_label": "Signature Matched From",
         "rominfomodal.signature_game_title_label": "Signature Game Title",
         "rominfomodal.signature_rom_attributes_label": "ROM Attributes"
+    ,"uploadrommodal.section.upload_header": "Upload"
+    ,"uploadrommodal.instructions": "Upload ROMs by dragging and dropping them here, or by clicking here."
+    ,"uploadrommodal.section.uploaded_roms_header": "Uploaded ROMs"
+    ,"uploadrommodal.no_roms_uploaded_label": "No ROMs uploaded."
     },
     "serverstrings": {
         "process.startup": "Startup",
