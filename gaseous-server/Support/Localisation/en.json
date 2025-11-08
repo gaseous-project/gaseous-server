@@ -209,12 +209,20 @@
         "homesettings.library_header": "Library",
         "homesettings.database_header": "Database",
         "homesettings.local_database_signatures_header": "Local Database Signatures",
-        "librariesettings.new_library_button": "New Library"
-    ,"platforms.unique_extensions_description": "When determining the platform of a ROM or image (which is later used when determining the game title), only the \"Unique File Extensions\" are used. All other extensions are ignored as they will limit the ability of Gaseous to determine the game title (see {0} for more information on how matching works)."
-    ,"platforms.list_prepopulated_description": "This list is pre-populated with some of the more common platforms. New platforms will appear in this list as titles are added."
-    ,"platforms.button.export_json": "Export to JSON"
-    ,"platforms.button.import_json": "Import JSON"
-    ,"platforms.button.reset_to_default": "Reset to Default"
+        "librariesettings.new_library_button": "New Library",
+        "platforms.unique_extensions_description": "When determining the platform of a ROM or image (which is later used when determining the game title), only the \"Unique File Extensions\" are used. All other extensions are ignored as they will limit the ability of Gaseous to determine the game title (see {0} for more information on how matching works).",
+        "platforms.list_prepopulated_description": "This list is pre-populated with some of the more common platforms. New platforms will appear in this list as titles are added.",
+        "platforms.button.export_json": "Export to JSON",
+        "platforms.button.import_json": "Import JSON",
+        "platforms.button.reset_to_default": "Reset to Default"
+        ,
+        "serversettings.logging_header": "Logging",
+        "serversettings.write_logs_label": "Write logs",
+        "serversettings.write_to_database_only_option": "To database only (default)",
+        "serversettings.write_to_database_and_disk_option": "To database and disk",
+        "serversettings.minimum_log_retention_label": "Minimum log retention (days):",
+        "serversettings.emulator_header": "Emulator",
+        "serversettings.enable_debug_mode_label": "Enable debug mode"
     },
     "serverstrings": {
         "process.startup": "Startup",
