@@ -21,7 +21,8 @@
                         style="width: 100px; height: 100px; border-radius: 50%; background-size: cover; background-position: center; margin: auto; font-size: 3vmax; display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
                     </div>
                     <input type="file" id="avatar-upload" name="avatar" accept="image/*" />
-                    <button id="avatar-upload-clear" class="button" data-i18n="accountmodal.clear_avatar_button">Clear</button>
+                    <button id="avatar-upload-clear" class="button"
+                        data-i18n="accountmodal.clear_avatar_button">Clear</button>
                 </div>
             </div>
 
@@ -32,7 +33,8 @@
                         style="width: 300px; margin: auto; border-radius: var(--standard-radius); margin-bottom: 10px;">
                     </div>
                     <input type="file" id="background-upload" name="background" accept="image/*" />
-                    <button id="background-upload-clear" class="button" data-i18n="accountmodal.clear_background_button">Clear</button>
+                    <button id="background-upload-clear" class="button"
+                        data-i18n="accountmodal.clear_background_button">Clear</button>
                 </div>
             </div>
         </div>
@@ -41,7 +43,7 @@
 
 <div id="tab2" name="modalTab" data-tabname="Account" data-i18n-attr="data-tabname:accountmodal.tab.account">
     <div class="section">
-    <div class="section-header" data-i18n="accountmodal.section.username_header">Username</div>
+        <div class="section-header" data-i18n="accountmodal.section.username_header">Username</div>
         <div class="section-body">
             <div class="account-modal-tab1">
                 <div style="flex-grow:1">
@@ -61,7 +63,7 @@
     </div>
 
     <div class="section">
-    <div class="section-header" data-i18n="accountmodal.section.change_password_header">Change Password</div>
+        <div class="section-header" data-i18n="accountmodal.section.change_password_header">Change Password</div>
         <div class="section-body">
             <div class="account-modal-tab1">
                 <div style="flex-grow:1">
@@ -84,11 +86,14 @@
     </div>
 </div>
 
-<div id="tab3" name="modalTab" data-tabname="Two Factor Authentication" data-i18n-attr="data-tabname:accountmodal.tab.two_factor_authentication">
+<div id="tab3" name="modalTab" data-tabname="Two Factor Authentication"
+    data-i18n-attr="data-tabname:accountmodal.tab.two_factor_authentication">
     <div class="section">
-    <div class="section-header" data-i18n="accountmodal.section.two_factor_authentication_header">Two Factor Authentication</div>
+        <div class="section-header" data-i18n="accountmodal.section.two_factor_authentication_header">Two Factor
+            Authentication</div>
         <div class="section-body">
-            <div data-i18n="accountmodal.two_factor_enable_description">Enable two-factor authentication for added security.</div>
+            <div data-i18n="accountmodal.two_factor_enable_description">Enable two-factor authentication for added
+                security.</div>
             <p>
                 <button id="enable-2fa" class="button" data-i18n="accountmodal.enable_2fa_button">Enable 2FA</button>
                 <button id="disable-2fa" class="button" data-i18n="accountmodal.disable_2fa_button">Disable 2FA</button>

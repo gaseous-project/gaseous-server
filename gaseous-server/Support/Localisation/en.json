@@ -311,22 +311,22 @@
         "preferencesmodal.region.option.japan": "Japan",
         "preferencesmodal.region.option.korea": "Korea",
         "preferencesmodal.section.age_classification_header": "Age Classification",
-        "preferencesmodal.classification_badge_fallback_order_label": "Classification badge fallback order:"
-    ,"rominfomodal.tab.rom_info": "ROM Info"
-    ,"rominfomodal.tab.archive_content": "Archive Content"
-    ,"rominfomodal.library_label": "Library"
-    ,"rominfomodal.platform_label": "Platform"
-    ,"rominfomodal.size_label": "Size"
-    ,"rominfomodal.rom_type_label": "ROM Type"
-    ,"rominfomodal.media_type_label": "Media Type"
-    ,"rominfomodal.media_label_label": "Media Label"
-    ,"rominfomodal.md5_label": "MD5"
-    ,"rominfomodal.sha1_label": "SHA1"
-    ,"rominfomodal.sha256_label": "SHA256"
-    ,"rominfomodal.crc_label": "CRC"
-    ,"rominfomodal.signature_matched_from_label": "Signature Matched From"
-    ,"rominfomodal.signature_game_title_label": "Signature Game Title"
-    ,"rominfomodal.signature_rom_attributes_label": "ROM Attributes"
+        "preferencesmodal.classification_badge_fallback_order_label": "Classification badge fallback order:",
+        "rominfomodal.tab.rom_info": "ROM Info",
+        "rominfomodal.tab.archive_content": "Archive Content",
+        "rominfomodal.library_label": "Library",
+        "rominfomodal.platform_label": "Platform",
+        "rominfomodal.size_label": "Size",
+        "rominfomodal.rom_type_label": "ROM Type",
+        "rominfomodal.media_type_label": "Media Type",
+        "rominfomodal.media_label_label": "Media Label",
+        "rominfomodal.md5_label": "MD5",
+        "rominfomodal.sha1_label": "SHA1",
+        "rominfomodal.sha256_label": "SHA256",
+        "rominfomodal.crc_label": "CRC",
+        "rominfomodal.signature_matched_from_label": "Signature Matched From",
+        "rominfomodal.signature_game_title_label": "Signature Game Title",
+        "rominfomodal.signature_rom_attributes_label": "ROM Attributes"
     },
     "serverstrings": {
         "process.startup": "Startup",

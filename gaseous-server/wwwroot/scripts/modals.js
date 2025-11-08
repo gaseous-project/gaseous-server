@@ -41,7 +41,6 @@ class Modal {
                 newTab.id = 'tab-' + tab.id;
                 newTab.classList.add('modal-tab-button');
                 newTab.setAttribute('data-tabid', tab.id);
-                newTab.textContent = tab.getAttribute('data-tabname');
                 newTab.addEventListener('click', () => {
                     tabs.forEach((tab) => {
                         if (tab.getAttribute('id') !== newTab.getAttribute('data-tabid')) {
@@ -53,6 +52,21 @@ class Modal {
                         }
                     });
                 });
+                // set the tab name
+                if (tab.hasAttribute('data-i18n')) {
+                    newTab.setAttribute('data-i18n', tab.getAttribute('data-i18n'));
+                    newTab.textContent = window.lang.translate(tab.getAttribute('data-i18n'));
+                } else if (tab.hasAttribute('data-i18n-attr')) {
+                    let attributeParts = tab.getAttribute('data-i18n-attr').split(':');
+                    let attributeName = attributeParts[0];
+                    if (attributeParts.length > 1) {
+                        attributeName = attributeParts[1].trim();
+                    }
+                    newTab.setAttribute('data-i18n', attributeName);
+                    newTab.textContent = window.lang.translate(attributeName);
+                } else {
+                    newTab.textContent = tab.getAttribute('data-tabname');
+                }
                 if (firstTab) {
                     newTab.classList.add('model-tab-button-selected');
                     tab.style.display = 'block';

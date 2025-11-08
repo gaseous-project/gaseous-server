@@ -1195,7 +1195,7 @@ class GameCardRomList {
         this.romsTab.classList.add('card-tab-selected');
         this.romsTab.id = 'card-romlist-roms-tab';
         this.romsTab.setAttribute('data-section', 'roms');
-    this.romsTab.innerHTML = window.lang.translate('card.tabs.roms');
+        this.romsTab.innerHTML = window.lang.translate('card.tabs.roms');
         this.contentTabs.appendChild(this.romsTab);
 
         // create the Content tab
@@ -1203,7 +1203,7 @@ class GameCardRomList {
         this.contentTab.classList.add('card-tab');
         this.contentTab.id = 'card-romlist-content-tab';
         this.contentTab.setAttribute('data-section', 'content');
-    this.contentTab.innerHTML = window.lang.translate('card.tabs.content');
+        this.contentTab.innerHTML = window.lang.translate('card.tabs.content');
         this.contentTabs.appendChild(this.contentTab);
 
         // add event listeners to the tabs
@@ -1376,7 +1376,7 @@ class GameCardRomList {
         this.configureEmulatorButton = document.createElement('button');
         this.configureEmulatorButton.classList.add('modal-button');
         this.configureEmulatorButton.classList.add('card-romlist-management-button');
-    this.configureEmulatorButton.innerHTML = window.lang.translate('card.buttons.emulator');
+        this.configureEmulatorButton.innerHTML = window.lang.translate('card.buttons.emulator');
         this.configureEmulatorButton.addEventListener('click', async (e) => {
             e.stopPropagation();
             this.ShowEmulatorConfigureModal();
@@ -1946,7 +1946,7 @@ class GameCardRomList {
 
     LoadContent() {
         // load any additional content
-    console.log(window.lang.translate('card.content.loading_additional_for_platform', { platform: this.gamePlatformObject.name }));
+        console.log(window.lang.translate('card.content.loading_additional_for_platform', { platform: this.gamePlatformObject.name }));
         this.contentContainer.innerHTML = '';
         fetch(`/api/v1.1/ContentManager/?metadataids=${this.gamePlatformObject.metadataMapId}&contentTypes=AudioSample,GlobalManual&pageSize=50`, {
             method: 'GET',
@@ -2087,7 +2087,7 @@ class GameCardRomList {
         metadataModal.modalElement.classList.add('modal-metadataconfiguration');
 
         // set the title
-    metadataModal.modalElement.querySelector('#modal-header-text').innerHTML = window.lang.translate('card.metadata.mapping_title', { platform: this.gamePlatformObject.name });
+        metadataModal.modalElement.querySelector('#modal-header-text').innerHTML = window.lang.translate('card.metadata.mapping_title', [this.gamePlatformObject.metadataGameName]);
 
         // set the content
         let metadataContent = metadataModal.modalElement.querySelector('#modal-body');
@@ -2261,7 +2261,7 @@ class GameCardRomList {
 
 
         // setup the buttons
-    let okButton = new ModalButton(window.lang.translate('generic.ok'), 1, this.gamePlatformObject, async function (callingObject) {
+        let okButton = new ModalButton(window.lang.translate('generic.ok'), 1, this.gamePlatformObject, async function (callingObject) {
             let model = metadataMap.metadataMapItems;
 
             // process the model to ensure only one preferred is set
@@ -2291,7 +2291,7 @@ class GameCardRomList {
         });
         metadataModal.addButton(okButton);
 
-    let cancelButton = new ModalButton(window.lang.translate('generic.cancel'), 0, metadataModal, async function (callingObject) {
+        let cancelButton = new ModalButton(window.lang.translate('generic.cancel'), 0, metadataModal, async function (callingObject) {
             metadataModal.close();
         });
         metadataModal.addButton(cancelButton);
@@ -2344,7 +2344,7 @@ class GameCardRomList {
         mappingContent.appendChild(emuConfig.panel);
 
         // setup the buttons
-    let resetButton = new ModalButton(window.lang.translate('card.emulator.reset_to_default'), 0, this, async function (callingObject) {
+        let resetButton = new ModalButton(window.lang.translate('card.emulator.reset_to_default'), 0, this, async function (callingObject) {
             await fetch('/api/v1.1/Games/' + callingObject.gamePlatformObject.metadataMapId + '/emulatorconfiguration/' + callingObject.gamePlatformObject.id, {
                 method: 'DELETE'
             });
@@ -2356,7 +2356,7 @@ class GameCardRomList {
         });
         mappingModal.addButton(resetButton);
 
-    let okButton = new ModalButton(window.lang.translate('generic.ok'), 1, this, async function (callingObject) {
+        let okButton = new ModalButton(window.lang.translate('generic.ok'), 1, this, async function (callingObject) {
             let model = {
                 EmulatorType: emuConfig.PlatformMap.webEmulator.type,
                 Core: emuConfig.PlatformMap.webEmulator.core,
@@ -2379,7 +2379,7 @@ class GameCardRomList {
         });
         mappingModal.addButton(okButton);
 
-    let cancelButton = new ModalButton(window.lang.translate('generic.cancel'), 0, mappingModal, async function (callingObject) {
+        let cancelButton = new ModalButton(window.lang.translate('generic.cancel'), 0, mappingModal, async function (callingObject) {
             mappingModal.close();
         });
         mappingModal.addButton(cancelButton);
@@ -2467,7 +2467,7 @@ class SettingsCard {
         this.card.BuildCard();
 
         // set the header
-    this.card.SetHeader(window.lang.translate('card.settings.header'), true);
+        this.card.SetHeader(window.lang.translate('card.settings.header'), true);
 
         // set the background
         this.card.cardBackgroundContainer.style.display = 'none';
