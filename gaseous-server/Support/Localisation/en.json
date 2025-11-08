@@ -291,27 +291,42 @@
         "newlibrarymodal.name_label": "Name:",
         "newlibrarymodal.path_label": "Path:",
         "newlibrarymodal.default_platform_label": "Default Platform:",
-        "newlibrarymodal.path_select_button": "..."
-    ,"preferencesmodal.tab.general": "General"
-    ,"preferencesmodal.section.general_header": "General"
-    ,"preferencesmodal.default_home_page_label": "Default home page:"
-    ,"preferencesmodal.default_home_page.option.home": "Home"
-    ,"preferencesmodal.default_home_page.option.library": "Library"
-    ,"preferencesmodal.section.game_icons_header": "Game Icons"
-    ,"preferencesmodal.show_title_label": "Show title"
-    ,"preferencesmodal.show_rating_label": "Show rating"
-    ,"preferencesmodal.show_age_classification_badges_label": "Show age classification badges"
-    ,"preferencesmodal.section.game_details_header": "Game Details"
-    ,"preferencesmodal.use_clear_logo_label": "Use clear logo when available"
-    ,"preferencesmodal.tab.localisation": "Localisation"
-    ,"preferencesmodal.section.preferred_title_cover_art_region_header": "Preferred Title and Cover Art Region"
-    ,"preferencesmodal.region_label": "Region:"
-    ,"preferencesmodal.region.option.us_default": "US (Default)"
-    ,"preferencesmodal.region.option.europe": "Europe"
-    ,"preferencesmodal.region.option.japan": "Japan"
-    ,"preferencesmodal.region.option.korea": "Korea"
-    ,"preferencesmodal.section.age_classification_header": "Age Classification"
-    ,"preferencesmodal.classification_badge_fallback_order_label": "Classification badge fallback order:"
+        "newlibrarymodal.path_select_button": "...",
+        "preferencesmodal.tab.general": "General",
+        "preferencesmodal.section.general_header": "General",
+        "preferencesmodal.default_home_page_label": "Default home page:",
+        "preferencesmodal.default_home_page.option.home": "Home",
+        "preferencesmodal.default_home_page.option.library": "Library",
+        "preferencesmodal.section.game_icons_header": "Game Icons",
+        "preferencesmodal.show_title_label": "Show title",
+        "preferencesmodal.show_rating_label": "Show rating",
+        "preferencesmodal.show_age_classification_badges_label": "Show age classification badges",
+        "preferencesmodal.section.game_details_header": "Game Details",
+        "preferencesmodal.use_clear_logo_label": "Use clear logo when available",
+        "preferencesmodal.tab.localisation": "Localisation",
+        "preferencesmodal.section.preferred_title_cover_art_region_header": "Preferred Title and Cover Art Region",
+        "preferencesmodal.region_label": "Region:",
+        "preferencesmodal.region.option.us_default": "US (Default)",
+        "preferencesmodal.region.option.europe": "Europe",
+        "preferencesmodal.region.option.japan": "Japan",
+        "preferencesmodal.region.option.korea": "Korea",
+        "preferencesmodal.section.age_classification_header": "Age Classification",
+        "preferencesmodal.classification_badge_fallback_order_label": "Classification badge fallback order:"
+    ,"rominfomodal.tab.rom_info": "ROM Info"
+    ,"rominfomodal.tab.archive_content": "Archive Content"
+    ,"rominfomodal.library_label": "Library"
+    ,"rominfomodal.platform_label": "Platform"
+    ,"rominfomodal.size_label": "Size"
+    ,"rominfomodal.rom_type_label": "ROM Type"
+    ,"rominfomodal.media_type_label": "Media Type"
+    ,"rominfomodal.media_label_label": "Media Label"
+    ,"rominfomodal.md5_label": "MD5"
+    ,"rominfomodal.sha1_label": "SHA1"
+    ,"rominfomodal.sha256_label": "SHA256"
+    ,"rominfomodal.crc_label": "CRC"
+    ,"rominfomodal.signature_matched_from_label": "Signature Matched From"
+    ,"rominfomodal.signature_game_title_label": "Signature Game Title"
+    ,"rominfomodal.signature_rom_attributes_label": "ROM Attributes"
     },
     "serverstrings": {
         "process.startup": "Startup",
