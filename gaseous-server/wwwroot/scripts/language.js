@@ -52,7 +52,7 @@ class Language {
             this.#recordMissingKey(key);
             return key;
         }
-        return this.#formatValue(direct, args);
+        return "*" + this.#formatValue(direct, args);
     }
 
     // Pluralisation aligned with server logic in Localisation.TranslatePlural
@@ -101,7 +101,7 @@ class Language {
             // allow positional usage where {0} is count
             args = [count];
         }
-        return this.#formatValue(value, args);
+        return "*" + this.#formatValue(value, args);
     }
 
     // Translate all DOM elements with data-i18n
@@ -112,26 +112,51 @@ class Language {
         }
     }
 
-    // Translate a single element; supports attribute list and html opt-in
+    // Translate a single element.
+    // Supports:
+    //  1) data-i18n for inner text/HTML (optionally data-i18n-html)
+    //  2) data-i18n-attr="attr:key,attr2:key2" OR existing format "attr:key" (single) even without data-i18n
+    //     allowing attribute-only translation on elements without visible text.
     translateElement(elem) {
-        const key = elem.dataset.i18n;
-        if (!key) return;
+        const hasTextKey = elem.dataset.i18n != null;
         const params = this.#extractParams(elem);
-        const translated = this.translate(key, params);
-        const wantsHtml = elem.dataset.i18nHtml !== undefined;
-        if (wantsHtml) {
-            elem.innerHTML = translated; // trusted / controlled translations only
-            elem.style.backgroundColor = 'yellow';
-        } else {
-            elem.textContent = translated;
+
+        // Handle text / html content translation if key present
+        if (hasTextKey) {
+            const key = elem.dataset.i18n;
+            const translated = this.translate(key, params);
+            const wantsHtml = elem.dataset.i18nHtml !== undefined;
+            if (wantsHtml) {
+                elem.innerHTML = translated; // trusted / controlled translations only
+            } else {
+                elem.textContent = translated;
+            }
         }
-        // attribute translations
-        if (elem.dataset.i18nAttr) {
-            const attrs = elem.dataset.i18nAttr.split(',').map(a => a.trim()).filter(Boolean);
-            for (const attrName of attrs) {
-                const attrKey = `${key}.${attrName}`;
-                const attrValue = this.translate(attrKey, params);
-                if (attrValue !== attrKey) elem.setAttribute(attrName, attrValue);
+
+        // Attribute-only translation path.
+        // data-i18n-attr expected format: "attr:key" pairs separated by commas.
+        // Backwards compatibility: if element also had data-i18n (old behaviour), we derive attr keys as key.attrName.
+        const attrSpec = elem.dataset.i18nAttr || elem.dataset.i18nAttrs; // support legacy i18nAttrs
+        if (attrSpec) {
+            // Normalise list: allow either key.attr style (legacy) or attr:key style (new).
+            // Detect style: if first segment contains ':' use attr:key pairs.
+            const parts = attrSpec.split(',').map(p => p.trim()).filter(Boolean);
+            const usesExplicitPairs = parts.some(p => p.includes(':'));
+            if (usesExplicitPairs) {
+                for (const pair of parts) {
+                    const [attrName, attrKey] = pair.split(':').map(s => s.trim());
+                    if (!attrName || !attrKey) continue;
+                    const attrValue = this.translate(attrKey, params);
+                    if (attrValue !== attrKey) elem.setAttribute(attrName, attrValue);
+                }
+            } else if (hasTextKey) {
+                // Legacy behaviour: attrs list like "placeholder,value" -> attr keys derived from text key
+                const textKey = elem.dataset.i18n;
+                for (const attrName of parts) {
+                    const derivedKey = `${textKey}.${attrName}`;
+                    const attrValue = this.translate(derivedKey, params);
+                    if (attrValue !== derivedKey) elem.setAttribute(attrName, attrValue);
+                }
             }
         }
     }
@@ -143,7 +168,7 @@ class Language {
                 for (const node of mutation.addedNodes) {
                     if (node.nodeType !== 1) continue;
                     if (node.dataset?.i18n !== undefined) this.translateElement(node);
-                    const nested = node.querySelectorAll?.('[data-i18n]');
+                    const nested = node.querySelectorAll?.('[data-i18n],[data-i18n-attr]');
                     if (nested) {
                         for (const el of nested) this.translateElement(el);
                     }
@@ -400,8 +425,6 @@ class Language {
                 if (out.includes(token)) out = out.split(token).join(String(args[k]));
             }
         }
-        out = "**" + out + "**"; // debug wrapper to visualize missing replacements
-        console.log('Formatted value: ' + out);
         return out;
     }
 
