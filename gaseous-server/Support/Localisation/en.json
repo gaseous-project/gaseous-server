@@ -262,8 +262,14 @@
         "accountmodal.enter_code_label": "Enter the code from your authenticator app:",
         "accountmodal.confirm_2fa_button": "Confirm",
         "accountmodal.clear_avatar_button": "Clear",
-    "accountmodal.clear_background_button": "Clear",
-    "biosmodal.add_bios_firmware_button": "Add BIOS/Firmware"
+        "accountmodal.clear_background_button": "Clear",
+        "biosmodal.add_bios_firmware_button": "Add BIOS/Firmware"
+    ,"emulatorstatemodal.tab.load": "Load"
+    ,"emulatorstatemodal.tab.upload_state": "Upload State"
+    ,"emulatorstatemodal.section.srm_file_header": "SRM File"
+    ,"emulatorstatemodal.button.purge_srm": "Purge SRM"
+    ,"emulatorstatemodal.section.load_state_header": "Load State"
+    ,"emulatorstatemodal.section.upload_state_header": "Upload State"
     },
     "serverstrings": {
         "process.startup": "Startup",
