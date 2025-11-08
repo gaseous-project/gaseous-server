@@ -278,20 +278,40 @@
         "first2igdbadvancedmodal.use_hasheous_api_proxy_label": "Use Hasheous API Proxy",
         "first2igdbadvancedmodal.use_igdb_api_label": "Use IGDB API",
         "first2igdbadvancedmodal.igdb_client_id_placeholder": "IGDB Client ID",
-        "first2igdbadvancedmodal.igdb_client_secret_placeholder": "IGDB Client Secret"
-    ,"gameromsmodal.media_groups_header": "Media Groups"
-    ,"gameromsmodal.edit_link": "Edit"
-    ,"gameromsmodal.roms_images_label": "ROMs/Images"
-    ,"gameromsmodal.delete_button": "Delete"
-    ,"gameromsmodal.create_media_group_button": "Create Media Group"
-    ,"gameromsmodal.name_search_placeholder": "Name Search"
-    ,"gameromsmodal.search_button": "Search"
-    ,"gameromsmodal.initial_roms_count_label": "0 ROMs"
-    ,"gameromsmodal.no_roms_message": "There are no ROMs associated with this game and platform."
-    ,"newlibrarymodal.name_label": "Name:"
-    ,"newlibrarymodal.path_label": "Path:"
-    ,"newlibrarymodal.default_platform_label": "Default Platform:"
-    ,"newlibrarymodal.path_select_button": "..."
+        "first2igdbadvancedmodal.igdb_client_secret_placeholder": "IGDB Client Secret",
+        "gameromsmodal.media_groups_header": "Media Groups",
+        "gameromsmodal.edit_link": "Edit",
+        "gameromsmodal.roms_images_label": "ROMs/Images",
+        "gameromsmodal.delete_button": "Delete",
+        "gameromsmodal.create_media_group_button": "Create Media Group",
+        "gameromsmodal.name_search_placeholder": "Name Search",
+        "gameromsmodal.search_button": "Search",
+        "gameromsmodal.initial_roms_count_label": "0 ROMs",
+        "gameromsmodal.no_roms_message": "There are no ROMs associated with this game and platform.",
+        "newlibrarymodal.name_label": "Name:",
+        "newlibrarymodal.path_label": "Path:",
+        "newlibrarymodal.default_platform_label": "Default Platform:",
+        "newlibrarymodal.path_select_button": "..."
+    ,"preferencesmodal.tab.general": "General"
+    ,"preferencesmodal.section.general_header": "General"
+    ,"preferencesmodal.default_home_page_label": "Default home page:"
+    ,"preferencesmodal.default_home_page.option.home": "Home"
+    ,"preferencesmodal.default_home_page.option.library": "Library"
+    ,"preferencesmodal.section.game_icons_header": "Game Icons"
+    ,"preferencesmodal.show_title_label": "Show title"
+    ,"preferencesmodal.show_rating_label": "Show rating"
+    ,"preferencesmodal.show_age_classification_badges_label": "Show age classification badges"
+    ,"preferencesmodal.section.game_details_header": "Game Details"
+    ,"preferencesmodal.use_clear_logo_label": "Use clear logo when available"
+    ,"preferencesmodal.tab.localisation": "Localisation"
+    ,"preferencesmodal.section.preferred_title_cover_art_region_header": "Preferred Title and Cover Art Region"
+    ,"preferencesmodal.region_label": "Region:"
+    ,"preferencesmodal.region.option.us_default": "US (Default)"
+    ,"preferencesmodal.region.option.europe": "Europe"
+    ,"preferencesmodal.region.option.japan": "Japan"
+    ,"preferencesmodal.region.option.korea": "Korea"
+    ,"preferencesmodal.section.age_classification_header": "Age Classification"
+    ,"preferencesmodal.classification_badge_fallback_order_label": "Classification badge fallback order:"
     },
     "serverstrings": {
         "process.startup": "Startup",
