@@ -214,8 +214,7 @@
         "platforms.list_prepopulated_description": "This list is pre-populated with some of the more common platforms. New platforms will appear in this list as titles are added.",
         "platforms.button.export_json": "Export to JSON",
         "platforms.button.import_json": "Import JSON",
-        "platforms.button.reset_to_default": "Reset to Default"
-        ,
+        "platforms.button.reset_to_default": "Reset to Default",
         "serversettings.logging_header": "Logging",
         "serversettings.write_logs_label": "Write logs",
         "serversettings.write_to_database_only_option": "To database only (default)",
@@ -223,6 +222,9 @@
         "serversettings.minimum_log_retention_label": "Minimum log retention (days):",
         "serversettings.emulator_header": "Emulator",
         "serversettings.enable_debug_mode_label": "Enable debug mode"
+        ,
+        "serviceconfiguration.button.reset_to_default": "Reset to Default",
+        "serviceconfiguration.button.save": "Save"
     },
     "serverstrings": {
         "process.startup": "Startup",
