@@ -288,6 +288,10 @@
     ,"gameromsmodal.search_button": "Search"
     ,"gameromsmodal.initial_roms_count_label": "0 ROMs"
     ,"gameromsmodal.no_roms_message": "There are no ROMs associated with this game and platform."
+    ,"newlibrarymodal.name_label": "Name:"
+    ,"newlibrarymodal.path_label": "Path:"
+    ,"newlibrarymodal.default_platform_label": "Default Platform:"
+    ,"newlibrarymodal.path_select_button": "..."
     },
     "serverstrings": {
         "process.startup": "Startup",
