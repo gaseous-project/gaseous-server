@@ -221,10 +221,11 @@
         "serversettings.write_to_database_and_disk_option": "To database and disk",
         "serversettings.minimum_log_retention_label": "Minimum log retention (days):",
         "serversettings.emulator_header": "Emulator",
-        "serversettings.enable_debug_mode_label": "Enable debug mode"
-        ,
+        "serversettings.enable_debug_mode_label": "Enable debug mode",
         "serviceconfiguration.button.reset_to_default": "Reset to Default",
         "serviceconfiguration.button.save": "Save"
+        ,
+        "servicesettings.configure_services_label": "Configure services"
     },
     "serverstrings": {
         "process.startup": "Startup",
