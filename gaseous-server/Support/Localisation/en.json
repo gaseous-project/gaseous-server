@@ -371,12 +371,20 @@
         "usereditmodal.section.change_password_header": "Change Password",
         "usereditmodal.new_password_label": "New Password",
         "usereditmodal.confirm_new_password_label": "Confirm New Password",
-        "usereditmodal.password_requirements_paragraph": "Password requirements:"
-    ,"usernewmodal.email_address_label": "Email Address"
-    ,"usernewmodal.new_password_label": "New Password"
-    ,"usernewmodal.confirm_new_password_label": "Confirm New Password"
-    ,"usernewmodal.email_requirements_paragraph": "Email requirements:"
-    ,"usernewmodal.password_requirements_paragraph": "Password requirements:"
+        "usereditmodal.password_requirements_paragraph": "Password requirements:",
+        "usernewmodal.email_address_label": "Email Address",
+        "usernewmodal.new_password_label": "New Password",
+        "usernewmodal.confirm_new_password_label": "Confirm New Password",
+        "usernewmodal.email_requirements_paragraph": "Email requirements:",
+        "usernewmodal.password_requirements_paragraph": "Password requirements:",
+        "webemulatormodal.section.web_emulator_header": "Web Emulator",
+        "webemulatormodal.emulatorjs_description": "The EmulatorJS web emulator is a web-based emulator that allows you to run various retro systems in your browser. For more information, see the project home page at",
+        "webemulatormodal.core_header": "Core",
+        "webemulatormodal.help_image_alt": "Help",
+        "webemulatormodal.help_image_title": "Help",
+        "webemulatormodal.more_information_cores_prefix": "See",
+        "webemulatormodal.more_information_cores_suffix": "for more information regarding EmulatorJS cores.",
+        "webemulatormodal.bios_files_available_header": "BIOS Files Available when Running the Emulator"
     },
     "serverstrings": {
         "process.startup": "Startup",
