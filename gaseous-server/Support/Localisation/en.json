@@ -326,11 +326,52 @@
         "rominfomodal.crc_label": "CRC",
         "rominfomodal.signature_matched_from_label": "Signature Matched From",
         "rominfomodal.signature_game_title_label": "Signature Game Title",
-        "rominfomodal.signature_rom_attributes_label": "ROM Attributes"
-    ,"uploadrommodal.section.upload_header": "Upload"
-    ,"uploadrommodal.instructions": "Upload ROMs by dragging and dropping them here, or by clicking here."
-    ,"uploadrommodal.section.uploaded_roms_header": "Uploaded ROMs"
-    ,"uploadrommodal.no_roms_uploaded_label": "No ROMs uploaded."
+        "rominfomodal.signature_rom_attributes_label": "ROM Attributes",
+        "uploadrommodal.section.upload_header": "Upload",
+        "uploadrommodal.instructions": "Upload ROMs by dragging and dropping them here, or by clicking here.",
+        "uploadrommodal.section.uploaded_roms_header": "Uploaded ROMs",
+        "uploadrommodal.no_roms_uploaded_label": "No ROMs uploaded."
+    ,"usereditmodal.tab.general": "General"
+    ,"usereditmodal.section.general_header": "General"
+    ,"usereditmodal.user_id_label": "User Id"
+    ,"usereditmodal.account_lockout_label": "Account lockout"
+    ,"usereditmodal.account_lockout_ends_label": "Account lockout ends"
+    ,"usereditmodal.tab.permissions": "Permissions"
+    ,"usereditmodal.section.user_role_header": "User Role"
+    ,"usereditmodal.user_role.player_option": "Player"
+    ,"usereditmodal.user_role.gamer_option": "Gamer"
+    ,"usereditmodal.user_role.administrator_option": "Administrator"
+    ,"usereditmodal.section.assigned_permissions_header": "Assigned Permissions"
+    ,"usereditmodal.permissions.games_and_roms_header": "Games and ROMs"
+    ,"usereditmodal.permissions.play_games": "Play games"
+    ,"usereditmodal.permissions.download_rom_images": "Download ROM images"
+    ,"usereditmodal.permissions.upload_rom_images": "Upload ROM images"
+    ,"usereditmodal.permissions.create_delete_multidisk_packages": "Create and delete multidisk packages"
+    ,"usereditmodal.permissions.delete_rom_images": "Delete ROM images"
+    ,"usereditmodal.permissions.fix_rom_image_matches": "Fix ROM image matches"
+    ,"usereditmodal.permissions.collections_header": "Collections"
+    ,"usereditmodal.permissions.download_packages": "Download packages"
+    ,"usereditmodal.permissions.create_packages": "Create packages"
+    ,"usereditmodal.permissions.edit_packages": "Edit packages"
+    ,"usereditmodal.permissions.delete_packages": "Delete packages"
+    ,"usereditmodal.permissions.settings_header": "Settings"
+    ,"usereditmodal.permissions.download_firmware": "Download firmware"
+    ,"usereditmodal.permissions.view_background_tasks": "View background tasks"
+    ,"usereditmodal.permissions.view_platform_mapping": "View platform mapping"
+    ,"usereditmodal.permissions.modify_platform_mapping": "Modify platform mapping"
+    ,"usereditmodal.permissions.manually_start_background_tasks": "Manually start background tasks"
+    ,"usereditmodal.permissions.view_logs": "View logs"
+    ,"usereditmodal.permissions.manage_user_accounts": "Manage user accounts"
+    ,"usereditmodal.permissions.show_details_link": "Show details..."
+    ,"usereditmodal.tab.age_restrictions": "Age Restrictions"
+    ,"usereditmodal.section.age_group_header": "Age Group"
+    ,"usereditmodal.section.allowed_age_ratings_header": "Allowed Age Ratings"
+    ,"usereditmodal.age_ratings.show_details_link": "Show details..."
+    ,"usereditmodal.tab.login": "Login"
+    ,"usereditmodal.section.change_password_header": "Change Password"
+    ,"usereditmodal.new_password_label": "New Password"
+    ,"usereditmodal.confirm_new_password_label": "Confirm New Password"
+    ,"usereditmodal.password_requirements_paragraph": "Password requirements:"
     },
     "serverstrings": {
         "process.startup": "Startup",
