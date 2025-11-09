@@ -396,28 +396,29 @@
         "firstpage.email_requirements_paragraph": "Email requirements:",
         "firstpage.password_requirements_paragraph": "Password requirements:",
         "firstpage.create_account_button": "Create Account",
-        "firstpage.create_account_button.value": "Create Account"
-        ,"first2page.select_signature_source_header": "Select Signature Source"
-        ,"first2page.signatures_description": "Signatures are used to match a ROM to a game name using the hash of the ROM (MD5 or SHA1). For more information, see the"
-        ,"first2page.signatures_link_text": "Signatures"
-        ,"first2page.signature.hasheous_option": "Hasheous (Recommended)"
-        ,"first2page.signature.hasheous_label": "Hasheous is a community-driven project that provides a database of ROM hashes and game names. It is the most accurate and up-to-date source of signatures."
-        ,"first2page.signature.localonly_option": "Local Only"
-        ,"first2page.signature.localonly_label": "Local Only uses the signatures that are stored in the Gaseous database. This is the default option and is useful if you are not connected to the internet."
-        ,"first2page.select_metadata_source_header": "Select Metadata Source"
-        ,"first2page.metadata_description": "Metadata is used to provide additional information about a game, such as the release date, publisher, and genre. For more information, see the"
-        ,"first2page.metadata_link_text": "Metadata"
-        ,"first2page.metadata.igdb_option": "Internet Game Database (Recommended)"
-        ,"first2page.metadata.igdb_label": "IGDB is a community-driven project that provides a database of game metadata. It is the most accurate and up-to-date source of metadata."
-        ,"first2page.metadata.igdb_advanced_button": "Advanced"
-        ,"first2page.metadata.thegamesdb_option": "The Games DB"
-        ,"first2page.metadata.thegamesdb_label": "The Games DB is a community-driven project that provides a database of game metadata. It is a good alternative to IGDB."
-        ,"first2page.metadata.none_option": "None"
-        ,"first2page.metadata.none_label": "None disables metadata retrieval. This is useful if you do not want to use metadata or are not connected to the internet."
-        ,"first2page.wizard.previous_button": "Previous"
-        ,"first2page.wizard.previous_button.value": "Previous"
-        ,"first2page.wizard.next_button": "Next"
-        ,"first2page.wizard.next_button.value": "Next"
+        "firstpage.create_account_button.value": "Create Account",
+        "first2page.select_signature_source_header": "Select Signature Source",
+        "first2page.signatures_description": "Signatures are used to match a ROM to a game name using the hash of the ROM (MD5 or SHA1). For more information, see the",
+        "first2page.signatures_link_text": "Signatures",
+        "first2page.signature.hasheous_option": "Hasheous (Recommended)",
+        "first2page.signature.hasheous_label": "Hasheous is a community-driven project that provides a database of ROM hashes and game names. It is the most accurate and up-to-date source of signatures.",
+        "first2page.signature.localonly_option": "Local Only",
+        "first2page.signature.localonly_label": "Local Only uses the signatures that are stored in the Gaseous database. This is the default option and is useful if you are not connected to the internet.",
+        "first2page.select_metadata_source_header": "Select Metadata Source",
+        "first2page.metadata_description": "Metadata is used to provide additional information about a game, such as the release date, publisher, and genre. For more information, see the",
+        "first2page.metadata_link_text": "Metadata",
+        "first2page.metadata.igdb_option": "Internet Game Database (Recommended)",
+        "first2page.metadata.igdb_label": "IGDB is a community-driven project that provides a database of game metadata. It is the most accurate and up-to-date source of metadata.",
+        "first2page.metadata.igdb_advanced_button": "Advanced",
+        "first2page.metadata.thegamesdb_option": "The Games DB",
+        "first2page.metadata.thegamesdb_label": "The Games DB is a community-driven project that provides a database of game metadata. It is a good alternative to IGDB.",
+        "first2page.metadata.none_option": "None",
+        "first2page.metadata.none_label": "None disables metadata retrieval. This is useful if you do not want to use metadata or are not connected to the internet.",
+        "first2page.wizard.previous_button": "Previous",
+        "first2page.wizard.previous_button.value": "Previous",
+        "first2page.wizard.next_button": "Next",
+        "first2page.wizard.next_button.value": "Next",
+        "homepage.go_to_your_library_button": "Go to your library"
     },
     "serverstrings": {
         "process.startup": "Startup",
