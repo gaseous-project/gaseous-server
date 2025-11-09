@@ -8,11 +8,11 @@
                     <!-- <img src="/images/logo.png" style="display: block; margin: 20px auto; width: 100px;" /> -->
                     <div class="loginwindow-logospace-logo">&nbsp;</div>
 
-                    <div id="loginwindow_header_label" class="loginwindow-logospace-label">Gaseous</div>
+                    <div id="loginwindow_header_label" class="loginwindow-logospace-label" data-i18n="firstpage.header_label">Gaseous</div>
 
                     <div style="height: 20px;">&nbsp;</div>
 
-                    <button type="button" value="Get Started"
+                    <button type="button" value="Get Started" data-i18n-attr="value:firstpage.get_started_button" data-i18n="firstpage.get_started_button"
                         onclick="document.getElementById('first_welcome').style.display = 'none'; document.getElementById('first_newadmin').style.display = '';"
                         class="bigbutton">Get Started</button>
                 </div>
@@ -22,13 +22,13 @@
                             <a href="https://github.com/gaseous-project/gaseous-server"
                                 class="romlink romlink-nounderline">
                                 <img src="/images/github-mark.svg" class="banner_button_image" />
-                                GitHub
+                                <span data-i18n="firstpage.link.github">GitHub</span>
                             </a>
                         </div>
                         <div class="loginwindow-logospace-linktable-link">
                             <a href="https://discord.gg/Nhu7wpT3k4" class="romlink romlink-nounderline">
                                 <img src="/images/discord.svg" class="banner_button_image" />
-                                Discord
+                                <span data-i18n="firstpage.link.discord">Discord</span>
                             </a>
                         </div>
                     </div>
@@ -45,7 +45,7 @@
                     <div class="loginwindow-logospace-logo">&nbsp;</div>
                     <div class="loginwindow-logospace-label">
                         <div>
-                            Gaseous
+                            <span data-i18n="firstpage.header_label">Gaseous</span>
                         </div>
                     </div>
                 </div>
@@ -55,13 +55,13 @@
                             <a href="https://github.com/gaseous-project/gaseous-server"
                                 class="romlink romlink-nounderline">
                                 <img src="/images/github-mark.svg" class="banner_button_image" />
-                                GitHub
+                                <span data-i18n="firstpage.link.github">GitHub</span>
                             </a>
                         </div>
                         <div class="loginwindow-logospace-linktable-link">
                             <a href="https://discord.gg/Nhu7wpT3k4" class="romlink romlink-nounderline">
                                 <img src="/images/discord.svg" class="banner_button_image" />
-                                Discord
+                                <span data-i18n="firstpage.link.discord">Discord</span>
                             </a>
                         </div>
                     </div>
@@ -72,36 +72,37 @@
                 <table class="loginwindow_loginspace_controls">
                     <tr>
                         <td colspan="2">
-                            <h2>Create your administrator account</h2>
+                            <h2 data-i18n="firstpage.create_admin_header">Create your administrator account</h2>
                         </td>
                     </tr>
                     <tr>
                         <!-- <td>Email</td> -->
-                        <td colspan="2"><input type="email" id="login_email" style="width: 95%;" placeholder="Email" />
+                        <td colspan="2"><input type="email" id="login_email" style="width: 95%;" placeholder="Email" data-i18n-attr="placeholder:firstpage.email_placeholder" />
                         </td>
                     </tr>
                     <tr>
                         <!-- <td>New Password</td> -->
-                        <td colspan="2"><input type="password" id="login_password" style="width: 95%;"
-                                placeholder="New Password" />
+            <td colspan="2"><input type="password" id="login_password" style="width: 95%;"
+                placeholder="New Password" data-i18n-attr="placeholder:firstpage.new_password_placeholder" />
                         </td>
                     </tr>
                     <tr>
                         <!-- <td>Confirm Password</td> -->
-                        <td colspan="2"><input type="password" id="login_confirmpassword" style="width: 95%;"
-                                placeholder="Confirm Password" /></td>
+            <td colspan="2"><input type="password" id="login_confirmpassword" style="width: 95%;"
+                placeholder="Confirm Password" data-i18n-attr="placeholder:firstpage.confirm_password_placeholder" /></td>
                     </tr>
                     <tr>
                         <td colspan="2">
-                            <p>Email requirements:</p>
+                            <p data-i18n="firstpage.email_requirements_paragraph">Email requirements:</p>
                             <div id="email-error"></div>
-                            <p>Password requirements:</p>
+                            <p data-i18n="firstpage.password_requirements_paragraph">Password requirements:</p>
                             <div id="password-error"></div>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="2" style="padding-top: 20px;">
                             <button id="login_createaccount" type="submit" value="Create Account"
+                                data-i18n-attr="value:firstpage.create_account_button.value" data-i18n="firstpage.create_account_button"
                                 onclick="registerAccount();" disabled="disabled" class="bigbutton">Create
                                 Account</button>
                         </td>

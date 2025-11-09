@@ -384,7 +384,19 @@
         "webemulatormodal.help_image_title": "Help",
         "webemulatormodal.more_information_cores_prefix": "See",
         "webemulatormodal.more_information_cores_suffix": "for more information regarding EmulatorJS cores.",
-        "webemulatormodal.bios_files_available_header": "BIOS Files Available when Running the Emulator"
+        "webemulatormodal.bios_files_available_header": "BIOS Files Available when Running the Emulator",
+        "firstpage.header_label": "Gaseous",
+        "firstpage.get_started_button": "Get Started",
+        "firstpage.link.github": "GitHub",
+        "firstpage.link.discord": "Discord",
+        "firstpage.create_admin_header": "Create your administrator account",
+        "firstpage.email_placeholder": "Email",
+        "firstpage.new_password_placeholder": "New Password",
+        "firstpage.confirm_password_placeholder": "Confirm Password",
+        "firstpage.email_requirements_paragraph": "Email requirements:",
+        "firstpage.password_requirements_paragraph": "Password requirements:",
+        "firstpage.create_account_button": "Create Account",
+        "firstpage.create_account_button.value": "Create Account"
     },
     "serverstrings": {
         "process.startup": "Startup",
