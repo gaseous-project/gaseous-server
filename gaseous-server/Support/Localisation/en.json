@@ -433,24 +433,33 @@
         "librarypage.order.last_played_option": "Last Played",
         "librarypage.order.play_time_option": "Play Time",
         "librarypage.order.direction.ascending_option": "Ascending",
-        "librarypage.order.direction.descending_option": "Descending"
-        ,"loginpage.sign_in_header": "Sign In"
-        ,"loginpage.sign_in_button": "Sign In"
-        ,"loginpage.sign_in_button.value": "Sign In"
-        ,"loginpage.email_or_username_placeholder": "Email or Username"
-        ,"loginpage.password_placeholder": "Password"
-        ,"loginpage.two_factor_authentication_header": "Two‑Factor Authentication"
-        ,"loginpage.two_factor_code_placeholder": "6-digit code"
-        ,"loginpage.verify_button": "Verify"
-        ,"loginpage.use_recovery_code_button": "Use a recovery code"
-        ,"loginpage.back_to_password_button": "Back to password"
-        ,"loginpage.use_recovery_code_header": "Use a Recovery Code"
-        ,"loginpage.enter_recovery_code_placeholder": "Enter recovery code"
-        ,"loginpage.back_to_authenticator_code_button": "Back to authenticator code"
-        ,"loginpage.sign_in_with_google_button": "Sign in with Google"
-        ,"loginpage.microsoft_sign_in_alt": "Microsoft Sign In"
-        ,"loginpage.sign_in_with_microsoft_button": "Sign in with Microsoft"
-        ,"loginpage.sign_in_with_oidc_button": "Sign in with OIDC"
+        "librarypage.order.direction.descending_option": "Descending",
+        "loginpage.sign_in_header": "Sign In",
+        "loginpage.sign_in_button": "Sign In",
+        "loginpage.sign_in_button.value": "Sign In",
+        "loginpage.email_or_username_placeholder": "Email or Username",
+        "loginpage.password_placeholder": "Password",
+        "loginpage.two_factor_authentication_header": "Two‑Factor Authentication",
+        "loginpage.two_factor_code_placeholder": "6-digit code",
+        "loginpage.verify_button": "Verify",
+        "loginpage.use_recovery_code_button": "Use a recovery code",
+        "loginpage.back_to_password_button": "Back to password",
+        "loginpage.use_recovery_code_header": "Use a Recovery Code",
+        "loginpage.enter_recovery_code_placeholder": "Enter recovery code",
+        "loginpage.back_to_authenticator_code_button": "Back to authenticator code",
+        "loginpage.sign_in_with_google_button": "Sign in with Google",
+        "loginpage.microsoft_sign_in_alt": "Microsoft Sign In",
+        "loginpage.sign_in_with_microsoft_button": "Sign in with Microsoft",
+        "loginpage.sign_in_with_oidc_button": "Sign in with OIDC"
+        ,"loginpage.incorrect_password_error": "Incorrect password"
+        ,"loginpage.enter_six_digit_code_error": "Enter the 6-digit code."
+        ,"loginpage.invalid_code_error": "Invalid code. Try again."
+        ,"loginpage.error_verifying_code_error": "Error verifying code."
+        ,"loginpage.enter_recovery_code_error": "Enter a recovery code."
+        ,"loginpage.invalid_recovery_code_error": "Invalid recovery code."
+        ,"loginpage.error_verifying_recovery_code_error": "Error verifying recovery code."
+        ,"loginpage.unsupported_social_login_provider_error": "Unsupported social login provider: {0}"
+        ,"loginpage.error_fetching_social_login_options_error": "Error fetching social login options: {0}"
     },
     "serverstrings": {
         "process.startup": "Startup",
