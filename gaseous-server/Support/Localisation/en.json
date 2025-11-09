@@ -419,6 +419,21 @@
         "first2page.wizard.next_button": "Next",
         "first2page.wizard.next_button.value": "Next",
         "homepage.go_to_your_library_button": "Go to your library"
+        ,"librarypage.filter_label": "Filter"
+        ,"librarypage.toggle_filter_alt": "Toggle Filter"
+        ,"librarypage.toggle_filter_title": "Toggle Filter"
+        ,"librarypage.page_size_label": "Page size:"
+        ,"librarypage.order_by_label": "Order by:"
+        ,"librarypage.order.name_the_option": "Name, The"
+        ,"librarypage.order.name_option": "Name"
+        ,"librarypage.order.release_date_option": "Release Date"
+        ,"librarypage.order.user_rating_option": "User Rating"
+        ,"librarypage.order.user_rating_count_option": "User Rating Count"
+        ,"librarypage.order.date_added_option": "Date Added"
+        ,"librarypage.order.last_played_option": "Last Played"
+        ,"librarypage.order.play_time_option": "Play Time"
+        ,"librarypage.order.direction.ascending_option": "Ascending"
+        ,"librarypage.order.direction.descending_option": "Descending"
     },
     "serverstrings": {
         "process.startup": "Startup",
