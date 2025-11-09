@@ -5,24 +5,20 @@
                 <div class="loginwindow-logospace-banner loginwindow-logospace-banner-top">
                     <div class="loginwindow-logospace-logo">&nbsp;</div>
                     <div class="loginwindow-logospace-label">
-                        <div>
-                            Gaseous
-                        </div>
+                        <div data-i18n="firstpage.header_label"></div>
                     </div>
                 </div>
                 <div class="loginwindow-logospace-banner loginwindow-logospace-banner-bottom">
                     <div class="loginwindow-logospace-linktable">
                         <div class="loginwindow-logospace-linktable-link">
                             <a href="https://github.com/gaseous-project/gaseous-server"
-                                class="romlink romlink-nounderline">
+                                class="romlink romlink-nounderline" data-i18n="firstpage.link.github">
                                 <img src="/images/github-mark.svg" class="banner_button_image" />
-                                GitHub
                             </a>
                         </div>
                         <div class="loginwindow-logospace-linktable-link">
-                            <a href="https://discord.gg/Nhu7wpT3k4" class="romlink romlink-nounderline">
+                            <a href="https://discord.gg/Nhu7wpT3k4" class="romlink romlink-nounderline" data-i18n="firstpage.link.discord">
                                 <img src="/images/discord.svg" class="banner_button_image" />
-                                Discord
                             </a>
                         </div>
                     </div>
@@ -34,29 +30,28 @@
                     <table class="loginwindow_loginspace_controls">
                         <tr>
                             <td style="text-align: center;">
-                                <h2>Sign In</h2>
+                                <h2 data-i18n="loginpage.sign_in_header"></h2>
                             </td>
                         </tr>
                         <tbody id="social_login_button_password" style="display: none;">
                             <tr>
                                 <!-- <td>Email</td> -->
-                                <td><input type="text" id="login_email" style="width: 95%;"
-                                        placeholder="Email or Username" />
+                <td><input type="text" id="login_email" style="width: 95%;"
+                    data-i18n-attr="placeholder:loginpage.email_or_username_placeholder" />
                                 </td>
                             </tr>
                             <tr>
                                 <!-- <td>Password</td> -->
-                                <td><input type="password" id="login_password" style="width: 95%;"
-                                        placeholder="Password" /></td>
+                <td><input type="password" id="login_password" style="width: 95%;"
+                    data-i18n-attr="placeholder:loginpage.password_placeholder" /></td>
                             </tr>
                             <tr id="login_errorrow" style="display: none;">
                                 <td id="login_errorlabel" style="color: red;"></td>
                             </tr>
                             <tr>
                                 <td style="padding-bottom: 10px;">
-                                    <button type="submit" value="Sign In" onclick="UserLogin();" name="submit"
-                                        class="bigbutton">Sign
-                                        In</button>
+                                    <button type="submit" onclick="UserLogin();" name="submit"
+                                        class="bigbutton" data-i18n="loginpage.sign_in_button" data-i18n-attr="value:loginpage.sign_in_button.value"></button>
                                 </td>
                             </tr>
                         </tbody>
@@ -65,13 +60,13 @@
                         <tbody id="twofactor_section" style="display: none;">
                             <tr>
                                 <td style="text-align: center;">
-                                    <strong>Two‑Factor Authentication</strong>
+                                    <strong data-i18n="loginpage.two_factor_authentication_header"></strong>
                                 </td>
                             </tr>
                             <tr>
                                 <td>
                                     <input type="text" id="twofactor_code" style="width: 95%;" maxlength="10"
-                                        placeholder="6-digit code" />
+                                        data-i18n-attr="placeholder:loginpage.two_factor_code_placeholder" />
                                 </td>
                             </tr>
                             <tr id="twofactor_errorrow" style="display: none;">
@@ -79,19 +74,17 @@
                             </tr>
                             <tr>
                                 <td style="padding-bottom: 10px;">
-                                    <button type="button" onclick="VerifyTwoFactor();" class="bigbutton">Verify</button>
+                                    <button type="button" onclick="VerifyTwoFactor();" class="bigbutton" data-i18n="loginpage.verify_button"></button>
                                 </td>
                             </tr>
                             <tr>
                                 <td style="text-align:center;">
-                                    <button type="button" style="width: 100%;" onclick="ShowRecoverySection();">Use a
-                                        recovery code</button>
+                                    <button type="button" style="width: 100%;" onclick="ShowRecoverySection();" data-i18n="loginpage.use_recovery_code_button"></button>
                                 </td>
                             </tr>
                             <tr>
                                 <td style="text-align:center;">
-                                    <button type="button" style="width: 100%;" onclick="ShowPasswordSection();">Back to
-                                        password</button>
+                                    <button type="button" style="width: 100%;" onclick="ShowPasswordSection();" data-i18n="loginpage.back_to_password_button"></button>
                                 </td>
                             </tr>
                         </tbody>
@@ -100,13 +93,13 @@
                         <tbody id="recovery_section" style="display: none;">
                             <tr>
                                 <td style="text-align: center;">
-                                    <strong>Use a Recovery Code</strong>
+                                    <strong data-i18n="loginpage.use_recovery_code_header"></strong>
                                 </td>
                             </tr>
                             <tr>
                                 <td>
                                     <input type="text" id="recovery_code" style="width: 95%;"
-                                        placeholder="Enter recovery code" />
+                                        data-i18n-attr="placeholder:loginpage.enter_recovery_code_placeholder" />
                                 </td>
                             </tr>
                             <tr id="recovery_errorrow" style="display: none;">
@@ -115,14 +108,12 @@
                             <tr>
                                 <td style="padding-bottom: 10px;">
                                     <button type="button" onclick="VerifyRecoveryCode();"
-                                        class="bigbutton">Verify</button>
+                                        class="bigbutton" data-i18n="loginpage.verify_button"></button>
                                 </td>
                             </tr>
                             <tr>
                                 <td style="text-align:center;">
-                                    <button type="button" style="width: 100%;" onclick="ShowTwoFactorSection();">Back to
-                                        authenticator
-                                        code</button>
+                                    <button type="button" style="width: 100%;" onclick="ShowTwoFactorSection();" data-i18n="loginpage.back_to_authenticator_code_button"></button>
                                 </td>
                             </tr>
                         </tbody>
@@ -149,8 +140,8 @@
                                                 <path fill="none" d="M0 0h48v48H0z"></path>
                                             </svg>
                                         </div>
-                                        <span class="gsi-material-button-contents">Sign in with Google</span>
-                                        <span style="display: none;">Sign in with Google</span>
+                                        <span class="gsi-material-button-contents" data-i18n="loginpage.sign_in_with_google_button"></span>
+                                        <span style="display: none;" data-i18n="loginpage.sign_in_with_google_button"></span>
                                     </div>
                                 </button>
                             </td>
@@ -159,15 +150,15 @@
                             <td style="padding-top: 5px;">
                                 <button class="ms-signin-button" style="width:100%" onclick="SocialLogin('microsoft');">
                                     <img class="ms-signin-image" src="/images/ms-signin-logo.svg"
-                                        alt="Microsoft Sign In" />
-                                    <span class="ms-signin-text">Sign in with Microsoft</span>
+                                        data-i18n-attr="alt:loginpage.microsoft_sign_in_alt" />
+                                    <span class="ms-signin-text" data-i18n="loginpage.sign_in_with_microsoft_button"></span>
                                 </button>
                             </td>
                         </tr>
                         <tr id="social_login_button_oidc" style="display: none;">
                             <td style="padding-top: 5px;">
                                 <button class="ms-signin-button" style="width:100%" onclick="SocialLogin('oidc');">
-                                    <span class="ms-signin-text">Sign in with OIDC</span>
+                                    <span class="ms-signin-text" data-i18n="loginpage.sign_in_with_oidc_button"></span>
                                 </button>
                             </td>
                         </tr>
