@@ -268,6 +268,42 @@
         "accountmodal.confirm_2fa_button": "Confirm",
         "accountmodal.clear_avatar_button": "Clear",
         "accountmodal.clear_background_button": "Clear",
+        "accountmodal.recovery_codes_available_html": "<strong>Recovery Codes:</strong> {0} available",
+        "accountmodal.two_factor_confirmation_error_title": "2FA Confirmation Error",
+        "accountmodal.two_factor_confirmation_enter_code_error": "Please enter the confirmation code from your authenticator app.",
+        "accountmodal.two_factor_confirmation_invalid_or_expired_error": "The confirmation code is invalid or expired. Please try again.",
+        "accountmodal.two_factor_enabled_title": "2FA Enabled",
+        "accountmodal.two_factor_enabled_message": "2FA has been successfully enabled for your account.",
+        "accountmodal.recovery_codes_error_title": "Recovery Codes Error",
+        "accountmodal.recovery_codes_fetch_failed_error": "Couldn't fetch your recovery codes. Please try again later.",
+        "accountmodal.recovery_codes_store_codes_message": "Store these codes in a safe place. They can be used to access your account if you lose access to your authenticator app. They are one-time use only, and never shown again.",
+        "accountmodal.recovery_codes_none_returned_error": "No recovery codes were returned. Please try again later.",
+        "accountmodal.two_factor_setup_error_title": "2FA Setup Error",
+        "accountmodal.two_factor_setup_generate_key_failed_error": "Couldn't generate a 2FA key. Please try again later.",
+        "accountmodal.two_factor_setup_generic_unexpected_error": "An unexpected error occurred. Please try again later.",
+        "accountmodal.secret_key_html": "<strong>Secret Key:</strong> {0}",
+        "accountmodal.two_factor_disable_confirm": "Are you sure you want to disable 2FA? This will remove the extra security layer from your account.",
+        "accountmodal.two_factor_disable_error_title": "2FA Disable Error",
+        "accountmodal.two_factor_disable_failed_error": "The 2FA disable failed. Please try again later.",
+        "accountmodal.two_factor_disabled_title": "2FA Disabled",
+        "accountmodal.two_factor_disabled_message": "2FA has been successfully disabled for your account.",
+        "accountmodal.username_change_error_title": "Username Change Error",
+        "accountmodal.username_change_requirements_failed_error": "The new username does not meet the requirements.",
+        "accountmodal.username_change_failed_error": "The username change failed. Try a different username.",
+        "accountmodal.password_reset_error_title": "Password Reset Error",
+        "accountmodal.password_reset_requirements_failed_error": "The new password does not meet the requirements.",
+        "accountmodal.password_reset_failed_error": "The password reset failed. Check the current password and try again.",
+        "accountmodal.email_rule_valid_address": "Email is a valid address",
+        "accountmodal.email_rule_unique": "Email is unique",
+        "accountmodal.username_rule_length": "Between 3 and 30 characters",
+        "accountmodal.username_rule_valid_characters": "Only letters, numbers, underscores, dashes, periods, and at signs",
+        "accountmodal.username_rule_unique": "Username is unique",
+        "accountmodal.password_rule_minimum_length": "Minimum {0} characters",
+        "accountmodal.password_rule_at_least_one_uppercase": "At least one uppercase letter",
+        "accountmodal.password_rule_at_least_one_lowercase": "At least one lowercase letter",
+        "accountmodal.password_rule_at_least_one_number": "At least one number",
+        "accountmodal.password_rule_at_least_one_special_character": "At least one special character.",
+        "accountmodal.password_rule_passwords_must_match": "Passwords must match.",
         "biosmodal.add_bios_firmware_button": "Add BIOS/Firmware",
         "emulatorstatemodal.tab.load": "Load",
         "emulatorstatemodal.tab.upload_state": "Upload State",
@@ -450,16 +486,16 @@
         "loginpage.sign_in_with_google_button": "Sign in with Google",
         "loginpage.microsoft_sign_in_alt": "Microsoft Sign In",
         "loginpage.sign_in_with_microsoft_button": "Sign in with Microsoft",
-        "loginpage.sign_in_with_oidc_button": "Sign in with OIDC"
-        ,"loginpage.incorrect_password_error": "Incorrect password"
-        ,"loginpage.enter_six_digit_code_error": "Enter the 6-digit code."
-        ,"loginpage.invalid_code_error": "Invalid code. Try again."
-        ,"loginpage.error_verifying_code_error": "Error verifying code."
-        ,"loginpage.enter_recovery_code_error": "Enter a recovery code."
-        ,"loginpage.invalid_recovery_code_error": "Invalid recovery code."
-        ,"loginpage.error_verifying_recovery_code_error": "Error verifying recovery code."
-        ,"loginpage.unsupported_social_login_provider_error": "Unsupported social login provider: {0}"
-        ,"loginpage.error_fetching_social_login_options_error": "Error fetching social login options: {0}"
+        "loginpage.sign_in_with_oidc_button": "Sign in with OIDC",
+        "loginpage.incorrect_password_error": "Incorrect password",
+        "loginpage.enter_six_digit_code_error": "Enter the 6-digit code.",
+        "loginpage.invalid_code_error": "Invalid code. Try again.",
+        "loginpage.error_verifying_code_error": "Error verifying code.",
+        "loginpage.enter_recovery_code_error": "Enter a recovery code.",
+        "loginpage.invalid_recovery_code_error": "Invalid recovery code.",
+        "loginpage.error_verifying_recovery_code_error": "Error verifying recovery code.",
+        "loginpage.unsupported_social_login_provider_error": "Unsupported social login provider: {0}",
+        "loginpage.error_fetching_social_login_options_error": "Error fetching social login options: {0}"
     },
     "serverstrings": {
         "process.startup": "Startup",

@@ -134,7 +134,7 @@ async function VerifyTwoFactor() {
     const code = (codeEl?.value || '').trim();
     if (!code) {
         document.getElementById('twofactor_errorrow').style.display = '';
-    document.getElementById('twofactor_errorlabel').innerText = window.lang.translate('loginpage.enter_six_digit_code_error');
+        document.getElementById('twofactor_errorlabel').innerText = window.lang.translate('loginpage.enter_six_digit_code_error');
         return;
     }
 
@@ -152,7 +152,7 @@ async function VerifyTwoFactor() {
         }
     } catch (e) {
         document.getElementById('twofactor_errorrow').style.display = '';
-    document.getElementById('twofactor_errorlabel').innerText = window.lang.translate('loginpage.error_verifying_code_error');
+        document.getElementById('twofactor_errorlabel').innerText = window.lang.translate('loginpage.error_verifying_code_error');
     }
 }
 
@@ -161,7 +161,7 @@ async function VerifyRecoveryCode() {
     const recoveryCode = (codeEl?.value || '').trim();
     if (!recoveryCode) {
         document.getElementById('recovery_errorrow').style.display = '';
-    document.getElementById('recovery_errorlabel').innerText = window.lang.translate('loginpage.enter_recovery_code_error');
+        document.getElementById('recovery_errorlabel').innerText = window.lang.translate('loginpage.enter_recovery_code_error');
         return;
     }
     try {
@@ -178,7 +178,7 @@ async function VerifyRecoveryCode() {
         }
     } catch (e) {
         document.getElementById('recovery_errorrow').style.display = '';
-    document.getElementById('recovery_errorlabel').innerText = window.lang.translate('loginpage.error_verifying_recovery_code_error');
+        document.getElementById('recovery_errorlabel').innerText = window.lang.translate('loginpage.error_verifying_recovery_code_error');
     }
 }
 
@@ -205,5 +205,5 @@ fetch('/api/v1/Account/social-login', {
         ShowSocialButtons(true);
     })
     .catch(error => {
-    console.error(window.lang.translate('loginpage.error_fetching_social_login_options_error', [error]));
+        console.error(window.lang.translate('loginpage.error_fetching_social_login_options_error', [error]));
     });
