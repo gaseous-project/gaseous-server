@@ -1,0 +1,16 @@
+{
+    "name": "English (Canada)",
+    "nativeName": "English (Canada)",
+    "code": "en-CA",
+    "pluralRule": "n != 1",
+    "direction": "ltr",
+    "type": "Overlay",
+    "strings": {
+        "banner.notification.database_upgrade.body": "Performance may be degraded while the database is being upgraded, while favourites and game saves may be missing. Please wait until the upgrade is complete.",
+        "home.favourites": "Favourites",
+        "card.game.favourite": "Favourite",
+        "filtering.settings.favourite": "Favourite",
+        "about.old_school_emulation_center": "The Old School Emulation Centre"
+    },
+    "serverstrings": {}
+}
