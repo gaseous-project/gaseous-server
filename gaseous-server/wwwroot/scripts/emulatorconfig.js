@@ -60,7 +60,7 @@ class WebEmulatorConfiguration {
 
         let newLabel = document.createElement('label');
         newLabel.htmlFor = 'webemulator_select_none';
-        newLabel.innerHTML = '&nbsp;None';
+        newLabel.innerHTML = '&nbsp;' + window.lang.translate('webemulatormodal.emulator_none_option');
         emulatorSelectTableCell.appendChild(newLabel);
 
         emulatorSelectTableRow.appendChild(emulatorSelectTableCell);
@@ -156,12 +156,12 @@ class WebEmulatorConfiguration {
                             newLabel.htmlFor = 'webemulator_core_select_' + this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].core;
                             let labelText = "";
                             if (this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].alternateCoreName.length > 0) {
-                                labelText = "&nbsp;" + this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].core + " (maps to core: " + this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].alternateCoreName + ")";
+                                labelText = "&nbsp;" + this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].core + " (" + window.lang.translate('webemulatormodal.core_maps_to_core', [this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].alternateCoreName]) + ")";
                             } else {
                                 labelText = "&nbsp;" + this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].core;
                             }
                             if (this.PlatformMap.webEmulator.availableWebEmulators[i].availableWebEmulatorCores[j].default == true) {
-                                labelText += " (Default)";
+                                labelText += " (" + window.lang.translate('webemulatormodal.core_default_suffix') + ")";
                             }
                             newLabel.innerHTML = labelText;
                             coreSelectTableCell.appendChild(newLabel);
@@ -214,7 +214,7 @@ class WebEmulatorConfiguration {
                 newLabel.htmlFor = 'webemulator_bios_select_' + this.PlatformMap.bios[i].hash;
                 let labelText = "";
                 if (this.PlatformMap.bios[i].description.length > 0) {
-                    labelText = this.PlatformMap.bios[i].description + " (" + this.PlatformMap.bios[i].filename + ")";
+                    labelText = window.lang.translate('webemulatormodal.bios_description_filename', [this.PlatformMap.bios[i].description, this.PlatformMap.bios[i].filename]);
                 } else {
                     labelText = this.PlatformMap.bios[i].filename;
                 }
