@@ -21,8 +21,8 @@ if [ ! -d "$LOCALE_DIR" ]; then
 fi
 
 # Build table header
-TABLE="| Code | English Name | Native Name | Type | Parent | Pluralisation | Notes |\n"
-TABLE+="|------|--------------|-------------|------|--------|---------------|-------|\n"
+TABLE=$'| Code | English Name | Native Name | Type | Parent | Pluralisation | Notes |\n'
+TABLE+=$'|------|--------------|-------------|------|--------|---------------|-------|\n'
 
 # Iterate over JSON files, sorted for deterministic output
 for file in $(ls "$LOCALE_DIR"/*.json | sort); do
@@ -57,7 +57,7 @@ for file in $(ls "$LOCALE_DIR"/*.json | sort); do
   if [ "$code" = "en-US" ]; then
     notes="Acts as default American variant"
   fi
-  TABLE+="| $code | $name | $nativeName | $type | $parent | $pluralisation | $notes |\n"
+  TABLE+=$"| $code | $name | $nativeName | $type | $parent | $pluralisation | $notes |"$'\n'
  done
 
 # Escape slashes for sed replacement
