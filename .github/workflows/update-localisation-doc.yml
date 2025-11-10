@@ -1,0 +1,51 @@
+name: Update Localisation Documentation
+
+on:
+  push:
+    paths:
+      - 'gaseous-server/Support/Localisation/*.json'
+      - 'docs/LOCALISATION.MD'
+      - '.github/scripts/generate_locale_table.sh'
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 3 * * 1' # Weekly Monday 03:00 UTC
+
+jobs:
+  regenerate-locale-table:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Generate locale table
+        run: |
+          chmod +x .github/scripts/generate_locale_table.sh
+          .github/scripts/generate_locale_table.sh
+
+      - name: Detect changes
+        run: |
+          if git diff --quiet docs/LOCALISATION.MD; then
+            echo "DOC_CHANGED=false" >> $GITHUB_ENV
+          else
+            echo "DOC_CHANGED=true" >> $GITHUB_ENV
+          fi
+
+      - name: Commit updates
+        if: env.DOC_CHANGED == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/LOCALISATION.MD
+          git commit -m "docs: auto-update localisation language table"
+          git push
+
+      - name: Summary
+        run: |
+          echo "Locale table regeneration complete. Changed: $DOC_CHANGED" >> $GITHUB_STEP_SUMMARY
