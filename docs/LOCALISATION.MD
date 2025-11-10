@@ -11,11 +11,11 @@
 | en-HK | English (Hong Kong) | English (Hong Kong) | Overlay | en | pluralRule | Regional spelling |
 | en-IE | English (Ireland) | English (Ireland) | Overlay | en | pluralRule | Regional spelling |
 | en-IN | English (India) | English (India) | Overlay | en | pluralRule | Regional spelling |
-| en | English | English | Base | — | pluralRule + pluralRules | Provides full master string set & advanced multi-category rules |
 | en-NZ | English (New Zealand) | English (New Zealand) | Overlay | en | pluralRule | Regional spelling |
 | en-SG | English (Singapore) | English (Singapore) | Overlay | en | pluralRule | Regional spelling |
 | en-US | English (American English) | English (American English) | Overlay | en | pluralRule | Acts as default American variant |
 | en-ZA | English (South Africa) | English (South Africa) | Overlay | en | pluralRule | Regional spelling |
+| en | English | English | Base | — | pluralRule + pluralRules | Provides full master string set & advanced multi-category rules |
 | es-419 | Español (Latinoamérica) | Español (Latinoamérica) | Overlay | es | pluralRule |  |
 | es-AR | Español (Argentina) | Español (Argentina) | Overlay | es | pluralRule |  |
 | es-BO | Español (Bolivia) | Español (Bolivia) | Overlay | es | pluralRule |  |
@@ -28,7 +28,6 @@
 | es-ES | Español (España) | Español (España) | Overlay | es | pluralRule |  |
 | es-GT | Español (Guatemala) | Español (Guatemala) | Overlay | es | pluralRule |  |
 | es-HN | Español (Honduras) | Español (Honduras) | Overlay | es | pluralRule |  |
-| es | Español | Español | Base | — | pluralRule + pluralRules |  |
 | es-MX | Español (México) | Español (México) | Overlay | es | pluralRule |  |
 | es-NI | Español (Nicaragua) | Español (Nicaragua) | Overlay | es | pluralRule |  |
 | es-PA | Español (Panamá) | Español (Panamá) | Overlay | es | pluralRule |  |
@@ -37,7 +36,8 @@
 | es-PY | Español (Paraguay) | Español (Paraguay) | Overlay | es | pluralRule |  |
 | es-SV | Español (El Salvador) | Español (El Salvador) | Overlay | es | pluralRule |  |
 | es-UY | Español (Uruguay) | Español (Uruguay) | Overlay | es | pluralRule |  |
-| es-VE | Español (Venezuela) | Español (Venezuela) | Overlay | es | pluralRule |  |<!-- LOCALE_TABLE_END -->
+| es-VE | Español (Venezuela) | Español (Venezuela) | Overlay | es | pluralRule |  |
+| es | Español | Español | Base | — | pluralRule + pluralRules |  |<!-- LOCALE_TABLE_END -->
 
 All overlay locales inherit missing keys from the base English (`en`). Where both embedded resource and file system versions exist, the file system locale overrides the embedded resource, and overlays extend their parent before final merge with `en` for safety.
 
