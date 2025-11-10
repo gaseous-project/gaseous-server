@@ -41,11 +41,19 @@
 | fr-BE | Français (Belgique) | Français (Belgique) | Overlay | fr | pluralRule + pluralRules |  |
 | fr-CA | Français (Canada) | Français (Canada) | Overlay | fr | pluralRule + pluralRules |  |
 | fr-CH | Français (Suisse) | Français (Suisse) | Overlay | fr | pluralRule + pluralRules |  |
+| fr-CI | Français (Côte d'Ivoire) | Français (Côte d'Ivoire) | Overlay | fr | pluralRule + pluralRules |  |
+| fr-CM | Français (Cameroun) | Français (Cameroun) | Overlay | fr | pluralRule + pluralRules |  |
 | fr-DZ | Français (Algérie) | Français (Algérie) | Overlay | fr | pluralRule + pluralRules |  |
 | fr-FR | Français (France) | Français (France) | Overlay | fr | pluralRule + pluralRules |  |
+| fr-GF | Français (Guyane française) | Français (Guyane française) | Overlay | fr | pluralRule + pluralRules |  |
+| fr-GP | Français (Guadeloupe) | Français (Guadeloupe) | Overlay | fr | pluralRule + pluralRules |  |
+| fr-HT | Français (Haïti) | Français (Haïti) | Overlay | fr | pluralRule + pluralRules |  |
 | fr-LU | Français (Luxembourg) | Français (Luxembourg) | Overlay | fr | pluralRule + pluralRules |  |
 | fr-MA | Français (Maroc) | Français (Maroc) | Overlay | fr | pluralRule + pluralRules |  |
 | fr-MC | Français (Monaco) | Français (Monaco) | Overlay | fr | pluralRule + pluralRules |  |
+| fr-NC | Français (Nouvelle-Calédonie) | Français (Nouvelle-Calédonie) | Overlay | fr | pluralRule + pluralRules |  |
+| fr-PF | Français (Polynésie française) | Français (Polynésie française) | Overlay | fr | pluralRule + pluralRules |  |
+| fr-RE | Français (La Réunion) | Français (La Réunion) | Overlay | fr | pluralRule + pluralRules |  |
 | fr-SN | Français (Sénégal) | Français (Sénégal) | Overlay | fr | pluralRule + pluralRules |  |
 | fr-TN | Français (Tunisie) | Français (Tunisie) | Overlay | fr | pluralRule + pluralRules |  |
 | fr | Français | Français | Base | — | pluralRule + pluralRules |  |<!-- LOCALE_TABLE_END -->
