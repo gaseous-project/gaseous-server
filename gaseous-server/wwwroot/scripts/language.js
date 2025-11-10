@@ -52,7 +52,7 @@ class Language {
             this.#recordMissingKey(key);
             return key;
         }
-        return "*" + this.#formatValue(direct, args);
+        return this.#formatValue(direct, args);
     }
 
     // Pluralisation aligned with server logic in Localisation.TranslatePlural
@@ -101,7 +101,7 @@ class Language {
             // allow positional usage where {0} is count
             args = [count];
         }
-        return "*" + this.#formatValue(value, args);
+        return this.#formatValue(value, args);
     }
 
     // Translate all DOM elements with data-i18n
