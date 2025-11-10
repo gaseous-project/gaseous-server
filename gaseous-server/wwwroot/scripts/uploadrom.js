@@ -18,7 +18,7 @@ class UploadRom {
         await this.dialog.BuildModal(true);
 
         // setup the dialog
-        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Upload ROM";
+        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = window.lang ? window.lang.translate('uploadrommodal.title') : 'Upload ROM';
 
         // set up the drop zone
         let dropZone = this.dialog.modalElement.querySelector('#upload_target');
@@ -98,7 +98,7 @@ class UploadRom {
 
             await new Promise(resolve => {
                 if (this.UploadCount > this.MaxUploads) {
-                    console.log('Max uploads reached, waiting for uploads to complete');
+                    console.log(window.lang ? window.lang.translate('uploadrommodal.console.max_uploads_reached_waiting') : 'Max uploads reached, waiting for uploads to complete');
                     const interval = setInterval(() => {
                         if (this.UploadCount <= this.MaxUploads) {
                             clearInterval(interval);
@@ -119,7 +119,7 @@ class UploadRom {
                     // process the results
                     console.log(xhr.responseText);
 
-                    uploadedItem.SetStatus('rom', 2, null, 'Queued for processing');
+                    uploadedItem.SetStatus('rom', 2, null, (window.lang ? window.lang.translate('uploadrommodal.status.queued_for_processing') : 'Queued for processing'));
                 }
             });
             xhr.send(formData);
@@ -224,11 +224,11 @@ class UploadItem {
     }
 
     static StatusValues = {
-        0: "Pending",
-        1: "Uploading",
-        2: "Complete",
-        3: "Failed",
-        4: "Processing",
-        5: "Error"
+        0: window.lang ? window.lang.translate('uploadrommodal.status.pending') : "Pending",
+        1: window.lang ? window.lang.translate('uploadrommodal.status.uploading') : "Uploading",
+        2: window.lang ? window.lang.translate('uploadrommodal.status.complete') : "Complete",
+        3: window.lang ? window.lang.translate('uploadrommodal.status.failed') : "Failed",
+        4: window.lang ? window.lang.translate('uploadrommodal.status.processing') : "Processing",
+        5: window.lang ? window.lang.translate('uploadrommodal.status.error') : "Error"
     };
 }
