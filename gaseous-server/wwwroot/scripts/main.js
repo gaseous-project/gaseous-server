@@ -27,7 +27,7 @@ function ajaxCall(endpoint, method, successFunction, errorFunction, body) {
 
         // Error handling
         error: function (error) {
-            console.log('Error reaching URL: ' + endpoint);
+            console.log(window.lang ? window.lang.translate('console.error_generic', ['reaching URL']) : 'Error: reaching URL' + ': ' + endpoint);
             console.log(`Error ${JSON.stringify(error)}`);
 
             if (errorFunction) {
@@ -322,7 +322,7 @@ function CreateEditableTable(TableName, Headers) {
     // add more button
     var addButton = document.createElement('button');
     addButton.value = 'Add Row';
-    addButton.innerHTML = 'Add Row';
+    addButton.innerHTML = window.lang ? window.lang.translate('main.add_row') : 'Add Row';
 
     $(addButton).click(function () {
         eTable.appendChild(AddEditableTableRow(Headers));
@@ -355,7 +355,7 @@ function AddEditableTableRow(Headers) {
     delButtonCell.style.textAlign = 'right';
     var delButton = document.createElement('button');
     delButton.value = 'Delete';
-    delButton.innerHTML = 'Delete';
+    delButton.innerHTML = window.lang ? window.lang.translate('generic.delete') : 'Delete';
     delButton.setAttribute('onclick', 'document.getElementById("' + uniqueId + '").remove();');
 
     delButtonCell.appendChild(delButton);
@@ -479,37 +479,37 @@ function rgbToHex(r, g, b) {
 function GetTaskFriendlyName(TaskName, options) {
     switch (TaskName) {
         case 'SignatureIngestor':
-            return "Signature import";
+            return window.lang ? window.lang.translate('task.signature_import') : 'Signature import';
         case 'TitleIngestor':
-            return "Title import";
+            return window.lang ? window.lang.translate('task.title_import') : 'Title import';
         case 'ImportQueueProcessor':
-            return "Import Queue Processor";
+            return window.lang ? window.lang.translate('task.import_queue_processor') : 'Import Queue Processor';
         case 'MetadataRefresh':
-            return "Metadata refresh";
+            return window.lang ? window.lang.translate('task.metadata_refresh') : 'Metadata refresh';
         case 'OrganiseLibrary':
-            return "Organise library";
+            return window.lang ? window.lang.translate('task.organise_library') : 'Organise library';
         case 'LibraryScan':
-            return "Library scan";
+            return window.lang ? window.lang.translate('task.library_scan') : 'Library scan';
         case 'LibraryScanWorker':
             if (options) {
-                return "Library scan worker: " + options.name;
+                return window.lang ? window.lang.translate('task.library_scan_worker_with_name', [options.name]) : ('Library scan worker: ' + options.name);
             } else {
-                return "Library scan worker";
+                return window.lang ? window.lang.translate('task.library_scan_worker') : 'Library scan worker';
             }
         case 'CollectionCompiler':
             if (options) {
-                return "Compress collection id: " + options;
+                return window.lang ? window.lang.translate('task.compress_collection_id', [options]) : ('Compress collection id: ' + options);
             } else {
-                return "Compress collection";
+                return window.lang ? window.lang.translate('task.compress_collection') : 'Compress collection';
             }
         case 'BackgroundDatabaseUpgrade':
-            return "Background database upgrade";
+            return window.lang ? window.lang.translate('task.background_database_upgrade') : 'Background database upgrade';
         case 'TempCleanup':
-            return "Temporary directory cleanup";
+            return window.lang ? window.lang.translate('task.temporary_directory_cleanup') : 'Temporary directory cleanup';
         case 'DailyMaintainer':
-            return "Daily maintenance";
+            return window.lang ? window.lang.translate('task.daily_maintenance') : 'Daily maintenance';
         case 'WeeklyMaintainer':
-            return "Weekly maintenance";
+            return window.lang ? window.lang.translate('task.weekly_maintenance') : 'Weekly maintenance';
         default:
             return TaskName;
     }
@@ -725,7 +725,7 @@ function BuildSpaceBar(LibrarySize, OtherSize, TotalSize) {
     } else {
         librarySizeSpan.style.left = '0px';
     }
-    librarySizeSpan.innerHTML = 'Library: ' + formatBytes(LibrarySize) + ' (' + LibrarySizePercent + '%)';
+    librarySizeSpan.innerHTML = (window.lang ? window.lang.translate('main.spacebar.library_usage') : 'Library') + ': ' + formatBytes(LibrarySize) + ' (' + LibrarySizePercent + '%)';
     sizeBox.appendChild(librarySizeSpan);
 
     LibraryCell.addEventListener('mouseover', function () {
@@ -741,7 +741,7 @@ function BuildSpaceBar(LibrarySize, OtherSize, TotalSize) {
     otherSizeSpan.classList.add('sizelabel');
     otherSizeSpan.classList.add('sizelabel_center');
     otherSizeSpan.style.display = 'none';
-    otherSizeSpan.innerHTML = 'Other: ' + formatBytes(OtherSize) + ' (' + OtherSizePercent + '%)';
+    otherSizeSpan.innerHTML = (window.lang ? window.lang.translate('main.spacebar.other_usage') : 'Other') + ': ' + formatBytes(OtherSize) + ' (' + OtherSizePercent + '%)';
     sizeBox.appendChild(otherSizeSpan);
 
     OtherCell.addEventListener('mouseover', function () {
@@ -757,7 +757,7 @@ function BuildSpaceBar(LibrarySize, OtherSize, TotalSize) {
     freeSizeSpan.classList.add('sizelabel');
     freeSizeSpan.classList.add('sizelabel_right');
     freeSizeSpan.style.display = 'none';
-    freeSizeSpan.innerHTML = 'Free: ' + formatBytes(TotalSize - (Number(LibrarySize) + Number(OtherSize))) + ' (' + FreeSizePercent + '%)';
+    freeSizeSpan.innerHTML = (window.lang ? window.lang.translate('main.spacebar.free_usage') : 'Free') + ': ' + formatBytes(TotalSize - (Number(LibrarySize) + Number(OtherSize))) + ' (' + FreeSizePercent + '%)';
     sizeBox.appendChild(freeSizeSpan);
 
     FreeCell.addEventListener('mouseover', function () {
