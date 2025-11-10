@@ -1,0 +1,20 @@
+{
+  "name": "Français (Canada)",
+  "nativeName": "Français (Canada)",
+  "code": "fr-CA",
+  "pluralRule": "n > 1",
+  "direction": "ltr",
+  "type": "Overlay",
+  "strings": {
+    "banner.notification.database_upgrade.body": "Les performances peuvent être réduites pendant la mise à niveau de la base de données ; les favoris et les sauvegardes peuvent être manquants. Veuillez attendre la fin de la mise à niveau.",
+    "home.favourites": "Favoris",
+    "card.game.favourite": "Favori",
+    "filtering.settings.favourite": "Favori",
+    "task.organise_library": "Organiser la bibliothèque",
+    "process.organise_library": "Organiser la bibliothèque",
+    "timered_event.starting_library_organiser": "Démarrage de l'organisateur de bibliothèque",
+    "organiselibrary.starting_default_library_organisation": "Démarrage de l'organisation par défaut de la bibliothèque",
+    "organiselibrary.finished_default_library_organisation": "Organisation par défaut de la bibliothèque terminée"
+  },
+  "serverstrings": {}
+}
