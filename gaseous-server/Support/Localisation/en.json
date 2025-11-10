@@ -650,7 +650,16 @@
         "rominfo.placeholder.platform": "Platform",
         "rominfo.placeholder.game": "Game",
         "rominfo.delete.title": "Delete ROM",
-        "rominfo.delete.message": "Are you sure you want to delete this ROM and any associated save states?"
+        "rominfo.delete.message": "Are you sure you want to delete this ROM and any associated save states?",
+        "screenshots.type.screenshot_alt": "Screenshot",
+        "screenshots.type.photo_alt": "Photo",
+        "screenshots.youtube.invalid_url": "Invalid YouTube URL",
+        "screenshots.placeholder.no_preview": "No Preview Available",
+        "screenshots.delete.confirm": "Are you sure you want to delete this screenshot?",
+        "screenshots.delete.failed": "Failed to delete the screenshot.",
+        "screenshots.title.untitled": "Untitled",
+        "screenshots.upload_date.unknown": "Upload date unknown",
+        "screenshots.description.none_available": "No description available."
     },
     "serverstrings": {
         "process.startup": "Startup",
