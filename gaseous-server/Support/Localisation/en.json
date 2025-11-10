@@ -620,7 +620,9 @@
         "platforms.bios.placeholder.description": "Description",
         "platforms.bios.placeholder.filename": "Filename",
         "preferences.modal.title": "Preferences",
-        "preferences.error.failed_load_age_rating_mappings": "Failed to load age rating mappings"
+        "preferences.error.failed_load_age_rating_mappings": "Failed to load age rating mappings",
+        "rendergames.unknown_game": "Unknown Game",
+        "rendergames.rating.value": "{0}% / {1}"
     },
     "serverstrings": {
         "process.startup": "Startup",
