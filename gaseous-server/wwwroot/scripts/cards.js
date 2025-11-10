@@ -308,12 +308,12 @@ class GameCard {
         let cardAttribution = this.card.cardBody.querySelector('#card-metadataattribution');
         switch (this.gameData.metadataSource) {
             case "IGDB":
-                cardAttribution.innerHTML = `Data provided by ${this.gameData.metadataSource}. <a href="https://www.igdb.com/games/${this.gameData.slug}" class="romlink" target="_blank" rel="noopener noreferrer">Source</a>`;
+                cardAttribution.innerHTML = `${window.lang.translate('card.game.data_provided_by', [this.gameData.metadataSource])} <a href="https://www.igdb.com/games/${this.gameData.slug}" class="romlink" target="_blank" rel="noopener noreferrer">${window.lang.translate('card.game.source_link_label')}</a>`;
                 cardAttribution.style.display = '';
                 break;
 
             case "TheGamesDb":
-                cardAttribution.innerHTML = `Data provided by ${this.gameData.metadataSource}. <a href="https://thegamesdb.net/game.php?id=${this.gameData.id}" class="romlink" target="_blank" rel="noopener noreferrer">Source</a>`;
+                cardAttribution.innerHTML = `${window.lang.translate('card.game.data_provided_by', [this.gameData.metadataSource])} <a href="https://thegamesdb.net/game.php?id=${this.gameData.id}" class="romlink" target="_blank" rel="noopener noreferrer">${window.lang.translate('card.game.source_link_label')}</a>`;
                 cardAttribution.style.display = '';
                 break;
         }
@@ -353,7 +353,7 @@ class GameCard {
 
                         if (provider !== this.gameData.metadataSource) {
                             let logoAttribution = this.card.cardBody.querySelector('#card-logoattribution');
-                            logoAttribution.innerHTML = `Logo provided by ${provider}`;
+                            logoAttribution.innerHTML = window.lang.translate('card.game.logo_provided_by', [provider]);
                             logoAttribution.style.display = '';
                         }
                         break;
@@ -579,10 +579,10 @@ class GameCard {
                         element.addEventListener('click', () => {
                             if (gameSummary.classList.contains('line-clamp-4')) {
                                 gameSummary.classList.remove('line-clamp-4');
-                                readMoreLink.innerHTML = 'Read less';
+                                readMoreLink.innerHTML = window.lang.translate('card.game.read_less_link');
                             } else {
                                 gameSummary.classList.add('line-clamp-4');
-                                readMoreLink.innerHTML = 'Read more';
+                                readMoreLink.innerHTML = window.lang.translate('card.game.read_more_link');
                             }
                         });
                     });
@@ -885,7 +885,11 @@ class GameCard {
             }
             tab.id = `card-tabs-${tabName}`;
             tab.setAttribute('data-section', tabName);
-            tab.innerHTML = key;
+            if (key === "My Content") {
+                tab.innerHTML = `${window.lang.translate('card.screenshots.my_content_tab')}`;
+            } else {
+                tab.innerHTML = key;
+            }
             this.contentTabs.appendChild(tab);
 
             // create the section
@@ -1973,16 +1977,16 @@ class GameCardRomList {
 
                 let contentTableHeaderName = document.createElement('th');
                 contentTableHeaderName.classList.add('romcell');
-                contentTableHeaderName.innerHTML = 'Name';
+                contentTableHeaderName.innerHTML = window.lang.translate('card.content.table.header.name');
                 contentTableHeader.appendChild(contentTableHeaderName);
 
                 let contentTableHeaderSize = document.createElement('th');
-                contentTableHeaderSize.innerHTML = 'Size';
+                contentTableHeaderSize.innerHTML = window.lang.translate('card.content.table.header.size');
                 contentTableHeaderSize.classList.add('romcell');
                 contentTableHeader.appendChild(contentTableHeaderSize);
 
                 let contentTableHeaderType = document.createElement('th');
-                contentTableHeaderType.innerHTML = 'Type';
+                contentTableHeaderType.innerHTML = window.lang.translate('card.content.table.header.type');
                 contentTableHeaderType.classList.add('romcell');
                 contentTableHeader.appendChild(contentTableHeaderType);
 
@@ -2010,13 +2014,13 @@ class GameCardRomList {
                     contentTableType.classList.add('romcell');
                     switch (element.contentType) {
                         case 'AudioSample':
-                            contentTableType.innerHTML = 'Audio Sample';
+                            contentTableType.innerHTML = window.lang.translate('card.content.type.audio_sample');
                             break;
                         case 'GlobalManual':
-                            contentTableType.innerHTML = 'Manual';
+                            contentTableType.innerHTML = window.lang.translate('card.content.type.manual');
                             break;
                         default:
-                            contentTableType.innerHTML = element.contentType;
+                            contentTableType.innerHTML = window.lang.translate('card.content.type.default', [element.contentType]);
                             break;
                     }
                     contentTableRow.appendChild(contentTableType);
@@ -2334,7 +2338,7 @@ class GameCardRomList {
         }
 
         // set the title
-        mappingModal.modalElement.querySelector('#modal-header-text').innerHTML = this.gamePlatformObject.name + ' Emulation Settings';
+        mappingModal.modalElement.querySelector('#modal-header-text').innerHTML = window.lang.translate('card.emulator.settings_title', [this.gamePlatformObject.name]);
 
         // set the content
         let mappingContent = mappingModal.modalElement.querySelector('#modal-body');
