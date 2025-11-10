@@ -5,7 +5,7 @@
 <!-- LOCALE_TABLE_START -->
 | Code | English Name | Native Name | Type | Parent | Pluralisation | Notes |
 |------|--------------|-------------|------|--------|---------------|-------|
-| en-AU | English (Australia) | English (Australia) | Overlay | en | pluralRule | Regional spelling |
+| en-AU | English (Australia) | English (Australia) | Overlay | en | pluralRule + pluralRules | Regional spelling |
 | en-CA | English (Canada) | English (Canada) | Overlay | en | pluralRule | Regional spelling |
 | en-GB | English (United Kingdom) | English (United Kingdom) | Overlay | en | pluralRule | Regional spelling |
 | en-HK | English (Hong Kong) | English (Hong Kong) | Overlay | en | pluralRule | Regional spelling |
@@ -37,7 +37,18 @@
 | es-SV | Español (El Salvador) | Español (El Salvador) | Overlay | es | pluralRule |  |
 | es-UY | Español (Uruguay) | Español (Uruguay) | Overlay | es | pluralRule |  |
 | es-VE | Español (Venezuela) | Español (Venezuela) | Overlay | es | pluralRule |  |
-| es | Español | Español | Base | — | pluralRule + pluralRules |  |<!-- LOCALE_TABLE_END -->
+| es | Español | Español | Base | — | pluralRule + pluralRules |  |
+| fr-BE | Français (Belgique) | Français (Belgique) | Overlay | fr | pluralRule + pluralRules |  |
+| fr-CA | Français (Canada) | Français (Canada) | Overlay | fr | pluralRule + pluralRules |  |
+| fr-CH | Français (Suisse) | Français (Suisse) | Overlay | fr | pluralRule + pluralRules |  |
+| fr-DZ | Français (Algérie) | Français (Algérie) | Overlay | fr | pluralRule + pluralRules |  |
+| fr-FR | Français (France) | Français (France) | Overlay | fr | pluralRule + pluralRules |  |
+| fr-LU | Français (Luxembourg) | Français (Luxembourg) | Overlay | fr | pluralRule + pluralRules |  |
+| fr-MA | Français (Maroc) | Français (Maroc) | Overlay | fr | pluralRule + pluralRules |  |
+| fr-MC | Français (Monaco) | Français (Monaco) | Overlay | fr | pluralRule + pluralRules |  |
+| fr-SN | Français (Sénégal) | Français (Sénégal) | Overlay | fr | pluralRule + pluralRules |  |
+| fr-TN | Français (Tunisie) | Français (Tunisie) | Overlay | fr | pluralRule + pluralRules |  |
+| fr | Français | Français | Base | — | pluralRule + pluralRules |  |<!-- LOCALE_TABLE_END -->
 
 All overlay locales inherit missing keys from the base English (`en`). Where both embedded resource and file system versions exist, the file system locale overrides the embedded resource, and overlays extend their parent before final merge with `en` for safety.
 
