@@ -592,7 +592,21 @@
         "modals.content_upload.title": "Upload Content",
         "modals.content_upload.uploading_file": "Uploading content file",
         "modals.content_upload.upload_success": "Content uploaded successfully.",
-        "modals.content_upload.upload_error_prefix": "Error uploading content: {0}"
+        "modals.content_upload.upload_error_prefix": "Error uploading content: {0}",
+        "notifications.fetching_every_five_seconds": "Fetching notifications every 5 seconds",
+        "notifications.error.failed_fetch_prefix": "Failed to fetch notifications: {0}",
+        "notifications.error.fetch_exception_prefix": "Error fetching notifications: {0}",
+        "notifications.section.database_upgrade.title": "Database Upgrade",
+        "notifications.section.import_status.title": "Import Status",
+        "notifications.section.recently_imported.title": "Recently Imported",
+        "notifications.none_available": "No notifications available",
+        "notifications.database_upgrade.in_progress": "Upgrading database...",
+        "notifications.database_upgrade.task.platform_metadata": "Platform Metadata",
+        "notifications.database_upgrade.task.signature_metadata": "Signature Metadata",
+        "notifications.database_upgrade.task.game_metadata": "Game Metadata",
+        "notifications.database_upgrade.task.migrating_user_data": "Migrating user data to new database schema",
+        "notifications.database_upgrade.explanation": "The system is currently performing a database upgrade. This may take some time depending on the size of your library. Some features may not be available during the upgrade.",
+        "notifications.import_queue.pending_count": "{0} imports pending"
     },
     "serverstrings": {
         "process.startup": "Startup",
