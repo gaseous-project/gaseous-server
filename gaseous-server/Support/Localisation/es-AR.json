@@ -1,0 +1,19 @@
+{
+    "name": "Español (Argentina)",
+    "nativeName": "Español (Argentina)",
+    "code": "es-AR",
+    "pluralRule": "n != 1",
+    "direction": "ltr",
+    "type": "Overlay",
+    "strings": {
+        "home.favourites": "Favoritos",
+        "card.game.favourite": "Favorito",
+        "filtering.settings.favourite": "Favorito",
+        "task.organise_library": "Organizar biblioteca",
+        "process.organise_library": "Organizar Biblioteca",
+        "timered_event.starting_library_organiser": "Iniciando Organizador de Biblioteca",
+        "organiselibrary.starting_default_library_organisation": "Iniciando organización predeterminada de la biblioteca",
+        "organiselibrary.finished_default_library_organisation": "Organización predeterminada de la biblioteca finalizada"
+    },
+    "serverstrings": {}
+}
