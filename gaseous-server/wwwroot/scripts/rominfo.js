@@ -24,10 +24,10 @@ class rominfodialog {
             callingObject.dialog.modalElement.querySelector('#rominfo_type').innerHTML = rominfodialog.getRomType(data.romType);
             callingObject.dialog.modalElement.querySelector('#rominfo_mediatype').innerHTML = data.romTypeMedia;
             callingObject.dialog.modalElement.querySelector('#rominfo_medialabel').innerHTML = data.mediaLabel;
-            callingObject.dialog.modalElement.querySelector('#rominfo_md5').innerHTML = data.md5 ? data.md5 : "N/A";
-            callingObject.dialog.modalElement.querySelector('#rominfo_sha1').innerHTML = data.sha1 ? data.sha1 : "N/A";
-            callingObject.dialog.modalElement.querySelector('#rominfo_sha256').innerHTML = data.sha256 ? data.sha256 : "N/A";
-            callingObject.dialog.modalElement.querySelector('#rominfo_crc').innerHTML = data.crc ? data.crc : "N/A";
+            callingObject.dialog.modalElement.querySelector('#rominfo_md5').innerHTML = data.md5 ? data.md5 : (window.lang ? window.lang.translate('generic.na') : 'N/A');
+            callingObject.dialog.modalElement.querySelector('#rominfo_sha1').innerHTML = data.sha1 ? data.sha1 : (window.lang ? window.lang.translate('generic.na') : 'N/A');
+            callingObject.dialog.modalElement.querySelector('#rominfo_sha256').innerHTML = data.sha256 ? data.sha256 : (window.lang ? window.lang.translate('generic.na') : 'N/A');
+            callingObject.dialog.modalElement.querySelector('#rominfo_crc').innerHTML = data.crc ? data.crc : (window.lang ? window.lang.translate('generic.na') : 'N/A');
             callingObject.dialog.modalElement.querySelector('#rominfo_signaturematch').innerHTML = data.signatureSource;
             callingObject.dialog.modalElement.querySelector('#rominfo_signaturetitle').innerHTML = data.signatureSourceGameTitle;
 
@@ -68,11 +68,11 @@ class rominfodialog {
                             zipRow.classList.add("romrow");
                             let zipCell1 = document.createElement('th');
                             zipCell1.classList.add("romcell");
-                            zipCell1.innerHTML = "File Name";
+                            zipCell1.innerHTML = window.lang ? window.lang.translate('rominfo.zip.table.header.file_name') : 'File Name';
                             zipRow.appendChild(zipCell1);
                             let zipCell2 = document.createElement('th');
                             zipCell2.classList.add("romcell");
-                            zipCell2.innerHTML = "Size";
+                            zipCell2.innerHTML = window.lang ? window.lang.translate('rominfo.zip.table.header.size') : 'Size';
                             zipRow.appendChild(zipCell2);
 
                             let zipContents = JSON.parse(value);
@@ -93,7 +93,7 @@ class rominfodialog {
                                 let hashRow = zipBody.insertRow();
                                 let hashCell1 = hashRow.insertCell();
                                 hashCell1.classList.add("romcell");
-                                hashCell1.innerHTML = "MD5: " + (zipContents[i].MD5 ? zipContents[i].MD5 : "N/A") + "<br>SHA1: " + (zipContents[i].SHA1 ? zipContents[i].SHA1 : "N/A") + "<br>SHA256: " + (zipContents[i].SHA256 ? zipContents[i].SHA256 : "N/A") + "<br>CRC: " + (zipContents[i].CRC ? zipContents[i].CRC : "N/A");
+                                hashCell1.innerHTML = "MD5: " + (zipContents[i].MD5 ? zipContents[i].MD5 : (window.lang ? window.lang.translate('generic.na') : 'N/A')) + "<br>SHA1: " + (zipContents[i].SHA1 ? zipContents[i].SHA1 : (window.lang ? window.lang.translate('generic.na') : 'N/A')) + "<br>SHA256: " + (zipContents[i].SHA256 ? zipContents[i].SHA256 : (window.lang ? window.lang.translate('generic.na') : 'N/A')) + "<br>CRC: " + (zipContents[i].CRC ? zipContents[i].CRC : (window.lang ? window.lang.translate('generic.na') : 'N/A'));
                                 hashCell1.colSpan = 2;
                                 hashCell1.setAttribute('style', 'padding-left: 20px;');
 
@@ -102,7 +102,7 @@ class rominfodialog {
                                     let selectorRow = zipBody.insertRow();
                                     let selectorCell1 = selectorRow.insertCell();
                                     selectorCell1.classList.add("romcell");
-                                    selectorCell1.innerHTML = "This hash was used to match this archive";
+                                    selectorCell1.innerHTML = window.lang ? window.lang.translate('rominfo.zip.selector.used_to_match') : 'This hash was used to match this archive';
                                     selectorCell1.colSpan = 2;
                                     selectorCell1.setAttribute('style', 'padding-left: 20px;');
                                 }
@@ -141,10 +141,10 @@ class rominfodialog {
 
         // create the delete button
         if (isDeleteable == true) {
-            let deleteButton = new ModalButton("Delete", 2, this, function (callingObject) {
-                const deleteWindow = new MessageBox("Delete ROM", "Are you sure you want to delete this ROM and any associated save states?");
+            let deleteButton = new ModalButton(window.lang ? window.lang.translate('generic.delete') : 'Delete', 2, this, function (callingObject) {
+                const deleteWindow = new MessageBox(window.lang ? window.lang.translate('rominfo.delete.title') : 'Delete ROM', window.lang ? window.lang.translate('rominfo.delete.message') : 'Are you sure you want to delete this ROM and any associated save states?');
 
-                let deleteButton = new ModalButton("Delete", 2, callingObject, function (callingObject) {
+                let deleteButton = new ModalButton(window.lang ? window.lang.translate('generic.delete') : 'Delete', 2, callingObject, function (callingObject) {
                     ajaxCall('/api/v1.1/Games/' + callingObject.gameId + '/roms/' + callingObject.romId, 'DELETE', function (result) {
                         if (callingObject.CallbackDelete == null) {
                             window.location.reload();
@@ -157,7 +157,7 @@ class rominfodialog {
                 });
                 deleteWindow.addButton(deleteButton);
 
-                let cancelButton = new ModalButton("Cancel", 0, deleteWindow, function (callingObject) {
+                let cancelButton = new ModalButton(window.lang ? window.lang.translate('generic.cancel') : 'Cancel', 0, deleteWindow, function (callingObject) {
                     callingObject.msgDialog.close();
                 });
                 deleteWindow.addButton(cancelButton);
@@ -168,7 +168,7 @@ class rominfodialog {
         }
 
         // create the ok button
-        let okButton = new ModalButton("OK", 1, this, function (callingObject) {
+        let okButton = new ModalButton(window.lang ? window.lang.translate('generic.ok') : 'OK', 1, this, function (callingObject) {
             // disable buttons
             callingObject.dialog.disableButtons();
 
@@ -236,38 +236,38 @@ class rominfodialog {
     static getRomType(typeId) {
         switch (typeId) {
             case 1:
-                return "Optical media";
+                return window.lang ? window.lang.translate('rominfo.get_rom_type.optical_media') : 'Optical media';
             case 2:
-                return "Magnetic media";
+                return window.lang ? window.lang.translate('rominfo.get_rom_type.magnetic_media') : 'Magnetic media';
             case 3:
-                return "Individual files";
+                return window.lang ? window.lang.translate('rominfo.get_rom_type.individual_files') : 'Individual files';
             case 4:
-                return "Individual pars";
+                return window.lang ? window.lang.translate('rominfo.get_rom_type.individual_pars') : 'Individual pars';
             case 5:
-                return "Tape based media";
+                return window.lang ? window.lang.translate('rominfo.get_rom_type.tape_based_media') : 'Tape based media';
             case 6:
-                return "Side of the media";
+                return window.lang ? window.lang.translate('rominfo.get_rom_type.side_of_media') : 'Side of the media';
             case 0:
             default:
-                return "Media type is unknown";
+                return window.lang ? window.lang.translate('rominfo.get_rom_type.media_type_unknown') : 'Media type is unknown';
         }
     }
 
     static convertTOSECAttributeName(attributeName) {
         let tosecAttributeNames = {
-            "cr": "Cracked",
-            "f": "Fixed",
-            "h": "Hacked",
-            "m": "Modified",
-            "p": "Pirated",
-            "t": "Trained",
-            "tr": "Translated",
-            "o": "Over Dump",
-            "u": "Under Dump",
-            "v": "Virus",
-            "b": "Bad Dump",
-            "a": "Alternate",
-            "!": "Known Verified Dump"
+            "cr": window.lang ? window.lang.translate('rominfo.tosec.cr') : 'Cracked',
+            "f": window.lang ? window.lang.translate('rominfo.tosec.f') : 'Fixed',
+            "h": window.lang ? window.lang.translate('rominfo.tosec.h') : 'Hacked',
+            "m": window.lang ? window.lang.translate('rominfo.tosec.m') : 'Modified',
+            "p": window.lang ? window.lang.translate('rominfo.tosec.p') : 'Pirated',
+            "t": window.lang ? window.lang.translate('rominfo.tosec.t') : 'Trained',
+            "tr": window.lang ? window.lang.translate('rominfo.tosec.tr') : 'Translated',
+            "o": window.lang ? window.lang.translate('rominfo.tosec.o') : 'Over Dump',
+            "u": window.lang ? window.lang.translate('rominfo.tosec.u') : 'Under Dump',
+            "v": window.lang ? window.lang.translate('rominfo.tosec.v') : 'Virus',
+            "b": window.lang ? window.lang.translate('rominfo.tosec.b') : 'Bad Dump',
+            "a": window.lang ? window.lang.translate('rominfo.tosec.a') : 'Alternate',
+            "!": window.lang ? window.lang.translate('rominfo.tosec.exclamation') : 'Known Verified Dump'
         };
 
         if (attributeName in tosecAttributeNames) {
@@ -280,7 +280,7 @@ class rominfodialog {
     setFixPlatformDropDown(callingObject) {
         $('#properties_fixplatform').select2({
             minimumInputLength: 3,
-            placeholder: 'Platform',
+            placeholder: window.lang ? window.lang.translate('rominfo.placeholder.platform') : 'Platform',
             allowClear: true,
             ajax: {
                 url: '/api/v1.1/Search/Platform',
@@ -323,7 +323,7 @@ class rominfodialog {
     setFixGameDropDown(callingObject) {
         $('#properties_fixgame').select2({
             minimumInputLength: 3,
-            placeholder: 'Game',
+            placeholder: window.lang ? window.lang.translate('rominfo.placeholder.game') : 'Game',
             allowClear: true,
             templateResult: DropDownRenderGameOption,
             ajax: {
