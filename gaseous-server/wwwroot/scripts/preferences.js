@@ -18,7 +18,7 @@ class PreferencesWindow {
                 if (response.ok) {
                     return response.json();
                 } else {
-                    throw new Error('Failed to load age rating mappings');
+                    throw new Error(window.lang ? window.lang.translate('preferences.error.failed_load_age_rating_mappings') : 'Failed to load age rating mappings');
                 }
             })
             .catch(error => {
@@ -27,7 +27,7 @@ class PreferencesWindow {
             });
 
         // setup the dialog
-        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Preferences";
+        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = window.lang ? window.lang.translate('preferences.modal.title') : 'Preferences';
 
         // set initial preference states
         let preferences = GetPreferences();
@@ -103,7 +103,7 @@ class PreferencesWindow {
         });
 
         // create the ok button
-        let okButton = new ModalButton("OK", 1, this, function (callingObject) {
+        let okButton = new ModalButton(window.lang ? window.lang.translate('generic.ok') : 'OK', 1, this, function (callingObject) {
             // get the preferences
             let selectedPreferences = callingObject.dialog.modalElement.querySelectorAll('[data-pref]');
             let preferences = [];
@@ -154,7 +154,7 @@ class PreferencesWindow {
         this.dialog.addButton(okButton);
 
         // create the cancel button
-        let cancelButton = new ModalButton("Cancel", 0, this, function (callingObject) {
+        let cancelButton = new ModalButton(window.lang ? window.lang.translate('generic.cancel') : 'Cancel', 0, this, function (callingObject) {
             if (callingObject.CancelCallbacks) {
                 for (const callback of callingObject.CancelCallbacks) {
                     callback();

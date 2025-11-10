@@ -606,7 +606,21 @@
         "notifications.database_upgrade.task.game_metadata": "Game Metadata",
         "notifications.database_upgrade.task.migrating_user_data": "Migrating user data to new database schema",
         "notifications.database_upgrade.explanation": "The system is currently performing a database upgrade. This may take some time depending on the size of your library. Some features may not be available during the upgrade.",
-        "notifications.import_queue.pending_count": "{0} imports pending"
+        "notifications.import_queue.pending_count": "{0} imports pending",
+        "generic.error": "Error",
+        "platforms.mapping.failed_load": "Failed to load platform data",
+        "platforms.mapping.failed_save": "Failed to save platform data",
+        "platforms.firmware.table.header.description": "Description",
+        "platforms.firmware.table.header.file_name": "File name",
+        "platforms.firmware.table.header.md5_hash": "MD5 Hash",
+        "platforms.firmware.table.header.availability": "Availability",
+        "platforms.firmware.platform_available_count": "{0} / {1} available",
+        "platforms.firmware.total_available_count": "{0} / {1} available",
+        "platforms.bios.placeholder.hash": "Hash",
+        "platforms.bios.placeholder.description": "Description",
+        "platforms.bios.placeholder.filename": "Filename",
+        "preferences.modal.title": "Preferences",
+        "preferences.error.failed_load_age_rating_mappings": "Failed to load age rating mappings"
     },
     "serverstrings": {
         "process.startup": "Startup",
