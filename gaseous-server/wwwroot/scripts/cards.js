@@ -1977,16 +1977,16 @@ class GameCardRomList {
 
                 let contentTableHeaderName = document.createElement('th');
                 contentTableHeaderName.classList.add('romcell');
-                contentTableHeaderName.innerHTML = window.lang.translate('card.content.table.header.name');
+                contentTableHeaderName.innerHTML = window.lang.translate('card.content.table.name');
                 contentTableHeader.appendChild(contentTableHeaderName);
 
                 let contentTableHeaderSize = document.createElement('th');
-                contentTableHeaderSize.innerHTML = window.lang.translate('card.content.table.header.size');
+                contentTableHeaderSize.innerHTML = window.lang.translate('card.content.table.size');
                 contentTableHeaderSize.classList.add('romcell');
                 contentTableHeader.appendChild(contentTableHeaderSize);
 
                 let contentTableHeaderType = document.createElement('th');
-                contentTableHeaderType.innerHTML = window.lang.translate('card.content.table.header.type');
+                contentTableHeaderType.innerHTML = window.lang.translate('card.content.table.type');
                 contentTableHeaderType.classList.add('romcell');
                 contentTableHeader.appendChild(contentTableHeaderType);
 
