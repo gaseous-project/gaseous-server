@@ -1,0 +1,22 @@
+{
+  "name": "Français (France)",
+  "nativeName": "Français (France)",
+  "code": "fr-FR",
+  "pluralRule": "n > 1",
+  "direction": "ltr",
+  "type": "Overlay",
+  "strings": {
+    "banner.upload": "Télécharger",
+    "banner.upload.alt": "Télécharger",
+    "generic.upload_complete": "Téléchargement terminé",
+    "uploadrommodal.instructions": "Téléversez des ROM en les déposant ici ou en cliquant ici.",
+    "uploadrommodal.title": "Téléverser ROM",
+    "uploadrommodal.section.upload_header": "Téléverser",
+    "uploadrommodal.console.max_uploads_reached_waiting": "Nombre maximal de téléversements atteint, en attente de la fin",
+    "generic.download": "Télécharger",
+    "webemulatormodal.section.web_emulator_header": "Émulateur Web",
+    "accountmodal.email_rule_valid_address": "L'e-mail est une adresse valide",
+    "accountmodal.email_rule_unique": "L'e-mail est unique"
+  },
+  "serverstrings": {}
+}
