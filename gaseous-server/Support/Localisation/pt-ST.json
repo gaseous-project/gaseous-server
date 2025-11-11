@@ -1,11 +1,14 @@
 {
-  "name": "Portuguese (São Tomé and Príncipe)",
-  "nativeName": "Português (São Tomé e Príncipe)",
-  "code": "pt-ST",
-  "pluralRule": "n != 1",
-  "pluralRules": { "one": "n == 1", "other": "n != 1" },
-  "direction": "ltr",
-  "type": "Overlay",
-  "strings": {},
-  "serverstrings": {}
+    "name": "Portuguese (São Tomé and Príncipe)",
+    "nativeName": "Português (São Tomé e Príncipe)",
+    "code": "pt-ST",
+    "pluralRule": "n != 1",
+    "pluralRules": {
+        "one": "n == 1",
+        "other": "n != 1"
+    },
+    "direction": "ltr",
+    "type": "Overlay",
+    "strings": {},
+    "serverstrings": {}
 }

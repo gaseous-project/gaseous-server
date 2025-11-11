@@ -1,11 +1,14 @@
 {
-  "name": "Portuguese (Portugal)",
-  "nativeName": "Português (Portugal)",
-  "code": "pt-PT",
-  "pluralRule": "n != 1",
-  "pluralRules": { "one": "n == 1", "other": "n != 1" },
-  "direction": "ltr",
-  "type": "Overlay",
-  "strings": {},
-  "serverstrings": {}
+    "name": "Portuguese (Portugal)",
+    "nativeName": "Português (Portugal)",
+    "code": "pt-PT",
+    "pluralRule": "n != 1",
+    "pluralRules": {
+        "one": "n == 1",
+        "other": "n != 1"
+    },
+    "direction": "ltr",
+    "type": "Overlay",
+    "strings": {},
+    "serverstrings": {}
 }
