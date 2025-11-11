@@ -3,9 +3,9 @@
 
 This is the server for the Gaseous system. It offers ROM and title management, as well as some basic in browser emulation of those ROMs.
 
-Version 1.7.0 and later contain user authentication, and can be exposed to the internet. However, it is recommended to not expose the server to the internet if you're not actively using it remotely, or if you have alternative means to access it remotely like a VPN.
+> Version 1.7.0 and later contain user authentication, and can be exposed to the internet. However, it is recommended to not expose the server to the internet if you're not actively using it remotely, or if you have alternative means to access it remotely like a VPN.
 
-While we do our best to stay on top of server security, if you expose the server to the internet **you do so at your own risk**.
+> While we do our best to stay on top of server security, if you expose the server to the internet **you do so at your own risk**.
 
 ## Screenshots
 ![Library](./gaseous-server/wwwroot/screenshots/Library.png)
@@ -17,7 +17,7 @@ While we do our best to stay on top of server security, if you expose the server
   * These are the database versions Gaseous has been tested and developed against. Your mileage may vary with earlier versions.
   * MariaDB is the preferred database server, while MySQL will continue to be supported for existing users (they should be interchangable).
   * Note that due to the earlier database schema using MySQL specific features, moving to MariaDB from MySQL will require rebuilding your database from scratch. The "Library Scan" background task can be used to re-import all titles.
-* Internet Game Database API Key. See: https://api-docs.igdb.com/#account-creation
+* Internet Game Database API Key. See: https://api-docs.igdb.com/#account-creation - only required when not using the Hasheous proxy
 
 # Installation
 See https://github.com/gaseous-project/gaseous-server/wiki/Installation for installation instructions.
@@ -31,6 +31,9 @@ When you publish `gaseous-server`, the `gaseous-cli` tool is also published auto
 You can deploy both by copying the entire publish directory to your target location. The CLI runs alongside the server and uses the same configuration database.
 
 # Running as a Windows Service
+
+> **Note**: This feature is currently experimental.
+
 Gaseous Server can run as a standard console app, in Docker, or as a Windows Service.
 
 1) Publish for Windows (example: win-x64)
@@ -40,7 +43,7 @@ Gaseous Server can run as a standard console app, in Docker, or as a Windows Ser
   - New-Service -Name "GaseousServer" -BinaryPathName "C:\path\to\gaseous-server.exe" -DisplayName "Gaseous Server" -Description "Gaseous metadata and library server" -StartupType Automatic
   - Start-Service GaseousServer
 
-Notes
+**Notes**
 - Configure the listening URL via appsettings.Production.json (Kestrel Endpoints) or ASPNETCORE_URLS.
 - Ensure the service account has permissions to the library paths and logs directory.
 - Open the firewall for the chosen port.
