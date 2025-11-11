@@ -86,7 +86,7 @@ namespace gaseous_server.Classes
 					// check if the database exists first - first run must have permissions to create a database
 					string sql = "CREATE DATABASE IF NOT EXISTS `" + Config.DatabaseConfiguration.DatabaseName + "`;";
 					Dictionary<string, object> dbDict = new Dictionary<string, object>();
-					Logging.Log(Logging.LogType.Information, "Database", "Creating database if it doesn't exist");
+					Logging.LogKey(Logging.LogType.Information, "process.database", "database.creating_database_if_not_exists");
 					ExecuteCMD(sql, dbDict, CacheOptions, 30, "server=" + Config.DatabaseConfiguration.HostName + ";port=" + Config.DatabaseConfiguration.Port + ";userid=" + Config.DatabaseConfiguration.UserName + ";password=" + Config.DatabaseConfiguration.Password);
 
 					// check if schema version table is in place - if not, create the schema version table
@@ -95,7 +95,7 @@ namespace gaseous_server.Classes
 					if (SchemaVersionPresent.Rows.Count == 0)
 					{
 						// no schema table present - create it
-						Logging.Log(Logging.LogType.Information, "Database", "Schema version table doesn't exist. Creating it.");
+						Logging.LogKey(Logging.LogType.Information, "process.database", "database.schema_version_table_missing_creating");
 						sql = "CREATE TABLE `schema_version` (`schema_version` INT NOT NULL, PRIMARY KEY (`schema_version`)); INSERT INTO `schema_version` (`schema_version`) VALUES (0);";
 						ExecuteCMD(sql, dbDict, CacheOptions);
 					}
@@ -129,13 +129,13 @@ namespace gaseous_server.Classes
 								if (SchemaVersion.Rows.Count == 0)
 								{
 									// something is broken here... where's the table?
-									Logging.Log(Logging.LogType.Critical, "Database", "Schema table missing! This shouldn't happen!");
+									Logging.LogKey(Logging.LogType.Critical, "process.database", "database.schema_table_missing_should_not_happen");
 									throw new Exception("schema_version table is missing!");
 								}
 								else
 								{
 									int SchemaVer = (int)SchemaVersion.Rows[0][0];
-									Logging.Log(Logging.LogType.Information, "Database", "Schema version is " + SchemaVer);
+									Logging.LogKey(Logging.LogType.Information, "process.database", "database.schema_version_is", null, new[] { SchemaVer.ToString() });
 									// update schema version variable
 									Database.schema_version = SchemaVer;
 									if (SchemaVer < i)
@@ -146,7 +146,7 @@ namespace gaseous_server.Classes
 											DatabaseMigration.PreUpgradeScript(i, _ConnectorType);
 
 											// apply schema!
-											Logging.Log(Logging.LogType.Information, "Database", "Updating schema to version " + i);
+											Logging.LogKey(Logging.LogType.Information, "process.database", "database.updating_schema_to_version", null, new[] { i.ToString() });
 											ExecuteCMD(dbScript, dbDict, 100);
 
 											// increment schema version
@@ -163,7 +163,7 @@ namespace gaseous_server.Classes
 										}
 										catch (Exception ex)
 										{
-											Logging.Log(Logging.LogType.Critical, "Database", "Schema upgrade failed! Unable to continue.", ex);
+											Logging.LogKey(Logging.LogType.Critical, "process.database", "database.schema_upgrade_failed_unable_to_continue", null, null, ex);
 											System.Environment.Exit(1);
 										}
 									}
@@ -171,7 +171,7 @@ namespace gaseous_server.Classes
 							}
 						}
 					}
-					Logging.Log(Logging.LogType.Information, "Database", "Database setup complete");
+					Logging.LogKey(Logging.LogType.Information, "process.database", "database.setup_complete");
 					break;
 			}
 		}
@@ -610,7 +610,7 @@ namespace gaseous_server.Classes
 			{
 				DataTable RetTable = new DataTable();
 
-				Logging.Log(Logging.LogType.Debug, "Database", "Connecting to database", null, true);
+				Logging.LogKey(Logging.LogType.Debug, "process.database", "database.connecting_to_database", null, null, null, true);
 				using (MySqlConnection conn = new MySqlConnection(DBConn))
 				{
 					conn.Open();
@@ -629,22 +629,22 @@ namespace gaseous_server.Classes
 
 					try
 					{
-						Logging.Log(Logging.LogType.Debug, "Database", "Executing sql: '" + SQL + "'", null, true);
+						Logging.LogKey(Logging.LogType.Debug, "process.database", "database.executing_sql", null, new[] { SQL }, null, true);
 						if (Parameters.Count > 0)
 						{
 							string dictValues = string.Join(";", Parameters.Select(x => string.Join("=", x.Key, x.Value)));
-							Logging.Log(Logging.LogType.Debug, "Database", "Parameters: " + dictValues, null, true);
+							Logging.LogKey(Logging.LogType.Debug, "process.database", "database.parameters", null, new[] { dictValues }, null, true);
 						}
 						RetTable.Load(cmd.ExecuteReader());
 					}
 					catch (Exception ex)
 					{
-						Logging.Log(Logging.LogType.Critical, "Database", "Error while executing '" + SQL + "'", ex);
+						Logging.LogKey(Logging.LogType.Critical, "process.database", "database.error_executing_sql", null, new[] { SQL }, ex);
 						Trace.WriteLine("Error executing " + SQL);
 						Trace.WriteLine("Full exception: " + ex.ToString());
 					}
 
-					Logging.Log(Logging.LogType.Debug, "Database", "Closing database connection", null, true);
+					Logging.LogKey(Logging.LogType.Debug, "process.database", "database.closing_database_connection", null, null, null, true);
 					conn.Close();
 				}
 
@@ -655,7 +655,7 @@ namespace gaseous_server.Classes
 			{
 				int result = 0;
 
-				Logging.Log(Logging.LogType.Debug, "Database", "Connecting to database", null, true);
+				Logging.LogKey(Logging.LogType.Debug, "process.database", "database.connecting_to_database", null, null, null, true);
 				using (MySqlConnection conn = new MySqlConnection(DBConn))
 				{
 					conn.Open();
@@ -674,22 +674,22 @@ namespace gaseous_server.Classes
 
 					try
 					{
-						Logging.Log(Logging.LogType.Debug, "Database", "Executing sql: '" + SQL + "'", null, true);
+						Logging.LogKey(Logging.LogType.Debug, "process.database", "database.executing_sql", null, new[] { SQL }, null, true);
 						if (Parameters.Count > 0)
 						{
 							string dictValues = string.Join(";", Parameters.Select(x => string.Join("=", x.Key, x.Value)));
-							Logging.Log(Logging.LogType.Debug, "Database", "Parameters: " + dictValues, null, true);
+							Logging.LogKey(Logging.LogType.Debug, "process.database", "database.parameters", null, new[] { dictValues }, null, true);
 						}
 						result = cmd.ExecuteNonQuery();
 					}
 					catch (Exception ex)
 					{
-						Logging.Log(Logging.LogType.Critical, "Database", "Error while executing '" + SQL + "'", ex);
+						Logging.LogKey(Logging.LogType.Critical, "process.database", "database.error_executing_sql", null, new[] { SQL }, ex);
 						Trace.WriteLine("Error executing " + SQL);
 						Trace.WriteLine("Full exception: " + ex.ToString());
 					}
 
-					Logging.Log(Logging.LogType.Debug, "Database", "Closing database connection", null, true);
+					Logging.LogKey(Logging.LogType.Debug, "process.database", "database.closing_database_connection", null, null, null, true);
 					conn.Close();
 				}
 

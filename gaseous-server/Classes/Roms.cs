@@ -238,7 +238,7 @@ namespace gaseous_server.Classes
 						}
 						catch (Exception ex)
 						{
-							Logging.Log(Logging.LogType.Critical, "Fix Match", "An error occurred while sending a fixed match to Hasheous.", ex);
+							Logging.LogKey(Logging.LogType.Critical, "process.fix_match", "fixmatch.error_sending_fixed_match_to_hasheous", null, null, ex);
 						}
 					}
 				}
@@ -288,7 +288,7 @@ namespace gaseous_server.Classes
 				}
 				catch (Exception ex)
 				{
-					Logging.Log(Logging.LogType.Warning, "Roms", "Error parsing rom attributes: " + ex.Message);
+					Logging.LogKey(Logging.LogType.Warning, "process.rom_group", "roms.error_parsing_rom_attributes", null, new string[] { ex.Message });
 				}
 			}
 

@@ -1,5 +1,5 @@
-<p>
-    Select collection to add game to:
+<p id="collection_addgame_header">
+    <script>document.getElementById('collection_addgame_header').innerText = globalThis.lang.translate('collection.add_game.select_collection_to_add');</script>
 </p>
 
 <table style="width: 100%;">
@@ -10,22 +10,22 @@
     </tr>
     <tr>
         <td style="padding-top: 15px;">
-            <input type="checkbox" id="collection_rebuild" style="margin-right: 5px;" /><label for="collection_rebuild">Rebuild Collection</label>
+            <input type="checkbox" id="collection_rebuild" style="margin-right: 5px;" /><label for="collection_rebuild"><script>document.write(globalThis.lang.translate('collection.add_game.rebuild_collection'));</script></label>
         </td>
         <td style="text-align: right; padding-top: 15px;">
-            <button id="collection_cancelbtn" value="Cancel" onclick="closeSubDialog();">Cancel</button>
-            <button id="collection_addbtn" value="Add" onclick="AddToCollection();">Add</button>
+            <button id="collection_cancelbtn" value="Cancel" onclick="closeSubDialog();"><script>document.write(globalThis.lang.translate('generic.cancel'));</script></button>
+            <button id="collection_addbtn" value="Add" onclick="AddToCollection();"><script>document.write(globalThis.lang.translate('generic.add'));</script></button>
         </td>
     </tr>
 </table>
 
 <script type="text/javascript">
-    document.getElementById('collection_addgame').innerHTML = "<option value='0' selected='selected'>Select collection</option>";
+    document.getElementById('collection_addgame').innerHTML = "<option value='0' selected='selected'>" + globalThis.lang.translate('collection.add_game.select_collection_option') + "</option>";
 
     $('#collection_addgame').select2({
         ajax: {
             url: '/api/v1.1/Collections',
-            placeholder: 'Select collection',
+            placeholder: globalThis.lang.translate('collection.add_game.select_collection_placeholder'),
             processResults: function (data) {
                 var arr = [];
                 

@@ -60,7 +60,7 @@ class ScreenshotItem {
                 } else {
                     let img = document.createElement('img');
                     img.src = this.url;
-                    img.alt = this.title || 'Screenshot';
+                    img.alt = this.title || (window.lang ? window.lang.translate('screenshots.type.screenshot_alt') : 'Screenshot');
                     img.style.maxWidth = "100%";
                     img.style.maxHeight = "100%";
                     container.appendChild(img);
@@ -78,7 +78,7 @@ class ScreenshotItem {
                 } else {
                     let img = document.createElement('img');
                     img.src = this.url;
-                    img.alt = this.title || 'Photo';
+                    img.alt = this.title || (window.lang ? window.lang.translate('screenshots.type.photo_alt') : 'Photo');
                     img.style.maxWidth = "100%";
                     img.style.maxHeight = "100%";
                     container.appendChild(img);
@@ -107,7 +107,7 @@ class ScreenshotItem {
                         container.appendChild(iframe);
                     }
                 } else {
-                    container.alt = 'Invalid YouTube URL';
+                    container.alt = window.lang ? window.lang.translate('screenshots.youtube.invalid_url') : 'Invalid YouTube URL';
                 }
 
                 // add youtube icon overlay
@@ -149,7 +149,7 @@ class ScreenshotItem {
             default:
                 let placeholder = document.createElement('div');
                 placeholder.classList.add('screenshot-placeholder');
-                placeholder.innerText = 'No Preview Available';
+                placeholder.innerText = window.lang ? window.lang.translate('screenshots.placeholder.no_preview') : 'No Preview Available';
                 container.appendChild(placeholder);
                 break;
         }
@@ -253,11 +253,11 @@ class ScreenshotViewer {
         if (this.deleteCallback) {
             this.deleteButton = document.createElement("div");
             this.deleteButton.classList.add("screenshot-delete-button");
-            this.deleteButton.innerText = "Delete";
+            this.deleteButton.innerText = window.lang ? window.lang.translate('generic.delete') : 'Delete';
             this.deleteButton.addEventListener("click", async () => {
                 if (this.screenshots.length === 0) return;
                 let screenshotToDelete = this.screenshots[this.currentIndex];
-                let confirmed = confirm("Are you sure you want to delete this screenshot?");
+                let confirmed = confirm(window.lang ? window.lang.translate('screenshots.delete.confirm') : 'Are you sure you want to delete this screenshot?');
                 if (confirmed) {
                     let success = await this.deleteCallback(screenshotToDelete);
                     if (success) {
@@ -273,7 +273,7 @@ class ScreenshotViewer {
                             this.Close();
                         }
                     } else {
-                        alert("Failed to delete the screenshot.");
+                        alert(window.lang ? window.lang.translate('screenshots.delete.failed') : 'Failed to delete the screenshot.');
                     }
                 }
             });
@@ -460,19 +460,19 @@ class ScreenshotViewer {
         // update info panel
         if (screenshot.title) {
             this.titleElement.style.display = "block";
-            this.titleElement.innerText = screenshot.title || "Untitled";
+            this.titleElement.innerText = screenshot.title || (window.lang ? window.lang.translate('screenshots.title.untitled') : 'Untitled');
         } else {
             this.titleElement.style.display = "none";
         }
         if (screenshot.uploadDate) {
             this.dateTimeElement.style.display = "block";
-            this.dateTimeElement.innerText = screenshot.uploadDate ? `${new Date(screenshot.uploadDate).toLocaleString()}` : "Upload date unknown";
+            this.dateTimeElement.innerText = screenshot.uploadDate ? `${new Date(screenshot.uploadDate).toLocaleString()}` : (window.lang ? window.lang.translate('screenshots.upload_date.unknown') : 'Upload date unknown');
         } else {
             this.dateTimeElement.style.display = "none";
         }
         if (screenshot.description) {
             this.descriptionElement.style.display = "block";
-            this.descriptionElement.innerText = screenshot.description || "No description available.";
+            this.descriptionElement.innerText = screenshot.description || (window.lang ? window.lang.translate('screenshots.description.none_available') : 'No description available.');
         } else {
             this.descriptionElement.style.display = "none";
         }

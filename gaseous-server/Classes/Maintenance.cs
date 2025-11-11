@@ -17,7 +17,7 @@ namespace gaseous_server.Classes
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
 
             // remove any entries from the library that have an invalid id
-            Logging.Log(Logging.LogType.Information, "Maintenance", "Removing any entries from the library that have an invalid id");
+            Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.removing_invalid_library_entries");
             string LibraryWhereClause = "";
             foreach (GameLibrary.LibraryItem library in await GameLibrary.GetLibraries())
             {
@@ -35,12 +35,12 @@ namespace gaseous_server.Classes
             }
 
             // update rom counts
-            Logging.Log(Logging.LogType.Information, "Maintenance", "Updating rom counts");
+            Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.updating_rom_counts");
             MetadataManagement metadataGame = new MetadataManagement(this);
             metadataGame.UpdateRomCounts();
 
             // delete old logs
-            Logging.Log(Logging.LogType.Information, "Maintenance", "Removing logs older than " + Config.LoggingConfiguration.LogRetention + " days");
+            Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.removing_old_logs", null, new string[] { Config.LoggingConfiguration.LogRetention.ToString() });
             long deletedCount = 1;
             long deletedEventCount = 0;
             long maxLoops = 10000;
@@ -52,17 +52,17 @@ namespace gaseous_server.Classes
                 deletedCount = (long)deletedCountTable.Rows[0][0];
                 deletedEventCount += deletedCount;
 
-                Logging.Log(Logging.LogType.Information, "Maintenance", "Deleted " + deletedCount + " log entries");
+                Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.deleted_log_entries", null, new string[] { deletedCount.ToString() });
 
                 // check if we've hit the limit
                 maxLoops -= 1;
                 if (maxLoops <= 0)
                 {
-                    Logging.Log(Logging.LogType.Warning, "Maintenance", "Hit the maximum number of loops for deleting logs. Stopping.");
+                    Logging.LogKey(Logging.LogType.Warning, "process.maintenance", "maintenance.hit_maximum_number_of_loops_deleting_logs_stopping");
                     break;
                 }
             }
-            Logging.Log(Logging.LogType.Information, "Maintenance", "Deleted " + deletedEventCount + " log entries");
+            Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.deleted_total_log_entries", null, new string[] { deletedEventCount.ToString() });
 
             // delete files and directories older than 7 days in PathsToClean
             List<string> PathsToClean = new List<string>();
@@ -71,7 +71,7 @@ namespace gaseous_server.Classes
 
             foreach (string PathToClean in PathsToClean)
             {
-                Logging.Log(Logging.LogType.Information, "Maintenance", "Removing files older than " + MaxFileAge + " days from " + PathToClean);
+                Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.removing_files_older_than_days_from_path", null, new string[] { MaxFileAge.ToString(), PathToClean });
 
                 // get content
                 // files first
@@ -80,7 +80,7 @@ namespace gaseous_server.Classes
                     FileInfo fileInfo = new FileInfo(filePath);
                     if (fileInfo.LastWriteTimeUtc.AddDays(MaxFileAge) < DateTime.UtcNow)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Maintenance", "Deleting file " + filePath);
+                        Logging.LogKey(Logging.LogType.Warning, "process.maintenance", "maintenance.deleting_file", null, new string[] { filePath });
                         File.Delete(filePath);
                     }
                 }
@@ -91,7 +91,7 @@ namespace gaseous_server.Classes
                     DirectoryInfo directoryInfo = new DirectoryInfo(dirPath);
                     if (directoryInfo.LastWriteTimeUtc.AddDays(MaxFileAge) < DateTime.UtcNow)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Maintenance", "Deleting directory " + directoryInfo);
+                        Logging.LogKey(Logging.LogType.Warning, "process.maintenance", "maintenance.deleting_directory", null, new string[] { directoryInfo.ToString() });
                         Directory.Delete(dirPath, true);
                     }
                 }
@@ -104,7 +104,7 @@ namespace gaseous_server.Classes
             string sql = "";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
 
-            Logging.Log(Logging.LogType.Information, "Maintenance", "Optimising database tables");
+            Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.optimising_database_tables");
             sql = "SHOW FULL TABLES WHERE Table_Type = 'BASE TABLE';";
             DataTable tables = await db.ExecuteCMDAsync(sql);
 
@@ -122,7 +122,7 @@ namespace gaseous_server.Classes
                     {
                         retVal += responseRow.ItemArray[i] + "; ";
                     }
-                    Logging.Log(Logging.LogType.Information, "Maintenance", "(" + StatusCounter + "/" + tables.Rows.Count + "): Optimise table " + row[0].ToString() + ": " + retVal);
+                    Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.optimise_table_status", null, new string[] { StatusCounter.ToString(), tables.Rows.Count.ToString(), row[0].ToString(), retVal });
                 }
 
                 StatusCounter += 1;

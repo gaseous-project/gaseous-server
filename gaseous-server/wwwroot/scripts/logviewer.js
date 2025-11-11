@@ -35,7 +35,7 @@ class LogViewer {
 
         const infoLabel = document.createElement('label');
         infoLabel.htmlFor = 'logs_type_info';
-        infoLabel.textContent = 'ℹ️ Information';
+        infoLabel.textContent = window.lang.translate('logs.filter.information');
 
         this.warningCheckbox = document.createElement('input');
         this.warningCheckbox.type = 'checkbox';
@@ -44,7 +44,7 @@ class LogViewer {
 
         const warningLabel = document.createElement('label');
         warningLabel.htmlFor = 'logs_type_warning';
-        warningLabel.textContent = '⚠️ Warning';
+        warningLabel.textContent = window.lang.translate('logs.filter.warning');
 
         this.criticalCheckbox = document.createElement('input');
         this.criticalCheckbox.type = 'checkbox';
@@ -53,7 +53,7 @@ class LogViewer {
 
         const criticalLabel = document.createElement('label');
         criticalLabel.htmlFor = 'logs_type_critical';
-        criticalLabel.textContent = '🚫 Critical';
+        criticalLabel.textContent = window.lang.translate('logs.filter.critical');
 
         // Wrap each checkbox + label pair in its own paragraph for clearer vertical spacing
         const infoPara = document.createElement('p');
@@ -79,14 +79,14 @@ class LogViewer {
         this.startDateInput = document.createElement('input');
         this.startDateInput.type = 'datetime-local';
         this.startDateInput.id = 'logs_startdate';
-        this.startDateInput.placeholder = 'Start Date';
+        this.startDateInput.placeholder = window.lang.translate('logs.filter.start_date_placeholder');
         this.startDateInput.style.width = '45%';
         this.startDateInput.value = this.logPreconfig.StartDateTime || '';
 
         this.endDateInput = document.createElement('input');
         this.endDateInput.type = 'datetime-local';
         this.endDateInput.id = 'logs_enddate';
-        this.endDateInput.placeholder = 'End Date';
+        this.endDateInput.placeholder = window.lang.translate('logs.filter.end_date_placeholder');
         this.endDateInput.style.width = '45%';
         this.endDateInput.value = this.logPreconfig.EndDateTime || '';
 
@@ -104,7 +104,7 @@ class LogViewer {
         this.searchTextInput = document.createElement('input');
         this.searchTextInput.type = 'text';
         this.searchTextInput.id = 'logs_textsearch';
-        this.searchTextInput.placeholder = 'Search';
+        this.searchTextInput.placeholder = window.lang.translate('logs.filter.search_placeholder');
         this.searchTextInput.style.width = '95%';
         this.searchTextInput.value = this.logPreconfig.SearchText || '';
 
@@ -120,7 +120,7 @@ class LogViewer {
         this.correlationIdInput = document.createElement('input');
         this.correlationIdInput.type = 'text';
         this.correlationIdInput.id = 'logs_correlationid';
-        this.correlationIdInput.placeholder = 'Correlation Id';
+        this.correlationIdInput.placeholder = window.lang.translate('logs.filter.correlation_id_placeholder');
         this.correlationIdInput.style.width = '95%';
         this.correlationIdInput.value = this.logPreconfig.CorrelationId || '';
 
@@ -135,13 +135,13 @@ class LogViewer {
         cell5.style.textAlign = 'right';
 
         this.searchButton = document.createElement('button');
-        this.searchButton.textContent = 'Search';
+        this.searchButton.textContent = window.lang.translate('logs.filter.search_button');
         this.searchButton.addEventListener('click', () => {
             this.InitialSearch();
         });
 
         this.resetButton = document.createElement('button');
-        this.resetButton.textContent = 'Reset';
+        this.resetButton.textContent = window.lang.translate('logs.filter.reset_button');
         this.resetButton.addEventListener('click', () => {
             this.infoCheckbox.checked = this.logPreconfig.Information || false;
             this.warningCheckbox.checked = this.logPreconfig.Warning || false;
@@ -177,7 +177,13 @@ class LogViewer {
 
         // Create the header row
         const headerRow = document.createElement('thead');
-        const headerCells = [['', '18px'], ['', '30px'], ['Event Time', '190px'], ['Process', '150px'], 'Message'];
+        const headerCells = [
+            ['', '18px'],
+            ['', '30px'],
+            [window.lang.translate('logs.table.header.event_time'), '190px'],
+            [window.lang.translate('logs.table.header.process'), '150px'],
+            window.lang.translate('logs.table.header.message')
+        ];
         const headerTr = document.createElement('tr');
 
         for (const headerText of headerCells) {
@@ -204,8 +210,8 @@ class LogViewer {
         this.loadMoreContainer.style.display = 'none';
 
         this.loadMoreButton = document.createElement('button');
-        this.loadMoreButton.value = 'Load More';
-        this.loadMoreButton.textContent = 'Load More';
+        this.loadMoreButton.value = window.lang.translate('logs.table.load_more');
+        this.loadMoreButton.textContent = window.lang.translate('logs.table.load_more');
 
         this.loadMoreContainer.appendChild(this.loadMoreButton);
         container.appendChild(this.loadMoreContainer);
@@ -349,7 +355,7 @@ class LogViewer {
                     // exception
                     if (logEntry.exceptionValue) {
                         const exceptionLabelDiv = document.createElement('strong');
-                        exceptionLabelDiv.innerHTML = `Exception:`;
+                        exceptionLabelDiv.innerHTML = window.lang.translate('logs.detail.exception_label');
                         detailRowDataCell.appendChild(exceptionLabelDiv);
 
                         const preDiv = document.createElement('div');
@@ -378,7 +384,7 @@ class LogViewer {
                     // calling process and user
                     const callingProcessDiv = document.createElement('p');
                     const callingProcessLabelDiv = document.createElement('strong');
-                    callingProcessLabelDiv.innerHTML = `Calling process:`;
+                    callingProcessLabelDiv.innerHTML = window.lang.translate('logs.detail.calling_process_label');
                     callingProcessDiv.appendChild(callingProcessLabelDiv);
                     const callingProcessSpan = document.createElement('span');
                     callingProcessSpan.innerHTML = ` ${logEntry.callingProcess}`;
@@ -387,17 +393,17 @@ class LogViewer {
 
                     const userDiv = document.createElement('p');
                     const userLabelDiv = document.createElement('strong');
-                    userLabelDiv.innerHTML = `Initiated by user:`;
+                    userLabelDiv.innerHTML = window.lang.translate('logs.detail.initiated_by_user_label');
                     userDiv.appendChild(userLabelDiv);
                     const userSpan = document.createElement('span');
-                    userSpan.innerHTML = ` ${logEntry.callingUser || 'N/A'}`;
+                    userSpan.innerHTML = ` ${logEntry.callingUser || window.lang.translate('logs.detail.user_not_available')}`;
                     userDiv.appendChild(userSpan);
                     detailRowDataCell.appendChild(userDiv);
 
                     // add the correlation id below the exception
                     const correlationIdDiv = document.createElement('p');
                     const correlationIdLabelDiv = document.createElement('strong');
-                    correlationIdLabelDiv.innerHTML = `Correlation Id: `;
+                    correlationIdLabelDiv.innerHTML = window.lang.translate('logs.detail.correlation_id_label') + ' ';
                     correlationIdDiv.appendChild(correlationIdLabelDiv);
                     const correlationIdSpan = document.createElement('span');
                     correlationIdSpan.classList.add('romlink');
@@ -441,10 +447,10 @@ class LogViewer {
                     row.addEventListener('click', () => {
                         if (detailRow.style.display === 'none') {
                             detailRow.style.display = '';
-                            expandCell.textContent = '-';
+                            expandCell.textContent = window.lang.translate('logs.detail.expand_row_button.collapse');
                         } else {
                             detailRow.style.display = 'none';
-                            expandCell.textContent = '+';
+                            expandCell.textContent = window.lang.translate('logs.detail.expand_row_button.expand');
                         }
                     });
 

@@ -40,7 +40,7 @@ async function UserLogin() {
             default:
                 // login failed
                 document.getElementById('login_errorrow').style.display = '';
-                document.getElementById('login_errorlabel').innerHTML = 'Incorrect password';
+                document.getElementById('login_errorlabel').innerHTML = window.lang.translate('loginpage.incorrect_password_error');
                 break;
         }
     }
@@ -82,7 +82,7 @@ function SocialLogin(provider) {
             window.location.href = '/api/v1.0/Account/signin-oidc';
             break;
         default:
-            console.error('Unsupported social login provider:', provider);
+            console.error(window.lang.translate('loginpage.unsupported_social_login_provider_error', [provider]));
             break;
     }
 }
@@ -134,7 +134,7 @@ async function VerifyTwoFactor() {
     const code = (codeEl?.value || '').trim();
     if (!code) {
         document.getElementById('twofactor_errorrow').style.display = '';
-        document.getElementById('twofactor_errorlabel').innerText = 'Enter the 6-digit code.';
+        document.getElementById('twofactor_errorlabel').innerText = window.lang.translate('loginpage.enter_six_digit_code_error');
         return;
     }
 
@@ -148,11 +148,11 @@ async function VerifyTwoFactor() {
             window.location.replace('/index.html');
         } else {
             document.getElementById('twofactor_errorrow').style.display = '';
-            document.getElementById('twofactor_errorlabel').innerText = 'Invalid code. Try again.';
+            document.getElementById('twofactor_errorlabel').innerText = window.lang.translate('loginpage.invalid_code_error');
         }
     } catch (e) {
         document.getElementById('twofactor_errorrow').style.display = '';
-        document.getElementById('twofactor_errorlabel').innerText = 'Error verifying code.';
+        document.getElementById('twofactor_errorlabel').innerText = window.lang.translate('loginpage.error_verifying_code_error');
     }
 }
 
@@ -161,7 +161,7 @@ async function VerifyRecoveryCode() {
     const recoveryCode = (codeEl?.value || '').trim();
     if (!recoveryCode) {
         document.getElementById('recovery_errorrow').style.display = '';
-        document.getElementById('recovery_errorlabel').innerText = 'Enter a recovery code.';
+        document.getElementById('recovery_errorlabel').innerText = window.lang.translate('loginpage.enter_recovery_code_error');
         return;
     }
     try {
@@ -174,11 +174,11 @@ async function VerifyRecoveryCode() {
             window.location.replace('/index.html');
         } else {
             document.getElementById('recovery_errorrow').style.display = '';
-            document.getElementById('recovery_errorlabel').innerText = 'Invalid recovery code.';
+            document.getElementById('recovery_errorlabel').innerText = window.lang.translate('loginpage.invalid_recovery_code_error');
         }
     } catch (e) {
         document.getElementById('recovery_errorrow').style.display = '';
-        document.getElementById('recovery_errorlabel').innerText = 'Error verifying recovery code.';
+        document.getElementById('recovery_errorlabel').innerText = window.lang.translate('loginpage.error_verifying_recovery_code_error');
     }
 }
 
@@ -205,5 +205,5 @@ fetch('/api/v1/Account/social-login', {
         ShowSocialButtons(true);
     })
     .catch(error => {
-        console.error('Error fetching social login options:', error);
+        console.error(window.lang.translate('loginpage.error_fetching_social_login_options_error', [error]));
     });

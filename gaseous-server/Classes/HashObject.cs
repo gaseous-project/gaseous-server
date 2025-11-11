@@ -17,27 +17,27 @@ namespace gaseous_server.Classes
         {
             using var fileStream = File.OpenRead(fileName);
 
-            Logging.Log(Logging.LogType.Information, "Hash File", $"Generating MD5 hash for file: {fileName}");
+            Logging.LogKey(Logging.LogType.Information, "process.hash_file", "hashfile.generating_md5", null, new string[] { fileName });
             using (var md5 = MD5.Create())
             {
                 md5hash = BitConverter.ToString(md5.ComputeHash(fileStream)).Replace("-", "").ToLowerInvariant();
             }
 
-            Logging.Log(Logging.LogType.Information, "Hash File", $"Generating SHA1 hash for file: {fileName}");
+            Logging.LogKey(Logging.LogType.Information, "process.hash_file", "hashfile.generating_sha1", null, new string[] { fileName });
             fileStream.Position = 0;
             using (var sha1 = SHA1.Create())
             {
                 sha1hash = BitConverter.ToString(sha1.ComputeHash(fileStream)).Replace("-", "").ToLowerInvariant();
             }
 
-            Logging.Log(Logging.LogType.Information, "Hash File", $"Generating SHA256 hash for file: {fileName}");
+            Logging.LogKey(Logging.LogType.Information, "process.hash_file", "hashfile.generating_sha256", null, new string[] { fileName });
             fileStream.Position = 0;
             using (var sha256 = SHA256.Create())
             {
                 sha256hash = BitConverter.ToString(sha256.ComputeHash(fileStream)).Replace("-", "").ToLowerInvariant();
             }
 
-            Logging.Log(Logging.LogType.Information, "Hash File", $"Generating CRC32 hash for file: {fileName}");
+            Logging.LogKey(Logging.LogType.Information, "process.hash_file", "hashfile.generating_crc32", null, new string[] { fileName });
             uint crc32HashCalc = CRC32.ComputeFile(fileName);
             crc32hash = crc32HashCalc.ToString("x8");
         }

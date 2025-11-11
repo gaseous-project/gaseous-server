@@ -1,0 +1,24 @@
+{
+    "name": "English (Australia)",
+    "nativeName": "English (Australia)",
+    "code": "en-AU",
+    "pluralRule": "n != 1",
+    "pluralRules": {
+        "one": "n == 1",
+        "other": "n != 1"
+    },
+    "direction": "ltr",
+    "type": "Overlay",
+    "strings": {
+        "banner.notification.database_upgrade.body": "Performance may be degraded while the database is being upgraded, while favourites and game saves may be missing. Please wait until the upgrade is complete.",
+        "home.favourites": "Favourites",
+        "card.game.favourite": "Favourite",
+        "filtering.settings.favourite": "Favourite",
+        "task.organise_library": "Organise library",
+        "process.organise_library": "Organise Library",
+        "timered_event.starting_library_organiser": "Starting Library Organiser",
+        "organiselibrary.starting_default_library_organisation": "Starting default library organisation",
+        "organiselibrary.finished_default_library_organisation": "Finished default library organisation"
+    },
+    "serverstrings": {}
+}

@@ -1,0 +1,57 @@
+name: Update Localisation Documentation
+
+on:
+  push:
+    paths:
+      - 'gaseous-server/Support/Localisation/*.json'
+      - 'docs/LOCALISATION.MD'
+      - '.github/scripts/generate_locale_table.sh'
+  workflow_dispatch: {}
+  schedule:
+    - cron: '0 3 * * 1' # Weekly Monday 03:00 UTC
+
+jobs:
+  regenerate-locale-table:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+
+      - name: Generate locale table
+        run: |
+          chmod +x .github/scripts/generate_locale_table.sh
+          .github/scripts/generate_locale_table.sh
+          chmod +x .github/scripts/generate_glossary_table.sh
+          .github/scripts/generate_glossary_table.sh
+
+      - name: Detect changes
+        id: detect
+        run: |
+          changed=false
+          if ! git diff --quiet docs/LOCALISATION.MD; then
+            changed=true
+          fi
+          if ! git diff --quiet docs/LOCALISATION_GLOSSARY.md; then
+            changed=true
+          fi
+          echo "changed=${changed}" >> $GITHUB_OUTPUT
+
+      - name: Commit updates
+        if: ${{ steps.detect.outputs.changed == 'true' }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/LOCALISATION.MD docs/LOCALISATION_GLOSSARY.md
+          git commit -m "docs: auto-update localisation tables (language + glossary)"
+          git push
+
+      - name: Summary
+        run: |
+          echo "Locale/glossary regeneration complete. Changed: ${{ steps.detect.outputs.changed }}" >> $GITHUB_STEP_SUMMARY

@@ -53,6 +53,8 @@
     <None Remove="Support\Database\" />
     <None Remove="Support\Database\MySQL\" />
     <None Remove="Support\Database\MySQL\gaseous-*.sql" />
+    <None Remove="Support\Localisation\" />
+    <None Remove="Support\Localisation\*.json" />
     <None Remove="Classes\Metadata\" />
   </ItemGroup>
   <ItemGroup>
@@ -79,6 +81,7 @@
     <EmbeddedResource Include="Support\Language.txt" />
     <EmbeddedResource Include="Support\DefaultPlatformLogo.svg" />
     <EmbeddedResource Include="Support\Database\MySQL\gaseous-*.sql" />
+    <EmbeddedResource Include="Support\Localisation\*.json" />
     <EmbeddedResource Include="wwwroot\images\Ratings\AgeGroupMap.json" />
   </ItemGroup>
 

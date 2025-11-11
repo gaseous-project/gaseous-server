@@ -2,9 +2,10 @@
     <div class="games_filter_controls">
         <!-- <div class="games_library_controlblock"> -->
         <div id="games_filter_button_column_filter" class="games_library_button" style="float: right;">
-            <img src="/images/column.svg" alt="Toggle Filter" title="Toggle Filter" class="games_library_button_icon" />
+            <img src="/images/column.svg" class="games_library_button_icon"
+                data-i18n-attr="alt:librarypage.toggle_filter_alt,title:librarypage.toggle_filter_title" />
         </div>
-        <span class="games_library_label">Filter</span>
+        <span class="games_library_label" data-i18n="librarypage.filter_label"></span>
         <!-- </div> -->
     </div>
     <div id="games_filter_scroller">
@@ -39,7 +40,7 @@
             </div> -->
 
             <div class="games_library_controlblock block_mini_mode">
-                <span class="games_library_label">Page size: </span>
+                <span class="games_library_label" data-i18n="librarypage.page_size_label"></span>
             </div>
             <div id="games_library_pagesize" class="games_library_controlblock block_mini_mode"
                 style="text-align: left;">
@@ -49,24 +50,25 @@
             </div>
 
             <div class="games_library_controlblock block_mini_mode">
-                <span class="games_library_label">Order by: </span>
+                <span class="games_library_label" data-i18n="librarypage.order_by_label"></span>
             </div>
             <div id="games_library_orderby" class="games_library_controlblock block_mini_mode"
                 style="text-align: left;">
                 <select id="games_library_orderby_select" data-minimum-results-for-search="Infinity">
-                    <option selected="selected" value="NameThe">Name, The</option>
-                    <option value="Name">Name</option>
-                    <option value="ReleaseDate">Release Date</option>
-                    <option value="Rating">User Rating</option>
-                    <option value="RatingCount">User Rating Count</option>
-                    <option value="DateAdded">Date Added</option>
-                    <option value="LastPlayed">Last Played</option>
-                    <option value="TimePlayed">Play Time</option>
+                    <option selected="selected" value="NameThe" data-i18n="librarypage.order.name_the_option"></option>
+                    <option value="Name" data-i18n="librarypage.order.name_option"></option>
+                    <option value="ReleaseDate" data-i18n="librarypage.order.release_date_option"></option>
+                    <option value="Rating" data-i18n="librarypage.order.user_rating_option"></option>
+                    <option value="RatingCount" data-i18n="librarypage.order.user_rating_count_option"></option>
+                    <option value="DateAdded" data-i18n="librarypage.order.date_added_option"></option>
+                    <option value="LastPlayed" data-i18n="librarypage.order.last_played_option"></option>
+                    <option value="TimePlayed" data-i18n="librarypage.order.play_time_option"></option>
                 </select>
                 <select id="games_library_orderby_direction_select" data-minimum-results-for-search="Infinity"
                     class="block_mini_mode">
-                    <option selected="selected" value="Ascending">Ascending</option>
-                    <option value="Descending">Descending</option>
+                    <option selected="selected" value="Ascending"
+                        data-i18n="librarypage.order.direction.ascending_option"></option>
+                    <option value="Descending" data-i18n="librarypage.order.direction.descending_option"></option>
                 </select>
             </div>
             <div class="games_library_controlblock">

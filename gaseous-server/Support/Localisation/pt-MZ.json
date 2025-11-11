@@ -1,0 +1,14 @@
+{
+    "name": "Portuguese (Mozambique)",
+    "nativeName": "Português (Moçambique)",
+    "code": "pt-MZ",
+    "pluralRule": "n != 1",
+    "pluralRules": {
+        "one": "n == 1",
+        "other": "n != 1"
+    },
+    "direction": "ltr",
+    "type": "Overlay",
+    "strings": {},
+    "serverstrings": {}
+}

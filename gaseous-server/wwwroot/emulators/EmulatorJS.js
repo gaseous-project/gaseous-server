@@ -7,7 +7,7 @@ EJS_core = getQueryString('core', 'string');
 async function GetCoreData(coreName) {
     let response = await fetch('/emulators/EmulatorJS/data/cores/cores.json');
     if (!response.ok) {
-        throw new Error('Network response was not ok');
+        throw new Error(window.lang.translate("console.network_error", response.statusText));
     }
     let data = await response.json();
 
@@ -38,16 +38,16 @@ function injectLoaderOnce() {
 GetCoreData(EJS_core)
     .then(data => {
         CoreData = data;
-        console.log('Core data:', CoreData);
+        console.log(window.lang.translate("console.core_data"), CoreData);
 
         if (typeof SharedArrayBuffer !== 'undefined') {
             const requireThreads = !!(CoreData && CoreData.options && CoreData.options.requireThreads === true);
             EJS_threads = requireThreads;
-            console.log(requireThreads ? 'Threads enabled for this core.' : 'Threads disabled for this core.');
+            console.log(requireThreads ? `${window.lang.translate("console.emulator_threads_status", window.lang.translate("generic.enabled"))}` : `${window.lang.translate("console.emulator_threads_status", window.lang.translate("generic.disabled"))}`);
         } else {
             // SharedArrayBuffer is not supported, disable threads
             EJS_threads = false;
-            console.log('SharedArrayBuffer unsupported. Threads disabled.');
+            console.log(window.lang.translate("console.emulator_sharedarraybuffer_unsupported"));
         }
 
         // Notify listeners that CoreData is ready (optional)
@@ -56,7 +56,7 @@ GetCoreData(EJS_core)
         } catch (_) { }
     })
     .catch(err => {
-        console.error('Failed to load core data', err);
+        console.error(window.lang.translate("console.core_data_failed", err));
         // Keep safe defaults
         EJS_threads = false;
     })
@@ -72,6 +72,9 @@ GetCoreData(EJS_core)
 // Lightgun
 EJS_lightgun = false; // can be true or false
 
+// set language
+EJS_language = window.lang.locale || 'en';
+
 // URL to BIOS file
 EJS_biosUrl = emuBios;
 
@@ -80,7 +83,7 @@ EJS_gameUrl = decodeURIComponent(getQueryString('rompath', 'string'));
 
 // load state if defined
 if (StateUrl) {
-    console.log('Loading saved state from: ' + StateUrl);
+    console.log(window.lang.translate("console.emulator_loading_save_state", StateUrl));
     EJS_loadStateURL = StateUrl;
 }
 
@@ -91,7 +94,11 @@ EJS_startOnLoaded = true;
 EJS_pathtodata = '/emulators/EmulatorJS/data/';
 
 EJS_DEBUG_XX = emulatorDebugMode;
-console.log("Debug enabled: " + EJS_DEBUG_XX);
+if (EJS_DEBUG_XX) {
+    console.log(window.lang.translate("console.emulator_debug_state", window.lang.translate("generic.enabled")));
+} else {
+    console.log(window.lang.translate("console.emulator_debug_state", window.lang.translate("generic.disabled")));
+}
 
 EJS_backgroundImage = emuBackground;
 EJS_backgroundBlur = true;
@@ -146,7 +153,7 @@ EJS_Buttons = {
 
                     let gameImage = document.createElement('img');
                     gameImage.src = imgUrl;
-                    gameImage.alt = 'Game Image';
+                    gameImage.alt = window.lang.translate("emulator.game_image");
                     gameImage.classList.add('emulator_pausemask-image');
                     if (imgClass) {
                         gameImage.classList.add(imgClass);
@@ -167,14 +174,14 @@ EJS_Buttons = {
                 pausedLabel.id = 'paused-label';
                 pausedLabel.classList.add('emulator_pausemask-pausedlabel');
                 pausedLabel.classList.add('emulator_pausemask-pausedlabel-flash');
-                pausedLabel.textContent = '*** Paused ***';
+                pausedLabel.textContent = `*** ${window.lang.translate("emulator.paused_overlay")} ***`;
                 bgMask.appendChild(pausedLabel);
 
                 // resume label
                 let resumeLabel = document.createElement('div');
                 resumeLabel.id = 'resume-label';
                 resumeLabel.classList.add('emulator_pausemask-resumelabel');
-                resumeLabel.textContent = 'Click to Resume';
+                resumeLabel.textContent = window.lang.translate("emulator.click_to_resume");
                 bgMask.appendChild(resumeLabel);
             }
 
@@ -189,11 +196,6 @@ EJS_Buttons = {
 
             let emulatorContainer = document.querySelector(EJS_player);
             emulatorContainer.appendChild(bgMask);
-        }
-    },
-    play: {
-        callback: () => {
-            alert('Play button clicked!'); // Placeholder for play button action
         }
     },
     cacheManager: false,
@@ -215,7 +217,7 @@ EJS_Buttons = {
     screenshotBtn: {
         visible: true,
         icon: '<svg version="1.1" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" xmlns:svg="http://www.w3.org/2000/svg"><g id="g3"><path d="m 256,233.109 c -28.5,0 -51.594,23.297 -51.594,52.047 0,28.766 23.094,52.047 51.594,52.047 28.5,0 51.594,-23.281 51.594,-52.047 0,-28.75 -23.094,-52.047 -51.594,-52.047 z" id="path1"/><path d="m 497.375,140.297 c -8.984,-9.094 -21.641,-14.813 -35.453,-14.813 h -54.203 c -4.359,0.016 -8.438,-2.594 -10.313,-6.813 L 381.172,82.327 C 373.141,64.311 355.281,52.593 335.469,52.593 H 176.531 c -19.813,0 -37.672,11.719 -45.719,29.719 v 0.016 l -16.219,36.344 c -1.875,4.219 -5.953,6.828 -10.313,6.813 H 50.078 c -13.813,0 -26.484,5.719 -35.484,14.813 C 5.594,149.359 0,162.031 0,175.828 v 233.25 c 0,13.797 5.594,26.469 14.594,35.531 9,9.094 21.672,14.813 35.484,14.797 h 225.781 186.063 c 13.813,0.016 26.469,-5.703 35.453,-14.797 C 506.406,435.546 512,422.875 512,409.078 v -233.25 c 0,-13.797 -5.594,-26.484 -14.625,-35.531 z m -24.094,268.781 c 0,3.313 -1.281,6.125 -3.375,8.281 -2.156,2.109 -4.844,3.328 -7.984,3.344 H 275.859 50.078 c -3.156,-0.016 -5.859,-1.234 -7.984,-3.344 -2.094,-2.156 -3.375,-4.969 -3.375,-8.281 v -233.25 c 0,-3.313 1.281,-6.125 3.375,-8.281 2.125,-2.125 4.828,-3.328 7.984,-3.344 h 54.203 c 19.781,0 37.656,-11.734 45.688,-29.766 l 16.188,-36.328 c 1.906,-4.203 5.969,-6.813 10.375,-6.813 H 335.47 c 4.406,0 8.469,2.609 10.359,6.797 l 16.219,36.359 c 8.016,18.016 25.891,29.75 45.672,29.75 h 54.203 c 3.141,0.016 5.828,1.219 7.984,3.344 2.094,2.156 3.375,4.984 3.375,8.281 v 233.251 z" id="path2"/><path d="m 256,170.938 c -31.313,-0.016 -59.75,12.844 -80.203,33.5 -20.484,20.656 -33.172,49.266 -33.156,80.719 -0.016,31.453 12.672,60.094 33.156,80.719 20.453,20.672 48.891,33.516 80.203,33.516 31.297,0 59.75,-12.844 80.203,-33.516 20.484,-20.625 33.172,-49.266 33.156,-80.719 0.016,-31.453 -12.672,-60.063 -33.156,-80.719 C 315.75,183.781 287.297,170.922 256,170.938 Z m 59.031,173.953 c -15.172,15.297 -35.953,24.688 -59.031,24.688 -23.094,0 -43.859,-9.391 -59.047,-24.688 -15.141,-15.297 -24.5,-36.328 -24.516,-59.734 0.016,-23.391 9.375,-44.422 24.516,-59.734 15.188,-15.297 35.953,-24.672 59.047,-24.688 23.078,0.016 43.859,9.391 59.031,24.688 15.156,15.313 24.516,36.344 24.531,59.734 -0.015,23.406 -9.374,44.437 -24.531,59.734 z" id="path3"/><rect x="392.18799" y="197.65601" width="34.405998" height="34.405998" id="rect3"/></g></svg>',
-        displayName: 'Screenshot',
+        displayName: window.lang.translate("generic.screenshot"),
         callback: async () => {
             let screenshotData = await EJS_emulator.takeScreenshot("canvas", "png", 1);
             let screenshot = {
@@ -235,19 +237,18 @@ EJS_Buttons = {
             })
                 .then(response => response.json())
                 .then(result => {
-                    console.log("Upload complete");
+                    console.log(window.lang.translate("generic.upload_complete"));
                     console.log(result);
                     // show a notification
                     const notification = new Notification(
-                        'Screenshot Saved',
-                        'Screenshot has been saved to the media library.',
-                        `/api/v1.1/ContentManager/attachment/${result.attachmentId}/data`
+                        window.lang.translate("generic.screenshot"),
+                        window.lang.translate("generic.screenshot.has_been_saved")
+                            `/api/v1.1/ContentManager/attachment/${result.attachmentId}/data`
                     );
                     notification.Show();
                 })
                 .catch(error => {
-                    console.log("An error occurred");
-                    console.log(error);
+                    console.log(window.lang.translate("console.error_generic", error));
                 });
         }
     }
@@ -271,12 +272,12 @@ EJS_onSaveState = function (e) {
     })
         .then(response => response.json())
         .then(result => {
-            console.log("Upload complete");
+            console.log(window.lang.translate("generic.upload_complete"));
             console.log(result);
 
             const notification = new Notification(
-                'State Saved',
-                'Game state has been saved.',
+                window.lang.translate("emulator.state.saved"),
+                window.lang.translate("emulator.state.saved_message"),
                 '/api/v1.1/StateManager/' + romId + '/' + result.value.id + '/Screenshot/image.png?IsMediaGroup=' + IsMediaGroup
             );
             notification.Show();
@@ -320,7 +321,7 @@ EJS_onGameStart = async function (e) {
     if (FS.analyzePath(path).exists) FS.unlink(path);
 
     if (!response.ok) {
-        console.log("No save file found");
+        console.log(window.lang.translate("emulator.no_save_files_found"));
         return;
     }
 
@@ -343,12 +344,12 @@ EJS_onGameStart = async function (e) {
             break;
 
         default:
-            console.log("Unknown format: " + format);
+            console.log(window.lang.translate("generic.unknown_format", format));
             return;
     }
 
     // if (binData !== undefined) {
-    console.log("Save file found");
+    console.log(window.lang.translate("emulator.save_file_found"));
 
     // write the save file
     FS.writeFile(path, binData);
@@ -394,7 +395,7 @@ if (['arcade', 'mame', 'fbneo', 'fbalpha2012_cps1', 'fbalpha2012_cps2'].includes
                 }
                 samplesArray[pathName] = `/api/v1.1/ContentManager/attachment/zipStream?attachmentIds=${sampleIds}`;
 
-                console.log('Samples Array:', samplesArray);
+                console.log(window.lang.translate("emulator.samples_array"), samplesArray);
                 EJS_externalFiles = samplesArray;
             });
     }

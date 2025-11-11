@@ -15,13 +15,13 @@
                             <a href="https://github.com/gaseous-project/gaseous-server"
                                 class="romlink romlink-nounderline">
                                 <img src="/images/github-mark.svg" class="banner_button_image" />
-                                GitHub
+                                <span data-i18n="firstpage.link.github">GitHub</span>
                             </a>
                         </div>
                         <div class="loginwindow-logospace-linktable-link">
                             <a href="https://discord.gg/Nhu7wpT3k4" class="romlink romlink-nounderline">
                                 <img src="/images/discord.svg" class="banner_button_image" />
-                                Discord
+                                <span data-i18n="firstpage.link.discord">Discord</span>
                             </a>
                         </div>
                     </div>
@@ -33,17 +33,18 @@
                     data-page="0">
                     <tr>
                         <td colspan="2">
-                            <h2>Select Signature Source</h2>
+                            <h2 data-i18n="first2page.select_signature_source_header">Select Signature Source</h2>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="2">
                             <p>
-                                Signatures are used to match a ROM to a game name using the hash of the ROM (MD5 or
-                                SHA1).
-                                For more information, see the <a
+                                <span data-i18n="first2page.signatures_description">Signatures are used to match a ROM
+                                    to a game name using the hash of the ROM (MD5 or SHA1). For more information, see
+                                    the</span> <a
                                     href="https://github.com/gaseous-project/gaseous-server/wiki/Signatures"
-                                    class="romlink" target="_blank" rel="noopener noreferrer">Signatures</a> wiki page.
+                                    class="romlink" target="_blank" rel="noopener noreferrer"
+                                    data-i18n="first2page.signatures_link_text">Signatures</a> wiki page.
                             </p>
                         </td>
                     </tr>
@@ -54,16 +55,18 @@
                                     value="Hasheous" />
                             </td>
                             <td>
-                                <label for="login_signatures_hasheous"><strong>Hasheous (Recommended)</strong></label>
+                                <label for="login_signatures_hasheous"><strong
+                                        data-i18n="first2page.signature.hasheous_option">Hasheous
+                                        (Recommended)</strong></label>
                             </td>
                         </tr>
                         <tr>
                             <td></td>
                             <td>
                                 <label for="login_signatures_hasheous">
-                                    Hasheous is a community-driven project that provides a database of ROM hashes and
-                                    game
-                                    names. It is the most accurate and up-to-date source of signatures.
+                                    <span data-i18n="first2page.signature.hasheous_label">Hasheous is a community-driven
+                                        project that provides a database of ROM hashes and game names. It is the most
+                                        accurate and up-to-date source of signatures.</span>
                                 </label>
                             </td>
                         </tr>
@@ -79,16 +82,17 @@
                                     value="LocalOnly" />
                             </td>
                             <td>
-                                <label for="login_signatures_localonly"><strong>Local Only</strong></label>
+                                <label for="login_signatures_localonly"><strong
+                                        data-i18n="first2page.signature.localonly_option">Local Only</strong></label>
                             </td>
                         </tr>
                         <tr>
                             <td></td>
                             <td>
                                 <label for="login_signatures_localonly">
-                                    Local Only uses the signatures that are stored in the Gaseous database. This is the
-                                    default
-                                    option and is useful if you are not connected to the internet.
+                                    <span data-i18n="first2page.signature.localonly_label">Local Only uses the
+                                        signatures that are stored in the Gaseous database. This is the default option
+                                        and is useful if you are not connected to the internet.</span>
                                 </label>
                             </td>
                         </tr>
@@ -99,17 +103,18 @@
                     name="wizard-page" data-page="1">
                     <tr>
                         <td colspan="2">
-                            <h2>Select Metadata Source</h2>
+                            <h2 data-i18n="first2page.select_metadata_source_header">Select Metadata Source</h2>
                         </td>
                     </tr>
                     <tr>
                         <td colspan="2">
                             <p>
-                                Metadata is used to provide additional information about a game, such as the release
-                                date,
-                                publisher, and genre. For more information, see the <a
+                                <span data-i18n="first2page.metadata_description">Metadata is used to provide additional
+                                    information about a game, such as the release date, publisher, and genre. For more
+                                    information, see the</span> <a
                                     href="https://github.com/gaseous-project/gaseous-server/wiki/Metadata"
-                                    class="romlink" target="_blank" rel="noopener noreferrer">Metadata</a> wiki page.
+                                    class="romlink" target="_blank" rel="noopener noreferrer"
+                                    data-i18n="first2page.metadata_link_text">Metadata</a> wiki page.
                             </p>
                         </td>
                     </tr>
@@ -119,7 +124,8 @@
                                 <input type="radio" id="login_metadata_igdb" name="login_metadata" value="IGDB" />
                             </td>
                             <td>
-                                <label for="login_metadata_igdb"><strong>Internet Game Database
+                                <label for="login_metadata_igdb"><strong
+                                        data-i18n="first2page.metadata.igdb_option">Internet Game Database
                                         (Recommended)</strong></label>
                             </td>
                         </tr>
@@ -127,14 +133,15 @@
                             <td></td>
                             <td>
                                 <label for="login_metadata_igdb">
-                                    IGDB is a community-driven project that provides a database of game metadata. It is
-                                    the
-                                    most accurate and up-to-date source of metadata.
+                                    <span data-i18n="first2page.metadata.igdb_label">IGDB is a community-driven project
+                                        that provides a database of game metadata. It is the most accurate and
+                                        up-to-date source of metadata.</span>
                                 </label>
 
                                 <br />
                                 <br />
-                                <button id="login_metadata_igdb_advanced" class="loginwindow_button">Advanced</button>
+                                <button id="login_metadata_igdb_advanced" class="loginwindow_button"
+                                    data-i18n="first2page.metadata.igdb_advanced_button">Advanced</button>
                             </td>
                         </tr>
                     </tbody>
@@ -149,17 +156,17 @@
                                     value="TheGamesDB" />
                             </td>
                             <td>
-                                <label for="login_metadata_thegamesdb"><strong>The Games DB</strong></label>
+                                <label for="login_metadata_thegamesdb"><strong
+                                        data-i18n="first2page.metadata.thegamesdb_option">The Games DB</strong></label>
                             </td>
                         </tr>
                         <tr>
                             <td></td>
                             <td>
                                 <label for="login_metadata_thegamesdb">
-                                    The Games DB is a community-driven project that provides a database of game
-                                    metadata.
-                                    It is
-                                    a good alternative to IGDB.
+                                    <span data-i18n="first2page.metadata.thegamesdb_label">The Games DB is a
+                                        community-driven project that provides a database of game metadata. It is a good
+                                        alternative to IGDB.</span>
                                 </label>
                             </td>
                         </tr>
@@ -174,16 +181,17 @@
                                 <input type="radio" id="login_metadata_none" name="login_metadata" value="none" />
                             </td>
                             <td>
-                                <label for="login_metadata_none"><strong>None</strong></label>
+                                <label for="login_metadata_none"><strong
+                                        data-i18n="first2page.metadata.none_option">None</strong></label>
                             </td>
                         </tr>
                         <tr>
                             <td></td>
                             <td>
                                 <label for="login_metadata_none">
-                                    None disables metadata retrieval. This is useful if you do not want to use metadata
-                                    or
-                                    are not connected to the internet.
+                                    <span data-i18n="first2page.metadata.none_label">None disables metadata retrieval.
+                                        This is useful if you do not want to use metadata or are not connected to the
+                                        internet.</span>
                                 </label>
                             </td>
                         </tr>
@@ -192,8 +200,12 @@
 
                 <div id="page_controls" style="position: absolute; bottom: 0; right: 0; padding: 20px;">
                     <div class="loginwindow_controlsspace">
-                        <button id="wizard-prev" class="loginwindow_button" disabled="disabled">Previous</button>
-                        <button id="wizard-next" class="loginwindow_button" disabled="disabled">Next</button>
+                        <button id="wizard-prev" class="loginwindow_button" disabled="disabled"
+                            data-i18n="first2page.wizard.previous_button"
+                            data-i18n-attr="value:first2page.wizard.previous_button.value">Previous</button>
+                        <button id="wizard-next" class="loginwindow_button" disabled="disabled"
+                            data-i18n="first2page.wizard.next_button"
+                            data-i18n-attr="value:first2page.wizard.next_button.value">Next</button>
                     </div>
                 </div>
             </div>

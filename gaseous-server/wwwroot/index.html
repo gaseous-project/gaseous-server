@@ -13,7 +13,7 @@
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
     <link rel="manifest" href="/site.webmanifest">
-    <title>Gaseous Games</title>
+    <title data-i18n="index.title">Gaseous Games</title>
 
     <script type="text/javascript">
         // update src links to ensure the latest versions are always loaded.
@@ -83,6 +83,9 @@
         let currentPage = null;
         let pageUnloadCallbacks = {};
 
+        // load language files
+        window.lang = undefined; // placeholder for lang object
+
         // Enhanced LoadPageContent function with proper unloading for SPA behavior
         async function LoadPageContent(page, targetDiv) {
             if (targetDiv == undefined || targetDiv == null || targetDiv == '') {
@@ -98,6 +101,11 @@
             let pageContentResponse = await fetch('/pages/' + page + '.html' + '?v=' + AppVersion);
             let pageContentContent = await pageContentResponse.text();
             document.getElementById(targetDiv).innerHTML = pageContentContent;
+
+            // Translate content immediately after injection
+            if (window.lang && window.lang.isReady()) {
+                window.lang.translateAllElements();
+            }
 
             // Store current page for tracking
             if (targetDiv === 'content') {
@@ -169,13 +177,21 @@
                 return;
             }
 
-            console.log(`Unloading page: ${currentPage}`);
+            if (window.lang && window.lang.isReady()) {
+                console.log(window.lang.translate('console.unloading_page', [currentPage]));
+            } else {
+                console.log(`Unloading page: ${currentPage}`);
+            }
 
             // Call page-specific unload callback if it exists
             if (pageUnloadCallbacks[currentPage] && typeof pageUnloadCallbacks[currentPage] === 'function') {
                 try {
                     await pageUnloadCallbacks[currentPage]();
-                    console.log(`${currentPage} page cleanup completed`);
+                    if (window.lang && window.lang.isReady()) {
+                        console.log(window.lang.translate('console.page_cleanup_completed', [currentPage]));
+                    } else {
+                        console.log(`${currentPage} page cleanup completed`);
+                    }
                 } catch (error) {
                     console.error('Error during %s page cleanup:', currentPage, error);
                 }
@@ -270,7 +286,11 @@
         async function navigateToPage(page) {
             if (['home', 'library'].includes(page) && ['home', 'library'].includes(currentPage)) {
                 // SPA navigation between home and library
-                console.log(`SPA navigation from ${currentPage} to ${page}`);
+                if (window.lang && window.lang.isReady()) {
+                    console.log(window.lang.translate('console.spa_navigation', [currentPage, page]));
+                } else {
+                    console.log(`SPA navigation from ${currentPage} to ${page}`);
+                }
                 await LoadPageContent(page, 'content');
 
                 // Update URL without page reload
@@ -290,6 +310,7 @@
                         // get version information
                         let versionFile = await response.json();
                         AppVersion = versionFile.AppVersion;
+                        localStorage.setItem('System.AppVersion', AppVersion);
                         DBSchemaVersion = versionFile.DBSchemaVersion;
                         FirstRunStatus = versionFile.FirstRunStatus;
                         emulatorDebugMode = versionFile.emulatorDebugMode;
@@ -335,14 +356,35 @@
                             if (typeof getQueryString === "function") {
                                 break;
                             }
-                            console.log("Waiting for scripts to load...");
+                            if (window.lang && window.lang.isReady()) {
+                                console.log(window.lang.translate('console.waiting_for_scripts'));
+                            } else {
+                                console.log("Waiting for scripts to load...");
+                            }
                             await new Promise(r => setTimeout(r, 100));
                         } while (typeof getQueryString !== "function");
 
+                        // Initialize language module
+                        const { default: Language } = await import('/scripts/language.js?v=' + AppVersion);
+                        window.lang = new Language();
+                        await window.lang.Init(false);
+                        moment.locale(window.lang.locale);
+
+                        // Initial translation pass and dynamic observer
+                        window.lang.translateAllElements();
+                        window.lang._observer = window.lang.observeDynamicContent();
+
                         // start the application
-                        console.log("Starting Gaseous");
-                        console.log("App Version: " + AppVersion);
-                        console.log("First Run Status: " + FirstRunStatus);
+                        if (window.lang && window.lang.isReady()) {
+                            console.log(window.lang.translate('console.starting_gaseous'));
+                            console.log(window.lang.translate('console.app_version', [AppVersion]));
+                            console.log(window.lang.translate('console.first_run_status', [FirstRunStatus]));
+                        } else {
+                            console.log("Starting Gaseous");
+                            console.log("App Version: " + AppVersion);
+                            console.log("First Run Status: " + FirstRunStatus);
+                        }
+
                         switch (FirstRunStatus) {
                             case 0:
                             case "0":
@@ -361,7 +403,11 @@
                                     .then(async response => {
                                         if (response.ok) {
                                             // user is signed in - start setting up the application
-                                            console.log("User is logged in");
+                                            if (window.lang && window.lang.isReady()) {
+                                                console.log(window.lang.translate('console.user_logged_in_client'));
+                                            } else {
+                                                console.log("User is logged in");
+                                            }
                                             userProfile = await response.json();
 
                                             switch (FirstRunStatus) {
@@ -388,7 +434,11 @@
                                                     if (!pageSelection) {
                                                         pageSelection = GetPreference("Library.DefaultHomePage");
                                                     }
-                                                    console.log("Loading page: " + pageSelection);
+                                                    if (window.lang && window.lang.isReady()) {
+                                                        console.log(window.lang.translate('console.loading_page', [pageSelection]));
+                                                    } else {
+                                                        console.log("Loading page: " + pageSelection);
+                                                    }
                                                     await LoadPageContent(pageSelection, 'content');
 
                                                     // Set initial state for browser navigation
@@ -400,7 +450,11 @@
                                                     if (['home', 'library'].includes(pageSelection)) {
                                                         let gameCard = sessionStorage.getItem('Card.game.Id');
                                                         if (gameCard) {
-                                                            console.log("Restoring game card: " + gameCard);
+                                                            if (window.lang && window.lang.isReady()) {
+                                                                console.log(window.lang.translate('console.restoring_game_card', [gameCard]));
+                                                            } else {
+                                                                console.log("Restoring game card: " + gameCard);
+                                                            }
 
                                                             let gameCardInstance = new GameCard(gameCard);
                                                             gameCardInstance.ShowCard();
@@ -435,7 +489,11 @@
                                                     // Add browser back/forward navigation support for SPA
                                                     window.addEventListener('popstate', async (event) => {
                                                         if (event.state && event.state.page) {
-                                                            console.log('Browser navigation to:', event.state.page);
+                                                            if (window.lang && window.lang.isReady()) {
+                                                                console.log(window.lang.translate('console.browser_navigation_to', [event.state.page]));
+                                                            } else {
+                                                                console.log('Browser navigation to:', event.state.page);
+                                                            }
                                                             await LoadPageContent(event.state.page, 'content');
                                                         } else {
                                                             // Fallback to query string if no state
@@ -460,7 +518,11 @@
                                         }
                                     })
                                     .catch(async (error) => {
-                                        console.log(error);
+                                        if (window.lang && window.lang.isReady()) {
+                                            console.log(window.lang.translate('console.error_generic', [String(error)]));
+                                        } else {
+                                            console.log(error);
+                                        }
                                         DeleteAllDatabases();
                                         await LoadPageContent('login');
                                     });
@@ -469,10 +531,17 @@
                     }
                 })
                 .catch(async (error) => {
-                    console.log(error);
+                    if (window.lang && window.lang.isReady()) {
+                        console.log(window.lang.translate('console.error_generic', [String(error)]));
+                    } else {
+                        console.log(error);
+                    }
                 });
-
-            console.log("Gaseous Games started successfully");
+            if (window.lang && window.lang.isReady()) {
+                console.log(window.lang.translate('console.started_successfully'));
+            } else {
+                console.log("Gaseous Games started successfully");
+            }
         }
 
         function DeleteAllDatabases() {

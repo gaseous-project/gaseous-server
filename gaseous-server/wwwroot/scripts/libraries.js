@@ -15,7 +15,7 @@ class NewLibrary {
 
         // setup the dialog
         this.DialogName = this.dialog.modalElement.querySelector('#modal-header-text');
-        this.DialogName.innerHTML = "New Library";
+        this.DialogName.innerHTML = window.lang.translate('newlibrarymodal.dialog_title');
 
         // set up the library name field
         this.LibraryName = this.dialog.modalElement.querySelector('#librarynew_name');
@@ -48,7 +48,7 @@ class NewLibrary {
 
         $(this.defaultPlatformSelector).select2({
             minimumInputLength: 3,
-            placeholder: 'Any',
+            placeholder: window.lang.translate('newlibrarymodal.default_platform_any_option'),
             allowClear: true,
             ajax: {
                 url: '/api/v1.1/Search/Platform',
@@ -84,7 +84,7 @@ class NewLibrary {
         });
 
         // add ok button
-        let okButton = new ModalButton("OK", 1, this, async (callingObject) => {
+        let okButton = new ModalButton(window.lang.translate('generic.ok'), 1, this, async (callingObject) => {
             if (await this.validate()) {
                 // create the library
                 let defaultPlatform = 0;
@@ -111,7 +111,7 @@ class NewLibrary {
                     })
                     .then(response => {
                         if (!response.ok) {
-                            throw new Error('Network response was not ok: ' + response.statusText);
+                            throw new Error(window.lang.translate('newlibrarymodal.error.network_response_prefix') + ' ' + response.statusText);
                         }
                         if (this.parent) {
                             // call the page drawLibrary function
@@ -122,14 +122,14 @@ class NewLibrary {
                         this.dialog.close();
                     })
                     .catch(error => {
-                        alert('An error occurred while creating the library:\n\n' + error.message);
+                        alert(window.lang.translate('newlibrarymodal.error.creation_prefix') + '\n\n' + error.message);
                     });
             }
         });
         this.dialog.addButton(okButton);
 
         // add cancel button
-        let cancelButton = new ModalButton("Cancel", 0, this, async function (callingObject) {
+        let cancelButton = new ModalButton(window.lang.translate('generic.cancel'), 0, this, async function (callingObject) {
             callingObject.dialog.close();
         });
         this.dialog.addButton(cancelButton);
@@ -138,7 +138,7 @@ class NewLibrary {
         this.dialog.open();
 
         // disable the ok button
-        this.dialog.disableButton("OK");
+        this.dialog.disableButton(window.lang.translate('generic.ok'));
     }
 
     async validate() {
@@ -155,9 +155,9 @@ class NewLibrary {
         }
 
         if (valid) {
-            this.dialog.enableButton("OK");
+            this.dialog.enableButton(window.lang.translate('generic.ok'));
         } else {
-            this.dialog.disableButton("OK");
+            this.dialog.disableButton(window.lang.translate('generic.ok'));
         }
 
         return valid;

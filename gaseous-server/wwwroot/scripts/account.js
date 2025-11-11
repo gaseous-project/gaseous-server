@@ -9,7 +9,8 @@ class AccountWindow {
         await this.dialog.BuildModal();
 
         // setup the dialog
-        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Profile and Account";
+        // localise modal header
+        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = window.lang.translate('banner.profile_and_account');
 
         this.AvatarPreview = this.dialog.modalElement.querySelector('#avatar-preview');
         this.AvatarPreviewChanged = false;
@@ -100,14 +101,14 @@ class AccountWindow {
                 }
             })
             .catch(error => {
-                console.error('Error fetching social login options:', error);
+                console.error(window.lang.translate('loginpage.error_fetching_social_login_options_error', [error]));
             });
 
         // populate the previews with the existing profile images
         const response = await fetch("/api/v1.1/UserProfile/" + userProfile.profileId).then(async response => {
             if (!response.ok) {
                 // handle the error
-                console.error("Error fetching profile");
+                console.error(window.lang.translate('console.error_generic', [window.lang.translate('banner.profile_and_account')]));
             } else {
                 const profile = await response.json();
                 if (profile) {
@@ -158,7 +159,7 @@ class AccountWindow {
         this.twoFactorStatus = await fetch("/api/v1.1/TwoFactor/status").then(async response => {
             if (!response.ok) {
                 // handle the error
-                console.error("Error fetching 2FA status:");
+                console.error(window.lang.translate('console.error_generic', ['2FA status']));
                 console.error(response);
                 return "Error";
             } else {
@@ -169,7 +170,7 @@ class AccountWindow {
 
                     // show the recovery code count
                     this.twoFactorRecoveryCodes.style.display = '';
-                    this.twoFactorRecoveryCodes.innerHTML = `<strong>Recovery Codes:</strong> ${status.recoveryCodesLeft} available`;
+                    this.twoFactorRecoveryCodes.innerHTML = window.lang.translate('accountmodal.recovery_codes_available_html', [status.recoveryCodesLeft]);
                     return "Enabled";
                 } else {
                     this.twoFactorButton_enable.style.display = '';
@@ -185,7 +186,7 @@ class AccountWindow {
             // confirm the user has set up their authenticator app
             const confirmationCode = document.getElementById('2fa-code').value.trim();
             if (confirmationCode.length === 0) {
-                let warningDialog = new MessageBox("2FA Confirmation Error", "Please enter the confirmation code from your authenticator app.");
+                let warningDialog = new MessageBox(window.lang.translate('accountmodal.two_factor_confirmation_error_title'), window.lang.translate('accountmodal.two_factor_confirmation_enter_code_error'));
                 warningDialog.open();
                 return;
             }
@@ -199,15 +200,15 @@ class AccountWindow {
             }).then(async response => {
                 if (!response.ok) {
                     // handle the error
-                    console.error("Error confirming 2FA setup:");
+                    console.error(window.lang.translate('console.error_generic', ['confirming 2FA setup']));
                     console.error(response);
-                    let warningDialog = new MessageBox("2FA Confirmation Error", "The confirmation code is invalid or expired. Please try again.");
+                    let warningDialog = new MessageBox(window.lang.translate('accountmodal.two_factor_confirmation_error_title'), window.lang.translate('accountmodal.two_factor_confirmation_invalid_or_expired_error'));
                     warningDialog.open();
                     return;
                 } else {
                     // update the 2FA status
                     AccountWindow.#ReloadProfile();
-                    let successDialog = new MessageBox("2FA Enabled", "2FA has been successfully enabled for your account.");
+                    let successDialog = new MessageBox(window.lang.translate('accountmodal.two_factor_enabled_title'), window.lang.translate('accountmodal.two_factor_enabled_message'));
                     successDialog.open();
                     document.getElementById('enable-2fa').style.display = 'none';
                     document.getElementById('disable-2fa').style.display = '';
@@ -221,9 +222,9 @@ class AccountWindow {
                         body: JSON.stringify({ count: 10 })
                     });
                     if (!recoveryCodesResponse.ok) {
-                        console.error("Error fetching recovery codes:");
+                        console.error(window.lang.translate('console.error_generic', ['fetching recovery codes']));
                         console.error(recoveryCodesResponse);
-                        let warningDialog = new MessageBox("Recovery Codes Error", "Couldn't fetch your recovery codes. Please try again later.");
+                        let warningDialog = new MessageBox(window.lang.translate('accountmodal.recovery_codes_error_title'), window.lang.translate('accountmodal.recovery_codes_fetch_failed_error'));
                         warningDialog.open();
                         return;
                     }
@@ -233,7 +234,7 @@ class AccountWindow {
                         recoveryCodesContainer.innerHTML = "";
 
                         let recoveryCodesSummary = document.createElement('p');
-                        recoveryCodesSummary.innerHTML = "Store these codes in a safe place. They can be used to access your account if you lose access to your authenticator app. They are one-time use only, and never shown again.";
+                        recoveryCodesSummary.innerHTML = window.lang.translate('accountmodal.recovery_codes_store_codes_message');
                         recoveryCodesContainer.appendChild(recoveryCodesSummary);
 
                         recoveryCodes.forEach(code => {
@@ -244,7 +245,7 @@ class AccountWindow {
                         });
                         recoveryCodesContainer.style.display = 'block';
                     } else {
-                        let warningDialog = new MessageBox("Recovery Codes Error", "No recovery codes were returned. Please try again later.");
+                        let warningDialog = new MessageBox(window.lang.translate('accountmodal.recovery_codes_error_title'), window.lang.translate('accountmodal.recovery_codes_none_returned_error'));
                         warningDialog.open();
                     }
 
@@ -329,7 +330,7 @@ class AccountWindow {
                 // Show the raw secret key
                 const secretKeyContainer = document.getElementById('2fa-secret-key');
                 if (secretKeyContainer) {
-                    secretKeyContainer.innerHTML = `<strong>Secret Key:</strong> ${normalizedSecret}`;
+                    secretKeyContainer.innerHTML = window.lang.translate('accountmodal.secret_key_html', [normalizedSecret]);
                     secretKeyContainer.style.display = 'block';
                 }
 
@@ -341,15 +342,15 @@ class AccountWindow {
                     confirmationInput.value = ""; // Clear previous input
                 }
             } catch (err) {
-                console.error("Unexpected error during 2FA setup:", err);
-                let warningDialog = new MessageBox("2FA Setup Error", "An unexpected error occurred. Please try again later.");
+                console.error(window.lang.translate('console.error_generic', ['2FA setup']) + ': ' + err);
+                let warningDialog = new MessageBox(window.lang.translate('accountmodal.two_factor_setup_error_title'), window.lang.translate('accountmodal.two_factor_setup_generic_unexpected_error'));
                 warningDialog.open();
             }
         });
 
         this.twoFactorButton_disable.addEventListener('click', async function () {
             // confirm the user wants to disable 2FA
-            let confirmation = confirm("Are you sure you want to disable 2FA? This will remove the extra security layer from your account.");
+            let confirmation = confirm(window.lang.translate('accountmodal.two_factor_disable_confirm'));
             if (confirmation) {
                 // disable 2FA
                 const response = await fetch("/api/v1.1/TwoFactor/enable/false", {
@@ -360,15 +361,15 @@ class AccountWindow {
                 }).then(async response => {
                     if (!response.ok) {
                         // handle the error
-                        console.error("Error disabling 2FA:");
+                        console.error(window.lang.translate('console.error_generic', ['disabling 2FA']));
                         console.error(response);
-                        let warningDialog = new MessageBox("2FA Disable Error", "The 2FA disable failed. Please try again later.");
+                        let warningDialog = new MessageBox(window.lang.translate('accountmodal.two_factor_disable_error_title'), window.lang.translate('accountmodal.two_factor_disable_failed_error'));
                         warningDialog.open();
                         return;
                     } else {
                         // update the 2FA status
                         AccountWindow.#ReloadProfile();
-                        let successDialog = new MessageBox("2FA Disabled", "2FA has been successfully disabled for your account.");
+                        let successDialog = new MessageBox(window.lang.translate('accountmodal.two_factor_disabled_title'), window.lang.translate('accountmodal.two_factor_disabled_message'));
                         successDialog.open();
                         document.getElementById('enable-2fa').style.display = '';
                         document.getElementById('disable-2fa').style.display = 'none';
@@ -379,14 +380,14 @@ class AccountWindow {
 
 
         // create the ok button
-        let okButton = new ModalButton("OK", 1, this, async function (callingObject) {
+        let okButton = new ModalButton(window.lang.translate('generic.ok'), 1, this, async function (callingObject) {
             // check if a new username has been entered
             if (callingObject.username_new.value.length > 0 && callingObject.username_new.value !== userProfile.userName) {
                 // assume user wants to change their username
                 // check if the new username meets the rules
                 if (!UsernameCheck.CheckUsername(callingObject.UsernameCheck, callingObject.username_new)) {
                     // display an error
-                    let warningDialog = new MessageBox("Username Change Error", "The new username does not meet the requirements.");
+                    let warningDialog = new MessageBox(window.lang.translate('accountmodal.username_change_error_title'), window.lang.translate('accountmodal.username_change_requirements_failed_error'));
                     warningDialog.open();
                     return;
                 }
@@ -405,9 +406,9 @@ class AccountWindow {
                 }).then(async response => {
                     if (!response.ok) {
                         // handle the error
-                        console.error("Error updating username:");
+                        console.error(window.lang.translate('console.error_generic', ['updating username']));
                         console.error(response);
-                        let warningDialog = new MessageBox("Username Change Error", "The username change failed. Try a different username.");
+                        let warningDialog = new MessageBox(window.lang.translate('accountmodal.username_change_error_title'), window.lang.translate('accountmodal.username_change_failed_error'));
                         warningDialog.open();
                         changeSuccessfull = false;
                         return;
@@ -430,7 +431,7 @@ class AccountWindow {
                 // check if the new password meets the rules
                 if (!PasswordCheck.CheckPasswords(callingObject.PasswordCheck, callingObject.password_new, callingObject.password_confirm)) {
                     // display an error
-                    let warningDialog = new MessageBox("Password Reset Error", "The new password does not meet the requirements.");
+                    let warningDialog = new MessageBox(window.lang.translate('accountmodal.password_reset_error_title'), window.lang.translate('accountmodal.password_reset_requirements_failed_error'));
                     warningDialog.open();
                     return;
                 }
@@ -451,9 +452,9 @@ class AccountWindow {
                 }).then(async response => {
                     if (!response.ok) {
                         // handle the error
-                        console.error("Error updating password:");
+                        console.error(window.lang.translate('console.error_generic', ['updating password']));
                         console.error(response);
-                        let warningDialog = new MessageBox("Password Reset Error", "The password reset failed. Check the current password and try again.");
+                        let warningDialog = new MessageBox(window.lang.translate('accountmodal.password_reset_error_title'), window.lang.translate('accountmodal.password_reset_failed_error'));
                         warningDialog.open();
                         changeSuccessfull = false;
                         return;
@@ -489,7 +490,7 @@ class AccountWindow {
             }).then(async response => {
                 if (!response.ok) {
                     // handle the error
-                    console.error("Error updating profile:");
+                    console.error(window.lang.translate('console.error_generic', ['updating profile']));
                     console.error(response);
                 } else {
                     // update the avatar
@@ -500,7 +501,7 @@ class AccountWindow {
                             }).then(async response => {
                                 if (!response.ok) {
                                     // handle the error
-                                    console.error("Error deleting avatar:");
+                                    console.error(window.lang.translate('console.error_generic', ['deleting avatar']));
                                     console.error(response);
                                 }
                             });
@@ -513,7 +514,7 @@ class AccountWindow {
                             }).then(async response => {
                                 if (!response.ok) {
                                     // handle the error
-                                    console.error("Error updating avatar:");
+                                    console.error(window.lang.translate('console.error_generic', ['updating avatar']));
                                     console.error(response);
                                 }
                             });
@@ -528,7 +529,7 @@ class AccountWindow {
                             }).then(async response => {
                                 if (!response.ok) {
                                     // handle the error
-                                    console.error("Error deleting background:");
+                                    console.error(window.lang.translate('console.error_generic', ['deleting background']));
                                     console.error(response);
                                 }
                             });
@@ -541,7 +542,7 @@ class AccountWindow {
                             }).then(async response => {
                                 if (!response.ok) {
                                     // handle the error
-                                    console.error("Error updating background:");
+                                    console.error(window.lang.translate('console.error_generic', ['updating background']));
                                     console.error(response);
                                 }
                             });
@@ -556,7 +557,7 @@ class AccountWindow {
         this.dialog.addButton(okButton);
 
         // create the cancel button
-        let cancelButton = new ModalButton("Cancel", 0, this, function (callingObject) {
+        let cancelButton = new ModalButton(window.lang.translate('generic.cancel'), 0, this, function (callingObject) {
             callingObject.dialog.close();
         });
         this.dialog.addButton(cancelButton);
@@ -820,13 +821,13 @@ class EmailCheck {
         this.errorList.className = 'password-rules';
 
         this.listItemInvalidEmail = document.createElement('li');
-        this.listItemInvalidEmail.innerHTML = "Email is a valid address";
+        this.listItemInvalidEmail.innerHTML = window.lang.translate('accountmodal.email_rule_valid_address');
         this.listItemInvalidEmail.classList.add('listitem');
         this.errorList.appendChild(this.listItemInvalidEmail);
 
         if (this.SkipUniqueCheck === false) {
             this.listItemUniqueEmail = document.createElement('li');
-            this.listItemUniqueEmail.innerHTML = "Email is unique";
+            this.listItemUniqueEmail.innerHTML = window.lang.translate('accountmodal.email_rule_unique');
             this.listItemUniqueEmail.classList.add('listitem');
             this.errorList.appendChild(this.listItemUniqueEmail);
         }
@@ -900,17 +901,17 @@ class UsernameCheck {
         this.errorList.className = 'password-rules';
 
         this.listItemLength = document.createElement('li');
-        this.listItemLength.innerHTML = "Between 3 and 30 characters";
+        this.listItemLength.innerHTML = window.lang.translate('accountmodal.username_rule_length');
         this.listItemLength.classList.add('listitem');
         this.errorList.appendChild(this.listItemLength);
 
         this.listItemCharacters = document.createElement('li');
-        this.listItemCharacters.innerHTML = "Only letters, numbers, underscores, dashes, periods, and at signs";
+        this.listItemCharacters.innerHTML = window.lang.translate('accountmodal.username_rule_valid_characters');
         this.listItemCharacters.classList.add('listitem');
         this.errorList.appendChild(this.listItemCharacters);
 
         this.listItemUnique = document.createElement('li');
-        this.listItemUnique.innerHTML = "Username is unique";
+        this.listItemUnique.innerHTML = window.lang.translate('accountmodal.username_rule_unique');
         this.listItemUnique.classList.add('listitem');
         this.errorList.appendChild(this.listItemUnique);
 
@@ -1007,40 +1008,40 @@ class PasswordCheck {
         this.errorList.className = 'password-rules';
 
         this.listItemPasswordLength = document.createElement('li');
-        this.listItemPasswordLength.innerHTML = "Minimum " + this.MinimumPasswordLength + " characters";
+        this.listItemPasswordLength.innerHTML = window.lang.translate('accountmodal.password_rule_minimum_length', [this.MinimumPasswordLength]);
         this.listItemPasswordLength.classList.add('listitem');
         this.errorList.appendChild(this.listItemPasswordLength);
 
         if (this.RequireUppercase == true) {
             this.listItemUpper = document.createElement('li');
-            this.listItemUpper.innerHTML = "At least one uppercase letter";
+            this.listItemUpper.innerHTML = window.lang.translate('accountmodal.password_rule_at_least_one_uppercase');
             this.listItemUpper.classList.add('listitem');
             this.errorList.appendChild(this.listItemUpper);
         }
 
         if (this.RequireLowercase == true) {
             this.listItemLower = document.createElement('li');
-            this.listItemLower.innerHTML = "At least one lowercase letter";
+            this.listItemLower.innerHTML = window.lang.translate('accountmodal.password_rule_at_least_one_lowercase');
             this.listItemLower.classList.add('listitem');
             this.errorList.appendChild(this.listItemLower);
         }
 
         if (this.RequireNumber == true) {
             this.listItemNumber = document.createElement('li');
-            this.listItemNumber.innerHTML = "At least one number";
+            this.listItemNumber.innerHTML = window.lang.translate('accountmodal.password_rule_at_least_one_number');
             this.listItemNumber.classList.add('listitem');
             this.errorList.appendChild(this.listItemNumber);
         }
 
         if (this.RequireSpecial == true) {
             this.listItemSpecial = document.createElement('li');
-            this.listItemSpecial.innerHTML = "At least one special character.";
+            this.listItemSpecial.innerHTML = window.lang.translate('accountmodal.password_rule_at_least_one_special_character');
             this.listItemSpecial.classList.add('listitem');
             this.errorList.appendChild(this.listItemSpecial);
         }
 
         this.listItemMatch = document.createElement('li');
-        this.listItemMatch.innerHTML = "Passwords must match.";
+        this.listItemMatch.innerHTML = window.lang.translate('accountmodal.password_rule_passwords_must_match');
         this.listItemMatch.classList.add('listitem');
         this.errorList.appendChild(this.listItemMatch);
 

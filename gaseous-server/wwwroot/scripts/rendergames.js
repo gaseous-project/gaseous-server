@@ -9,7 +9,7 @@ class GameIcon {
         if (data === undefined) {
             data = {
                 metadataMapId: -1,
-                name: 'Unknown Game',
+                name: window.lang ? window.lang.translate('rendergames.unknown_game') : 'Unknown Game',
                 cover: null,
                 totalRating: null,
                 totalRatingCount: null,
@@ -172,7 +172,7 @@ class GameIcon {
                         gameImageRatingBanner.appendChild(gameImageRatingBannerLogo);
 
                         let gameImageRatingBannerValue = document.createElement('span');
-                        gameImageRatingBannerValue.innerHTML = Math.floor(data.totalRating) + '% / ' + data.totalRatingCount;
+                        gameImageRatingBannerValue.innerHTML = window.lang ? window.lang.translate('rendergames.rating.value', [Math.floor(data.totalRating), data.totalRatingCount]) : Math.floor(data.totalRating) + '% / ' + data.totalRatingCount;
                         gameImageRatingBanner.appendChild(gameImageRatingBannerValue);
                     }
                 }

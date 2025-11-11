@@ -3,35 +3,38 @@
         <div id="banner_icon" onclick="window.location.href = '/index.html';">
             <img src="/images/logo.png" alt="Gaseous" id="banner_icon_image" />
         </div>
-        <div id="banner_header_label" onclick="window.location.href = '/index.html';">Gaseous</div>
+        <div id="banner_header_label" onclick="window.location.href = '/index.html';" data-i18n="index.title">Gaseous
+        </div>
 
         <div id="banner_user" class="banner_button dropdown dropbtn" style="margin-top: 3px;">
             <div id="banner_user_image_box"></div>
             <div id="myDropdown" class="dropdown-content dropdown-profile">
                 <div id="banner_user_profilecard"></div>
-                <a href="#" id="dropdown-menu-account">Profile and Account</a>
-                <a href="#" id="dropdown-menu-preferences">Preferences</a>
+                <a href="#" id="dropdown-menu-account" data-i18n="banner.profile_and_account">Profile and Account</a>
+                <a href="#" id="dropdown-menu-preferences" data-i18n="banner.preferences">Preferences</a>
                 <div class="dropdown-menu-separator"></div>
-                <a id="banner_user_logoff" href="#">Sign Out</a>
+                <a id="banner_user_logoff" href="#" data-i18n="banner.sign_out">Sign Out</a>
             </div>
         </div>
 
         <div id="banner_notif" class="banner_button dropbtn">
             <img src="/images/notifications.svg" alt="Notifications" title="Notifications"
-                id="banner_notifications_image" class="banner_button_image" style="pointer-events: none;" />
-            <span id="banner_notifications_label" class="banner_label">Notifications</span>
+                id="banner_notifications_image" class="banner_button_image" style="pointer-events: none;"
+                data-i18n="banner.notifications" data-i18n-attr="alt,title" />
+            <span id="banner_notifications_label" class="banner_label"
+                data-i18n="banner.notifications">Notifications</span>
         </div>
 
         <div id="banner_cog" class="banner_button">
             <img src="/images/settings.svg" alt="Settings" title="Settings" id="banner_settings_image"
-                class="banner_button_image" />
-            <span id="banner_settings_label" class="banner_label">Settings</span>
+                class="banner_button_image" data-i18n="banner.settings" data-i18n-attr="alt,title" />
+            <span id="banner_settings_label" class="banner_label" data-i18n="banner.settings">Settings</span>
         </div>
 
         <div id="banner_upload" class="banner_button">
             <img src="/images/upload.svg" alt="Upload" title="Upload" id="banner_upload_image"
-                class="banner_button_image" />
-            <span id="banner_upload_label" class="banner_label">Upload</span>
+                class="banner_button_image" data-i18n="banner.upload" data-i18n-attr="alt,title" />
+            <span id="banner_upload_label" class="banner_label" data-i18n="banner.upload">Upload</span>
         </div>
 
         <!-- <div id="banner_collections" class="banner_button">
@@ -42,13 +45,14 @@
 
         <div id="banner_library" class="banner_button">
             <img src="/images/library.svg" alt="Library" title="Library" id="banner_library_image"
-                class="banner_button_image" />
-            <span id="banner_library_label" class="banner_label">Library</span>
+                class="banner_button_image" data-i18n="banner.library" data-i18n-attr="alt,title" />
+            <span id="banner_library_label" class="banner_label" data-i18n="banner.library">Library</span>
         </div>
 
         <div id="banner_home" class="banner_button">
-            <img src="/images/home.svg" alt="Home" title="Home" id="banner_home_image" class="banner_button_image" />
-            <span id="banner_home_label" class="banner_label">Home</span>
+            <img src="/images/home.svg" alt="Home" title="Home" id="banner_home_image" class="banner_button_image"
+                data-i18n="banner.home" data-i18n-attr="alt,title" />
+            <span id="banner_home_label" class="banner_label" data-i18n="banner.home">Home</span>
         </div>
     </div>
 </div>

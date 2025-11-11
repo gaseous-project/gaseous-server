@@ -1,0 +1,30 @@
+{
+    "name": "Chinese (Macau)",
+    "nativeName": "中文（繁體－澳門）",
+    "code": "zh-MO",
+    "pluralRule": "true",
+    "pluralRules": {
+        "other": "true"
+    },
+    "direction": "ltr",
+    "type": "Overlay",
+    "strings": {
+        "home.favourites": "我的最愛",
+        "card.game.favourite": "我的最愛",
+        "filtering.settings.favourite": "我的最愛",
+        "generic.play": "遊玩",
+        "card.game.play_button_label": "遊玩",
+        "card.game.play_alt": "遊玩",
+        "generic.screenshot": "截圖",
+        "generic.screenshot.count.one": "{0} 張截圖",
+        "generic.screenshot.count.other": "{0} 張截圖",
+        "banner.library": "資料庫",
+        "banner.library.alt": "資料庫",
+        "banner.home": "主頁",
+        "banner.home.alt": "主頁",
+        "about.home_page": "主頁",
+        "banner.settings": "設定",
+        "banner.settings.alt": "設定"
+    },
+    "serverstrings": {}
+}

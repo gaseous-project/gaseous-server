@@ -40,23 +40,23 @@ namespace gaseous_server.Models
                     // check if it exists first - only add if it doesn't exist
                     try
                     {
-                        Logging.Log(Logging.LogType.Information, "Platform Map", "Checking if " + mapItem.IGDBName + " is in database.");
+                        Logging.LogKey(Logging.LogType.Information, "process.platform_map", "platformmap.checking_if_in_database", null, new[] { mapItem.IGDBName });
                         PlatformMapItem item = await GetPlatformMap(mapItem.IGDBId);
                         // exists
                         if (ResetToDefault == false)
                         {
                             await WriteAvailableEmulators(mapItem);
-                            Logging.Log(Logging.LogType.Information, "Platform Map", "Skipping import of " + mapItem.IGDBName + " - already in database.");
+                            Logging.LogKey(Logging.LogType.Information, "process.platform_map", "platformmap.skipping_import_already_in_database", null, new[] { mapItem.IGDBName });
                         }
                         else
                         {
                             await WritePlatformMap(mapItem, true, true, true);
-                            Logging.Log(Logging.LogType.Information, "Platform Map", "Overwriting " + mapItem.IGDBName + " with default values.");
+                            Logging.LogKey(Logging.LogType.Information, "process.platform_map", "platformmap.overwriting_with_default_values", null, new[] { mapItem.IGDBName });
                         }
                     }
                     catch
                     {
-                        Logging.Log(Logging.LogType.Information, "Platform Map", "Importing " + mapItem.IGDBName + " from predefined data.");
+                        Logging.LogKey(Logging.LogType.Information, "process.platform_map", "platformmap.importing_from_predefined_data", null, new[] { mapItem.IGDBName });
                         // doesn't exist - add it
                         await WritePlatformMap(mapItem, false, true, true);
                     }
@@ -84,13 +84,13 @@ namespace gaseous_server.Models
                     PlatformMapItem item = await GetPlatformMap(mapItem.IGDBId);
 
                     // still here? we must have found the item we're looking for! overwrite it
-                    Logging.Log(Logging.LogType.Information, "Platform Map", "Replacing " + mapItem.IGDBName + " from external JSON file.");
+                    Logging.LogKey(Logging.LogType.Information, "process.platform_map", "platformmap.replacing_from_external_json", null, new[] { mapItem.IGDBName });
                     await WritePlatformMap(mapItem, true, true);
                 }
                 catch
                 {
                     // we caught a not found error, insert a new record
-                    Logging.Log(Logging.LogType.Information, "Platform Map", "Importing " + mapItem.IGDBName + " from external JSON file.");
+                    Logging.LogKey(Logging.LogType.Information, "process.platform_map", "platformmap.importing_from_external_json", null, new[] { mapItem.IGDBName });
                     await WritePlatformMap(mapItem, false, true);
                 }
             }
@@ -196,7 +196,7 @@ namespace gaseous_server.Models
         public static async Task<PlatformMapItem> GetPlatformMap(long Id)
         {
             // check the cache first
-            List<PlatformMapItem>? cachedPlatformMap= (List<PlatformMapItem>?)DatabaseMemoryCache.GetCacheObject("PlatformMap");
+            List<PlatformMapItem>? cachedPlatformMap = (List<PlatformMapItem>?)DatabaseMemoryCache.GetCacheObject("PlatformMap");
             if (cachedPlatformMap != null)
             {
                 PlatformMapItem? cachedItem = cachedPlatformMap.FirstOrDefault(x => x.IGDBId == Id);
@@ -221,7 +221,7 @@ namespace gaseous_server.Models
             else
             {
                 Exception exception = new Exception("Platform Map Id " + Id + " does not exist.");
-                Logging.Log(Logging.LogType.Critical, "Platform Map", "Platform Map Id " + Id + " does not exist.", exception);
+                Logging.LogKey(Logging.LogType.Critical, "process.platform_map", "platformmap.id_does_not_exist", null, new[] { Id.ToString() }, exception);
                 throw exception;
             }
         }
@@ -495,7 +495,7 @@ namespace gaseous_server.Models
         {
             if (Signature.Game != null)
             {
-                Logging.Log(Logging.LogType.Information, "Platform Mapping", "Determining platform based on extension " + ImageExtension + " or \"" + Signature.Game.System + "\"");
+                Logging.LogKey(Logging.LogType.Information, "process.platform_mapping", "platformmapping.determining_platform_based_on_extension_or_system", null, new[] { ImageExtension, Signature.Game.System });
             }
 
             bool PlatformFound = false;
@@ -513,7 +513,7 @@ namespace gaseous_server.Models
 
                         PlatformFound = true;
 
-                        Logging.Log(Logging.LogType.Information, "Platform Mapping", "Platform id " + PlatformMapping.IGDBId + " determined from file extension");
+                        Logging.LogKey(Logging.LogType.Information, "process.platform_mapping", "platformmapping.platform_id_determined_from_file_extension", null, new[] { PlatformMapping.IGDBId.ToString() });
                         break;
                     }
                 }
@@ -536,7 +536,7 @@ namespace gaseous_server.Models
 
                         PlatformFound = true;
 
-                        Logging.Log(Logging.LogType.Information, "Platform Mapping", "Platform id " + PlatformMapping.IGDBId + " determined from signature system to platform map");
+                        Logging.LogKey(Logging.LogType.Information, "process.platform_mapping", "platformmapping.platform_id_determined_from_signature_system", null, new[] { PlatformMapping.IGDBId.ToString() });
                         break;
                     }
                 }
@@ -544,7 +544,7 @@ namespace gaseous_server.Models
 
             if (PlatformFound == false)
             {
-                Logging.Log(Logging.LogType.Information, "Platform Mapping", "Unable to determine platform");
+                Logging.LogKey(Logging.LogType.Information, "process.platform_mapping", "platformmapping.unable_to_determine_platform");
             }
         }
 

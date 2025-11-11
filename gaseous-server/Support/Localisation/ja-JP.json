@@ -1,0 +1,13 @@
+{
+    "name": "Japanese (Japan)",
+    "nativeName": "日本語 (日本)",
+    "code": "ja-JP",
+    "pluralRule": "true",
+    "pluralRules": {
+        "other": "true"
+    },
+    "direction": "ltr",
+    "type": "Overlay",
+    "strings": {},
+    "serverstrings": {}
+}

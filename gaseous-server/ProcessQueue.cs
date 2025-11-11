@@ -99,13 +99,22 @@ namespace gaseous_server
                     subTask.RemoveWhenStopped = RemoveWhenCompleted;
                     SubTasks.Add(subTask);
 
-                    Logging.Log(Logging.LogType.Information, "Queue Item", "Added subtask " + TaskName + " of type " + TaskType.ToString() + " with correlation id " + correlationId.ToString(), null, false, new Dictionary<string, object>
-                    {
-                        { "ParentQueueItem", _ItemType.ToString() },
-                        { "SubTaskType", TaskType.ToString() },
-                        { "SubTaskName", TaskName },
-                        { "SubTaskCorrelationId", correlationId.ToString() }
-                    });
+                    Logging.LogKey(
+                        Logging.LogType.Information,
+                        "process.queue_item",
+                        "queue.added_subtask",
+                        null,
+                        new[] { TaskName, TaskType.ToString(), correlationId.ToString() },
+                        null,
+                        false,
+                        new Dictionary<string, object>
+                        {
+                            { "ParentQueueItem", _ItemType.ToString() },
+                            { "SubTaskType", TaskType.ToString() },
+                            { "SubTaskName", TaskName },
+                            { "SubTaskCorrelationId", correlationId.ToString() }
+                        }
+                    );
 
                     return correlationId;
                 }
@@ -245,7 +254,7 @@ namespace gaseous_server
                         switch (_TaskType)
                         {
                             case TaskTypes.ImportQueueProcessor:
-                                Logging.Log(Logging.LogType.Information, "Import Queue Processor", "Processing import " + _TaskName);
+                                Logging.LogKey(Logging.LogType.Information, "process.import_queue_processor", "importqueue.processing_import", null, new[] { _TaskName });
 
                                 // update the import state
                                 ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Processing, ImportStateItem.ImportType.Unknown, null);
@@ -278,7 +287,7 @@ namespace gaseous_server
                                         !PlatformMapping.SupportedFileExtensions.Contains(Path.GetExtension(importState.FileName), StringComparer.OrdinalIgnoreCase)
                                     )
                                     {
-                                        Logging.Log(Logging.LogType.Debug, "Import Game", "Skipping item " + importState.FileName + " - not a supported file type");
+                                        Logging.LogKey(Logging.LogType.Debug, "process.import_game", "importqueue.skipping_item_not_supported", null, new[] { importState.FileName });
                                         ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Skipped, ImportStateItem.ImportType.Unknown, ProcessData);
                                     }
                                     else
@@ -309,38 +318,38 @@ namespace gaseous_server
                                 }
                                 else
                                 {
-                                    Logging.Log(Logging.LogType.Warning, "Import Queue Processor", "Import " + _TaskName + " not found");
+                                    Logging.LogKey(Logging.LogType.Warning, "process.import_queue_processor", "importqueue.import_not_found", null, new[] { _TaskName });
                                 }
 
                                 break;
 
                             case TaskTypes.MetadataRefresh_Platform:
-                                Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing platform metadata for " + _TaskName);
+                                Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_platform_metadata_for", null, new[] { _TaskName });
                                 MetadataManagement metadataPlatform = new MetadataManagement(this);
                                 await metadataPlatform.RefreshPlatforms(true);
                                 break;
 
                             case TaskTypes.MetadataRefresh_Signatures:
-                                Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing signature metadata for " + _TaskName);
+                                Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_signature_metadata_for", null, new[] { _TaskName });
                                 MetadataManagement metadataSignatures = new MetadataManagement(this);
                                 await metadataSignatures.RefreshSignatures(true);
                                 break;
 
                             case TaskTypes.MetadataRefresh_Game:
-                                Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing game metadata for " + _TaskName);
+                                Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_game_metadata_for", null, new[] { _TaskName });
                                 MetadataManagement metadataGame = new MetadataManagement(this);
                                 metadataGame.UpdateRomCounts();
                                 await metadataGame.RefreshGames(true);
                                 break;
 
                             case TaskTypes.DatabaseMigration_1031:
-                                Logging.Log(Logging.LogType.Information, "Database Migration", "Running database migration 1031 for " + _TaskName);
+                                Logging.LogKey(Logging.LogType.Information, "process.database", "database.running_migration_for", null, new[] { _TaskName, "1031" });
                                 await DatabaseMigration.RunMigration1031();
                                 break;
 
                             case TaskTypes.LibraryScanWorker:
                                 CallContext.SetData("CallingProcess", _TaskType.ToString() + " - " + ((GameLibrary.LibraryItem)_Settings).Name);
-                                Logging.Log(Logging.LogType.Information, "Library Scan", "Scanning library " + _TaskName);
+                                Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.scanning_library", null, new[] { _TaskName });
                                 ImportGame importLibraryScan = new ImportGame(this);
                                 await importLibraryScan.LibrarySpecificScan((GameLibrary.LibraryItem)_Settings);
                                 break;
@@ -532,14 +541,14 @@ namespace gaseous_server
                         CallContext.SetData("CallingUser", "System");
 
                         // log the start
-                        Logging.Log(Logging.LogType.Debug, "Timered Event", "Executing " + _ItemType + " with correlation id " + _CorrelationId);
+                        Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.executing_item_with_correlation_id", null, new[] { _ItemType.ToString(), _CorrelationId });
 
                         try
                         {
                             switch (_ItemType)
                             {
                                 case QueueItemType.SignatureIngestor:
-                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Signature Ingestor");
+                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_signature_ingestor");
                                     SignatureIngestors.XML.XMLIngestor tIngest = new SignatureIngestors.XML.XMLIngestor
                                     {
                                         CallingQueueItem = this
@@ -553,7 +562,7 @@ namespace gaseous_server
                                             parserType != gaseous_signature_parser.parser.SignatureParser.Unknown
                                         )
                                         {
-                                            Logging.Log(Logging.LogType.Debug, "Signature Import", "Processing " + parserType + " files");
+                                            Logging.LogKey(Logging.LogType.Debug, "process.signature_ingest", "signatureingest.processing_parser_files", null, new[] { parserType.ToString() });
 
                                             string SignaturePath = Path.Combine(Config.LibraryConfiguration.LibrarySignaturesDirectory, parserType.ToString());
                                             string SignatureProcessedPath = Path.Combine(Config.LibraryConfiguration.LibrarySignaturesProcessedDirectory, parserType.ToString());
@@ -577,7 +586,7 @@ namespace gaseous_server
                                     break;
 
                                 case QueueItemType.TitleIngestor:
-                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Title Ingestor");
+                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_title_ingestor");
                                     Classes.ImportGame import = new ImportGame
                                     {
                                         CallingQueueItem = this
@@ -589,7 +598,7 @@ namespace gaseous_server
                                     break;
 
                                 case QueueItemType.ImportQueueProcessor:
-                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Import Queue Processor");
+                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_import_queue_processor");
 
                                     if (ImportGame.ImportStates != null)
                                     {
@@ -604,7 +613,7 @@ namespace gaseous_server
                                             if (subTask == null)
                                             {
                                                 // process the import
-                                                Logging.Log(Logging.LogType.Information, "Import Queue Processor", "Processing import " + importState.FileName);
+                                                Logging.LogKey(Logging.LogType.Information, "process.import_queue_processor", "importqueue.processing_import", null, new[] { importState.FileName });
                                                 AddSubTask(SubTask.TaskTypes.ImportQueueProcessor, Path.GetFileName(importState.FileName), importState.SessionId, true);
                                                 // update the import state
                                                 ImportGame.UpdateImportState(importState.SessionId, ImportStateItem.ImportState.Queued, ImportStateItem.ImportType.Unknown, null);
@@ -622,7 +631,7 @@ namespace gaseous_server
                                     break;
 
                                 case QueueItemType.MetadataRefresh:
-                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Metadata Refresher");
+                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_metadata_refresher");
 
                                     // clear the sub tasks
                                     if (SubTasks != null)
@@ -644,7 +653,7 @@ namespace gaseous_server
                                     break;
 
                                 case QueueItemType.OrganiseLibrary:
-                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Library Organiser");
+                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_library_organiser");
                                     Classes.ImportGame importLibraryOrg = new ImportGame
                                     {
                                         CallingQueueItem = this
@@ -656,7 +665,7 @@ namespace gaseous_server
                                     break;
 
                                 case QueueItemType.LibraryScan:
-                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Library Scanners");
+                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_library_scanners");
                                     Classes.ImportGame libScan = new ImportGame
                                     {
                                         CallingQueueItem = this
@@ -671,7 +680,7 @@ namespace gaseous_server
                                         foreach (GameLibrary.LibraryItem library in libraries)
                                         {
                                             Guid childCorrelationId = AddSubTask(SubTask.TaskTypes.LibraryScanWorker, library.Name, library, true);
-                                            Logging.Log(Logging.LogType.Information, "Library Scan", "Queuing library " + library.Name + " for scanning with correlation id: " + childCorrelationId);
+                                            Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.queuing_library_for_scanning_with_correlation_id", null, new[] { library.Name, childCorrelationId.ToString() });
                                         }
                                     }
 
@@ -680,23 +689,23 @@ namespace gaseous_server
                                     break;
 
                                 case QueueItemType.CollectionCompiler:
-                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Collection Compiler");
+                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_collection_compiler");
                                     Dictionary<string, object> collectionOptions = (Dictionary<string, object>)Options;
                                     Classes.Collections.CompileCollections((long)collectionOptions["Id"], (string)collectionOptions["UserId"]);
                                     break;
 
                                 case QueueItemType.MediaGroupCompiler:
-                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Media Group Compiler");
+                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_media_group_compiler");
                                     await Classes.RomMediaGroup.CompileMediaGroup((long)Options);
                                     break;
 
                                 case QueueItemType.BackgroundDatabaseUpgrade:
-                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Background Upgrade");
+                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_background_upgrade");
                                     await DatabaseMigration.UpgradeScriptBackgroundTasks();
                                     break;
 
                                 case QueueItemType.DailyMaintainer:
-                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Daily Maintenance");
+                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_daily_maintenance");
                                     Classes.Maintenance maintenance = new Maintenance
                                     {
                                         CallingQueueItem = this
@@ -708,7 +717,7 @@ namespace gaseous_server
                                     break;
 
                                 case QueueItemType.WeeklyMaintainer:
-                                    Logging.Log(Logging.LogType.Debug, "Timered Event", "Starting Weekly Maintenance");
+                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_weekly_maintenance");
                                     Classes.Maintenance weeklyMaintenance = new Maintenance
                                     {
                                         CallingQueueItem = this
@@ -731,7 +740,7 @@ namespace gaseous_server
                                                     DirectoryInfo info = new DirectoryInfo(directory);
                                                     if (info.LastWriteTimeUtc.AddMinutes(5) < DateTime.UtcNow)
                                                     {
-                                                        Logging.Log(Logging.LogType.Information, "Get Signature", "Deleting temporary decompress folder: " + directory);
+                                                        Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.deleting_temporary_decompress_folder", null, new[] { directory });
                                                         Directory.Delete(directory, true);
                                                     }
                                                 }
@@ -740,7 +749,7 @@ namespace gaseous_server
                                     }
                                     catch (Exception tcEx)
                                     {
-                                        Logging.Log(Logging.LogType.Warning, "Get Signature", "An error occurred while cleaning temporary files", tcEx);
+                                        Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.error_cleaning_temporary_files", null, null, tcEx);
                                     }
                                     break;
 
@@ -754,7 +763,7 @@ namespace gaseous_server
                         }
                         catch (Exception ex)
                         {
-                            Logging.Log(Logging.LogType.Warning, "Timered Event", "An error occurred", ex);
+                            Logging.LogKey(Logging.LogType.Warning, "process.timered_event", "timered_event.error_occurred", null, null, ex);
                             _LastResult = "";
                             _LastError = ex.ToString();
                         }
@@ -771,7 +780,7 @@ namespace gaseous_server
                         _LastFinishTime = DateTime.UtcNow;
                         _LastRunDuration = Math.Round((DateTime.UtcNow - _LastRunTime).TotalSeconds, 2);
 
-                        Logging.Log(Logging.LogType.Information, "Timered Event", "Total " + _ItemType + " run time = " + _LastRunDuration);
+                        Logging.LogKey(Logging.LogType.Information, "process.timered_event", "timered_event.total_run_time", null, new[] { _ItemType.ToString(), _LastRunDuration.ToString() });
                     }
                 }
             }

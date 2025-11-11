@@ -1,0 +1,26 @@
+{
+    "name": "Français (France)",
+    "nativeName": "Français (France)",
+    "code": "fr-FR",
+    "pluralRule": "n > 1",
+    "pluralRules": {
+        "one": "n == 0 || n == 1",
+        "other": "n > 1"
+    },
+    "direction": "ltr",
+    "type": "Overlay",
+    "strings": {
+        "banner.upload": "Importer",
+        "banner.upload.alt": "Importer",
+        "generic.upload_complete": "Importation terminée",
+        "uploadrommodal.instructions": "Importez des ROM en les glissant-déposant ici ou en cliquant ici.",
+        "uploadrommodal.title": "Importer ROM",
+        "uploadrommodal.section.upload_header": "Importer",
+        "uploadrommodal.console.max_uploads_reached_waiting": "Nombre maximum d'importations atteint, attente de la fin",
+        "generic.download": "Télécharger",
+        "webemulatormodal.section.web_emulator_header": "Émulateur Web",
+        "accountmodal.email_rule_valid_address": "L'e-mail est une adresse valide",
+        "accountmodal.email_rule_unique": "L'e-mail est unique"
+    },
+    "serverstrings": {}
+}
