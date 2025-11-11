@@ -28,7 +28,7 @@ namespace gaseous_server.Controllers.v1_1
         /// <summary>
         /// Retrieves the locale file for the specified locale code.
         /// </summary>
-        /// <param name="locale">The language or locale code (e.g., "en-US" or "fr"). Defaults to "en-US".</param>
+        /// <param name="locale">The language or locale code (e.g., "en-AU" or "fr"). Defaults to "en-AU".</param>
         /// <returns>The locale file model containing localization data.</returns>
         /// <response code="200">Returns the locale file model.</response>
         /// <response code="400">If the locale parameter is invalid.</response>
@@ -38,7 +38,7 @@ namespace gaseous_server.Controllers.v1_1
         [ProducesResponseType(typeof(LocaleFileModel), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<IActionResult> GetLanguage(string locale = "en-US")
+        public async Task<IActionResult> GetLanguage(string locale = "en-AU")
         {
             // sanitize input to prevent directory traversal attacks
             // input should only ever be a locale code like "en-US" or "fr-FR", or language code like "en" or "fr"
@@ -62,6 +62,23 @@ namespace gaseous_server.Controllers.v1_1
             }
 
             return Ok(localeFile);
+        }
+
+        /// <summary>
+        /// Returns the list of available language/locale codes supported by the server.
+        /// </summary>
+        /// <returns>A collection of available locale codes.</returns>
+        /// <response code="200">Returns the list of available languages/locales.</response>
+        [MapToApiVersion("1.1")]
+        [HttpGet]
+        [Route("available-languages")]
+        [ProducesResponseType(typeof(LocaleFileModel), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> GetAvailableLanguages()
+        {
+            var languages = Localisation.AvailableLanguages;
+            return Ok(languages);
         }
     }
 }

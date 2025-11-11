@@ -9,7 +9,8 @@ class HomePageGameRow {
 
         let titleHeader = document.createElement("div");
         titleHeader.classList.add("section-header");
-        titleHeader.textContent = this.title;
+        titleHeader.textContent = window.lang.translate(this.title);
+        titleHeader.setAttribute("data-i18n", this.title);
         this.row.appendChild(titleHeader);
 
         this.games = document.createElement("div");
@@ -92,7 +93,7 @@ var gameRows = [];
 
 backgroundImageHandler = undefined;
 
-gameRows.push(new HomePageGameRow(window.lang.translate('home.favourites'),
+gameRows.push(new HomePageGameRow('home.favourites',
     {
         "orderBy": "NameThe",
         "orderDirection": "Ascending",
@@ -103,7 +104,7 @@ gameRows.push(new HomePageGameRow(window.lang.translate('home.favourites'),
     }
 ));
 
-gameRows.push(new HomePageGameRow(window.lang.translate('home.saved_games'),
+gameRows.push(new HomePageGameRow('home.saved_games',
     {
         "orderBy": "NameThe",
         "orderDirection": "Ascending",
@@ -114,7 +115,7 @@ gameRows.push(new HomePageGameRow(window.lang.translate('home.saved_games'),
     }
 ));
 
-gameRows.push(new HomePageGameRow(window.lang.translate('home.recently_played_games'),
+gameRows.push(new HomePageGameRow('home.recently_played_games',
     {
         "playTime": { "min": 1, "max": null },
         "orderBy": "LastPlayed",
@@ -123,7 +124,7 @@ gameRows.push(new HomePageGameRow(window.lang.translate('home.recently_played_ga
     }
 ));
 
-gameRows.push(new HomePageGameRow(window.lang.translate('home.recently_added_games'),
+gameRows.push(new HomePageGameRow('home.recently_added_games',
     {
         "orderBy": "DateAdded",
         "orderDirection": "Descending",
@@ -131,7 +132,7 @@ gameRows.push(new HomePageGameRow(window.lang.translate('home.recently_added_gam
     }
 ));
 
-gameRows.push(new HomePageGameRow(window.lang.translate('home.top_rated_games'),
+gameRows.push(new HomePageGameRow('home.top_rated_games',
     {
         "orderBy": "Rating",
         "orderDirection": "Descending",
@@ -166,7 +167,7 @@ profileDiv.appendChild(profileCardContent);
 // Register cleanup callback for home page
 if (typeof registerPageUnloadCallback === 'function') {
     registerPageUnloadCallback('home', async () => {
-    console.log(window.lang.translate('console.cleaning_up_home_page'));
+        console.log(window.lang.translate('console.cleaning_up_home_page'));
 
         // Clear any loading intervals
         if (typeof gameRows !== 'undefined' && gameRows) {
@@ -191,7 +192,7 @@ if (typeof registerPageUnloadCallback === 'function') {
             backgroundImageHandler = undefined;
         }
 
-    console.log(window.lang.translate('console.home_page_cleanup_completed'));
+        console.log(window.lang.translate('console.home_page_cleanup_completed'));
     });
 }
 

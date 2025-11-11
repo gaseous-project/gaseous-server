@@ -58,6 +58,11 @@ namespace gaseous_server.Classes
         }
 
         /// <summary>
+        /// Gets a dictionary mapping available locale codes to their native or display names.
+        /// </summary>
+        public static Dictionary<string, string> AvailableLanguages => GetLanguages();
+
+        /// <summary>
         /// Translates a localisation key using the current locale from either client-facing strings or server-only strings.
         /// </summary>
         /// <param name="key">The localisation key to look up.</param>
@@ -450,6 +455,66 @@ namespace gaseous_server.Classes
             _loadedLocales.AddOrUpdate(locale, localeData, (key, oldValue) => localeData);
 
             return localeData;
+        }
+
+        /// <summary>
+        /// Retrieves a dictionary of available languages/locales supported by the server.
+        /// </summary>
+        /// <returns>A dictionary where the key is the locale code and the value is the native name of the language.</returns>
+        public static Dictionary<string, string> GetLanguages()
+        {
+            var languages = new Dictionary<string, string>();
+
+            // get a list of all embedded resource locale files
+            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+            var resourceNames = assembly.GetManifestResourceNames();
+            foreach (var resourceName in resourceNames)
+            {
+                if (resourceName.StartsWith("gaseous_server.Support.Localisation.") && resourceName.EndsWith(".json"))
+                {
+                    string localeCode = resourceName.Substring("gaseous_server.Support.Localisation.".Length);
+                    localeCode = localeCode.Substring(0, localeCode.Length - ".json".Length);
+                    try
+                    {
+                        LocaleFileModel localeFile = GetLanguageFile(localeCode);
+                        if (localeFile != null && !languages.ContainsKey(localeFile.Code))
+                        {
+                            languages.Add(localeFile.Code, localeFile.NativeName ?? localeFile.Name ?? localeFile.Code);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // skip invalid locale files
+                    }
+                }
+            }
+
+            // get a list of all locale files on disk
+            if (Directory.Exists(Config.LocalisationPath))
+            {
+                var files = Directory.GetFiles(Config.LocalisationPath, "*.json");
+                foreach (var filePath in files)
+                {
+                    string fileName = Path.GetFileNameWithoutExtension(filePath);
+                    try
+                    {
+                        LocaleFileModel localeFile = GetLanguageFile(fileName);
+                        if (localeFile != null && !languages.ContainsKey(localeFile.Code))
+                        {
+                            languages.Add(localeFile.Code, localeFile.NativeName ?? localeFile.Name ?? localeFile.Code);
+                        }
+                    }
+                    catch (Exception)
+                    {
+                        // skip invalid locale files
+                    }
+                }
+            }
+
+            // sort languages by native name
+            languages = languages.OrderBy(kvp => kvp.Value).ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+            return languages;
         }
 
         private static LocaleFileModel LoadLocaleFromResources(string locale)

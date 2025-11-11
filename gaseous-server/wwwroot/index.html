@@ -367,7 +367,7 @@
                         // Initialize language module
                         const { default: Language } = await import('/scripts/language.js?v=' + AppVersion);
                         window.lang = new Language();
-                        await window.lang.Init(true);
+                        await window.lang.Init(false);
                         moment.locale(window.lang.locale);
 
                         // Initial translation pass and dynamic observer

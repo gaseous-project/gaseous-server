@@ -72,6 +72,9 @@ GetCoreData(EJS_core)
 // Lightgun
 EJS_lightgun = false; // can be true or false
 
+// set language
+EJS_language = window.lang.locale || 'en';
+
 // URL to BIOS file
 EJS_biosUrl = emuBios;
 
@@ -240,7 +243,7 @@ EJS_Buttons = {
                     const notification = new Notification(
                         window.lang.translate("generic.screenshot"),
                         window.lang.translate("generic.screenshot.has_been_saved")
-                        `/api/v1.1/ContentManager/attachment/${result.attachmentId}/data`
+                            `/api/v1.1/ContentManager/attachment/${result.attachmentId}/data`
                     );
                     notification.Show();
                 })

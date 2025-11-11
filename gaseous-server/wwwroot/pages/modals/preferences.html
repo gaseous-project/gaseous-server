@@ -106,6 +106,24 @@
 <div id="tab2" name="modalTab" data-tabname="Localisation"
     data-i18n-attr="data-tabname:preferencesmodal.tab.localisation">
     <div class="section">
+        <div class="section-header" data-i18n="preferencesmodal.section.preferred_language_header">
+            Preferred Language</div>
+        <div class="section-body">
+            <table style="width: 100%;">
+                <tr>
+                    <td style="width: 25%;">
+                        <span data-i18n="preferencesmodal.language_label">Language:</span>
+                    </td>
+                    <td>
+                        <select id="profile_pref_LibraryGameLanguage" data-pref="Language.Selected"
+                            data-uselocalstore="1" data-minimum-results-for-search="Infinity" style="width: 80%;">
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="section">
         <div class="section-header" data-i18n="preferencesmodal.section.preferred_title_cover_art_region_header">
             Preferred Title and Cover Art Region</div>
         <div class="section-body">
@@ -130,7 +148,8 @@
     </div>
 
     <div class="section">
-        <div class="section-header" data-i18n="preferencesmodal.section.age_classification_header">Age Classification
+        <div class="section-header" data-i18n="preferencesmodal.section.age_classification_header">Age
+            Classification
         </div>
         <div class="section-body">
             <table id="profile_pref_LibraryClassificationBadgeSelect" style="width: 100%;">
