@@ -1,8 +1,9 @@
 <div id="card-image">
     <div id="card-cover-info-block">
         <img id="card-cover" src="/images/unknowngame.png" class="game_cover_image" style="display: none;"
-            alt="Coverart" />
-        <img id="card-clearlogo" src="/images/unknowngame.png" style="display: none;" alt="Logo" />
+            alt="Coverart" data-i18n-attr="alt:card.game.cover_art_alt" />
+        <img id="card-clearlogo" src="/images/unknowngame.png" style="display: none;" alt="Logo"
+            data-i18n-attr="alt:card.game.logo_alt" />
         <div id="card-title-info">
             <span id="card-title" style="display: none;"></span>
             <span id="card-releasedate" class="card-info-block-item" style="display: none;"></span>
@@ -12,7 +13,7 @@
             <div id="card-userratings" class="card-info-block-item" style="display: none;">
                 <div id="card-userrating-igdb" style="display: none;">
                     <img id="card-userrating-igdb-logo" src="/images/IGDB_logo.svg" class="card-info-rating-icon"
-                        alt="IGDB" />
+                        alt="IGDB" data-i18n-attr="alt:card.game.igdb_alt" />
                     <span id="card-userrating-igdb-value"></span>
                 </div>
             </div>
@@ -28,11 +29,11 @@
         <div id="card-statssection" class="section">
             <div class="section-body">
                 <div class="gamestatistics_box">
-                    <span class="gamestatistics_label">Last Played</span>
+                    <span class="gamestatistics_label" data-i18n="card.game.last_played_label">Last Played</span>
                     <span id="gamestatistics_lastplayed_value" class="gamestatistics_value">-</span>
                 </div>
                 <div class="gamestatistics_box">
-                    <span class="gamestatistics_label">Play Time</span>
+                    <span class="gamestatistics_label" data-i18n="card.game.play_time_label">Play Time</span>
                     <span id="gamestatistics_timeplayed_value" class="gamestatistics_value">-</span>
                 </div>
 
@@ -45,13 +46,15 @@
         </div>
 
         <div id="card-launchgame" style="display: none;">
-            <img id="card-launchgame-icon" src="/images/play.svg" class="banner_button_image" alt="Play" />
-            <span id="card-launchgame-text" class="banner_button_text">Play</span>
+            <img id="card-launchgame-icon" src="/images/play.svg" class="banner_button_image" alt="Play"
+                data-i18n-attr="alt:card.game.play_alt" />
+            <span id="card-launchgame-text" class="banner_button_text"
+                data-i18n="card.game.play_button_label">Play</span>
         </div>
     </div>
 
     <div class="section">
-        <div class="section-header">
+        <div class="section-header" data-i18n="card.game.screenshots_and_videos_header">
             Screenshots and Videos
         </div>
         <div class="section-body">
@@ -64,17 +67,18 @@
     </div>
 
     <div id="card-summary-section" class="section" style="display: none;">
-        <div class=" section-header">
+        <div class=" section-header" data-i18n="card.game.summary_header">
             Summary
         </div>
         <div class="section-body">
             <span id="card-summary" class="line-clamp-4"></span>
-            <span id="card-summary-full" class="romlink" style="display: none;">Read more</span>
+            <span id="card-summary-full" class="romlink" style="display: none;"
+                data-i18n="card.game.read_more_link">Read more</span>
         </div>
     </div>
 
     <div id="card-platforms-section" class="section" style="display: none;">
-        <div class="section-header">
+        <div class="section-header" data-i18n="card.game.available_platforms_header">
             Available Platforms
         </div>
         <div id="card-platforms" class="section-body">

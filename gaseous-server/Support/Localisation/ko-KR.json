@@ -1,0 +1,18 @@
+{
+  "name": "Korean (South Korea)",
+  "nativeName": "한국어 (대한민국)",
+  "code": "ko-KR",
+  "pluralRule": "n >= 0",
+  "pluralRules": {
+    "other": "n >= 0"
+  },
+  "direction": "ltr",
+  "type": "Overlay",
+  "strings": {
+    "banner.notification.database_upgrade.body": "데이터베이스 업그레이드 중에는 성능이 저하될 수 있으며 즐겨찾기와 저장 게임이 표시되지 않을 수 있습니다. 업그레이드가 완료될 때까지 기다려 주세요.",
+    "home.favourites": "즐겨찾기",
+    "card.game.favourite": "즐겨찾기",
+    "filtering.settings.favourite": "즐겨찾기"
+  },
+  "serverstrings": {}
+}

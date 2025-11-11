@@ -72,7 +72,7 @@ async function SetupPage() {
                     this.dialog.modalElement.style = 'width: 90%; height: 250px; min-width: 350px; min-height: 215px; max-width: 440px; max-height: unset;';
 
                     // setup the dialog
-                    this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Advanced";
+                    this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = window.lang.translate('wizard.advanced');
 
                     // populate the dialog
                     let useIGDBAPI = this.dialog.modalElement.querySelector('#igdb-advanced-useigdb');
@@ -90,7 +90,7 @@ async function SetupPage() {
                     }
 
                     // create the ok button
-                    let okButton = new ModalButton("OK", 1, this, () => {
+                    let okButton = new ModalButton(window.lang.translate('generic.ok'), 1, this, () => {
                         // get igdb source from settings
                         let igdbSource = settings.metadataSources.find(source => source.source == 'IGDB');
                         if (useIGDBAPI.checked === true) {
@@ -115,7 +115,7 @@ async function SetupPage() {
                     this.dialog.addButton(okButton);
 
                     // create the cancel button
-                    let cancelButton = new ModalButton("Cancel", 0, this, () => {
+                    let cancelButton = new ModalButton(window.lang.translate('generic.cancel'), 0, this, () => {
                         this.dialog.close();
                     });
                     this.dialog.addButton(cancelButton);
@@ -139,7 +139,7 @@ function EnableButtons(pageNumber) {
         prevButton.disabled = true;
         nextButton.disabled = !wizardPages[pageNumber];
 
-        nextButton.innerHTML = 'Next';
+    nextButton.innerHTML = window.lang.translate('wizard.next');
         nextButton.classList.remove('bluebutton');
     }
 
@@ -148,10 +148,10 @@ function EnableButtons(pageNumber) {
         nextButton.disabled = !wizardPages[pageNumber];
 
         if (pageNumber == pages.length - 1) {
-            nextButton.innerHTML = 'Finish';
+            nextButton.innerHTML = window.lang.translate('wizard.finish');
             nextButton.classList.add('bluebutton');
         } else {
-            nextButton.innerHTML = 'Next';
+            nextButton.innerHTML = window.lang.translate('wizard.next');
             nextButton.classList.remove('bluebutton');
         }
 

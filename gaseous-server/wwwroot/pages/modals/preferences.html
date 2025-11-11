@@ -1,17 +1,19 @@
-<div id="tab1" name="modalTab" data-tabname="General">
+<div id="tab1" name="modalTab" data-tabname="General" data-i18n-attr="data-tabname:preferencesmodal.tab.general">
     <div class="section">
-        <div class="section-header">General</div>
+        <div class="section-header" data-i18n="preferencesmodal.section.general_header">General</div>
         <div class="section-body">
             <table style="width: 100%;">
                 <tr>
                     <td style="width: 25%;">
-                        Default home page:
+                        <span data-i18n="preferencesmodal.default_home_page_label">Default home page:</span>
                     </td>
                     <td>
                         <select id="profile_pref_DefaultHomePage" data-pref="Library.DefaultHomePage"
                             data-minimum-results-for-search="Infinity">
-                            <option value="home">Home</option>
-                            <option value="library">Library</option>
+                            <option value="home" data-i18n="preferencesmodal.default_home_page.option.home">Home
+                            </option>
+                            <option value="library" data-i18n="preferencesmodal.default_home_page.option.library">
+                                Library</option>
                         </select>
                     </td>
                 </tr>
@@ -51,20 +53,22 @@
     </div> -->
 
     <div class="section">
-        <div class="section-header">Game Icons</div>
+        <div class="section-header" data-i18n="preferencesmodal.section.game_icons_header">Game Icons</div>
         <div class="section-body">
             <table style="width: 100%;">
                 <tr>
                     <td>
                         <input type="checkbox" id="profile_pref_LibraryShowGameTitle"
-                            data-pref="Library.ShowGameTitle"><label for="profile_pref_LibraryShowGameTitle"> Show
+                            data-pref="Library.ShowGameTitle"><label for="profile_pref_LibraryShowGameTitle"
+                            data-i18n="preferencesmodal.show_title_label"> Show
                             title</label>
                     </td>
                 </tr>
                 <tr>
                     <td>
                         <input type="checkbox" id="profile_pref_LibraryShowGameRating"
-                            data-pref="Library.ShowGameRating"><label for="profile_pref_LibraryShowGameRating"> Show
+                            data-pref="Library.ShowGameRating"><label for="profile_pref_LibraryShowGameRating"
+                            data-i18n="preferencesmodal.show_rating_label"> Show
                             rating</label>
                     </td>
                 </tr>
@@ -72,7 +76,8 @@
                     <td>
                         <input type="checkbox" id="profile_pref_LibraryShowGameClassification"
                             data-pref="Library.ShowGameClassification"><label
-                            for="profile_pref_LibraryShowGameClassification">
+                            for="profile_pref_LibraryShowGameClassification"
+                            data-i18n="preferencesmodal.show_age_classification_badges_label">
                             Show
                             age classification badges</label>
                     </td>
@@ -82,13 +87,14 @@
     </div>
 
     <div class="section">
-        <div class="section-header">Game Details</div>
+        <div class="section-header" data-i18n="preferencesmodal.section.game_details_header">Game Details</div>
         <div class="section-body">
             <table style="width: 100%;">
                 <tr>
                     <td>
                         <input type="checkbox" id="profile_pref_LibraryShowClearLogo"
-                            data-pref="Library.ShowClearLogo"><label for="profile_pref_LibraryShowClearLogo">
+                            data-pref="Library.ShowClearLogo"><label for="profile_pref_LibraryShowClearLogo"
+                            data-i18n="preferencesmodal.use_clear_logo_label">
                             Use clear logo when available</label>
                     </td>
                 </tr>
@@ -97,22 +103,43 @@
     </div>
 </div>
 
-<div id="tab2" name="modalTab" data-tabname="Localisation">
+<div id="tab2" name="modalTab" data-tabname="Localisation"
+    data-i18n-attr="data-tabname:preferencesmodal.tab.localisation">
     <div class="section">
-        <div class="section-header">Preferred Title and Cover Art Region</div>
+        <div class="section-header" data-i18n="preferencesmodal.section.preferred_language_header">
+            Preferred Language</div>
         <div class="section-body">
             <table style="width: 100%;">
                 <tr>
                     <td style="width: 25%;">
-                        Region:
+                        <span data-i18n="preferencesmodal.language_label">Language:</span>
+                    </td>
+                    <td>
+                        <select id="profile_pref_LibraryGameLanguage" data-pref="Language.Selected"
+                            data-uselocalstore="1" data-minimum-results-for-search="Infinity" style="width: 80%;">
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    <div class="section">
+        <div class="section-header" data-i18n="preferencesmodal.section.preferred_title_cover_art_region_header">
+            Preferred Title and Cover Art Region</div>
+        <div class="section-body">
+            <table style="width: 100%;">
+                <tr>
+                    <td style="width: 25%;">
+                        <span data-i18n="preferencesmodal.region_label">Region:</span>
                     </td>
                     <td>
                         <select id="profile_pref_LibraryGameRegion" data-pref="User.Locale"
                             data-minimum-results-for-search="Infinity">
-                            <option selected="selected" value="default">US (Default)</option>
-                            <option value="EU">Europe</option>
-                            <option value="ja-JP">Japan</option>
-                            <option value="ko-KR">Korea</option>
+                            <option selected="selected" value="default"
+                                data-i18n="preferencesmodal.region.option.us_default">US (Default)</option>
+                            <option value="EU" data-i18n="preferencesmodal.region.option.europe">Europe</option>
+                            <option value="ja-JP" data-i18n="preferencesmodal.region.option.japan">Japan</option>
+                            <option value="ko-KR" data-i18n="preferencesmodal.region.option.korea">Korea</option>
                         </select>
                     </td>
                 </tr>
@@ -121,11 +148,14 @@
     </div>
 
     <div class="section">
-        <div class="section-header">Age Classification</div>
+        <div class="section-header" data-i18n="preferencesmodal.section.age_classification_header">Age
+            Classification
+        </div>
         <div class="section-body">
             <table id="profile_pref_LibraryClassificationBadgeSelect" style="width: 100%;">
                 <tr>
-                    <td>Classification badge fallback order:</td>
+                    <td data-i18n="preferencesmodal.classification_badge_fallback_order_label">Classification badge
+                        fallback order:</td>
                 </tr>
                 <tr>
                     <td>

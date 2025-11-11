@@ -148,7 +148,7 @@ namespace gaseous_server.Classes.Metadata
                         // the number of call counts indicates we should throttle things a bit
                         if (InRateLimitAvoidanceModeStatus == false)
                         {
-                            Logging.Log(Logging.LogType.Information, "API Connection", "Entered rate limit avoidance period, API calls will be throttled by " + RateLimitAvoidanceWait + " milliseconds.");
+                            Logging.LogKey(Logging.LogType.Information, "process.api_connection", "apiconnection.entered_rate_limit_avoidance_period", null, new string[] { RateLimitAvoidanceWait.ToString() });
                             InRateLimitAvoidanceModeStatus = true;
                         }
                         return true;
@@ -158,7 +158,7 @@ namespace gaseous_server.Classes.Metadata
                         // still in full speed mode - no throttle required
                         if (InRateLimitAvoidanceModeStatus == true)
                         {
-                            Logging.Log(Logging.LogType.Information, "API Connection", "Exited rate limit avoidance period, API call rate is returned to full speed.");
+                            Logging.LogKey(Logging.LogType.Information, "process.api_connection", "apiconnection.exited_rate_limit_avoidance_period");
                             InRateLimitAvoidanceModeStatus = false;
                         }
                         return false;
@@ -798,11 +798,11 @@ namespace gaseous_server.Classes.Metadata
 
         private async Task<T[]> IGDBAPI<T>(string Endpoint, string Fields, string Query)
         {
-            Logging.Log(Logging.LogType.Debug, "API Connection", "Accessing API for endpoint: " + Endpoint);
+            Logging.LogKey(Logging.LogType.Debug, "process.api_connection", "apiconnection.accessing_api_for_endpoint", null, new string[] { Endpoint });
 
             if (RateLimitResumeTime > DateTime.UtcNow)
             {
-                Logging.Log(Logging.LogType.Information, "API Connection", "IGDB rate limit hit. Pausing API communications until " + RateLimitResumeTime.ToString() + ". Attempt " + RetryAttempts + " of " + RetryAttemptsMax + " retries.");
+                Logging.LogKey(Logging.LogType.Information, "process.api_connection", "apiconnection.igdb_rate_limit_hit_pausing_until", null, new string[] { RateLimitResumeTime.ToString(), RetryAttempts.ToString(), RetryAttemptsMax.ToString() });
                 Thread.Sleep(RateLimitRecoveryWaitTime);
             }
 
@@ -811,7 +811,7 @@ namespace gaseous_server.Classes.Metadata
                 if (InRateLimitAvoidanceMode == true)
                 {
                     // sleep for a moment to help avoid hitting the rate limiter
-                    Logging.Log(Logging.LogType.Information, "API Connection: Endpoint:" + Endpoint, "IGDB rate limit hit. Pausing API communications for " + RateLimitAvoidanceWait + " milliseconds to avoid rate limiter.");
+                    Logging.LogKey(Logging.LogType.Information, "process.api_connection", "apiconnection.igdb_rate_limit_hit_pausing_milliseconds", null, new string[] { Endpoint, RateLimitAvoidanceWait.ToString() });
                     Thread.Sleep(RateLimitAvoidanceWait);
                 }
 
@@ -831,12 +831,12 @@ namespace gaseous_server.Classes.Metadata
                     case HttpStatusCode.TooManyRequests:
                         if (RetryAttempts >= RetryAttemptsMax)
                         {
-                            Logging.Log(Logging.LogType.Warning, "API Connection", "IGDB rate limiter attempts expired. Aborting.", apiEx);
+                            Logging.LogKey(Logging.LogType.Warning, "process.api_connection", "apiconnection.igdb_rate_limiter_attempts_expired_aborting", null, null, apiEx);
                             throw;
                         }
                         else
                         {
-                            Logging.Log(Logging.LogType.Information, "API Connection", "IGDB API rate limit hit while accessing endpoint " + Endpoint, apiEx);
+                            Logging.LogKey(Logging.LogType.Information, "process.api_connection", "apiconnection.igdb_api_rate_limit_hit_accessing_endpoint", null, new string[] { Endpoint }, apiEx);
 
                             RetryAttempts += 1;
 
@@ -844,7 +844,7 @@ namespace gaseous_server.Classes.Metadata
                         }
 
                     case HttpStatusCode.Unauthorized:
-                        Logging.Log(Logging.LogType.Information, "API Connection", "IGDB API unauthorised error while accessing endpoint " + Endpoint + ". Waiting " + RateLimitAvoidanceWait + " milliseconds and resetting IGDB client.", apiEx);
+                        Logging.LogKey(Logging.LogType.Information, "process.api_connection", "apiconnection.igdb_api_unauthorised_error_accessing_endpoint_waiting_milliseconds_resetting_client", null, new string[] { Endpoint, RateLimitAvoidanceWait.ToString() }, apiEx);
 
                         Thread.Sleep(RateLimitAvoidanceWait);
 
@@ -859,13 +859,13 @@ namespace gaseous_server.Classes.Metadata
                         return await IGDBAPI<T>(Endpoint, Fields, Query);
 
                     default:
-                        Logging.Log(Logging.LogType.Warning, "API Connection", "Exception when accessing endpoint " + Endpoint, apiEx);
+                        Logging.LogKey(Logging.LogType.Warning, "process.api_connection", "apiconnection.exception_accessing_endpoint", null, new string[] { Endpoint }, apiEx);
                         throw;
                 }
             }
             catch (Exception ex)
             {
-                Logging.Log(Logging.LogType.Warning, "API Connection", "Exception when accessing endpoint " + Endpoint, ex);
+                Logging.LogKey(Logging.LogType.Warning, "process.api_connection", "apiconnection.exception_accessing_endpoint", null, new string[] { Endpoint }, ex);
                 throw;
             }
         }
@@ -894,13 +894,13 @@ namespace gaseous_server.Classes.Metadata
         /// </returns>
         private async Task<T[]> HasheousAPI<T>(FileSignature.MetadataSources SourceType, string Endpoint, string Fields, string Query)
         {
-            Logging.Log(Logging.LogType.Debug, "API Connection", "Accessing API for endpoint: " + Endpoint);
+            Logging.LogKey(Logging.LogType.Debug, "process.api_connection", "apiconnection.accessing_api_for_endpoint", null, new string[] { Endpoint });
 
             ConfigureHasheousClient(ref hasheous);
 
             if (RateLimitResumeTime > DateTime.UtcNow)
             {
-                Logging.Log(Logging.LogType.Information, "API Connection", "Hasheous rate limit hit. Pausing API communications until " + RateLimitResumeTime.ToString() + ". Attempt " + RetryAttempts + " of " + RetryAttemptsMax + " retries.");
+                Logging.LogKey(Logging.LogType.Information, "process.api_connection", "apiconnection.hasheous_rate_limit_hit_pausing_until", null, new string[] { RateLimitResumeTime.ToString(), RetryAttempts.ToString(), RetryAttemptsMax.ToString() });
                 Thread.Sleep(RateLimitRecoveryWaitTime);
             }
 
@@ -909,7 +909,7 @@ namespace gaseous_server.Classes.Metadata
                 if (InRateLimitAvoidanceMode == true)
                 {
                     // sleep for a moment to help avoid hitting the rate limiter
-                    Logging.Log(Logging.LogType.Information, "API Connection: Endpoint:" + Endpoint, "Hasheous rate limit hit. Pausing API communications for " + RateLimitAvoidanceWait + " milliseconds to avoid rate limiter.");
+                    Logging.LogKey(Logging.LogType.Information, "process.api_connection", "apiconnection.hasheous_rate_limit_hit_pausing_milliseconds", null, new string[] { Endpoint, RateLimitAvoidanceWait.ToString() });
                     Thread.Sleep(RateLimitAvoidanceWait);
                 }
 
@@ -928,12 +928,12 @@ namespace gaseous_server.Classes.Metadata
                     case HttpStatusCode.TooManyRequests:
                         if (RetryAttempts >= RetryAttemptsMax)
                         {
-                            Logging.Log(Logging.LogType.Warning, "API Connection", "Hasheous rate limiter attempts expired. Aborting.", apiEx);
+                            Logging.LogKey(Logging.LogType.Warning, "process.api_connection", "apiconnection.hasheous_rate_limiter_attempts_expired_aborting", null, null, apiEx);
                             throw;
                         }
                         else
                         {
-                            Logging.Log(Logging.LogType.Information, "API Connection", "Hasheous API rate limit hit while accessing endpoint " + Endpoint, apiEx);
+                            Logging.LogKey(Logging.LogType.Information, "process.api_connection", "apiconnection.hasheous_api_rate_limit_hit_accessing_endpoint", null, new string[] { Endpoint }, apiEx);
 
                             RetryAttempts += 1;
 
@@ -944,7 +944,7 @@ namespace gaseous_server.Classes.Metadata
                         }
 
                     case HttpStatusCode.Unauthorized:
-                        Logging.Log(Logging.LogType.Information, "API Connection", "Hasheous API unauthorised error while accessing endpoint " + Endpoint + ". Waiting " + RateLimitAvoidanceWait + " milliseconds and resetting Hasheous client.", apiEx);
+                        Logging.LogKey(Logging.LogType.Information, "process.api_connection", "apiconnection.hasheous_api_unauthorised_error_accessing_endpoint_waiting_milliseconds_resetting_client", null, new string[] { Endpoint, RateLimitAvoidanceWait.ToString() }, apiEx);
 
                         Thread.Sleep(RateLimitAvoidanceWait);
 
@@ -962,13 +962,13 @@ namespace gaseous_server.Classes.Metadata
                         return results3;
 
                     default:
-                        Logging.Log(Logging.LogType.Warning, "API Connection", "Exception when accessing endpoint " + Endpoint, apiEx);
+                        Logging.LogKey(Logging.LogType.Warning, "process.api_connection", "apiconnection.exception_accessing_endpoint", null, new string[] { Endpoint }, apiEx);
                         throw;
                 }
             }
             catch (Exception ex)
             {
-                Logging.Log(Logging.LogType.Warning, "API Connection", "Exception when accessing endpoint " + Endpoint, ex);
+                Logging.LogKey(Logging.LogType.Warning, "process.api_connection", "apiconnection.exception_accessing_endpoint", null, new string[] { Endpoint }, ex);
                 throw;
             }
         }
@@ -1351,13 +1351,13 @@ namespace gaseous_server.Classes.Metadata
         #region Download File
         private async Task<bool?> _DownloadFile(Uri uri, string DestinationFile)
         {
-            Logging.Log(Logging.LogType.Debug, "Communications", "Download attempt " + RetryAttempts + " of " + RetryAttemptsMax + " from: " + uri.ToString());
+            Logging.LogKey(Logging.LogType.Debug, "process.communications", "communications.download_attempt_from", null, new string[] { RetryAttempts.ToString(), RetryAttemptsMax.ToString(), uri.ToString() });
 
             ConfigureHasheousClient(ref hasheous);
 
             if (RateLimitResumeTime > DateTime.UtcNow)
             {
-                Logging.Log(Logging.LogType.Information, "Communications", "Hasheous rate limit hit. Pausing API communications until " + RateLimitResumeTime.ToString() + ". Attempt " + RetryAttempts + " of " + RetryAttemptsMax + " retries.");
+                Logging.LogKey(Logging.LogType.Information, "process.communications", "communications.hasheous_rate_limit_hit_pausing_until", null, new string[] { RateLimitResumeTime.ToString(), RetryAttempts.ToString(), RetryAttemptsMax.ToString() });
                 Thread.Sleep(RateLimitRecoveryWaitTime);
             }
 
@@ -1366,7 +1366,7 @@ namespace gaseous_server.Classes.Metadata
                 if (InRateLimitAvoidanceMode == true)
                 {
                     // sleep for a moment to help avoid hitting the rate limiter
-                    Logging.Log(Logging.LogType.Information, "Communications: Downloading from:" + uri.ToString(), "Hasheous rate limit hit. Pausing API communications for " + RateLimitAvoidanceWait + " milliseconds to avoid rate limiter.");
+                    Logging.LogKey(Logging.LogType.Information, "process.communications", "communications.hasheous_rate_limit_hit_pausing_milliseconds", null, new string[] { uri.ToString(), RateLimitAvoidanceWait.ToString() });
                     Thread.Sleep(RateLimitAvoidanceWait);
                 }
 
@@ -1376,7 +1376,7 @@ namespace gaseous_server.Classes.Metadata
                     Directory.CreateDirectory(DestinationDirectory);
                 }
 
-                Logging.Log(Logging.LogType.Information, "Communications", "Downloading from " + uri.ToString() + " to " + DestinationFile);
+                Logging.LogKey(Logging.LogType.Information, "process.communications", "communications.downloading_from_to", null, new string[] { uri.ToString(), DestinationFile });
 
                 using (HttpResponseMessage response = client.GetAsync(uri, HttpCompletionOption.ResponseHeadersRead).Result)
                 {
@@ -1425,12 +1425,12 @@ namespace gaseous_server.Classes.Metadata
                     case HttpStatusCode.TooManyRequests:
                         if (RetryAttempts >= RetryAttemptsMax)
                         {
-                            Logging.Log(Logging.LogType.Warning, "Communications", "Hasheous rate limiter attempts expired. Aborting.", ex);
+                            Logging.LogKey(Logging.LogType.Warning, "process.communications", "communications.hasheous_rate_limiter_attempts_expired_aborting", null, null, ex);
                             throw;
                         }
                         else
                         {
-                            Logging.Log(Logging.LogType.Information, "Communications", "Hasheous API rate limit hit while downloading " + uri.ToString(), ex);
+                            Logging.LogKey(Logging.LogType.Information, "process.communications", "communications.hasheous_api_rate_limit_hit_while_downloading", null, new string[] { uri.ToString() }, ex);
 
                             RetryAttempts += 1;
 
@@ -1452,13 +1452,13 @@ namespace gaseous_server.Classes.Metadata
                         break;
 
                     default:
-                        Logging.Log(Logging.LogType.Warning, "Communications", "Error downloading file from Uri: " + uri.ToString(), ex);
+                        Logging.LogKey(Logging.LogType.Warning, "process.communications", "communications.error_downloading_file_from_uri", null, new string[] { uri.ToString() }, ex);
                         throw;
                 }
             }
             catch (Exception ex)
             {
-                Logging.Log(Logging.LogType.Warning, "Communications", "Error downloading file from Uri: " + uri.ToString(), ex);
+                Logging.LogKey(Logging.LogType.Warning, "process.communications", "communications.error_downloading_file_from_uri", null, new string[] { uri.ToString() }, ex);
                 throw;
             }
 
@@ -1500,14 +1500,14 @@ namespace gaseous_server.Classes.Metadata
                 // sleep if the rate limiter is active
                 if (RateLimitResumeTime > DateTime.UtcNow)
                 {
-                    Logging.Log(Logging.LogType.Information, "API Connection", "Metadata source rate limit hit. Pausing API communications until " + RateLimitResumeTime.ToString() + ". Attempt " + RetryAttempts + " of " + RetryAttemptsMax + " retries.");
+                    Logging.LogKey(Logging.LogType.Information, "process.api_connection", "apiconnection.metadata_source_rate_limit_hit_pausing_until", null, new string[] { RateLimitResumeTime.ToString(), RetryAttempts.ToString(), RetryAttemptsMax.ToString() });
                     Thread.Sleep(RateLimitRecoveryWaitTime);
                 }
 
                 if (InRateLimitAvoidanceMode == true)
                 {
                     // sleep for a moment to help avoid hitting the rate limiter
-                    Logging.Log(Logging.LogType.Information, "API Connection: Fetch Image", "Metadata source rate limit hit. Pausing API communications for " + RateLimitAvoidanceWait + " milliseconds to avoid rate limiter.");
+                    Logging.LogKey(Logging.LogType.Information, "process.api_connection", "apiconnection.metadata_source_rate_limit_hit_pausing_milliseconds", null, new string[] { RateLimitAvoidanceWait.ToString() });
                     Thread.Sleep(RateLimitAvoidanceWait);
                 }
 
@@ -1574,26 +1574,26 @@ namespace gaseous_server.Classes.Metadata
                 T ReturnValue = Newtonsoft.Json.JsonConvert.DeserializeObject<T>(rawString);
                 if (ReturnValue != null)
                 {
-                    Logging.Log(Logging.LogType.Information, "Search Cache", "Found search result in cache. Search string: " + SearchString);
+                    Logging.LogKey(Logging.LogType.Information, "process.search_cache", "searchcache.found_search_result_in_cache", null, new string[] { SearchString });
                     return ReturnValue;
                 }
                 else
                 {
-                    Logging.Log(Logging.LogType.Information, "Search Cache", "Search result not found in cache.");
+                    Logging.LogKey(Logging.LogType.Information, "process.search_cache", "searchcache.search_result_not_found_in_cache");
                     return default;
                 }
             }
             else
             {
                 // cache miss
-                Logging.Log(Logging.LogType.Information, "Search Cache", "Search result not found in cache.");
+                Logging.LogKey(Logging.LogType.Information, "process.search_cache", "searchcache.search_result_not_found_in_cache");
                 return default;
             }
         }
 
         public static void SetSearchCache<T>(string SearchFields, string SearchString, T SearchResult)
         {
-            Logging.Log(Logging.LogType.Information, "Search Cache", "Storing search results in cache. Search string: " + SearchString);
+            Logging.LogKey(Logging.LogType.Information, "process.search_cache", "searchcache.storing_search_results_in_cache", null, new string[] { SearchString });
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "INSERT INTO SearchCache (SearchFields, SearchString, Content, LastSearch) VALUES (@searchfields, @searchstring, @content, @lastsearch);";
@@ -1614,7 +1614,7 @@ namespace gaseous_server.Classes.Metadata
             Platform? platform = await Platforms.GetPlatform(Id);
             if (platform == null)
             {
-                Logging.Log(Logging.LogType.Warning, "PopulateHasheousPlatformData", "Platform with ID " + Id + " not found in cache.");
+                Logging.LogKey(Logging.LogType.Warning, "process.populate_hasheous_platform_data", "populatehasheousplatformdata.platform_with_id_not_found_in_cache", null, new string[] { Id.ToString() });
                 return;
             }
 
@@ -1628,7 +1628,7 @@ namespace gaseous_server.Classes.Metadata
             // loop through the platforms and check if the metadata matches the IGDB platform id
             if (hasheousPlatforms == null || hasheousPlatforms.Count == 0)
             {
-                Logging.Log(Logging.LogType.Warning, "PopulateHasheousPlatformData", "No platforms found in Hasheous.");
+                Logging.LogKey(Logging.LogType.Warning, "process.populate_hasheous_platform_data", "populatehasheousplatformdata.no_platforms_found_in_hasheous");
                 return;
             }
 
@@ -1643,7 +1643,7 @@ namespace gaseous_server.Classes.Metadata
 
             if (hasheousPlatform == null)
             {
-                Logging.Log(Logging.LogType.Warning, "PopulateHasheousPlatformData", "No matching platform found in Hasheous for ID " + Id);
+                Logging.LogKey(Logging.LogType.Warning, "process.populate_hasheous_platform_data", "populatehasheousplatformdata.no_matching_platform_found_for_id", null, new string[] { Id.ToString() });
                 return;
             }
 
@@ -1702,7 +1702,7 @@ namespace gaseous_server.Classes.Metadata
                 }
                 await Storage.NewCacheValue<Platform>(FileSignature.MetadataSources.None, platform, true);
             }
-            Logging.Log(Logging.LogType.Information, "PopulateHasheousPlatformData", "Platform data populated for ID " + Id);
+            Logging.LogKey(Logging.LogType.Information, "process.populate_hasheous_platform_data", "populatehasheousplatformdata.platform_data_populated_for_id", null, new string[] { Id.ToString() });
         }
 
         /// <summary>

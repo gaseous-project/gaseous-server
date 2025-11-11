@@ -53,25 +53,25 @@ namespace gaseous_server.Controllers
                         NormalizedEmail = model.Email.ToUpper(),
                         SecurityProfile = new SecurityProfileViewModel()
                     };
-                    Logging.Log(Logging.LogType.Information, "First Run", "Creating new account " + model.Email);
+                    Logging.LogKey(Logging.LogType.Information, "process.first_run", "firstrun.creating_new_account", null, new string[] { model.Email });
                     var result = await _userManager.CreateAsync(user, model.Password);
                     if (result.Succeeded)
                     {
-                        Logging.Log(Logging.LogType.Information, "First Run", "Creation of " + model.Email + " successful.");
-                        Logging.Log(Logging.LogType.Information, "First Run", "Adding Player role to " + model.Email);
+                        Logging.LogKey(Logging.LogType.Information, "process.first_run", "firstrun.creation_successful", null, new string[] { model.Email });
+                        Logging.LogKey(Logging.LogType.Information, "process.first_run", "firstrun.adding_player_role", null, new string[] { model.Email });
                         await _userManager.AddToRoleAsync(user, "Player");
-                        Logging.Log(Logging.LogType.Information, "First Run", "Adding Gamer role to " + model.Email);
+                        Logging.LogKey(Logging.LogType.Information, "process.first_run", "firstrun.adding_gamer_role", null, new string[] { model.Email });
                         await _userManager.AddToRoleAsync(user, "Gamer");
-                        Logging.Log(Logging.LogType.Information, "First Run", "Adding Admin role to " + model.Email);
+                        Logging.LogKey(Logging.LogType.Information, "process.first_run", "firstrun.adding_admin_role", null, new string[] { model.Email });
                         await _userManager.AddToRoleAsync(user, "Admin");
 
-                        Logging.Log(Logging.LogType.Information, "First Run", "Signing in as " + model.Email);
+                        Logging.LogKey(Logging.LogType.Information, "process.first_run", "firstrun.signing_in_as", null, new string[] { model.Email });
                         await _signInManager.SignInAsync(user, isPersistent: true);
 
-                        Logging.Log(Logging.LogType.Information, "First Run", "Setting first run state to 1");
+                        Logging.LogKey(Logging.LogType.Information, "process.first_run", "firstrun.setting_first_run_state_to", null, new string[] { "1" });
                         Config.SetSetting<string>("FirstRunStatus", "1");
 
-                        Logging.Log(Logging.LogType.Information, "First Run", "Migrating existing collections to newly created user (for upgrades from v1.6.1 and earlier)");
+                        Logging.LogKey(Logging.LogType.Information, "process.first_run", "firstrun.migrating_existing_collections");
                         Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
                         string sql = "UPDATE RomCollections SET OwnedBy=@userid WHERE OwnedBy IS NULL;";
                         Dictionary<string, object> dbDict = new Dictionary<string, object>
@@ -108,15 +108,15 @@ namespace gaseous_server.Controllers
             {
                 if (ModelState.IsValid)
                 {
-                    Logging.Log(Logging.LogType.Information, "First Run", "Setting up datasources");
+                    Logging.LogKey(Logging.LogType.Information, "process.first_run", "firstrun.setting_up_datasources");
 
                     SystemController sys = new SystemController();
                     sys.SetSystemSettings(model);
 
-                    Logging.Log(Logging.LogType.Information, "First Run", "Setting first run state to 1");
+                    Logging.LogKey(Logging.LogType.Information, "process.first_run", "firstrun.setting_first_run_state_to", null, new string[] { "1" });
                     Config.SetSetting<string>("FirstRunStatus", "2");
 
-                    Logging.Log(Logging.LogType.Information, "First Run", "Setting up datasources complete, starting metadata refresh");
+                    Logging.LogKey(Logging.LogType.Information, "process.first_run", "firstrun.setting_up_datasources_complete_starting_metadata_refresh");
                     ProcessQueue.QueueItem metadataRefresh = ProcessQueue.QueueItems.Find(x => x.ItemType == ProcessQueue.QueueItemType.MetadataRefresh);
                     if (metadataRefresh != null)
                     {

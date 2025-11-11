@@ -12,13 +12,27 @@ class PreferencesWindow {
         this.dialog = await new Modal("preferences");
         await this.dialog.BuildModal();
 
+        // load language list
+        this.LanguageList = await fetch('/api/v1.1/Localisation/available-languages')
+            .then(async response => {
+                if (response.ok) {
+                    return await response.json();
+                } else {
+                    throw new Error(window.lang ? window.lang.translate('preferences.error.failed_load_language_list') : 'Failed to load language list');
+                }
+            })
+            .catch(error => {
+                console.error(error);
+                return [];
+            });
+
         // load age rating mappings
         this.AgeRatingMappings = await fetch('/images/Ratings/AgeGroupMap.json')
-            .then(response => {
+            .then(async response => {
                 if (response.ok) {
-                    return response.json();
+                    return await response.json();
                 } else {
-                    throw new Error('Failed to load age rating mappings');
+                    throw new Error(window.lang ? window.lang.translate('preferences.error.failed_load_age_rating_mappings') : 'Failed to load age rating mappings');
                 }
             })
             .catch(error => {
@@ -27,7 +41,7 @@ class PreferencesWindow {
             });
 
         // setup the dialog
-        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Preferences";
+        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = window.lang ? window.lang.translate('preferences.modal.title') : 'Preferences';
 
         // set initial preference states
         let preferences = GetPreferences();
@@ -58,6 +72,9 @@ class PreferencesWindow {
                     break;
             }
         }
+
+        // populate the language listbox
+        this.#populateLanguageList();
 
         // populate the classification board listbox
         this.#populateClassificationList();
@@ -103,7 +120,7 @@ class PreferencesWindow {
         });
 
         // create the ok button
-        let okButton = new ModalButton("OK", 1, this, function (callingObject) {
+        let okButton = new ModalButton(window.lang ? window.lang.translate('generic.ok') : 'OK', 1, this, function (callingObject) {
             // get the preferences
             let selectedPreferences = callingObject.dialog.modalElement.querySelectorAll('[data-pref]');
             let preferences = [];
@@ -122,7 +139,16 @@ class PreferencesWindow {
                         pref.value = JSON.stringify(preference.value.toString());
                         break;
                 }
-                preferences.push(pref);
+                if (preference.getAttribute('data-uselocalstore') === "1") {
+                    // apply directly to local storage
+                    localStorage.setItem(pref.setting, pref.value);
+                    if (pref.setting === "Language.Selected") {
+                        // update the language immediately
+                        window.lang.setLocale(JSON.parse(pref.value));
+                    }
+                } else {
+                    preferences.push(pref);
+                }
             });
 
             // get the classification order
@@ -154,7 +180,7 @@ class PreferencesWindow {
         this.dialog.addButton(okButton);
 
         // create the cancel button
-        let cancelButton = new ModalButton("Cancel", 0, this, function (callingObject) {
+        let cancelButton = new ModalButton(window.lang ? window.lang.translate('generic.cancel') : 'Cancel', 0, this, function (callingObject) {
             if (callingObject.CancelCallbacks) {
                 for (const callback of callingObject.CancelCallbacks) {
                     callback();
@@ -167,6 +193,21 @@ class PreferencesWindow {
 
         // show the dialog
         await this.dialog.open();
+    }
+
+    #populateLanguageList() {
+        // populate language selector
+        let languageSelector = this.dialog.modalElement.querySelector('[data-pref="Language.Selected"]');
+        for (const [key, value] of Object.entries(this.LanguageList)) {
+            let option = document.createElement('option');
+            option.value = key;
+            option.text = value;
+            if (key == window.lang?.locale) {
+                option.selected = true;
+            }
+            languageSelector.appendChild(option);
+        }
+        $(languageSelector).select2();
     }
 
     #populateClassificationList(preSelectedClassification) {

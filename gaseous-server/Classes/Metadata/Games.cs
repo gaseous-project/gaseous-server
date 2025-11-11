@@ -86,7 +86,7 @@ namespace gaseous_server.Classes.Metadata
             // get cover art from parent if this has no cover
             if (result.Cover == null)
             {
-                Logging.Log(Logging.LogType.Information, "Game Metadata", "Game has no cover art, fetching cover art from parent game");
+                Logging.LogKey(Logging.LogType.Information, "process.game_metadata", "gamemetadata.cover_art_missing_fetching_from_parent");
                 result.Cover = parentGame.Cover;
             }
 
@@ -97,7 +97,7 @@ namespace gaseous_server.Classes.Metadata
                 {
                     if (result.ParentGame != null)
                     {
-                        Logging.Log(Logging.LogType.Information, "Game Metadata", "Game has no summary, fetching summary from parent game");
+                        Logging.LogKey(Logging.LogType.Information, "process.game_metadata", "gamemetadata.summary_missing_fetching_from_parent");
                         result.Summary = parentGame.Summary;
                     }
                 }
@@ -179,12 +179,12 @@ namespace gaseous_server.Classes.Metadata
         public static async Task<Game[]> SearchForGame(string SearchString, long PlatformId, SearchType searchType)
         {
             // search local first
-            Logging.Log(Logging.LogType.Information, "Game Search", "Attempting local search of type '" + searchType.ToString() + "' for " + SearchString);
+            Logging.LogKey(Logging.LogType.Information, "process.game_search", "gamesearch.attempting_local_search_for", null, new string[] { searchType.ToString(), SearchString });
             Task<Game[]> games = _SearchForGameDatabase(SearchString, PlatformId, searchType);
             if (games.Result.Length == 0)
             {
                 // fall back to online search
-                Logging.Log(Logging.LogType.Information, "Game Search", "Falling back to remote search of type '" + searchType.ToString() + "' for " + SearchString);
+                Logging.LogKey(Logging.LogType.Information, "process.game_search", "gamesearch.falling_back_to_remote_search_for", null, new string[] { searchType.ToString(), SearchString });
                 games = _SearchForGameRemote(SearchString, PlatformId, searchType);
             }
             return games.Result;

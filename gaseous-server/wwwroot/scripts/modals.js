@@ -41,7 +41,6 @@ class Modal {
                 newTab.id = 'tab-' + tab.id;
                 newTab.classList.add('modal-tab-button');
                 newTab.setAttribute('data-tabid', tab.id);
-                newTab.textContent = tab.getAttribute('data-tabname');
                 newTab.addEventListener('click', () => {
                     tabs.forEach((tab) => {
                         if (tab.getAttribute('id') !== newTab.getAttribute('data-tabid')) {
@@ -53,6 +52,21 @@ class Modal {
                         }
                     });
                 });
+                // set the tab name
+                if (tab.hasAttribute('data-i18n')) {
+                    newTab.setAttribute('data-i18n', tab.getAttribute('data-i18n'));
+                    newTab.textContent = window.lang.translate(tab.getAttribute('data-i18n'));
+                } else if (tab.hasAttribute('data-i18n-attr')) {
+                    let attributeParts = tab.getAttribute('data-i18n-attr').split(':');
+                    let attributeName = attributeParts[0];
+                    if (attributeParts.length > 1) {
+                        attributeName = attributeParts[1].trim();
+                    }
+                    newTab.setAttribute('data-i18n', attributeName);
+                    newTab.textContent = window.lang.translate(attributeName);
+                } else {
+                    newTab.textContent = tab.getAttribute('data-tabname');
+                }
                 if (firstTab) {
                     newTab.classList.add('model-tab-button-selected');
                     tab.style.display = 'block';
@@ -119,7 +133,7 @@ class Modal {
             const closeButton = document.createElement('button');
             closeButton.classList.add('modal-button');
             closeButton.classList.add('bluebutton');
-            closeButton.innerHTML = 'OK';
+            closeButton.innerHTML = window.lang ? window.lang.translate('generic.ok') : 'OK';
             closeButton.addEventListener('click', () => {
                 this.close();
             });
@@ -309,7 +323,7 @@ class FileOpen {
         this.dialog.modalElement.style = 'width: 600px; height: 350px; min-width: unset; min-height: unset; max-width: unset; max-height: unset;';
 
         // setup the dialog
-        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Select Path";
+        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = window.lang ? window.lang.translate('modals.select_path.title') : 'Select Path';
         this.dialog.modalElement.querySelector('#modal-body').setAttribute('style', 'overflow-x: auto; overflow-y: hidden; padding: 0px;');
 
         // load the first path
@@ -322,7 +336,7 @@ class FileOpen {
         this.pathBox = this.dialog.modalElement.querySelector('#selectedPath');
 
         // add ok button
-        let okButton = new ModalButton("OK", 1, this, async function (callingObject) {
+        let okButton = new ModalButton(window.lang ? window.lang.translate('generic.ok') : 'OK', 1, this, async function (callingObject) {
             if (callingObject.okCallback) {
                 callingObject.okCallback();
             }
@@ -331,7 +345,7 @@ class FileOpen {
         this.dialog.addButton(okButton);
 
         // add cancel button
-        let cancelButton = new ModalButton("Cancel", 0, this, async function (callingObject) {
+        let cancelButton = new ModalButton(window.lang ? window.lang.translate('generic.cancel') : 'Cancel', 0, this, async function (callingObject) {
             if (callingObject.cancelButton) {
                 callingObject.cancelCallback();
             }
@@ -419,7 +433,7 @@ class EmulatorStateManager {
         await this.dialog.BuildModal();
 
         // setup the dialog
-        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Save Manager";
+        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = window.lang ? window.lang.translate('modals.save_manager.title') : 'Save Manager';
 
         this.statesBox = this.dialog.modalElement.querySelector('#saved_states');
 
@@ -429,7 +443,7 @@ class EmulatorStateManager {
             let formData = new FormData();
             formData.append('file', file);
 
-            console.log("Uploading state file");
+            console.log(window.lang ? window.lang.translate('modals.save_manager.uploading_state_file') : 'Uploading state file');
 
             let thisObject = this;
             fetch('/api/v1.1/StateManager/Upload?RomId=' + this.RomId + '&IsMediaGroup=' + this.IsMediaGroup, {
@@ -450,7 +464,7 @@ class EmulatorStateManager {
         });
 
         // add the buttons
-        let closeButton = new ModalButton("Close", 0, this, async function (callingObject) {
+        let closeButton = new ModalButton(window.lang ? window.lang.translate('generic.close') : 'Close', 0, this, async function (callingObject) {
             callingObject.dialog.close();
         });
         this.dialog.addButton(closeButton);
@@ -484,7 +498,7 @@ class EmulatorStateManager {
                     // create latest option
                     let latestOption = document.createElement('option');
                     latestOption.value = 'latest';
-                    latestOption.innerHTML = 'Latest';
+                    latestOption.innerHTML = window.lang ? window.lang.translate('generic.latest') : 'Latest';
                     srmSelect.appendChild(latestOption);
 
                     // create all the options
@@ -529,7 +543,7 @@ class EmulatorStateManager {
                             method: 'DELETE'
                         }).then(async response => {
                             if (!response.ok) {
-                                console.error("Error deleting srm");
+                                console.error(window.lang ? window.lang.translate('modals.save_manager.error_deleting_srm') : 'Error deleting srm');
                             } else {
                                 this.dialog.modalElement.querySelector('#loadFile').style.display = 'none';
                             }
@@ -547,14 +561,14 @@ class EmulatorStateManager {
         let statesUrl = '/api/v1.1/StateManager/' + thisObject.RomId + '?IsMediaGroup=' + thisObject.IsMediaGroup;
         await fetch(statesUrl).then(async response => {
             if (!response.ok) {
-                thisObject.statesBox.innerHTML = 'No saved states found.';
+                thisObject.statesBox.innerHTML = window.lang ? window.lang.translate('modals.save_manager.no_states') : 'No saved states found.';
             } else {
                 let result = await response.json();
 
                 thisObject.dialog.modalElement.querySelector('#stateFile').value = '';
 
                 if (result.length === 0) {
-                    thisObject.statesBox.innerHTML = 'No saved states found.';
+                    thisObject.statesBox.innerHTML = window.lang ? window.lang.translate('modals.save_manager.no_states') : 'No saved states found.';
                 } else {
                     console.log(result);
                     for (let i = 0; i < result.length; i++) {
@@ -602,7 +616,7 @@ class EmulatorStateManager {
                         if (state.name) {
                             stateName.value = state.name;
                         } else {
-                            stateName.setAttribute('placeholder', "Untitled");
+                            stateName.setAttribute('placeholder', window.lang ? window.lang.translate('modals.save_manager.untitled_placeholder') : 'Untitled');
                         }
                         stateMainPanel.appendChild(stateName);
 
@@ -640,7 +654,7 @@ class EmulatorStateManager {
                                 break;
                         }
 
-                        stateControlsLaunch.innerHTML = '<img src="/images/play.svg" class="banner_button_image" alt="Play" title="Play" />';
+                        stateControlsLaunch.innerHTML = '<img src="/images/play.svg" class="banner_button_image" alt="' + (window.lang ? window.lang.translate('generic.play') : 'Play') + '" title="' + (window.lang ? window.lang.translate('generic.play') : 'Play') + '" />';
                         stateControlsLaunch.style.float = 'right';
                         stateControls.appendChild(stateControlsLaunch);
 
@@ -649,7 +663,7 @@ class EmulatorStateManager {
                         stateControlsDownload.classList.add('platform_edit_button');
                         stateControlsDownload.classList.add('saved_state_buttonlink');
                         stateControlsDownload.href = '/api/v1.1/StateManager/' + thisObject.RomId + '/' + state.id + '/State/savestate.state?IsMediaGroup=' + thisObject.IsMediaGroup;
-                        stateControlsDownload.innerHTML = '<img src="/images/download.svg" class="banner_button_image" alt="Download" title="Download" />';
+                        stateControlsDownload.innerHTML = '<img src="/images/download.svg" class="banner_button_image" alt="' + (window.lang ? window.lang.translate('generic.download') : 'Download') + '" title="' + (window.lang ? window.lang.translate('generic.download') : 'Download') + '" />';
                         stateControls.appendChild(stateControlsDownload);
 
                         let stateControlsDelete = document.createElement('span');
@@ -659,7 +673,7 @@ class EmulatorStateManager {
                         stateControlsDelete.addEventListener('click', async () => {
                             await thisObject.#DeleteStateSave(state.id, thisObject.IsMediaGroup);
                         });
-                        stateControlsDelete.innerHTML = '<img src="/images/delete.svg" class="banner_button_image" alt="Delete" title="Delete" />';
+                        stateControlsDelete.innerHTML = '<img src="/images/delete.svg" class="banner_button_image" alt="' + (window.lang ? window.lang.translate('generic.delete') : 'Delete') + '" title="' + (window.lang ? window.lang.translate('generic.delete') : 'Delete') + '" />';
                         stateControls.appendChild(stateControlsDelete);
 
                         stateMainPanel.appendChild(stateControls);
@@ -678,7 +692,7 @@ class EmulatorStateManager {
             method: 'DELETE'
         }).then(async response => {
             if (!response.ok) {
-                console.error("Error deleting state");
+                console.error(window.lang ? window.lang.translate('modals.save_manager.error_deleting_state') : 'Error deleting state');
             } else {
                 await this.#LoadStates();
             }
@@ -700,7 +714,7 @@ class EmulatorStateManager {
             body: JSON.stringify(model)
         }).then(async response => {
             if (!response.ok) {
-                console.error("Error updating state");
+                console.error(window.lang ? window.lang.translate('modals.save_manager.error_updating_state') : 'Error updating state');
             } else {
                 await this.#LoadStates();
             }
@@ -709,9 +723,9 @@ class EmulatorStateManager {
 
     #UploadAlert(data) {
         if (data.Management == "Managed") {
-            alert("State uploaded successfully.");
+            alert(window.lang ? window.lang.translate('modals.save_manager.state_uploaded_success') : 'State uploaded successfully.');
         } else {
-            alert("State uploaded successfully, but it might not function correctly for this platform and ROM.");
+            alert(window.lang ? window.lang.translate('modals.save_manager.state_uploaded_warning') : 'State uploaded successfully, but it might not function correctly for this platform and ROM.');
         }
     }
 }
@@ -730,7 +744,7 @@ class ScreenshotDisplay {
 
         // setup the dialog
         this.dialog.modalElement.classList.add('modal-screenshots');
-        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Screenshots";
+        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = window.lang ? window.lang.translate('modals.screenshots.title') : 'Screenshots';
         this.panel = this.dialog.modalElement.querySelector('#modal-body');
         this.panel.setAttribute('style', 'overflow-x: auto; overflow-y: hidden; padding: 0px; position: relative;');
         this.scroller = this.dialog.modalElement.querySelector('#modal-window-content');
@@ -740,7 +754,7 @@ class ScreenshotDisplay {
         let gameUrl = `/api/v1.1/Games/${this.gameid}`;
         await fetch(gameUrl).then(async response => {
             if (!response.ok) {
-                this.scroller.innerHTML = '<li class=screenshot-item">No screenshots found.</li>';
+                this.scroller.innerHTML = '<li class=screenshot-item">' + (window.lang ? window.lang.translate('modals.screenshots.none_found') : 'No screenshots found.') + '</li>';
             } else {
                 let gameData = await response.json();
 
@@ -788,7 +802,7 @@ class ScreenshotDisplay {
         if (this.selectedImage) {
             let selectedImage = this.scroller.querySelector('#' + this.selectedImage);
             if (selectedImage) {
-                console.log("Selected image found: " + this.selectedImage);
+                console.log((window.lang ? window.lang.translate('modals.screenshots.selected_image_found_prefix', [this.selectedImage]) : 'Selected image found: ' + this.selectedImage));
                 // scroll into view smoothly
                 selectedImage.scrollIntoView({
                     behavior: 'smooth',
@@ -817,7 +831,7 @@ class ContentUploadDialog {
 
         // setup the dialog
         this.dialog.modalElement.classList.add('modal-content-upload');
-        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "Upload Content";
+        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = window.lang ? window.lang.translate('modals.content_upload.title') : 'Upload Content';
         this.panel = this.dialog.modalElement.querySelector('#modal-body');
         this.panel.setAttribute('style', 'overflow-x: auto; overflow-y: hidden; padding: 20px; position: relative;');
 
@@ -829,7 +843,7 @@ class ContentUploadDialog {
             formData.append('file', file);
             formData.append('ContentType', this.contentType);
 
-            console.log("Uploading content file");
+            console.log(window.lang ? window.lang.translate('modals.content_upload.uploading_file') : 'Uploading content file');
 
             let thisObject = this;
             fetch('/api/v1.1/ContentManager/fileupload/single?metadataid=' + this.metadataId, {
@@ -839,7 +853,7 @@ class ContentUploadDialog {
                 .then(response => response.json())
                 .then(async data => {
                     console.log('Success:', data);
-                    alert("Content uploaded successfully.");
+                    alert(window.lang ? window.lang.translate('modals.content_upload.upload_success') : 'Content uploaded successfully.');
 
                     if (this.closeCallback) {
                         this.closeCallback();
@@ -849,12 +863,12 @@ class ContentUploadDialog {
                 })
                 .catch(async error => {
                     console.error("Error:", error);
-                    alert("Error uploading content: " + error);
+                    alert((window.lang ? window.lang.translate('modals.content_upload.upload_error_prefix', [error]) : 'Error uploading content: ' + error));
                 });
         });
 
         // add the buttons
-        let closeButton = new ModalButton("Cancel", 0, this, async function (callingObject) {
+        let closeButton = new ModalButton(window.lang ? window.lang.translate('generic.cancel') : 'Cancel', 0, this, async function (callingObject) {
             callingObject.dialog.close();
         });
         this.dialog.addButton(closeButton);

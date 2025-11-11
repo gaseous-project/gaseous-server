@@ -107,7 +107,7 @@ namespace gaseous_server.Classes
                 };
                 _importStates.Add(importState);
 
-                Logging.Log(Logging.LogType.Information, "Import Game", String.Format("File {0} added to import queue via {1} by user {2}", FileName, Method.ToString(), UserId));
+                Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.file_added_to_import_queue", null, new string[] { FileName, Method.ToString(), UserId });
 
                 // check if there is an ImportQueueProcessor running
                 ProcessQueue.QueueItem? queueItem = ProcessQueue.QueueItems.Find(x => x.ItemType == ProcessQueue.QueueItemType.ImportQueueProcessor);
@@ -223,7 +223,7 @@ namespace gaseous_server.Classes
             {
                 string[] importContents = Directory.GetFiles(ImportPath, "*.*", SearchOption.AllDirectories);
 
-                Logging.Log(Logging.LogType.Information, "Import Games", "Found " + importContents.Length + " files to process in import directory: " + ImportPath);
+                Logging.LogKey(Logging.LogType.Information, "process.import_games", "importgames.found_files_to_process", null, new string[] { importContents.Length.ToString(), ImportPath });
 
                 // import files first
                 int importCount = 1;
@@ -238,7 +238,7 @@ namespace gaseous_server.Classes
             }
             else
             {
-                Logging.Log(Logging.LogType.Critical, "Import Games", "The import directory " + ImportPath + " does not exist.");
+                Logging.LogKey(Logging.LogType.Critical, "process.import_games", "importgames.import_directory_does_not_exist", null, new string[] { ImportPath });
                 throw new DirectoryNotFoundException("Invalid path: " + ImportPath);
             }
         }
@@ -277,7 +277,7 @@ namespace gaseous_server.Classes
                 if (FilePath.StartsWith(Config.LibraryConfiguration.LibraryImportDirectory))
                 {
                     // import source was the import directory
-                    Logging.Log(Logging.LogType.Warning, "Import Game", "  " + FilePath + " already in database - moving to " + Config.LibraryConfiguration.LibraryImportDuplicatesDirectory);
+                    Logging.LogKey(Logging.LogType.Warning, "process.import_game", "importgame.file_already_in_database_moving_to_duplicates", null, new string[] { FilePath, Config.LibraryConfiguration.LibraryImportDuplicatesDirectory });
 
                     string targetPathWithFileName = FilePath.Replace(Config.LibraryConfiguration.LibraryImportDirectory, Config.LibraryConfiguration.LibraryImportDuplicatesDirectory);
                     string targetPath = Path.GetDirectoryName(targetPathWithFileName);
@@ -291,7 +291,7 @@ namespace gaseous_server.Classes
                 else if (FilePath.StartsWith(Config.LibraryConfiguration.LibraryUploadDirectory))
                 {
                     // import source was the upload directory
-                    Logging.Log(Logging.LogType.Warning, "Import Game", "  " + FilePath + " already in database - skipping import");
+                    Logging.LogKey(Logging.LogType.Warning, "process.import_game", "importgame.file_already_in_database_skipping_import", null, new string[] { FilePath });
 
                     // delete the file
                     File.Delete(FilePath);
@@ -301,7 +301,7 @@ namespace gaseous_server.Classes
             }
             else
             {
-                Logging.Log(Logging.LogType.Information, "Import Game", "  " + FilePath + " not in database - processing");
+                Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.file_not_in_database_processing", null, new string[] { FilePath });
 
                 FileInfo fi = new FileInfo(FilePath);
                 FileSignature fileSignature = new FileSignature();
@@ -318,7 +318,7 @@ namespace gaseous_server.Classes
                     }
                     catch (Exception ex)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Import Game", "  Error searching for game in IGDB: " + ex.Message);
+                        Logging.LogKey(Logging.LogType.Warning, "process.import_game", "importgame.error_searching_for_game_in_igdb", null, new string[] { ex.Message });
                     }
 
                 }
@@ -393,7 +393,7 @@ namespace gaseous_server.Classes
                     Signatures_Games.SourceValues.SourceValueItem? signatureSource = signature.MetadataSources.Games.Find(x => x.Source == source);
                     if (signatureSource == null)
                     {
-                        Logging.Log(Logging.LogType.Information, "Import Game", "  No source found for " + source.ToString());
+                        Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.no_source_found_for", null, new string[] { source.ToString() });
                         continue;
                     }
 
@@ -512,7 +512,7 @@ namespace gaseous_server.Classes
                     }
                     catch (Exception ex)
                     {
-                        Logging.Log(Logging.LogType.Warning, "Import Game", "Provided game id resulted in a failed game lookup", ex);
+                        Logging.LogKey(Logging.LogType.Warning, "process.import_game", "importgame.failed_game_id_lookup", null, null, ex);
                     }
                 }
             }
@@ -528,11 +528,11 @@ namespace gaseous_server.Classes
             {
                 bool GameFound = false;
 
-                Logging.Log(Logging.LogType.Information, "Import Game", "  Searching for title: " + SearchCandidate);
+                Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.searching_for_title", null, new string[] { SearchCandidate });
 
                 foreach (Metadata.Games.SearchType searchType in Enum.GetValues(typeof(Metadata.Games.SearchType)))
                 {
-                    Logging.Log(Logging.LogType.Information, "Import Game", "  Search type: " + searchType.ToString());
+                    Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.search_type", null, new string[] { searchType.ToString() });
                     gaseous_server.Models.Game[] games = await Metadata.Games.SearchForGame(SearchCandidate, PlatformId, searchType);
                     if (games != null)
                     {
@@ -540,13 +540,13 @@ namespace gaseous_server.Classes
                         {
                             // exact match!
                             determinedGame = await Metadata.Games.GetGame(MetadataSources.IGDB, (long)games[0].Id);
-                            Logging.Log(Logging.LogType.Information, "Import Game", "  IGDB game: " + determinedGame.Name);
+                            Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.igdb_game", null, new string[] { determinedGame.Name });
                             GameFound = true;
                             break;
                         }
                         else if (games.Length > 0)
                         {
-                            Logging.Log(Logging.LogType.Information, "Import Game", "  " + games.Length + " search results found");
+                            Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.search_results_found", null, new string[] { games.Length.ToString() });
 
                             // quite likely we've found sequels and alternate types
                             foreach (gaseous_server.Models.Game game in games)
@@ -555,7 +555,7 @@ namespace gaseous_server.Classes
                                 {
                                     // found game title matches the search candidate
                                     determinedGame = await Metadata.Games.GetGame(MetadataSources.IGDB, (long)games[0].Id);
-                                    Logging.Log(Logging.LogType.Information, "Import Game", "Found exact match!");
+                                    Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.found_exact_match");
                                     GameFound = true;
                                     break;
                                 }
@@ -563,12 +563,12 @@ namespace gaseous_server.Classes
                         }
                         else
                         {
-                            Logging.Log(Logging.LogType.Information, "Import Game", "  No search results found");
+                            Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.no_search_results_found");
                         }
                     }
                     else
                     {
-                        Logging.Log(Logging.LogType.Information, "Import Game", "  No search results found");
+                        Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.no_search_results_found");
                     }
                 }
                 if (GameFound == true) { break; }
@@ -581,7 +581,7 @@ namespace gaseous_server.Classes
             string destSlug = "";
             if (determinedGame.Id == null)
             {
-                Logging.Log(Logging.LogType.Information, "Import Game", "  Unable to determine game");
+                Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.unable_to_determine_game");
             }
 
             return determinedGame;
@@ -648,7 +648,7 @@ namespace gaseous_server.Classes
                 SearchCandidates.Add(GameName.Substring(0, GameName.IndexOf(": ")).Trim());
             }
 
-            Logging.Log(Logging.LogType.Information, "Import Game", "  Search candidates: " + String.Join(", ", SearchCandidates));
+            Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.search_candidates", null, new string[] { String.Join(", ", SearchCandidates) });
 
             return SearchCandidates;
         }
@@ -732,20 +732,20 @@ namespace gaseous_server.Classes
                 }
                 catch (Exception ex)
                 {
-                    Logging.Log(Logging.LogType.Information, "Move Game ROM", "Unable to move ROM", ex);
+                    Logging.LogKey(Logging.LogType.Information, "process.move_game_rom", "movegamrom.unable_to_move_rom", null, null, ex);
                 }
 
                 if (romPath == DestinationPath)
                 {
-                    Logging.Log(Logging.LogType.Debug, "Move Game ROM", "Destination path is the same as the current path - aborting");
+                    Logging.LogKey(Logging.LogType.Debug, "process.move_game_rom", "movegamrom.destination_same_as_current_aborting");
                     return true;
                 }
                 else
                 {
-                    Logging.Log(Logging.LogType.Information, "Move Game ROM", "Moving " + romPath + " to " + DestinationPath);
+                    Logging.LogKey(Logging.LogType.Information, "process.move_game_rom", "movegamrom.moving_file_to_destination", null, new string[] { romPath, DestinationPath });
                     if (File.Exists(DestinationPath))
                     {
-                        Logging.Log(Logging.LogType.Information, "Move Game ROM", "A file with the same name exists at the destination - aborting");
+                        Logging.LogKey(Logging.LogType.Information, "process.move_game_rom", "movegamrom.same_name_exists_at_destination_aborting");
                         return false;
                     }
                     else
@@ -772,14 +772,14 @@ namespace gaseous_server.Classes
             }
             else
             {
-                Logging.Log(Logging.LogType.Warning, "Move Game ROM", "File " + romPath + " appears to be missing!");
+                Logging.LogKey(Logging.LogType.Warning, "process.move_game_rom", "movegamrom.file_appears_missing", null, new string[] { romPath });
                 return false;
             }
         }
 
         public async Task OrganiseLibrary()
         {
-            Logging.Log(Logging.LogType.Information, "Organise Library", "Starting default library organisation");
+            Logging.LogKey(Logging.LogType.Information, "process.organise_library", "organiselibrary.starting_default_library_organisation");
 
             GameLibrary.LibraryItem library = GameLibrary.GetDefaultLibrary;
 
@@ -795,7 +795,7 @@ namespace gaseous_server.Classes
                 for (int i = 0; i < romDT.Rows.Count; i++)
                 {
                     SetStatus(i, romDT.Rows.Count, "Processing file " + romDT.Rows[i]["name"]);
-                    Logging.Log(Logging.LogType.Information, "Organise Library", "(" + i + "/" + romDT.Rows.Count + ") Processing ROM " + romDT.Rows[i]["name"]);
+                    Logging.LogKey(Logging.LogType.Information, "process.organise_library", "organiselibrary.processing_rom", null, new string[] { i.ToString(), romDT.Rows.Count.ToString(), romDT.Rows[i]["name"].ToString() });
                     long RomId = (long)romDT.Rows[i]["id"];
                     await MoveGameFile(RomId, false);
                 }
@@ -805,7 +805,7 @@ namespace gaseous_server.Classes
             // clean up empty directories
             DeleteOrphanedDirectories(GameLibrary.GetDefaultLibrary.Path);
 
-            Logging.Log(Logging.LogType.Information, "Organise Library", "Finsihed default library organisation");
+            Logging.LogKey(Logging.LogType.Information, "process.organise_library", "organiselibrary.finished_default_library_organisation");
         }
 
         public static void DeleteOrphanedDirectories(string startLocation)
@@ -827,14 +827,14 @@ namespace gaseous_server.Classes
 
         public async Task LibrarySpecificScan(GameLibrary.LibraryItem library)
         {
-            Logging.Log(Logging.LogType.Information, "Library Scan", "Starting scan of library: " + library.Name);
+            Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.starting_scan_of_library", null, new string[] { library.Name });
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
             // force load of platform mapping tables
             List<PlatformMapping.PlatformMapItem> _platformMap = PlatformMapping.PlatformMap;
 
-            Logging.Log(Logging.LogType.Information, "Library Scan", "Looking for duplicate library files to clean up");
+            Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.looking_for_duplicate_library_files_to_clean_up");
             string duplicateSql = "DELETE r1 FROM Games_Roms r1 INNER JOIN Games_Roms r2 WHERE r1.Id > r2.Id AND r1.MD5 = r2.MD5 AND r1.LibraryId=@libraryid AND r2.LibraryId=@libraryid;";
             Dictionary<string, object> dupDict = new Dictionary<string, object>();
             dupDict.Add("libraryid", library.Id);
@@ -855,7 +855,7 @@ namespace gaseous_server.Classes
 
                 foreach (var entry in rowsToDelete)
                 {
-                    Logging.Log(Logging.LogType.Information, "Library Scan", $"Deleting database entry for file with incorrect directory {entry.Path}");
+                    Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.deleting_database_entry_for_file_with_incorrect_directory", null, new string[] { entry.Path });
                     string deleteSql = "DELETE FROM Games_Roms WHERE Id=@id AND LibraryId=@libraryid";
                     var deleteDict = new Dictionary<string, object>
                     {
@@ -870,7 +870,7 @@ namespace gaseous_server.Classes
             dtRoms = await db.ExecuteCMDAsync(sql, dbDict);
 
             // search for files in the library that aren't in the database
-            Logging.Log(Logging.LogType.Information, "Library Scan", "Looking for orphaned library files to add");
+            Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.looking_for_orphaned_library_files_to_add");
             string[] LibraryFiles = Directory.GetFiles(library.Path, "*.*", SearchOption.AllDirectories);
             int StatusCount = 0;
             foreach (string LibraryFile in LibraryFiles)
@@ -889,7 +889,7 @@ namespace gaseous_server.Classes
                     if (romFound == false)
                     {
                         // file is not in database - process it
-                        Logging.Log(Logging.LogType.Information, "Library Scan", "Orphaned file found in library: " + LibraryFile);
+                        Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.orphaned_file_found_in_library", null, new string[] { LibraryFile });
 
                         HashObject hash = new HashObject(LibraryFile);
                         FileInfo fi = new FileInfo(LibraryFile);
@@ -921,7 +921,7 @@ namespace gaseous_server.Classes
                         }
                         catch (Exception ex)
                         {
-                            Logging.Log(Logging.LogType.Warning, "Library Scan", "An error occurred while matching orphaned file: " + LibraryFile + ". Skipping.", ex);
+                            Logging.LogKey(Logging.LogType.Warning, "process.library_scan", "libraryscan.error_matching_orphaned_file_skipping", null, new string[] { LibraryFile }, ex);
                         }
                     }
                 }
@@ -933,7 +933,7 @@ namespace gaseous_server.Classes
             dtRoms = await db.ExecuteCMDAsync(sql, dbDict);
 
             // Check all roms to see if their local file still exists
-            Logging.Log(Logging.LogType.Information, "Library Scan", "Checking library files exist on disk");
+            Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.checking_library_files_exist_on_disk");
             StatusCount = 0;
 
             if (dtRoms.Rows.Count > 0)
@@ -947,7 +947,7 @@ namespace gaseous_server.Classes
                     string romPath = (string)dtRoms.Rows[i]["Path"];
 
                     SetStatus(StatusCount, dtRoms.Rows.Count, $"Processing file {romPath}");
-                    Logging.Log(Logging.LogType.Information, "Library Scan", $"Processing ROM at path {romPath}");
+                    Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.processing_rom_at_path", null, new string[] { romPath });
 
                     string fileName = Path.GetFileName(romPath);
                     string fileExt = Path.GetExtension(romPath);
@@ -965,23 +965,23 @@ namespace gaseous_server.Classes
                         }
                         catch (Exception ex)
                         {
-                            Logging.Log(Logging.LogType.Warning, "Library Scan", "Unable to compute path", ex);
+                            Logging.LogKey(Logging.LogType.Warning, "process.library_scan", "libraryscan.unable_to_compute_path", null, null, ex);
                         }
 
                         if (library.IsDefaultLibrary && romPath != computedPath)
                         {
-                            Logging.Log(Logging.LogType.Information, "Library Scan", $"ROM at path {romPath} found, but needs to be moved");
+                            Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.rom_found_needs_to_be_moved", null, new string[] { romPath });
                             await MoveGameFile(romId, false);
                         }
                         else
                         {
-                            Logging.Log(Logging.LogType.Information, "Library Scan", $"ROM at path {romPath} found");
+                            Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.rom_found", null, new string[] { romPath });
                         }
                     }
                     else
                     {
                         // File doesn't exist where it's supposed to be! Delete it from the db
-                        Logging.Log(Logging.LogType.Warning, "Library Scan", $"Deleting orphaned database entry for {romPath}");
+                        Logging.LogKey(Logging.LogType.Warning, "process.library_scan", "libraryscan.deleting_orphaned_database_entry_for_file", null, new string[] { romPath });
 
                         string deleteSql = "DELETE FROM Games_Roms WHERE Id = @id AND LibraryId = @libraryid";
                         var deleteDict = new Dictionary<string, object>
@@ -994,7 +994,7 @@ namespace gaseous_server.Classes
                 }
             }
 
-            Logging.Log(Logging.LogType.Information, "Library Scan", "Library scan completed");
+            Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.library_scan_completed");
         }
     }
 }

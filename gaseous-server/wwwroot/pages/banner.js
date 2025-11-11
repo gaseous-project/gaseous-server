@@ -1,4 +1,13 @@
 function setupBanner() {
+    // translation helper (waits for global language instance if present)
+    const t = (key) => {
+        try {
+            if (globalThis.language && typeof globalThis.language.translate === 'function') {
+                return globalThis.language.translate(key);
+            }
+        } catch { }
+        return key; // fallback to key if language not ready
+    };
     // attach event listeners to the banner elements
     let userMenu = document.getElementById("banner_user");
     if (userMenu) {
@@ -110,8 +119,8 @@ function setupBanner() {
                 if (showDatabaseUpgradeNotification) {
                     // we had a change in the notification, show the notification and then store the new notification in localStorage
                     let notificationMsg = new Notification(
-                        'Database Upgrade In Progress',
-                        'Performance may be degraded while the database is being upgraded, while favourites and game saves may be missing. Please wait until the upgrade is complete.',
+                        t('banner.notification.database_upgrade.title'),
+                        t('banner.notification.database_upgrade.body'),
                         undefined,
                         undefined,
                         undefined,
@@ -165,8 +174,8 @@ function setupBanner() {
 
                                 // show the notification
                                 let notificationMsg = new Notification(
-                                    'Game Imported',
-                                    'New games have been imported. Reload the library to see them.',
+                                    t('banner.notification.game_imported.title'),
+                                    t('banner.notification.game_imported.body'),
                                     undefined,
                                     undefined,
                                     undefined,

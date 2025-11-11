@@ -568,7 +568,7 @@ namespace gaseous_server.Classes
 
 				try
 				{
-					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Refreshing metadata for platform " + dr["name"] + " (" + dr["id"] + ")");
+					Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_metadata_for_platform", null, new string[] { StatusCounter.ToString(), dt.Rows.Count.ToString(), dr["name"].ToString(), dr["id"].ToString() });
 
 					FileSignature.MetadataSources metadataSource = FileSignature.MetadataSources.None;
 
@@ -599,7 +599,7 @@ namespace gaseous_server.Classes
 				}
 				catch (Exception ex)
 				{
-					Logging.Log(Logging.LogType.Critical, "Metadata Refresh", "An error occurred while refreshing metadata for " + dr["name"], ex);
+					Logging.LogKey(Logging.LogType.Critical, "process.metadata_refresh", "metadatarefresh.error_refreshing_metadata_for_platform", null, new string[] { dr["name"].ToString() }, ex);
 				}
 
 				StatusCounter += 1;
@@ -637,7 +637,7 @@ namespace gaseous_server.Classes
 							}
 							catch (Exception ex)
 							{
-								Logging.Log(Logging.LogType.Warning, "Metadata Refresh", "Failed to delete file " + file + " from Hasheous cache directory", ex);
+								Logging.LogKey(Logging.LogType.Warning, "process.metadata_refresh", "metadatarefresh.failed_to_delete_file_from_hasheous_cache_directory", null, new string[] { file }, ex);
 							}
 						}
 					}
@@ -651,7 +651,7 @@ namespace gaseous_server.Classes
 
 					try
 					{
-						Logging.Log(Logging.LogType.Information, "Metadata Refresh", "(" + StatusCounter + "/" + dt.Rows.Count + "): Refreshing signature for ROM " + dr["Name"] + " (" + dr["Id"] + ")");
+						Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_signature_for_rom", null, new string[] { StatusCounter.ToString(), dt.Rows.Count.ToString(), dr["Name"].ToString(), dr["Id"].ToString() });
 
 						// get the hash of the ROM from the datarow
 						string? md5 = dr["MD5"] == DBNull.Value ? null : dr["MD5"].ToString();
@@ -685,7 +685,7 @@ namespace gaseous_server.Classes
 						}
 						else
 						{
-							Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Missing one or more hashes for " + dr["Name"] + " - recalculating hashes");
+							Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.missing_one_or_more_hashes_recalculating_hashes", null, new string[] { dr["Name"].ToString() });
 							hash = new HashObject(dr["Path"].ToString());
 						}
 
@@ -701,7 +701,7 @@ namespace gaseous_server.Classes
 						// validation rules: 1) signature must not be null, 2) signature must have a platform ID
 						if (signature == null || signature.Flags.PlatformId == null)
 						{
-							Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Signature for " + dr["Name"] + " is invalid - skipping metadata refresh");
+							Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.signature_invalid_skipping_metadata_refresh", null, new string[] { dr["Name"].ToString() });
 							StatusCounter += 1;
 							continue;
 						}
@@ -720,7 +720,7 @@ namespace gaseous_server.Classes
 					}
 					catch (Exception ex)
 					{
-						Logging.Log(Logging.LogType.Critical, "Metadata Refresh", "An error occurred while refreshing metadata for " + dr["Name"], ex);
+						Logging.LogKey(Logging.LogType.Critical, "process.metadata_refresh", "metadatarefresh.error_refreshing_metadata_for_rom", null, new string[] { dr["Name"].ToString() }, ex);
 					}
 
 					StatusCounter += 1;
@@ -771,7 +771,7 @@ namespace gaseous_server.Classes
 				// check if the game is already in progress
 				if (inProgressRefreshes.Any(x => x["Id"].ToString() == dr["Id"].ToString()))
 				{
-					Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Skipping metadata refresh for game " + dr["Name"] + " (" + dr["Id"] + ") - already in progress");
+					Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.skipping_metadata_refresh_for_game_already_in_progress", null, new string[] { dr["Name"].ToString(), dr["Id"].ToString() });
 					continue;
 				}
 
@@ -799,13 +799,13 @@ namespace gaseous_server.Classes
 		{
 			if (metadataItem == null)
 			{
-				Logging.Log(Logging.LogType.Warning, "Metadata Refresh", "Metadata item is null - skipping refresh");
+				Logging.LogKey(Logging.LogType.Warning, "process.metadata_refresh", "metadatarefresh.metadata_item_null_skipping_refresh");
 				return;
 			}
 
 			if (metadataItem.MetadataMapItems == null || metadataItem.MetadataMapItems.Count == 0)
 			{
-				Logging.Log(Logging.LogType.Warning, "Metadata Refresh", "Metadata item has no metadata map items - skipping refresh");
+				Logging.LogKey(Logging.LogType.Warning, "process.metadata_refresh", "metadatarefresh.metadata_item_has_no_metadata_map_items_skipping_refresh");
 				return;
 			}
 
@@ -822,7 +822,7 @@ namespace gaseous_server.Classes
 					continue;
 				}
 
-				Logging.Log(Logging.LogType.Information, "Metadata Refresh", "Refreshing metadata for game " + metadataItem.SignatureGameName + " (" + metadataItem.Id + ") using source " + item.SourceType.ToString() + " with source id " + item.SourceId);
+				Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_metadata_for_game_using_source_with_source_id", null, new string[] { metadataItem.SignatureGameName, metadataItem.Id.ToString(), item.SourceType.ToString(), item.SourceId.ToString() });
 				Models.Game? game = await Metadata.Games.GetGame(item.SourceType, item.SourceId, true, forceRefresh);
 
 				// get supporting metadata

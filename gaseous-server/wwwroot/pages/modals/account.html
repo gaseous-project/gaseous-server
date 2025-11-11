@@ -1,13 +1,13 @@
-<div id="tab1" name="modalTab" data-tabname="Profile">
+<div id="tab1" name="modalTab" data-tabname="Profile" data-i18n-attr="data-tabname:accountmodal.tab.profile">
     <div class="account-modal-tab1">
         <div style="flex-grow:1">
             <div class="section">
-                <div class="section-header">Name</div>
+                <div class="section-header" data-i18n="accountmodal.section.name_header">Name</div>
                 <div class="section-body">
-                    <div>Display Name</div>
+                    <div data-i18n="accountmodal.display_name_label">Display Name</div>
                     <input type="text" id="display-name" name="name" style="width: 90%;"
                         class="inputWithVerticalLabel" />
-                    <div>Quip</div>
+                    <div data-i18n="accountmodal.quip_label">Quip</div>
                     <textarea id="quip" class="inputWithVerticalLabel" name="quip" style="width: 90%;"></textarea>
                 </div>
             </div>
@@ -15,45 +15,47 @@
 
         <div style="flex-grow:1">
             <div class="section">
-                <div class="section-header">Avatar</div>
+                <div class="section-header" data-i18n="accountmodal.section.avatar_header">Avatar</div>
                 <div class="section-body" style="text-align: center;">
                     <div id="avatar-preview" class="avatar"
                         style="width: 100px; height: 100px; border-radius: 50%; background-size: cover; background-position: center; margin: auto; font-size: 3vmax; display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
                     </div>
                     <input type="file" id="avatar-upload" name="avatar" accept="image/*" />
-                    <button id="avatar-upload-clear" class="button">Clear</button>
+                    <button id="avatar-upload-clear" class="button"
+                        data-i18n="accountmodal.clear_avatar_button">Clear</button>
                 </div>
             </div>
 
             <div class="section">
-                <div class="section-header">Background</div>
+                <div class="section-header" data-i18n="accountmodal.section.background_header">Background</div>
                 <div class="section-body" style="text-align: center;">
                     <div id="background-preview" class="profile-card-background-image"
                         style="width: 300px; margin: auto; border-radius: var(--standard-radius); margin-bottom: 10px;">
                     </div>
                     <input type="file" id="background-upload" name="background" accept="image/*" />
-                    <button id="background-upload-clear" class="button">Clear</button>
+                    <button id="background-upload-clear" class="button"
+                        data-i18n="accountmodal.clear_background_button">Clear</button>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div id="tab2" name="modalTab" data-tabname="Account">
+<div id="tab2" name="modalTab" data-tabname="Account" data-i18n-attr="data-tabname:accountmodal.tab.account">
     <div class="section">
-        <div class="section-header">Username</div>
+        <div class="section-header" data-i18n="accountmodal.section.username_header">Username</div>
         <div class="section-body">
             <div class="account-modal-tab1">
                 <div style="flex-grow:1">
-                    <div>Current Username</div>
+                    <div data-i18n="accountmodal.current_username_label">Current Username</div>
                     <input type="text" id="current-username" name="current-username" style="width: 95%;"
                         class="inputWithVerticalLabel" readonly />
-                    <div>New Username</div>
+                    <div data-i18n="accountmodal.new_username_label">New Username</div>
                     <input type="text" id="new-username" name="username" style="width: 95%;"
                         class="inputWithVerticalLabel" />
                 </div>
                 <div style="flex-grow:1">
-                    <p>Username requirements:</p>
+                    <p data-i18n="accountmodal.username_requirements_paragraph">Username requirements:</p>
                     <div id="username-error"></div>
                 </div>
             </div>
@@ -61,22 +63,22 @@
     </div>
 
     <div class="section">
-        <div class="section-header">Change Password</div>
+        <div class="section-header" data-i18n="accountmodal.section.change_password_header">Change Password</div>
         <div class="section-body">
             <div class="account-modal-tab1">
                 <div style="flex-grow:1">
-                    <div>Current Password</div>
+                    <div data-i18n="accountmodal.current_password_label">Current Password</div>
                     <input type="password" id="current-password" name="current-password" style="width: 95%;"
                         class="inputWithVerticalLabel" />
-                    <div>New Password</div>
+                    <div data-i18n="accountmodal.new_password_label">New Password</div>
                     <input type="password" id="new-password" name="new-password" style="width: 95%;"
                         class="inputWithVerticalLabel" />
-                    <div>Confirm New Password</div>
+                    <div data-i18n="accountmodal.confirm_new_password_label">Confirm New Password</div>
                     <input type="password" id="confirm-new-password" name="confirm-new-password" style="width: 95%;"
                         class="inputWithVerticalLabel" />
                 </div>
                 <div style="flex-grow:1">
-                    <p>Password requirements:</p>
+                    <p data-i18n="accountmodal.password_requirements_paragraph">Password requirements:</p>
                     <div id="password-error"></div>
                 </div>
             </div>
@@ -84,22 +86,25 @@
     </div>
 </div>
 
-<div id="tab3" name="modalTab" data-tabname="Two Factor Authentication">
+<div id="tab3" name="modalTab" data-tabname="Two Factor Authentication"
+    data-i18n-attr="data-tabname:accountmodal.tab.two_factor_authentication">
     <div class="section">
-        <div class="section-header">Two Factor Authentication</div>
+        <div class="section-header" data-i18n="accountmodal.section.two_factor_authentication_header">Two Factor
+            Authentication</div>
         <div class="section-body">
-            <div>Enable two-factor authentication for added security.</div>
+            <div data-i18n="accountmodal.two_factor_enable_description">Enable two-factor authentication for added
+                security.</div>
             <p>
-                <button id="enable-2fa" class="button">Enable 2FA</button>
-                <button id="disable-2fa" class="button">Disable 2FA</button>
+                <button id="enable-2fa" class="button" data-i18n="accountmodal.enable_2fa_button">Enable 2FA</button>
+                <button id="disable-2fa" class="button" data-i18n="accountmodal.disable_2fa_button">Disable 2FA</button>
             </p>
             <div id="2fa-status" style="margin-top: 10px;">
                 <p id="2fa-qrcode" style="display: none; background-color: #ffffff; padding: 10px;"></p>
                 <p id="2fa-secret-key" style="display: none;"></p>
                 <div id="2fa-confirmation" style="display: none; margin-top: 10px;">
-                    <div>Enter the code from your authenticator app:</div>
+                    <div data-i18n="accountmodal.enter_code_label">Enter the code from your authenticator app:</div>
                     <input type="text" id="2fa-code" name="2fa-code" class="inputWithVerticalLabel" />
-                    <button id="confirm-2fa" class="button">Confirm</button>
+                    <button id="confirm-2fa" class="button" data-i18n="accountmodal.confirm_2fa_button">Confirm</button>
                 </div>
                 <p id="recovery-codes" style="display: none;"></p>
             </div>

@@ -1,3 +1,4 @@
+// Corrected localized version
 class Mapping {
     constructor(PlatformId, OKCallback, CancelCallback) {
         this.PlatformId = PlatformId;
@@ -6,65 +7,56 @@ class Mapping {
     }
 
     async open() {
-        // Create the modal
         this.dialog = new Modal("mappings");
         await this.dialog.BuildModal();
 
-        // Get the platform data
+        // Load platform data
         await fetch('/api/v1.1/PlatformMaps/' + this.PlatformId, {
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            headers: { 'Content-Type': 'application/json' }
         }).then(async response => {
             if (response.ok) {
-                let result = await response.json();
-                this.PlatformData = result;
+                this.PlatformData = await response.json();
             } else {
-                let warningDialog = new MessageBox("Error", "Failed to load platform data", "OK");
-                warningDialog.open();
+                new MessageBox(
+                    window.lang ? window.lang.translate('generic.error') : 'Error',
+                    window.lang ? window.lang.translate('platforms.mapping.failed_load') : 'Failed to load platform data'
+                ).open();
             }
         });
+        if (!this.PlatformData) { return; }
 
-        // setup the dialog
+        // Header
         this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = this.PlatformData.igdbName;
 
-        // setup general page
+        // Alternate names
         this.alternateNames = this.dialog.modalElement.querySelector('#mapping_edit_alternativenames');
-        $(this.alternateNames).select2({
-            tags: true,
-            tokenSeparators: [',']
-        });
+        $(this.alternateNames).select2({ tags: true, tokenSeparators: [','] });
         this.#AddTokensFromList(this.alternateNames, this.PlatformData.alternateNames);
 
+        // Supported file extensions
         this.supportedFileExtensions = this.dialog.modalElement.querySelector('#mapping_edit_supportedfileextensions');
         $(this.supportedFileExtensions).select2({
             tags: true,
             tokenSeparators: [','],
             createTag: function (params) {
-                if (params.term.indexOf('.') === -1) {
-                    // Return null to disable tag creation
-                    return null;
-                }
-
-                return {
-                    id: params.term.toUpperCase(),
-                    text: params.term.toUpperCase()
-                }
+                if (params.term.indexOf('.') === -1) { return null; }
+                return { id: params.term.toUpperCase(), text: params.term.toUpperCase() };
             }
         });
         this.#AddTokensFromList(this.supportedFileExtensions, this.PlatformData.extensions.supportedFileExtensions);
 
+        // Slug & retropie directory
         this.dialog.modalElement.querySelector('#mapping_edit_igdbslug').value = this.PlatformData.igdbSlug;
         this.dialog.modalElement.querySelector('#mapping_edit_retropie').value = this.PlatformData.retroPieDirectoryName;
 
-        // setup the emulator page
+        // Web emulator config
         this.webEmulatorConfiguration = new WebEmulatorConfiguration(this.PlatformData);
         await this.webEmulatorConfiguration.open();
         this.dialog.modalElement.querySelector('#mapping_edit_webemulator').appendChild(this.webEmulatorConfiguration.panel);
 
-        // setup the buttons
-        let okButton = new ModalButton("OK", 1, this, async (callingObject) => {
+        // OK button
+        const okButton = new ModalButton(window.lang ? window.lang.translate('generic.ok') : 'OK', 1, this, async (callingObject) => {
             callingObject.PlatformData.alternateNames = $(callingObject.alternateNames).val();
             callingObject.PlatformData.extensions.supportedFileExtensions = $(callingObject.supportedFileExtensions).val();
             callingObject.PlatformData.retroPieDirectoryName = callingObject.dialog.modalElement.querySelector('#mapping_edit_retropie').value;
@@ -74,35 +66,26 @@ class Mapping {
 
             await fetch('/api/v1.1/PlatformMaps/' + callingObject.PlatformId, {
                 method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(callingObject.PlatformData)
             }).then(async response => {
-                if (response.ok) {
-                    let result = await response.json();
-                } else {
-                    let warningDialog = new Dialog("Error", "Failed to save platform data", "OK");
-                    warningDialog.open();
+                if (!response.ok) {
+                    new Dialog(
+                        window.lang ? window.lang.translate('generic.error') : 'Error',
+                        window.lang ? window.lang.translate('platforms.mapping.failed_save') : 'Failed to save platform data',
+                        window.lang ? window.lang.translate('generic.ok') : 'OK'
+                    ).open();
                 }
             });
 
-            if (this.OKCallback) {
-                console.log("Calling OKCallback");
-                this.OKCallback();
-            }
-
+            if (this.OKCallback) { this.OKCallback(); }
             callingObject.dialog.close();
-            callingObject = null; // Clear the reference to the calling object
         });
         this.dialog.addButton(okButton);
 
-        // create the cancel button
-        let cancelButton = new ModalButton("Cancel", 0, this, function (callingObject) {
-            if (callingObject.CancelCallback) {
-                callingObject.CancelCallback();
-            }
-
+        // Cancel button
+        const cancelButton = new ModalButton(window.lang ? window.lang.translate('generic.cancel') : 'Cancel', 0, this, (callingObject) => {
+            if (callingObject.CancelCallback) { callingObject.CancelCallback(); }
             callingObject.dialog.close();
         });
         this.dialog.addButton(cancelButton);
@@ -112,12 +95,8 @@ class Mapping {
 
     #AddTokensFromList(selectObj, tagList) {
         for (const tag of tagList) {
-            let data = {
-                id: tag,
-                text: tag
-            }
-
-            let newOption = new Option(data.text, data.id, true, true);
+            const data = { id: tag, text: tag };
+            const newOption = new Option(data.text, data.id, true, true);
             $(selectObj).append(newOption).trigger('change');
         }
     }
@@ -128,45 +107,22 @@ class BiosTable {
         this.targetDiv = targetDiv;
         this.showAvailableCheckbox = document.getElementById('firmware_showavailable');
         this.showUnavailableCheckbox = document.getElementById('firmware_showunavailable');
-
-        this.showAvailableCheckbox.addEventListener('change', () => {
-            this.displayFirmwareList();
-        });
-
-        this.showUnavailableCheckbox.addEventListener('change', () => {
-            this.displayFirmwareList();
-        });
+        this.showAvailableCheckbox.addEventListener('change', () => this.displayFirmwareList());
+        this.showUnavailableCheckbox.addEventListener('change', () => this.displayFirmwareList());
+        this.biosDict = {};
     }
-
-    biosDict = {};
 
     async loadBios() {
         this.biosDict = {};
-
-        await fetch('/api/v1.1/Bios', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then(async response => {
+        await fetch('/api/v1.1/Bios', { method: 'GET', headers: { 'Content-Type': 'application/json' } }).then(async response => {
             if (response.ok) {
-                let result = await response.json();
-                result.sort((a, b) => a.platformname.charCodeAt(0) - b.platformname.charCodeAt(0));
-
-                // sort into a dictionary
+                const result = await response.json();
+                result.sort((a, b) => a.platformname.localeCompare(b.platformname));
                 result.forEach(item => {
-                    let tempArray = [];
-                    if (this.biosDict.hasOwnProperty(item.platformname)) {
-                        tempArray = this.biosDict[item.platformname];
-                        tempArray.push(item);
-                    } else {
-                        tempArray.push(item);
-                        this.biosDict[item.platformname] = tempArray;
-                    }
-
-                    this.biosDict[item.platformname] = tempArray;
+                    const arr = this.biosDict[item.platformname] || [];
+                    arr.push(item);
+                    this.biosDict[item.platformname] = arr;
                 });
-
                 this.displayFirmwareList();
             }
         });
@@ -174,163 +130,106 @@ class BiosTable {
 
     displayFirmwareList() {
         this.targetDiv.innerHTML = '';
-
         let totalAvailable = 0;
         let totalCount = 0;
-
         for (const [key, value] of Object.entries(this.biosDict)) {
-            // new platform - show a header
-            let platformRow = document.createElement('div');
-            platformRow.classList.add('section')
-
-            let platformHeader = document.createElement('div');
+            const platformRow = document.createElement('div');
+            platformRow.classList.add('section');
+            const platformHeader = document.createElement('div');
             platformHeader.classList.add('section-header');
-
-            let platformHeaderValue = document.createElement('span');
+            const platformHeaderValue = document.createElement('span');
             platformHeaderValue.innerHTML = key;
             platformHeader.appendChild(platformHeaderValue);
-
-            let platformHeaderEdit = document.createElement('a');
+            const platformHeaderEdit = document.createElement('a');
             platformHeaderEdit.href = '#';
             platformHeaderEdit.style.float = 'right';
             platformHeaderEdit.addEventListener('click', () => {
-                let biosEditor = new BiosEditor(value[0].platformid, this.loadBios);
+                const biosEditor = new BiosEditor(value[0].platformid, this.loadBios.bind(this));
                 biosEditor.OKCallback = this.loadBios.bind(this);
                 biosEditor.open();
             });
-            let platformHeaderEditIcon = document.createElement('img');
+            const platformHeaderEditIcon = document.createElement('img');
             platformHeaderEditIcon.src = '/images/edit.svg';
             platformHeaderEditIcon.classList.add('banner_button_image');
             platformHeaderEdit.appendChild(platformHeaderEditIcon);
             platformHeader.appendChild(platformHeaderEdit);
-
-            let platformHeaderCounter = document.createElement('span');
+            const platformHeaderCounter = document.createElement('span');
             platformHeaderCounter.style.float = 'right';
             platformHeaderCounter.style.marginRight = '10px';
             platformHeader.appendChild(platformHeaderCounter);
-
             platformRow.appendChild(platformHeader);
-
-            let platformBody = document.createElement('div');
+            const platformBody = document.createElement('div');
             platformBody.classList.add('section-body');
-
-            // create new table
-            let newTable = document.createElement('table');
+            const newTable = document.createElement('table');
             newTable.classList.add('romtable');
             newTable.setAttribute('cellspacing', 0);
-
-            // create the header row
-            let headerRow = document.createElement('tr');
-            headerRow.classList.add('romrow');
-            headerRow.classList.add('romheader');
-
-            let headerCell1 = document.createElement('th');
-            headerCell1.classList.add('romcell');
-            headerCell1.classList.add('card-services-column');
-            headerCell1.innerHTML = 'Description';
+            const headerRow = document.createElement('tr');
+            headerRow.classList.add('romrow', 'romheader');
+            const headerCell1 = document.createElement('th');
+            headerCell1.classList.add('romcell', 'card-services-column');
+            headerCell1.innerHTML = window.lang ? window.lang.translate('platforms.firmware.table.header.description') : 'Description';
             headerRow.appendChild(headerCell1);
-
-            let headerCell2 = document.createElement('th');
+            const headerCell2 = document.createElement('th');
             headerCell2.classList.add('romcell');
-            headerCell2.innerHTML = 'File name';
+            headerCell2.innerHTML = window.lang ? window.lang.translate('platforms.firmware.table.header.file_name') : 'File name';
             headerRow.appendChild(headerCell2);
-
-            let headerCell3 = document.createElement('th');
-            headerCell3.classList.add('romcell');
-            headerCell3.classList.add('card-services-column');
-            headerCell3.innerHTML = 'MD5 Hash';
+            const headerCell3 = document.createElement('th');
+            headerCell3.classList.add('romcell', 'card-services-column');
+            headerCell3.innerHTML = window.lang ? window.lang.translate('platforms.firmware.table.header.md5_hash') : 'MD5 Hash';
             headerRow.appendChild(headerCell3);
-
-            let headerCell4 = document.createElement('th');
+            const headerCell4 = document.createElement('th');
             headerCell4.classList.add('romcell');
-            headerCell4.innerHTML = 'Availability';
+            headerCell4.innerHTML = window.lang ? window.lang.translate('platforms.firmware.table.header.availability') : 'Availability';
             headerRow.appendChild(headerCell4);
-
             newTable.appendChild(headerRow);
-
             let totalPlatformAvailable = 0;
-
-            let showAvailable = this.showAvailableCheckbox.checked;
-            let showUnavailable = this.showUnavailableCheckbox.checked;
-
+            const showAvailable = this.showAvailableCheckbox.checked;
+            const showUnavailable = this.showUnavailableCheckbox.checked;
             value.forEach(item => {
-                // update counters
-                if (item.available == true) {
-                    totalAvailable += 1;
-                    totalPlatformAvailable += 1;
-                }
-
-                if (
-                    (item.available == true && showAvailable == true) ||
-                    (item.available == false && showUnavailable == true)
-                ) {
-                    let biosFilename = document.createElement('a');
-                    biosFilename.href = '/api/v1.1/Bios/' + item.platformid + '/' + item.filename;
-                    biosFilename.innerHTML = item.filename;
-                    biosFilename.classList.add('romlink');
-
-                    let availableText = document.createElement('span');
-                    if (item.available == true) {
-                        availableText.innerHTML = 'Available';
-                        availableText.classList.add('greentext');
-
-                        biosFilename = document.createElement('a');
+                if (item.available) { totalAvailable++; totalPlatformAvailable++; }
+                if ((item.available && showAvailable) || (!item.available && showUnavailable)) {
+                    let biosFilename = document.createElement(item.available ? 'a' : 'span');
+                    if (item.available) {
                         biosFilename.href = '/api/v1.1/Bios/' + item.platformid + '/' + item.filename;
-                        biosFilename.innerHTML = item.filename;
                         biosFilename.classList.add('romlink');
-                    } else {
-                        availableText.innerHTML = 'Unavailable';
-                        availableText.classList.add('redtext');
-
-                        biosFilename = document.createElement('span');
-                        biosFilename.innerHTML = item.filename;
                     }
-
-                    // create a new row
-                    let itemRow = document.createElement('tr');
+                    biosFilename.innerHTML = item.filename;
+                    const availableText = document.createElement('span');
+                    if (item.available) {
+                        availableText.innerHTML = window.lang ? window.lang.translate('firmware.filter.available') : 'Available';
+                        availableText.classList.add('greentext');
+                    } else {
+                        availableText.innerHTML = window.lang ? window.lang.translate('firmware.filter.unavailable') : 'Unavailable';
+                        availableText.classList.add('redtext');
+                    }
+                    const itemRow = document.createElement('tr');
                     itemRow.classList.add('romrow');
-
-                    // create the cells
-                    let descriptionCell = document.createElement('td');
-                    descriptionCell.classList.add('romcell');
-                    descriptionCell.classList.add('bioscell');
-                    descriptionCell.classList.add('card-services-column');
+                    const descriptionCell = document.createElement('td');
+                    descriptionCell.classList.add('romcell', 'bioscell', 'card-services-column');
                     descriptionCell.innerHTML = item.description;
                     itemRow.appendChild(descriptionCell);
-
-                    let filenameCell = document.createElement('td');
-                    filenameCell.classList.add('romcell');
-                    filenameCell.classList.add('bioscell');
+                    const filenameCell = document.createElement('td');
+                    filenameCell.classList.add('romcell', 'bioscell');
                     filenameCell.appendChild(biosFilename);
                     itemRow.appendChild(filenameCell);
-
-                    let hashCell = document.createElement('td');
-                    hashCell.classList.add('romcell');
-                    hashCell.classList.add('bioscell');
-                    hashCell.classList.add('card-services-column');
+                    const hashCell = document.createElement('td');
+                    hashCell.classList.add('romcell', 'bioscell', 'card-services-column');
                     hashCell.innerHTML = item.hash;
                     itemRow.appendChild(hashCell);
-
-                    let availableCell = document.createElement('td');
-                    availableCell.classList.add('romcell');
-                    availableCell.classList.add('bioscell');
+                    const availableCell = document.createElement('td');
+                    availableCell.classList.add('romcell', 'bioscell');
                     availableCell.appendChild(availableText);
                     itemRow.appendChild(availableCell);
-
                     newTable.appendChild(itemRow);
                 }
-                totalCount += 1;
+                totalCount++;
             });
-
-            platformHeaderCounter.innerHTML = totalPlatformAvailable + ' / ' + value.length + ' available';
-
+            platformHeaderCounter.innerHTML = window.lang ? window.lang.translate('platforms.firmware.platform_available_count', [totalPlatformAvailable, value.length]) : (totalPlatformAvailable + ' / ' + value.length + ' available');
             platformBody.append(newTable);
             platformRow.append(platformBody);
-
             this.targetDiv.append(platformRow);
         }
-
-        document.getElementById('firmware_totalcount').innerHTML = totalAvailable + ' / ' + totalCount + ' available';
+        document.getElementById('firmware_totalcount').innerHTML = window.lang ? window.lang.translate('platforms.firmware.total_available_count', [totalAvailable, totalCount]) : (totalAvailable + ' / ' + totalCount + ' available');
     }
 }
 
@@ -339,109 +238,63 @@ class BiosEditor {
         this.PlatformId = PlatformId;
         this.OKCallback = OKCallback;
         this.CancelCallback = CancelCallback;
+        this.BiosItems = [];
     }
 
-    BiosItems = [];
-
     async open() {
-        // Create the modal
         this.dialog = new Modal("bios");
         await this.dialog.BuildModal();
-
-        // Get the platform data
-        await fetch('/api/v1.1/PlatformMaps/' + this.PlatformId, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        }).then(async response => {
+        await fetch('/api/v1.1/PlatformMaps/' + this.PlatformId, { method: 'GET', headers: { 'Content-Type': 'application/json' } }).then(async response => {
             if (response.ok) {
-                let result = await response.json();
-                this.PlatformData = result;
-
-                // setup the dialog
-                this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = this.PlatformData.igdbName;
-
-                // setup the bios editor page
-                let biosEditor = this.dialog.modalElement.querySelector('#bios_editor');
-                biosEditor.innerHTML = '';
-
-                this.PlatformData.bios.forEach(bios => {
-                    let biosItem = new MappingBiosItem(bios.hash, bios.description, bios.filename);
-                    biosEditor.appendChild(biosItem.Item);
-                    this.BiosItems.push(biosItem);
-                });
-
-                let newBiosItem = new MappingBiosItem('', '', '');
-                biosEditor.appendChild(newBiosItem.Item);
-                this.BiosItems.push(newBiosItem);
-
-                let addBiosButton = this.dialog.modalElement.querySelector('#mapping_edit_bios_add');
-                addBiosButton.addEventListener('click', () => {
-                    let newBiosItem = new MappingBiosItem('', '', '');
-                    biosEditor.appendChild(newBiosItem.Item);
-                    this.BiosItems.push(newBiosItem);
-                });
-
-                // setup the buttons
-                let okButton = new ModalButton("OK", 1, this, async (callingObject) => {
-                    // build bios items list
-                    let biosItems = [];
-                    callingObject.BiosItems.forEach(item => {
-                        // only add items that are not deleted and have a hash and filename
-                        if (item.Deleted == false && item.HashInput.value != '' && item.FilenameInput.value != '') {
-                            let biosItem = {
-                                hash: item.HashInput.value,
-                                description: item.DescriptionInput.value,
-                                filename: item.FilenameInput.value
-                            };
-
-                            biosItems.push(biosItem);
-                        }
-                    });
-                    callingObject.PlatformData.bios = biosItems;
-
-                    await fetch('/api/v1.1/PlatformMaps/' + callingObject.PlatformId, {
-                        method: 'PATCH',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify(callingObject.PlatformData)
-                    }).then(async response => {
-                        if (response.ok) {
-                            let result = await response.json();
-                            console.log(result);
-
-                            if (this.OKCallback) {
-                                this.OKCallback();
-                            }
-
-                            callingObject.dialog.close();
-                        } else {
-                            let warningDialog = new Dialog("Error", "Failed to save platform data", "OK");
-                            warningDialog.open();
-                        }
-                    });
-                });
-                this.dialog.addButton(okButton);
-
-                // create the cancel button
-                let cancelButton = new ModalButton("Cancel", 0, this, (callingObject) => {
-                    if (this.CancelCallback) {
-                        this.CancelCallback();
-                    }
-
-                    callingObject.dialog.close();
-                });
-                this.dialog.addButton(cancelButton);
-
-                // Show the modal
-                this.dialog.open();
+                this.PlatformData = await response.json();
             } else {
-                let warningDialog = new MessageBox("Error", "Failed to load platform data", "OK");
-                warningDialog.open();
+                new MessageBox(window.lang ? window.lang.translate('generic.error') : 'Error', window.lang ? window.lang.translate('platforms.mapping.failed_load') : 'Failed to load platform data').open();
             }
         });
+        if (!this.PlatformData) { return; }
+        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = this.PlatformData.igdbName;
+        const biosEditor = this.dialog.modalElement.querySelector('#bios_editor');
+        biosEditor.innerHTML = '';
+        this.PlatformData.bios.forEach(bios => {
+            const biosItem = new MappingBiosItem(bios.hash, bios.description, bios.filename);
+            biosEditor.appendChild(biosItem.Item);
+            this.BiosItems.push(biosItem);
+        });
+        const newBiosItem = new MappingBiosItem('', '', '');
+        biosEditor.appendChild(newBiosItem.Item);
+        this.BiosItems.push(newBiosItem);
+        const addBiosButton = this.dialog.modalElement.querySelector('#mapping_edit_bios_add');
+        addBiosButton.addEventListener('click', () => {
+            const nb = new MappingBiosItem('', '', '');
+            biosEditor.appendChild(nb.Item);
+            this.BiosItems.push(nb);
+        });
+        const okButton = new ModalButton(window.lang ? window.lang.translate('generic.ok') : 'OK', 1, this, async (callingObject) => {
+            const biosItems = [];
+            callingObject.BiosItems.forEach(item => {
+                if (!item.Deleted && item.HashInput.value !== '' && item.FilenameInput.value !== '') {
+                    biosItems.push({ hash: item.HashInput.value, description: item.DescriptionInput.value, filename: item.FilenameInput.value });
+                }
+            });
+            callingObject.PlatformData.bios = biosItems;
+            await fetch('/api/v1.1/PlatformMaps/' + callingObject.PlatformId, {
+                method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(callingObject.PlatformData)
+            }).then(async response => {
+                if (response.ok) {
+                    if (this.OKCallback) { this.OKCallback(); }
+                    callingObject.dialog.close();
+                } else {
+                    new Dialog(window.lang ? window.lang.translate('generic.error') : 'Error', window.lang ? window.lang.translate('platforms.mapping.failed_save') : 'Failed to save platform data', window.lang ? window.lang.translate('generic.ok') : 'OK').open();
+                }
+            });
+        });
+        this.dialog.addButton(okButton);
+        const cancelButton = new ModalButton(window.lang ? window.lang.translate('generic.cancel') : 'Cancel', 0, this, (callingObject) => {
+            if (this.CancelCallback) { this.CancelCallback(); }
+            callingObject.dialog.close();
+        });
+        this.dialog.addButton(cancelButton);
+        this.dialog.open();
     }
 }
 
@@ -450,49 +303,35 @@ class MappingBiosItem {
         this.Hash = Hash;
         this.Description = Description;
         this.Filename = Filename;
-
         this.Deleted = false;
-
         this.Item = document.createElement('div');
-        this.Item.classList.add('biositem');
-        this.Item.classList.add('romrow');
-
+        this.Item.classList.add('biositem', 'romrow');
         this.HashInput = document.createElement('input');
         this.HashInput.type = 'text';
         this.HashInput.value = this.Hash;
-        this.HashInput.classList.add('biosinput');
-        this.HashInput.classList.add('bioshash');
-        this.HashInput.placeholder = 'Hash';
+        this.HashInput.classList.add('biosinput', 'bioshash');
+        this.HashInput.placeholder = window.lang ? window.lang.translate('platforms.bios.placeholder.hash') : 'Hash';
         this.Item.appendChild(this.HashInput);
-
         this.DescriptionInput = document.createElement('input');
         this.DescriptionInput.type = 'text';
         this.DescriptionInput.value = this.Description;
-        this.DescriptionInput.classList.add('biosinput');
-        this.DescriptionInput.classList.add('biosdescription');
-        this.DescriptionInput.placeholder = 'Description';
+        this.DescriptionInput.classList.add('biosinput', 'biosdescription');
+        this.DescriptionInput.placeholder = window.lang ? window.lang.translate('platforms.bios.placeholder.description') : 'Description';
         this.Item.appendChild(this.DescriptionInput);
-
         this.FilenameInput = document.createElement('input');
         this.FilenameInput.type = 'text';
         this.FilenameInput.value = this.Filename;
-        this.FilenameInput.classList.add('biosinput');
-        this.FilenameInput.classList.add('biosfilename');
-        this.FilenameInput.placeholder = 'Filename';
+        this.FilenameInput.classList.add('biosinput', 'biosfilename');
+        this.FilenameInput.placeholder = window.lang ? window.lang.translate('platforms.bios.placeholder.filename') : 'Filename';
         this.Item.appendChild(this.FilenameInput);
-
         this.DeleteButton = document.createElement('a');
         this.DeleteButton.href = '#';
-        this.DeleteButton.classList.add('biositemcontrol');
-        this.DeleteButton.classList.add('biosdelete');
-        this.DeleteButton.addEventListener('click', () => {
-            this.Item.parentElement.removeChild(this.Item);
-            this.Deleted = true;
-        });
+        this.DeleteButton.classList.add('biositemcontrol', 'biosdelete');
+        this.DeleteButton.addEventListener('click', () => { this.Item.parentElement.removeChild(this.Item); this.Deleted = true; });
         this.DeleteImage = document.createElement('img');
         this.DeleteImage.src = '/images/delete.svg';
-        this.DeleteImage.alt = 'Delete';
-        this.DeleteImage.title = 'Delete';
+        this.DeleteImage.alt = window.lang ? window.lang.translate('generic.delete') : 'Delete';
+        this.DeleteImage.title = window.lang ? window.lang.translate('generic.delete') : 'Delete';
         this.DeleteImage.classList.add('banner_button_image');
         this.DeleteButton.appendChild(this.DeleteImage);
         this.Item.appendChild(this.DeleteButton);

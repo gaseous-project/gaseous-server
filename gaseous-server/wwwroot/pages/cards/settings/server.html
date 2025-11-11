@@ -1,24 +1,25 @@
 <div class="section">
-    <div class="section-header">Logging</div>
+    <div class="section-header" data-i18n="serversettings.logging_header">Logging</div>
     <div class="section-body">
         <table>
             <tr>
                 <td style="width: 25%;">
-                    Write logs
+                    <span data-i18n="serversettings.write_logs_label">Write logs</span>
                 </td>
                 <td>
                     <input type="radio" name="settings_logs_write" id="settings_logs_write_db" value="false"
                         data-settingname="logginconfiguration.alwayslogtodisk" checked="checked"><label
-                        for="settings_logs_write_db"> To database only
-                        (default)</label>
+                        for="settings_logs_write_db"> <span data-i18n="serversettings.write_to_database_only_option">To
+                            database only (default)</span></label>
                 </td>
             </tr>
             <tr>
                 <td></td>
                 <td>
                     <input type="radio" name="settings_logs_write" id="settings_logs_write_fs" value="true"
-                        data-settingname="logginconfiguration.alwayslogtodisk"><label for="settings_logs_write_fs"> To
-                        database and disk</label>
+                        data-settingname="logginconfiguration.alwayslogtodisk"><label for="settings_logs_write_fs">
+                        <span data-i18n="serversettings.write_to_database_and_disk_option">To database and
+                            disk</span></label>
                 </td>
             </tr>
             <tr>
@@ -26,7 +27,7 @@
             </tr>
             <tr>
                 <td style="width: 25%;">
-                    Minimum log retention (days):
+                    <span data-i18n="serversettings.minimum_log_retention_label">Minimum log retention (days):</span>
                 </td>
                 <td>
                     <input type="number" min="1" id="settings_logs_retention"
@@ -37,11 +38,12 @@
     </div>
 </div>
 <div class="section">
-    <div class="section-header">Emulator</div>
+    <div class="section-header" data-i18n="serversettings.emulator_header">Emulator</div>
     <div class="section-body">
         <table>
             <tr>
-                <td style="width: 25%;"><label for="settings_emulator_debug">Enable debug mode</label></td>
+                <td style="width: 25%;"><label for="settings_emulator_debug"
+                        data-i18n="serversettings.enable_debug_mode_label">Enable debug mode</label></td>
                 <td><input type="checkbox" name="settings_emulator" id="settings_emulator_debug" checked="checked"
                         data-settingname="emulatordebugmode" />
                 </td>

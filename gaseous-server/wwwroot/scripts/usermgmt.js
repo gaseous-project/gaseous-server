@@ -9,7 +9,8 @@ class UserNew {
         await this.dialog.BuildModal();
 
         // setup the dialog
-        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = "New User";
+        // Localised dialog title
+        this.dialog.modalElement.querySelector('#modal-header-text').innerHTML = window.lang?.translate('usernewmodal.dialog_title') || 'New User';
         this.dialog.modalElement.style = 'width: 390px; height: 480px; min-width: unset; min-height: unset; max-width: unset; max-height: unset;';
 
         // setup email check
@@ -24,17 +25,23 @@ class UserNew {
         this.PasswordCheck = new PasswordCheck(this.password_new, this.password_confirm, this.password_error);
 
         // add the ok button
-        let okButton = new ModalButton("OK", 1, this, async function (callingObject) {
+        let okButton = new ModalButton(window.lang?.translate('generic.ok') || 'OK', 1, this, async function (callingObject) {
             if (!await EmailCheck.CheckEmail(callingObject.EmailCheck, callingObject.email)) {
                 // display an error
-                let warningDialog = new MessageBox("New User Error", "Invalid email address. Please correct the errors before continuing.");
+                let warningDialog = new MessageBox(
+                    window.lang?.translate('usernewmodal.error.title') || 'New User Error',
+                    window.lang?.translate('usernewmodal.error.invalid_email_message') || 'Invalid email address. Please correct the errors before continuing.'
+                );
                 warningDialog.open();
                 return;
             }
 
             if (!PasswordCheck.CheckPasswords(callingObject.PasswordCheck, callingObject.password_new, callingObject.password_confirm)) {
                 // display an error
-                let warningDialog = new MessageBox("New User Error", "The password doesn't meet the requirements. Please correct the errors before continuing.");
+                let warningDialog = new MessageBox(
+                    window.lang?.translate('usernewmodal.error.title') || 'New User Error',
+                    window.lang?.translate('usernewmodal.error.password_requirements_failed_message') || "The password doesn't meet the requirements. Please correct the errors before continuing."
+                );
                 warningDialog.open();
                 return;
             }
@@ -62,7 +69,10 @@ class UserNew {
                     callingObject.dialog.close();
                 } else {
                     let result = await response.json();
-                    let warningDialog = new MessageBox("New User Error", "An error occurred while creating the user. Check that the email address is valid and the password meets the requirements.");
+                    let warningDialog = new MessageBox(
+                        window.lang?.translate('usernewmodal.error.title') || 'New User Error',
+                        window.lang?.translate('usernewmodal.error.creation_failed_message') || 'An error occurred while creating the user. Check that the email address is valid and the password meets the requirements.'
+                    );
                     warningDialog.open();
                 }
             });
@@ -70,7 +80,7 @@ class UserNew {
         this.dialog.addButton(okButton);
 
         // add the cancel button
-        let cancelButton = new ModalButton("Cancel", 0, this, async function (callingObject) {
+        let cancelButton = new ModalButton(window.lang?.translate('generic.cancel') || 'Cancel', 0, this, async function (callingObject) {
             callingObject.dialog.close();
         });
         this.dialog.addButton(cancelButton);
@@ -100,7 +110,10 @@ class UserEdit {
                 this.user = result;
             } else {
                 let result = await response.json();
-                let warningDialog = new MessageBox("Edit User Error", "An error occurred while retrieving the user.");
+                let warningDialog = new MessageBox(
+                    window.lang?.translate('usereditmodal.error.title') || 'Edit User Error',
+                    window.lang?.translate('usereditmodal.error.retrieve_failed_message') || 'An error occurred while retrieving the user.'
+                );
                 warningDialog.open();
             }
         });
@@ -126,11 +139,11 @@ class UserEdit {
         this.dialog.modalElement.querySelector('#user-id').innerHTML = this.user.id;
         let userProfileCard = new ProfileCard(this.user.profileId, true);
         if (this.user.lockoutEnabled === true) {
-            this.dialog.modalElement.querySelector('#user-lockedout').innerHTML = 'Locked';
+            this.dialog.modalElement.querySelector('#user-lockedout').innerHTML = window.lang?.translate('usereditmodal.status.locked') || 'Locked';
             this.dialog.modalElement.querySelector('#user-lockedout').style.backgroundColor = 'red';
-            this.dialog.modalElement.querySelector('#user-lockedout-end').innerHTML = 'until ' + new Date(this.user.lockoutEnd).toLocaleString();
+            this.dialog.modalElement.querySelector('#user-lockedout-end').innerHTML = (window.lang?.translate('usereditmodal.status.locked_until_prefix') || 'until ') + new Date(this.user.lockoutEnd).toLocaleString();
         } else {
-            this.dialog.modalElement.querySelector('#user-lockedout').innerHTML = 'Unlocked';
+            this.dialog.modalElement.querySelector('#user-lockedout').innerHTML = window.lang?.translate('usereditmodal.status.unlocked') || 'Unlocked';
             this.dialog.modalElement.querySelector('#user-lockedout').style.backgroundColor = '';
             this.dialog.modalElement.querySelector('#user-lockedout-end').innerHTML = '';
         }
@@ -161,13 +174,13 @@ class UserEdit {
                 this.rolePermTable.classList.add('expanded');
                 this.rolePermCover.classList.remove('collapsed');
                 this.rolePermCover.classList.add('expanded');
-                this.rolePermLink.innerHTML = 'Hide details...';
+                this.rolePermLink.innerHTML = window.lang?.translate('usereditmodal.permissions.hide_details_link') || 'Hide details...';
             } else {
                 this.rolePermTable.classList.remove('expanded');
                 this.rolePermTable.classList.add('collapsed');
                 this.rolePermCover.classList.remove('expanded');
                 this.rolePermCover.classList.add('collapsed');
-                this.rolePermLink.innerHTML = 'Show details...';
+                this.rolePermLink.innerHTML = window.lang?.translate('usereditmodal.permissions.show_details_link') || 'Show details...';
             }
         });
 
@@ -208,7 +221,7 @@ class UserEdit {
         tCell.appendChild(includeUnratedCheckbox);
         let includeUnratedLabel = document.createElement('label');
         includeUnratedLabel.htmlFor = 'includeUnrated';
-        includeUnratedLabel.innerHTML = 'Include unrated titles';
+        includeUnratedLabel.innerHTML = window.lang?.translate('usereditmodal.agerestrictions.include_unrated_label') || 'Include unrated titles';
         tCell.appendChild(includeUnratedLabel);
         tRow.appendChild(tCell);
         ageRestrictionPolicyTable.appendChild(tRow);
@@ -229,13 +242,13 @@ class UserEdit {
                 this.agePermTable.classList.add('expanded');
                 this.agePermCover.classList.remove('collapsed');
                 this.agePermCover.classList.add('expanded');
-                this.agePermLink.innerHTML = 'Hide details...';
+                this.agePermLink.innerHTML = window.lang?.translate('usereditmodal.age_ratings.hide_details_link') || 'Hide details...';
             } else {
                 this.agePermTable.classList.remove('expanded');
                 this.agePermTable.classList.add('collapsed');
                 this.agePermCover.classList.remove('expanded');
                 this.agePermCover.classList.add('collapsed');
-                this.agePermLink.innerHTML = 'Show details...';
+                this.agePermLink.innerHTML = window.lang?.translate('usereditmodal.age_ratings.show_details_link') || 'Show details...';
             }
         });
 
@@ -246,13 +259,16 @@ class UserEdit {
         this.PasswordCheck = new PasswordCheck(this.password_new, this.password_confirm, this.password_error);
 
         // create the ok button
-        let okButton = new ModalButton("OK", 1, this, async function (callingObject) {
+        let okButton = new ModalButton(window.lang?.translate('generic.ok') || 'OK', 1, this, async function (callingObject) {
             // check if a new password has been entered
             if (callingObject.password_new.value.length > 0 && callingObject.password_confirm.value.length > 0) {
                 // check if the new password meets the rules
                 if (!PasswordCheck.CheckPasswords(callingObject.PasswordCheck, callingObject.password_new, callingObject.password_confirm)) {
                     // display an error
-                    let warningDialog = new MessageBox("Password Reset Error", "The new password does not meet the requirements.");
+                    let warningDialog = new MessageBox(
+                        window.lang?.translate('usereditmodal.password_reset_error_title') || 'Password Reset Error',
+                        window.lang?.translate('usereditmodal.password_reset_requirements_failed_error') || 'The new password does not meet the requirements.'
+                    );
                     warningDialog.open();
                     return;
                 }
@@ -274,7 +290,10 @@ class UserEdit {
                         // handle the error
                         console.error("Error updating password:");
                         console.error(response);
-                        let warningDialog = new MessageBox("Password Reset Error", "The password reset failed. Check the current password and try again.");
+                        let warningDialog = new MessageBox(
+                            window.lang?.translate('usereditmodal.password_reset_error_title') || 'Password Reset Error',
+                            window.lang?.translate('usereditmodal.password_reset_failed_error') || 'The password reset failed. Check the current password and try again.'
+                        );
                         warningDialog.open();
                         changeSuccessfull = false;
                         return;
@@ -300,7 +319,10 @@ class UserEdit {
                     // handle the error
                     console.error("Error updating role:");
                     console.error(response);
-                    let warningDialog = new MessageBox("Role Update Error", "The role update failed. Check the role and try again.");
+                    let warningDialog = new MessageBox(
+                        window.lang?.translate('usereditmodal.role_update_error_title') || 'Role Update Error',
+                        window.lang?.translate('usereditmodal.role_update_failed_error') || 'The role update failed. Check the role and try again.'
+                    );
                     warningDialog.open();
                     return;
                 }
@@ -324,7 +346,10 @@ class UserEdit {
                     // handle the error
                     console.error("Error updating security profile:");
                     console.error(response);
-                    let warningDialog = new MessageBox("Security Profile Update Error", "The security profile update failed. Check the settings and try again.");
+                    let warningDialog = new MessageBox(
+                        window.lang?.translate('usereditmodal.security_profile_update_error_title') || 'Security Profile Update Error',
+                        window.lang?.translate('usereditmodal.security_profile_update_failed_error') || 'The security profile update failed. Check the settings and try again.'
+                    );
                     warningDialog.open();
                     return;
                 }
@@ -338,7 +363,7 @@ class UserEdit {
         this.dialog.addButton(okButton);
 
         // create the cancel button
-        let cancelButton = new ModalButton("Cancel", 0, this, function (callingObject) {
+        let cancelButton = new ModalButton(window.lang?.translate('generic.cancel') || 'Cancel', 0, this, function (callingObject) {
             if (callingObject.cancelCallback) {
                 callingObject.cancelCallback();
             }

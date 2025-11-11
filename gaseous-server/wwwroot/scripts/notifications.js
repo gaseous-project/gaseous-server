@@ -5,7 +5,7 @@ let notificationLoadErrorCallbacks = [];
 
 // fetch the latest notifications from the server every 5 seconds
 function startNotificationFetch() {
-    console.log('Fetching notifications every 5 seconds');
+    console.log(window.lang ? window.lang.translate('notifications.fetching_every_five_seconds') : 'Fetching notifications every 5 seconds');
     setInterval(async () => {
         if (notificationLoadStartCallbacks) {
             for (const callback of notificationLoadStartCallbacks) {
@@ -16,7 +16,7 @@ function startNotificationFetch() {
             if (response.ok) {
                 return response.json();
             } else {
-                console.error('Failed to fetch notifications:', response.statusText);
+                console.error((window.lang ? window.lang.translate('notifications.error.failed_fetch_prefix', [response.statusText]) : 'Failed to fetch notifications: ' + response.statusText));
                 if (notificationLoadEndCallbacks) {
                     for (const callback of notificationLoadErrorCallbacks) {
                         callback(response);
@@ -33,7 +33,7 @@ function startNotificationFetch() {
                 }
             }
         }).catch(error => {
-            console.error('Error fetching notifications:', error);
+            console.error((window.lang ? window.lang.translate('notifications.error.fetch_exception_prefix', [error]) : 'Error fetching notifications: ' + error));
             if (notificationLoadEndCallbacks) {
                 for (const callback of notificationLoadErrorCallbacks) {
                     callback(error);
@@ -162,7 +162,7 @@ class NotificationPanel {
 
         const databaseUpgradeTitle = document.createElement('div');
         databaseUpgradeTitle.classList.add('section-header');
-        databaseUpgradeTitle.innerHTML = 'Database Upgrade';
+        databaseUpgradeTitle.innerHTML = window.lang ? window.lang.translate('notifications.section.database_upgrade.title') : 'Database Upgrade';
         this.databaseUpgradePanel.appendChild(databaseUpgradeTitle);
 
         this.databaseUpgradeBody = document.createElement('div');
@@ -177,7 +177,7 @@ class NotificationPanel {
 
         const processingTitle = document.createElement('div');
         processingTitle.classList.add('section-header');
-        processingTitle.innerHTML = 'Import Status';
+        processingTitle.innerHTML = window.lang ? window.lang.translate('notifications.section.import_status.title') : 'Import Status';
         this.processingPanel.appendChild(processingTitle);
 
         this.processingBody = document.createElement('div');
@@ -197,7 +197,7 @@ class NotificationPanel {
 
         const completedTitle = document.createElement('div');
         completedTitle.classList.add('section-header');
-        completedTitle.innerHTML = 'Recently Imported';
+        completedTitle.innerHTML = window.lang ? window.lang.translate('notifications.section.recently_imported.title') : 'Recently Imported';
         this.completedPanel.appendChild(completedTitle);
 
         this.completedBody = document.createElement('div');
@@ -211,7 +211,7 @@ class NotificationPanel {
 
         const noNotificationsBody = document.createElement('div');
         noNotificationsBody.classList.add('section-body');
-        noNotificationsBody.innerHTML = 'No notifications available';
+        noNotificationsBody.innerHTML = window.lang ? window.lang.translate('notifications.none_available') : 'No notifications available';
         this.noNotifications.appendChild(noNotificationsBody);
 
         // append the panels to the main panel
@@ -261,14 +261,14 @@ class NotificationPanel {
             upgradeNotification.classList.add('notification_item');
 
             let upgradeLabel = document.createElement('span');
-            upgradeLabel.innerHTML = 'Upgrading database...';
+            upgradeLabel.innerHTML = window.lang ? window.lang.translate('notifications.database_upgrade.in_progress') : 'Upgrading database...';
             upgradeNotification.appendChild(upgradeLabel);
 
             let upgradeLabels = {
-                "MetadataRefresh_Platform": "Platform Metadata",
-                "MetadataRefresh_Signatures": "Signature Metadata",
-                "MetadataRefresh_Game": "Game Metadata",
-                "DatabaseMigration_1031": "Migrating user data to new database schema"
+                "MetadataRefresh_Platform": window.lang ? window.lang.translate('notifications.database_upgrade.task.platform_metadata') : 'Platform Metadata',
+                "MetadataRefresh_Signatures": window.lang ? window.lang.translate('notifications.database_upgrade.task.signature_metadata') : 'Signature Metadata',
+                "MetadataRefresh_Game": window.lang ? window.lang.translate('notifications.database_upgrade.task.game_metadata') : 'Game Metadata',
+                "DatabaseMigration_1031": window.lang ? window.lang.translate('notifications.database_upgrade.task.migrating_user_data') : 'Migrating user data to new database schema'
             }
 
             if (Object.keys(notifications['databaseUpgrade']).length > 0) {
@@ -311,7 +311,7 @@ class NotificationPanel {
             }
 
             let upgradeText = document.createElement('p');
-            upgradeText.innerHTML = 'The system is currently performing a database upgrade. This may take some time depending on the size of your library. Some features may not be available during the upgrade.';
+            upgradeText.innerHTML = window.lang ? window.lang.translate('notifications.database_upgrade.explanation') : 'The system is currently performing a database upgrade. This may take some time depending on the size of your library. Some features may not be available during the upgrade.';
             upgradeNotification.appendChild(upgradeText);
             this.databaseUpgradeBody.appendChild(upgradeNotification);
             showDatabaseUpgrade = true;
@@ -322,7 +322,7 @@ class NotificationPanel {
             if (notifications['importQueue']['Pending'] || notifications['importQueue']['Processing']) {
                 if (notifications['importQueue']['Pending']) {
                     showPending = true;
-                    this.pendingBody.innerHTML = notifications['importQueue']['Pending'] + ' imports pending';
+                    this.pendingBody.innerHTML = window.lang ? window.lang.translate('notifications.import_queue.pending_count', [notifications['importQueue']['Pending']]) : (notifications['importQueue']['Pending'] + ' imports pending');
                 }
 
                 if (notifications['importQueue']['Processing']) {

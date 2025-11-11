@@ -45,12 +45,12 @@ namespace gaseous_server.Classes
                     }
                     else
                     {
-                        Logging.Log(Logging.LogType.Warning, "Media Group", "Unable to add ROM id " + RomId + " to group. ROM platform is different from group platform.");
+                        Logging.LogKey(Logging.LogType.Warning, "process.media_group", "mediagroup.unable_to_add_rom_platform_different", null, new string[] { RomId.ToString() });
                     }
                 }
                 catch (Roms.InvalidRomId irid)
                 {
-                    Logging.Log(Logging.LogType.Warning, "Media Group", "Unable to add ROM id " + RomId + " to group. ROM doesn't exist", irid);
+                    Logging.LogKey(Logging.LogType.Warning, "process.media_group", "mediagroup.unable_to_add_rom_does_not_exist", null, new string[] { RomId.ToString() }, irid);
                 }
             }
 
@@ -164,12 +164,12 @@ namespace gaseous_server.Classes
                     }
                     else
                     {
-                        Logging.Log(Logging.LogType.Warning, "Media Group", "Unable to add ROM id " + RomId + " to group. ROM platform is different from group platform.");
+                        Logging.LogKey(Logging.LogType.Warning, "process.media_group", "mediagroup.unable_to_add_rom_platform_different", null, new string[] { RomId.ToString() });
                     }
                 }
                 catch (Roms.InvalidRomId irid)
                 {
-                    Logging.Log(Logging.LogType.Warning, "Media Group", "Unable to add ROM id " + RomId + " to group. ROM doesn't exist", irid);
+                    Logging.LogKey(Logging.LogType.Warning, "process.media_group", "mediagroup.unable_to_add_rom_does_not_exist", null, new string[] { RomId.ToString() }, irid);
                 }
             }
 
@@ -261,7 +261,7 @@ namespace gaseous_server.Classes
                 }
                 catch (Exception ex)
                 {
-                    Logging.Log(Logging.LogType.Warning, "Rom Group", "Unable to load ROM data", ex);
+                    Logging.LogKey(Logging.LogType.Warning, "process.rom_group", "romgroup.unable_to_load_rom_data", null, null, ex);
                 }
             }
 
@@ -302,7 +302,7 @@ namespace gaseous_server.Classes
                 Platform PlatformObject = await Platforms.GetPlatform(mediaGroupItem.PlatformId);
                 PlatformMapping.PlatformMapItem platformMapItem = await PlatformMapping.GetPlatformMap(mediaGroupItem.PlatformId);
 
-                Logging.Log(Logging.LogType.Information, "Media Group", "Beginning build of media group: " + GameObject.Name + " for platform " + PlatformObject.Name);
+                Logging.LogKey(Logging.LogType.Information, "process.media_group", "mediagroup.beginning_build_of_media_group_for_platform", null, new string[] { GameObject.Name ?? "", PlatformObject.Name ?? "" });
 
                 // set starting
                 string sql = "UPDATE RomMediaGroup SET Status=@bs WHERE Id=@id";
@@ -319,7 +319,7 @@ namespace gaseous_server.Classes
                     // clean up if needed
                     if (File.Exists(ZipFilePath))
                     {
-                        Logging.Log(Logging.LogType.Warning, "Media Group", "Deleting existing build of media group: " + GameObject.Name + " for platform " + PlatformObject.Name);
+                        Logging.LogKey(Logging.LogType.Warning, "process.media_group", "mediagroup.deleting_existing_build_of_media_group_for_platform", null, new string[] { GameObject.Name ?? "", PlatformObject.Name ?? "" });
                         File.Delete(ZipFilePath);
                     }
 
@@ -341,7 +341,7 @@ namespace gaseous_server.Classes
                             string romExt = Path.GetExtension(rom.Path);
                             if (new string[] { ".zip", ".rar", ".7z" }.Contains(romExt))
                             {
-                                Logging.Log(Logging.LogType.Information, "Media Group", "Decompressing ROM: " + rom.Name);
+                                Logging.LogKey(Logging.LogType.Information, "process.media_group", "mediagroup.decompressing_rom", null, new string[] { rom.Name });
 
                                 // is compressed
                                 switch (romExt)
@@ -353,7 +353,7 @@ namespace gaseous_server.Classes
                                             {
                                                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                                                 {
-                                                    Logging.Log(Logging.LogType.Information, "Media Group", "Extracting file: " + entry.Key);
+                                                    Logging.LogKey(Logging.LogType.Information, "process.media_group", "mediagroup.extracting_file", null, new string[] { entry.Key });
                                                     if (fileNameFound == false)
                                                     {
                                                         //check if extension is in valid extensions
@@ -374,7 +374,7 @@ namespace gaseous_server.Classes
                                         }
                                         catch (Exception zipEx)
                                         {
-                                            Logging.Log(Logging.LogType.Warning, "Media Group", "Unzip error", zipEx);
+                                            Logging.LogKey(Logging.LogType.Warning, "process.media_group", "mediagroup.unzip_error", null, null, zipEx);
                                             throw;
                                         }
                                         break;
@@ -386,7 +386,7 @@ namespace gaseous_server.Classes
                                             {
                                                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                                                 {
-                                                    Logging.Log(Logging.LogType.Information, "Media Group", "Extracting file: " + entry.Key);
+                                                    Logging.LogKey(Logging.LogType.Information, "process.media_group", "mediagroup.extracting_file", null, new string[] { entry.Key });
                                                     if (fileNameFound == false)
                                                     {
                                                         //check if extension is in valid extensions
@@ -407,7 +407,7 @@ namespace gaseous_server.Classes
                                         }
                                         catch (Exception zipEx)
                                         {
-                                            Logging.Log(Logging.LogType.Warning, "Media Group", "Unrar error", zipEx);
+                                            Logging.LogKey(Logging.LogType.Warning, "process.media_group", "mediagroup.unrar_error", null, null, zipEx);
                                             throw;
                                         }
                                         break;
@@ -419,7 +419,7 @@ namespace gaseous_server.Classes
                                             {
                                                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                                                 {
-                                                    Logging.Log(Logging.LogType.Information, "Media Group", "Extracting file: " + entry.Key);
+                                                    Logging.LogKey(Logging.LogType.Information, "process.media_group", "mediagroup.extracting_file", null, new string[] { entry.Key });
                                                     if (fileNameFound == false)
                                                     {
                                                         //check if extension is in valid extensions
@@ -440,7 +440,7 @@ namespace gaseous_server.Classes
                                         }
                                         catch (Exception zipEx)
                                         {
-                                            Logging.Log(Logging.LogType.Warning, "Media Group", "7z error", zipEx);
+                                            Logging.LogKey(Logging.LogType.Warning, "process.media_group", "mediagroup.sevenzip_error", null, null, zipEx);
                                             throw;
                                         }
                                         break;
@@ -450,7 +450,7 @@ namespace gaseous_server.Classes
                             else
                             {
                                 // is uncompressed
-                                Logging.Log(Logging.LogType.Information, "Media Group", "Copying ROM: " + rom.Name);
+                                Logging.LogKey(Logging.LogType.Information, "process.media_group", "mediagroup.copying_rom", null, new string[] { rom.Name });
                                 File.Copy(rom.Path, Path.Combine(ZipFileTempPath, Path.GetFileName(rom.Path)));
                             }
 
@@ -508,7 +508,7 @@ namespace gaseous_server.Classes
                     await File.WriteAllTextAsync(Path.Combine(ZipFileTempPath, GameObject.Name + ".m3u"), String.Join(Environment.NewLine, M3UFileContents));
 
                     // compress to zip
-                    Logging.Log(Logging.LogType.Information, "Media Group", "Compressing media group");
+                    Logging.LogKey(Logging.LogType.Information, "process.media_group", "mediagroup.compressing_media_group");
                     if (!Directory.Exists(Config.LibraryConfiguration.LibraryMediaGroupDirectory))
                     {
                         Directory.CreateDirectory(Config.LibraryConfiguration.LibraryMediaGroupDirectory);
@@ -518,7 +518,7 @@ namespace gaseous_server.Classes
                     // clean up
                     if (Directory.Exists(ZipFileTempPath))
                     {
-                        Logging.Log(Logging.LogType.Information, "Media Group", "Cleaning up");
+                        Logging.LogKey(Logging.LogType.Information, "process.media_group", "mediagroup.cleaning_up");
                         Directory.Delete(ZipFileTempPath, true);
                     }
 
@@ -543,7 +543,7 @@ namespace gaseous_server.Classes
                     dbDict["bs"] = GameRomMediaGroupItem.GroupBuildStatus.Failed;
                     await db.ExecuteCMDAsync(sql, dbDict);
 
-                    Logging.Log(Logging.LogType.Critical, "Media Group", "Media Group building has failed", ex);
+                    Logging.LogKey(Logging.LogType.Critical, "process.media_group", "mediagroup.media_group_building_has_failed", null, null, ex);
                 }
             }
         }

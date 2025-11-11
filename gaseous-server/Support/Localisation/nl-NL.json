@@ -1,0 +1,16 @@
+{
+    "name": "Dutch (Netherlands)",
+    "nativeName": "Nederlands (Nederland)",
+    "code": "nl-NL",
+    "pluralRule": "n != 1",
+    "pluralRules": {
+        "one": "n == 1",
+        "other": "n != 1"
+    },
+    "direction": "ltr",
+    "type": "Overlay",
+    "strings": {
+        "home.favourites": "Favorieten"
+    },
+    "serverstrings": {}
+}

@@ -414,25 +414,25 @@ class Filtering {
 
         // free text search
         let searchCollapsed = true;
-        if (this.filterCollapsed['Title Search'] !== undefined) {
-            searchCollapsed = this.filterCollapsed['Title Search'];
+        if (this.filterCollapsed['filtering.title_search'] !== undefined) {
+            searchCollapsed = this.filterCollapsed['filtering.title_search'];
         }
-        panel.appendChild(this.#BuildBasicPanel('Title Search', true, searchCollapsed, this.#BuildStringPanel('search', 'Title Search'), null));
+        panel.appendChild(this.#BuildBasicPanel('filtering.title_search', true, searchCollapsed, this.#BuildStringPanel('search', window.lang.translate('filtering.title_search')), null));
 
         // settings filter
         let settingsCollapsed = true;
         if (this.filterCollapsed['Settings'] !== undefined) {
             settingsCollapsed = this.filterCollapsed['Settings'];
         }
-        panel.appendChild(this.#BuildBasicPanel('Settings', true, settingsCollapsed, this.#BuildCheckList('settings', [
+        panel.appendChild(this.#BuildBasicPanel('filtering.settings', true, settingsCollapsed, this.#BuildCheckList('settings', [
             {
                 "id": "hasSavedGame",
-                "name": "Game has saves avaialble",
+                "name": window.lang.translate('filtering.settings.has_saved_game'),
                 "gameCount": 0
             },
             {
                 "id": "isFavourite",
-                "name": "Favourite",
+                "name": window.lang.translate('filtering.settings.favourite'),
                 "gameCount": 0
             }
         ], false), null));
@@ -442,63 +442,63 @@ class Filtering {
         if (this.filterCollapsed['Platforms'] !== undefined) {
             platformsCollapsed = this.filterCollapsed['Platforms'];
         }
-        panel.appendChild(this.#BuildBasicPanel('Platforms', true, platformsCollapsed, this.#BuildCheckList("Platforms", filter["platforms"], true), null));
+        panel.appendChild(this.#BuildBasicPanel('filtering.platforms', true, platformsCollapsed, this.#BuildCheckList("Platforms", filter["platforms"], true), null));
 
         // genres filter
         let genresCollapsed = true;
         if (this.filterCollapsed['Genres'] !== undefined) {
             genresCollapsed = this.filterCollapsed['Genres'];
         }
-        panel.appendChild(this.#BuildBasicPanel('Genres', true, genresCollapsed, this.#BuildCheckList("Genres", filter["genres"], true), null));
+        panel.appendChild(this.#BuildBasicPanel('filtering.genres', true, genresCollapsed, this.#BuildCheckList("Genres", filter["genres"], true), null));
 
         // themes filter
         let themesCollapsed = true;
         if (this.filterCollapsed['Themes'] !== undefined) {
             themesCollapsed = this.filterCollapsed['Themes'];
         }
-        panel.appendChild(this.#BuildBasicPanel('Themes', true, themesCollapsed, this.#BuildCheckList("Themes", filter["themes"], true), null));
+        panel.appendChild(this.#BuildBasicPanel('filtering.themes', true, themesCollapsed, this.#BuildCheckList("Themes", filter["themes"], true), null));
 
         // release year filter
         let releaseYearCollapsed = true;
         if (this.filterCollapsed['Release Year'] !== undefined) {
             releaseYearCollapsed = this.filterCollapsed['Release Year'];
         }
-        panel.appendChild(this.#BuildBasicPanel('Release Year', true, releaseYearCollapsed, this.#BuildRangePanel('releaseyear', 'Release Year', 1960, new Date().getFullYear()), null));
+        panel.appendChild(this.#BuildBasicPanel('filtering.release_year', true, releaseYearCollapsed, this.#BuildRangePanel('releaseyear', window.lang.translate('filtering.release_year'), 1960, new Date().getFullYear()), null));
 
         // players filter
         let playersCollapsed = true;
         if (this.filterCollapsed['Players'] !== undefined) {
             playersCollapsed = this.filterCollapsed['Players'];
         }
-        panel.appendChild(this.#BuildBasicPanel('Players', true, playersCollapsed, this.#BuildCheckList("Players", filter["gamemodes"], true), null));
+        panel.appendChild(this.#BuildBasicPanel('filtering.players', true, playersCollapsed, this.#BuildCheckList("Players", filter["gamemodes"], true), null));
 
         // player perspectives filter
         let perspectivesCollapsed = true;
         if (this.filterCollapsed['Player Perspectives'] !== undefined) {
             perspectivesCollapsed = this.filterCollapsed['Player Perspectives'];
         }
-        panel.appendChild(this.#BuildBasicPanel('Player Perspectives', true, perspectivesCollapsed, this.#BuildCheckList("perspectives", filter["playerperspectives"], true), null));
+        panel.appendChild(this.#BuildBasicPanel('filtering.player_perspectives', true, perspectivesCollapsed, this.#BuildCheckList("perspectives", filter["playerperspectives"], true), null));
 
         // age groups filter
         let ageGroupsCollapsed = true;
         if (this.filterCollapsed['Age Groups'] !== undefined) {
             ageGroupsCollapsed = this.filterCollapsed['Age Groups'];
         }
-        panel.appendChild(this.#BuildBasicPanel('Age Groups', true, ageGroupsCollapsed, this.#BuildCheckList("ageGroups", filter["agegroupings"], true), null));
+        panel.appendChild(this.#BuildBasicPanel('filtering.age_groups', true, ageGroupsCollapsed, this.#BuildCheckList("ageGroups", filter["agegroupings"], true), null));
 
         // user rating filter
         let userRatingCollapsed = true;
         if (this.filterCollapsed['User Rating'] !== undefined) {
             userRatingCollapsed = this.filterCollapsed['User Rating'];
         }
-        panel.appendChild(this.#BuildBasicPanel('User Rating', true, userRatingCollapsed, this.#BuildRangePanel('userrating', 'User Rating', 0, 100), null));
+        panel.appendChild(this.#BuildBasicPanel('filtering.user_rating', true, userRatingCollapsed, this.#BuildRangePanel('userrating', window.lang.translate('filtering.user_rating'), 0, 100), null));
 
         // user vote count
         let userVoteCountCollapsed = true;
         if (this.filterCollapsed['User Votes'] !== undefined) {
             userVoteCountCollapsed = this.filterCollapsed['User Votes'];
         }
-        panel.appendChild(this.#BuildBasicPanel('User Votes', true, userVoteCountCollapsed, this.#BuildRangePanel('uservotecount', 'User Votes', 0, 1000000), null));
+        panel.appendChild(this.#BuildBasicPanel('filtering.user_votes', true, userVoteCountCollapsed, this.#BuildRangePanel('uservotecount', window.lang.translate('filtering.user_votes'), 0, 1000000), null));
 
         targetElement.appendChild(panel);
         return targetElement;
@@ -542,7 +542,8 @@ class Filtering {
         }
 
         let heading = document.createElement('div');
-        heading.innerText = headingDisplayName;
+        heading.innerText = window.lang.translate(headingDisplayName);
+        heading.setAttribute('data-i18n', headingDisplayName);
         header.appendChild(heading);
 
         panel.appendChild(header);

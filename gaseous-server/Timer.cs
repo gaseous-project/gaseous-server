@@ -18,7 +18,7 @@ namespace gaseous_server
         public Task StartAsync(CancellationToken stoppingToken)
         {
             //_logger.LogInformation("Timed Hosted Service running.");
-            Logging.Log(Logging.LogType.Debug, "Background", "Starting background task monitor");
+            Logging.LogKey(Logging.LogType.Debug, "process.background", "background.starting_background_task_monitor");
 
             _timer = new Timer(DoWork, null, TimeSpan.FromSeconds(10),
                 TimeSpan.FromSeconds(5));
@@ -86,7 +86,7 @@ namespace gaseous_server
         public Task StopAsync(CancellationToken stoppingToken)
         {
             //_logger.LogInformation("Timed Hosted Service is stopping.");
-            Logging.Log(Logging.LogType.Debug, "Background", "Stopping background task monitor");
+            Logging.LogKey(Logging.LogType.Debug, "process.background", "background.stopping_background_task_monitor");
 
             _timer?.Change(Timeout.Infinite, 0);
 
