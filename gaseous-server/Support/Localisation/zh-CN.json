@@ -1,0 +1,11 @@
+{
+  "name": "Chinese (China)",
+  "nativeName": "中文（中国大陆）",
+  "code": "zh-CN",
+  "pluralRule": "true",
+  "pluralRules": { "other": "true" },
+  "direction": "ltr",
+  "type": "Overlay",
+  "strings": {},
+  "serverstrings": {}
+}
