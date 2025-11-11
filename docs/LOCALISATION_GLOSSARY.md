@@ -4,63 +4,63 @@ This glossary standardises high‑frequency UI terms across English (EN), French
 
 ## Core UI Terms
 <!-- GLOSSARY_TABLE_START -->
-| Key Concept | English | French | German | Portuguese |
-|-------------|---------|--------|--------|------------|
-| settings | Settings | Paramètres | Einstellungen | Definições |
-| preferences | Preferences | Préférences | Voreinstellungen | Preferências |
-| upload | Upload | Importer | Hochladen | Carregar |
-| download | Download | — | Herunterladen | Transferir |
-| library | Library | Bibliothèque | Bibliothek | Biblioteca |
-| home | Home | Accueil | Startseite | Início |
-| favorites | Favorites | Favoris | Favoriten | Favoritos |
-| play | Play | Jouer | Spielen | Jogar |
-| delete | Delete | Supprimer | Löschen | Eliminar |
-| add | Add | Ajouter | Hinzufügen | Adicionar |
-| emulator | Emulator | Émulateur | Emulator | Emulador |
-| firmware | Firmware | Firmware | Firmware | Firmware |
-| metadata | Metadata | Métadonnées | Metadaten | Metadados |
-| signature | Signature Source | Source de signature | Signaturquelle | Fonte de Assinatura |
-| rom | ROMs | ROM | ROMs | ROMs |
-| media | Media: {0} | Support : {0} | Medien: {0} | Média: {0} |
-| screenshot | Screenshot | Capture d'écran | Screenshot | Captura |
-| saved /game | Saved Games | Jeux sauvegardés | Gespeicherte Spiele | Jogos Gravados |
-| user | New User | Nouvel utilisateur | Neuer Benutzer | Novo Utilizador |
-| username | Username | Nom d'utilisateur | Benutzername | Nome de Utilizador |
-| password | Current Password | Mot de passe actuel | Aktuelles Passwort | Palavra-passe actual |
-| two /factor /authentication | Two Factor Authentication | Authentification à deux facteurs | Zwei-Faktor-Authentifizierung | Autenticação de Dois Factores |
-| error | Error | Erreur : {0} | Fehler | Erro |
-| warning | ⚠️ Warning | — | ⚠️ Warnung | ⚠️ Aviso |
-| information | ℹ️ Information | — | ℹ️ Information | ℹ️ Informação |
-| search | Title Search | — | Titelsuche | Pesquisa por Título |
-| filter | Filter | Filtre | Filter | Filtro |
-| platform | Platforms | Plateformes | Plattformen | Plataformas |
-| genre | Genres | Genres | Genres | Géneros |
-| theme | Themes | Thèmes | Themen | Temas |
-| rating | Rating: {0} | Note : {0} | Bewertung: {0} | Classificação: {0} |
-| player | Player | Joueur | Spieler | Player |
-| collection | Collection | Collection | Sammlung | Colecção |
-| size | Size: {0} | Taille : {0} | Größe: {0} | Tamanho: {0} |
-| summary | Summary | Résumé | Zusammenfassung | Resumo |
-| description | Description | Description  | Beschreibung | Descrição |
-| link | Link | Lien  | Link | Ligação |
-| source | Source | Source | Quelle | Fonte |
-| logs | Logs | Journaux | Protokolle | Registos |
-| task | Library scan | — | Bibliothek-Scan | Análise à biblioteca |
-| maintenance | Weekly maintenance | — | Wöchentliche Wartung | Manutenção semanal |
-| database | Database | Base de données | Datenbank | Base de Dados |
-| import | Upload | Importer | Hochladen | Carregar |
-| export | Export to JSON | Exporter en JSON | Als JSON exportieren | Exportar para JSON |
-| reset | Reset to Default | Réinitialiser par défaut | Auf Standard zurücksetzen | Repor Padrão |
-| background | Background | Arrière-plan | Hintergrund | Segundo Plano |
-| enabled | Enabled | Activé | Aktiv | Activo |
-| disabled | Disabled | Désactivé | Inaktiv | Inactivo |
-| pending | Pending | En attente | Ausstehend | Pendente |
-| processing | Processing | Traitement | Verarbeite | A processar |
-| complete | Complete | Terminé | Abgeschlossen | Concluído |
-| failed | Failed | Échec | Fehlgeschlagen | Falhou |
-| session | Failed to create session: {0} {1} | Échec de la création de la session : {0} {1} | Sitzung konnte nicht erstellt werden: {0} {1} | Falha ao criar sessão: {0} {1} |
-| game | Internet Game Database (Recommended) | Gaseous | Internet Game Database (Empfohlen) | Internet Game Database (Recomendado) |
-| cover /art | Coverart | Illustration | Coverart | Arte da Capa |
+| Key Concept | English | French | German | Portuguese | Russian | Japanese | Dutch |
+|-------------|---------|--------|--------|------------|---------|----------|-------|
+| settings | Settings | Paramètres | Einstellungen | Definições | Параметры | 設定 | Instellingen |
+| preferences | Preferences | Préférences | Voreinstellungen | Preferências | Предпочтения | 環境設定 | Voorkeuren |
+| upload | Upload | Importer | Hochladen | Carregar | Загрузка | アップロード | Uploaden |
+| download | Download | — | Herunterladen | Transferir | Скачать | ダウンロード | Downloaden |
+| library | Library | Bibliothèque | Bibliothek | Biblioteca | Библиотека | ライブラリ | Bibliotheek |
+| home | Home | Accueil | Startseite | Início | Главная | ホーム | Startpagina |
+| favorites | Favorites | Favoris | Favoriten | Favoritos | Избранное | お気に入り | Favorieten |
+| play | Play | Jouer | Spielen | Jogar | Играть | プレイ | Spelen |
+| delete | Delete | Supprimer | Löschen | Eliminar | Удалить | 削除 | Verwijderen |
+| add | Add | Ajouter | Hinzufügen | Adicionar | Добавить | 追加 | Toevoegen |
+| emulator | Emulator | Émulateur | Emulator | Emulador | Эмулятор | エミュレーター | Emulator |
+| firmware | Firmware | Firmware | Firmware | Firmware | Прошивка | ファームウェア | Firmware |
+| metadata | Metadata | Métadonnées | Metadaten | Metadados | Метаданные | メタデータ | Metadata |
+| signature | Signature Source | Source de signature | Signaturquelle | Fonte de Assinatura | Источник сигнатур | シグネチャソース | Signature-bron |
+| rom | ROMs | ROM | ROMs | ROMs | ROM'ы | ROM | ROM's |
+| media | Media: {0} | Support : {0} | Medien: {0} | Média: {0} | Медиа: {0} | メディア: {0} | Media: {0} |
+| screenshot | Screenshot | Capture d'écran | Screenshot | Captura | Скриншот | スクリーンショット | Schermafbeelding |
+| saved /game | Saved Games | Jeux sauvegardés | Gespeicherte Spiele | Jogos Gravados | Сохранённые игры | セーブ済みゲーム | Opgeslagen spellen |
+| user | New User | Nouvel utilisateur | Neuer Benutzer | Novo Utilizador | Новый пользователь | 新規ユーザー | Nieuwe gebruiker |
+| username | Username | Nom d'utilisateur | Benutzername | Nome de Utilizador | Имя пользователя | ユーザー名 | Gebruikersnaam |
+| password | Current Password | Mot de passe actuel | Aktuelles Passwort | Palavra-passe actual | Текущий пароль | 現在のパスワード | Huidig wachtwoord |
+| two /factor /authentication | Two Factor Authentication | Authentification à deux facteurs | Zwei-Faktor-Authentifizierung | Autenticação de Dois Factores | Двухфакторная аутентификация | 二要素認証 | Twee-factor authenticatie |
+| error | Error | Erreur : {0} | Fehler | Erro | Ошибка: {0} | エラー: {0} | Fout: {0} |
+| warning | ⚠️ Warning | — | ⚠️ Warnung | ⚠️ Aviso | ⚠️ Предупреждение | ⚠️ 警告 | ⚠️ Waarschuwing |
+| information | ℹ️ Information | — | ℹ️ Information | ℹ️ Informação | ℹ️ Информация | ℹ️ 情報 | ℹ️ Informatie |
+| search | Title Search | — | Titelsuche | Pesquisa por Título | Поиск по названию | タイトル検索 | Titel zoeken |
+| filter | Filter | Filtre | Filter | Filtro | Фильтр | フィルター | Filter |
+| platform | Platforms | Plateformes | Plattformen | Plataformas | Платформы | プラットフォーム | Platforms |
+| genre | Genres | Genres | Genres | Géneros | Жанры | ジャンル | Genres |
+| theme | Themes | Thèmes | Themen | Temas | Темы | テーマ | Thema's |
+| rating | Rating: {0} | Note : {0} | Bewertung: {0} | Classificação: {0} | Рейтинг: {0} | 評価: {0} | Beoordeling: {0} |
+| player | Player | Joueur | Spieler | Player | Игрок | プレイヤー | Speler |
+| collection | Collection | Collection | Sammlung | Colecção | Коллекция | コレクション | Collectie |
+| size | Size: {0} | Taille : {0} | Größe: {0} | Tamanho: {0} | Размер: {0} | サイズ: {0} | Grootte: {0} |
+| summary | Summary | Résumé | Zusammenfassung | Resumo | Сводка | 概要 | Samenvatting |
+| description | Description | Description  | Beschreibung | Descrição | Описание | 説明 | Beschrijving |
+| link | Link | Lien  | Link | Ligação | Ссылка | リンク | Link |
+| source | Source | Source | Quelle | Fonte | Источник | ソース | Bron |
+| logs | Logs | Journaux | Protokolle | Registos | Логи | ログ | Logboeken |
+| task | Library scan | — | Bibliothek-Scan | Análise à biblioteca | Скан библиотеки | ライブラリスキャン | Bibliotheekscan |
+| maintenance | Weekly maintenance | — | Wöchentliche Wartung | Manutenção semanal | Еженедельное обслуживание | 週次メンテナンス | Wekelijks onderhoud |
+| database | Database | Base de données | Datenbank | Base de Dados | База данных | データベース | Database |
+| import | Upload | Importer | Hochladen | Carregar | Импорт | アップロード | Uploaden |
+| export | Export to JSON | Exporter en JSON | Als JSON exportieren | Exportar para JSON | Экспорт в JSON | JSON へエクスポート | Exporteren naar JSON |
+| reset | Reset to Default | Réinitialiser par défaut | Auf Standard zurücksetzen | Repor Padrão | Сброс к стандарту | 既定にリセット | Terug naar standaard |
+| background | Background | Arrière-plan | Hintergrund | Segundo Plano | Фон | 背景 | Achtergrond |
+| enabled | Enabled | Activé | Aktiv | Activo | Включено | 有効 | Ingeschakeld |
+| disabled | Disabled | Désactivé | Inaktiv | Inactivo | Отключено | 無効 | Uitgeschakeld |
+| pending | Pending | En attente | Ausstehend | Pendente | В ожидании | 保留中 | In behandeling |
+| processing | Processing | Traitement | Verarbeite | A processar | Обработка | 処理中 | Verwerken |
+| complete | Complete | Terminé | Abgeschlossen | Concluído | Завершено | 完了 | Voltooid |
+| failed | Failed | Échec | Fehlgeschlagen | Falhou | Ошибка | 失敗 | Mislukt |
+| session | Failed to create session: {0} {1} | Échec de la création de la session : {0} {1} | Sitzung konnte nicht erstellt werden: {0} {1} | Falha ao criar sessão: {0} {1} | Не удалось создать сеанс: {0} {1} | セッションの作成に失敗: {0} {1} | Sessie maken mislukt: {0} {1} |
+| game | Internet Game Database (Recommended) | Gaseous | Internet Game Database (Empfohlen) | Internet Game Database (Recomendado) | Internet Game Database (Рекомендуется) | Internet Game Database (推奨) | Internet Game Database (Aanbevolen) |
+| cover /art | Coverart | Illustration | Coverart | Arte da Capa | Обложка | カバーアート | Coverart |
 <!-- GLOSSARY_TABLE_END -->
 ## Style & Lexical Guidance
 - French Upload: Use "Importer" uniformly (avoid regional variants like "Téléverser" for consistency).
@@ -74,6 +74,9 @@ This glossary standardises high‑frequency UI terms across English (EN), French
 - English: {one, other} plus extended custom set internally (zero/few/many/other) – UI strings mostly one/other.
 - French: one (n==0 || n==1), other (n>1).
 - German & Portuguese: one (n==1), other (n!=1).
+- Dutch: one (n==1), other (n!=1).
+- Japanese: other (n is any number; no plural distinction).
+- Russian: one (n%10==1 && n%100!=11), few (n%10 in 2..4 && n%100 not in 12..14), many (n%10==0 || n%10 in 5..9 || n%100 in 11..14), other (everything else).
 
 ## Term Decision Log (Rationale)
 - "Upload" harmonised to verbs (Import/Importer | Hochladen | Carregar/Enviar) instead of noun forms for action buttons.
