@@ -1,16 +1,16 @@
 {
-  "name": "German (Austria)",
-  "nativeName": "Deutsch (Österreich)",
-  "code": "de-AT",
-  "pluralRule": "n != 1",
-  "pluralRules": {
-    "one": "n == 1",
-    "other": "n != 1"
-  },
-  "direction": "ltr",
-  "type": "Overlay",
-  "strings": {
-    "homepage.go_to_your_library_button": "Zur Bibliothek gehen"
-  },
-  "serverstrings": {}
+    "name": "German (Austria)",
+    "nativeName": "Deutsch (Österreich)",
+    "code": "de-AT",
+    "pluralRule": "n != 1",
+    "pluralRules": {
+        "one": "n == 1",
+        "other": "n != 1"
+    },
+    "direction": "ltr",
+    "type": "Overlay",
+    "strings": {
+        "homepage.go_to_your_library_button": "Zur Bibliothek gehen"
+    },
+    "serverstrings": {}
 }
