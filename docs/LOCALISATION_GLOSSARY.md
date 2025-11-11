@@ -6,14 +6,68 @@ This glossary standardises high‑frequency UI terms across English (EN), French
 <!-- GLOSSARY_TABLE_START -->
 | Key Concept | English | French | German | Portuguese |
 |-------------|---------|--------|--------|------------|
-| settings | Settings | Paramètres | Einstellungen | Definições |\n| preferences | Preferences | Préférences | Voreinstellungen | Preferências |\n| upload | Upload | Importer | Hochladen | Carregar |\n| download | Download | — | Herunterladen | Transferir |\n| library | Library | Bibliothèque | Bibliothek | Biblioteca |\n| home | Home | Accueil | Startseite | Início |\n| favorites | Favorites | Favoris | Favoriten | Favoritos |\n| play | Play | Jouer | Spielen | Jogar |\n| delete | Delete | Supprimer | Löschen | Eliminar |\n| add | Add | Ajouter | Hinzufügen | Adicionar |\n| emulator | Emulator | Émulateur | Emulator | Emulador |\n| firmware | Firmware | Firmware | Firmware | Firmware |\n| metadata | Metadata | Métadonnées | Metadaten | Metadados |\n| signature | Signature Source | Source de signature | Signaturquelle | Fonte de Assinatura |\n| rom | ROMs | ROM | ROMs | ROMs |\n| media | Media: {0} | Support : {0} | Medien: {0} | Média: {0} |\n| screenshot | Screenshot | Capture d'écran | Screenshot | Captura |\n| saved /game | Saved Games | Jeux sauvegardés | Gespeicherte Spiele | Jogos Gravados |\n| user | New User | Nouvel utilisateur | Neuer Benutzer | Novo Utilizador |\n| username | Username | Nom d'utilisateur | Benutzername | Nome de Utilizador |\n| password | Current Password | Mot de passe actuel | Aktuelles Passwort | Palavra-passe actual |\n| two /factor /authentication | Two Factor Authentication | Authentification à deux facteurs | Zwei-Faktor-Authentifizierung | Autenticação de Dois Factores |\n| error | Error | Erreur : {0} | Fehler | Erro |\n| warning | ⚠️ Warning | — | ⚠️ Warnung | ⚠️ Aviso |\n| information | ℹ️ Information | — | ℹ️ Information | ℹ️ Informação |\n| search | Title Search | — | Titelsuche | Pesquisa por Título |\n| filter | Filter | Filtre | Filter | Filtro |\n| platform | Platforms | Plateformes | Plattformen | Plataformas |\n| genre | Genres | Genres | Genres | Géneros |\n| theme | Themes | Thèmes | Themen | Temas |\n| rating | Rating: {0} | Note : {0} | Bewertung: {0} | Classificação: {0} |\n| player | Player | Joueur | Spieler | Player |\n| collection | Collection | Collection | Sammlung | Colecção |\n| size | Size: {0} | Taille : {0} | Größe: {0} | Tamanho: {0} |\n| summary | Summary | Résumé | Zusammenfassung | Resumo |\n| description | Description | Description  | Beschreibung | Descrição |\n| link | Link | Lien  | Link | Ligação |\n| source | Source | Source | Quelle | Fonte |\n| logs | Logs | Journaux | Protokolle | Registos |\n| task | Library scan | — | Bibliothek-Scan | Análise à biblioteca |\n| maintenance | Weekly maintenance | — | Wöchentliche Wartung | Manutenção semanal |\n| database | Database | Base de données | Datenbank | Base de Dados |\n| import | Upload | Importer | Hochladen | Carregar |\n| export | Export to JSON | Exporter en JSON | Als JSON exportieren | Exportar para JSON |\n| reset | Reset to Default | Réinitialiser par défaut | Auf Standard zurücksetzen | Repor Padrão |\n| background | Background | Arrière-plan | Hintergrund | Segundo Plano |\n| enabled | Enabled | Activé | Aktiv | Activo |\n| disabled | Disabled | Désactivé | Inaktiv | Inactivo |\n| pending | Pending | En attente | Ausstehend | Pendente |\n| processing | Processing | Traitement | Verarbeite | A processar |\n| complete | Complete | Terminé | Abgeschlossen | Concluído |\n| failed | Failed | Échec | Fehlgeschlagen | Falhou |\n| session | Failed to create session: {0} {1} | Échec de la création de la session : {0} {1} | Sitzung konnte nicht erstellt werden: {0} {1} | Falha ao criar sessão: {0} {1} |\n| game | Internet Game Database (Recommended) | Gaseous | Internet Game Database (Empfohlen) | Internet Game Database (Recomendado) |\n| cover /art | Coverart | Illustration | Coverart | Arte da Capa |\n<!-- GLOSSARY_TABLE_END -->
-
+| settings | Settings | Paramètres | Einstellungen | Definições |
+| preferences | Preferences | Préférences | Voreinstellungen | Preferências |
+| upload | Upload | Importer | Hochladen | Carregar |
+| download | Download | — | Herunterladen | Transferir |
+| library | Library | Bibliothèque | Bibliothek | Biblioteca |
+| home | Home | Accueil | Startseite | Início |
+| favorites | Favorites | Favoris | Favoriten | Favoritos |
+| play | Play | Jouer | Spielen | Jogar |
+| delete | Delete | Supprimer | Löschen | Eliminar |
+| add | Add | Ajouter | Hinzufügen | Adicionar |
+| emulator | Emulator | Émulateur | Emulator | Emulador |
+| firmware | Firmware | Firmware | Firmware | Firmware |
+| metadata | Metadata | Métadonnées | Metadaten | Metadados |
+| signature | Signature Source | Source de signature | Signaturquelle | Fonte de Assinatura |
+| rom | ROMs | ROM | ROMs | ROMs |
+| media | Media: {0} | Support : {0} | Medien: {0} | Média: {0} |
+| screenshot | Screenshot | Capture d'écran | Screenshot | Captura |
+| saved /game | Saved Games | Jeux sauvegardés | Gespeicherte Spiele | Jogos Gravados |
+| user | New User | Nouvel utilisateur | Neuer Benutzer | Novo Utilizador |
+| username | Username | Nom d'utilisateur | Benutzername | Nome de Utilizador |
+| password | Current Password | Mot de passe actuel | Aktuelles Passwort | Palavra-passe actual |
+| two /factor /authentication | Two Factor Authentication | Authentification à deux facteurs | Zwei-Faktor-Authentifizierung | Autenticação de Dois Factores |
+| error | Error | Erreur : {0} | Fehler | Erro |
+| warning | ⚠️ Warning | — | ⚠️ Warnung | ⚠️ Aviso |
+| information | ℹ️ Information | — | ℹ️ Information | ℹ️ Informação |
+| search | Title Search | — | Titelsuche | Pesquisa por Título |
+| filter | Filter | Filtre | Filter | Filtro |
+| platform | Platforms | Plateformes | Plattformen | Plataformas |
+| genre | Genres | Genres | Genres | Géneros |
+| theme | Themes | Thèmes | Themen | Temas |
+| rating | Rating: {0} | Note : {0} | Bewertung: {0} | Classificação: {0} |
+| player | Player | Joueur | Spieler | Player |
+| collection | Collection | Collection | Sammlung | Colecção |
+| size | Size: {0} | Taille : {0} | Größe: {0} | Tamanho: {0} |
+| summary | Summary | Résumé | Zusammenfassung | Resumo |
+| description | Description | Description  | Beschreibung | Descrição |
+| link | Link | Lien  | Link | Ligação |
+| source | Source | Source | Quelle | Fonte |
+| logs | Logs | Journaux | Protokolle | Registos |
+| task | Library scan | — | Bibliothek-Scan | Análise à biblioteca |
+| maintenance | Weekly maintenance | — | Wöchentliche Wartung | Manutenção semanal |
+| database | Database | Base de données | Datenbank | Base de Dados |
+| import | Upload | Importer | Hochladen | Carregar |
+| export | Export to JSON | Exporter en JSON | Als JSON exportieren | Exportar para JSON |
+| reset | Reset to Default | Réinitialiser par défaut | Auf Standard zurücksetzen | Repor Padrão |
+| background | Background | Arrière-plan | Hintergrund | Segundo Plano |
+| enabled | Enabled | Activé | Aktiv | Activo |
+| disabled | Disabled | Désactivé | Inaktiv | Inactivo |
+| pending | Pending | En attente | Ausstehend | Pendente |
+| processing | Processing | Traitement | Verarbeite | A processar |
+| complete | Complete | Terminé | Abgeschlossen | Concluído |
+| failed | Failed | Échec | Fehlgeschlagen | Falhou |
+| session | Failed to create session: {0} {1} | Échec de la création de la session : {0} {1} | Sitzung konnte nicht erstellt werden: {0} {1} | Falha ao criar sessão: {0} {1} |
+| game | Internet Game Database (Recommended) | Gaseous | Internet Game Database (Empfohlen) | Internet Game Database (Recomendado) |
+| cover /art | Coverart | Illustration | Coverart | Arte da Capa |
+<!-- GLOSSARY_TABLE_END -->
 ## Style & Lexical Guidance
 - French Upload: Use "Importer" uniformly (avoid regional variants like "Téléverser" for consistency).
 - Portuguese Variants: Base (pt) uses European forms (Definições, Carregar, Transferir). Overlay `pt-BR` adjusts: Settings → Configurações; Upload → Enviar; Download → Baixar.
 - German Compound Nouns: Prefer full forms (Benutzerverwaltung, Datenbank-Schema-Version). Avoid mixing English loanwords unless UI standard (e.g., "Reset" already translated as "Zurücksetzen").
 - Title Capitalisation: Follow native language norms (sentence case for FR/DE/PT, Title Case optional only in EN where already used).
-- Accents & Diacritics: Ensure proper usage (e.g., "État", "Über", "Configurações", "Colecção"). Watch for encoding in JSON (UTF‑8).
+- Accents & Diacritics: Ensure proper usage (e.g., "État", "Über", "Configurações", "Colecção"). Watch for encoding in JSON (UTF–8).
 - Consistent Hyphenation: English uses hyphen in "Two-Factor"; in German use "Zwei-Faktor-Authentifizierung"; Portuguese uses "dois fatores" (no hyphen) and French "à deux facteurs".
 
 ## Pluralisation Patterns (Summary)
@@ -46,3 +100,4 @@ When introducing a new locale:
 
 ---
 Last updated: 2025-11-11
+

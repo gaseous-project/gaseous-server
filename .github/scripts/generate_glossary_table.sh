@@ -133,7 +133,9 @@ declare -A CONCEPT_KEYS=(
 )
 
 function extract_term() {
-  local concept="$1" locale="$2" file="$LOCALE_DIR/$locale.json"
+  local concept="${1:-}" loc="${2:-}"
+  if [ -z "$loc" ]; then echo ""; return; fi
+  local file="$LOCALE_DIR/$loc.json"
   if [ ! -f "$file" ]; then echo ""; return; fi
   local keys_string="${CONCEPT_KEYS[$concept]}"
   IFS=';' read -r -a candidates <<< "$keys_string"
@@ -175,10 +177,35 @@ for term in "${TERMS[@]}"; do
   pt_val=${pt_val%:}
 
   TABLE+="| ${term//_/ /} | ${en_val:-—} | ${fr_val:-—} | ${de_val:-—} | ${pt_val:-—} |\n"
-Done
+done
 
-# Replace section between markers
-ESCAPED_TABLE=$(printf '%s' "$TABLE" | sed 's/\\/\\\\/g; s/\//\\\//g')
-perl -0777 -i -pe "s/${START_MARKER}.*?${END_MARKER}/${START_MARKER}\n${ESCAPED_TABLE}${END_MARKER}/s" "$GLOSSARY_FILE"
+# Safety: ensure markers exist before attempting replacement
+if ! grep -q "$START_MARKER" "$GLOSSARY_FILE" || ! grep -q "$END_MARKER" "$GLOSSARY_FILE"; then
+  echo "Error: glossary markers not found in $GLOSSARY_FILE. Aborting update." >&2
+  exit 1
+fi
 
-echo "Glossary table updated in $GLOSSARY_FILE"
+# Replace section between markers using Perl (non-greedy, DOTALL). Preserve surrounding content.
+ESCAPED_TABLE="$TABLE"
+if ! perl -0777 -i -pe "s/${START_MARKER}.*?${END_MARKER}/${START_MARKER}\n$ESCAPED_TABLE${END_MARKER}/s" "$GLOSSARY_FILE" 2>/dev/null; then
+  echo "Perl replacement failed, attempting awk fallback" >&2
+  awk -v start="$START_MARKER" -v end="$END_MARKER" -v repl="$ESCAPED_TABLE" 'BEGIN{infile=""} {infile=infile $0 "\n"} END {
+    # Split keeping newlines
+    n=split(infile, lines, "\n");
+    foundStart=0; foundEnd=0; out=""; inside=0
+    for(i=1;i<=n;i++){
+      line=lines[i]
+      if(line==start){
+        foundStart=1
+        out=out start "\n" repl end "\n"
+        # Skip until end marker encountered
+        inside=1; continue
+      }
+      if(line==end){ foundEnd=1; inside=0; continue }
+      if(!inside){ out=out line "\n" }
+    }
+    if(foundStart && foundEnd){ printf "%s", out } else { printf "%s", infile > "/dev/stderr"; exit 2 }
+  }' "$GLOSSARY_FILE" > "$GLOSSARY_FILE.tmp" && mv "$GLOSSARY_FILE.tmp" "$GLOSSARY_FILE"
+fi
+
+echo "Glossary table updated successfully in $GLOSSARY_FILE"
