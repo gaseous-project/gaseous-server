@@ -1,14 +1,14 @@
 {
-  "name": "Italiano (Svizzera)",
-  "nativeName": "Italiano (Svizzera)",
-  "code": "it-CH",
-  "pluralRule": "n != 1",
-  "pluralRules": {
-    "one": "n == 1",
-    "other": "n != 1"
-  },
-  "direction": "ltr",
-  "type": "Overlay",
-  "strings": { },
-  "serverstrings": { }
+    "name": "Italiano (Svizzera)",
+    "nativeName": "Italiano (Svizzera)",
+    "code": "it-CH",
+    "pluralRule": "n != 1",
+    "pluralRules": {
+        "one": "n == 1",
+        "other": "n != 1"
+    },
+    "direction": "ltr",
+    "type": "Overlay",
+    "strings": {},
+    "serverstrings": {}
 }
