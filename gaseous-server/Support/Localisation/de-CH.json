@@ -1,0 +1,20 @@
+{
+  "name": "German (Switzerland)",
+  "nativeName": "Deutsch (Schweiz)",
+  "code": "de-CH",
+  "pluralRule": "n != 1",
+  "pluralRules": {
+    "one": "n == 1",
+    "other": "n != 1"
+  },
+  "direction": "ltr",
+  "type": "Overlay",
+  "strings": {
+    "generic.close": "Schliessen",
+    "card.rom.size_prefix": "Groesse: {0}",
+    "rominfomodal.size_label": "Groesse",
+    "card.content.table.size": "Groesse",
+    "rominfo.zip.table.header.size": "Groesse"
+  },
+  "serverstrings": {}
+}

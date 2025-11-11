@@ -1,0 +1,14 @@
+{
+  "name": "German (Luxembourg)",
+  "nativeName": "Deutsch (Luxemburg)",
+  "code": "de-LU",
+  "pluralRule": "n != 1",
+  "pluralRules": {
+    "one": "n == 1",
+    "other": "n != 1"
+  },
+  "direction": "ltr",
+  "type": "Overlay",
+  "strings": {},
+  "serverstrings": {}
+}
