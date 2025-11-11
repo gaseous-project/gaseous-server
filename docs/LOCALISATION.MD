@@ -5,6 +5,12 @@
 <!-- LOCALE_TABLE_START -->
 | Code | English Name | Native Name | Type | Parent | Pluralisation | Notes |
 |------|--------------|-------------|------|--------|---------------|-------|
+| de-AT | German (Austria) | Deutsch (Österreich) | Overlay | de | pluralRule + pluralRules |  |
+| de-CH | German (Switzerland) | Deutsch (Schweiz) | Overlay | de | pluralRule + pluralRules |  |
+| de-DE | German (Germany) | Deutsch (Deutschland) | Overlay | de | pluralRule + pluralRules |  |
+| de-LI | German (Liechtenstein) | Deutsch (Liechtenstein) | Overlay | de | pluralRule + pluralRules |  |
+| de-LU | German (Luxembourg) | Deutsch (Luxemburg) | Overlay | de | pluralRule + pluralRules |  |
+| de | German | Deutsch | Base | — | pluralRule + pluralRules |  |
 | en-AU | English (Australia) | English (Australia) | Overlay | en | pluralRule + pluralRules | Regional spelling |
 | en-CA | English (Canada) | English (Canada) | Overlay | en | pluralRule | Regional spelling |
 | en-GB | English (United Kingdom) | English (United Kingdom) | Overlay | en | pluralRule | Regional spelling |
@@ -56,7 +62,40 @@
 | fr-RE | Français (La Réunion) | Français (La Réunion) | Overlay | fr | pluralRule + pluralRules |  |
 | fr-SN | Français (Sénégal) | Français (Sénégal) | Overlay | fr | pluralRule + pluralRules |  |
 | fr-TN | Français (Tunisie) | Français (Tunisie) | Overlay | fr | pluralRule + pluralRules |  |
-| fr | Français | Français | Base | — | pluralRule + pluralRules |  |<!-- LOCALE_TABLE_END -->
+| fr | Français | Français | Base | — | pluralRule + pluralRules |  |
+| it-CH | Italiano (Svizzera) | Italiano (Svizzera) | Overlay | it | pluralRule + pluralRules |  |
+| it-IT | Italiano (Italia) | Italiano (Italia) | Overlay | it | pluralRule + pluralRules |  |
+| it-SM | Italiano (San Marino) | Italiano (San Marino) | Overlay | it | pluralRule + pluralRules |  |
+| it-VA | Italiano (Vaticano) | Italiano (Vaticano) | Overlay | it | pluralRule + pluralRules |  |
+| it | Italiano | Italiano | Base | — | pluralRule + pluralRules |  |
+| ja-JP | Japanese (Japan) | 日本語 (日本) | Overlay | ja | pluralRule + pluralRules |  |
+| ja | Japanese | 日本語 | Base | — | pluralRule + pluralRules |  |
+| ko-KR | Korean (South Korea) | 한국어 (대한민국) | Overlay | ko | pluralRule + pluralRules |  |
+| ko | Korean | 한국어 | Base | — | pluralRule + pluralRules |  |
+| nl-BE | Dutch (Belgium) | Nederlands (België) | Overlay | nl | pluralRule + pluralRules |  |
+| nl-NL | Dutch (Netherlands) | Nederlands (Nederland) | Overlay | nl | pluralRule + pluralRules |  |
+| nl | Dutch | Nederlands | Base | — | pluralRule + pluralRules |  |
+| pt-AO | Portuguese (Angola) | Português (Angola) | Overlay | pt | pluralRule + pluralRules |  |
+| pt-BR | Portuguese (Brazil) | Português (Brasil) | Overlay | pt | pluralRule + pluralRules |  |
+| pt-CV | Portuguese (Cape Verde) | Português (Cabo Verde) | Overlay | pt | pluralRule + pluralRules |  |
+| pt-GW | Portuguese (Guinea-Bissau) | Português (Guiné-Bissau) | Overlay | pt | pluralRule + pluralRules |  |
+| pt-MO | Portuguese (Macau) | Português (Macau) | Overlay | pt | pluralRule + pluralRules |  |
+| pt-MZ | Portuguese (Mozambique) | Português (Moçambique) | Overlay | pt | pluralRule + pluralRules |  |
+| pt-PT | Portuguese (Portugal) | Português (Portugal) | Overlay | pt | pluralRule + pluralRules |  |
+| pt-ST | Portuguese (São Tomé and Príncipe) | Português (São Tomé e Príncipe) | Overlay | pt | pluralRule + pluralRules |  |
+| pt | Portuguese | Português | Base | — | pluralRule + pluralRules |  |
+| ru-BY | Russian (Belarus) | Русский (Беларусь) | Overlay | ru | pluralRule + pluralRules |  |
+| ru-KG | Russian (Kyrgyzstan) | Русский (Кыргызстан) | Overlay | ru | pluralRule + pluralRules |  |
+| ru-KZ | Russian (Kazakhstan) | Русский (Казахстан) | Overlay | ru | pluralRule + pluralRules |  |
+| ru-RU | Russian (Russia) | Русский (Россия) | Overlay | ru | pluralRule + pluralRules |  |
+| ru-UA | Russian (Ukraine) | Русский (Украина) | Overlay | ru | pluralRule + pluralRules |  |
+| ru | Russian | Русский | Base | — | pluralRule + pluralRules |  |
+| zh-CN | Chinese (China) | 中文（中国大陆） | Overlay | zh | pluralRule + pluralRules |  |
+| zh-HK | Chinese (Hong Kong) | 中文（繁體－香港） | Overlay | zh | pluralRule + pluralRules |  |
+| zh-MO | Chinese (Macau) | 中文（繁體－澳門） | Overlay | zh | pluralRule + pluralRules |  |
+| zh-SG | Chinese (Singapore) | 中文（新加坡） | Overlay | zh | pluralRule + pluralRules |  |
+| zh-TW | Chinese (Taiwan) | 中文（繁體－台灣） | Overlay | zh | pluralRule + pluralRules |  |
+| zh | Chinese | 中文（简体） | Base | — | pluralRule + pluralRules |  |<!-- LOCALE_TABLE_END -->
 
 All overlay locales inherit missing keys from the base English (`en`). Where both embedded resource and file system versions exist, the file system locale overrides the embedded resource, and overlays extend their parent before final merge with `en` for safety.
 
