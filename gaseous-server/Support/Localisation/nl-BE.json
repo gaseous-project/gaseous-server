@@ -1,0 +1,17 @@
+{
+  "name": "Dutch (Belgium)",
+  "nativeName": "Nederlands (België)",
+  "code": "nl-BE",
+  "pluralRule": "n != 1",
+  "pluralRules": {
+    "one": "n == 1",
+    "other": "n != 1"
+  },
+  "direction": "ltr",
+  "type": "Overlay",
+  "strings": {
+    "home.favourites": "Favorieten",
+    "accountmodal.quip_label": "Onderschrift"  
+  },
+  "serverstrings": {}
+}
