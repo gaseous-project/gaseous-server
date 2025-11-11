@@ -3,6 +3,7 @@
 This glossary standardises high‑frequency UI terms across English (EN), French (FR), German (DE) and Portuguese (PT). Use it to ensure consistency, especially when adding new locales or reviewing overlays.
 
 ## Core UI Terms
+<!-- GLOSSARY_TABLE_START -->
 | Key Concept | English | French | German | Portuguese |
 |-------------|---------|--------|--------|------------|
 | Settings | Settings | Paramètres | Einstellungen | Definições |
@@ -60,6 +61,7 @@ This glossary standardises high‑frequency UI terms across English (EN), French
 | Session | Session | Session | Sitzung | Sessão |
 | Game | Game | Jeu | Spiel | Jogo |
 | Cover Art | Coverart | Illustration de couverture | Coverart / Titelbild | Arte da capa |
+<!-- GLOSSARY_TABLE_END -->
 
 ## Style & Lexical Guidance
 - French Upload: Use "Importer" uniformly (avoid regional variants like "Téléverser" for consistency).
