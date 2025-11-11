@@ -1,0 +1,27 @@
+{
+  "name": "Portuguese (Brazil)",
+  "nativeName": "Português (Brasil)",
+  "code": "pt-BR",
+  "pluralRule": "n != 1",
+  "pluralRules": { "one": "n == 1", "other": "n != 1" },
+  "direction": "ltr",
+  "type": "Overlay",
+  "strings": {
+    "banner.settings": "Configurações",
+    "banner.settings.alt": "Configurações",
+    "banner.upload": "Enviar",
+    "banner.upload.alt": "Enviar",
+    "generic.upload_complete": "Envio concluído",
+    "card.settings.header": "Configurações",
+    "card.settings.menu.server_settings": "Configurações do Servidor",
+    "card.settings.menu.service_configuration": "Configuração de Serviço",
+    "card.management.upload_audio_sample": "Enviar Amostra de Áudio",
+    "card.management.upload_manual": "Enviar Manual",
+    "serversettings.logging_header": "Registro",
+    "serversettings.write_logs_label": "Gravar registros",
+    "serversettings.write_to_database_and_disk_option": "Para banco de dados e disco",
+    "card.management.platform_mapping_reset_message": "Todos os mapeamentos de plataforma foram redefinidos para os valores padrão.",
+    "generic.download": "Baixar"
+  },
+  "serverstrings": {}
+}
