@@ -2,6 +2,8 @@ name: Update Localisation Documentation
 
 on:
   push:
+    branches-ignore:
+      - main
     paths:
       - 'gaseous-server/Support/Localisation/*.json'
       - 'docs/LOCALISATION.MD'
