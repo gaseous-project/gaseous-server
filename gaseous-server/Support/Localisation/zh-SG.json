@@ -1,11 +1,13 @@
 {
-  "name": "Chinese (Singapore)",
-  "nativeName": "中文（新加坡）",
-  "code": "zh-SG",
-  "pluralRule": "true",
-  "pluralRules": { "other": "true" },
-  "direction": "ltr",
-  "type": "Overlay",
-  "strings": {},
-  "serverstrings": {}
+    "name": "Chinese (Singapore)",
+    "nativeName": "中文（新加坡）",
+    "code": "zh-SG",
+    "pluralRule": "true",
+    "pluralRules": {
+        "other": "true"
+    },
+    "direction": "ltr",
+    "type": "Overlay",
+    "strings": {},
+    "serverstrings": {}
 }
