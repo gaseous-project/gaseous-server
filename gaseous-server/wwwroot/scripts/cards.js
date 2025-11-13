@@ -1847,7 +1847,7 @@ class GameCardRomList {
                     // create the rom size
                     let romSizeLabel = document.createElement('div');
                     romSizeLabel.classList.add('card-romlist-size');
-                    romSizeLabel.innerHTML = window.lang.translate('card.rom.size_prefix') + formatBytes(element.size);
+                    romSizeLabel.innerHTML = window.lang.translate('card.rom.size_prefix', [formatBytes(element.size)]);
                     romName.appendChild(romSizeLabel);
 
                     // create the rom type
