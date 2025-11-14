@@ -63,7 +63,7 @@ jobs:
           fs.writeFileSync('missing-language-keys.json', JSON.stringify(missing, null, 2));
           EOF
 
-      - name: Comment on PR if missing keys
+      - name: Comment on PR with language coverage status
         if: always()
         uses: actions/github-script@v7
         with:
@@ -73,27 +73,60 @@ jobs:
             try {
               missing = JSON.parse(fs.readFileSync('missing-language-keys.json', 'utf8'));
             } catch {}
-            if (missing.length === 0) return;
-            let body = '### :warning: Missing Language Keys\n';
-            for (const entry of missing) {
-              body += `\n**${entry.file}**`;
-              if (entry.error) {
-                body += `\n- Error: ${entry.error}`;
-                continue;
-              }
-              if (entry.missingStrings.length) {
-                body += `\n- Missing strings: ${entry.missingStrings.join(', ')}`;
-              }
-              if (entry.missingServerStrings.length) {
-                body += `\n- Missing serverstrings: ${entry.missingServerStrings.join(', ')}`;
+            
+            // Comment identifier for finding existing bot comments
+            const commentIdentifier = '<!-- language-coverage-bot -->';
+            
+            let body;
+            if (missing.length === 0) {
+              body = `${commentIdentifier}\n### :white_check_mark: Language Coverage\n\nAll base language files have complete translations! :tada:`;
+            } else {
+              body = `${commentIdentifier}\n### :warning: Missing Language Keys\n`;
+              for (const entry of missing) {
+                body += `\n**${entry.file}**`;
+                if (entry.error) {
+                  body += `\n- Error: ${entry.error}`;
+                  continue;
+                }
+                if (entry.missingStrings.length) {
+                  body += `\n- Missing strings: ${entry.missingStrings.join(', ')}`;
+                }
+                if (entry.missingServerStrings.length) {
+                  body += `\n- Missing serverstrings: ${entry.missingServerStrings.join(', ')}`;
+                }
               }
             }
-            github.rest.issues.createComment({
+            
+            // Find existing bot comment
+            const comments = await github.rest.issues.listComments({
               issue_number: context.issue.number,
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body
             });
+            
+            const botComment = comments.data.find(comment => 
+              comment.body.includes(commentIdentifier)
+            );
+            
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                comment_id: botComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body
+              });
+              console.log('Updated existing language coverage comment');
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body
+              });
+              console.log('Created new language coverage comment');
+            }
 
       - name: Fail if missing keys
         if: always()
