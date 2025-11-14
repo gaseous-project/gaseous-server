@@ -22,7 +22,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          submodules: 'true'
+          submodules: 'recursive'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git for submodules
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git submodule foreach --recursive 'git config user.name "github-actions[bot]"'
+          git submodule foreach --recursive 'git config user.email "41898282+github-actions[bot]@users.noreply.github.com"'
 
       - name: Set up jq
         run: sudo apt-get update && sudo apt-get install -y jq
@@ -38,19 +46,46 @@ jobs:
         id: detect
         run: |
           changed=false
+          submodule_changed=false
+          
+          # Check for changes in docs submodule
           if ! git diff --quiet docs/LOCALISATION.MD; then
             changed=true
           fi
           if ! git diff --quiet docs/LOCALISATION_GLOSSARY.md; then
             changed=true
           fi
+          
+          # Check if docs is a submodule
+          if [ -f .gitmodules ] && grep -q "path = docs" .gitmodules; then
+            submodule_changed=true
+          fi
+          
           echo "changed=${changed}" >> $GITHUB_OUTPUT
+          echo "submodule_changed=${submodule_changed}" >> $GITHUB_OUTPUT
 
-      - name: Commit updates
-        if: ${{ steps.detect.outputs.changed == 'true' }}
+      - name: Commit submodule changes
+        if: ${{ steps.detect.outputs.changed == 'true' && steps.detect.outputs.submodule_changed == 'true' }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          cd docs
+          git add LOCALISATION.MD LOCALISATION_GLOSSARY.md
+          if ! git diff --cached --quiet; then
+            git commit -m "docs: auto-update localisation tables (language + glossary)"
+            git push origin HEAD
+          fi
+
+      - name: Update parent repository submodule reference
+        if: ${{ steps.detect.outputs.changed == 'true' && steps.detect.outputs.submodule_changed == 'true' }}
+        run: |
+          git add docs
+          if ! git diff --cached --quiet; then
+            git commit -m "docs: update submodule reference for localisation table updates"
+            git push
+          fi
+
+      - name: Commit direct changes (non-submodule)
+        if: ${{ steps.detect.outputs.changed == 'true' && steps.detect.outputs.submodule_changed == 'false' }}
+        run: |
           git add docs/LOCALISATION.MD docs/LOCALISATION_GLOSSARY.md
           git commit -m "docs: auto-update localisation tables (language + glossary)"
           git push
