@@ -433,6 +433,10 @@ class Language {
                 const token = `{{${k}}}`;
                 if (out.includes(token)) out = out.split(token).join(String(args[k]));
             }
+        } else {
+            // single value replacement for {0}
+            const token = new RegExp('\\{0\\}', 'g');
+            out = out.replace(token, String(args));
         }
         return out;
     }
