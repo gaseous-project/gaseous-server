@@ -56,6 +56,11 @@
     <None Remove="Support\Localisation\" />
     <None Remove="Support\Localisation\*.json" />
     <None Remove="Classes\Metadata\" />
+    <!-- Exclude .git directories from build process (including nested ones) -->
+    <None Remove="**\.git\**" />
+    <Compile Remove="**\.git\**" />
+    <Content Remove="**\.git\**" />
+    <EmbeddedResource Remove="**\.git\**" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Controllers\" />
@@ -67,7 +72,7 @@
     <Folder Remove="Reference" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="wwwroot\**">
+    <None Include="wwwroot\**" Exclude="wwwroot\**\.git\**">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>

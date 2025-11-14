@@ -38,7 +38,7 @@ function injectLoaderOnce() {
 GetCoreData(EJS_core)
     .then(data => {
         CoreData = data;
-        console.log(window.lang.translate("console.core_data"), CoreData);
+        console.log(window.lang.translate("console.core_data", JSON.stringify(CoreData)));
 
         if (typeof SharedArrayBuffer !== 'undefined') {
             const requireThreads = !!(CoreData && CoreData.options && CoreData.options.requireThreads === true);
@@ -181,7 +181,7 @@ EJS_Buttons = {
                 let resumeLabel = document.createElement('div');
                 resumeLabel.id = 'resume-label';
                 resumeLabel.classList.add('emulator_pausemask-resumelabel');
-                resumeLabel.textContent = window.lang.translate("emulator.click_to_resume");
+                resumeLabel.textContent = window.lang.translate("emulator.paused_click_to_resume");
                 bgMask.appendChild(resumeLabel);
             }
 
@@ -395,7 +395,7 @@ if (['arcade', 'mame', 'fbneo', 'fbalpha2012_cps1', 'fbalpha2012_cps2'].includes
                 }
                 samplesArray[pathName] = `/api/v1.1/ContentManager/attachment/zipStream?attachmentIds=${sampleIds}`;
 
-                console.log(window.lang.translate("emulator.samples_array"), samplesArray);
+                console.log(window.lang.translate("emulator.samples_array", JSON.stringify(samplesArray)));
                 EJS_externalFiles = samplesArray;
             });
     }
