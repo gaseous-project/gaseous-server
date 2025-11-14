@@ -20,7 +20,16 @@
         "process.organise_library": "Organiser la bibliothèque",
         "timered_event.starting_library_organiser": "Démarrage de l'organisateur de bibliothèque",
         "organiselibrary.starting_default_library_organisation": "Démarrage de l'organisation par défaut de la bibliothèque",
-        "organiselibrary.finished_default_library_organisation": "Organisation par défaut de la bibliothèque terminée"
+        "organiselibrary.finished_default_library_organisation": "Organisation par défaut de la bibliothèque terminée",
+        "firstpage.email_placeholder": "E-mail",
+        "firstpage.email_requirements_paragraph": "Exigences e-mail :",
+        "usernewmodal.email_address_label": "Adresse e-mail",
+        "usernewmodal.email_requirements_paragraph": "Exigences e-mail :",
+        "usernewmodal.error.invalid_email_message": "Adresse e-mail invalide. Corrigez les erreurs avant de continuer.",
+        "usernewmodal.error.creation_failed_message": "Une erreur est survenue lors de la création de l'utilisateur. Vérifiez que l'adresse e-mail est valide et que le mot de passe répond aux exigences.",
+        "loginpage.email_or_username_placeholder": "E-mail ou nom d'utilisateur",
+        "accountmodal.email_rule_valid_address": "L'e-mail est une adresse valide",
+        "accountmodal.email_rule_unique": "L'e-mail est unique"
     },
     "serverstrings": {}
 }

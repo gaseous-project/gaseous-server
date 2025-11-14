@@ -1,0 +1,139 @@
+name: Check Language Coverage
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+on:
+  pull_request:
+    paths:
+      - 'gaseous-server/Support/Localisation/*.json'
+      - '.github/workflows/language-coverage.yml'
+
+jobs:
+  language-coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Check language coverage
+        id: check-coverage
+        run: |
+          node <<'EOF'
+          const fs = require('fs');
+          const path = require('path');
+
+          const locDir = path.join(process.env.GITHUB_WORKSPACE, 'gaseous-server/Support/Localisation');
+          const enPath = path.join(locDir, 'en.json');
+          const en = JSON.parse(fs.readFileSync(enPath, 'utf8'));
+          const enStrings = Object.keys(en.strings || {});
+          const enServerStrings = Object.keys(en.serverstrings || {});
+
+          // Helper: is base language file (e.g. fr.json, de.json)
+          function isBaseLang(filename) {
+            return /^[a-z]{2}\.json$/.test(filename) && filename !== 'en.json';
+          }
+
+          const missing = [];
+          for (const file of fs.readdirSync(locDir)) {
+            if (!isBaseLang(file)) continue;
+            const filePath = path.join(locDir, file);
+            let data;
+            try {
+              data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            } catch (e) {
+              missing.push({ file, error: 'Invalid JSON' });
+              continue;
+            }
+            const strings = Object.keys(data.strings || {});
+            const serverstrings = Object.keys(data.serverstrings || {});
+            const missingStrings = enStrings.filter(k => !strings.includes(k));
+            const missingServerStrings = enServerStrings.filter(k => !serverstrings.includes(k));
+            if (missingStrings.length || missingServerStrings.length) {
+              missing.push({ file, missingStrings, missingServerStrings });
+            }
+          }
+
+          // Save result for later steps
+          fs.writeFileSync('missing-language-keys.json', JSON.stringify(missing, null, 2));
+          EOF
+
+      - name: Comment on PR with language coverage status
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let missing = [];
+            try {
+              missing = JSON.parse(fs.readFileSync('missing-language-keys.json', 'utf8'));
+            } catch {}
+            
+            // Comment identifier for finding existing bot comments
+            const commentIdentifier = '<!-- language-coverage-bot -->';
+            
+            let body;
+            if (missing.length === 0) {
+              body = `${commentIdentifier}\n### :white_check_mark: Language Coverage\n\nAll base language files have complete translations! :tada:`;
+            } else {
+              body = `${commentIdentifier}\n### :warning: Missing Language Keys\n`;
+              for (const entry of missing) {
+                body += `\n**${entry.file}**`;
+                if (entry.error) {
+                  body += `\n- Error: ${entry.error}`;
+                  continue;
+                }
+                if (entry.missingStrings.length) {
+                  body += `\n- Missing strings: ${entry.missingStrings.join(', ')}`;
+                }
+                if (entry.missingServerStrings.length) {
+                  body += `\n- Missing serverstrings: ${entry.missingServerStrings.join(', ')}`;
+                }
+              }
+            }
+            
+            // Find existing bot comment
+            const comments = await github.rest.issues.listComments({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+            });
+            
+            const botComment = comments.data.find(comment => 
+              comment.body.includes(commentIdentifier)
+            );
+            
+            if (botComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                comment_id: botComment.id,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body
+              });
+              console.log('Updated existing language coverage comment');
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body
+              });
+              console.log('Created new language coverage comment');
+            }
+
+      - name: Fail if missing keys
+        if: always()
+        run: |
+          missing=$(cat missing-language-keys.json)
+          if [ "$missing" != "[]" ]; then
+            echo "Some base language files are missing keys. See PR comments."
+            exit 1
+          fi
