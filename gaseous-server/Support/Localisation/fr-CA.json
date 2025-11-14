@@ -27,7 +27,24 @@
         "uploadrommodal.instructions": "Téléversez des ROM en les déposant ici ou en cliquant ici.",
         "uploadrommodal.console.max_uploads_reached_waiting": "Nombre maximal de téléversements atteint, attente de la fin",
         "accountmodal.email_rule_valid_address": "Le courriel est une adresse valide",
-        "accountmodal.email_rule_unique": "Le courriel est unique"
+        "accountmodal.email_rule_unique": "Le courriel est unique",
+        "emulatorstatemodal.tab.upload_state": "Téléverser un état",
+        "emulatorstatemodal.section.upload_state_header": "Téléverser un état",
+        "modals.save_manager.state_uploaded_success": "État téléversé avec succès.",
+        "modals.save_manager.state_uploaded_warning": "État téléversé avec succès, mais pourrait ne pas fonctionner correctement pour cette plateforme et ROM.",
+        "modals.save_manager.uploading_state_file": "Téléversement du fichier d'état",
+        "modals.content_upload.title": "Téléverser le contenu",
+        "modals.content_upload.uploading_file": "Téléversement du fichier de contenu",
+        "modals.content_upload.upload_success": "Contenu téléversé avec succès.",
+        "modals.content_upload.upload_error_prefix": "Erreur lors du téléversement du contenu : {0}",
+        "firstpage.email_placeholder": "Courriel",
+        "firstpage.email_requirements_paragraph": "Exigences courriel :",
+        "usernewmodal.email_address_label": "Adresse courriel",
+        "usernewmodal.email_requirements_paragraph": "Exigences courriel :",
+        "usernewmodal.error.invalid_email_message": "Adresse courriel invalide. Corrigez les erreurs avant de continuer.",
+        "usernewmodal.error.creation_failed_message": "Une erreur est survenue lors de la création de l'utilisateur. Vérifiez que l'adresse courriel est valide et que le mot de passe répond aux exigences.",
+        "loginpage.email_or_username_placeholder": "Courriel ou nom d'utilisateur",
+        "screenshots.upload_date.unknown": "Date de téléversement inconnue"
     },
     "serverstrings": {}
 }

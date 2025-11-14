@@ -20,7 +20,14 @@
         "generic.download": "Télécharger",
         "webemulatormodal.section.web_emulator_header": "Émulateur Web",
         "accountmodal.email_rule_valid_address": "L'e-mail est une adresse valide",
-        "accountmodal.email_rule_unique": "L'e-mail est unique"
+        "accountmodal.email_rule_unique": "L'e-mail est unique",
+        "firstpage.email_placeholder": "E-mail",
+        "firstpage.email_requirements_paragraph": "Exigences e-mail :",
+        "usernewmodal.email_address_label": "Adresse e-mail",
+        "usernewmodal.email_requirements_paragraph": "Exigences e-mail :",
+        "usernewmodal.error.invalid_email_message": "Adresse e-mail invalide. Corrigez les erreurs avant de continuer.",
+        "usernewmodal.error.creation_failed_message": "Une erreur est survenue lors de la création de l'utilisateur. Vérifiez que l'adresse e-mail est valide et que le mot de passe répond aux exigences.",
+        "loginpage.email_or_username_placeholder": "E-mail ou nom d'utilisateur"
     },
     "serverstrings": {}
 }
