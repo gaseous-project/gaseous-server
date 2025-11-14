@@ -13,6 +13,7 @@
     "direction": "ltr",
     "type": "Base",
     "strings": {
+        "test.string": "This is a test string.",
         "index.title": "Gaseous",
         "banner.notifications": "Notifications",
         "banner.notifications.alt": "Notifications",
