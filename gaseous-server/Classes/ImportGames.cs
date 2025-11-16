@@ -202,8 +202,6 @@ namespace gaseous_server.Classes
 
             // remove completed import states older than 60 minutes
             _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Completed && x.LastUpdated < cutoff);
-            // remove failed import states older than 60 minutes
-            _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Failed && x.LastUpdated < cutoff);
             // remove pending import states that don't have a file on disk
             _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Pending && !File.Exists(x.FileName));
         }

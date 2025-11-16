@@ -288,7 +288,21 @@ namespace gaseous_server
                                     )
                                     {
                                         Logging.LogKey(Logging.LogType.Debug, "process.import_game", "importqueue.skipping_item_not_supported", null, new[] { importState.FileName });
-                                        ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Skipped, ImportStateItem.ImportType.Unknown, ProcessData);
+
+                                        // move the file to the errors directory
+                                        string targetPathWithFileName = importState.FileName.Replace(Config.LibraryConfiguration.LibraryImportDirectory, Config.LibraryConfiguration.LibraryImportErrorDirectory);
+
+                                        // create target directory if it doesn't exist
+                                        if (!Directory.Exists(Path.GetDirectoryName(targetPathWithFileName)!))
+                                        {
+                                            Directory.CreateDirectory(Path.GetDirectoryName(targetPathWithFileName)!);
+                                        }
+
+                                        File.Move(importState.FileName, targetPathWithFileName, true);
+
+                                        ProcessData.Add("type", "skipped");
+                                        ProcessData.Add("status", "skipped");
+                                        ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Completed, ImportStateItem.ImportType.Unknown, ProcessData);
                                     }
                                     else
                                     {
@@ -617,6 +631,20 @@ namespace gaseous_server
                                                 AddSubTask(SubTask.TaskTypes.ImportQueueProcessor, Path.GetFileName(importState.FileName), importState.SessionId, true);
                                                 // update the import state
                                                 ImportGame.UpdateImportState(importState.SessionId, ImportStateItem.ImportState.Queued, ImportStateItem.ImportType.Unknown, null);
+                                            }
+                                        }
+
+                                        // check for queued imports that have stalled (don't have a related sub task)
+                                        List<ImportStateItem> stalledImports = ImportGame.ImportStates.Where(x => x.State == ImportStateItem.ImportState.Queued).ToList();
+                                        foreach (ImportStateItem importState in stalledImports)
+                                        {
+                                            // check the subtask list for any tasks with the same session id
+                                            SubTask? subTask = SubTasks.FirstOrDefault(x => x.Settings is Guid && (Guid)x.Settings == importState.SessionId);
+                                            if (subTask == null)
+                                            {
+                                                // process the import
+                                                Logging.LogKey(Logging.LogType.Warning, "process.import_queue_processor", "importqueue.requeuing_stalled_import", null, new[] { importState.FileName });
+                                                AddSubTask(SubTask.TaskTypes.ImportQueueProcessor, Path.GetFileName(importState.FileName), importState.SessionId, true);
                                             }
                                         }
                                     }

@@ -1184,7 +1184,7 @@ namespace gaseous_server.Controllers
             try
             {
                 Classes.Roms.GameRomItem rom = await Classes.Roms.GetRom(RomId);
-                if (rom.MetadataMapId != MetadataMapId || rom.Name != FileName)
+                if (rom == null)
                 {
                     return NotFound();
                 }

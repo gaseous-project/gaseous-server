@@ -14,9 +14,7 @@ namespace gaseous_server.Models
             Pending,
             Queued,
             Processing,
-            Completed,
-            Skipped,
-            Failed
+            Completed
         }
         public string? ErrorMessage { get; set; } = null;
         public enum ImportMethod
