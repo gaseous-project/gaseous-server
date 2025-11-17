@@ -11,7 +11,13 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
     public class Hasheous : IFileSignaturePlugin
     {
         /// <inheritdoc/>
+        public string Name { get; } = "Hasheous";
+
+        /// <inheritdoc/>
         public Dictionary<string, object>? Settings { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        /// <inheritdoc/>
+        public bool UsesInternet { get; } = true;
 
         /// <inheritdoc/>
         public async Task<Signatures_Games?> GetSignature(HashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)

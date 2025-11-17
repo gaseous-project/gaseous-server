@@ -6,9 +6,24 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
     public interface IFileSignaturePlugin
     {
         /// <summary>
+        /// Gets the type of plugin.
+        /// </summary>
+        public string PluginType => "FileSignature";
+
+        /// <summary>
+        /// Gets the name of the plugin.
+        /// </summary>
+        public string Name { get;}
+
+        /// <summary>
         /// Gets or sets the configuration settings for the file signature plugin.
         /// </summary>
         public Dictionary<string, object>? Settings { get; set; }
+
+        /// <summary>
+        /// Gets a value indicating whether this plugin requires internet connectivity to function.
+        /// </summary>
+        public bool UsesInternet { get; }
 
         /// <summary>
         /// Gets the signature for a game file based on its hash and metadata.

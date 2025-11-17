@@ -8,7 +8,13 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
     public class Database : IFileSignaturePlugin
     {
         /// <inheritdoc/>
+        public string Name { get; } = "Database";
+        
+        /// <inheritdoc/>
         public Dictionary<string, object>? Settings { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+
+        /// <inheritdoc/>
+        public bool UsesInternet { get; } = false;
 
         /// <inheritdoc/>
         public async Task<Signatures_Games?> GetSignature(HashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
