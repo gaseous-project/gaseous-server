@@ -513,14 +513,14 @@ namespace gaseous_server.Classes
         public static void MySql_1031_MigrateMetadataVersion()
         {
             // get the database migration task
-            foreach (ProcessQueue.QueueItem qi in ProcessQueue.QueueItems)
+            foreach (ProcessQueue.QueueProcessor.QueueItem qi in ProcessQueue.QueueProcessor.QueueItems)
             {
                 if (qi.ItemType == ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade)
                 {
-                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Platform, "Platform Metadata", null, false);
-                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Signatures, "Signature Metadata", null, false);
-                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.MetadataRefresh_Game, "Game Metadata", null, false);
-                    qi.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.DatabaseMigration_1031, "Database Migration 1031", null, false);
+                    qi.AddSubTask(ProcessQueue.QueueItemSubTasks.MetadataRefresh_Platform, "Platform Metadata", null, false);
+                    qi.AddSubTask(ProcessQueue.QueueItemSubTasks.MetadataRefresh_Signatures, "Signature Metadata", null, false);
+                    qi.AddSubTask(ProcessQueue.QueueItemSubTasks.MetadataRefresh_Game, "Game Metadata", null, false);
+                    qi.AddSubTask(ProcessQueue.QueueItemSubTasks.DatabaseMigration_1031, "Database Migration 1031", null, false);
                 }
             }
         }

@@ -37,13 +37,13 @@ namespace gaseous_server
             }
 
             // check if a database upgrade process is in the queue
-            ProcessQueue.QueueItemState[] upgradeStates = new ProcessQueue.QueueItemState[]
+            ProcessQueue.QueueProcessor.QueueItemState[] upgradeStates = new ProcessQueue.QueueProcessor.QueueItemState[]
             {
-                ProcessQueue.QueueItemState.Running,
-                ProcessQueue.QueueItemState.Stopped,
-                ProcessQueue.QueueItemState.NeverStarted
+                ProcessQueue.QueueProcessor.QueueItemState.Running,
+                ProcessQueue.QueueProcessor.QueueItemState.Stopped,
+                ProcessQueue.QueueProcessor.QueueItemState.NeverStarted
             };
-            if (ProcessQueue.QueueItems.Any(qi => qi.ItemType == ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade && upgradeStates.Contains(qi.ItemState)))
+            if (ProcessQueue.QueueProcessor.QueueItems.Any(qi => qi.ItemType == ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade && upgradeStates.Contains(qi.ItemState)))
             {
                 Config.DatabaseConfiguration.UpgradeInProgress = true;
             }
@@ -52,13 +52,13 @@ namespace gaseous_server
                 Config.DatabaseConfiguration.UpgradeInProgress = false;
             }
 
-            List<ProcessQueue.QueueItem> ActiveList = new List<ProcessQueue.QueueItem>();
-            ActiveList.AddRange(ProcessQueue.QueueItems);
-            foreach (ProcessQueue.QueueItem qi in ActiveList)
+            List<ProcessQueue.QueueProcessor.QueueItem> ActiveList = new List<ProcessQueue.QueueProcessor.QueueItem>();
+            ActiveList.AddRange(ProcessQueue.QueueProcessor.QueueItems);
+            foreach (ProcessQueue.QueueProcessor.QueueItem qi in ActiveList)
             {
                 if (Config.DatabaseConfiguration.UpgradeInProgress == false || (Config.DatabaseConfiguration.UpgradeInProgress == true && qi.ItemType == ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade))
                 {
-                    if (qi.ItemState != ProcessQueue.QueueItemState.Disabled)
+                    if (qi.ItemState != ProcessQueue.QueueProcessor.QueueItemState.Disabled)
                     {
                         if (CheckIfProcessIsBlockedByOthers(qi) == false)
                         {
@@ -68,9 +68,9 @@ namespace gaseous_server
                                 // execute queued process
                                 _ = Task.Run(() => qi.Execute());
 
-                                if (qi.RemoveWhenStopped == true && qi.ItemState == ProcessQueue.QueueItemState.Stopped)
+                                if (qi.RemoveWhenStopped == true && qi.ItemState == ProcessQueue.QueueProcessor.QueueItemState.Stopped)
                                 {
-                                    ProcessQueue.QueueItems.Remove(qi);
+                                    ProcessQueue.QueueProcessor.QueueItems.Remove(qi);
                                 }
                             }
                         }
@@ -98,11 +98,11 @@ namespace gaseous_server
             _timer?.Dispose();
         }
 
-        private bool CheckIfProcessIsBlockedByOthers(ProcessQueue.QueueItem queueItem)
+        private bool CheckIfProcessIsBlockedByOthers(ProcessQueue.QueueProcessor.QueueItem queueItem)
         {
-            foreach (ProcessQueue.QueueItem qi in ProcessQueue.QueueItems)
+            foreach (ProcessQueue.QueueProcessor.QueueItem qi in ProcessQueue.QueueProcessor.QueueItems)
             {
-                if (qi.ItemState == ProcessQueue.QueueItemState.Running)
+                if (qi.ItemState == ProcessQueue.QueueProcessor.QueueItemState.Running)
                 {
                     // other service is running, check if queueItem is blocked by it
                     if (

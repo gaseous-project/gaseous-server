@@ -14,9 +14,9 @@ using Newtonsoft.Json;
 using NuGet.Common;
 using NuGet.Packaging;
 
-namespace gaseous_server
+namespace gaseous_server.ProcessQueue
 {
-    public static class ProcessQueue
+    public static class QueueProcessor
     {
         public static List<QueueItem> QueueItems = new List<QueueItem>();
 
@@ -85,7 +85,7 @@ namespace gaseous_server
             [Newtonsoft.Json.JsonIgnore]
             [System.Text.Json.Serialization.JsonIgnore]
             public List<SubTask> SubTasks { get; set; } = new List<SubTask>();
-            public Guid AddSubTask(SubTask.TaskTypes TaskType, string TaskName, object Settings, bool RemoveWhenCompleted)
+            public Guid AddSubTask(QueueItemSubTasks TaskType, string TaskName, object Settings, bool RemoveWhenCompleted)
             {
                 // check if the task already exists
                 SubTask? existingTask = SubTasks.FirstOrDefault(x => x.TaskType == TaskType && x.TaskName == TaskName);
@@ -147,23 +147,15 @@ namespace gaseous_server
             Dictionary<string, Thread> BackgroundThreads = null;
             public class SubTask
             {
-                public TaskTypes TaskType
+                public QueueItemSubTasks TaskType
                 {
                     get
                     {
                         return _TaskType;
                     }
                 }
-                private TaskTypes _TaskType;
-                public enum TaskTypes
-                {
-                    ImportQueueProcessor,
-                    MetadataRefresh_Platform,
-                    MetadataRefresh_Signatures,
-                    MetadataRefresh_Game,
-                    DatabaseMigration_1031,
-                    LibraryScanWorker
-                }
+                private QueueItemSubTasks _TaskType;
+
                 private string _CorrelationId;
                 public string CorrelationId
                 {
@@ -225,7 +217,7 @@ namespace gaseous_server
                     }
                 }
                 private object? _ParentObject = null;
-                public SubTask(object? ParentObject, TaskTypes TaskType, string TaskName, object Settings, Guid CorrelationId = default)
+                public SubTask(object? ParentObject, QueueItemSubTasks TaskType, string TaskName, object Settings, Guid CorrelationId = default)
                 {
                     _ParentObject = ParentObject;
                     _TaskType = TaskType;
@@ -236,7 +228,7 @@ namespace gaseous_server
 
                     switch (TaskType)
                     {
-                        case TaskTypes.ImportQueueProcessor:
+                        case QueueItemSubTasks.ImportQueueProcessor:
                             ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Queued, ImportStateItem.ImportType.Unknown, null);
                             break;
                     }
@@ -253,7 +245,7 @@ namespace gaseous_server
                         // do some work
                         switch (_TaskType)
                         {
-                            case TaskTypes.ImportQueueProcessor:
+                            case QueueItemSubTasks.ImportQueueProcessor:
                                 Logging.LogKey(Logging.LogType.Information, "process.import_queue_processor", "importqueue.processing_import", null, new[] { _TaskName });
 
                                 // update the import state
@@ -337,31 +329,31 @@ namespace gaseous_server
 
                                 break;
 
-                            case TaskTypes.MetadataRefresh_Platform:
+                            case QueueItemSubTasks.MetadataRefresh_Platform:
                                 Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_platform_metadata_for", null, new[] { _TaskName });
                                 MetadataManagement metadataPlatform = new MetadataManagement(this);
                                 await metadataPlatform.RefreshPlatforms(true);
                                 break;
 
-                            case TaskTypes.MetadataRefresh_Signatures:
+                            case QueueItemSubTasks.MetadataRefresh_Signatures:
                                 Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_signature_metadata_for", null, new[] { _TaskName });
                                 MetadataManagement metadataSignatures = new MetadataManagement(this);
                                 await metadataSignatures.RefreshSignatures(true);
                                 break;
 
-                            case TaskTypes.MetadataRefresh_Game:
+                            case QueueItemSubTasks.MetadataRefresh_Game:
                                 Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_game_metadata_for", null, new[] { _TaskName });
                                 MetadataManagement metadataGame = new MetadataManagement(this);
                                 metadataGame.UpdateRomCounts();
                                 await metadataGame.RefreshGames(true);
                                 break;
 
-                            case TaskTypes.DatabaseMigration_1031:
+                            case QueueItemSubTasks.DatabaseMigration_1031:
                                 Logging.LogKey(Logging.LogType.Information, "process.database", "database.running_migration_for", null, new[] { _TaskName, "1031" });
                                 await DatabaseMigration.RunMigration1031();
                                 break;
 
-                            case TaskTypes.LibraryScanWorker:
+                            case QueueItemSubTasks.LibraryScanWorker:
                                 CallContext.SetData("CallingProcess", _TaskType.ToString() + " - " + ((GameLibrary.LibraryItem)_Settings).Name);
                                 Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.scanning_library", null, new[] { _TaskName });
                                 ImportGame importLibraryScan = new ImportGame(this);
@@ -628,7 +620,7 @@ namespace gaseous_server
                                             {
                                                 // process the import
                                                 Logging.LogKey(Logging.LogType.Information, "process.import_queue_processor", "importqueue.processing_import", null, new[] { importState.FileName });
-                                                AddSubTask(SubTask.TaskTypes.ImportQueueProcessor, Path.GetFileName(importState.FileName), importState.SessionId, true);
+                                                AddSubTask(QueueItemSubTasks.ImportQueueProcessor, Path.GetFileName(importState.FileName), importState.SessionId, true);
                                                 // update the import state
                                                 ImportGame.UpdateImportState(importState.SessionId, ImportStateItem.ImportState.Queued, ImportStateItem.ImportType.Unknown, null);
                                             }
@@ -644,7 +636,7 @@ namespace gaseous_server
                                             {
                                                 // process the import
                                                 Logging.LogKey(Logging.LogType.Warning, "process.import_queue_processor", "importqueue.requeuing_stalled_import", null, new[] { importState.FileName });
-                                                AddSubTask(SubTask.TaskTypes.ImportQueueProcessor, Path.GetFileName(importState.FileName), importState.SessionId, true);
+                                                AddSubTask(QueueItemSubTasks.ImportQueueProcessor, Path.GetFileName(importState.FileName), importState.SessionId, true);
                                             }
                                         }
                                     }
@@ -672,9 +664,9 @@ namespace gaseous_server
                                     }
 
                                     // set up metadata refresh subtasks
-                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Platform, "Platform Metadata", null, true);
-                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Signatures, "Signature Metadata", null, true);
-                                    AddSubTask(SubTask.TaskTypes.MetadataRefresh_Game, "Game Metadata", null, true);
+                                    AddSubTask(QueueItemSubTasks.MetadataRefresh_Platform, "Platform Metadata", null, true);
+                                    AddSubTask(QueueItemSubTasks.MetadataRefresh_Signatures, "Signature Metadata", null, true);
+                                    AddSubTask(QueueItemSubTasks.MetadataRefresh_Game, "Game Metadata", null, true);
 
                                     _SaveLastRunTime = true;
 
@@ -707,7 +699,7 @@ namespace gaseous_server
                                         // process each library
                                         foreach (GameLibrary.LibraryItem library in libraries)
                                         {
-                                            Guid childCorrelationId = AddSubTask(SubTask.TaskTypes.LibraryScanWorker, library.Name, library, true);
+                                            Guid childCorrelationId = AddSubTask(QueueItemSubTasks.LibraryScanWorker, library.Name, library, true);
                                             Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.queuing_library_for_scanning_with_correlation_id", null, new[] { library.Name, childCorrelationId.ToString() });
                                         }
                                     }
@@ -1022,84 +1014,6 @@ namespace gaseous_server
                 public Logging.LogType? ErrorType { get; set; }
                 public int ErrorCount { get; set; }
             }
-        }
-
-        public enum QueueItemType
-        {
-            /// <summary>
-            /// Reserved for blocking all services - no actual background service is tied to this type
-            /// </summary>
-            All,
-
-            /// <summary>
-            /// Default type - no background service is tied to this type
-            /// </summary>
-            NotConfigured,
-
-            /// <summary>
-            /// Ingests signature DAT files into the database
-            /// </summary>
-            SignatureIngestor,
-
-            /// <summary>
-            /// Imports game files into the database and moves them to the required location on disk
-            /// </summary>
-            TitleIngestor,
-
-            /// <summary>
-            /// Processes the import queue and imports files into the database
-            /// </summary>
-            ImportQueueProcessor,
-
-            /// <summary>
-            /// Forces stored metadata to be refreshed
-            /// </summary>
-            MetadataRefresh,
-
-            /// <summary>
-            /// Ensures all managed files are where they are supposed to be
-            /// </summary>
-            OrganiseLibrary,
-
-            /// <summary>
-            /// Looks for orphaned files in the library and re-adds them to the database
-            /// </summary>
-            LibraryScan,
-
-            /// <summary>
-            /// Performs the work for the LibraryScan task
-            /// </summary>
-            LibraryScanWorker,
-
-            /// <summary>
-            /// Builds collections - set the options attribute to the id of the collection to build
-            /// </summary>
-            CollectionCompiler,
-
-            /// <summary>
-            /// Builds media groups - set the options attribute to the id of the media group to build
-            /// </summary>
-            MediaGroupCompiler,
-
-            /// <summary>
-            /// Performs and post database upgrade scripts that can be processed as a background task
-            /// </summary>
-            BackgroundDatabaseUpgrade,
-
-            /// <summary>
-            /// Performs a clean up of old files, and purge old logs
-            /// </summary>
-            DailyMaintainer,
-
-            /// <summary>
-            /// Performs more intensive cleanups and optimises the database
-            /// </summary>
-            WeeklyMaintainer,
-
-            /// <summary>
-            /// Cleans up marked paths in the temporary directory
-            /// </summary>
-            TempCleanup
         }
 
         public enum QueueItemState

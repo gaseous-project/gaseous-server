@@ -42,6 +42,10 @@
     --input-border-hover: rgb(147, 147, 147);
     --input-font-colour: var(--page-font-colour);
 
+    /* progress bar */
+    --progress-bar-background: rgb(165, 165, 165);
+    --progress-bar-value: rgb(0, 207, 48);
+
     /* button */
     --button-background: rgb(110, 109, 109);
     --button-background-gradient: linear-gradient(140deg, rgba(110, 109, 109, 1) 0%, rgba(85, 85, 85, 1) 100%);

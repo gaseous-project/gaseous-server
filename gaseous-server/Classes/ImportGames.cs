@@ -110,7 +110,7 @@ namespace gaseous_server.Classes
                 Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.file_added_to_import_queue", null, new string[] { FileName, Method.ToString(), UserId });
 
                 // check if there is an ImportQueueProcessor running
-                ProcessQueue.QueueItem? queueItem = ProcessQueue.QueueItems.Find(x => x.ItemType == ProcessQueue.QueueItemType.ImportQueueProcessor);
+                ProcessQueue.QueueProcessor.QueueItem? queueItem = ProcessQueue.QueueProcessor.QueueItems.Find(x => x.ItemType == ProcessQueue.QueueItemType.ImportQueueProcessor);
                 if (queueItem != null)
                 {
                     queueItem.ForceExecute();

@@ -157,11 +157,11 @@ namespace gaseous_server
             if (library.IsDefaultLibrary == false)
             {
                 // check for active library scans
-                foreach (ProcessQueue.QueueItem item in ProcessQueue.QueueItems)
+                foreach (ProcessQueue.QueueProcessor.QueueItem item in ProcessQueue.QueueProcessor.QueueItems)
                 {
                     if (
-                        (item.ItemType == ProcessQueue.QueueItemType.LibraryScan && item.ItemState == ProcessQueue.QueueItemState.Running) ||
-                        (item.ItemType == ProcessQueue.QueueItemType.LibraryScanWorker && item.ItemState == ProcessQueue.QueueItemState.Running)
+                        (item.ItemType == ProcessQueue.QueueItemType.LibraryScan && item.ItemState == ProcessQueue.QueueProcessor.QueueItemState.Running) ||
+                        (item.ItemType == ProcessQueue.QueueItemType.LibraryScanWorker && item.ItemState == ProcessQueue.QueueProcessor.QueueItemState.Running)
                     )
                     {
                         Logging.LogKey(Logging.LogType.Warning, "process.library_management", "librarymanagement.unable_to_delete_libraries_while_scan_running");
@@ -215,11 +215,11 @@ namespace gaseous_server
             LibraryItem library = await GetLibrary(LibraryId);
 
             // start the library scan if it's not already running
-            foreach (ProcessQueue.QueueItem item in ProcessQueue.QueueItems)
+            foreach (ProcessQueue.QueueProcessor.QueueItem item in ProcessQueue.QueueProcessor.QueueItems)
             {
-                if (item.ItemType == ProcessQueue.QueueItemType.LibraryScan && item.ItemState != ProcessQueue.QueueItemState.Running)
+                if (item.ItemType == ProcessQueue.QueueItemType.LibraryScan && item.ItemState != ProcessQueue.QueueProcessor.QueueItemState.Running)
                 {
-                    item.AddSubTask(ProcessQueue.QueueItem.SubTask.TaskTypes.LibraryScanWorker, library.Name, library, true);
+                    item.AddSubTask(ProcessQueue.QueueItemSubTasks.LibraryScanWorker, library.Name, library, true);
                     item.ForceExecute();
                 }
             }

@@ -205,7 +205,7 @@ ORDER BY Platform.`Name`; ";
                             Config.SetSetting<string>("Enabled_" + TaskConfiguration.Task, TaskConfiguration.Enabled.ToString());
 
                             // update existing process
-                            foreach (ProcessQueue.QueueItem item in ProcessQueue.QueueItems)
+                            foreach (ProcessQueue.QueueProcessor.QueueItem item in ProcessQueue.QueueProcessor.QueueItems)
                             {
                                 if (item.ItemType.ToString().ToLower() == TaskConfiguration.Task.ToLower())
                                 {
@@ -221,7 +221,7 @@ ORDER BY Platform.`Name`; ";
                                 Config.SetSetting<string>("Interval_" + TaskConfiguration.Task, TaskConfiguration.Interval.ToString());
 
                                 // update existing process
-                                foreach (ProcessQueue.QueueItem item in ProcessQueue.QueueItems)
+                                foreach (ProcessQueue.QueueProcessor.QueueItem item in ProcessQueue.QueueProcessor.QueueItems)
                                 {
                                     if (item.ItemType.ToString().ToLower() == TaskConfiguration.Task.ToLower())
                                     {
@@ -240,7 +240,7 @@ ORDER BY Platform.`Name`; ";
                             Config.SetSetting<string>("AllowedDays_" + TaskConfiguration.Task, Newtonsoft.Json.JsonConvert.SerializeObject(TaskConfiguration.AllowedDays));
 
                             // update existing process
-                            foreach (ProcessQueue.QueueItem item in ProcessQueue.QueueItems)
+                            foreach (ProcessQueue.QueueProcessor.QueueItem item in ProcessQueue.QueueProcessor.QueueItems)
                             {
                                 if (item.ItemType.ToString().ToLower() == TaskConfiguration.Task.ToLower())
                                 {
@@ -257,7 +257,7 @@ ORDER BY Platform.`Name`; ";
                             Config.SetSetting<string>("AllowedEndMinutes_" + TaskConfiguration.Task, TaskConfiguration.AllowedEndMinutes.ToString());
 
                             // update existing process
-                            foreach (ProcessQueue.QueueItem item in ProcessQueue.QueueItems)
+                            foreach (ProcessQueue.QueueProcessor.QueueItem item in ProcessQueue.QueueProcessor.QueueItems)
                             {
                                 if (item.ItemType.ToString().ToLower() == TaskConfiguration.Task.ToLower())
                                 {

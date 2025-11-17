@@ -20,9 +20,9 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public List<ProcessQueue.QueueItem> GetQueue()
+        public List<ProcessQueue.QueueProcessor.QueueItem> GetQueue()
         {
-            return ProcessQueue.QueueItems;
+            return ProcessQueue.QueueProcessor.QueueItems;
         }
 
         [MapToApiVersion("1.0")]
@@ -32,9 +32,9 @@ namespace gaseous_server.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [Authorize(Roles = "Admin")]
-        public ActionResult<ProcessQueue.QueueItem> ForceRun(ProcessQueue.QueueItemType TaskType, Boolean ForceRun)
+        public ActionResult<ProcessQueue.QueueProcessor.QueueItem> ForceRun(ProcessQueue.QueueItemType TaskType, Boolean ForceRun)
         {
-            foreach (ProcessQueue.QueueItem qi in ProcessQueue.QueueItems)
+            foreach (ProcessQueue.QueueProcessor.QueueItem qi in ProcessQueue.QueueProcessor.QueueItems)
             {
                 if (qi.AllowManualStart == true)
                 {

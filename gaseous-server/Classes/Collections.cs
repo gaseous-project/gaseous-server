@@ -201,13 +201,13 @@ namespace gaseous_server.Classes
                 db.ExecuteCMD(sql, dbDict);
 
                 // start background task
-                ProcessQueue.QueueItem queueItem = new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.CollectionCompiler, 1, false, true);
+                ProcessQueue.QueueProcessor.QueueItem queueItem = new ProcessQueue.QueueProcessor.QueueItem(ProcessQueue.QueueItemType.CollectionCompiler, 1, false, true);
                 queueItem.Options = new Dictionary<string, object>{
                     { "Id", Id },
                     { "UserId", userid }
                 };
                 queueItem.ForceExecute();
-                ProcessQueue.QueueItems.Add(queueItem);
+                ProcessQueue.QueueProcessor.QueueItems.Add(queueItem);
             }
         }
 

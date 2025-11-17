@@ -81,7 +81,7 @@ namespace gaseous_server.Controllers
 
             // get database upgrade status
             Dictionary<string, Dictionary<string, string>> upgradeStatus = new Dictionary<string, Dictionary<string, string>>();
-            foreach (var item in ProcessQueue.QueueItems)
+            foreach (var item in ProcessQueue.QueueProcessor.QueueItems)
             {
                 if (item.ItemType == ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade)
                 {
