@@ -2,32 +2,89 @@ using System.Collections.Concurrent;
 using System.Configuration;
 using System.IO.Compression;
 using System.Net;
+using System.Reflection;
 using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
+using gaseous_server.Classes.Plugins.FileSignatures;
 using gaseous_server.Models;
 using HasheousClient.Models.Metadata.IGDB;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NuGet.Common;
-using SevenZip;
-using SharpCompress.Archives;
-using SharpCompress.Archives.Rar;
-using SharpCompress.Archives.Zip;
-using SharpCompress.Common;
 
 namespace gaseous_server.Classes
 {
+    /// <summary>
+    /// Provides functionality for file signature detection and analysis, including support for compressed archives.
+    /// </summary>
     public class FileSignature
     {
+        private static List<IDecompressionPlugin> _decompressionPlugins = new List<IDecompressionPlugin>();
+
+        private static List<IDecompressionPlugin> DecompressionPlugins
+        {
+            get
+            {
+                if (_decompressionPlugins.Count > 0)
+                {
+                    return _decompressionPlugins;
+                }
+
+                // Clear existing items
+                _decompressionPlugins.Clear();
+
+                // Dynamically discover all classes that implement IDecompressionPlugin
+                var assembly = Assembly.GetExecutingAssembly();
+                var pluginType = typeof(IDecompressionPlugin);
+                
+                var pluginTypes = assembly.GetTypes()
+                    .Where(t => t.IsClass && !t.IsAbstract && pluginType.IsAssignableFrom(t))
+                    .ToList();
+
+                foreach (var type in pluginTypes)
+                {
+                    try
+                    {
+                        var plugin = Activator.CreateInstance(type) as IDecompressionPlugin;
+                        if (plugin != null)
+                        {
+                            _decompressionPlugins.Add(plugin);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "decompression_plugin_load_failed", null, new string[] { type.Name }, ex);
+                    }
+                }
+
+                return _decompressionPlugins;
+            }
+        }
+
+        private static string[] SupportedCompressionExtensions
+        {
+            get
+            {
+                return [.. DecompressionPlugins.Select(p => p.Extension)];
+            }
+        }
+
+        /// <summary>
+        /// Gets the file signature for a game file, including analysis of compressed archives.
+        /// </summary>
+        /// <param name="library">The library item containing the game file.</param>
+        /// <param name="hash">The hash object containing file checksums.</param>
+        /// <param name="fi">The FileInfo object for the game file.</param>
+        /// <param name="GameFileImportPath">The path to the game file being imported.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the discovered file signature.</returns>
         public async Task<Signatures_Games> GetFileSignatureAsync(GameLibrary.LibraryItem library, HashObject hash, FileInfo fi, string GameFileImportPath)
         {
             Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.getting_signature_for_file", null, new string[] { GameFileImportPath });
             gaseous_server.Models.Signatures_Games discoveredSignature = new gaseous_server.Models.Signatures_Games();
             discoveredSignature = await _GetFileSignatureAsync(hash, fi.Name, fi.Extension, fi.Length, GameFileImportPath, false);
 
-            string[] CompressionExts = { ".zip", ".rar", ".7z" };
             string ImportedFileExtension = Path.GetExtension(GameFileImportPath);
 
-            if (CompressionExts.Contains(ImportedFileExtension) && (fi.Length < 1073741824))
+            if (SupportedCompressionExtensions.Contains(ImportedFileExtension) && (fi.Length < 1073741824))
             {
                 // file is a zip and less than 1 GiB
                 // extract the zip file and search the contents
@@ -37,79 +94,12 @@ namespace gaseous_server.Classes
                 if (!Directory.Exists(ExtractPath)) { Directory.CreateDirectory(ExtractPath); }
                 try
                 {
-                    switch (ImportedFileExtension)
+                    var matchingPlugin = DecompressionPlugins
+                        .FirstOrDefault(plugin => plugin.Extension.Equals(ImportedFileExtension, StringComparison.OrdinalIgnoreCase));
+                    
+                    if (matchingPlugin != null)
                     {
-                        case ".zip":
-                            Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.decompressing_using_zip");
-                            try
-                            {
-                                using (var archive = SharpCompress.Archives.Zip.ZipArchive.Open(GameFileImportPath))
-                                {
-                                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                                    {
-                                        Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.extracting_file", null, new string[] { entry.Key });
-                                        entry.WriteToDirectory(ExtractPath, new ExtractionOptions()
-                                        {
-                                            ExtractFullPath = true,
-                                            Overwrite = true
-                                        });
-                                    }
-                                }
-                            }
-                            catch (Exception zipEx)
-                            {
-                                Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.unzip_error", null, null, zipEx);
-                                throw;
-                            }
-                            break;
-
-                        case ".rar":
-                            Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.decompressing_using_rar");
-                            try
-                            {
-                                using (var archive = RarArchive.Open(GameFileImportPath))
-                                {
-                                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                                    {
-                                        Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.extracting_file", null, new string[] { entry.Key });
-                                        entry.WriteToDirectory(ExtractPath, new ExtractionOptions()
-                                        {
-                                            ExtractFullPath = true,
-                                            Overwrite = true
-                                        });
-                                    }
-                                }
-                            }
-                            catch (Exception zipEx)
-                            {
-                                Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.unrar_error", null, null, zipEx);
-                                throw;
-                            }
-                            break;
-
-                        case ".7z":
-                            Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.decompressing_using_7z");
-                            try
-                            {
-                                using (var archive = SharpCompress.Archives.SevenZip.SevenZipArchive.Open(GameFileImportPath))
-                                {
-                                    foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
-                                    {
-                                        Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.extracting_file", null, new string[] { entry.Key });
-                                        entry.WriteToDirectory(ExtractPath, new ExtractionOptions()
-                                        {
-                                            ExtractFullPath = true,
-                                            Overwrite = true
-                                        });
-                                    }
-                                }
-                            }
-                            catch (Exception zipEx)
-                            {
-                                Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.sevenzip_error", null, null, zipEx);
-                                throw;
-                            }
-                            break;
+                        await matchingPlugin.DecompressFile(GameFileImportPath, ExtractPath);
                     }
 
                     Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.processing_decompressed_files_for_signature_matches");
@@ -182,7 +172,7 @@ namespace gaseous_server.Classes
                     }
 
                     discoveredSignature.Rom.Attributes.Add(
-                         "ZipContents", Newtonsoft.Json.JsonConvert.SerializeObject(archiveFiles)
+                        "ZipContents", Newtonsoft.Json.JsonConvert.SerializeObject(archiveFiles)
                     );
                 }
                 catch (Exception ex)
@@ -269,18 +259,55 @@ namespace gaseous_server.Classes
             return discoveredSignature;
         }
 
+        /// <summary>
+        /// Represents data about a file contained within an archive.
+        /// </summary>
         public class ArchiveData
         {
+            /// <summary>
+            /// Gets or sets the name of the file.
+            /// </summary>
             public string FileName { get; set; }
+            
+            /// <summary>
+            /// Gets or sets the path of the file within the archive.
+            /// </summary>
             public string FilePath { get; set; }
+            
+            /// <summary>
+            /// Gets or sets the size of the file in bytes.
+            /// </summary>
             public long Size { get; set; }
+            
+            /// <summary>
+            /// Gets or sets the MD5 hash of the file.
+            /// </summary>
             public string MD5 { get; set; }
+            
+            /// <summary>
+            /// Gets or sets the SHA1 hash of the file.
+            /// </summary>
             public string SHA1 { get; set; }
+            
+            /// <summary>
+            /// Gets or sets the SHA256 hash of the file.
+            /// </summary>
             public string SHA256 { get; set; }
+            
+            /// <summary>
+            /// Gets or sets the CRC32 hash of the file.
+            /// </summary>
             public string CRC { get; set; }
+            
+            /// <summary>
+            /// Gets or sets a value indicating whether this file is used as a signature selector.
+            /// </summary>
             public bool isSignatureSelector { get; set; } = false;
         }
 
+        /// <summary>
+        /// Specifies the various metadata sources available for game information.
+        /// </summary>
         public enum MetadataSources
         {
             None,
