@@ -225,49 +225,30 @@ namespace gaseous_server.Classes
             Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.checking_signature_for_file", null, new string[] { GameFileImportPath, hash.md5hash, hash.sha1hash, hash.sha256hash, hash.crc32hash });
 
             // setup plugins
-            Plugins.FileSignatures.IFileSignaturePlugin dbPlugin = new Plugins.FileSignatures.Database();
-            Plugins.FileSignatures.IFileSignaturePlugin hasheousPlugin = new Plugins.FileSignatures.Hasheous();
-            Plugins.FileSignatures.IFileSignaturePlugin filePlugin = new Plugins.FileSignatures.InspectFile();
+            List<Plugins.FileSignatures.IFileSignaturePlugin> plugins = new List<Plugins.FileSignatures.IFileSignaturePlugin>();
+
+            if (Config.MetadataConfiguration.SignatureSource != HasheousClient.Models.MetadataModel.SignatureSources.LocalOnly)
+            {
+                Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.hasheous_enabled_searching_remote_then_local");
+                plugins.Add(new Plugins.FileSignatures.Hasheous());
+            }
+            else
+            {
+                Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.hasheous_disabled_searching_local_only");
+            }
+            plugins.Add(new Plugins.FileSignatures.Database());
+            plugins.Add(new Plugins.FileSignatures.InspectFile());
 
             gaseous_server.Models.Signatures_Games? discoveredSignature = null;
 
-            // begin signature search
-            switch (Config.MetadataConfiguration.SignatureSource)
+            // loop plugins - first to return a signature wins
+            foreach (Plugins.FileSignatures.IFileSignaturePlugin plugin in plugins)
             {
-                case HasheousClient.Models.MetadataModel.SignatureSources.LocalOnly:
-                    Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.hasheous_disabled_searching_local_only");
-
-                    discoveredSignature = await dbPlugin.GetSignature(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
-
+                discoveredSignature = await plugin.GetSignature(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
+                if (discoveredSignature != null)
+                {
                     break;
-
-                case HasheousClient.Models.MetadataModel.SignatureSources.Hasheous:
-                    Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.hasheous_enabled_searching_remote_then_local");
-
-                    discoveredSignature = await hasheousPlugin.GetSignature(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
-
-                    if (discoveredSignature == null)
-                    {
-                        Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.signature_not_found_remote_checking_local");
-
-                        discoveredSignature = await dbPlugin.GetSignature(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
-                    }
-                    else
-                    {
-                        Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.signature_retrieved_remote_for_game", null, new string[] { discoveredSignature.Game.Name });
-                    }
-                    break;
-
-            }
-
-            if (discoveredSignature == null)
-            {
-                // construct a signature from file data
-                Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.signature_not_found_generating_from_file_data");
-
-                discoveredSignature = await filePlugin.GetSignature(hash, ImageName, ImageExtension, ImageSize, GameFileImportPath);
-
-                Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.signature_generated_for_game", null, new string[] { discoveredSignature.Game.Name });
+                }
             }
 
             gaseous_server.Models.PlatformMapping.GetIGDBPlatformMapping(ref discoveredSignature, ImageExtension, false);
