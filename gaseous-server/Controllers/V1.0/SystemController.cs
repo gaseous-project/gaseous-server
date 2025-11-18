@@ -511,6 +511,7 @@ ORDER BY Platform.`Name`; ";
             {
                 case ProcessQueue.QueueItemType.SignatureIngestor:
                     this._UserManageable = true;
+                    this._SaveLastRunTime = true;
                     this.DefaultInterval = 60;
                     this.MinimumAllowedInterval = 20;
                     this.DefaultAllowedDays = new List<DayOfWeek>{
@@ -530,6 +531,7 @@ ORDER BY Platform.`Name`; ";
 
                 case ProcessQueue.QueueItemType.TitleIngestor:
                     this._UserManageable = true;
+                    this._SaveLastRunTime = true;
                     this.DefaultInterval = 1;
                     this.MinimumAllowedInterval = 1;
                     this.DefaultAllowedDays = new List<DayOfWeek>{
@@ -555,6 +557,7 @@ ORDER BY Platform.`Name`; ";
 
                 case ProcessQueue.QueueItemType.MetadataRefresh:
                     this._UserManageable = true;
+                    this._SaveLastRunTime = true;
                     this.DefaultInterval = 360;
                     this.MinimumAllowedInterval = 360;
                     this.DefaultAllowedDays = new List<DayOfWeek>{
@@ -574,6 +577,7 @@ ORDER BY Platform.`Name`; ";
 
                 case ProcessQueue.QueueItemType.OrganiseLibrary:
                     this._UserManageable = true;
+                    this._SaveLastRunTime = true;
                     this.DefaultInterval = 1440;
                     this.MinimumAllowedInterval = 120;
                     this.DefaultAllowedDays = new List<DayOfWeek>{
@@ -599,6 +603,7 @@ ORDER BY Platform.`Name`; ";
 
                 case ProcessQueue.QueueItemType.LibraryScan:
                     this._UserManageable = true;
+                    this._SaveLastRunTime = true;
                     this.DefaultInterval = 1440;
                     this.MinimumAllowedInterval = 120;
                     this.DefaultAllowedDays = new List<DayOfWeek>{
@@ -622,6 +627,7 @@ ORDER BY Platform.`Name`; ";
 
                 case ProcessQueue.QueueItemType.DailyMaintainer:
                     this._UserManageable = true;
+                    this._SaveLastRunTime = true;
                     this.DefaultInterval = 1440;
                     this.MinimumAllowedInterval = 1440;
                     this.DefaultAllowedDays = new List<DayOfWeek>{
@@ -644,6 +650,7 @@ ORDER BY Platform.`Name`; ";
 
                 case ProcessQueue.QueueItemType.WeeklyMaintainer:
                     this._UserManageable = true;
+                    this._SaveLastRunTime = true;
                     this.DefaultInterval = 10080;
                     this.MinimumAllowedInterval = 10080;
                     this.DefaultAllowedDays = new List<DayOfWeek>{
@@ -741,6 +748,8 @@ ORDER BY Platform.`Name`; ";
         }
         private bool _UserManageable;
         public bool UserManageable => _UserManageable;
+        private bool _SaveLastRunTime;
+        public bool SaveLastRunTime => _SaveLastRunTime;
         public int Interval
         {
             get

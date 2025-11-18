@@ -62,7 +62,6 @@ namespace gaseous_server
                 var queueItem = new ProcessQueue.QueueProcessor.QueueItem(
                     ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade,
                     1,
-                    new List<ProcessQueue.QueueItemType> { ProcessQueue.QueueItemType.All },
                     false,
                     true);
                 queueItem.ForceExecute();

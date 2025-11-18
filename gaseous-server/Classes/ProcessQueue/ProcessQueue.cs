@@ -7,6 +7,7 @@ using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
 using gaseous_server.Models;
+using gaseous_server.ProcessQueue.Plugins;
 using HasheousClient.Models.Metadata.IGDB;
 using Microsoft.AspNetCore.Identity.UI.V4.Pages.Account.Manage.Internal;
 using Microsoft.AspNetCore.Mvc.ApplicationModels;
@@ -33,13 +34,16 @@ namespace gaseous_server.ProcessQueue
                 // load queueitem configuration
                 BackgroundTaskItem defaultItem = new BackgroundTaskItem(ItemType);
                 Enabled(defaultItem.Enabled);
+                _Blocks = defaultItem.Blocks;
+                _SaveLastRunTime = defaultItem.SaveLastRunTime;
                 _Interval = defaultItem.Interval;
                 _AllowedDays = defaultItem.AllowedDays;
                 AllowedStartHours = defaultItem.AllowedStartHours;
                 AllowedStartMinutes = defaultItem.AllowedStartMinutes;
                 AllowedEndHours = defaultItem.AllowedEndHours;
                 AllowedEndMinutes = defaultItem.AllowedEndMinutes;
-                _Blocks = defaultItem.Blocks;
+
+                AttachPlugin();
             }
 
             public QueueItem(QueueItemType ItemType, int ExecutionInterval, bool AllowManualStart = true, bool RemoveWhenStopped = false)
@@ -54,38 +58,77 @@ namespace gaseous_server.ProcessQueue
                 // load timing defaults
                 BackgroundTaskItem defaultItem = new BackgroundTaskItem(ItemType);
                 Enabled(defaultItem.Enabled);
+                _Blocks = defaultItem.Blocks;
+                _SaveLastRunTime = defaultItem.SaveLastRunTime;
                 _AllowedDays = defaultItem.AllowedDays;
                 AllowedStartHours = defaultItem.AllowedStartHours;
                 AllowedStartMinutes = defaultItem.AllowedStartMinutes;
                 AllowedEndHours = defaultItem.AllowedEndHours;
                 AllowedEndMinutes = defaultItem.AllowedEndMinutes;
+
+                AttachPlugin();
             }
 
-            public QueueItem(QueueItemType ItemType, int ExecutionInterval, List<QueueItemType> Blocks, bool AllowManualStart = true, bool RemoveWhenStopped = false)
+            private void AttachPlugin()
             {
-                _ItemType = ItemType;
-                _ItemState = QueueItemState.NeverStarted;
-                _LastRunTime = Config.ReadSetting<DateTime>("LastRun_" + _ItemType.ToString(), DateTime.UtcNow.AddMinutes(-5));
-                _Interval = ExecutionInterval;
-                _AllowManualStart = AllowManualStart;
-                _RemoveWhenStopped = RemoveWhenStopped;
-                _Blocks = Blocks;
+                // attach the plugin based on the item type
+                switch (_ItemType)
+                {
+                    case QueueItemType.SignatureIngestor:
+                        this.Task = new SignatureIngestor { ParentQueueItem = this };
+                        break;
 
-                // load timing defaults
-                BackgroundTaskItem defaultItem = new BackgroundTaskItem(ItemType);
-                Enabled(defaultItem.Enabled);
-                _AllowedDays = defaultItem.AllowedDays;
-                AllowedStartHours = defaultItem.AllowedStartHours;
-                AllowedStartMinutes = defaultItem.AllowedStartMinutes;
-                AllowedEndHours = defaultItem.AllowedEndHours;
-                AllowedEndMinutes = defaultItem.AllowedEndMinutes;
+                    case QueueItemType.TitleIngestor:
+                        this.Task = new TitleIngestor { ParentQueueItem = this };
+                        break;
+
+                    case QueueItemType.ImportQueueProcessor:
+                        this.Task = new ImportQueueProcessor { ParentQueueItem = this };
+                        break;
+
+                    case QueueItemType.MetadataRefresh:
+                        this.Task = new MetadataRefresh { ParentQueueItem = this };
+                        break;
+
+                    case QueueItemType.OrganiseLibrary:
+                        this.Task = new OrganiseLibrary { ParentQueueItem = this };
+                        break;
+
+                    case QueueItemType.LibraryScan:
+                        this.Task = new LibraryScan { ParentQueueItem = this };
+                        break;
+
+                    case QueueItemType.CollectionCompiler:
+                        this.Task = new CollectionCompiler { ParentQueueItem = this };
+                        break;
+
+                    case QueueItemType.MediaGroupCompiler:
+                        this.Task = new MediaGroupCompiler { ParentQueueItem = this };
+                        break;
+
+                    case QueueItemType.BackgroundDatabaseUpgrade:
+                        this.Task = new BackgroundDatabaseUpgrade { ParentQueueItem = this };
+                        break;
+
+                    case QueueItemType.DailyMaintainer:
+                        this.Task = new DailyMaintainer { ParentQueueItem = this };
+                        break;
+
+                    case QueueItemType.WeeklyMaintainer:
+                        this.Task = new WeeklyMaintainer { ParentQueueItem = this };
+                        break;
+
+                    case QueueItemType.TempCleanup:
+                        this.Task = new TempCleanup { ParentQueueItem = this };
+                        break;
+                }
             }
 
             private QueueItemType _ItemType = QueueItemType.NotConfigured;
             [Newtonsoft.Json.JsonIgnore]
             [System.Text.Json.Serialization.JsonIgnore]
             public List<SubTask> SubTasks { get; set; } = new List<SubTask>();
-            public Guid AddSubTask(QueueItemSubTasks TaskType, string TaskName, object Settings, bool RemoveWhenCompleted)
+            public Guid AddSubTask(QueueItemSubTasks TaskType, string TaskName, object? Settings, bool RemoveWhenCompleted)
             {
                 // check if the task already exists
                 SubTask? existingTask = SubTasks.FirstOrDefault(x => x.TaskType == TaskType && x.TaskName == TaskName);
@@ -203,7 +246,7 @@ namespace gaseous_server.ProcessQueue
                         return _Settings;
                     }
                 }
-                private object _Settings = new object();
+                private object? _Settings = new object();
                 public bool RemoveWhenStopped { get; set; } = false;
                 public string CurrentState { get; set; } = "";
                 public string CurrentStateProgress { get; set; } = "";
@@ -217,7 +260,7 @@ namespace gaseous_server.ProcessQueue
                     }
                 }
                 private object? _ParentObject = null;
-                public SubTask(object? ParentObject, QueueItemSubTasks TaskType, string TaskName, object Settings, Guid CorrelationId = default)
+                public SubTask(object? ParentObject, QueueItemSubTasks TaskType, string TaskName, object? Settings, Guid CorrelationId = default)
                 {
                     _ParentObject = ParentObject;
                     _TaskType = TaskType;
@@ -410,8 +453,6 @@ namespace gaseous_server.ProcessQueue
                 DayOfWeek.Friday,
                 DayOfWeek.Saturday
             };
-            private List<QueueItemType> _Blocks = new List<QueueItemType>();
-
             public List<DayOfWeek> AllowedDays
             {
                 get
@@ -447,7 +488,17 @@ namespace gaseous_server.ProcessQueue
                     return _ItemState;
                 }
             }
-            public DateTime LastRunTime => _LastRunTime;
+            public DateTime LastRunTime
+            {
+                get
+                {
+                    return _LastRunTime;
+                }
+                set
+                {
+                    _LastRunTime = value;
+                }
+            }
             public DateTime LastFinishTime => _LastFinishTime;
             public double LastRunDuration => _LastRunDuration;
             public DateTime NextRunTime
@@ -525,6 +576,12 @@ namespace gaseous_server.ProcessQueue
             public string CurrentState { get; set; } = "";
             public string CurrentStateProgress { get; set; } = "";
             public string CorrelationId => _CorrelationId;
+
+            [System.Text.Json.Serialization.JsonIgnore]
+            [Newtonsoft.Json.JsonIgnore]
+            public ITaskPlugin? Task { get; set; } = null;
+
+            private List<QueueItemType> _Blocks = new List<QueueItemType>();
             public List<QueueItemType> Blocks => _Blocks;
 
             public async Task Execute()
@@ -551,228 +608,12 @@ namespace gaseous_server.ProcessQueue
 
                         try
                         {
-                            switch (_ItemType)
+                            if (Task != null)
                             {
-                                case QueueItemType.SignatureIngestor:
-                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_signature_ingestor");
-                                    SignatureIngestors.XML.XMLIngestor tIngest = new SignatureIngestors.XML.XMLIngestor
-                                    {
-                                        CallingQueueItem = this
-                                    };
-
-                                    foreach (int i in Enum.GetValues(typeof(gaseous_signature_parser.parser.SignatureParser)))
-                                    {
-                                        gaseous_signature_parser.parser.SignatureParser parserType = (gaseous_signature_parser.parser.SignatureParser)i;
-                                        if (
-                                            parserType != gaseous_signature_parser.parser.SignatureParser.Auto &&
-                                            parserType != gaseous_signature_parser.parser.SignatureParser.Unknown
-                                        )
-                                        {
-                                            Logging.LogKey(Logging.LogType.Debug, "process.signature_ingest", "signatureingest.processing_parser_files", null, new[] { parserType.ToString() });
-
-                                            string SignaturePath = Path.Combine(Config.LibraryConfiguration.LibrarySignaturesDirectory, parserType.ToString());
-                                            string SignatureProcessedPath = Path.Combine(Config.LibraryConfiguration.LibrarySignaturesProcessedDirectory, parserType.ToString());
-
-                                            if (!Directory.Exists(SignaturePath))
-                                            {
-                                                Directory.CreateDirectory(SignaturePath);
-                                            }
-
-                                            if (!Directory.Exists(SignatureProcessedPath))
-                                            {
-                                                Directory.CreateDirectory(SignatureProcessedPath);
-                                            }
-
-                                            tIngest.Import(SignaturePath, SignatureProcessedPath, parserType);
-                                        }
-                                    }
-
-                                    _SaveLastRunTime = true;
-
-                                    break;
-
-                                case QueueItemType.TitleIngestor:
-                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_title_ingestor");
-                                    Classes.ImportGame import = new ImportGame
-                                    {
-                                        CallingQueueItem = this
-                                    };
-                                    import.ProcessDirectory(Config.LibraryConfiguration.LibraryImportDirectory);
-
-                                    _SaveLastRunTime = true;
-
-                                    break;
-
-                                case QueueItemType.ImportQueueProcessor:
-                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_import_queue_processor");
-
-                                    if (ImportGame.ImportStates != null)
-                                    {
-                                        // get all pending imports
-                                        List<ImportStateItem> pendingImports = ImportGame.ImportStates.Where(x => x.State == ImportStateItem.ImportState.Pending).ToList();
-
-                                        // process each import
-                                        foreach (ImportStateItem importState in pendingImports)
-                                        {
-                                            // check the subtask list for any tasks with the same session id
-                                            SubTask? subTask = SubTasks.FirstOrDefault(x => x.Settings is Guid && (Guid)x.Settings == importState.SessionId);
-                                            if (subTask == null)
-                                            {
-                                                // process the import
-                                                Logging.LogKey(Logging.LogType.Information, "process.import_queue_processor", "importqueue.processing_import", null, new[] { importState.FileName });
-                                                AddSubTask(QueueItemSubTasks.ImportQueueProcessor, Path.GetFileName(importState.FileName), importState.SessionId, true);
-                                                // update the import state
-                                                ImportGame.UpdateImportState(importState.SessionId, ImportStateItem.ImportState.Queued, ImportStateItem.ImportType.Unknown, null);
-                                            }
-                                        }
-
-                                        // check for queued imports that have stalled (don't have a related sub task)
-                                        List<ImportStateItem> stalledImports = ImportGame.ImportStates.Where(x => x.State == ImportStateItem.ImportState.Queued).ToList();
-                                        foreach (ImportStateItem importState in stalledImports)
-                                        {
-                                            // check the subtask list for any tasks with the same session id
-                                            SubTask? subTask = SubTasks.FirstOrDefault(x => x.Settings is Guid && (Guid)x.Settings == importState.SessionId);
-                                            if (subTask == null)
-                                            {
-                                                // process the import
-                                                Logging.LogKey(Logging.LogType.Warning, "process.import_queue_processor", "importqueue.requeuing_stalled_import", null, new[] { importState.FileName });
-                                                AddSubTask(QueueItemSubTasks.ImportQueueProcessor, Path.GetFileName(importState.FileName), importState.SessionId, true);
-                                            }
-                                        }
-                                    }
-
-                                    // clean up
-                                    Classes.ImportGame.DeleteOrphanedDirectories(Config.LibraryConfiguration.LibraryImportDirectory);
-                                    Classes.ImportGame.RemoveOldImportStates();
-
-                                    // force execute this task again so the user doesn't have to wait for imports to be processed
-                                    _LastRunTime = DateTime.UtcNow.AddMinutes(-_Interval);
-
-                                    break;
-
-                                case QueueItemType.MetadataRefresh:
-                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_metadata_refresher");
-
-                                    // clear the sub tasks
-                                    if (SubTasks != null)
-                                    {
-                                        SubTasks.Clear();
-                                    }
-                                    else
-                                    {
-                                        SubTasks = new List<SubTask>();
-                                    }
-
-                                    // set up metadata refresh subtasks
-                                    AddSubTask(QueueItemSubTasks.MetadataRefresh_Platform, "Platform Metadata", null, true);
-                                    AddSubTask(QueueItemSubTasks.MetadataRefresh_Signatures, "Signature Metadata", null, true);
-                                    AddSubTask(QueueItemSubTasks.MetadataRefresh_Game, "Game Metadata", null, true);
-
-                                    _SaveLastRunTime = true;
-
-                                    break;
-
-                                case QueueItemType.OrganiseLibrary:
-                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_library_organiser");
-                                    Classes.ImportGame importLibraryOrg = new ImportGame
-                                    {
-                                        CallingQueueItem = this
-                                    };
-                                    await importLibraryOrg.OrganiseLibrary();
-
-                                    _SaveLastRunTime = true;
-
-                                    break;
-
-                                case QueueItemType.LibraryScan:
-                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_library_scanners");
-                                    Classes.ImportGame libScan = new ImportGame
-                                    {
-                                        CallingQueueItem = this
-                                    };
-
-                                    // get all libraries
-                                    if (SubTasks == null || SubTasks.Count == 0)
-                                    {
-                                        List<GameLibrary.LibraryItem> libraries = await GameLibrary.GetLibraries();
-
-                                        // process each library
-                                        foreach (GameLibrary.LibraryItem library in libraries)
-                                        {
-                                            Guid childCorrelationId = AddSubTask(QueueItemSubTasks.LibraryScanWorker, library.Name, library, true);
-                                            Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.queuing_library_for_scanning_with_correlation_id", null, new[] { library.Name, childCorrelationId.ToString() });
-                                        }
-                                    }
-
-                                    _SaveLastRunTime = true;
-
-                                    break;
-
-                                case QueueItemType.CollectionCompiler:
-                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_collection_compiler");
-                                    Dictionary<string, object> collectionOptions = (Dictionary<string, object>)Options;
-                                    Classes.Collections.CompileCollections((long)collectionOptions["Id"], (string)collectionOptions["UserId"]);
-                                    break;
-
-                                case QueueItemType.MediaGroupCompiler:
-                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_media_group_compiler");
-                                    await Classes.RomMediaGroup.CompileMediaGroup((long)Options);
-                                    break;
-
-                                case QueueItemType.BackgroundDatabaseUpgrade:
-                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_background_upgrade");
-                                    await DatabaseMigration.UpgradeScriptBackgroundTasks();
-                                    break;
-
-                                case QueueItemType.DailyMaintainer:
-                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_daily_maintenance");
-                                    Classes.Maintenance maintenance = new Maintenance
-                                    {
-                                        CallingQueueItem = this
-                                    };
-                                    await maintenance.RunDailyMaintenance();
-
-                                    _SaveLastRunTime = true;
-
-                                    break;
-
-                                case QueueItemType.WeeklyMaintainer:
-                                    Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.starting_weekly_maintenance");
-                                    Classes.Maintenance weeklyMaintenance = new Maintenance
-                                    {
-                                        CallingQueueItem = this
-                                    };
-                                    await weeklyMaintenance.RunWeeklyMaintenance();
-
-                                    _SaveLastRunTime = true;
-                                    break;
-
-                                case QueueItemType.TempCleanup:
-                                    try
-                                    {
-                                        foreach (GameLibrary.LibraryItem libraryItem in await GameLibrary.GetLibraries())
-                                        {
-                                            string rootPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, libraryItem.Id.ToString());
-                                            if (Directory.Exists(rootPath))
-                                            {
-                                                foreach (string directory in Directory.GetDirectories(rootPath))
-                                                {
-                                                    DirectoryInfo info = new DirectoryInfo(directory);
-                                                    if (info.LastWriteTimeUtc.AddMinutes(5) < DateTime.UtcNow)
-                                                    {
-                                                        Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.deleting_temporary_decompress_folder", null, new[] { directory });
-                                                        Directory.Delete(directory, true);
-                                                    }
-                                                }
-                                            }
-                                        }
-                                    }
-                                    catch (Exception tcEx)
-                                    {
-                                        Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.error_cleaning_temporary_files", null, null, tcEx);
-                                    }
-                                    break;
-
+                                // execute the task plugin
+                                DateTime startTime = DateTime.UtcNow;
+                                await Task.Execute();
+                                _LastRunDuration = (DateTime.UtcNow - startTime).TotalSeconds;
                             }
 
                             // execute sub tasks
