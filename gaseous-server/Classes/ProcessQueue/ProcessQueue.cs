@@ -221,6 +221,10 @@ namespace gaseous_server.ProcessQueue
                     {
                         return _AllowConcurrentExecution;
                     }
+                    set
+                    {
+                        _AllowConcurrentExecution = value;
+                    }
                 }
                 private bool _AllowConcurrentExecution = false;
                 public string Status
@@ -273,9 +277,14 @@ namespace gaseous_server.ProcessQueue
                     {
                         case QueueItemSubTasks.ImportQueueProcessor:
                             ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Queued, ImportStateItem.ImportType.Unknown, null);
+                            this.subTask = new ImportQueueProcessor.SubTaskItem
+                            {
+                                ParentSubTaskItem = this
+                            };
                             break;
                     }
                 }
+                private gaseous_server.ProcessQueue.Plugins.ITaskPlugin.ISubTaskItem subTask { get; set; }
                 public async Task Execute()
                 {
                     CallContext.SetData("CorrelationId", _CorrelationId.ToString());
@@ -285,123 +294,47 @@ namespace gaseous_server.ProcessQueue
                     if (_State == QueueItemState.NeverStarted)
                     {
                         _State = QueueItemState.Running;
-                        // do some work
-                        switch (_TaskType)
+
+                        if (subTask != null)
                         {
-                            case QueueItemSubTasks.ImportQueueProcessor:
-                                Logging.LogKey(Logging.LogType.Information, "process.import_queue_processor", "importqueue.processing_import", null, new[] { _TaskName });
+                            await subTask.Execute();
+                        }
+                        else
+                        {
+                            // do some work
+                            switch (_TaskType)
+                            {
+                                case QueueItemSubTasks.MetadataRefresh_Platform:
+                                    Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_platform_metadata_for", null, new[] { _TaskName });
+                                    MetadataManagement metadataPlatform = new MetadataManagement(this);
+                                    await metadataPlatform.RefreshPlatforms(true);
+                                    break;
 
-                                // update the import state
-                                ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Processing, ImportStateItem.ImportType.Unknown, null);
+                                case QueueItemSubTasks.MetadataRefresh_Signatures:
+                                    Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_signature_metadata_for", null, new[] { _TaskName });
+                                    MetadataManagement metadataSignatures = new MetadataManagement(this);
+                                    await metadataSignatures.RefreshSignatures(true);
+                                    break;
 
-                                ImportStateItem importState = ImportGame.GetImportState((Guid)_Settings);
-                                if (importState != null)
-                                {
-                                    Dictionary<string, object>? ProcessData = new Dictionary<string, object>();
-                                    ProcessData.Add("path", Path.GetFileName(importState.FileName));
-                                    ProcessData.Add("sessionid", importState.SessionId.ToString());
+                                case QueueItemSubTasks.MetadataRefresh_Game:
+                                    Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_game_metadata_for", null, new[] { _TaskName });
+                                    MetadataManagement metadataGame = new MetadataManagement(this);
+                                    metadataGame.UpdateRomCounts();
+                                    await metadataGame.RefreshGames(true);
+                                    break;
 
-                                    // get the hash of the file
-                                    HashObject hash = new HashObject(importState.FileName);
-                                    ProcessData.Add("md5hash", hash.md5hash);
-                                    ProcessData.Add("sha1hash", hash.sha1hash);
-                                    ProcessData.Add("crc32hash", hash.crc32hash);
+                                case QueueItemSubTasks.DatabaseMigration_1031:
+                                    Logging.LogKey(Logging.LogType.Information, "process.database", "database.running_migration_for", null, new[] { _TaskName, "1031" });
+                                    await DatabaseMigration.RunMigration1031();
+                                    break;
 
-                                    // check if the file is a bios file first
-                                    Models.PlatformMapping.PlatformMapItem? IsBios = Classes.Bios.BiosHashSignatureLookup(hash.md5hash);
-
-                                    if (IsBios != null)
-                                    {
-                                        // file is a bios
-                                        Bios.ImportBiosFile(importState.FileName, hash, ref ProcessData);
-
-                                        ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Completed, ImportStateItem.ImportType.BIOS, ProcessData);
-                                    }
-                                    else if (
-                                        Common.SkippableFiles.Contains<string>(Path.GetFileName(importState.FileName), StringComparer.OrdinalIgnoreCase) ||
-                                        !PlatformMapping.SupportedFileExtensions.Contains(Path.GetExtension(importState.FileName), StringComparer.OrdinalIgnoreCase)
-                                    )
-                                    {
-                                        Logging.LogKey(Logging.LogType.Debug, "process.import_game", "importqueue.skipping_item_not_supported", null, new[] { importState.FileName });
-
-                                        // move the file to the errors directory
-                                        string targetPathWithFileName = importState.FileName.Replace(Config.LibraryConfiguration.LibraryImportDirectory, Config.LibraryConfiguration.LibraryImportErrorDirectory);
-
-                                        // create target directory if it doesn't exist
-                                        if (!Directory.Exists(Path.GetDirectoryName(targetPathWithFileName)!))
-                                        {
-                                            Directory.CreateDirectory(Path.GetDirectoryName(targetPathWithFileName)!);
-                                        }
-
-                                        File.Move(importState.FileName, targetPathWithFileName, true);
-
-                                        ProcessData.Add("type", "skipped");
-                                        ProcessData.Add("status", "skipped");
-                                        ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Completed, ImportStateItem.ImportType.Unknown, ProcessData);
-                                    }
-                                    else
-                                    {
-                                        // file is a rom
-                                        Platform? platformOverride = null;
-                                        if (importState.PlatformOverride != null)
-                                        {
-                                            platformOverride = await Platforms.GetPlatform((long)importState.PlatformOverride);
-                                        }
-                                        ImportGame.ImportGameFile(importState.FileName, hash, ref ProcessData, platformOverride);
-
-                                        ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Processing, ImportStateItem.ImportType.Rom, ProcessData);
-
-                                        // refresh the metadata for the game - this is a task that can run in the background
-                                        _AllowConcurrentExecution = true;
-                                        if (ProcessData.ContainsKey("metadatamapid"))
-                                        {
-                                            long? metadataMapId = (long?)ProcessData["metadatamapid"];
-                                            if (metadataMapId != null)
-                                            {
-                                                MetadataManagement metadataManagement = new MetadataManagement();
-                                                await metadataManagement.RefreshSpecificGameAsync((long)metadataMapId);
-                                            }
-                                        }
-                                        ImportGame.UpdateImportState((Guid)_Settings, ImportStateItem.ImportState.Completed, ImportStateItem.ImportType.Rom, ProcessData);
-                                    }
-                                }
-                                else
-                                {
-                                    Logging.LogKey(Logging.LogType.Warning, "process.import_queue_processor", "importqueue.import_not_found", null, new[] { _TaskName });
-                                }
-
-                                break;
-
-                            case QueueItemSubTasks.MetadataRefresh_Platform:
-                                Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_platform_metadata_for", null, new[] { _TaskName });
-                                MetadataManagement metadataPlatform = new MetadataManagement(this);
-                                await metadataPlatform.RefreshPlatforms(true);
-                                break;
-
-                            case QueueItemSubTasks.MetadataRefresh_Signatures:
-                                Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_signature_metadata_for", null, new[] { _TaskName });
-                                MetadataManagement metadataSignatures = new MetadataManagement(this);
-                                await metadataSignatures.RefreshSignatures(true);
-                                break;
-
-                            case QueueItemSubTasks.MetadataRefresh_Game:
-                                Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_game_metadata_for", null, new[] { _TaskName });
-                                MetadataManagement metadataGame = new MetadataManagement(this);
-                                metadataGame.UpdateRomCounts();
-                                await metadataGame.RefreshGames(true);
-                                break;
-
-                            case QueueItemSubTasks.DatabaseMigration_1031:
-                                Logging.LogKey(Logging.LogType.Information, "process.database", "database.running_migration_for", null, new[] { _TaskName, "1031" });
-                                await DatabaseMigration.RunMigration1031();
-                                break;
-
-                            case QueueItemSubTasks.LibraryScanWorker:
-                                CallContext.SetData("CallingProcess", _TaskType.ToString() + " - " + ((GameLibrary.LibraryItem)_Settings).Name);
-                                Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.scanning_library", null, new[] { _TaskName });
-                                ImportGame importLibraryScan = new ImportGame(this);
-                                await importLibraryScan.LibrarySpecificScan((GameLibrary.LibraryItem)_Settings);
-                                break;
+                                case QueueItemSubTasks.LibraryScanWorker:
+                                    CallContext.SetData("CallingProcess", _TaskType.ToString() + " - " + ((GameLibrary.LibraryItem)_Settings).Name);
+                                    Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.scanning_library", null, new[] { _TaskName });
+                                    ImportGame importLibraryScan = new ImportGame(this);
+                                    await importLibraryScan.LibrarySpecificScan((GameLibrary.LibraryItem)_Settings);
+                                    break;
+                            }
                         }
                         _State = QueueItemState.Stopped;
                         _Status = "Stopped";

@@ -51,9 +51,15 @@ namespace gaseous_server.ProcessQueue.Plugins
             public object? Data { get; set; }
 
             /// <summary>
-            /// Gets or sets the parent plugin associated with this subtask.
+            /// Gets or sets the parent task plugin associated with this subtask item.
             /// </summary>
-            public ITaskPlugin ParentPlugin { get; set; }
+            public QueueProcessor.QueueItem.SubTask ParentSubTaskItem { get; set; }
+
+            /// <summary>
+            /// Executes the subtask asynchronously.
+            /// </summary>
+            /// <returns>A Task representing the asynchronous operation.</returns>
+            public Task Execute();
         }
     }
 }
