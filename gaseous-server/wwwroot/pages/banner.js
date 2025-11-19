@@ -142,9 +142,9 @@ function setupBanner() {
             if (data['importQueue']) {
                 if (data['importQueue']['Pending'] || data['importQueue']['Processing']) {
                     notificationState = 1;
-                } else if (data['importQueue']['Completed']) {
+                } else if (data['importQueue']['imported']) {
                     // check localStorage for the notification. If there is a record with the same id, do not retrigger the notification
-                    let importQueueNotificationData = data['importQueue']['Completed'];
+                    let importQueueNotificationData = data['importQueue']['imported'];
 
                     // check if there are any notifications in the importQueue
                     let notificationsTracker = localStorage.getItem('NotificationsTracker');
@@ -174,8 +174,8 @@ function setupBanner() {
 
                                 // show the notification
                                 let notificationMsg = new Notification(
-                                    t('banner.notification.game_imported.title'),
-                                    t('banner.notification.game_imported.body'),
+                                    window.lang.translate('banner.notification.game_imported.title'),
+                                    window.lang.translate('banner.notification.game_imported.body'),
                                     undefined,
                                     undefined,
                                     undefined,

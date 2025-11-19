@@ -333,10 +333,10 @@ class NotificationPanel {
                 }
             }
 
-            if (notifications['importQueue']['Completed']) {
+            if (notifications['importQueue']['imported']) {
                 showCompleted = true;
 
-                notifications['importQueue']['Completed'].forEach(item => {
+                notifications['importQueue']['imported'].forEach(item => {
                     this.completedBody.appendChild(createNotificationPanelItem(item));
                 });
             }
