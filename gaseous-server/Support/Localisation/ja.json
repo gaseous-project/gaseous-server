@@ -356,6 +356,8 @@
         "preferencesmodal.use_clear_logo_label": "クリアロゴを使用 (利用可能な場合)",
         "preferencesmodal.tab.localisation": "ローカライゼーション",
         "preferencesmodal.section.preferred_title_cover_art_region_header": "優先タイトル/カバーアート地域",
+        "preferencesmodal.section.preferred_language_header": "優先言語",
+        "preferencesmodal.language_label": "言語:",
         "preferencesmodal.region_label": "地域:",
         "preferencesmodal.region.option.us_default": "米国 (既定)",
         "preferencesmodal.region.option.europe": "ヨーロッパ",

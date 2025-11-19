@@ -387,6 +387,8 @@
         "preferencesmodal.use_clear_logo_label": "Использовать прозрачное лого при наличии",
         "preferencesmodal.tab.localisation": "Локализация",
         "preferencesmodal.section.preferred_title_cover_art_region_header": "Предпочтительный регион названия и обложки",
+        "preferencesmodal.section.preferred_language_header": "Предпочтительный язык",
+        "preferencesmodal.language_label": "Язык:",
         "preferencesmodal.region_label": "Регион:",
         "preferencesmodal.region.option.us_default": "США (по умолчанию)",
         "preferencesmodal.region.option.europe": "Европа",

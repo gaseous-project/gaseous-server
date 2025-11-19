@@ -357,6 +357,8 @@
         "preferencesmodal.use_clear_logo_label": "Clear logo gebruiken indien beschikbaar",
         "preferencesmodal.tab.localisation": "Lokalisatie",
         "preferencesmodal.section.preferred_title_cover_art_region_header": "Voorkeursregio titel en coverart",
+        "preferencesmodal.section.preferred_language_header": "Voorkeurstaal",
+        "preferencesmodal.language_label": "Taal:",
         "preferencesmodal.region_label": "Regio:",
         "preferencesmodal.region.option.us_default": "VS (Standaard)",
         "preferencesmodal.region.option.europe": "Europa",

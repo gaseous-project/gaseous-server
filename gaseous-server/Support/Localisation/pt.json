@@ -357,6 +357,8 @@
         "preferencesmodal.use_clear_logo_label": "Usar logótipo transparente quando disponível",
         "preferencesmodal.tab.localisation": "Localização",
         "preferencesmodal.section.preferred_title_cover_art_region_header": "Região Preferida de Título e Arte de Capa",
+        "preferencesmodal.section.preferred_language_header": "Idioma Preferido",
+        "preferencesmodal.language_label": "Idioma preferido:",
         "preferencesmodal.region_label": "Região:",
         "preferencesmodal.region.option.us_default": "EUA (Padrão)",
         "preferencesmodal.region.option.europe": "Europa",

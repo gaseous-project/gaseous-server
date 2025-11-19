@@ -356,6 +356,8 @@
         "preferencesmodal.use_clear_logo_label": "可用时使用透明 Logo",
         "preferencesmodal.tab.localisation": "本地化",
         "preferencesmodal.section.preferred_title_cover_art_region_header": "首选标题与封面区域",
+        "preferencesmodal.section.preferred_language_header": "首选语言",
+        "preferencesmodal.language_label": "语言:",
         "preferencesmodal.region_label": "区域:",
         "preferencesmodal.region.option.us_default": "美国 (默认)",
         "preferencesmodal.region.option.europe": "欧洲",

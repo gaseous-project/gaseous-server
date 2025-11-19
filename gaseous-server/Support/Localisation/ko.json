@@ -356,6 +356,8 @@
     "preferencesmodal.use_clear_logo_label": "가능하면 투명 로고 사용",
     "preferencesmodal.tab.localisation": "현지화",
     "preferencesmodal.section.preferred_title_cover_art_region_header": "선호 제목 및 커버 아트 지역",
+    "preferencesmodal.section.preferred_language_header": "선호 언어",
+    "preferencesmodal.language_label": "선호 언어:",
     "preferencesmodal.region_label": "지역:",
     "preferencesmodal.region.option.us_default": "미국 (기본)",
     "preferencesmodal.region.option.europe": "유럽",
@@ -684,7 +686,7 @@
     "screenshots.delete.failed": "스크린샷 삭제 실패.",
     "screenshots.title.untitled": "제목 없음",
     "screenshots.upload_date.unknown": "업로드 날짜 알 수 없음",
-    "screenshots.description.none_available": "설명 없음."  
+    "screenshots.description.none_available": "설명 없음."
   },
   "serverstrings": {
     "process.startup": "시작",
