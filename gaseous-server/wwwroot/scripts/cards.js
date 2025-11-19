@@ -2468,7 +2468,7 @@ class SettingsCard {
 
     async ShowCard() {
         this.card = new Card('settings', this.gameId);
-        this.card.BuildCard();
+        await this.card.BuildCard();
 
         // set the header
         this.card.SetHeader(window.lang.translate('card.settings.header'), true);
@@ -2477,60 +2477,64 @@ class SettingsCard {
         this.card.cardBackgroundContainer.style.display = 'none';
         this.card.cardScroller.classList.add('card-settings-scroller-background');
 
-        // load the card body
-        fetch("/pages/cards/settings.html", {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'text/html'
-            }
-        }).then(async response => {
-            if (!response.ok) {
-                throw new Error('Network response was not ok: ' + response.statusText);
-            }
-            const content = await response.text();
-            this.card.cardBody.innerHTML = content;
-
-            // set the body
-            this.menu = this.card.cardBody.querySelector('#card-settings-menu-box');
-            this.body = this.card.cardBody.querySelector('#card-settings-content');
-            this.contentHeading = this.card.cardBody.querySelector('#card-settings-content-heading-label');
-            this.content = this.card.cardBody.querySelector('#card-settings-content-body');
-
-            // set the back button
-            this.card.backButton.addEventListener('click', async () => {
-                let pagePathParts = this.currentPagePath.split('/');
-                if (pagePathParts.length === 2) {
-                    // show the menu
-                    this.menu.classList.remove('card-settings-menu-box-smallscreen-invisible');
-                    // hide the content box
-                    this.body.classList.add('card-settings-content-box-smallscreen-invisible');
-                    // hide the back button
-                    this.card.backButton.classList.remove('card-back-button-smallscreen-visible');
-                } else {
-                    // switch to the parent page
-                    let parentPagePath = pagePathParts.slice(0, -1).join('/');
-                    await this.SwitchPage(parentPagePath);
+        // show the card
+        await this.card.Open().then(async () => {
+            // load the card body
+            await fetch("/pages/cards/settings.html", {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'text/html'
                 }
+            }).then(async response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok: ' + response.statusText);
+                }
+                const content = await response.text();
+                this.card.cardBody.innerHTML = content;
+
+                // set the body
+                this.menu = this.card.cardBody.querySelector('#card-settings-menu-box');
+                this.body = this.card.cardBody.querySelector('#card-settings-content');
+                this.contentHeading = this.card.cardBody.querySelector('#card-settings-content-heading-label');
+                this.content = this.card.cardBody.querySelector('#card-settings-content-body');
+
+                // set the back button
+                this.card.backButton.addEventListener('click', async () => {
+                    let pagePathParts = this.currentPagePath.split('/');
+                    if (pagePathParts.length === 2) {
+                        // show the menu
+                        this.menu.classList.remove('card-settings-menu-box-smallscreen-invisible');
+                        // hide the content box
+                        this.body.classList.add('card-settings-content-box-smallscreen-invisible');
+                        // hide the back button
+                        this.card.backButton.classList.remove('card-back-button-smallscreen-visible');
+                    } else {
+                        // switch to the parent page
+                        let parentPagePath = pagePathParts.slice(0, -1).join('/');
+                        await this.SwitchPage(parentPagePath);
+                    }
+                });
+
+                // build the menu
+                if (this.menu) {
+                    this.menu.appendChild(await this.BuildMenu());
+                } else {
+                    console.error('Menu element not found in settings card body.');
+                }
+
+                // load the home settings page
+                await this.SwitchPage('/home', true);
+            }).catch(error => {
+                console.error('Error fetching card content:', error);
+                // handle error, e.g., show an error message
             });
-
-            // build the menu
-            this.BuildMenu();
-
-            // show the card
-            this.card.Open();
-
-            // load the home settings page
-            await this.SwitchPage('/home', true);
-        }).catch(error => {
-            console.error('Error fetching card content:', error);
-            // handle error, e.g., show an error message
         });
     }
 
-    BuildMenu() {
-        let menuContainer = this.card.cardBody.querySelector('#card-settings-menu');
+    async BuildMenu() {
+        let menuContainer = document.createElement('div');
+        menuContainer.id = 'card-settings-menu';
         menuContainer.classList.add('section');
-        menuContainer.innerHTML = '';
 
         for (const item in Object.keys(this.menuItems)) {
             // skip if item has more than one slash
@@ -2565,6 +2569,8 @@ class SettingsCard {
             });
             menuContainer.appendChild(menuItem);
         }
+
+        return menuContainer;
     }
 
     async SwitchPage(pagePath, initialLoad = false, model = null) {
@@ -2620,7 +2626,10 @@ class SettingsCard {
             // set the content
             let pageName = this.menuItems[pagePath].name;
             this.contentHeading.innerHTML = pageName;
-            this.content.innerHTML = await response.text();
+            const html = await response.text();
+            // Re-select content element in case DOM was replaced
+            this.content = this.card.cardBody.querySelector('#card-settings-content-body');
+            this.content.innerHTML = html;
 
             this.currentPage = page;
             this.currentPagePath = pagePath;
@@ -2631,7 +2640,6 @@ class SettingsCard {
                 this.refresher = null;
             }
 
-            // load the content based on the page
             switch (page) {
                 case 'home':
                     await this.SystemLoadSystemStatus();
@@ -2725,8 +2733,8 @@ class SettingsCard {
     refresher = null;
 
     async SystemLoadSystemStatus() {
-        fetch('/api/v1.1/System')
-            .then(response => response.json())
+        await fetch('/api/v1.1/System')
+            .then(async response => await response.json())
             .then(result => {
                 if (result) {
                     this.#BuildLibraryStatisticsBar(
@@ -2737,11 +2745,11 @@ class SettingsCard {
 
                     // database
                     let newDbTable = document.createElement('table');
-                    newDbTable.className = 'romtable';
+                    newDbTable.classList.add('romtable');
                     newDbTable.setAttribute('cellspacing', 0);
                     newDbTable.appendChild(createTableRow(false, ['Database Size', formatBytes(result.databaseSize)]));
 
-                    let targetDbDiv = this.body.querySelector('#system_database');
+                    let targetDbDiv = this.content.querySelector('#system_database');
                     targetDbDiv.innerHTML = '';
                     targetDbDiv.appendChild(newDbTable);
                 }
@@ -2822,11 +2830,11 @@ class SettingsCard {
     }
 
     async SystemSignaturesStatus() {
-        fetch('/api/v1.1/Signatures/Status')
-            .then(response => response.json())
+        await fetch('/api/v1.1/Signatures/Status')
+            .then(async response => await response.json())
             .then(result => {
                 if (!result || (result.sources === 0 && result.platforms === 0 && result.games === 0 && result.roms === 0)) {
-                    let targetDiv = this.body.querySelector('#system_signaturessection');
+                    let targetDiv = this.content.querySelector('#system_signaturessection');
                     targetDiv.style.display = 'none';
                 }
 
@@ -2845,7 +2853,7 @@ class SettingsCard {
                     newTable.appendChild(createTableRow(false, newRow, 'romrow', 'romcell'));
                 }
 
-                let targetDiv = this.body.querySelector('#system_signatures');
+                let targetDiv = this.content.querySelector('#system_signatures');
                 targetDiv.innerHTML = '';
                 targetDiv.appendChild(newTable);
             })
