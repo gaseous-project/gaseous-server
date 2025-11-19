@@ -360,6 +360,8 @@
         "preferencesmodal.use_clear_logo_label": "Use clear logo when available",
         "preferencesmodal.tab.localisation": "Localisation",
         "preferencesmodal.section.preferred_title_cover_art_region_header": "Preferred Title and Cover Art Region",
+        "preferencesmodal.section.preferred_language_header": "Preferred Language",
+        "preferencesmodal.language_label": "Language:",
         "preferencesmodal.region_label": "Region:",
         "preferencesmodal.region.option.us_default": "US (Default)",
         "preferencesmodal.region.option.europe": "Europe",

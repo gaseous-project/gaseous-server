@@ -72,8 +72,8 @@ GetCoreData(EJS_core)
 // Lightgun
 EJS_lightgun = false; // can be true or false
 
-// set language
-EJS_language = window.lang.locale || 'en';
+// set language - EJS only supports the language code, not locale
+EJS_language = window.lang.locale.split('-')[0] || 'en';
 
 // URL to BIOS file
 EJS_biosUrl = emuBios;
