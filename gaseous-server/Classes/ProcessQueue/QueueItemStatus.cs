@@ -40,15 +40,15 @@ namespace gaseous_server.Classes
                 // check if type is QueueItem
                 switch (type)
                 {
-                    case "gaseous_server.ProcessQueue+QueueItem":
+                    case "gaseous_server.ProcessQueue.QueueProcessor+QueueItem":
                         // set CallingQueueItem to QueueItem
-                        ProcessQueue.QueueItem callingQueueItem = (ProcessQueue.QueueItem)CallingQueueItem;
+                        ProcessQueue.QueueProcessor.QueueItem callingQueueItem = (ProcessQueue.QueueProcessor.QueueItem)CallingQueueItem;
                         callingQueueItem.CurrentState = state;
                         callingQueueItem.CurrentStateProgress = progress;
                         break;
-                    case "gaseous_server.ProcessQueue+QueueItem+SubTask":
+                    case "gaseous_server.ProcessQueue.QueueProcessor+QueueItem+SubTask":
                         // set CallingQueueItem to QueueItem.SubTask
-                        ProcessQueue.QueueItem.SubTask callingSubTask = (ProcessQueue.QueueItem.SubTask)CallingQueueItem;
+                        ProcessQueue.QueueProcessor.QueueItem.SubTask callingSubTask = (ProcessQueue.QueueProcessor.QueueItem.SubTask)CallingQueueItem;
                         callingSubTask.CurrentState = state;
                         callingSubTask.CurrentStateProgress = progress;
                         break;

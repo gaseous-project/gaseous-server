@@ -110,7 +110,7 @@ namespace gaseous_server.Classes
                 Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.file_added_to_import_queue", null, new string[] { FileName, Method.ToString(), UserId });
 
                 // check if there is an ImportQueueProcessor running
-                ProcessQueue.QueueItem? queueItem = ProcessQueue.QueueItems.Find(x => x.ItemType == ProcessQueue.QueueItemType.ImportQueueProcessor);
+                ProcessQueue.QueueProcessor.QueueItem? queueItem = ProcessQueue.QueueProcessor.QueueItems.Find(x => x.ItemType == ProcessQueue.QueueItemType.ImportQueueProcessor);
                 if (queueItem != null)
                 {
                     queueItem.ForceExecute();
@@ -202,8 +202,6 @@ namespace gaseous_server.Classes
 
             // remove completed import states older than 60 minutes
             _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Completed && x.LastUpdated < cutoff);
-            // remove failed import states older than 60 minutes
-            _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Failed && x.LastUpdated < cutoff);
             // remove pending import states that don't have a file on disk
             _importStates.RemoveAll(x => x.State == ImportStateItem.ImportState.Pending && !File.Exists(x.FileName));
         }

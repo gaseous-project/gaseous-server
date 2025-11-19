@@ -21,20 +21,20 @@ namespace gaseous_server.Controllers
             Dictionary<string, object> notifications = new Dictionary<string, object>();
 
             // get import queue status
-            Dictionary<Models.ImportStateItem.ImportState, object> importQueueStatus = new Dictionary<Models.ImportStateItem.ImportState, object>();
+            Dictionary<string, object> importQueueStatus = new Dictionary<string, object>();
             foreach (var item in ImportGame.ImportStates)
             {
                 switch (item.State)
                 {
                     case Models.ImportStateItem.ImportState.Pending:
                     case Models.ImportStateItem.ImportState.Queued:
-                        if (importQueueStatus.ContainsKey(Models.ImportStateItem.ImportState.Pending))
+                        if (importQueueStatus.ContainsKey(Models.ImportStateItem.ImportState.Pending.ToString()))
                         {
-                            importQueueStatus[Models.ImportStateItem.ImportState.Pending] = (int)importQueueStatus[Models.ImportStateItem.ImportState.Pending] + 1;
+                            importQueueStatus[Models.ImportStateItem.ImportState.Pending.ToString()] = (int)importQueueStatus[Models.ImportStateItem.ImportState.Pending.ToString()] + 1;
                         }
                         else
                         {
-                            importQueueStatus.Add(Models.ImportStateItem.ImportState.Pending, 1);
+                            importQueueStatus.Add(Models.ImportStateItem.ImportState.Pending.ToString(), 1);
                         }
                         break;
 
@@ -52,12 +52,24 @@ namespace gaseous_server.Controllers
                             { "method", item.Method.ToString() }
                         };
 
-                        if (!importQueueStatus.ContainsKey(item.State))
+                        string targetKey = item.State.ToString();
+                        if (item.ProcessData != null)
                         {
-                            importQueueStatus.Add(item.State, new List<Dictionary<string, object>>());
+                            if (item.ProcessData.ContainsKey("status"))
+                            {
+                                if (item.ProcessData["status"] != null && item.ProcessData["status"].ToString().Length > 0)
+                                {
+                                    targetKey = item.ProcessData["status"].ToString();
+                                }
+                            }
                         }
 
-                        ((List<Dictionary<string, object>>)importQueueStatus[item.State]).Add(processingItem);
+                        if (!importQueueStatus.ContainsKey(targetKey))
+                        {
+                            importQueueStatus.Add(targetKey, new List<Dictionary<string, object>>());
+                        }
+
+                        ((List<Dictionary<string, object>>)importQueueStatus[targetKey]).Add(processingItem);
 
                         break;
                 }
@@ -69,7 +81,7 @@ namespace gaseous_server.Controllers
 
             // get database upgrade status
             Dictionary<string, Dictionary<string, string>> upgradeStatus = new Dictionary<string, Dictionary<string, string>>();
-            foreach (var item in ProcessQueue.QueueItems)
+            foreach (var item in ProcessQueue.QueueProcessor.QueueItems)
             {
                 if (item.ItemType == ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade)
                 {
@@ -79,7 +91,8 @@ namespace gaseous_server.Controllers
                         {
                             upgradeStatus.Add(subTask.TaskType.ToString(), new Dictionary<string, string>
                             {
-                                { "state", subTask.State.ToString() },
+                                { "state", subTask.State.ToString()
+},
                                 { "progressText", subTask.CurrentState.ToString() },
                                 { "progress", subTask.CurrentStateProgress.ToString() }
                             });

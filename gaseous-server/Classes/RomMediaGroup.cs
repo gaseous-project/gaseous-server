@@ -283,10 +283,10 @@ namespace gaseous_server.Classes
                 await db.ExecuteCMDAsync(sql, dbDict);
 
                 // start background task
-                ProcessQueue.QueueItem queueItem = new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.MediaGroupCompiler, 1, false, true);
+                ProcessQueue.QueueProcessor.QueueItem queueItem = new ProcessQueue.QueueProcessor.QueueItem(ProcessQueue.QueueItemType.MediaGroupCompiler, 1, false, true);
                 queueItem.Options = Id;
                 queueItem.ForceExecute();
-                ProcessQueue.QueueItems.Add(queueItem);
+                ProcessQueue.QueueProcessor.QueueItems.Add(queueItem);
             }
         }
 

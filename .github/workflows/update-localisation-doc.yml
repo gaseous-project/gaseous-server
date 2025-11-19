@@ -6,11 +6,10 @@ on:
       - main
     paths:
       - 'gaseous-server/Support/Localisation/*.json'
-      - 'docs/LOCALISATION.MD'
+      - 'docs/Localisation.md'
+      - 'docs/Localisation-Glossary.md'
       - '.github/scripts/generate_locale_table.sh'
   workflow_dispatch: {}
-  schedule:
-    - cron: '0 3 * * 1' # Weekly Monday 03:00 UTC
 
 jobs:
   regenerate-locale-table:
@@ -49,10 +48,10 @@ jobs:
           submodule_changed=false
           
           # Check for changes in docs submodule
-          if ! git diff --quiet docs/LOCALISATION.MD; then
+          if ! git diff --quiet docs/Localisation.md; then
             changed=true
           fi
-          if ! git diff --quiet docs/LOCALISATION_GLOSSARY.md; then
+          if ! git diff --quiet docs/Localisation-Glossary.md; then
             changed=true
           fi
           
@@ -68,7 +67,7 @@ jobs:
         if: ${{ steps.detect.outputs.changed == 'true' && steps.detect.outputs.submodule_changed == 'true' }}
         run: |
           cd docs
-          git add LOCALISATION.MD LOCALISATION_GLOSSARY.md
+          git add Localisation.md Localisation-Glossary.md
           if ! git diff --cached --quiet; then
             git commit -m "docs: auto-update localisation tables (language + glossary)"
             git push origin HEAD
@@ -86,7 +85,7 @@ jobs:
       - name: Commit direct changes (non-submodule)
         if: ${{ steps.detect.outputs.changed == 'true' && steps.detect.outputs.submodule_changed == 'false' }}
         run: |
-          git add docs/LOCALISATION.MD docs/LOCALISATION_GLOSSARY.md
+          git add docs/Localisation.md docs/Localisation-Glossary.md
           git commit -m "docs: auto-update localisation tables (language + glossary)"
           git push
 

@@ -117,7 +117,7 @@ namespace gaseous_server.Controllers
                     Config.SetSetting<string>("FirstRunStatus", "2");
 
                     Logging.LogKey(Logging.LogType.Information, "process.first_run", "firstrun.setting_up_datasources_complete_starting_metadata_refresh");
-                    ProcessQueue.QueueItem metadataRefresh = ProcessQueue.QueueItems.Find(x => x.ItemType == ProcessQueue.QueueItemType.MetadataRefresh);
+                    ProcessQueue.QueueProcessor.QueueItem metadataRefresh = ProcessQueue.QueueProcessor.QueueItems.Find(x => x.ItemType == ProcessQueue.QueueItemType.MetadataRefresh);
                     if (metadataRefresh != null)
                     {
                         metadataRefresh.ForceExecute();

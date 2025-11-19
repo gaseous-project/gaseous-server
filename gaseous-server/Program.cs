@@ -6,7 +6,6 @@ using gaseous_server.Models;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Server.Kestrel.Core;
-using Microsoft.OpenApi.Models;
 using Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Identity;
@@ -21,6 +20,7 @@ using Microsoft.AspNetCore.HttpOverrides;
 using System.Net;
 using System.Linq;
 using Microsoft.Extensions.Hosting.WindowsServices;
+using Microsoft.OpenApi;
 
 // Defer heavy startup work so Windows Service can report RUNNING quickly
 

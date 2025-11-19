@@ -59,14 +59,13 @@ namespace gaseous_server
                     Directory.Delete(Config.LibraryConfiguration.LibraryUploadDirectory, true);
 
                 // Delayed upgrade tasks
-                var queueItem = new ProcessQueue.QueueItem(
+                var queueItem = new ProcessQueue.QueueProcessor.QueueItem(
                     ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade,
                     1,
-                    new List<ProcessQueue.QueueItemType> { ProcessQueue.QueueItemType.All },
                     false,
                     true);
                 queueItem.ForceExecute();
-                ProcessQueue.QueueItems.Add(queueItem);
+                ProcessQueue.QueueProcessor.QueueItems.Add(queueItem);
 
                 // Roles and system setup
                 using (var scope = _services.CreateScope())
@@ -95,17 +94,17 @@ namespace gaseous_server
                 Bios.MigrateToNewFolderStructure();
 
                 // Background tasks
-                ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.SignatureIngestor));
-                ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.TitleIngestor));
-                ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.ImportQueueProcessor, 1, false));
-                ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.MetadataRefresh));
-                ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.OrganiseLibrary));
-                ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.LibraryScan));
+                ProcessQueue.QueueProcessor.QueueItems.Add(new ProcessQueue.QueueProcessor.QueueItem(ProcessQueue.QueueItemType.SignatureIngestor));
+                ProcessQueue.QueueProcessor.QueueItems.Add(new ProcessQueue.QueueProcessor.QueueItem(ProcessQueue.QueueItemType.TitleIngestor));
+                ProcessQueue.QueueProcessor.QueueItems.Add(new ProcessQueue.QueueProcessor.QueueItem(ProcessQueue.QueueItemType.ImportQueueProcessor, 1, false));
+                ProcessQueue.QueueProcessor.QueueItems.Add(new ProcessQueue.QueueProcessor.QueueItem(ProcessQueue.QueueItemType.MetadataRefresh));
+                ProcessQueue.QueueProcessor.QueueItems.Add(new ProcessQueue.QueueProcessor.QueueItem(ProcessQueue.QueueItemType.OrganiseLibrary));
+                ProcessQueue.QueueProcessor.QueueItems.Add(new ProcessQueue.QueueProcessor.QueueItem(ProcessQueue.QueueItemType.LibraryScan));
 
                 // Maintenance tasks
-                ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.DailyMaintainer));
-                ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.WeeklyMaintainer));
-                ProcessQueue.QueueItems.Add(new ProcessQueue.QueueItem(ProcessQueue.QueueItemType.TempCleanup));
+                ProcessQueue.QueueProcessor.QueueItems.Add(new ProcessQueue.QueueProcessor.QueueItem(ProcessQueue.QueueItemType.DailyMaintainer));
+                ProcessQueue.QueueProcessor.QueueItems.Add(new ProcessQueue.QueueProcessor.QueueItem(ProcessQueue.QueueItemType.WeeklyMaintainer));
+                ProcessQueue.QueueProcessor.QueueItems.Add(new ProcessQueue.QueueProcessor.QueueItem(ProcessQueue.QueueItemType.TempCleanup));
 
                 Logging.WriteToDiskOnly = false;
                 Logging.LogKey(Logging.LogType.Information, "process.startup", "startup.initialization_complete");

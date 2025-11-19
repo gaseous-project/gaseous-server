@@ -667,6 +667,32 @@ input[name='filter_panel_range_max'] {
     width: 50px;
 }
 
+progress {
+    /* Reset the default appearance */
+    width: 100%;
+    height: 5px;
+    display: block;
+    appearance: none;
+    -webkit-appearance: none;
+    border: none;
+}
+
+progress:indeterminate {
+    background-color: var(--progress-bar-value);
+}
+
+progress::-webkit-progress-bar {
+    background-color: var(--progress-bar-background);
+}
+
+progress::-webkit-progress-value {
+    background-color: var(--progress-bar-value);
+}
+
+progress::-moz-progress-bar {
+    background-color: var(--progress-bar-value);
+}
+
 /* width */
 ::-webkit-scrollbar {
     width: 10px;
