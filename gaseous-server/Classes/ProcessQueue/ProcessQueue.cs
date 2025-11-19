@@ -282,6 +282,34 @@ namespace gaseous_server.ProcessQueue
                                 ParentSubTaskItem = this
                             };
                             break;
+
+                        case QueueItemSubTasks.MetadataRefresh_Signatures:
+                            this.subTask = new MetadataRefresh.SubTaskSignatureRefresh
+                            {
+                                ParentSubTaskItem = this
+                            };
+                            break;
+
+                        case QueueItemSubTasks.MetadataRefresh_Platform:
+                            this.subTask = new MetadataRefresh.SubTaskPlatformRefresh
+                            {
+                                ParentSubTaskItem = this
+                            };
+                            break;
+
+                        case QueueItemSubTasks.MetadataRefresh_Game:
+                            this.subTask = new MetadataRefresh.SubTaskGameRefresh
+                            {
+                                ParentSubTaskItem = this
+                            };
+                            break;
+
+                        case QueueItemSubTasks.LibraryScanWorker:
+                            this.subTask = new LibraryScan.SubTaskLibraryScanWorker
+                            {
+                                ParentSubTaskItem = this
+                            };
+                            break;
                     }
                 }
                 private gaseous_server.ProcessQueue.Plugins.ITaskPlugin.ISubTaskItem subTask { get; set; }
@@ -304,35 +332,9 @@ namespace gaseous_server.ProcessQueue
                             // do some work
                             switch (_TaskType)
                             {
-                                case QueueItemSubTasks.MetadataRefresh_Platform:
-                                    Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_platform_metadata_for", null, new[] { _TaskName });
-                                    MetadataManagement metadataPlatform = new MetadataManagement(this);
-                                    await metadataPlatform.RefreshPlatforms(true);
-                                    break;
-
-                                case QueueItemSubTasks.MetadataRefresh_Signatures:
-                                    Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_signature_metadata_for", null, new[] { _TaskName });
-                                    MetadataManagement metadataSignatures = new MetadataManagement(this);
-                                    await metadataSignatures.RefreshSignatures(true);
-                                    break;
-
-                                case QueueItemSubTasks.MetadataRefresh_Game:
-                                    Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_game_metadata_for", null, new[] { _TaskName });
-                                    MetadataManagement metadataGame = new MetadataManagement(this);
-                                    metadataGame.UpdateRomCounts();
-                                    await metadataGame.RefreshGames(true);
-                                    break;
-
                                 case QueueItemSubTasks.DatabaseMigration_1031:
                                     Logging.LogKey(Logging.LogType.Information, "process.database", "database.running_migration_for", null, new[] { _TaskName, "1031" });
                                     await DatabaseMigration.RunMigration1031();
-                                    break;
-
-                                case QueueItemSubTasks.LibraryScanWorker:
-                                    CallContext.SetData("CallingProcess", _TaskType.ToString() + " - " + ((GameLibrary.LibraryItem)_Settings).Name);
-                                    Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.scanning_library", null, new[] { _TaskName });
-                                    ImportGame importLibraryScan = new ImportGame(this);
-                                    await importLibraryScan.LibrarySpecificScan((GameLibrary.LibraryItem)_Settings);
                                     break;
                             }
                         }

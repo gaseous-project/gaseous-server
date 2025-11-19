@@ -34,5 +34,29 @@ namespace gaseous_server.ProcessQueue.Plugins
                 }
             }
         }
+
+        /// <summary>
+        /// Represents a subtask worker for scanning a specific game library.
+        /// </summary>
+        public class SubTaskLibraryScanWorker : ITaskPlugin.ISubTaskItem
+        {
+            /// <inheritdoc/>
+            public QueueItemSubTasks SubTaskType => QueueItemSubTasks.LibraryScanWorker;
+
+            /// <inheritdoc/>
+            public object? Data { get; set; }
+
+            /// <inheritdoc/>
+            public required QueueProcessor.QueueItem.SubTask ParentSubTaskItem { get; set; }
+
+            /// <inheritdoc/>
+            public async Task Execute()
+            {
+                CallContext.SetData("CallingProcess", ParentSubTaskItem.TaskName + " - " + ((GameLibrary.LibraryItem)ParentSubTaskItem.Settings).Name);
+                Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.scanning_library", null, new[] { ParentSubTaskItem.TaskName });
+                ImportGame importLibraryScan = new ImportGame(ParentSubTaskItem);
+                await importLibraryScan.LibrarySpecificScan((GameLibrary.LibraryItem)ParentSubTaskItem.Settings);
+            }
+        }
     }
 }
