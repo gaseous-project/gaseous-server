@@ -19,7 +19,7 @@
 		}
 	},
 	// Use 'postCreateCommand' to run commands after the container is created.
-	"postCreateCommand": "dotnet restore",
+	"postCreateCommand": "dotnet restore && bash /workspace/build/scripts/get-ejs-git.sh",
 	// Configure tool-specific properties.
 	"customizations": {
 		"vscode": {
