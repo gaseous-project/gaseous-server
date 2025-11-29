@@ -305,7 +305,7 @@ namespace gaseous_server.Classes.Metadata
                     }
                     else
                     {
-                        HasheousClient.Models.Metadata.IGDB.Game[] hResults = Communications.hasheousClient.GetMetadataProxy_SearchGame<HasheousClient.Models.Metadata.IGDB.Game>(HasheousClient.Hasheous.MetadataProvider.IGDB, PlatformId.ToString(), SearchString);
+                        HasheousClient.Models.Metadata.IGDB.Game[] hResults = Communications.hasheousClient.GetMetadataProxy_SearchGame<HasheousClient.Models.Metadata.IGDB.Game>(HasheousClient.Models.MetadataSources.IGDB, PlatformId.ToString(), SearchString);
 
                         List<Game> hGames = new List<Game>();
                         foreach (HasheousClient.Models.Metadata.IGDB.Game hResult in hResults)

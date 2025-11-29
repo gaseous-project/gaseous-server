@@ -194,7 +194,7 @@ namespace gaseous_server.Classes
                             // add the ids to the existing genre
                             if (filterObject.Ids == null)
                             {
-                                filterObject.Ids = new Dictionary<HasheousClient.Hasheous.MetadataProvider, long>();
+                                filterObject.Ids = new Dictionary<HasheousClient.Models.MetadataSources, long>();
                             }
 
                             foreach (var id in filterItem.Ids)
@@ -240,11 +240,11 @@ namespace gaseous_server.Classes
             {
                 if (dr.Table.Columns.Contains("GameIdType"))
                 {
-                    HasheousClient.Hasheous.MetadataProvider SourceId = (HasheousClient.Hasheous.MetadataProvider)Enum.Parse(typeof(HasheousClient.Hasheous.MetadataProvider), dr["GameIdType"].ToString());
+                    HasheousClient.Models.MetadataSources SourceId = (HasheousClient.Models.MetadataSources)Enum.Parse(typeof(HasheousClient.Models.MetadataSources), dr["GameIdType"].ToString());
 
                     if (this.Ids == null)
                     {
-                        this.Ids = new Dictionary<HasheousClient.Hasheous.MetadataProvider, long>();
+                        this.Ids = new Dictionary<HasheousClient.Models.MetadataSources, long>();
                     }
 
                     if (this.Ids.ContainsKey(SourceId) == false)
@@ -263,7 +263,7 @@ namespace gaseous_server.Classes
 
             public long? Id { get; set; }
 
-            public Dictionary<HasheousClient.Hasheous.MetadataProvider, long>? Ids { get; set; }
+            public Dictionary<HasheousClient.Models.MetadataSources, long>? Ids { get; set; }
 
             public string Name { get; set; }
 
