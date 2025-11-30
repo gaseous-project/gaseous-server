@@ -33,7 +33,7 @@ jobs:
 
       - name: Set tag to version
         shell: pwsh
-        run: TagToVersion -t ${{ github.ref }}
+        run: dotnet TagToVersion -t ${{ github.ref }}
 
       - name: Compute sanitized MSI version
         shell: pwsh
