@@ -24,22 +24,26 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Install tag tool
+        shell: pwsh
         run: dotnet tool install -g dotnetCampus.TagToVersion
+
+      - name: Add .NET tools to PATH
+        shell: pwsh
+        run: echo "$($env:USERPROFILE)\.dotnet\tools" >> $env:GITHUB_PATH
 
       - name: Set tag to version
         shell: pwsh
-        run: |
-          echo "$env:USERPROFILE\.dotnet\tools" >> $env:GITHUB_PATH
-          TagToVersion -t ${{ github.ref }}
+        run: TagToVersion -t ${{ github.ref }}
 
       - name: Compute sanitized MSI version
         shell: pwsh
         run: |
-          $tag = "$env:GITHUB_REF_NAME"
+          $tag = $env:GITHUB_REF_NAME
           if ($tag -match '^v(?<v>\d+\.\d+\.\d+)') { $v = $Matches['v'] } else { throw "Tag name '$tag' not in expected form" }
           echo "SANITIZED_VERSION=$v" >> $env:GITHUB_ENV
 
       - name: Sign in to NuGet (GitHub Packages)
+        shell: pwsh
         run: dotnet nuget add source --username michael-j-green --password ${{ secrets.NUGETKEY }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/gaseous-project/index.json"
 
       - name: Build MSI (Release)
@@ -52,7 +56,7 @@ jobs:
         run: |
           $src = "installer/setup/bin/x64/Release/Setup.msi"
           if (!(Test-Path $src)) { throw "MSI not found at $src" }
-          $dest = "GaseousServer-$env:GITHUB_REF_NAME-x64.msi"
+          $dest = "GaseousServer-$($env:GITHUB_REF_NAME)-x64.msi"
           Copy-Item $src $dest -Force
           Write-Host "Created $dest"
 
