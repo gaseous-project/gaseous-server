@@ -39,7 +39,7 @@ jobs:
         shell: pwsh
         run: |
           # strip off extension like "-preview.1" or "-rc.2"
-          $tag = $($env:GITHUB_REF_NAME).split("-"")[0]
+          $tag = $($env:GITHUB_REF_NAME).split("-")[0]
           # strip off leading "v"
           $v = $tag.trimstart("v")
           # parse into version object to validate
