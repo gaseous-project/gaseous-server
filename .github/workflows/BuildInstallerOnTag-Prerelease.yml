@@ -52,6 +52,7 @@ jobs:
 
       - name: Build MSI (Release)
         run: |
+          Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser -Force
           dotnet build .\installer\setup\Setup.wixproj -c Release -p:Version=$env:SANITIZED_VERSION -p:ProductVersion=$env:SANITIZED_VERSION
 
       - name: Rename MSI with tag
