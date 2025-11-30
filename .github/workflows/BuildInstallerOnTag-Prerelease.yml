@@ -53,6 +53,10 @@ jobs:
       - name: Allow PowerShell script execution
         run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
 
+      - name: Publish server for harvesting
+        run: |
+          dotnet publish .\gaseous-server\gaseous-server.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o .\installer\setup\publish\win-x64
+
       - name: Generate Harvest.wxs
         run: |
           New-Item -ItemType Directory -Force -Path .\installer\setup\publish\win-x64 | Out-Null
