@@ -43,7 +43,7 @@ jobs:
           # strip off leading "v"
           $v = $tag.trimstart("v")
           # parse into version object to validate
-          [version]$ver = [version]::Parse($v).ToString()
+          [version]$ver = [version]::Parse($v)
           # set sanitized version for later steps
           echo "SANITIZED_VERSION=$($ver.ToString())" >> $env:GITHUB_ENV
           echo "Computed sanitized version: $($ver.ToString())"
