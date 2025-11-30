@@ -147,7 +147,7 @@ namespace gaseous_server.Classes
 
 											// apply schema!
 											Logging.LogKey(Logging.LogType.Information, "process.database", "database.updating_schema_to_version", null, new[] { i.ToString() });
-											ExecuteCMD(dbScript, dbDict, 100);
+											ExecuteCMD(dbScript, dbDict, 360);
 
 											// increment schema version
 											sql = "UPDATE schema_version SET schema_version=@schemaver";
