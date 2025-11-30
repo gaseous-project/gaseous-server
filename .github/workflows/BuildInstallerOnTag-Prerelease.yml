@@ -50,9 +50,15 @@ jobs:
       - name: Sign in to NuGet (GitHub Packages)
         run: dotnet nuget add source --username michael-j-green --password ${{ secrets.NUGETKEY }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/gaseous-project/index.json"
 
+      - name: Allow PowerShell script execution
+        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+
+      - name: Generate Harvest.wxs
+        run: |
+          pwsh -File .\installer\setup\GenerateHarvest.ps1 -PublishDir .\installer\setup\publish\win-x64 -OutFile .\installer\setup\obj\harvest\Harvest.wxs
+
       - name: Build MSI (Release)
         run: |
-          Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope CurrentUser -Force
           dotnet build .\installer\setup\Setup.wixproj -c Release -p:Version=$env:SANITIZED_VERSION -p:ProductVersion=$env:SANITIZED_VERSION
 
       - name: Rename MSI with tag
