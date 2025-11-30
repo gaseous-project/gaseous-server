@@ -55,6 +55,8 @@ jobs:
 
       - name: Generate Harvest.wxs
         run: |
+          New-Item -ItemType Directory -Force -Path .\installer\setup\publish\win-x64 | Out-Null
+          New-Item -ItemType Directory -Force -Path .\installer\setup\obj\harvest | Out-Null
           pwsh -File .\installer\setup\GenerateHarvest.ps1 -PublishDir .\installer\setup\publish\win-x64 -OutFile .\installer\setup\obj\harvest\Harvest.wxs
 
       - name: Build MSI (Release)
