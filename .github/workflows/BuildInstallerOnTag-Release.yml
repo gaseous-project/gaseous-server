@@ -8,6 +8,9 @@ on:
 jobs:
   msi:
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
     permissions:
       contents: write
       packages: read
@@ -23,36 +26,47 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Install tag tool
-        shell: pwsh
         run: dotnet tool install -g dotnetCampus.TagToVersion
 
       - name: Add .NET tools to PATH
-        shell: pwsh
         run: echo "$($env:USERPROFILE)\.dotnet\tools" >> $env:GITHUB_PATH
 
       - name: Set tag to version
-        shell: pwsh
         run: dotnet TagToVersion -t ${{ github.ref }}
 
       - name: Compute sanitized MSI version
-        shell: pwsh
         run: |
-          $tag = $($env:GITHUB_REF_NAME).split("-"")[0]
-          if ($tag -match '^v(?<v>\d+\.\d+\.\d+)') { $v = $Matches['v'] } else { throw "Tag name '$tag' not in expected form" }
-          echo "SANITIZED_VERSION=$v" >> $env:GITHUB_ENV
-          echo "Computed sanitized version: $v"
+          # strip off extension like "-preview.1" or "-rc.2"
+          $tag = $($env:GITHUB_REF_NAME).split("-")[0]
+          # strip off leading "v"
+          $v = $tag.trimstart("v")
+          # parse into version object to validate
+          [version]$ver = [version]::Parse($v)
+          # set sanitized version for later steps
+          echo "SANITIZED_VERSION=$($ver.ToString())" >> $env:GITHUB_ENV
+          echo "Computed sanitized version: $($ver.ToString())"
 
       - name: Sign in to NuGet (GitHub Packages)
-        shell: pwsh
         run: dotnet nuget add source --username michael-j-green --password ${{ secrets.NUGETKEY }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/gaseous-project/index.json"
 
-      - name: Build MSI (Release)
-        shell: pwsh
+      - name: Allow PowerShell script execution
+        run: Set-ExecutionPolicy -ExecutionPolicy Bypass -Scope Process -Force
+
+      - name: Publish server for harvesting
         run: |
-          dotnet build .\installer\setup\Setup.wixproj -c Release -p:Version='${{ github.ref_name }}' -p:ProductVersion=$env:SANITIZED_VERSION
+          dotnet publish .\gaseous-server\gaseous-server.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o .\installer\setup\publish\win-x64
+
+      - name: Generate Harvest.wxs
+        run: |
+          New-Item -ItemType Directory -Force -Path .\installer\setup\publish\win-x64 | Out-Null
+          New-Item -ItemType Directory -Force -Path .\installer\setup\obj\harvest | Out-Null
+          pwsh -File .\installer\setup\GenerateHarvest.ps1 -PublishDir .\installer\setup\publish\win-x64 -OutFile .\installer\setup\obj\harvest\Harvest.wxs
+
+      - name: Build MSI (Release)
+        run: |
+          dotnet build .\installer\setup\Setup.wixproj -c Release -p:Version=$env:SANITIZED_VERSION -p:ProductVersion=$env:SANITIZED_VERSION
 
       - name: Rename MSI with tag
-        shell: pwsh
         run: |
           $src = "installer/setup/bin/x64/Release/Setup.msi"
           if (!(Test-Path $src)) { throw "MSI not found at $src" }
