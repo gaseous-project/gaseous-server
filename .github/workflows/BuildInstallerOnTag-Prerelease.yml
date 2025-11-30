@@ -9,6 +9,9 @@ on:
 jobs:
   msi:
     runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
     permissions:
       contents: write
       packages: read
@@ -24,19 +27,15 @@ jobs:
           dotnet-version: '9.0.x'
 
       - name: Install tag tool
-        shell: pwsh
         run: dotnet tool install -g dotnetCampus.TagToVersion
 
       - name: Add .NET tools to PATH
-        shell: pwsh
         run: echo "$($env:USERPROFILE)\.dotnet\tools" >> $env:GITHUB_PATH
 
       - name: Set tag to version
-        shell: pwsh
         run: dotnet TagToVersion -t ${{ github.ref }}
 
       - name: Compute sanitized MSI version
-        shell: pwsh
         run: |
           # strip off extension like "-preview.1" or "-rc.2"
           $tag = $($env:GITHUB_REF_NAME).split("-")[0]
@@ -49,16 +48,13 @@ jobs:
           echo "Computed sanitized version: $($ver.ToString())"
 
       - name: Sign in to NuGet (GitHub Packages)
-        shell: pwsh
         run: dotnet nuget add source --username michael-j-green --password ${{ secrets.NUGETKEY }} --store-password-in-clear-text --name github "https://nuget.pkg.github.com/gaseous-project/index.json"
 
       - name: Build MSI (Release)
-        shell: pwsh
         run: |
           dotnet build .\installer\setup\Setup.wixproj -c Release -p:Version=$env:SANITIZED_VERSION -p:ProductVersion=$env:SANITIZED_VERSION
 
       - name: Rename MSI with tag
-        shell: pwsh
         run: |
           $src = "installer/setup/bin/x64/Release/Setup.msi"
           if (!(Test-Path $src)) { throw "MSI not found at $src" }
