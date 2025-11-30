@@ -55,7 +55,7 @@ jobs:
       - name: Build MSI (Release)
         shell: pwsh
         run: |
-          dotnet build .\installer\setup\Setup.wixproj -c Release -p:Version='${{ github.ref_name }}' -p:ProductVersion=$env:SANITIZED_VERSION
+          dotnet build .\installer\setup\Setup.wixproj -c Release -p:Version=$env:SANITIZED_VERSION -p:ProductVersion=$env:SANITIZED_VERSION
 
       - name: Rename MSI with tag
         shell: pwsh
