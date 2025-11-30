@@ -5,7 +5,6 @@ on:
     tags:
       - 'v[0-9]+\.[0-9]+\.[0-9]+-preview\.[0-9]'
       - 'v[0-9]+\.[0-9]+\.[0-9]+-rc\.[0-9]'
-  workflow_dispatch:
 
 jobs:
   msi:
@@ -39,11 +38,15 @@ jobs:
       - name: Compute sanitized MSI version
         shell: pwsh
         run: |
-          # $tag = $($env:GITHUB_REF_NAME).split("-"")[0]
-          $tag = $("v2.0.0-preview.1").split("-"")[0]
-          if ($tag -match '^v(?<v>\d+\.\d+\.\d+)') { $v = $Matches['v'] } else { throw "Tag name '$tag' not in expected form" }
-          echo "SANITIZED_VERSION=$v" >> $env:GITHUB_ENV
-          echo "Computed sanitized version: $v"
+          # strip off extension like "-preview.1" or "-rc.2"
+          $tag = $($env:GITHUB_REF_NAME).split("-"")[0]
+          # strip off leading "v"
+          $v = $tag.trimstart("v")
+          # parse into version object to validate
+          [version]$ver = [version]::Parse($v).ToString()
+          # set sanitized version for later steps
+          echo "SANITIZED_VERSION=$($ver.ToString())" >> $env:GITHUB_ENV
+          echo "Computed sanitized version: $($ver.ToString())"
 
       - name: Sign in to NuGet (GitHub Packages)
         shell: pwsh
