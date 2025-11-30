@@ -37,9 +37,10 @@ jobs:
       - name: Compute sanitized MSI version
         shell: pwsh
         run: |
-          $tag = $env:GITHUB_REF_NAME
+          $tag = $($env:GITHUB_REF_NAME).split("-"")[0]
           if ($tag -match '^v(?<v>\d+\.\d+\.\d+)') { $v = $Matches['v'] } else { throw "Tag name '$tag' not in expected form" }
           echo "SANITIZED_VERSION=$v" >> $env:GITHUB_ENV
+          echo "Computed sanitized version: $v"
 
       - name: Sign in to NuGet (GitHub Packages)
         shell: pwsh
