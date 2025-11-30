@@ -38,7 +38,7 @@ namespace gaseous_server
                 db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
                 // DB init and static data
-                db.InitDB();
+                await db.InitDB();
                 await Storage.CreateRelationsTables<IGDB.Models.Game>();
                 await Storage.CreateRelationsTables<IGDB.Models.Platform>();
                 await AgeRatings.PopulateAgeMapAsync();

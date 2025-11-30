@@ -8,9 +8,15 @@ using MySqlConnector;
 
 namespace gaseous_server.Classes
 {
+	/// <summary>
+	/// Provides methods for interacting with the database, including schema management, command execution, and transactions.
+	/// </summary>
 	public class Database
 	{
 		private static int _schema_version { get; set; } = 0;
+		/// <summary>
+		/// Gets or sets the current schema version of the database.
+		/// </summary>
 		public static int schema_version
 		{
 			get
@@ -25,24 +31,44 @@ namespace gaseous_server.Classes
 			}
 		}
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="Database"/> class.
+		/// </summary>
 		public Database()
 		{
 
 		}
 
+		/// <summary>
+		/// Initializes a new instance of the <see cref="Database"/> class with the specified database type and connection string.
+		/// </summary>
+		/// <param name="Type">The type of database connector to use.</param>
+		/// <param name="ConnectionString">The connection string to use for the database connection.</param>
 		public Database(databaseType Type, string ConnectionString)
 		{
 			_ConnectorType = Type;
 			_ConnectionString = ConnectionString;
 		}
 
+		/// <summary>
+		/// Specifies the type of database connector being used.
+		/// </summary>
+		/// <summary>
+		/// Represents a MySQL database type.
+		/// </summary>
 		public enum databaseType
 		{
+			/// <summary>
+			/// MySQL database.
+			/// </summary>
 			MySql
 		}
 
 		string _ConnectionString = "";
 
+		/// <summary>
+		/// Gets or sets the connection string used to connect to the database.
+		/// </summary>
 		public string ConnectionString
 		{
 			get
@@ -57,6 +83,9 @@ namespace gaseous_server.Classes
 
 		databaseType? _ConnectorType = null;
 
+		/// <summary>
+		/// Gets or sets the type of database connector being used.
+		/// </summary>
 		public databaseType? ConnectorType
 		{
 			get
@@ -71,7 +100,10 @@ namespace gaseous_server.Classes
 
 		private static MemoryCache DatabaseMemoryCache = new MemoryCache();
 
-		public void InitDB()
+		/// <summary>
+		/// Initializes the database, creates schema version table if missing, and applies schema upgrades.
+		/// </summary>
+		public async Task InitDB()
 		{
 			// load resources
 			var assembly = Assembly.GetExecutingAssembly();
@@ -143,17 +175,17 @@ namespace gaseous_server.Classes
 										try
 										{
 											// run pre-upgrade code
-											DatabaseMigration.PreUpgradeScript(i, _ConnectorType);
+											await DatabaseMigration.PreUpgradeScript(i, _ConnectorType);
 
 											// apply schema!
 											Logging.LogKey(Logging.LogType.Information, "process.database", "database.updating_schema_to_version", null, new[] { i.ToString() });
-											ExecuteCMD(dbScript, dbDict, 360);
+											await ExecuteCMDAsync(dbScript, dbDict, 360);
 
 											// increment schema version
 											sql = "UPDATE schema_version SET schema_version=@schemaver";
 											dbDict = new Dictionary<string, object>();
 											dbDict.Add("schemaver", i);
-											ExecuteCMD(sql, dbDict, CacheOptions);
+											await ExecuteCMDAsync(sql, dbDict, CacheOptions);
 
 											// run post-upgrade code
 											DatabaseMigration.PostUpgradeScript(i, _ConnectorType);
