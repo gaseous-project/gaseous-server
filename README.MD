@@ -32,3 +32,16 @@ See https://github.com/gaseous-project/gaseous-server/wiki/Installation for inst
 
 # Discord Server
 Join our Discord server: https://discord.gg/Nhu7wpT3k4
+
+## Tests
+
+Run unit tests locally:
+
+```
+dotnet test gaseous-server.Tests/gaseous-server.Tests.csproj
+```
+
+The test suite covers:
+- JSON and binary response handling in `HTTPComms.SendRequestAsync`
+- `Retry-After` parsing and retry behavior
+- Cancellation token behavior

@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-cli", "gaseous-cli\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "gaseous-configurator", "gaseous-configurator\gaseous-configurator.csproj", "{C6A3A0D2-76AA-4C14-9A7B-7A8E6D7C9A11}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-server.Tests", "gaseous-server.Tests\gaseous-server.Tests.csproj", "{A476D629-DC6F-4C78-9084-8F910429AFB3}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +49,10 @@ Global
 		{F2E47B9E-6F3A-4E36-B3C8-6B075F2D9D75}.Debug|Any CPU.Build.0 = Debug|x64
 		{F2E47B9E-6F3A-4E36-B3C8-6B075F2D9D75}.Release|Any CPU.ActiveCfg = Release|x64
 		{F2E47B9E-6F3A-4E36-B3C8-6B075F2D9D75}.Release|Any CPU.Build.0 = Release|x64
+		{A476D629-DC6F-4C78-9084-8F910429AFB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A476D629-DC6F-4C78-9084-8F910429AFB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A476D629-DC6F-4C78-9084-8F910429AFB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A476D629-DC6F-4C78-9084-8F910429AFB3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
