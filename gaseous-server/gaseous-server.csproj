@@ -39,7 +39,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.22" />
   <!-- Enable Windows Service hosting and EventLog logging when running on Windows -->
   <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.0" />
-  <PackageReference Include="Microsoft.Extensions.Logging.EventLog" Version="10.0.0" />
+  <PackageReference Include="Microsoft.Extensions.Logging.EventLog" Version="10.0.1" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Controllers\" />
