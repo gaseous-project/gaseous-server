@@ -591,6 +591,7 @@ class Avatar {
         this.ShowProfileCard = ShowProfileCard;
         this.ShowName = ShowName;
         this.Avatar = document.createElement('span');
+        this.Avatar.style.padding = "0px";
         const response = this.#FetchProfile(this);
 
         if (this.ShowProfileCard === true) {

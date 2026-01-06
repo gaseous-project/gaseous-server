@@ -573,6 +573,13 @@ ORDER BY Platform.`Name`; ";
                     this.DefaultAllowedStartMinutes = 0;
                     this.DefaultAllowedEndHours = 23;
                     this.DefaultAllowedEndMinutes = 59;
+                    this._Blocks = new List<ProcessQueue.QueueItemType>
+                    {
+                        ProcessQueue.QueueItemType.OrganiseLibrary,
+                        ProcessQueue.QueueItemType.LibraryScan,
+                        ProcessQueue.QueueItemType.LibraryScanWorker,
+                        ProcessQueue.QueueItemType.TitleIngestor
+                    };
                     break;
 
                 case ProcessQueue.QueueItemType.OrganiseLibrary:

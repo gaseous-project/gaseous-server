@@ -165,7 +165,7 @@ namespace gaseous_server.Classes
                         TraceOutput += Environment.NewLine + " - " + kvp.Key + ": " + kvp.Value.ToString();
                     }
                 }
-                if (logItem.ExceptionValue != null)
+                if (logItem.ExceptionValue != null && logItem.ExceptionValue.ToString().Length > 0)
                 {
                     TraceOutput += Environment.NewLine + "Exception: " + logItem.ExceptionValue.ToString();
                 }

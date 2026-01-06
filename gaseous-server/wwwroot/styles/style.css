@@ -435,6 +435,10 @@ h3 {
     cursor: pointer;
 }
 
+#banner_user_image_box {
+    margin-top: 3px;
+}
+
 #banner_header {
     background: rgba(0, 22, 56, 0.8);
     background: linear-gradient(90deg, rgba(0, 22, 56, 0.2) 0%, rgba(0, 0, 0, 0.5) 100%);

@@ -3341,7 +3341,6 @@ class SettingsCard {
                                     logLinkImg.alt = 'Logs';
                                     logLinkImg.style.cursor = 'pointer';
                                     logLinkImg.addEventListener('click', () => {
-                                        // window.location.href = `/index.html?page=settings&sub=logs&correlationid=${task.correlationId}`;
                                         this.SwitchPage('/logs', null, { correlationId: task.correlationId });
                                     });
                                     cell.appendChild(logLinkImg);
@@ -3447,6 +3446,16 @@ class SettingsCard {
                             let subTaskLogLink = '';
                             if (userProfile.roles && userProfile.roles.includes("Admin") && subTask.correlationId) {
                                 subTaskLogLink = subTask.correlationId ? `<img id="logLink" class="banner_button_image" src="/images/log.svg" onclick="window.location.href='/index.html?page=settings&sub=logs&correlationid=${subTask.correlationId}'" title="${window.lang.translate('card.settings.menu.logs')}" style="cursor: pointer;">` : '';
+
+                                subTaskLogLink = document.createElement('img');
+                                subTaskLogLink.id = 'logLink';
+                                subTaskLogLink.className = 'banner_button_image';
+                                subTaskLogLink.src = '/images/log.svg';
+                                subTaskLogLink.title = window.lang.translate('card.settings.menu.logs');
+                                subTaskLogLink.style.cursor = 'pointer';
+                                subTaskLogLink.addEventListener('click', () => {
+                                    this.SwitchPage('/logs', null, { correlationId: subTask.correlationId })
+                                });
                             }
 
                             let subRowData = [
