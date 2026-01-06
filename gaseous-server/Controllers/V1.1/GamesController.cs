@@ -670,7 +670,7 @@ FROM
     WHERE
         `Region`.`Identifier` = @lang) `LocalizedNames` ON `Game`.`Id` = `LocalizedNames`.`Game`
         AND `Game`.`SourceId` = `LocalizedNames`.`SourceId`
-" + String.Join(" ", joinClauses) + " " + whereClause + " GROUP BY `MetadataMap`.`Id` " + havingClause + " " + orderByClause;
+" + String.Join(" ", joinClauses) + " " + whereClause + " GROUP BY `MetadataMapBridge`.`MetadataSourceType`, `MetadataMapBridge`.`MetadataSourceId` " + havingClause + " " + orderByClause;
 
             string? userLocale = user.UserPreferences?.Find(x => x.Setting == "User.Locale")?.Value;
             if (userLocale != null)
@@ -685,6 +685,7 @@ FROM
             }
 
             DataTable dbResponse;
+            DataTable fullDataset = null;
             int? RecordCount = null;
             string limiter = "";
 
@@ -700,9 +701,9 @@ FROM
             // get full count for summary if needed
             if (returnSummary == true)
             {
-                // Execute query without limit to get total record count
-                DataTable countResponse = await db.ExecuteCMDAsync(sql, whereParams, new DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
-                RecordCount = countResponse.Rows.Count;
+                // Execute query without limit to get total record count and full dataset for alpha list
+                fullDataset = await db.ExecuteCMDAsync(sql, whereParams, new DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
+                RecordCount = fullDataset.Rows.Count;
             }
 
             int indexInPage = 0;
@@ -774,7 +775,7 @@ FROM
                     string alphaSearchField = orderByField == "NameThe" ? "NameThe" : "Name";
                     HashSet<string> seenKeys = new HashSet<string>();
 
-                    for (int i = 0; i < dbResponse.Rows.Count; i++)
+                    for (int i = 0; i < fullDataset.Rows.Count; i++)
                     {
                         if (i + 1 == nextPageIndex)
                         {
@@ -782,7 +783,7 @@ FROM
                             nextPageIndex += pageSize;
                         }
 
-                        string? gameName = dbResponse.Rows[i][alphaSearchField]?.ToString();
+                        string? gameName = fullDataset.Rows[i][alphaSearchField]?.ToString();
                         string key;
                         if (string.IsNullOrEmpty(gameName))
                         {
