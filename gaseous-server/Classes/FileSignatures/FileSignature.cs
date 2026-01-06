@@ -35,7 +35,7 @@ namespace gaseous_server.Classes
                 // Dynamically discover all classes that implement IDecompressionPlugin
                 var assembly = Assembly.GetExecutingAssembly();
                 var pluginType = typeof(IDecompressionPlugin);
-                
+
                 var pluginTypes = assembly.GetTypes()
                     .Where(t => t.IsClass && !t.IsAbstract && pluginType.IsAssignableFrom(t))
                     .ToList();
@@ -96,7 +96,7 @@ namespace gaseous_server.Classes
                 {
                     var matchingPlugin = DecompressionPlugins
                         .FirstOrDefault(plugin => plugin.Extension.Equals(ImportedFileExtension, StringComparison.OrdinalIgnoreCase));
-                    
+
                     if (matchingPlugin != null)
                     {
                         await matchingPlugin.DecompressFile(GameFileImportPath, ExtractPath);
@@ -268,37 +268,37 @@ namespace gaseous_server.Classes
             /// Gets or sets the name of the file.
             /// </summary>
             public string FileName { get; set; }
-            
+
             /// <summary>
             /// Gets or sets the path of the file within the archive.
             /// </summary>
             public string FilePath { get; set; }
-            
+
             /// <summary>
             /// Gets or sets the size of the file in bytes.
             /// </summary>
             public long Size { get; set; }
-            
+
             /// <summary>
             /// Gets or sets the MD5 hash of the file.
             /// </summary>
             public string MD5 { get; set; }
-            
+
             /// <summary>
             /// Gets or sets the SHA1 hash of the file.
             /// </summary>
             public string SHA1 { get; set; }
-            
+
             /// <summary>
             /// Gets or sets the SHA256 hash of the file.
             /// </summary>
             public string SHA256 { get; set; }
-            
+
             /// <summary>
             /// Gets or sets the CRC32 hash of the file.
             /// </summary>
             public string CRC { get; set; }
-            
+
             /// <summary>
             /// Gets or sets a value indicating whether this file is used as a signature selector.
             /// </summary>
@@ -310,15 +310,55 @@ namespace gaseous_server.Classes
         /// </summary>
         public enum MetadataSources
         {
-            None,
-            IGDB,
-            TheGamesDb,
-            RetroAchievements,
-            GiantBomb,
-            Steam,
-            GOG,
-            EpicGameStore,
-            Wikipedia
+            /// <summary>
+            /// No metadata source specified.
+            /// </summary>
+            None = 0,
+
+            /// <summary>
+            /// Internet Game Database (IGDB)
+            /// </summary>
+            IGDB = 1,
+
+            /// <summary>
+            /// TheGamesDb.net
+            /// </summary>
+            TheGamesDb = 2,
+
+            /// <summary>
+            /// RetroAchievements
+            /// </summary>
+            RetroAchievements = 3,
+
+            /// <summary>
+            /// GiantBomb
+            /// </summary>
+            GiantBomb = 4,
+
+            /// <summary>
+            /// Steam
+            /// </summary>
+            Steam = 5,
+
+            /// <summary>
+            /// Good Old Games (GOG)
+            /// </summary>
+            GOG = 6,
+
+            /// <summary>
+            /// Epic Games Store
+            /// </summary>
+            EpicGameStore = 7,
+
+            /// <summary>
+            /// Wikipedia
+            /// </summary>
+            Wikipedia = 8,
+
+            /// <summary>
+            /// Unknown metadata source.
+            /// </summary>
+            Unknown = 9999
         }
     }
 }
