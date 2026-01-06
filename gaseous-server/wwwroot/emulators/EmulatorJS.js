@@ -1,7 +1,7 @@
-EJS_player = '#game';
+window.EJS_player = '#game';
 
 // Can also be fceumm or nestopia
-EJS_core = getQueryString('core', 'string');
+window.EJS_core = getQueryString('core', 'string');
 
 // get core data from cores.json
 async function GetCoreData(coreName) {
@@ -22,7 +22,7 @@ async function GetCoreData(coreName) {
 
 let CoreData = null;
 // Ensure a safe default before loader.js reads it (we will override before loading loader.js)
-EJS_threads = false;
+window.EJS_threads = false;
 
 // Inject loader.js only after CoreData is resolved and EJS_threads is finalized
 function injectLoaderOnce() {
@@ -70,42 +70,43 @@ GetCoreData(EJS_core)
     });
 
 // Lightgun
-EJS_lightgun = false; // can be true or false
+window.EJS_lightgun = false; // can be true or false
 
 // set language - EJS only supports the language code, not locale
-EJS_language = window.lang.locale.split('-')[0] || 'en';
+window.EJS_language = window.lang.locale.split('-')[0] || 'en';
 
 // URL to BIOS file
-EJS_biosUrl = emuBios;
+window.EJS_biosUrl = emuBios;
 
 // URL to Game rom
-EJS_gameUrl = decodeURIComponent(getQueryString('rompath', 'string'));
+window.EJS_gameUrl = decodeURIComponent(getQueryString('rompath', 'string'));
 
 // load state if defined
 if (StateUrl) {
     console.log(window.lang.translate("console.emulator_loading_save_state", StateUrl));
-    EJS_loadStateURL = StateUrl;
+    window.EJS_loadStateURL = StateUrl;
 }
 
 // start the emulator automatically when loaded
-EJS_startOnLoaded = true;
+window.EJS_startOnLoaded = true;
 
 // Path to the data directory
-EJS_pathtodata = '/emulators/EmulatorJS/data/';
+window.EJS_pathtodata = '/emulators/EmulatorJS/data/';
 
-EJS_DEBUG_XX = emulatorDebugMode;
-if (EJS_DEBUG_XX) {
+if (emulatorDebugMode === true || emulatorDebugMode === 'true') {
+    window.EJS_DEBUG_XX = true;
     console.log(window.lang.translate("console.emulator_debug_state", window.lang.translate("generic.enabled")));
 } else {
+    window.EJS_DEBUG_XX = false;
     console.log(window.lang.translate("console.emulator_debug_state", window.lang.translate("generic.disabled")));
 }
 
-EJS_backgroundImage = emuBackground;
-EJS_backgroundBlur = true;
+window.EJS_backgroundImage = emuBackground;
+window.EJS_backgroundBlur = true;
 
-EJS_fullscreenOnLoaded = false;
+window.EJS_fullscreenOnLoaded = false;
 
-EJS_gameName = emuGameTitle;
+window.EJS_gameName = emuGameTitle;
 
 let srmVersion = getQueryString('srmVersion', 'string');
 if (!srmVersion) {
@@ -114,7 +115,7 @@ if (!srmVersion) {
 
 console.log(gameData);
 
-EJS_Buttons = {
+window.EJS_Buttons = {
     pause: {
         callback: () => {
             let bgMask = document.createElement('div');
@@ -254,7 +255,7 @@ EJS_Buttons = {
     }
 }
 
-EJS_onSaveState = function (e) {
+window.EJS_onSaveState = function (e) {
     console.log(e);
     let returnValue = {
         "ScreenshotByteArrayBase64": btoa(Uint8ToString(e.screenshot)),
@@ -288,7 +289,7 @@ EJS_onSaveState = function (e) {
         });
 }
 
-EJS_onLoadState = function (e) {
+window.EJS_onLoadState = function (e) {
     let rompath = decodeURIComponent(getQueryString('rompath', 'string'));
     rompath = rompath.substring(rompath.lastIndexOf('/') + 1);
     console.log(rompath);
@@ -296,7 +297,7 @@ EJS_onLoadState = function (e) {
     stateManager.open();
 }
 
-EJS_onGameStart = async function (e) {
+window.EJS_onGameStart = async function (e) {
     // check if a save file is available
     let format = 'base64';
     let url = `/api/v1.1/SaveFile/${getQueryString('core', 'string')}/${IsMediaGroup}/${romId}/${srmVersion}/data?format=${format}`;

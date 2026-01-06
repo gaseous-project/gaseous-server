@@ -360,7 +360,7 @@ namespace gaseous_server.Controllers.v1_1
                     {
                         if (i > 0)
                         {
-                            tempVal += " AND ";
+                            tempVal += ", ";
                         }
                         string genreLabel = "@Genre" + i;
                         tempVal += genreLabel;
@@ -382,7 +382,7 @@ namespace gaseous_server.Controllers.v1_1
                     {
                         if (i > 0)
                         {
-                            tempVal += " AND ";
+                            tempVal += ", ";
                         }
                         string gameModeLabel = "@GameMode" + i;
                         tempVal += gameModeLabel;
@@ -404,7 +404,7 @@ namespace gaseous_server.Controllers.v1_1
                     {
                         if (i > 0)
                         {
-                            tempVal += " AND ";
+                            tempVal += ", ";
                         }
                         string playerPerspectiveLabel = "@PlayerPerspective" + i;
                         tempVal += playerPerspectiveLabel;
@@ -426,7 +426,7 @@ namespace gaseous_server.Controllers.v1_1
                     {
                         if (i > 0)
                         {
-                            tempVal += " AND ";
+                            tempVal += ", ";
                         }
                         string themeLabel = "@Theme" + i;
                         tempVal += themeLabel;
@@ -473,29 +473,13 @@ namespace gaseous_server.Controllers.v1_1
             // build where clause
             if (whereClauses.Count > 0)
             {
-                whereClause = "WHERE ";
-                for (int i = 0; i < whereClauses.Count; i++)
-                {
-                    if (i > 0)
-                    {
-                        whereClause += " AND ";
-                    }
-                    whereClause += whereClauses[i];
-                }
+                whereClause = "WHERE " + string.Join(" AND ", whereClauses);
             }
 
             // build having clause
             if (havingClauses.Count > 0)
             {
-                havingClause = "HAVING ";
-                for (int i = 0; i < havingClauses.Count; i++)
-                {
-                    if (i > 0)
-                    {
-                        havingClause += " AND ";
-                    }
-                    havingClause += havingClauses[i];
-                }
+                havingClause = "HAVING " + string.Join(" AND ", havingClauses);
             }
 
             // order by clause
@@ -686,15 +670,7 @@ FROM
     WHERE
         `Region`.`Identifier` = @lang) `LocalizedNames` ON `Game`.`Id` = `LocalizedNames`.`Game`
         AND `Game`.`SourceId` = `LocalizedNames`.`SourceId`
-" + String.Join(" ", joinClauses) + " " + whereClause + " GROUP BY `MetadataMapBridge`.`MetadataSourceId` " + havingClause + " " + orderByClause;
-
-            string limiter = "";
-            if (returnGames == true)
-            {
-                limiter += " LIMIT @pageOffset, @pageSize";
-                whereParams.Add("pageOffset", pageSize * (pageNumber - 1));
-                whereParams.Add("pageSize", pageSize);
-            }
+" + String.Join(" ", joinClauses) + " " + whereClause + " GROUP BY `MetadataMapBridge`.`MetadataSourceType`, `MetadataMapBridge`.`MetadataSourceId` " + havingClause + " " + orderByClause;
 
             string? userLocale = user.UserPreferences?.Find(x => x.Setting == "User.Locale")?.Value;
             if (userLocale != null)
@@ -708,13 +684,26 @@ FROM
                 whereParams["lang"] = "";
             }
 
-            DataTable dbResponse = await db.ExecuteCMDAsync(sql + limiter, whereParams, new DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
-
-            // get count
+            DataTable dbResponse;
+            DataTable fullDataset = null;
             int? RecordCount = null;
+            string limiter = "";
+
+            if (returnGames == true)
+            {
+                limiter += " LIMIT @pageOffset, @pageSize";
+                whereParams.Add("pageOffset", pageSize * (pageNumber - 1));
+                whereParams.Add("pageSize", pageSize);
+            }
+
+            dbResponse = await db.ExecuteCMDAsync(sql + limiter, whereParams, new DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
+
+            // get full count for summary if needed
             if (returnSummary == true)
             {
-                RecordCount = dbResponse.Rows.Count;
+                // Execute query without limit to get total record count and full dataset for alpha list
+                fullDataset = await db.ExecuteCMDAsync(sql, whereParams, new DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
+                RecordCount = fullDataset.Rows.Count;
             }
 
             int indexInPage = 0;
@@ -775,10 +764,6 @@ FROM
             Dictionary<string, GameReturnPackage.AlphaListItem>? AlphaList = null;
             if (returnSummary == true)
             {
-                dbResponse = await db.ExecuteCMDAsync(sql, whereParams, new DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
-
-                RecordCount = dbResponse.Rows.Count;
-
                 AlphaList = new Dictionary<string, GameReturnPackage.AlphaListItem>();
 
                 // build alpha list
@@ -790,7 +775,7 @@ FROM
                     string alphaSearchField = orderByField == "NameThe" ? "NameThe" : "Name";
                     HashSet<string> seenKeys = new HashSet<string>();
 
-                    for (int i = 0; i < dbResponse.Rows.Count; i++)
+                    for (int i = 0; i < fullDataset.Rows.Count; i++)
                     {
                         if (i + 1 == nextPageIndex)
                         {
@@ -798,7 +783,7 @@ FROM
                             nextPageIndex += pageSize;
                         }
 
-                        string? gameName = dbResponse.Rows[i][alphaSearchField]?.ToString();
+                        string? gameName = fullDataset.Rows[i][alphaSearchField]?.ToString();
                         string key;
                         if (string.IsNullOrEmpty(gameName))
                         {
