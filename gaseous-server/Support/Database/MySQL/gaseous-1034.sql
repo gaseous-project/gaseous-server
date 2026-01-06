@@ -1,5 +1,5 @@
-DELETE FROM `gaseous`.`ServerLogs`
+DELETE FROM `ServerLogs`
 WHERE `EventTime` < NOW() - INTERVAL 2 DAY;
 
-ALTER TABLE `gaseous`.`ServerLogs`
+ALTER TABLE `ServerLogs`
 ADD COLUMN `AdditionalData` LONGTEXT NULL DEFAULT NULL AFTER `Message`;
