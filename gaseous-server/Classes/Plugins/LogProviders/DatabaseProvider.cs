@@ -25,6 +25,8 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         /// <inheritdoc/>
         public Dictionary<string, object>? Settings { get; set; }
 
+        private Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
         /// <inheritdoc/>
         public async Task<bool> LogMessage(Logging.LogItem logItem)
         {
@@ -34,7 +36,6 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         /// <inheritdoc/>
         public async Task<bool> LogMessage(Logging.LogItem logItem, Exception? exception)
         {
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "INSERT INTO ServerLogs (EventTime, EventType, Process, Message, AdditionalData, Exception, CorrelationId, CallingProcess, CallingUser) VALUES (@EventTime, @EventType, @Process, @Message, @AdditionalData, @Exception, @correlationid, @callingprocess, @callinguser);";
             Dictionary<string, object> dbDict = new Dictionary<string, object>
             {
@@ -57,7 +58,6 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         /// <inheritdoc/>
         public async Task<Logging.LogItem?> GetLogMessageById(string id)
         {
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM ServerLogs WHERE Id = @Id LIMIT 1;";
             Dictionary<string, object> dbDict = new Dictionary<string, object>
             {
@@ -74,7 +74,6 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         /// <inheritdoc/>
         public async Task<List<Logging.LogItem>> GetLogMessages(Logging.LogsViewModel model)
         {
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             if (model.StartIndex.HasValue)
             {
@@ -245,6 +244,12 @@ namespace gaseous_server.Classes.Plugins.LogProviders
             };
 
             return log;
+        }
+
+        /// <inheritdoc/>
+        public void Shutdown()
+        {
+            // No resources to clean up for console logging
         }
     }
 }

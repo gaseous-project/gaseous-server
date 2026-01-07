@@ -485,3 +485,11 @@ try
 }
 catch { /* logging should not block startup */ }
 await app.WaitForShutdownAsync();
+
+// Shutdown logging providers to flush buffers and cleanup resources
+try
+{
+    Logging.LogKey(Logging.LogType.Information, "process.shutdown", "shutdown.stopping_log_providers");
+}
+catch { /* final log message may fail */ }
+Logging.ShutdownLogProviders();

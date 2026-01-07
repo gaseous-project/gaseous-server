@@ -43,10 +43,8 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         /// <inheritdoc/>
         public async Task<bool> LogMessage(Logging.LogItem logItem, Exception? exception)
         {
-
-            Console.ForegroundColor = logItem.EventTypeInfo.Colour;
-            Console.WriteLine(logItem.EventTime.ToString("yyyyMMdd HHmmss") + ": " + logItem.EventTypeInfo.TypeString + ": " + logItem.Process + " - " + logItem.Message);
-            Console.ResetColor();
+            string eventTypeString = logItem.EventTypeInfo.ColourEscape + logItem.EventTypeInfo.TypeString + logItem.EventTypeInfo.DefaultConsoleColourEscape;
+            Console.WriteLine(logItem.EventTime.ToString("HH:mm:ss") + ": " + eventTypeString + ": " + logItem.Process + " - " + logItem.Message);
 
             return true;
         }
@@ -68,6 +66,12 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         public async Task<List<Logging.LogItem>> GetLogMessages(Logging.LogsViewModel model)
         {
             throw new NotSupportedException();
+        }
+
+        /// <inheritdoc/>
+        public void Shutdown()
+        {
+            // No resources to clean up for console logging
         }
     }
 }

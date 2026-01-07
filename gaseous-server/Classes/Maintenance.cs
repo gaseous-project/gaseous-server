@@ -39,7 +39,9 @@ namespace gaseous_server.Classes
             MetadataManagement metadataGame = new MetadataManagement(this);
             metadataGame.UpdateRomCounts();
 
-            
+            // run log maintenance
+            Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.running_log_maintenance");
+            await Logging.RunMaintenance();
 
             // delete files and directories older than 7 days in PathsToClean
             List<string> PathsToClean = new List<string>();

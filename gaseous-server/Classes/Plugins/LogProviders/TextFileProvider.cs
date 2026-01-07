@@ -1,5 +1,8 @@
 
 using System.Data;
+using System.IO;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace gaseous_server.Classes.Plugins.LogProviders
 {
@@ -8,6 +11,72 @@ namespace gaseous_server.Classes.Plugins.LogProviders
     /// </summary>
     public class TextFileProvider : ILogProvider
     {
+        private static readonly SemaphoreSlim _writeLock = new(1, 1);
+        private static StreamWriter? _writer;
+        private static PeriodicTimer? _flushTimer;
+        private static Task? _flushLoop;
+        private static CancellationTokenSource? _flushCts;
+        private static volatile bool _flushStarted;
+
+        private static void EnsureWriterInitialized()
+        {
+            if (_writer != null)
+            {
+                return;
+            }
+
+            var logDir = Path.GetDirectoryName(Config.LogFilePath);
+            if (!string.IsNullOrEmpty(logDir) && !Directory.Exists(logDir))
+            {
+                Directory.CreateDirectory(logDir);
+            }
+
+            var fs = new FileStream(
+                Config.LogFilePath,
+                FileMode.Append,
+                FileAccess.Write,
+                FileShare.Read,
+                bufferSize: 64 * 1024,
+                options: FileOptions.Asynchronous);
+
+            _writer = new StreamWriter(fs)
+            {
+                AutoFlush = false
+            };
+
+            // Start periodic flush loop once
+            if (!_flushStarted)
+            {
+                _flushStarted = true;
+                _flushTimer = new PeriodicTimer(TimeSpan.FromSeconds(5));
+                _flushCts = new CancellationTokenSource();
+                _flushLoop = Task.Run(async () =>
+                {
+                    try
+                    {
+                        while (await _flushTimer!.WaitForNextTickAsync(_flushCts.Token).ConfigureAwait(false))
+                        {
+                            await _writeLock.WaitAsync().ConfigureAwait(false);
+                            try
+                            {
+                                if (_writer != null)
+                                {
+                                    await _writer.FlushAsync().ConfigureAwait(false);
+                                }
+                            }
+                            finally
+                            {
+                                _writeLock.Release();
+                            }
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        // expected when shutting down
+                    }
+                }, _flushCts.Token);
+            }
+        }
         /// <inheritdoc/>
         public string Name => "Text File Log Provider";
 
@@ -46,8 +115,25 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         /// <inheritdoc/>
         public async Task<bool> LogMessage(Logging.LogItem logItem, Exception? exception)
         {
-            var logOutput = Newtonsoft.Json.JsonConvert.SerializeObject(logItem, Newtonsoft.Json.Formatting.Indented);
-            await File.AppendAllTextAsync(Config.LogFilePath, logOutput + Environment.NewLine);
+            Newtonsoft.Json.JsonSerializerSettings jsonSettings = new()
+            {
+                NullValueHandling = Newtonsoft.Json.NullValueHandling.Ignore,
+                Formatting = Newtonsoft.Json.Formatting.None
+            };
+            jsonSettings.Converters.Add(new Newtonsoft.Json.Converters.StringEnumConverter());
+
+            var logOutput = Newtonsoft.Json.JsonConvert.SerializeObject(logItem, jsonSettings);
+
+            await _writeLock.WaitAsync().ConfigureAwait(false);
+            try
+            {
+                EnsureWriterInitialized();
+                await _writer!.WriteLineAsync(logOutput).ConfigureAwait(false);
+            }
+            finally
+            {
+                _writeLock.Release();
+            }
 
             return true;
         }
@@ -97,6 +183,46 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         public async Task<List<Logging.LogItem>> GetLogMessages(Logging.LogsViewModel model)
         {
             throw new NotSupportedException();
+        }
+
+        /// <inheritdoc/>
+        public void Shutdown()
+        {
+            // Cancel the periodic flush loop
+            _flushCts?.Cancel();
+
+            // Wait for flush loop to complete (with timeout)
+            try
+            {
+                _flushLoop?.Wait(TimeSpan.FromSeconds(5));
+            }
+            catch (AggregateException)
+            {
+                // Ignore cancellation exceptions during shutdown
+            }
+
+            // Acquire lock and flush/dispose writer
+            _writeLock.Wait();
+            try
+            {
+                if (_writer != null)
+                {
+                    _writer.Flush();
+                    _writer.Dispose();
+                    _writer = null;
+                }
+            }
+            finally
+            {
+                _writeLock.Release();
+            }
+
+            // Dispose timer and cancellation token source
+            _flushTimer?.Dispose();
+            _flushTimer = null;
+            _flushCts?.Dispose();
+            _flushCts = null;
+            _flushStarted = false;
         }
     }
 }

@@ -93,6 +93,78 @@ namespace gaseous_server.Classes
 
         static List<gaseous_server.Classes.Plugins.LogProviders.ILogProvider> _logProviders = new List<Plugins.LogProviders.ILogProvider>();
         static List<gaseous_server.Classes.Plugins.LogProviders.ILogProvider> _logReaderProviders = new List<Plugins.LogProviders.ILogProvider>();
+        static bool _providersInitialized = false;
+
+        /// <summary>
+        /// Static constructor to initialize log providers once at startup.
+        /// Performs reflection-based discovery of all available log providers.
+        /// </summary>
+        static Logging()
+        {
+            InitializeLogProviders();
+        }
+
+        /// <summary>
+        /// Initializes log providers by discovering all classes implementing ILogProvider.
+        /// Filters by supported operating systems and capabilities.
+        /// </summary>
+        static void InitializeLogProviders()
+        {
+            if (_providersInitialized) return;
+
+            try
+            {
+                var assembly = Assembly.GetExecutingAssembly();
+                var pluginType = typeof(Plugins.LogProviders.ILogProvider);
+
+                var pluginTypes = assembly.GetTypes()
+                    .Where(t => t.IsClass && !t.IsAbstract && pluginType.IsAssignableFrom(t))
+                    .ToList();
+
+                foreach (var type in pluginTypes)
+                {
+                    try
+                    {
+                        var plugin = Activator.CreateInstance(type) as Plugins.LogProviders.ILogProvider;
+                        if (plugin != null && plugin.SupportedOperatingSystems.Contains(Plugins.PluginManagement.GetCurrentOperatingSystem()))
+                        {
+                            _logProviders.Add(plugin);
+
+                            if (plugin.SupportsLogFetch)
+                            {
+                                _logReaderProviders.Add(plugin);
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // log provider failed to load - skip
+                    }
+                }
+            }
+            finally
+            {
+                _providersInitialized = true;
+            }
+        }
+
+        /// <summary>
+        /// Retrieves a context value from CallContext with safe fallback.
+        /// </summary>
+        /// <param name="key">The context key to retrieve.</param>
+        /// <returns>The context value or empty string if not found or error occurs.</returns>
+        static string GetContextValue(string key)
+        {
+            try
+            {
+                var ctxValue = CallContext.GetData(key);
+                return ctxValue?.ToString() ?? "";
+            }
+            catch
+            {
+                return "";
+            }
+        }
 
         /// <summary>
         /// Handles the actual persistence / output of the log item to the configured sinks.
@@ -112,95 +184,15 @@ namespace gaseous_server.Classes
             {
                 var diskLogProvider = new Plugins.LogProviders.TextFileProvider();
                 _ = diskLogProvider.LogMessage(logItem, null);
+                var consoleLogProvider = new Plugins.LogProviders.ConsoleProvider();
+                _ = consoleLogProvider.LogMessage(logItem, null);
             }
             else
             {
-                // load all log providers into a static array
-                // - classes that implement gaseous_server.Classes.Plugins.LogProviders.ILogProvider
-                // - filter by supported operating systems
-                if (_logProviders.Count == 0)
-                {
-                    // load all log providers
-                    var assembly = Assembly.GetExecutingAssembly();
-                    var pluginType = typeof(Plugins.LogProviders.ILogProvider);
-
-                    var pluginTypes = assembly.GetTypes()
-                        .Where(t => t.IsClass && !t.IsAbstract && pluginType.IsAssignableFrom(t))
-                        .ToList();
-
-                    foreach (var type in pluginTypes)
-                    {
-                        try
-                        {
-                            var plugin = Activator.CreateInstance(type) as Plugins.LogProviders.ILogProvider;
-                            if (plugin != null && plugin.SupportedOperatingSystems.Contains(Plugins.PluginManagement.GetCurrentOperatingSystem()))
-                            {
-                                _logProviders.Add(plugin);
-
-                                if (plugin.SupportsLogFetch)
-                                {
-                                    _logReaderProviders.Add(plugin);
-                                }
-                            }
-                        }
-                        catch
-                        {
-                            // log provider failed to load - write to disk log as fallback
-                        }
-                    }
-                }
-
                 // Pull ambient context values if they have been set for correlation / tracing.
-                try
-                {
-                    var ctxCorrelation = CallContext.GetData("CorrelationId");
-                    if (ctxCorrelation == null)
-                    {
-                        logItem.CorrelationId = "";
-                    }
-                    else
-                    {
-                        logItem.CorrelationId = ctxCorrelation.ToString() ?? "";
-                    }
-                }
-                catch
-                {
-                    logItem.CorrelationId = "";
-                }
-
-                try
-                {
-                    var ctxCallingProcess = CallContext.GetData("CallingProcess");
-                    if (ctxCallingProcess == null)
-                    {
-                        logItem.CallingProcess = "";
-                    }
-                    else
-                    {
-                        logItem.CallingProcess = ctxCallingProcess.ToString() ?? "";
-                    }
-                }
-                catch
-                {
-                    logItem.CallingProcess = "";
-                }
-
-                try
-                {
-                    var ctxCallingUser = CallContext.GetData("CallingUser");
-                    if (ctxCallingUser == null)
-                    {
-                        logItem.CallingUser = "";
-                    }
-                    else
-                    {
-                        logItem.CallingUser = ctxCallingUser.ToString() ?? "";
-                    }
-                }
-                catch
-                {
-                    logItem.CallingUser = "";
-                }
+                logItem.CorrelationId = GetContextValue("CorrelationId");
+                logItem.CallingProcess = GetContextValue("CallingProcess");
+                logItem.CallingUser = GetContextValue("CallingUser");
 
                 // send log to each provider
                 foreach (var provider in _logProviders)
@@ -218,11 +210,11 @@ namespace gaseous_server.Classes
         }
 
         /// <summary>
-        /// Retrieves log entries from the database applying pagination and optional filtering criteria
+        /// Retrieves log entries from providers that support log fetching, applying pagination and optional filtering criteria
         /// (event types, time range, full-text search on message, correlation/user/process constraints).
         /// </summary>
         /// <param name="model">Query model specifying filters and paging.</param>
-        /// <returns>List of matching <see cref="LogItem"/> instances.</returns>
+        /// <returns>List of matching <see cref="LogItem"/> instances from all reader-capable providers.</returns>
         public static async Task<List<LogItem>> GetLogs(LogsViewModel model)
         {
             if (_logReaderProviders.Count == 0)
@@ -231,7 +223,7 @@ namespace gaseous_server.Classes
             }
 
             var logItems = new List<LogItem>();
-            foreach (var provider in _logProviders)
+            foreach (var provider in _logReaderProviders)
             {
                 try
                 {
@@ -244,6 +236,42 @@ namespace gaseous_server.Classes
                 }
             }
             return logItems;
+        }
+
+        /// <summary>
+        /// Runs maintenance tasks for all log providers, such as purging aged logs.
+        /// </summary>
+        public async static Task RunMaintenance()
+        {
+            foreach (var provider in _logProviders)
+            {
+                try
+                {
+                    await provider.RunMaintenance();
+                }
+                catch
+                {
+                    // log provider failed to run maintenance - skip
+                }
+            }
+        }
+
+        /// <summary>
+        /// Shuts down all log providers, performing any necessary cleanup.
+        /// </summary>
+        public static void ShutdownLogProviders()
+        {
+            foreach (var provider in _logProviders)
+            {
+                try
+                {
+                    provider.Shutdown();
+                }
+                catch
+                {
+                    // log provider failed to shutdown - skip
+                }
+            }
         }
 
         /// <summary>
@@ -289,8 +317,11 @@ namespace gaseous_server.Classes
             /// </summary>
             public LogType? EventType { get; set; }
 
+            private LogTypeInfo? _cachedEventTypeInfo;
+
             /// <summary>
             /// Provides detailed information about the event type, including its string representation and console color.
+            /// Cached to avoid creating new instances on repeated access.
             /// </summary>
             [Newtonsoft.Json.JsonIgnore]
             [System.Text.Json.Serialization.JsonIgnore]
@@ -298,15 +329,45 @@ namespace gaseous_server.Classes
             {
                 get
                 {
-                    return new LogTypeInfo(EventType ?? LogType.Information);
+                    if (_cachedEventTypeInfo == null)
+                    {
+                        _cachedEventTypeInfo = new LogTypeInfo(EventType ?? LogType.Information);
+                    }
+                    return _cachedEventTypeInfo;
                 }
             }
 
             /// <summary>
             /// Contains information about the log type, including its severity, string representation, and console color.
+            /// Uses static lookup dictionaries for efficient O(1) access to type mappings.
             /// </summary>
             public class LogTypeInfo
             {
+                // Static lookup tables for O(1) access instead of switch statements
+                private static readonly Dictionary<LogType, string> TypeStringMap = new Dictionary<LogType, string>
+                {
+                    { LogType.Information, "INFO" },
+                    { LogType.Warning, "WARN" },
+                    { LogType.Critical, "CRIT" },
+                    { LogType.Debug, "DBUG" }
+                };
+
+                private static readonly Dictionary<LogType, ConsoleColor> ColourMap = new Dictionary<LogType, ConsoleColor>
+                {
+                    { LogType.Information, ConsoleColor.Blue },
+                    { LogType.Warning, ConsoleColor.Yellow },
+                    { LogType.Critical, ConsoleColor.Red },
+                    { LogType.Debug, ConsoleColor.Gray }
+                };
+
+                private static readonly Dictionary<LogType, string> ColourEscapeMap = new Dictionary<LogType, string>
+                {
+                    { LogType.Information, "\u001b[34m" }, // Blue
+                    { LogType.Warning, "\u001b[33m" },     // Yellow
+                    { LogType.Critical, "\u001b[31m" },     // Red
+                    { LogType.Debug, "\u001b[37m" }         // Gray/White
+                };
+
                 /// <summary>
                 /// Initializes a new instance of the <see cref="LogTypeInfo"/> class with the specified log type.
                 /// </summary>
@@ -324,50 +385,36 @@ namespace gaseous_server.Classes
                 public LogType Type { get { return this._type; } }
 
                 /// <summary>
-                /// String representation of the log type for easy logging/display.
+                /// String representation of the log type for easy logging/display (e.g., "INFO", "WARN", "CRIT", "DBUG").
+                /// Retrieved from static lookup dictionary for optimal performance.
                 /// </summary>
-                public string? TypeString
+                public string TypeString
                 {
-                    get
-                    {
-                        switch (this._type)
-                        {
-                            case LogType.Information:
-                                return "INFO";
-                            case LogType.Warning:
-                                return "WARN";
-                            case LogType.Critical:
-                                return "CRIT";
-                            case LogType.Debug:
-                                return "DBUG";
-                            default:
-                                return "INFO";
-                        }
-                    }
+                    get => TypeStringMap.TryGetValue(_type, out var value) ? value : "INFO";
                 }
 
                 /// <summary>
                 /// The console color associated with the log type for colorized output.
+                /// Retrieved from static lookup dictionary for optimal performance.
                 /// </summary>
                 public ConsoleColor Colour
                 {
-                    get
-                    {
-                        switch (this._type)
-                        {
-                            case LogType.Information:
-                                return ConsoleColor.Blue;
-                            case LogType.Warning:
-                                return ConsoleColor.Yellow;
-                            case LogType.Critical:
-                                return ConsoleColor.Red;
-                            case LogType.Debug:
-                                return ConsoleColor.Gray;
-                            default:
-                                return ConsoleColor.Blue;
-                        }
-                    }
+                    get => ColourMap.TryGetValue(_type, out var value) ? value : ConsoleColor.Blue;
                 }
+
+                /// <summary>
+                /// The ANSI escape code for the log type color for colorized console output.
+                /// Retrieved from static lookup dictionary for optimal performance.
+                /// </summary>
+                public string ColourEscape
+                {
+                    get => ColourEscapeMap.TryGetValue(_type, out var value) ? value : "\u001b[34m";
+                }
+
+                /// <summary>
+                /// The ANSI escape code to reset console color to default.
+                /// </summary>
+                public string DefaultConsoleColourEscape => "\u001b[0m";
             }
 
             /// <summary>

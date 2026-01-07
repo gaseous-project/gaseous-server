@@ -73,5 +73,10 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         /// A list of log messages that match the criteria specified in the view model.
         /// </returns>
         public Task<List<Logging.LogItem>> GetLogMessages(Logging.LogsViewModel model);
+
+        /// <summary>
+        /// Shuts down the log provider, performing any necessary cleanup.
+        /// </summary>
+        public void Shutdown();
     }
 }
