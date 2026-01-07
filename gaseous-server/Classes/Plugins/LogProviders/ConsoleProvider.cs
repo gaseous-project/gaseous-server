@@ -17,32 +17,18 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         /// <inheritdoc/>
         public async Task<bool> LogMessage(Logging.LogItem logItem)
         {
-            try
-            {
-                return await LogMessage(logItem, null);
-            }
-            catch
-            {
-                return false;
-            }
+            return await LogMessage(logItem, null);
         }
 
         /// <inheritdoc/>
-        public async Task<bool> LogMessage(Logging.LogItem logItem, Exception? exception = null)
+        public async Task<bool> LogMessage(Logging.LogItem logItem, Exception? exception)
         {
-            try
-            {
-                var logType = logItem.EventType ?? Logging.LogType.Information;
-                Console.ForegroundColor = Logging.LogItem.LogTypeToColor[logType];
-                Console.WriteLine(logItem.EventTime.ToString("yyyyMMdd HHmmss") + ": " + Logging.LogItem.LogTypeToString[logType] + ": " + logItem.Process + " - " + logItem.Message);
-                Console.ResetColor();
 
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            Console.ForegroundColor = logItem.EventTypeInfo.Colour;
+            Console.WriteLine(logItem.EventTime.ToString("yyyyMMdd HHmmss") + ": " + logItem.EventTypeInfo.TypeString + ": " + logItem.Process + " - " + logItem.Message);
+            Console.ResetColor();
+
+            return true;
         }
 
         /// <inheritdoc/>
@@ -53,13 +39,13 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         }
 
         /// <inheritdoc/>
-        public Task<Logging.LogItem> GetLogMessageById(string id)
+        public async Task<Logging.LogItem> GetLogMessageById(string id)
         {
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
-        public Task<List<Logging.LogItem>> GetLogMessages(Logging.LogsViewModel model)
+        public async Task<List<Logging.LogItem>> GetLogMessages(Logging.LogsViewModel model)
         {
             throw new NotSupportedException();
         }

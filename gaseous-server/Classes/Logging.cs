@@ -562,75 +562,132 @@ namespace gaseous_server.Classes
             /// Database identity / primary key (if sourced from persistence layer).
             /// </summary>
             public long Id { get; set; }
+
             /// <summary>
             /// UTC timestamp indicating when the event occurred / was captured.
             /// </summary>
             public DateTime EventTime { get; set; }
+
             /// <summary>
             /// Severity / classification of the log. Nullable to handle transitional deserialization scenarios.
             /// </summary>
             public LogType? EventType { get; set; }
+
+            /// <summary>
+            /// Provides detailed information about the event type, including its string representation and console color.
+            /// </summary>
+            [Newtonsoft.Json.JsonIgnore]
+            [System.Text.Json.Serialization.JsonIgnore]
+            public LogTypeInfo EventTypeInfo
+            {
+                get
+                {
+                    return new LogTypeInfo(EventType ?? LogType.Information);
+                }
+            }
+
+            /// <summary>
+            /// Contains information about the log type, including its severity, string representation, and console color.
+            /// </summary>
+            public class LogTypeInfo
+            {
+                /// <summary>
+                /// Initializes a new instance of the <see cref="LogTypeInfo"/> class with the specified log type.
+                /// </summary>
+                /// <param name="type">The log type to associate with this info instance.</param>
+                public LogTypeInfo(LogType type)
+                {
+                    this._type = type;
+                }
+
+                private LogType _type { get; set; }
+
+                /// <summary>
+                /// The type of log entry.
+                /// </summary>
+                public LogType Type { get { return this._type; } }
+
+                /// <summary>
+                /// String representation of the log type for easy logging/display.
+                /// </summary>
+                public string? TypeString
+                {
+                    get
+                    {
+                        switch (this._type)
+                        {
+                            case LogType.Information:
+                                return "INFO";
+                            case LogType.Warning:
+                                return "WARN";
+                            case LogType.Critical:
+                                return "CRIT";
+                            case LogType.Debug:
+                                return "DBUG";
+                            default:
+                                return "INFO";
+                        }
+                    }
+                }
+
+                /// <summary>
+                /// The console color associated with the log type for colorized output.
+                /// </summary>
+                public ConsoleColor Colour
+                {
+                    get
+                    {
+                        switch (this._type)
+                        {
+                            case LogType.Information:
+                                return ConsoleColor.Blue;
+                            case LogType.Warning:
+                                return ConsoleColor.Yellow;
+                            case LogType.Critical:
+                                return ConsoleColor.Red;
+                            case LogType.Debug:
+                                return ConsoleColor.Gray;
+                            default:
+                                return ConsoleColor.Blue;
+                        }
+                    }
+                }
+            }
+
             /// <summary>
             /// Logical process or component emitting the log (e.g., controller name, worker identifier).
             /// </summary>
             public string Process { get; set; } = "";
+
             /// <summary>
             /// Ambient correlation identifier used to link related operations across components.
             /// </summary>
             public string CorrelationId { get; set; } = "";
+
             /// <summary>
             /// Name of the calling process (if supplied via context) for cross-system traceability.
             /// </summary>
             public string? CallingProcess { get; set; } = "";
+
             /// <summary>
             /// Identifier / email of the user associated with the log (if available).
             /// </summary>
             public string? CallingUser { get; set; } = "";
-            private string _Message = "";
+
             /// <summary>
             /// Message body of the log entry. Set-only wrapper allows future validation / transformation.
             /// </summary>
-            public string Message
-            {
-                get
-                {
-                    return _Message;
-                }
-                set
-                {
-                    _Message = value;
-                }
-            }
+            public string Message { get; set; } = "";
+
             /// <summary>
             /// Raw exception details captured for the event, usually stack trace and message.
             /// </summary>
             public string? ExceptionValue { get; set; } = "";
+
             /// <summary>
             /// Arbitrary additional structured data associated with the log (serialized when persisted).
             /// </summary>
             public Dictionary<string, object> AdditionalData { get; set; } = new Dictionary<string, object>();
-
-            /// <summary>
-            /// Maps each LogType to its string representation for display purposes.
-            /// </summary>
-            public static readonly Dictionary<Logging.LogType, string> LogTypeToString = new Dictionary<Logging.LogType, string>()
-            {
-                { Logging.LogType.Information, "INFO" },
-                { Logging.LogType.Warning, "WARN" },
-                { Logging.LogType.Critical, "CRIT" },
-                { Logging.LogType.Debug, "DBUG" }
-            };
-
-            /// <summary>
-            /// Maps each LogType to its corresponding console color for colorized output.
-            /// </summary>
-            public static readonly Dictionary<Logging.LogType, ConsoleColor> LogTypeToColor = new Dictionary<Logging.LogType, ConsoleColor>()
-            {
-                { Logging.LogType.Information, ConsoleColor.White },
-                { Logging.LogType.Warning, ConsoleColor.Yellow },
-                { Logging.LogType.Critical, ConsoleColor.Red },
-                { Logging.LogType.Debug, ConsoleColor.Gray }
-            };
         }
 
         /// <summary>

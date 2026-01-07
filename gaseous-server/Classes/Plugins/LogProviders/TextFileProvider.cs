@@ -1,4 +1,6 @@
 
+using System.Data;
+
 namespace gaseous_server.Classes.Plugins.LogProviders
 {
     /// <summary>
@@ -12,38 +14,22 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         /// <inheritdoc/>
         public bool SupportsLogFetch => false;
 
-        private static DateTime lastDiskFlushTime = DateTime.MinValue;
-
         /// <inheritdoc/>
         public Dictionary<string, object>? Settings { get; set; }
 
         /// <inheritdoc/>
         public async Task<bool> LogMessage(Logging.LogItem logItem)
         {
-            try
-            {
-                return await LogMessage(logItem, null);
-            }
-            catch
-            {
-                return false;
-            }
+            return await LogMessage(logItem, null);
         }
 
         /// <inheritdoc/>
-        public async Task<bool> LogMessage(Logging.LogItem logItem, Exception? exception = null)
+        public async Task<bool> LogMessage(Logging.LogItem logItem, Exception? exception)
         {
-            try
-            {
-                var logType = logItem.EventType ?? Logging.LogType.Information;
-                File.AppendAllText(Config.LogFilePath, logItem.EventTime.ToString("yyyyMMdd HHmmss") + ": " + Logging.LogItem.LogTypeToString[logType] + ": " + logItem.Process + " - " + logItem.Message + Environment.NewLine);
+            var logOutput = Newtonsoft.Json.JsonConvert.SerializeObject(logItem, Newtonsoft.Json.Formatting.Indented);
+            await File.AppendAllTextAsync(Config.LogFilePath, logOutput + Environment.NewLine);
 
-                return true;
-            }
-            catch
-            {
-                return false;
-            }
+            return true;
         }
 
         /// <inheritdoc/>
@@ -53,33 +39,42 @@ namespace gaseous_server.Classes.Plugins.LogProviders
             try
             {
                 var logDirectory = Path.GetDirectoryName(Config.LogPath);
-                if (logDirectory != null && Directory.Exists(logDirectory))
+
+                if (logDirectory == null || !Directory.Exists(logDirectory))
                 {
-                    var logFiles = Directory.GetFiles(logDirectory);
-                    var retentionPeriod = TimeSpan.FromDays(Math.Max(Config.LoggingConfiguration.LogRetention, 1));
-                    foreach (var logFile in logFiles)
+                    throw new DirectoryNotFoundException(logDirectory);
+                }
+
+                Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.removing_files_older_than_days_from_path", null, new string[] { Config.LoggingConfiguration.LogRetention.ToString(), logDirectory });
+
+                var logFiles = Directory.GetFiles(logDirectory);
+                var retentionPeriod = TimeSpan.FromDays(Math.Max(Config.LoggingConfiguration.LogRetention, 1));
+                foreach (var logFile in logFiles)
+                {
+                    var fileInfo = new FileInfo(logFile);
+                    if (DateTime.UtcNow - fileInfo.LastAccessTime > retentionPeriod)
                     {
-                        var fileInfo = new FileInfo(logFile);
-                        if (DateTime.Now - fileInfo.LastAccessTime > retentionPeriod)
-                        {
-                            File.Delete(logFile);
-                        }
+                        Logging.LogKey(Logging.LogType.Warning, "process.maintenance", "maintenance.deleting_file", null, new string[] { logFile });
+                        File.Delete(logFile);
                     }
                 }
             }
-            catch
-            { }
+            catch (Exception ex)
+            {
+                // log the exception using the built-in logging system
+                Logging.LogKey(Logging.LogType.Warning, "process.maintenance", "Error during TextFileProvider log maintenance: " + ex.Message, null, null, ex, false, null);
+            }
             return true;
         }
 
         /// <inheritdoc/>
-        public Task<Logging.LogItem> GetLogMessageById(string id)
+        public async Task<Logging.LogItem> GetLogMessageById(string id)
         {
             throw new NotSupportedException();
         }
 
         /// <inheritdoc/>
-        public Task<List<Logging.LogItem>> GetLogMessages(Logging.LogsViewModel model)
+        public async Task<List<Logging.LogItem>> GetLogMessages(Logging.LogsViewModel model)
         {
             throw new NotSupportedException();
         }

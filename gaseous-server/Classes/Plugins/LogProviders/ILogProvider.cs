@@ -39,7 +39,7 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         /// <param name="logItem">The log item to be logged.</param>
         /// <param name="exception">An optional exception associated with the log item. Used for when a log provider encounters an error.</param>
         /// <returns>A task that represents the asynchronous logging operation. The task result contains a boolean indicating whether the logging was successful.</returns>
-        public Task<bool> LogMessage(Logging.LogItem logItem, Exception? exception = null);
+        public Task<bool> LogMessage(Logging.LogItem logItem, Exception? exception);
 
         /// <summary>
         /// Runs maintenance tasks for the log provider.
