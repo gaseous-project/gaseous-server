@@ -2,10 +2,19 @@ using System.Diagnostics;
 
 namespace gaseous_server.Classes.Plugins.LogProviders
 {
+    /// <summary>
+    /// Provides logging functionality using the Windows Event Log.
+    /// </summary>
     public class WindowsEventLogProvider : ILogProvider
     {
         /// <inheritdoc/>
         public string Name => "Windows Event Log Provider";
+
+        /// <inheritdoc/>
+        public List<gaseous_server.Classes.Plugins.PluginManagement.OperatingSystems> SupportedOperatingSystems { get; } = new List<gaseous_server.Classes.Plugins.PluginManagement.OperatingSystems>
+        {
+            gaseous_server.Classes.Plugins.PluginManagement.OperatingSystems.Windows
+        };
 
         /// <inheritdoc/>
         public bool SupportsLogFetch => false;
@@ -19,11 +28,8 @@ namespace gaseous_server.Classes.Plugins.LogProviders
             return await LogMessage(logItem, null);
         }
 
-        private const string WindowsEventLogSource = "GaseousServer";
-        private const string WindowsEventLogName = "Application";
-
         /// <inheritdoc/>
-        public async Task<bool> LogMessage(Logging.LogItem logItem, Exception? exception = null)
+        public async Task<bool> LogMessage(Logging.LogItem logItem, Exception? exception)
         {
             // check if we're on Windows - if not fail gracefully
             if (!OperatingSystem.IsWindows())
@@ -32,6 +38,10 @@ namespace gaseous_server.Classes.Plugins.LogProviders
             }
 
 #pragma warning disable CA1416
+
+            const string WindowsEventLogSource = "GaseousServer";
+            const string WindowsEventLogName = "Application";
+
             // Try to ensure the source exists. This may require elevation; ignore failures.
             try
             {
@@ -76,7 +86,7 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         }
 
         /// <inheritdoc/>
-        public async Task<Logging.LogItem> GetLogMessageById(string id)
+        public async Task<Logging.LogItem?> GetLogMessageById(string id)
         {
             throw new NotSupportedException();
         }

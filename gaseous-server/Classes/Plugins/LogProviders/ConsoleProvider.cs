@@ -9,6 +9,26 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         public string Name => "Console Log Provider";
 
         /// <inheritdoc/>
+        public List<gaseous_server.Classes.Plugins.PluginManagement.OperatingSystems> SupportedOperatingSystems
+        {
+            get
+            {
+                List<gaseous_server.Classes.Plugins.PluginManagement.OperatingSystems> operatingSystems = new List<gaseous_server.Classes.Plugins.PluginManagement.OperatingSystems>
+                {
+                    gaseous_server.Classes.Plugins.PluginManagement.OperatingSystems.Linux,
+                    gaseous_server.Classes.Plugins.PluginManagement.OperatingSystems.macOS
+                };
+
+                if (!PluginManagement.IsRunningAsWindowsService())
+                {
+                    operatingSystems.Add(gaseous_server.Classes.Plugins.PluginManagement.OperatingSystems.Windows);
+                }
+
+                return operatingSystems;
+            }
+        }
+
+        /// <inheritdoc/>
         public bool SupportsLogFetch => false;
 
         /// <inheritdoc/>
@@ -39,7 +59,7 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         }
 
         /// <inheritdoc/>
-        public async Task<Logging.LogItem> GetLogMessageById(string id)
+        public async Task<Logging.LogItem?> GetLogMessageById(string id)
         {
             throw new NotSupportedException();
         }

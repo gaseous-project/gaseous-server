@@ -17,6 +17,11 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         public string Name { get; }
 
         /// <summary>
+        /// Gets the list of operating systems supported by the log provider.
+        /// </summary>
+        public List<gaseous_server.Classes.Plugins.PluginManagement.OperatingSystems> SupportedOperatingSystems { get; }
+
+        /// <summary>
         /// Gets a value indicating whether the log provider supports fetching logs.
         /// </summary>
         public bool SupportsLogFetch { get; }
@@ -56,7 +61,7 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         /// <returns>
         /// The log message with the specified unique identifier.
         /// </returns>
-        public Task<Logging.LogItem> GetLogMessageById(string id);
+        public Task<Logging.LogItem?> GetLogMessageById(string id);
 
         /// <summary>
         /// Fetches log messages based on the provided view model. Requires SupportsLogFetch to be true.

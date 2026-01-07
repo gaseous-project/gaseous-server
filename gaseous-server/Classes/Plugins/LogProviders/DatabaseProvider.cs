@@ -12,6 +12,14 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         public string Name => "Database Log Provider";
 
         /// <inheritdoc/>
+        public List<gaseous_server.Classes.Plugins.PluginManagement.OperatingSystems> SupportedOperatingSystems { get; } = new List<gaseous_server.Classes.Plugins.PluginManagement.OperatingSystems>
+        {
+            gaseous_server.Classes.Plugins.PluginManagement.OperatingSystems.Linux,
+            gaseous_server.Classes.Plugins.PluginManagement.OperatingSystems.macOS,
+            gaseous_server.Classes.Plugins.PluginManagement.OperatingSystems.Windows
+        };
+
+        /// <inheritdoc/>
         public bool SupportsLogFetch => true;
 
         /// <inheritdoc/>
@@ -47,7 +55,7 @@ namespace gaseous_server.Classes.Plugins.LogProviders
         }
 
         /// <inheritdoc/>
-        public async Task<Logging.LogItem> GetLogMessageById(string id)
+        public async Task<Logging.LogItem?> GetLogMessageById(string id)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "SELECT * FROM ServerLogs WHERE Id = @Id LIMIT 1;";
