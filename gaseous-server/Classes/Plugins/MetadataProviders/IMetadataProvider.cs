@@ -9,7 +9,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         /// <summary>
         /// Gets the type of plugin.
         /// </summary>
-        public string PluginType => "MetadataProvider";
+        public gaseous_server.Classes.Plugins.PluginManagement.PluginTypes PluginType => gaseous_server.Classes.Plugins.PluginManagement.PluginTypes.MetadataProvider;
 
         /// <summary>
         /// Gets the name of the plugin.

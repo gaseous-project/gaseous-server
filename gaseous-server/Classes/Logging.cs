@@ -609,6 +609,28 @@ namespace gaseous_server.Classes
             /// Arbitrary additional structured data associated with the log (serialized when persisted).
             /// </summary>
             public Dictionary<string, object> AdditionalData { get; set; } = new Dictionary<string, object>();
+
+            /// <summary>
+            /// Maps each LogType to its string representation for display purposes.
+            /// </summary>
+            public static readonly Dictionary<Logging.LogType, string> LogTypeToString = new Dictionary<Logging.LogType, string>()
+            {
+                { Logging.LogType.Information, "INFO" },
+                { Logging.LogType.Warning, "WARN" },
+                { Logging.LogType.Critical, "CRIT" },
+                { Logging.LogType.Debug, "DBUG" }
+            };
+
+            /// <summary>
+            /// Maps each LogType to its corresponding console color for colorized output.
+            /// </summary>
+            public static readonly Dictionary<Logging.LogType, ConsoleColor> LogTypeToColor = new Dictionary<Logging.LogType, ConsoleColor>()
+            {
+                { Logging.LogType.Information, ConsoleColor.White },
+                { Logging.LogType.Warning, ConsoleColor.Yellow },
+                { Logging.LogType.Critical, ConsoleColor.Red },
+                { Logging.LogType.Debug, ConsoleColor.Gray }
+            };
         }
 
         /// <summary>
