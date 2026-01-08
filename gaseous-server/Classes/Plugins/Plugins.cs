@@ -21,6 +21,11 @@ namespace gaseous_server.Classes.Plugins
             MetadataProvider,
 
             /// <summary>
+            /// A plugin that provides metadata proxy functionality.
+            /// </summary>
+            MetadataProxyProvider,
+
+            /// <summary>
             /// A plugin that provides file signature functionality.
             /// </summary>
             FileSignatureProvider,

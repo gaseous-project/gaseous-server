@@ -24,7 +24,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             _sourceType = sourceType;
         }
 
-        private FileSignature.MetadataSources _sourceType;
+        private FileSignature.MetadataSources _sourceType { get; set; }
 
         /// <summary>
         /// Cache status of a record
@@ -190,16 +190,18 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         }
 
         /// <summary>
-        /// Add a new record to the cache
+        /// Store or update record in the cache
         /// </summary>
         /// <param name="ObjectToCache">
         /// The object to cache
         /// </param>
-        /// <param name="UpdateRecord">
-        /// Whether to update the record if it already exists
-        /// </param>
-        public async Task NewCacheValue<T>(T ObjectToCache, bool UpdateRecord = false)
+        public async Task StoreCacheValue<T>(T ObjectToCache)
         {
+            if (ObjectToCache == null)
+            {
+                throw new ArgumentNullException(nameof(ObjectToCache), "Object to cache cannot be null.");
+            }
+
             // get the object type name
             string ObjectTypeName = ObjectToCache.GetType().Name;
 
@@ -289,8 +291,10 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                 }
             }
 
+            var cacheStatus = await GetCacheStatusAsync(ObjectTypeName, (long)objectDict["Id"]);
+
             string sql = "";
-            if (UpdateRecord == false)
+            if (cacheStatus == CacheStatus.NotPresent)
             {
                 sql = "INSERT INTO `Metadata_" + ObjectTypeName + "` (" + fieldList + ") VALUES (" + valueList + ");";
             }
@@ -301,7 +305,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
 
             // execute sql
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            await db.ExecuteCMDAsync(sql, objectDict);
+            _ = db.ExecuteCMDAsync(sql, objectDict);
         }
 
         /// <summary>

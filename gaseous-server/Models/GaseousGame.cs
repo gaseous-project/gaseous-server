@@ -25,6 +25,9 @@ namespace gaseous_server.Models
         public Dictionary<FileSignature.MetadataSources, List<long>> ClearLogo { get; set; }
     }
 
+    /// <summary>
+    /// Indicates that a property should not be mapped to the database.
+    /// </summary>
     internal class NoDatabaseAttribute : Attribute
     {
     }
