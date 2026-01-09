@@ -223,7 +223,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
         /// <inheritdoc/>
         public async Task<Game?> GetGameAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<Game>("games", id, forceRefresh);
         }
 
         /// <inheritdoc/>
@@ -334,7 +334,10 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
 
             T? metadata = Activator.CreateInstance(typeof(T)) as T;
 
-            var cacheStatus = await Storage.GetCacheStatusAsync(endpoint, id);
+            // get name of type for storage purposes
+            string typeName = typeof(T).Name;
+
+            var cacheStatus = await Storage.GetCacheStatusAsync(typeName, id);
             if (forceLoadStatuses.Contains(cacheStatus) || forceRefresh)
             {
                 // check proxy provider if defined
@@ -350,15 +353,56 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
                     string body = "fields *; where id = " + id + ";";
                     var requestUrl = $"{IGDBUrl}{endpoint}";
                     var headers = IGDBAuthToken.ToHeaders();
-                    var response = await comms.SendRequestAsync<List<T>>(HTTPComms.HttpMethod.POST, requestUrl, headers, body);
-                    if (response.StatusCode == 200 && response.Body != null && response.Body.Count > 0)
+                    var response = await comms.SendRequestAsync<Dictionary<string, object>[]>(HTTPComms.HttpMethod.POST, requestUrl, headers, body);
+                    if (response.StatusCode == 200 && response.Body != null && response.Body.Length > 0)
                     {
-                        T item = response.Body[0];
+                        Dictionary<string, object> item = response.Body[0];
 
-                        // save to storage
-                        _ = Storage.StoreCacheValue<T>(item);
+                        // update any attributes of type DateTimeOffset from epoch seconds to proper DateTimeOffset
+                        var properties = typeof(T).GetProperties();
+                        foreach (var prop in properties)
+                        {
+                            var underlyingType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                            if (underlyingType == typeof(DateTimeOffset))
+                            {
+                                // Check for JsonPropertyName attribute first, fall back to property name
+                                string keyName = prop.Name;
+                                var jsonPropertyNameAttr = (System.Text.Json.Serialization.JsonPropertyNameAttribute?)Attribute.GetCustomAttribute(prop, typeof(System.Text.Json.Serialization.JsonPropertyNameAttribute));
+                                if (jsonPropertyNameAttr != null && !string.IsNullOrEmpty(jsonPropertyNameAttr.Name))
+                                {
+                                    keyName = jsonPropertyNameAttr.Name;
+                                }
+                                else
+                                {
+                                    // Also check Newtonsoft.Json JsonProperty attribute
+                                    var newtonsoftAttr = (Newtonsoft.Json.JsonPropertyAttribute?)Attribute.GetCustomAttribute(prop, typeof(Newtonsoft.Json.JsonPropertyAttribute));
+                                    if (newtonsoftAttr != null && !string.IsNullOrEmpty(newtonsoftAttr.PropertyName))
+                                    {
+                                        keyName = newtonsoftAttr.PropertyName;
+                                    }
+                                }
 
-                        return item;
+                                // Try to find the key in the dictionary (case-insensitive if needed)
+                                string? actualKey = item.Keys.FirstOrDefault(k => k.Equals(keyName, StringComparison.OrdinalIgnoreCase));
+                                if (actualKey != null && long.TryParse(item[actualKey].ToString(), out long epochSeconds))
+                                {
+                                    DateTimeOffset dto = DateTimeOffset.FromUnixTimeSeconds(epochSeconds);
+                                    item[actualKey] = dto;
+                                }
+                            }
+                        }
+
+                        // convert dictionary to target type
+                        string json = System.Text.Json.JsonSerializer.Serialize(item);
+                        T? result = System.Text.Json.JsonSerializer.Deserialize<T>(json);
+
+                        if (result != null)
+                        {
+                            // save to storage
+                            _ = Storage.StoreCacheValue<T>(result);
+
+                            return result;
+                        }
                     }
                 }
             }

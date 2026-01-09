@@ -475,21 +475,31 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// Heavy initialization moved to StartupInitializer (BackgroundService)
+// test run
+var igdbProvider = new gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider.Provider();
+igdbProvider.Settings = new Dictionary<string, object>();
+igdbProvider.Settings.Add("ClientID", Config.IGDB.ClientId);
+igdbProvider.Settings.Add("ClientSecret", Config.IGDB.Secret);
+// igdbProvider.ProxyProvider = new gaseous_server.Classes.Plugins.MetadataProviders.HasheousIGDBProxyProvider();
+var game = await igdbProvider.GetGameAsync(358);
+Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(game, Newtonsoft.Json.Formatting.Indented));
 
-// Start the web server explicitly so we only report RUNNING after Kestrel is accepting connections
-await app.StartAsync();
-try
-{
-    Logging.LogKey(Logging.LogType.Information, "process.startup", "startup.web_server_ready");
-}
-catch { /* logging should not block startup */ }
-await app.WaitForShutdownAsync();
 
-// Shutdown logging providers to flush buffers and cleanup resources
-try
-{
-    Logging.LogKey(Logging.LogType.Information, "process.shutdown", "shutdown.stopping_log_providers");
-}
-catch { /* final log message may fail */ }
-Logging.ShutdownLogProviders();
+// // Heavy initialization moved to StartupInitializer (BackgroundService)
+
+// // Start the web server explicitly so we only report RUNNING after Kestrel is accepting connections
+// await app.StartAsync();
+// try
+// {
+//     Logging.LogKey(Logging.LogType.Information, "process.startup", "startup.web_server_ready");
+// }
+// catch { /* logging should not block startup */ }
+// await app.WaitForShutdownAsync();
+
+// // Shutdown logging providers to flush buffers and cleanup resources
+// try
+// {
+//     Logging.LogKey(Logging.LogType.Information, "process.shutdown", "shutdown.stopping_log_providers");
+// }
+// catch { /* final log message may fail */ }
+// Logging.ShutdownLogProviders();

@@ -16,6 +16,16 @@ namespace gaseous_server.Classes
 
         private static TimeSpan _defaultTimeout = TimeSpan.FromSeconds(30);
 
+        // JsonSerializerOptions configured to handle property hiding/new keyword scenarios
+        private static readonly System.Text.Json.JsonSerializerOptions _jsonOptions = new System.Text.Json.JsonSerializerOptions
+        {
+            PropertyNameCaseInsensitive = true,
+            DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+            IncludeFields = false,
+            // This setting tells the serializer to prefer derived class properties over base class properties
+            TypeInfoResolver = new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver()
+        };
+
         // Rate limiting parameters
         // time window in seconds
         private static int _rateLimitWindow = 60;
@@ -174,15 +184,10 @@ namespace gaseous_server.Classes
             // Clear all previous headers from the HttpClient
             _httpClient.DefaultRequestHeaders.Clear();
 
-            // Set timeout for the request
-            if (timeout.HasValue)
-            {
-                _httpClient.Timeout = timeout.Value;
-            }
-            else
-            {
-                _httpClient.Timeout = _defaultTimeout;
-            }
+            // Build a per-request timeout using a linked cancellation token (avoid mutating HttpClient.Timeout)
+            using var timeoutCts = new System.Threading.CancellationTokenSource(timeout ?? _defaultTimeout);
+            using var linkedCts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+            var effectiveToken = linkedCts.Token;
 
             // Add headers if provided
             if (headers != null)
@@ -242,7 +247,7 @@ namespace gaseous_server.Classes
                 // If rate limit exceeded for this host, wait before sending the request
                 if (shouldWait && waitMs > 0)
                 {
-                    await Task.Delay(waitMs, cancellationToken);
+                    await Task.Delay(waitMs, effectiveToken);
                 }
 
                 try
@@ -255,8 +260,7 @@ namespace gaseous_server.Classes
                         // Add body for POST/PUT requests
                         if (body != null && (method == HttpMethod.POST || method == HttpMethod.PUT))
                         {
-                            string jsonBody = System.Text.Json.JsonSerializer.Serialize(body);
-                            requestMessage.Content = new StringContent(jsonBody, System.Text.Encoding.UTF8, "application/json");
+                            requestMessage.Content = new StringContent(body.ToString());
                         }
 
                         // If resuming a large binary download, add Range header
@@ -266,7 +270,7 @@ namespace gaseous_server.Classes
                         }
 
                         // Send the request (respect cancellation)
-                        httpResponseMessage = await _httpClient.SendAsync(requestMessage, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+                        httpResponseMessage = await _httpClient.SendAsync(requestMessage, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, effectiveToken);
                     }
 
                     // Record this request timestamp for rate limiting (per host)
@@ -309,7 +313,7 @@ namespace gaseous_server.Classes
                         // Chunked download for large payloads, with progress
                         if ((contentLength.HasValue && contentLength.Value >= chunkThresholdBytes) || startingOffset > 0)
                         {
-                            using var stream = await httpResponseMessage.Content.ReadAsStreamAsync(cancellationToken);
+                            using var stream = await httpResponseMessage.Content.ReadAsStreamAsync(effectiveToken);
                             using var ms = new MemoryStream();
                             if (startingOffset > 0)
                             {
@@ -321,7 +325,7 @@ namespace gaseous_server.Classes
                             // If resuming, initial progress starts at startingOffset
                             progressHandler?.Invoke(startingOffset, contentLength.HasValue ? contentLength + startingOffset : null);
                             int read;
-                            while ((read = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken)) > 0)
+                            while ((read = await stream.ReadAsync(buffer, 0, buffer.Length, effectiveToken)) > 0)
                             {
                                 ms.Write(buffer, 0, read);
                                 totalRead += read;
@@ -335,26 +339,26 @@ namespace gaseous_server.Classes
                         }
                         else
                         {
-                            var bytes = await httpResponseMessage.Content.ReadAsByteArrayAsync(cancellationToken);
+                            var bytes = await httpResponseMessage.Content.ReadAsByteArrayAsync(effectiveToken);
                             response.Body = (T)(object)bytes;
                         }
                     }
                     else if (typeof(T) == typeof(string) || (mediaType != null && mediaType.StartsWith("text")))
                     {
-                        string responseBody = await httpResponseMessage.Content.ReadAsStringAsync(cancellationToken);
+                        string responseBody = await httpResponseMessage.Content.ReadAsStringAsync(effectiveToken);
                         response.Body = (T)(object)responseBody;
                     }
                     else if (mediaType != null && mediaType.Contains("json"))
                     {
-                        string responseBody = await httpResponseMessage.Content.ReadAsStringAsync(cancellationToken);
+                        string responseBody = await httpResponseMessage.Content.ReadAsStringAsync(effectiveToken);
                         if (!string.IsNullOrWhiteSpace(responseBody))
                         {
-                            response.Body = System.Text.Json.JsonSerializer.Deserialize<T>(responseBody);
+                            response.Body = System.Text.Json.JsonSerializer.Deserialize<T>(responseBody, _jsonOptions);
                         }
                     }
                     else if (mediaType != null && mediaType.Contains("xml"))
                     {
-                        string responseBody = await httpResponseMessage.Content.ReadAsStringAsync(cancellationToken);
+                        string responseBody = await httpResponseMessage.Content.ReadAsStringAsync(effectiveToken);
                         if (!string.IsNullOrWhiteSpace(responseBody))
                         {
                             var serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
@@ -364,7 +368,7 @@ namespace gaseous_server.Classes
                     }
                     else if (isBinary)
                     {
-                        var bytes = await httpResponseMessage.Content.ReadAsByteArrayAsync(cancellationToken);
+                        var bytes = await httpResponseMessage.Content.ReadAsByteArrayAsync(effectiveToken);
                         // If T is not byte[], attempt to deserialize is risky; return default
                         if (typeof(T) == typeof(byte[]))
                             response.Body = (T)(object)bytes;
@@ -372,10 +376,10 @@ namespace gaseous_server.Classes
                     else
                     {
                         // Fallback: try JSON
-                        string responseBody = await httpResponseMessage.Content.ReadAsStringAsync(cancellationToken);
+                        string responseBody = await httpResponseMessage.Content.ReadAsStringAsync(effectiveToken);
                         if (!string.IsNullOrWhiteSpace(responseBody))
                         {
-                            response.Body = System.Text.Json.JsonSerializer.Deserialize<T>(responseBody);
+                            response.Body = System.Text.Json.JsonSerializer.Deserialize<T>(responseBody, _jsonOptions);
                         }
                     }
 
@@ -404,13 +408,13 @@ namespace gaseous_server.Classes
                             }
                         }
                         // Wait before retrying
-                        await Task.Delay(waitTime * 1000, cancellationToken);
+                        await Task.Delay(waitTime * 1000, effectiveToken);
                     }
                     // Handle 420 Enhance Your Calm response
                     else if (response.StatusCode == 420)
                     {
                         attempts++;
-                        await Task.Delay(_rateLimit420WaitTimeSeconds * 1000, cancellationToken);
+                        await Task.Delay(_rateLimit420WaitTimeSeconds * 1000, effectiveToken);
                     }
                     else
                     {
@@ -425,7 +429,7 @@ namespace gaseous_server.Classes
                     response.ErrorType = ex.GetType().FullName;
                     response.ErrorStackTrace = ex.StackTrace;
                     attempts++;
-                    await Task.Delay(2000 * attempts, cancellationToken);
+                    await Task.Delay(2000 * attempts, effectiveToken);
                 }
             }
 

@@ -1,4 +1,7 @@
-using HasheousClient.Models;
+using System;
+using System.Collections.Generic;
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes
 {

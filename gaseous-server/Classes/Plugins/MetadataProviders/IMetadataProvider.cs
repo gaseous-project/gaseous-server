@@ -5,6 +5,21 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
     /// <summary>
     /// Interface for metadata provider plugins.
     /// All metadata provider plugins must implement this interface, and normalise to the HasheousClient.Models.Metadata.IGDB models.
+    /// 
+    /// Note: Effective version 2 and later:
+    /// Local game metadata content is to be saved in the path ~/.gaseous-server/Data/GameMetadata/Bundles/{SourceType}/{GameId}/
+    /// where {SourceType} is the FileSignature.MetadataSources enum value for the provider (e.g., IGDB, TheGamesDB, etc), and {GameId} is the unique identifier for the game in that metadata source.
+    /// Each metadata provider is responsible for managing its own local storage within that path.
+    /// Content directories (images and videos) should be stored in subdirectories with the name of the content type:
+    /// - artwork
+    /// - boxart
+    /// - clearlogos
+    /// - covers
+    /// - fanart
+    /// - screenshots
+    /// - videos
+    /// Each metadata provider should implement caching and retrieval logic as needed, and is expected to handle mapping content types to standardized names when metadata is requested.
+    /// Each metadata provider should also be able to cope with the deletion of local cached content, and re-download it as necessary - as maintenance processes may clear out unused cached content periodically.
     /// </summary>
     public interface IMetadataProvider
     {

@@ -43,7 +43,6 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                     HasheousClient.WebApp.HttpHelper.Headers.Add("Pragma", "no-cache");
                 }
 
-                Console.WriteLine(HasheousClient.WebApp.HttpHelper.BaseUri);
                 HasheousClient.Models.LookupItemModel? HasheousResult = null;
                 try
                 {

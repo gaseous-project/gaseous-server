@@ -17,9 +17,9 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         public string Name { get; }
 
         /// <summary>
-        /// Gets or sets the source type of metadata provider.
+        /// Gets the source type of metadata provider.
         /// </summary>
-        public FileSignature.MetadataSources SourceType { get; set; }
+        public FileSignature.MetadataSources SourceType { get; }
 
         /// <summary>
         /// Gets or sets the configuration settings for the metadata provider plugin.
