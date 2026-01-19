@@ -36,7 +36,7 @@
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="8.0.22" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.MicrosoftAccount" Version="8.0.22" />
-    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.22" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="8.0.23" />
   <!-- Enable Windows Service hosting and EventLog logging when running on Windows -->
   <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.1" />
   <PackageReference Include="Microsoft.Extensions.Logging.EventLog" Version="10.0.1" />
