@@ -1,3 +1,5 @@
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
+
 namespace gaseous_server.Classes.Plugins.MetadataProviders
 {
     /// <summary>
@@ -46,13 +48,12 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         public Task<T?> GetEntityAsync<T>(string itemType, long id) where T : class;
 
         /// <summary>
-        /// Asynchronously searches for entities of the specified type based on a query string.
+        /// Asynchronously searches for games of the specified type based on a query string.
         /// </summary>
-        /// <typeparam name="T">The type of entities to search for.</typeparam>
-        /// <param name="itemType">The type of items being searched.</param>
+        /// <param name="searchType">The type of search to perform.</param>
         /// <param name="platformId">The platform identifier to filter search results.</param>
         /// <param name="searchCandidates">The list of search candidate strings.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains an array of matching entities, or null if none are found.</returns>
-        public Task<T[]?> SearchEntitiesAsync<T>(string itemType, long platformId, List<string> searchCandidates) where T : class;
+        public Task<Game[]?> SearchGamesAsync(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType searchType, long platformId, List<string> searchCandidates);
     }
 }

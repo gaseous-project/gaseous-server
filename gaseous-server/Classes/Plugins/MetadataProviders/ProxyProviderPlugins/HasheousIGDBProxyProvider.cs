@@ -82,20 +82,19 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         }
 
         /// <summary>
-        /// Searches for entities of type T. Not implemented for Hasheous IGDB proxy.
+        /// Searches for games.
         /// </summary>
-        /// <typeparam name="T">The metadata model type to return.</typeparam>
-        /// <param name="itemType">The IGDB item type name.</param>
+        /// <param name="searchType">The type of search to perform.</param>
         /// <param name="platformId">The platform identifier to filter search results.</param>
         /// <param name="searchCandidates">The list of search candidate strings.</param>
-        /// <returns>An array of entities or null.</returns>
-        public async Task<T[]?> SearchEntitiesAsync<T>(string itemType, long platformId, List<string> searchCandidates) where T : class
+        /// <returns>An array of games or null.</returns>
+        public async Task<gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game[]?> SearchGamesAsync(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType searchType, long platformId, List<string> searchCandidates)
         {
-            List<T> results = new List<T>();
+            List<gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game> results = new List<gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game>();
 
             foreach (var candidate in searchCandidates)
             {
-                var response = await hasheous.GetMetadataProxy_SearchGameAsync<T>(MetadataSources.IGDB, platformId.ToString(), candidate);
+                var response = await hasheous.GetMetadataProxy_SearchGameAsync<gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game>(MetadataSources.IGDB, platformId.ToString(), candidate);
                 if (response != null)
                 {
                     foreach (var item in response)
@@ -115,7 +114,27 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                         });
                         if (!exists)
                         {
-                            results.Add(item);
+                            // hasheous IGDB proxy search is always a search type search, so if searchType is not "search", we need to filter results here
+                            switch (searchType)
+                            {
+                                case gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.where:
+                                    // exact match only (on name)
+                                    if (string.Equals(item.Name, candidate, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        results.Add(item);
+                                    }
+                                    break;
+                                case gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.wherefuzzy:
+                                    // fuzzy match - contains
+                                    if (item.Name != null && item.Name.IndexOf(candidate, StringComparison.OrdinalIgnoreCase) >= 0)
+                                    {
+                                        results.Add(item);
+                                    }
+                                    break;
+                                default:
+                                    results.Add(item);
+                                    break;
+                            }
                         }
                     }
                 }

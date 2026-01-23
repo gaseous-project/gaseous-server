@@ -316,7 +316,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
                 {
                     ProxyProvider.Storage = this.Storage;
                 }
-                var proxyResult = await ProxyProvider.SearchEntitiesAsync<Game>("games", platformId, searchCandidates);
+                var proxyResult = await ProxyProvider.SearchGamesAsync(searchType, platformId, searchCandidates);
 
                 return proxyResult;
             }

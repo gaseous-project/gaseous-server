@@ -484,7 +484,7 @@ igdbProvider.ProxyProvider = new gaseous_server.Classes.Plugins.MetadataProvider
 // var game = await igdbProvider.GetGameAsync(358);
 // Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(game, Newtonsoft.Json.Formatting.Indented));
 
-var searchResults = await igdbProvider.SearchGamesAsync(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.search, 18, new List<string>() { "Super Mario Bros", "Super Mario Bros." });
+var searchResults = await igdbProvider.SearchGamesAsync(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.wherefuzzy, 18, new List<string>() { "Super Mario Bros", "Super Mario Bros." });
 Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(searchResults, Newtonsoft.Json.Formatting.Indented));
 
 
