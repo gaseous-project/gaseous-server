@@ -41,6 +41,9 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                 {
                     _hasheous = new HasheousClient.Hasheous();
 
+                    // Configure the Hasheous client
+                    HasheousClient.WebApp.HttpHelper.BaseUri = Config.MetadataConfiguration.HasheousHost;
+
                     // Set the API key for Hasheous Proxy
                     if (HasheousClient.WebApp.HttpHelper.ClientKey == null || HasheousClient.WebApp.HttpHelper.ClientKey != Config.MetadataConfiguration.HasheousClientAPIKey)
                     {
@@ -83,11 +86,42 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         /// </summary>
         /// <typeparam name="T">The metadata model type to return.</typeparam>
         /// <param name="itemType">The IGDB item type name.</param>
+        /// <param name="platformId">The platform identifier to filter search results.</param>
         /// <param name="searchCandidates">The list of search candidate strings.</param>
         /// <returns>An array of entities or null.</returns>
-        public Task<T[]?> SearchEntitiesAsync<T>(string itemType, List<string> searchCandidates) where T : class
+        public async Task<T[]?> SearchEntitiesAsync<T>(string itemType, long platformId, List<string> searchCandidates) where T : class
         {
-            throw new NotImplementedException();
+            List<T> results = new List<T>();
+
+            foreach (var candidate in searchCandidates)
+            {
+                var response = await hasheous.GetMetadataProxy_SearchGameAsync<T>(MetadataSources.IGDB, platformId.ToString(), candidate);
+                if (response != null)
+                {
+                    foreach (var item in response)
+                    {
+                        // check if item is already in results by Id property
+                        bool exists = results.Any(r =>
+                        {
+                            var idProp = r.GetType().GetProperty("Id") ?? r.GetType().GetProperty("ID") ?? r.GetType().GetProperty("id");
+                            var itemIdProp = item.GetType().GetProperty("Id") ?? item.GetType().GetProperty("ID") ?? item.GetType().GetProperty("id");
+                            if (idProp != null && itemIdProp != null)
+                            {
+                                var rId = idProp.GetValue(r);
+                                var itemId = itemIdProp.GetValue(item);
+                                return rId != null && itemId != null && rId.Equals(itemId);
+                            }
+                            return false;
+                        });
+                        if (!exists)
+                        {
+                            results.Add(item);
+                        }
+                    }
+                }
+            }
+
+            return results.Distinct().ToArray();
         }
 
         private async Task<T?> GetGameBundleAsync<T>(long id) where T : class

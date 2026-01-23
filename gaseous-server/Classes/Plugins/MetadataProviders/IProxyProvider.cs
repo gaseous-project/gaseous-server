@@ -50,8 +50,9 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         /// </summary>
         /// <typeparam name="T">The type of entities to search for.</typeparam>
         /// <param name="itemType">The type of items being searched.</param>
+        /// <param name="platformId">The platform identifier to filter search results.</param>
         /// <param name="searchCandidates">The list of search candidate strings.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains an array of matching entities, or null if none are found.</returns>
-        public Task<T[]?> SearchEntitiesAsync<T>(string itemType, List<string> searchCandidates) where T : class;
+        public Task<T[]?> SearchEntitiesAsync<T>(string itemType, long platformId, List<string> searchCandidates) where T : class;
     }
 }

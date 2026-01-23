@@ -316,7 +316,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
                 {
                     ProxyProvider.Storage = this.Storage;
                 }
-                var proxyResult = await ProxyProvider.SearchEntitiesAsync<Game>("games", searchCandidates);
+                var proxyResult = await ProxyProvider.SearchEntitiesAsync<Game>("games", platformId, searchCandidates);
 
                 return proxyResult;
             }
@@ -357,7 +357,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
                     }
                 }
 
-                return results.ToArray();
+                return results.DistinctBy(g => g.Id).ToArray();
             }
 
             return null;
