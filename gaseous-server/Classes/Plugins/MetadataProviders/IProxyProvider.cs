@@ -22,6 +22,11 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         public FileSignature.MetadataSources SourceType { get; }
 
         /// <summary>
+        /// Gets the storage handler for this metadata proxy provider (if required).
+        /// </summary>
+        public gaseous_server.Classes.Plugins.MetadataProviders.Storage? Storage { get; set; }
+
+        /// <summary>
         /// Gets or sets the configuration settings for the metadata provider plugin.
         /// </summary>
         public Dictionary<string, object>? Settings { get; set; }
@@ -45,8 +50,8 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         /// </summary>
         /// <typeparam name="T">The type of entities to search for.</typeparam>
         /// <param name="itemType">The type of items being searched.</param>
-        /// <param name="query">The search query string.</param>
+        /// <param name="searchCandidates">The list of search candidate strings.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains an array of matching entities, or null if none are found.</returns>
-        public Task<T[]?> SearchEntitiesAsync<T>(string itemType, string query) where T : class;
+        public Task<T[]?> SearchEntitiesAsync<T>(string itemType, List<string> searchCandidates) where T : class;
     }
 }

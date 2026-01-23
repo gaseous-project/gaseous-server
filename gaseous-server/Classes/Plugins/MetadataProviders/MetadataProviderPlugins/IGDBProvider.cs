@@ -163,19 +163,19 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
         /// <inheritdoc/>
         public async Task<AgeRatingOrganization?> GetAgeRatingOrganizationAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<AgeRatingOrganization>("age_rating_organizations", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<AlternativeName?> GetAlternativeNameAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<AlternativeName>("alternative_names", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<Artwork?> GetArtworkAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<Artwork>("artworks", id, forceRefresh);
         }
 
         /// <inheritdoc/>
@@ -187,37 +187,37 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
         /// <inheritdoc/>
         public async Task<Collection?> GetCollectionAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<Collection>("collections", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<Company?> GetCompanyAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<Company>("companies", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<CompanyLogo?> GetCompanyLogoAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<CompanyLogo>("company_logos", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<Cover?> GetCoverAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<Cover>("covers", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<ExternalGame?> GetExternalGameAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<ExternalGame>("external_games", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<Franchise?> GetFranchiseAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<Franchise>("franchises", id, forceRefresh);
         }
 
         /// <inheritdoc/>
@@ -229,85 +229,121 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
         /// <inheritdoc/>
         public async Task<GameLocalization?> GetGameLocalizationAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<GameLocalization>("game_localizations", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<GameMode?> GetGameModeAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<GameMode>("game_modes", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<GameVideo?> GetGameVideoAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<GameVideo>("game_videos", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<Genre?> GetGenreAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<Genre>("genres", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<InvolvedCompany?> GetInvolvedCompanyAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<InvolvedCompany>("involved_companies", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<MultiplayerMode?> GetMultiplayerModeAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<MultiplayerMode>("multiplayer_modes", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<Platform?> GetPlatformAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<Platform>("platforms", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<PlatformLogo?> GetPlatformLogoAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<PlatformLogo>("platform_logos", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<PlatformVersion?> GetPlatformVersionAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<PlatformVersion>("platform_versions", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<Region?> GetRegionAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<Region>("regions", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<ReleaseDate?> GetReleaseDateAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<ReleaseDate>("release_dates", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<Screenshot?> GetScreenshotAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<Screenshot>("screenshots", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<Theme?> GetThemeAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<Theme>("themes", id, forceRefresh);
         }
 
         /// <inheritdoc/>
         public async Task<Game[]?> SearchGamesAsync(SearchType searchType, long platformId, List<string> searchCandidates)
         {
-            throw new NotImplementedException();
+            if (ProxyProvider != null)
+            {
+                // use proxy provider if defined
+                if (ProxyProvider.Storage == null)
+                {
+                    ProxyProvider.Storage = this.Storage;
+                }
+                var proxyResult = await ProxyProvider.SearchEntitiesAsync<Game>("games", searchCandidates);
+
+                return proxyResult;
+            }
+
+            if (IGDBAuthToken != null)
+            {
+                string searchFields = "fields id,name,slug,platforms,summary; ";
+                foreach (var candidate in searchCandidates)
+                {
+                    string searchBody = "";
+                    string escCandidate = candidate.Replace("\\", "\\\\").Replace("\"", "\\\"");
+                    switch (searchType)
+                    {
+                        case SearchType.search:
+                            searchBody = $"search \"{escCandidate}\"; where platforms = {platformId};";
+                            break;
+                        case SearchType.wherefuzzy:
+                            searchBody = $"where platforms = ({platformId}) & name ~ *\"{escCandidate}\"*;";
+                            break;
+                        case SearchType.where:
+                            searchBody = $"where platforms = ({platformId}) & name ~ \"{escCandidate}\";";
+                            break;
+                    }
+
+                    searchFields += searchBody;
+
+                    // send request
+                }
+            }
         }
 
         /// <summary>
@@ -343,7 +379,15 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
                 // check proxy provider if defined
                 if (ProxyProvider != null)
                 {
-                    throw new NotImplementedException("Proxy provider integration is not yet implemented.");
+                    if (ProxyProvider.Storage == null)
+                    {
+                        ProxyProvider.Storage = this.Storage;
+                    }
+                    var proxyResult = await ProxyProvider.GetEntityAsync<T>(endpoint, id);
+                    if (proxyResult != null)
+                    {
+                        return null;
+                    }
                 }
 
                 // fall back to direct IGDB API call if no proxy provider available

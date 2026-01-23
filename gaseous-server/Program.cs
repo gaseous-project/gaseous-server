@@ -480,7 +480,7 @@ var igdbProvider = new gaseous_server.Classes.Plugins.MetadataProviders.IGDBProv
 igdbProvider.Settings = new Dictionary<string, object>();
 igdbProvider.Settings.Add("ClientID", Config.IGDB.ClientId);
 igdbProvider.Settings.Add("ClientSecret", Config.IGDB.Secret);
-// igdbProvider.ProxyProvider = new gaseous_server.Classes.Plugins.MetadataProviders.HasheousIGDBProxyProvider();
+igdbProvider.ProxyProvider = new gaseous_server.Classes.Plugins.MetadataProviders.HasheousIGDBProxyProvider();
 var game = await igdbProvider.GetGameAsync(358);
 Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(game, Newtonsoft.Json.Formatting.Indented));
 
