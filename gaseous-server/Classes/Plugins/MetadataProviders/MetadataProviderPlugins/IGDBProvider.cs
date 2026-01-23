@@ -307,6 +307,8 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
         /// <inheritdoc/>
         public async Task<Game[]?> SearchGamesAsync(SearchType searchType, long platformId, List<string> searchCandidates)
         {
+            List<Game>? results = new List<Game>();
+
             if (ProxyProvider != null)
             {
                 // use proxy provider if defined
@@ -321,29 +323,44 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
 
             if (IGDBAuthToken != null)
             {
-                string searchFields = "fields id,name,slug,platforms,summary; ";
                 foreach (var candidate in searchCandidates)
                 {
-                    string searchBody = "";
+                    string searchBody = "fields id,name,slug,platforms,summary; ";
                     string escCandidate = candidate.Replace("\\", "\\\\").Replace("\"", "\\\"");
                     switch (searchType)
                     {
                         case SearchType.search:
-                            searchBody = $"search \"{escCandidate}\"; where platforms = {platformId};";
+                            searchBody += $"search \"{escCandidate}\"; where platforms = {platformId};";
                             break;
                         case SearchType.wherefuzzy:
-                            searchBody = $"where platforms = ({platformId}) & name ~ *\"{escCandidate}\"*;";
+                            searchBody += $"where platforms = ({platformId}) & name ~ *\"{escCandidate}\"*;";
                             break;
                         case SearchType.where:
-                            searchBody = $"where platforms = ({platformId}) & name ~ \"{escCandidate}\";";
+                            searchBody += $"where platforms = ({platformId}) & name ~ \"{escCandidate}\";";
                             break;
                     }
 
-                    searchFields += searchBody;
-
                     // send request
+                    var requestUrl = $"{IGDBUrl}games";
+                    var headers = IGDBAuthToken.ToHeaders();
+                    var response = await comms.SendRequestAsync<Dictionary<string, object>[]>(HTTPComms.HttpMethod.POST, requestUrl, headers, searchBody);
+                    if (response.StatusCode == 200 && response.Body != null && response.Body.Length > 0)
+                    {
+                        List<Dictionary<string, object>> games = response.Body.ToList();
+
+                        foreach (var game in games)
+                        {
+                            Game? result = ConvertToEntity<Game>(game);
+
+                            results.Add(result!);
+                        }
+                    }
                 }
+
+                return results.ToArray();
             }
+
+            return null;
         }
 
         /// <summary>
@@ -402,43 +419,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
                     {
                         Dictionary<string, object> item = response.Body[0];
 
-                        // update any attributes of type DateTimeOffset from epoch seconds to proper DateTimeOffset
-                        var properties = typeof(T).GetProperties();
-                        foreach (var prop in properties)
-                        {
-                            var underlyingType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
-                            if (underlyingType == typeof(DateTimeOffset))
-                            {
-                                // Check for JsonPropertyName attribute first, fall back to property name
-                                string keyName = prop.Name;
-                                var jsonPropertyNameAttr = (System.Text.Json.Serialization.JsonPropertyNameAttribute?)Attribute.GetCustomAttribute(prop, typeof(System.Text.Json.Serialization.JsonPropertyNameAttribute));
-                                if (jsonPropertyNameAttr != null && !string.IsNullOrEmpty(jsonPropertyNameAttr.Name))
-                                {
-                                    keyName = jsonPropertyNameAttr.Name;
-                                }
-                                else
-                                {
-                                    // Also check Newtonsoft.Json JsonProperty attribute
-                                    var newtonsoftAttr = (Newtonsoft.Json.JsonPropertyAttribute?)Attribute.GetCustomAttribute(prop, typeof(Newtonsoft.Json.JsonPropertyAttribute));
-                                    if (newtonsoftAttr != null && !string.IsNullOrEmpty(newtonsoftAttr.PropertyName))
-                                    {
-                                        keyName = newtonsoftAttr.PropertyName;
-                                    }
-                                }
-
-                                // Try to find the key in the dictionary (case-insensitive if needed)
-                                string? actualKey = item.Keys.FirstOrDefault(k => k.Equals(keyName, StringComparison.OrdinalIgnoreCase));
-                                if (actualKey != null && long.TryParse(item[actualKey].ToString(), out long epochSeconds))
-                                {
-                                    DateTimeOffset dto = DateTimeOffset.FromUnixTimeSeconds(epochSeconds);
-                                    item[actualKey] = dto;
-                                }
-                            }
-                        }
-
-                        // convert dictionary to target type
-                        string json = System.Text.Json.JsonSerializer.Serialize(item);
-                        T? result = System.Text.Json.JsonSerializer.Deserialize<T>(json);
+                        T? result = ConvertToEntity<T>(item);
 
                         if (result != null)
                         {
@@ -462,6 +443,49 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
             }
 
             return null;
+        }
+
+        private static T ConvertToEntity<T>(Dictionary<string, object> item) where T : class
+        {
+            // update any attributes of type DateTimeOffset from epoch seconds to proper DateTimeOffset
+            var properties = typeof(T).GetProperties();
+            foreach (var prop in properties)
+            {
+                var underlyingType = Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType;
+                if (underlyingType == typeof(DateTimeOffset))
+                {
+                    // Check for JsonPropertyName attribute first, fall back to property name
+                    string keyName = prop.Name;
+                    var jsonPropertyNameAttr = (System.Text.Json.Serialization.JsonPropertyNameAttribute?)Attribute.GetCustomAttribute(prop, typeof(System.Text.Json.Serialization.JsonPropertyNameAttribute));
+                    if (jsonPropertyNameAttr != null && !string.IsNullOrEmpty(jsonPropertyNameAttr.Name))
+                    {
+                        keyName = jsonPropertyNameAttr.Name;
+                    }
+                    else
+                    {
+                        // Also check Newtonsoft.Json JsonProperty attribute
+                        var newtonsoftAttr = (Newtonsoft.Json.JsonPropertyAttribute?)Attribute.GetCustomAttribute(prop, typeof(Newtonsoft.Json.JsonPropertyAttribute));
+                        if (newtonsoftAttr != null && !string.IsNullOrEmpty(newtonsoftAttr.PropertyName))
+                        {
+                            keyName = newtonsoftAttr.PropertyName;
+                        }
+                    }
+
+                    // Try to find the key in the dictionary (case-insensitive if needed)
+                    string? actualKey = item.Keys.FirstOrDefault(k => k.Equals(keyName, StringComparison.OrdinalIgnoreCase));
+                    if (actualKey != null && long.TryParse(item[actualKey].ToString(), out long epochSeconds))
+                    {
+                        DateTimeOffset dto = DateTimeOffset.FromUnixTimeSeconds(epochSeconds);
+                        item[actualKey] = dto;
+                    }
+                }
+            }
+
+            // convert dictionary to target type
+            string json = System.Text.Json.JsonSerializer.Serialize(item);
+            T? result = System.Text.Json.JsonSerializer.Deserialize<T>(json);
+
+            return result!;
         }
     }
 }
