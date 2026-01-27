@@ -55,5 +55,25 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         /// <param name="searchCandidates">The list of search candidate strings.</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains an array of matching entities, or null if none are found.</returns>
         public Task<Game[]?> SearchGamesAsync(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType searchType, long platformId, List<string> searchCandidates);
+
+        /// <summary>
+        /// Retrieves an image from a given URL.
+        /// </summary>
+        /// <param name="gameId">
+        /// The unique identifier of the game the image is associated with.
+        /// </param>
+        /// <param name="url">
+        /// The URL of the image to retrieve.
+        /// </param>
+        /// <param name="imageType">
+        /// The type of image being retrieved (e.g., Cover, Screenshot).
+        /// </param>
+        /// <param name="imageSize">
+        /// The size of the image being retrieved (e.g., Small, Medium, Large, Original).
+        /// </param>
+        /// <returns>
+        /// A byte array representing the image data.
+        /// </returns>
+        public Task<byte[]?> GetImageAsync(long gameId, string url, ImageType imageType, ImageSize imageSize);
     }
 }

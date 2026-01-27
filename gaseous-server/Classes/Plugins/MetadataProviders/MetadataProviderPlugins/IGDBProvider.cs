@@ -364,6 +364,19 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
         }
 
         /// <summary>
+        /// Retrieves an image from IGDB.
+        /// </summary>
+        /// <param name="gameId">The unique identifier of the game the image is associated with.</param>
+        /// <param name="url">For IGDB images, this is the image id string.</param>
+        /// <param name="imageType">The type of image being retrieved (e.g., Cover, Screenshot).</param>
+        /// <param name="imageSize">The desired size of the image.</param>
+        /// <returns>A byte array containing the image data, or null if not found.</returns>
+        public async Task<byte[]?> GetImageAsync(long gameId, string url, ImageType imageType, ImageSize imageSize)
+        {
+            return null;
+        }
+
+        /// <summary>
         /// Generic method to get an entity by endpoint and ID.
         /// </summary>
         /// <typeparam name="T"></typeparam>

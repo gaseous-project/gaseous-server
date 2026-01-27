@@ -1,4 +1,5 @@
 
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using HasheousClient.Models;
 using SharpCompress.Archives;
 using SharpCompress.Common;
@@ -141,6 +142,19 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             }
 
             return results.Distinct().ToArray();
+        }
+
+        /// <inheritdoc/>
+        public async Task<byte[]?> GetImageAsync(long gameId, string url, ImageType imageType, ImageSize imageSize)
+        {
+            var entity = await GetEntityAsync<Game>("games", gameId);
+
+            if (entity != null)
+            {
+
+            }
+
+            return null;
         }
 
         private async Task<T?> GetGameBundleAsync<T>(long id) where T : class

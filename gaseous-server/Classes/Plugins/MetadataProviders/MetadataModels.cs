@@ -400,4 +400,66 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes
         /// </summary>
         searchNoPlatform = 3
     }
+
+    /// <summary>
+    /// Specifies the type of image asset for metadata.
+    /// </summary>
+    public enum ImageType
+    {
+        /// <summary>
+        /// Represents a cover image asset.
+        /// </summary>
+        Cover,
+
+        /// <summary>
+        /// Represents a screenshot image asset.
+        /// </summary>
+        Screenshot,
+
+        /// <summary>
+        /// Represents an artwork image asset.
+        /// </summary>
+        Artwork,
+
+        /// <summary>
+        /// Represents a logo image asset.
+        /// </summary>
+        Logo,
+
+        /// <summary>
+        /// Represents a clear logo image asset.
+        /// </summary>
+        ClearLogo,
+
+        /// <summary>
+        /// Represents a platform logo image asset.
+        /// </summary>
+        PlatformLogo
+    }
+
+    /// <summary>
+    /// Specifies the size of an image asset for metadata.
+    /// </summary>
+    public enum ImageSize
+    {
+        /// <summary>
+        /// Small image size. Resolution of 150x225 pixels.
+        /// </summary>
+        Small,
+
+        /// <summary>
+        /// Medium image size. Resolution of 300x450 pixels.
+        /// </summary>
+        Medium,
+
+        /// <summary>
+        /// Large image size. Resolution of 600x900 pixels.
+        /// </summary>
+        Large,
+
+        /// <summary>
+        /// Original image size. Resolution as provided by the source.
+        /// </summary>
+        Original
+    }
 }
