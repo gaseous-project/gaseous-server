@@ -477,12 +477,14 @@ app.Use(async (context, next) =>
 
 // test run
 var igdbProvider = new gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider.Provider();
-igdbProvider.Settings = new Dictionary<string, object>();
-igdbProvider.Settings.Add("ClientID", Config.IGDB.ClientId);
-igdbProvider.Settings.Add("ClientSecret", Config.IGDB.Secret);
+igdbProvider.Settings = new Dictionary<string, object>
+{
+    { "ClientID", Config.IGDB.ClientId },
+    { "ClientSecret", Config.IGDB.Secret }
+};
 igdbProvider.ProxyProvider = new gaseous_server.Classes.Plugins.MetadataProviders.HasheousIGDBProxyProvider();
-// var game = await igdbProvider.GetGameAsync(358);
-// Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(game, Newtonsoft.Json.Formatting.Indented));
+var game = await igdbProvider.GetGameAsync(358);
+Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(game, Newtonsoft.Json.Formatting.Indented));
 
 var searchResults = await igdbProvider.SearchGamesAsync(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.wherefuzzy, 18, new List<string>() { "Super Mario Bros", "Super Mario Bros." });
 Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(searchResults, Newtonsoft.Json.Formatting.Indented));
