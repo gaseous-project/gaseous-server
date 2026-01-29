@@ -145,15 +145,58 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         }
 
         /// <inheritdoc/>
-        public async Task<byte[]?> GetImageAsync(long gameId, string url, ImageType imageType, ImageSize imageSize)
+        public async Task<byte[]?> GetGameImageAsync(long gameId, string url, ImageType imageType, ImageSize imageSize)
         {
-            var entity = await GetEntityAsync<Game>("games", gameId);
+            // we should have a bundle available for the game - attempt to load image from bundle storage
+            string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, gameId);
 
-            if (entity != null)
+            if (Directory.Exists(bundlePath))
             {
+                string imageTypePath = "";
+                switch (imageType)
+                {
+                    case ImageType.Artwork:
+                        imageTypePath = "artworks";
+                        break;
+                    case ImageType.Cover:
+                        imageTypePath = "cover";
+                        break;
+                    case ImageType.Screenshot:
+                        imageTypePath = "screenshots";
+                        break;
+                }
 
+                if (!String.IsNullOrEmpty(imageTypePath))
+                {
+                    string imagePath = Path.Combine(bundlePath, imageTypePath, url + ".jpg");
+                    if (File.Exists(imagePath))
+                    {
+                        return await File.ReadAllBytesAsync(imagePath);
+                    }
+                }
             }
 
+            // image not found in bundle, attempt to download directly from Hasheous Proxy
+            string localCachedImagePath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, "HasheousProxyImages", SourceType.ToString(), gameId.ToString(), imageType.ToString());
+            string localCachedImagePathFile = Path.Combine(localCachedImagePath, url + ".jpg");
+            if (File.Exists(localCachedImagePathFile))
+            {
+                return await File.ReadAllBytesAsync(localCachedImagePathFile);
+            }
+            // image not in cache - download from Hasheous Proxy
+            Uri imageUri = new Uri($"{Config.MetadataConfiguration.HasheousHost}api/v1/MetadataProxy/Images/IGDB/{gameId}/{url}.jpg");
+            if (!Directory.Exists(localCachedImagePath))
+            {
+                Directory.CreateDirectory(localCachedImagePath);
+            }
+            // download the image
+            var response = await comms.DownloadToFileAsync(imageUri, localCachedImagePathFile);
+            if (response.StatusCode == 200)
+            {
+                return await File.ReadAllBytesAsync(localCachedImagePathFile);
+            }
+
+            // download failed or image not found
             return null;
         }
 
@@ -223,7 +266,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             if (forceDownloadBundle)
             {
                 // download the bundle via Hasheous Proxy
-                string bundleUrl = $"{Config.MetadataConfiguration.HasheousHost}/api/v1/MetadataProxy/Bundles/IGDB/{id}.bundle";
+                Uri bundleUrl = new Uri($"{Config.MetadataConfiguration.HasheousHost}api/v1/MetadataProxy/Bundles/IGDB/{id}.bundle");
                 string downloadDirectory = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, Path.GetRandomFileName());
                 string downloadedBundlePath = Path.Combine(downloadDirectory, $"{id}.bundle.zip");
                 if (Directory.Exists(downloadDirectory) == true)

@@ -422,11 +422,6 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes
         Artwork,
 
         /// <summary>
-        /// Represents a logo image asset.
-        /// </summary>
-        Logo,
-
-        /// <summary>
         /// Represents a clear logo image asset.
         /// </summary>
         ClearLogo,

@@ -179,7 +179,7 @@ namespace gaseous_server.Classes
         /// <param name="chunkThresholdBytes">If content length exceeds this, stream in chunks; default 5 MB. Ignored unless T is byte[].</param>
         /// <param name="enableResume">When true and server supports ranges, attempts to resume downloads starting at <paramref name="resumeFromBytes"/>.</param>
         /// <param name="resumeFromBytes">Starting offset in bytes for resuming a download. Effective only when <paramref name="enableResume"/> is true and server supports ranges.</param>
-        public async Task<HttpResponse<T>> SendRequestAsync<T>(HttpMethod method, string url, Dictionary<string, string>? headers = null, object? body = null, TimeSpan? timeout = null, int retryCount = 0, System.Threading.CancellationToken cancellationToken = default, bool returnRawResponse = false, Action<long, long?>? progressHandler = null, long chunkThresholdBytes = 5 * 1024 * 1024, bool enableResume = true, long resumeFromBytes = 0)
+        public async Task<HttpResponse<T>> SendRequestAsync<T>(HttpMethod method, Uri url, Dictionary<string, string>? headers = null, object? body = null, TimeSpan? timeout = null, int retryCount = 0, System.Threading.CancellationToken cancellationToken = default, bool returnRawResponse = false, Action<long, long?>? progressHandler = null, long chunkThresholdBytes = 5 * 1024 * 1024, bool enableResume = true, long resumeFromBytes = 0)
         {
             // Clear all previous headers from the HttpClient
             _httpClient.DefaultRequestHeaders.Clear();
@@ -209,7 +209,7 @@ namespace gaseous_server.Classes
             {
                 // --- Rate limiting logic scoped to host ---
                 // Extract host from URL
-                var uri = new Uri(url);
+                var uri = url;
                 string host = uri.Host;
                 bool shouldWait = false;
                 int waitMs = 0;
@@ -443,7 +443,7 @@ namespace gaseous_server.Classes
         /// <param name="url">The URL to inspect.</param>
         /// <param name="cancellationToken">Cancellation token.</param>
         /// <returns>Tuple indicating AcceptRanges (bytes) and ContentLength if known.</returns>
-        public async Task<(bool AcceptRanges, long? ContentLength)> CheckDownloadCapabilitiesAsync(string url, System.Threading.CancellationToken cancellationToken = default)
+        public async Task<(bool AcceptRanges, long? ContentLength)> CheckDownloadCapabilitiesAsync(Uri url, System.Threading.CancellationToken cancellationToken = default)
         {
             using var headRequest = new HttpRequestMessage(new System.Net.Http.HttpMethod("HEAD"), url);
             var headResponse = await _httpClient.SendAsync(headRequest, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancellationToken);
@@ -469,9 +469,9 @@ namespace gaseous_server.Classes
         /// <param name="progressHandler">Optional progress callback: (bytesWritten, totalBytes).</param>
         /// <param name="overwrite">If true, deletes any existing file before downloading.</param>
         /// <returns>HTTP response containing any body bytes (also written to file) and status information.</returns>
-        public async Task<HttpResponse<byte[]>> DownloadToFileAsync(string url, string destinationFilePath, Dictionary<string, string>? headers = null, System.Threading.CancellationToken cancellationToken = default, Action<long, long?>? progressHandler = null, bool overwrite = false)
+        public async Task<HttpResponse<byte[]>> DownloadToFileAsync(Uri url, string destinationFilePath, Dictionary<string, string>? headers = null, System.Threading.CancellationToken cancellationToken = default, Action<long, long?>? progressHandler = null, bool overwrite = false)
         {
-            if (string.IsNullOrWhiteSpace(url)) throw new ArgumentException("URL is required", nameof(url));
+            if (url == null) throw new ArgumentNullException(nameof(url));
             if (string.IsNullOrWhiteSpace(destinationFilePath)) throw new ArgumentException("Destination file path is required", nameof(destinationFilePath));
 
             // Overwrite handling

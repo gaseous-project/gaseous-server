@@ -196,13 +196,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
         }
 
         /// <inheritdoc/>
-        public Task<string> GetImageAsync(string url)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public async Task<byte[]?> GetImageAsync(long gameId, string url, ImageType imageType, ImageSize imageSize)
+        public async Task<byte[]?> GetGameImageAsync(long gameId, string url, ImageType imageType, ImageSize imageSize)
         {
             return null;
         }

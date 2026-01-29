@@ -74,6 +74,6 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         /// <returns>
         /// A byte array representing the image data.
         /// </returns>
-        public Task<byte[]?> GetImageAsync(long gameId, string url, ImageType imageType, ImageSize imageSize);
+        public Task<byte[]?> GetGameImageAsync(long gameId, string url, ImageType imageType, ImageSize imageSize);
     }
 }

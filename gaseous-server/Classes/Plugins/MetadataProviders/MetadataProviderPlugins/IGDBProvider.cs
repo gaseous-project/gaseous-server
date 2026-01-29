@@ -126,7 +126,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
                     return null;
                 }
 
-                var tokenRequestUrl = $"https://id.twitch.tv/oauth2/token?client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials";
+                Uri tokenRequestUrl = new Uri($"https://id.twitch.tv/oauth2/token?client_id={clientId}&client_secret={clientSecret}&grant_type=client_credentials");
 
                 var response = comms.SendRequestAsync<IGDBAuth>(HTTPComms.HttpMethod.POST, tokenRequestUrl).GetAwaiter().GetResult();
                 if (response.StatusCode != 200 || response.Body == null)
@@ -341,7 +341,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
                     }
 
                     // send request
-                    var requestUrl = $"{IGDBUrl}games";
+                    var requestUrl = new Uri($"{IGDBUrl}games");
                     var headers = IGDBAuthToken.ToHeaders();
                     var response = await comms.SendRequestAsync<Dictionary<string, object>[]>(HTTPComms.HttpMethod.POST, requestUrl, headers, searchBody);
                     if (response.StatusCode == 200 && response.Body != null && response.Body.Length > 0)
@@ -371,8 +371,30 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
         /// <param name="imageType">The type of image being retrieved (e.g., Cover, Screenshot).</param>
         /// <param name="imageSize">The desired size of the image.</param>
         /// <returns>A byte array containing the image data, or null if not found.</returns>
-        public async Task<byte[]?> GetImageAsync(long gameId, string url, ImageType imageType, ImageSize imageSize)
+        public async Task<byte[]?> GetGameImageAsync(long gameId, string url, ImageType imageType, ImageSize imageSize)
         {
+            Game game = await GetEntityAsync<Game>("games", gameId) ?? throw new Exception("Game not found");
+
+            // check the proxy first
+            if (ProxyProvider != null)
+            {
+                if (ProxyProvider.Storage == null)
+                {
+                    ProxyProvider.Storage = this.Storage;
+                }
+                var proxyResult = await ProxyProvider.GetGameImageAsync(gameId, url, imageType, imageSize);
+                if (proxyResult != null)
+                {
+                    return proxyResult;
+                }
+            }
+
+            // fall back to IGDB direct
+            if (IGDBAuthToken != null)
+            {
+                
+            }
+
             return null;
         }
 
@@ -416,7 +438,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
                     var proxyResult = await ProxyProvider.GetEntityAsync<T>(endpoint, id);
                     if (proxyResult != null)
                     {
-                        return null;
+                        return proxyResult;
                     }
                 }
 
@@ -425,7 +447,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
                 {
                     // call the IGDB API directly
                     string body = "fields *; where id = " + id + ";";
-                    var requestUrl = $"{IGDBUrl}{endpoint}";
+                    Uri requestUrl = new Uri($"{IGDBUrl}{endpoint}");
                     var headers = IGDBAuthToken.ToHeaders();
                     var response = await comms.SendRequestAsync<Dictionary<string, object>[]>(HTTPComms.HttpMethod.POST, requestUrl, headers, body);
                     if (response.StatusCode == 200 && response.Body != null && response.Body.Length > 0)

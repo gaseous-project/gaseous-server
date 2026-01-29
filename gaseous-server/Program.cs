@@ -483,11 +483,11 @@ igdbProvider.Settings = new Dictionary<string, object>
     { "ClientSecret", Config.IGDB.Secret }
 };
 igdbProvider.ProxyProvider = new gaseous_server.Classes.Plugins.MetadataProviders.HasheousIGDBProxyProvider();
-var game = await igdbProvider.GetGameAsync(358);
+var game = await igdbProvider.GetGameAsync(358, true);
 Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(game, Newtonsoft.Json.Formatting.Indented));
 
-var searchResults = await igdbProvider.SearchGamesAsync(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.wherefuzzy, 18, new List<string>() { "Super Mario Bros", "Super Mario Bros." });
-Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(searchResults, Newtonsoft.Json.Formatting.Indented));
+// var searchResults = await igdbProvider.SearchGamesAsync(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.wherefuzzy, 18, new List<string>() { "Super Mario Bros", "Super Mario Bros." });
+// Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(searchResults, Newtonsoft.Json.Formatting.Indented));
 
 
 // // Heavy initialization moved to StartupInitializer (BackgroundService)
