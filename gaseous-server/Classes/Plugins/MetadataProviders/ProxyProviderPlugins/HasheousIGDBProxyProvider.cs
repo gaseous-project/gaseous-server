@@ -13,7 +13,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
     public class HasheousIGDBProxyProvider : IProxyProvider
     {
         /// <inheritdoc/>
-        public string Name => throw new NotImplementedException();
+        public string Name => "Hasheous IGDB Proxy";
 
         /// <inheritdoc/>
         public FileSignature.MetadataSources SourceType => FileSignature.MetadataSources.IGDB;
@@ -148,7 +148,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         public async Task<byte[]?> GetGameImageAsync(long gameId, string url, ImageType imageType, ImageSize imageSize)
         {
             // we should have a bundle available for the game - attempt to load image from bundle storage
-            string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, gameId);
+            string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.Name, gameId);
 
             if (Directory.Exists(bundlePath))
             {
@@ -211,7 +211,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             }
 
             // check if bundle exists
-            string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, id);
+            string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.Name, id);
             bool forceDownloadBundle = false;
             if (Directory.Exists(bundlePath))
             {

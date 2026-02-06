@@ -392,7 +392,26 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
             // fall back to IGDB direct
             if (IGDBAuthToken != null)
             {
-                
+                string imageDirectory = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, gameId), imageType.ToString());
+                string directImagePath = Path.Combine(imageDirectory, url + ".jpg");
+
+                if (File.Exists(directImagePath))
+                {
+                    return await File.ReadAllBytesAsync(directImagePath);
+                }
+
+                if (!Directory.Exists(imageDirectory))
+                {
+                    Directory.CreateDirectory(imageDirectory);
+                }
+
+                Uri imageUri = new Uri($"https://images.igdb.com/igdb/image/upload/t_original/{url}.jpg");
+
+                var response = await comms.DownloadToFileAsync(imageUri, directImagePath);
+                if (response.StatusCode == 200)
+                {
+                    return await File.ReadAllBytesAsync(directImagePath);
+                }
             }
 
             return null;

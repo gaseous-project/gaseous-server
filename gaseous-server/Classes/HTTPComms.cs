@@ -10,6 +10,17 @@ namespace gaseous_server.Classes
     /// </summary>
     public class HTTPComms
     {
+        private string _userAgent
+        {
+            get
+            {
+                // get the assembly version
+                var assemblyVersion = System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+
+                return $"GaseousServer/{assemblyVersion} (.NET {System.Environment.Version}; {System.Runtime.InteropServices.RuntimeInformation.OSDescription})";
+            }
+        }
+
         private HttpClient _httpClient = new HttpClient();
 
         private static int _defaultRetryCount = 3;
@@ -183,6 +194,9 @@ namespace gaseous_server.Classes
         {
             // Clear all previous headers from the HttpClient
             _httpClient.DefaultRequestHeaders.Clear();
+
+            // Set User-Agent header
+            _httpClient.DefaultRequestHeaders.Add("User-Agent", _userAgent);
 
             // Build a per-request timeout using a linked cancellation token (avoid mutating HttpClient.Timeout)
             using var timeoutCts = new System.Threading.CancellationTokenSource(timeout ?? _defaultTimeout);

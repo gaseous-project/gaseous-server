@@ -808,7 +808,19 @@ namespace gaseous_server.Classes
                 /// <returns>The full path to the game bundles metadata directory.</returns>
                 public string LibraryMetadataDirectory_GameBundles(FileSignature.MetadataSources SourceType, long GameId)
                 {
-                    string MetadataPath = Path.Combine(LibraryMetadataDirectory, "GameMetadata", "Bundles", SourceType.ToString(), GameId.ToString());
+                    return LibraryMetadataDirectory_GameBundles(SourceType, "Direct", GameId);
+                }
+
+                /// <summary>
+                /// Gets the metadata directory path for game bundles based on the metadata source and game ID.
+                /// </summary>
+                /// <param name="SourceType">The metadata source type.</param>
+                /// <param name="ProxyName">The proxy name.</param>
+                /// <param name="GameId">The game ID.</param>
+                /// <returns>The full path to the game bundles metadata directory.</returns>
+                public string LibraryMetadataDirectory_GameBundles(FileSignature.MetadataSources SourceType, string ProxyName, long GameId)
+                {
+                    string MetadataPath = Path.Combine(LibraryMetadataDirectory, "GameMetadata", "Bundles", SourceType.ToString(), ProxyName, GameId.ToString());
                     return MetadataPath;
                 }
 

@@ -485,6 +485,9 @@ igdbProvider.Settings = new Dictionary<string, object>
 igdbProvider.ProxyProvider = new gaseous_server.Classes.Plugins.MetadataProviders.HasheousIGDBProxyProvider();
 var game = await igdbProvider.GetGameAsync(358, true);
 Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(game, Newtonsoft.Json.Formatting.Indented));
+var cover = await igdbProvider.GetCoverAsync(game.Cover);
+Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(cover, Newtonsoft.Json.Formatting.Indented));
+var image = await igdbProvider.GetGameImageAsync((long)game.Id, cover.ImageId, gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.ImageType.Cover, gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.ImageSize.Original);
 
 // var searchResults = await igdbProvider.SearchGamesAsync(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.wherefuzzy, 18, new List<string>() { "Super Mario Bros", "Super Mario Bros." });
 // Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(searchResults, Newtonsoft.Json.Formatting.Indented));

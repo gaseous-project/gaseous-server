@@ -200,5 +200,10 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
         {
             return null;
         }
+
+        private async Task<T?> GetGameBundleAsync<T>(long id) where T : class
+        {
+            
+        }
     }
 }
