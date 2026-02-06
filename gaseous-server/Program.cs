@@ -476,21 +476,25 @@ app.Use(async (context, next) =>
 });
 
 // test run
-var igdbProvider = new gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider.Provider();
-igdbProvider.Settings = new Dictionary<string, object>
-{
-    { "ClientID", Config.IGDB.ClientId },
-    { "ClientSecret", Config.IGDB.Secret }
-};
-igdbProvider.ProxyProvider = new gaseous_server.Classes.Plugins.MetadataProviders.HasheousIGDBProxyProvider();
-var game = await igdbProvider.GetGameAsync(358, true);
-Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(game, Newtonsoft.Json.Formatting.Indented));
-var cover = await igdbProvider.GetCoverAsync(game.Cover);
-Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(cover, Newtonsoft.Json.Formatting.Indented));
-var image = await igdbProvider.GetGameImageAsync((long)game.Id, cover.ImageId, gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.ImageType.Cover, gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.ImageSize.Original);
+// var igdbProvider = new gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider.Provider();
+// igdbProvider.Settings = new Dictionary<string, object>
+// {
+//     { "ClientID", Config.IGDB.ClientId },
+//     { "ClientSecret", Config.IGDB.Secret }
+// };
+// igdbProvider.ProxyProvider = new gaseous_server.Classes.Plugins.MetadataProviders.HasheousIGDBProxyProvider();
+// var game = await igdbProvider.GetGameAsync(358, true);
+// Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(game, Newtonsoft.Json.Formatting.Indented));
+// var cover = await igdbProvider.GetCoverAsync(game.Cover);
+// Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(cover, Newtonsoft.Json.Formatting.Indented));
+// var image = await igdbProvider.GetGameImageAsync((long)game.Id, cover.ImageId, gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.ImageType.Cover, gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.ImageSize.Original);
 
 // var searchResults = await igdbProvider.SearchGamesAsync(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.wherefuzzy, 18, new List<string>() { "Super Mario Bros", "Super Mario Bros." });
 // Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(searchResults, Newtonsoft.Json.Formatting.Indented));
+
+var tgdbProvider = new gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider.Provider();
+var tgdbGame = await tgdbProvider.GetGameAsync(1, true);
+Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(tgdbGame, Newtonsoft.Json.Formatting.Indented));
 
 
 // // Heavy initialization moved to StartupInitializer (BackgroundService)

@@ -322,7 +322,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                 return null;
             }
             string gameJson = await File.ReadAllTextAsync(gameJsonFilePath);
-            Dictionary<string, object>? gameEntity = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(gameJson); ;
+            Dictionary<string, object>? gameEntity = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(gameJson);
 
             // now build T from the deserialized data and return
             // create a new game instance - this is the root of the bundle, we'll then create sub-entities as needed and store them in the database
