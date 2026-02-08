@@ -21,6 +21,7 @@ using System.Net;
 using System.Linq;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.OpenApi;
+using gaseous_server.Classes.Metadata.Utility;
 
 // Defer heavy startup work so Windows Service can report RUNNING quickly
 
@@ -475,43 +476,21 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// test run
-// var igdbProvider = new gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider.Provider();
-// igdbProvider.Settings = new Dictionary<string, object>
-// {
-//     { "ClientID", Config.IGDB.ClientId },
-//     { "ClientSecret", Config.IGDB.Secret }
-// };
-// igdbProvider.ProxyProvider = new gaseous_server.Classes.Plugins.MetadataProviders.HasheousIGDBProxyProvider();
-// var game = await igdbProvider.GetGameAsync(358, true);
-// Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(game, Newtonsoft.Json.Formatting.Indented));
-// var cover = await igdbProvider.GetCoverAsync(game.Cover);
-// Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(cover, Newtonsoft.Json.Formatting.Indented));
-// var image = await igdbProvider.GetGameImageAsync((long)game.Id, cover.ImageId, gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.ImageType.Cover, gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.ImageSize.Original);
+// Heavy initialization moved to StartupInitializer (BackgroundService)
 
-// var searchResults = await igdbProvider.SearchGamesAsync(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.wherefuzzy, 18, new List<string>() { "Super Mario Bros", "Super Mario Bros." });
-// Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(searchResults, Newtonsoft.Json.Formatting.Indented));
+// Start the web server explicitly so we only report RUNNING after Kestrel is accepting connections
+await app.StartAsync();
+try
+{
+    Logging.LogKey(Logging.LogType.Information, "process.startup", "startup.web_server_ready");
+}
+catch { /* logging should not block startup */ }
+await app.WaitForShutdownAsync();
 
-var tgdbProvider = new gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider.Provider();
-var tgdbGame = await tgdbProvider.GetGameAsync(1, true);
-Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(tgdbGame, Newtonsoft.Json.Formatting.Indented));
-
-
-// // Heavy initialization moved to StartupInitializer (BackgroundService)
-
-// // Start the web server explicitly so we only report RUNNING after Kestrel is accepting connections
-// await app.StartAsync();
-// try
-// {
-//     Logging.LogKey(Logging.LogType.Information, "process.startup", "startup.web_server_ready");
-// }
-// catch { /* logging should not block startup */ }
-// await app.WaitForShutdownAsync();
-
-// // Shutdown logging providers to flush buffers and cleanup resources
-// try
-// {
-//     Logging.LogKey(Logging.LogType.Information, "process.shutdown", "shutdown.stopping_log_providers");
-// }
-// catch { /* final log message may fail */ }
-// Logging.ShutdownLogProviders();
+// Shutdown logging providers to flush buffers and cleanup resources
+try
+{
+    Logging.LogKey(Logging.LogType.Information, "process.shutdown", "shutdown.stopping_log_providers");
+}
+catch { /* final log message may fail */ }
+Logging.ShutdownLogProviders();

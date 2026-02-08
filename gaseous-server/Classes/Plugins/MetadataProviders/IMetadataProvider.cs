@@ -301,12 +301,9 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         /// <param name="imageType">
         /// The type of image being retrieved (e.g., Cover, Screenshot).
         /// </param>
-        /// <param name="imageSize">
-        /// The size of the image being retrieved (e.g., Small, Medium, Large, Original).
-        /// </param>
         /// <returns>
         /// A byte array representing the image data.
         /// </returns>
-        public Task<byte[]?> GetGameImageAsync(long gameId, string url, ImageType imageType, ImageSize imageSize);
+        public Task<byte[]?> GetGameImageAsync(long gameId, string url, ImageType imageType);
     }
 }

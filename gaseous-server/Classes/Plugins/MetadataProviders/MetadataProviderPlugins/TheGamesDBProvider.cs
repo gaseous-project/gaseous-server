@@ -1,3 +1,4 @@
+using gaseous_server.Classes.Metadata;
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using HasheousClient.Models;
 using SharpCompress.Archives;
@@ -65,195 +66,287 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
         private readonly HTTPComms comms = new HTTPComms();
 
         /// <inheritdoc/>
-        public Task<AgeRating?> GetAgeRatingAsync(long id, bool forceRefresh = false)
+        public async Task<AgeRating?> GetAgeRatingAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
+            return await GetEntityAsync<AgeRating>(id, false);
         }
 
         /// <inheritdoc/>
-        public Task<AgeRatingCategory?> GetAgeRatingCategoryAsync(long id, bool forceRefresh = false)
+        public async Task<AgeRatingCategory?> GetAgeRatingCategoryAsync(long id, bool forceRefresh = false)
         {
-            throw new NotImplementedException();
-        }
+            // only ESRB ratings are supported by TheGamesDB, so we can return a hardcoded category object for ESRB categories
+            AgeGroups.AgeGroupMapModel.RatingBoardModel esrbRatingBoard = AgeGroups.AgeGroupMap.RatingBoards["ESRB"];
 
-        /// <inheritdoc/>
-        public Task<AgeRatingContentDescription?> GetAgeRatingContentDescriptionAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<AgeRatingOrganization?> GetAgeRatingOrganizationAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<AlternativeName?> GetAlternativeNameAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<Artwork?> GetArtworkAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<ClearLogo?> GetClearLogoAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<Collection?> GetCollectionAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<Company?> GetCompanyAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<CompanyLogo?> GetCompanyLogoAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<Cover?> GetCoverAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<ExternalGame?> GetExternalGameAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<Franchise?> GetFranchiseAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<Game?> GetGameAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<GameLocalization?> GetGameLocalizationAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<GameMode?> GetGameModeAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<GameVideo?> GetGameVideoAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<Genre?> GetGenreAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<InvolvedCompany?> GetInvolvedCompanyAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<MultiplayerMode?> GetMultiplayerModeAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<Platform?> GetPlatformAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<PlatformLogo?> GetPlatformLogoAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<PlatformVersion?> GetPlatformVersionAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<Region?> GetRegionAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<ReleaseDate?> GetReleaseDateAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<Screenshot?> GetScreenshotAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<Theme?> GetThemeAsync(long id, bool forceRefresh = false)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public Task<Game[]?> SearchGamesAsync(SearchType searchType, long platformId, List<string> searchCandidates)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <inheritdoc/>
-        public async Task<byte[]?> GetGameImageAsync(long gameId, string url, ImageType imageType, ImageSize imageSize)
-        {
-            return null;
-        }
-
-        private async Task<T?> GetGameBundleAsync<T>(long id) where T : class
-        {
-            // we can only handle bundles for games - check T type
-            // abort if T is not Game
-            if (typeof(T) != typeof(Game))
+            if (esrbRatingBoard == null)
             {
                 return null;
             }
 
+            // search the ESRB ratings for a rating with a matching IGDB ID to the requested category ID - if found return an AgeRatingCategory object with the name of the rating as the category name
+            foreach (var rating in esrbRatingBoard.Ratings)
+            {
+                if (rating.Value.IGDBId == id && !string.IsNullOrEmpty(rating.Value.Name))
+                {
+                    return new AgeRatingCategory
+                    {
+                        Id = id,
+                        Rating = rating.Value.Name,
+                        Organization = 1,
+                        SourceType = FileSignature.MetadataSources.TheGamesDb
+                    };
+                }
+            }
+
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<AgeRatingContentDescription?> GetAgeRatingContentDescriptionAsync(long id, bool forceRefresh = false)
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<AgeRatingOrganization?> GetAgeRatingOrganizationAsync(long id, bool forceRefresh = false)
+        {
+            // only ESRB ratings are supported by TheGamesDB, so we can return a hardcoded organization object for ESRB
+            if (id == 1)
+            {
+                AgeGroups.AgeGroupMapModel.RatingBoardModel esrbRatingBoard = AgeGroups.AgeGroupMap.RatingBoards["ESRB"];
+                if (esrbRatingBoard == null || esrbRatingBoard.IGDBId == null || string.IsNullOrEmpty(esrbRatingBoard.Name))
+                {
+                    return null;
+                }
+                return new AgeRatingOrganization
+                {
+                    Id = (long)esrbRatingBoard.IGDBId,
+                    Name = esrbRatingBoard.Name,
+                    SourceType = FileSignature.MetadataSources.TheGamesDb
+                };
+            }
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<AlternativeName?> GetAlternativeNameAsync(long id, bool forceRefresh = false)
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<Artwork?> GetArtworkAsync(long id, bool forceRefresh = false)
+        {
+            return await GetEntityAsync<Artwork>(id, false);
+        }
+
+        /// <inheritdoc/>
+        public async Task<ClearLogo?> GetClearLogoAsync(long id, bool forceRefresh = false)
+        {
+            return await GetEntityAsync<ClearLogo>(id, false);
+        }
+
+        /// <inheritdoc/>
+        public async Task<Collection?> GetCollectionAsync(long id, bool forceRefresh = false)
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<Company?> GetCompanyAsync(long id, bool forceRefresh = false)
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<CompanyLogo?> GetCompanyLogoAsync(long id, bool forceRefresh = false)
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<Cover?> GetCoverAsync(long id, bool forceRefresh = false)
+        {
+            return await GetEntityAsync<Cover>(id, false);
+        }
+
+        /// <inheritdoc/>
+        public async Task<ExternalGame?> GetExternalGameAsync(long id, bool forceRefresh = false)
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<Franchise?> GetFranchiseAsync(long id, bool forceRefresh = false)
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<Game?> GetGameAsync(long id, bool forceRefresh = false)
+        {
+            return await GetEntityAsync<Game>(id, forceRefresh);
+        }
+
+        /// <inheritdoc/>
+        public async Task<GameLocalization?> GetGameLocalizationAsync(long id, bool forceRefresh = false)
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<GameMode?> GetGameModeAsync(long id, bool forceRefresh = false)
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<GameVideo?> GetGameVideoAsync(long id, bool forceRefresh = false)
+        {
+            return await GetEntityAsync<GameVideo>(id, false);
+        }
+
+        /// <inheritdoc/>
+        public async Task<Genre?> GetGenreAsync(long id, bool forceRefresh = false)
+        {
+            return await GetEntityAsync<Genre>(id, false);
+        }
+
+        /// <inheritdoc/>
+        public async Task<InvolvedCompany?> GetInvolvedCompanyAsync(long id, bool forceRefresh = false)
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<MultiplayerMode?> GetMultiplayerModeAsync(long id, bool forceRefresh = false)
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<Platform?> GetPlatformAsync(long id, bool forceRefresh = false)
+        {
+            return await GetEntityAsync<Platform>(id, false);
+        }
+
+        /// <inheritdoc/>
+        public async Task<PlatformLogo?> GetPlatformLogoAsync(long id, bool forceRefresh = false)
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<PlatformVersion?> GetPlatformVersionAsync(long id, bool forceRefresh = false)
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<Region?> GetRegionAsync(long id, bool forceRefresh = false)
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<ReleaseDate?> GetReleaseDateAsync(long id, bool forceRefresh = false)
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<Screenshot?> GetScreenshotAsync(long id, bool forceRefresh = false)
+        {
+            return await GetEntityAsync<Screenshot>(id, false);
+        }
+
+        /// <inheritdoc/>
+        public async Task<Theme?> GetThemeAsync(long id, bool forceRefresh = false)
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<Game[]?> SearchGamesAsync(SearchType searchType, long platformId, List<string> searchCandidates)
+        {
+            return null;
+        }
+
+        /// <inheritdoc/>
+        public async Task<byte[]?> GetGameImageAsync(long gameId, string url, ImageType imageType)
+        {
+            // supplied url is a partial file name and path in unix path format - we need to break it up so that we can combine it with the base path in a host OS compliant way
+            List<string> pathSegments =
+            [
+                Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(FileSignature.MetadataSources.TheGamesDb, gameId),
+                .. url.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries),
+            ];
+
+            string combinedPath = Path.Combine(pathSegments.ToArray());
+
+            if (File.Exists(combinedPath))
+            {
+                return await File.ReadAllBytesAsync(combinedPath);
+            }
+
+            return null;
+        }
+
+        private async Task<T?> GetEntityAsync<T>(long id, bool forceRefresh = false) where T : class
+        {
+            if (id == 0)
+            {
+                return null;
+            }
+
+            T? metadata = Activator.CreateInstance(typeof(T)) as T;
+
+            // get content from database - if not present fetch it from the server, but only if T is Game
+            var typeName = typeof(T).Name;
+            var cacheStatus = await Storage.GetCacheStatusAsync(typeName, id);
+            if (cacheStatus == Storage.CacheStatus.Current && forceRefresh == false)
+            {
+                T? cachedItem = await Storage.GetCacheValue<T>(metadata, "id", id);
+
+                if (cachedItem != null)
+                {
+                    return cachedItem;
+                }
+            }
+            else
+            {
+                // fetch from server
+                // if T is not game return null
+                if (typeof(T) != typeof(Game))
+                {
+                    return null;
+                }
+
+                // fetch the bundle - this process will populate/update the database for other supported types
+                try
+                {
+                    var game = await GetGameBundleAsync(id);
+                    metadata = game as T;
+                }
+                catch (Exception ex)
+                {
+                    // Log the exception or handle it as needed
+                }
+
+                return metadata;
+            }
+
+            return null;
+        }
+
+        private async Task<Game?> GetGameBundleAsync(long id)
+        {
             // check if bundle exists
             string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, id);
             bool forceDownloadBundle = false;
             if (Directory.Exists(bundlePath))
             {
-                // open the game.json file
-                string gameJsonPath = Path.Combine(bundlePath, "game.json");
+                // open the Game.json file
+                string gameJsonPath = Path.Combine(bundlePath, "Game.json");
                 if (!File.Exists(gameJsonPath))
                 {
                     forceDownloadBundle = true;
@@ -321,7 +414,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                 else
                 {
                     // failed to download bundle
-                    return null;
+                    throw new Exception($"Failed to download bundle from {bundleUrl}. Status code: {response.StatusCode}");
                 }
             }
 
@@ -366,32 +459,240 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
             }
 
             // bundle should now be present for loading - extract the requested entity from the Game.json file
-            // open the game.json file and deserialise to Dictionary<string, object>
+            // open the game.json file and deserialise to HasheousClient.Models.Metadata.TheGamesDb.GamesByGameID
             string gameJsonFilePath = Path.Combine(bundlePath, "Game.json");
             if (!File.Exists(gameJsonFilePath))
             {
-                return null;
+                throw new Exception($"Game.json file not found at {gameJsonFilePath}");
             }
             string gameJson = await File.ReadAllTextAsync(gameJsonFilePath);
-            Dictionary<string, object>? gameEntity = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(gameJson);
+            HasheousClient.Models.Metadata.TheGamesDb.GamesByGameID? gameEntity = Newtonsoft.Json.JsonConvert.DeserializeObject<HasheousClient.Models.Metadata.TheGamesDb.GamesByGameID>(gameJson);
 
-            // now build T from the deserialized data and return
             // game content should be the first element under data/games
-            if (
-                gameEntity != null &&
-                gameEntity.ContainsKey("data") && gameEntity["data"] is Dictionary<string, object> dataDict &&
-                dataDict.ContainsKey("games") && dataDict["games"] is Dictionary<string, object> gamesDict &&
-                gamesDict.ContainsKey(id.ToString()) && gamesDict[id.ToString()] is Dictionary<string, object> gameData)
+            if (gameEntity != null && gameEntity.data != null && gameEntity.data.games != null && gameEntity.data.games.Count > 0)
             {
-                // create a new instance of Game - TheGamesDB objects do not match the objects Gaseous uses, so we'll need to manually map the properties we want to keep from the bundle to our Game object
-                T? game = Activator.CreateInstance(typeof(T)) as T;
-                game.GetType().GetProperty("SourceType")?.SetValue(game, SourceType);
-                game.GetType().GetProperty("Id")?.SetValue(game, Convert.ToInt64(gameData["id"]));
-                game.GetType().GetProperty("Name")?.SetValue(game, gameData["game_title"].ToString());
-                game.GetType().GetProperty("FirstReleaseDate")?.SetValue(game, gameData.ContainsKey("release_date") && DateTimeOffset.TryParse(gameData["release_date"].ToString(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTimeOffset releaseDate) ? releaseDate : null);
-                game.GetType().GetProperty("Summary")?.SetValue(game, gameData.ContainsKey("overview") ? gameData["overview"].ToString() : null);
-                game.GetType().GetProperty("UpdatedAt")?.SetValue(game, gameData.ContainsKey("last_updated") && DateTimeOffset.TryParse(gameData["last_updated"].ToString(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTimeOffset updatedAt) ? updatedAt : null);
-                return game;
+                var game = gameEntity.data.games[0];
+
+                // create new IGDB game objects
+                Game? igdbGame = null;
+                AgeRating? igdbAgeRating = null;
+                Cover? igdbCover = null;
+                GameVideo? igdbVideo = null;
+                List<Artwork> igdbArtwork = new List<Artwork>();
+                List<ClearLogo> igdbClearLogo = new List<ClearLogo>();
+                List<Screenshot> igdbScreenshot = new List<Screenshot>();
+
+                // create new age rating object - all TheGamesDb age ratings are ESRB ratings
+                string tgdbRatingName = game.rating.Split(" - ")[0];
+                long? igdbAgeRatingTitle = null;
+                if (AgeGroups.AgeGroupMap.RatingBoards["ESRB"].Ratings.ContainsKey(tgdbRatingName))
+                {
+                    igdbAgeRatingTitle = AgeGroups.AgeGroupMap.RatingBoards["ESRB"].Ratings[tgdbRatingName].IGDBId;
+                }
+                if (igdbAgeRatingTitle.HasValue)
+                {
+                    igdbAgeRating = new AgeRating
+                    {
+                        Id = game.id,
+                        Organization = 1,
+                        RatingCategory = (long)igdbAgeRatingTitle,
+                        SourceType = FileSignature.MetadataSources.TheGamesDb
+                    };
+                    // update the cache
+                    await Storage.StoreCacheValue<AgeRating>(igdbAgeRating);
+                }
+
+                // process images
+                if (
+                    gameEntity.include != null &&
+                    gameEntity.include.boxart != null &&
+                    gameEntity.include.boxart.data != null &&
+                    gameEntity.include.boxart.data.ContainsKey(game.id.ToString())
+                )
+                {
+                    string originalUrl = gameEntity.include.boxart.base_url.original;
+
+                    List<HasheousClient.Models.Metadata.TheGamesDb.GameImage> imageDict = gameEntity.include.boxart.data[game.id.ToString()];
+                    foreach (var image in imageDict)
+                    {
+                        int width = 0;
+                        int height = 0;
+
+                        if (image.resolution == null || image.resolution == "")
+                        {
+                            image.resolution = "0x0";
+                        }
+
+                        width = int.TryParse(image.resolution.Split("x")[0].Trim(), out width) ? width : 0;
+                        height = int.TryParse(image.resolution.Split("x")[1].Trim(), out height) ? height : 0;
+
+                        switch (image.type)
+                        {
+                            case "boxart":
+                                // detect cover art
+                                if (igdbCover != null && image.side == "front")
+                                {
+                                    igdbCover = new Cover
+                                    {
+                                        Id = image.id,
+                                        ImageId = image.filename,
+                                        Width = width,
+                                        Height = height,
+                                        Url = new Uri(originalUrl + image.filename).ToString(),
+                                        AlphaChannel = false,
+                                        Animated = false,
+                                        Game = game.id,
+                                        SourceType = FileSignature.MetadataSources.TheGamesDb
+                                    };
+                                    await Storage.StoreCacheValue<Cover>(igdbCover);
+                                }
+                                break;
+
+                            case "fanart":
+                                // check that igdbArtwork doesn't include an item with this filename already
+                                if (igdbArtwork.Any(a => a.ImageId == image.filename))
+                                {
+                                    continue;
+                                }
+
+                                Artwork igdbArtworkItem = new Artwork
+                                {
+                                    Id = image.id,
+                                    ImageId = image.filename,
+                                    Width = width,
+                                    Height = height,
+                                    Url = new Uri(originalUrl + image.filename).ToString(),
+                                    AlphaChannel = false,
+                                    Animated = false,
+                                    Game = game.id,
+                                    SourceType = FileSignature.MetadataSources.TheGamesDb
+                                };
+                                igdbArtwork.Add(igdbArtworkItem);
+                                await Storage.StoreCacheValue<Artwork>(igdbArtworkItem);
+                                break;
+
+                            case "clearlogo":
+                                // check that igdbClearLogo doesn't include an item with this filename already
+                                if (igdbClearLogo.Any(a => a.ImageId == image.filename))
+                                {
+                                    continue;
+                                }
+
+                                ClearLogo igdbClearLogoItem = new ClearLogo
+                                {
+                                    Id = image.id,
+                                    ImageId = image.filename,
+                                    Width = width,
+                                    Height = height,
+                                    Url = new Uri(originalUrl + image.filename).ToString(),
+                                    AlphaChannel = false,
+                                    Animated = false,
+                                    Game = game.id,
+                                    SourceType = FileSignature.MetadataSources.TheGamesDb
+                                };
+                                igdbClearLogo.Add(igdbClearLogoItem);
+                                await Storage.StoreCacheValue<ClearLogo>(igdbClearLogoItem);
+                                break;
+
+                            case "screenshot":
+                                // check that igdbScreenshot doesn't include an item with this filename already
+                                if (igdbScreenshot.Any(a => a.ImageId == image.filename))
+                                {
+                                    continue;
+                                }
+
+                                Screenshot igdbScreenshotItem = new Screenshot
+                                {
+                                    Id = image.id,
+                                    ImageId = image.filename,
+                                    Width = width,
+                                    Height = height,
+                                    Url = new Uri(originalUrl + image.filename).ToString(),
+                                    AlphaChannel = false,
+                                    Animated = false,
+                                    Game = game.id,
+                                    SourceType = FileSignature.MetadataSources.TheGamesDb
+                                };
+                                igdbScreenshot.Add(igdbScreenshotItem);
+                                await Storage.StoreCacheValue<Screenshot>(igdbScreenshotItem);
+                                break;
+                        }
+                    }
+                }
+
+                // create video object
+                if (!String.IsNullOrEmpty(game.youtube))
+                {
+                    igdbVideo = new GameVideo
+                    {
+                        Id = game.id,
+                        Name = game.game_title,
+                        VideoId = game.youtube,
+                        Game = game.id,
+                        SourceType = FileSignature.MetadataSources.TheGamesDb
+                    };
+                    await Storage.StoreCacheValue<GameVideo>(igdbVideo);
+                }
+
+                // create new game object
+                igdbGame = new Game
+                {
+                    Id = game.id,
+                    Name = game.game_title,
+                    FirstReleaseDate = DateTimeOffset.TryParse(game.release_date, out var releaseDate) ? releaseDate : (DateTimeOffset?)null,
+                    Summary = game.overview,
+                    Slug = string.Join("-", game.game_title.Trim().ToLower().Replace(" ", "-").Split(Common.GetInvalidFileNameChars())) + "-" + game.id,
+                    Genres = game.genres?.Select(g => (long)g).ToList() ?? new List<long>(),
+                    SourceType = FileSignature.MetadataSources.TheGamesDb
+                };
+
+                if (igdbAgeRating != null && igdbAgeRating.Id != null)
+                {
+                    igdbGame.AgeRatings = new List<long> { (long)igdbAgeRating.Id };
+                }
+
+                if (igdbCover != null && igdbCover.Id != null)
+                {
+                    igdbGame.Cover = (long)igdbCover.Id;
+                }
+
+                if (igdbClearLogo != null && igdbClearLogo.Count > 0)
+                {
+                    // add all the id's from the igdbClearLogo list to the igdbGame.ClearLogos list
+                    igdbGame.ClearLogo = igdbClearLogo.Where(cl => cl.Id.HasValue).Select(cl => (long)cl.Id!).ToList();
+                }
+
+                if (igdbVideo != null && igdbVideo.Id.HasValue)
+                {
+                    igdbGame.Videos = new List<long> { (long)igdbVideo.Id };
+                }
+
+                if (igdbArtwork != null)
+                {
+                    igdbGame.Artworks = new List<long>();
+                    foreach (HasheousClient.Models.Metadata.IGDB.Artwork artwork in igdbArtwork)
+                    {
+                        if (artwork.Id.HasValue && !igdbGame.Artworks.Contains((long)artwork.Id))
+                        {
+                            igdbGame.Artworks.Add((long)artwork.Id);
+                        }
+                    }
+                }
+
+                if (igdbScreenshot != null)
+                {
+                    igdbGame.Screenshots = new List<long>();
+                    foreach (HasheousClient.Models.Metadata.IGDB.Screenshot screenshot in igdbScreenshot)
+                    {
+                        if (screenshot.Id.HasValue && !igdbGame.Screenshots.Contains((long)screenshot.Id))
+                        {
+                            igdbGame.Screenshots.Add((long)screenshot.Id);
+                        }
+                    }
+                }
+
+                await Storage.StoreCacheValue<Game>(igdbGame);
+                return igdbGame;
             }
 
             return null;

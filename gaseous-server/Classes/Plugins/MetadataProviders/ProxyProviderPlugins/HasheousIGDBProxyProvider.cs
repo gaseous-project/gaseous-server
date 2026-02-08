@@ -145,7 +145,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         }
 
         /// <inheritdoc/>
-        public async Task<byte[]?> GetGameImageAsync(long gameId, string url, ImageType imageType, ImageSize imageSize)
+        public async Task<byte[]?> GetGameImageAsync(long gameId, string url, ImageType imageType)
         {
             // we should have a bundle available for the game - attempt to load image from bundle storage
             string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.Name, gameId);

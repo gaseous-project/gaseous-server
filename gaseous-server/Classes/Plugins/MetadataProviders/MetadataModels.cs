@@ -217,6 +217,8 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes
         /// </summary>
         [Models.NoDatabaseAttribute]
         public FileSignature.MetadataSources SourceType { get; set; }
+
+        public List<long> ClearLogo { get; set; } = new List<long>();
     }
 
     /// <summary>

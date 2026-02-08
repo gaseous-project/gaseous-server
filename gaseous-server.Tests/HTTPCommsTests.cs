@@ -30,7 +30,7 @@ namespace gaseous_server.Tests
                 Content = new StringContent(json, System.Text.Encoding.UTF8, "application/json")
             }));
 
-            var result = await comms.SendRequestAsync<TestDto>(HTTPComms.HttpMethod.GET, "https://example.com/api");
+            var result = await comms.SendRequestAsync<TestDto>(HTTPComms.HttpMethod.GET, new Uri("https://example.com/api"));
             Assert.Equal(200, result.StatusCode);
             Assert.NotNull(result.Body);
             Assert.Equal(0, result.Body!.Value);
@@ -45,7 +45,7 @@ namespace gaseous_server.Tests
                 Content = new ByteArrayContent(bytes)
             }));
 
-            var result = await comms.SendRequestAsync<byte[]>(HTTPComms.HttpMethod.GET, "https://example.com/file");
+            var result = await comms.SendRequestAsync<byte[]>(HTTPComms.HttpMethod.GET, new Uri("https://example.com/file"));
             Assert.Equal(200, result.StatusCode);
             Assert.NotNull(result.Body);
             Assert.Equal(bytes, result.Body);
@@ -71,7 +71,7 @@ namespace gaseous_server.Tests
                 });
             });
 
-            var result = await comms.SendRequestAsync<TestDto>(HTTPComms.HttpMethod.GET, "https://example.com/rate");
+            var result = await comms.SendRequestAsync<TestDto>(HTTPComms.HttpMethod.GET, new Uri("https://example.com/rate"));
             Assert.Equal(200, result.StatusCode);
             Assert.Equal(2, call);
         }
@@ -90,7 +90,7 @@ namespace gaseous_server.Tests
             });
 
             cts.Cancel();
-            var ex = await Assert.ThrowsAsync<TaskCanceledException>(() => comms.SendRequestAsync<TestDto>(HTTPComms.HttpMethod.GET, "https://example.com/cancel", cancellationToken: cts.Token));
+            var ex = await Assert.ThrowsAsync<TaskCanceledException>(() => comms.SendRequestAsync<TestDto>(HTTPComms.HttpMethod.GET, new Uri("https://example.com/cancel"), cancellationToken: cts.Token));
         }
 
         private class TestDto

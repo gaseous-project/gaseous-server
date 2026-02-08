@@ -1,0 +1,1 @@
+ALTER TABLE `Metadata_Game` ADD COLUMN `ClearLogo` LONGTEXT;
