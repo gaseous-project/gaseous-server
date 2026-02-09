@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using static gaseous_server.Models.PlatformMapping;
 
 

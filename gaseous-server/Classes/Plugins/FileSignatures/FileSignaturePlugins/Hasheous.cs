@@ -1,5 +1,5 @@
 using gaseous_server.Models;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using gaseous_server.Classes.Metadata;
 using static gaseous_server.Classes.FileSignature;
 
@@ -182,17 +182,8 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                                                         }
                                                         else
                                                         {
-                                                            // immutable id is a string
-                                                            gaseous_server.Models.Game hasheousGame = await Games.GetGame(FileSignature.MetadataSources.IGDB, metadataResult.ImmutableId);
-                                                            if (hasheousGame != null)
-                                                            {
-                                                                signature.MetadataSources.AddGame((long)hasheousGame.Id, hasheousGame.Name, metadataSource);
-                                                            }
-                                                            else
-                                                            {
-                                                                // unresolvable immutable id - use unknown game
-                                                                signature.MetadataSources.AddGame(0, "Unknown Game", FileSignature.MetadataSources.None);
-                                                            }
+                                                            // unresolvable immutable id - use unknown game
+                                                            signature.MetadataSources.AddGame(0, "Unknown Game", FileSignature.MetadataSources.None);
                                                         }
                                                         break;
 

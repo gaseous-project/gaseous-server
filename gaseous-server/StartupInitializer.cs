@@ -49,7 +49,6 @@ namespace gaseous_server
                 await GameLibrary.UpdateDefaultLibraryPathAsync();
 
                 // API metadata source
-                Communications.MetadataSource = Config.MetadataConfiguration.DefaultMetadataSource;
                 HasheousClient.WebApp.HttpHelper.BaseUri = Config.MetadataConfiguration.HasheousHost;
 
                 // Storage cleanup

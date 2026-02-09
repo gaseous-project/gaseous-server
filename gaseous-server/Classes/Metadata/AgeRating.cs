@@ -3,7 +3,7 @@ using System.Buffers;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Microsoft.CodeAnalysis.Classification;
 
 namespace gaseous_server.Classes.Metadata

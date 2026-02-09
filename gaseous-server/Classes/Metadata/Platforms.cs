@@ -2,7 +2,7 @@
 using System.Data;
 using System.Net;
 using System.Threading.Tasks;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 
 namespace gaseous_server.Classes.Metadata
 {
@@ -15,7 +15,7 @@ namespace gaseous_server.Classes.Metadata
 
         public static async Task<Platform?> GetPlatform(long Id, FileSignature.MetadataSources? SourceType = null)
         {
-            FileSignature.MetadataSources Source = SourceType ?? Communications.MetadataSource;
+            FileSignature.MetadataSources Source = SourceType ?? Config.MetadataConfiguration.DefaultMetadataSource;
 
             if ((Id == 0) || (Id == null))
             {
@@ -50,21 +50,6 @@ namespace gaseous_server.Classes.Metadata
                 }
                 return RetVal;
             }
-        }
-
-        public static async Task<Platform> GetPlatform(string Slug)
-        {
-            // get platform id from slug - query Platform table
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string query = "SELECT Id FROM Platform WHERE slug = @slug AND SourceId = @sourceid;";
-            DataTable result = await db.ExecuteCMDAsync(query, new Dictionary<string, object> { { "@slug", Slug }, { "@sourceid", FileSignature.MetadataSources.IGDB } });
-            if (result.Rows.Count == 0)
-            {
-                throw new Metadata.InvalidMetadataId(Slug);
-            }
-
-            long Id = (long)result.Rows[0]["Id"];
-            return await GetPlatform(Id);
         }
     }
 }

@@ -18,7 +18,7 @@ using Microsoft.CodeAnalysis.Scripting;
 using static gaseous_server.Classes.Metadata.AgeRatings;
 using Asp.Versioning;
 using static gaseous_server.Models.PlatformMapping;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using HasheousClient;
 
 namespace gaseous_server.Controllers

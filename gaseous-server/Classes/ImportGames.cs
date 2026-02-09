@@ -11,7 +11,7 @@ using NuGet.Common;
 using NuGet.LibraryModel;
 using static gaseous_server.Classes.Metadata.Games;
 using static gaseous_server.Classes.FileSignature;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Mono.TextTemplating;
 
 namespace gaseous_server.Classes
@@ -323,7 +323,7 @@ namespace gaseous_server.Classes
 
                 // add to database
                 Platform? determinedPlatform = Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId).Result;
-                Models.Game? determinedGame = Metadata.Games.GetGame(discoveredSignature.Flags.GameMetadataSource, discoveredSignature.Flags.GameId).Result;
+                Game? determinedGame = Metadata.Games.GetGame(discoveredSignature.Flags.GameMetadataSource, discoveredSignature.Flags.GameId).Result;
                 MetadataMap? map = MetadataManagement.NewMetadataMap((long)determinedPlatform.Id, discoveredSignature.Game.Name);
                 long RomId = StoreGame(GameLibrary.GetDefaultLibrary, Hash, discoveredSignature, determinedPlatform, FilePath, 0, true).Result;
                 gaseous_server.Classes.Roms.GameRomItem romItem = Roms.GetRom(RomId).Result;
@@ -497,7 +497,7 @@ namespace gaseous_server.Classes
             return romId;
         }
 
-        public static async Task<gaseous_server.Models.Game> SearchForGame(gaseous_server.Models.Signatures_Games Signature, long PlatformId, bool FullDownload)
+        public static async Task<Game> SearchForGame(gaseous_server.Models.Signatures_Games Signature, long PlatformId, bool FullDownload)
         {
             if (Signature.Flags != null)
             {
@@ -516,52 +516,47 @@ namespace gaseous_server.Classes
             }
 
             // search discovered game - case insensitive exact match first
-            gaseous_server.Models.Game determinedGame = new gaseous_server.Models.Game();
+            Game determinedGame = new Game();
 
             string GameName = Signature.Game.Name;
 
             List<string> SearchCandidates = GetSearchCandidates(GameName);
 
-            foreach (string SearchCandidate in SearchCandidates)
+            foreach (SearchType searchType in Enum.GetValues(typeof(SearchType)))
             {
-                bool GameFound = false;
-
-                Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.searching_for_title", null, new string[] { SearchCandidate });
-
-                foreach (Metadata.Games.SearchType searchType in Enum.GetValues(typeof(Metadata.Games.SearchType)))
+                Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.search_type", null, new string[] { searchType.ToString() });
+                Game[] games = await Metadata.Games.SearchForGame(SearchCandidates, PlatformId, searchType);
+                if (games != null)
                 {
-                    Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.search_type", null, new string[] { searchType.ToString() });
-                    gaseous_server.Models.Game[] games = await Metadata.Games.SearchForGame(SearchCandidate, PlatformId, searchType);
-                    if (games != null)
+                    if (games.Length == 1)
                     {
-                        if (games.Length == 1)
-                        {
-                            // exact match!
-                            determinedGame = await Metadata.Games.GetGame(MetadataSources.IGDB, (long)games[0].Id);
-                            Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.igdb_game", null, new string[] { determinedGame.Name });
-                            GameFound = true;
-                            break;
-                        }
-                        else if (games.Length > 0)
-                        {
-                            Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.search_results_found", null, new string[] { games.Length.ToString() });
+                        // exact match!
+                        determinedGame = await Metadata.Games.GetGame(MetadataSources.IGDB, (long)games[0].Id);
+                        Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.igdb_game", null, new string[] { determinedGame.Name });
+                        break;
+                    }
+                    else if (games.Length > 0)
+                    {
+                        Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.search_results_found", null, new string[] { games.Length.ToString() });
 
-                            // quite likely we've found sequels and alternate types
-                            foreach (gaseous_server.Models.Game game in games)
+                        // quite likely we've found sequels and alternate types
+                        foreach (Game game in games)
+                        {
+                            foreach (string SearchCandidate in SearchCandidates)
                             {
                                 if (game.Name == SearchCandidate)
                                 {
                                     // found game title matches the search candidate
                                     determinedGame = await Metadata.Games.GetGame(MetadataSources.IGDB, (long)games[0].Id);
                                     Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.found_exact_match");
-                                    GameFound = true;
                                     break;
                                 }
                             }
-                        }
-                        else
-                        {
-                            Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.no_search_results_found");
+
+                            if (determinedGame != null && determinedGame.Id != null)
+                            {
+                                break;
+                            }
                         }
                     }
                     else
@@ -569,11 +564,15 @@ namespace gaseous_server.Classes
                         Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.no_search_results_found");
                     }
                 }
-                if (GameFound == true) { break; }
+                else
+                {
+                    Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.no_search_results_found");
+                }
             }
+
             if (determinedGame == null)
             {
-                determinedGame = new gaseous_server.Models.Game();
+                determinedGame = new Game();
             }
 
             string destSlug = "";
@@ -585,41 +584,37 @@ namespace gaseous_server.Classes
             return determinedGame;
         }
 
-        public static async Task<List<gaseous_server.Models.Game>> SearchForGame_GetAll(string GameName, long PlatformId)
+        public static async Task<List<Game>> SearchForGame_GetAll(string GameName, long PlatformId)
         {
-            List<gaseous_server.Models.Game> searchResults = new List<gaseous_server.Models.Game>();
+            List<Game> searchResults = new List<Game>();
 
             List<string> SearchCandidates = GetSearchCandidates(GameName);
 
-            foreach (string SearchCandidate in SearchCandidates)
+            foreach (SearchType searchType in Enum.GetValues(typeof(SearchType)))
             {
-                foreach (Metadata.Games.SearchType searchType in Enum.GetValues(typeof(Metadata.Games.SearchType)))
+                if ((PlatformId == 0 && searchType == SearchType.searchNoPlatform) || (PlatformId != 0 && searchType != SearchType.searchNoPlatform))
                 {
-                    if ((PlatformId == 0 && searchType == SearchType.searchNoPlatform) || (PlatformId != 0 && searchType != SearchType.searchNoPlatform))
+                    Game[] games = await Metadata.Games.SearchForGame(SearchCandidates, PlatformId, searchType);
+                    foreach (Game foundGame in games)
                     {
-                        gaseous_server.Models.Game[] games = await Metadata.Games.SearchForGame(SearchCandidate, PlatformId, searchType);
-                        foreach (gaseous_server.Models.Game foundGame in games)
+                        bool gameInResults = false;
+                        foreach (Game searchResult in searchResults)
                         {
-                            bool gameInResults = false;
-                            foreach (gaseous_server.Models.Game searchResult in searchResults)
+                            if (searchResult.Id == foundGame.Id)
                             {
-                                if (searchResult.Id == foundGame.Id)
-                                {
-                                    gameInResults = true;
-                                }
+                                gameInResults = true;
                             }
+                        }
 
-                            if (gameInResults == false)
-                            {
-                                searchResults.Add(foundGame);
-                            }
+                        if (gameInResults == false)
+                        {
+                            searchResults.Add(foundGame);
                         }
                     }
                 }
             }
 
             return searchResults;
-
         }
 
         private static List<string> GetSearchCandidates(string GameName)
@@ -677,7 +672,7 @@ namespace gaseous_server.Classes
                 throw new Exception("No platform associated with rom");
             }
 
-            gaseous_server.Models.Game? game = await Classes.Metadata.Games.GetGame(metadataMapItem.SourceType, metadataMapItem.SourceId);
+            Game? game = await Classes.Metadata.Games.GetGame(metadataMapItem.SourceType, metadataMapItem.SourceId);
             if (game == null)
             {
                 throw new Exception("No game associated with rom");
@@ -913,7 +908,7 @@ namespace gaseous_server.Classes
                             }
                             determinedPlatform = await Platforms.GetPlatform(PlatformId);
 
-                            gaseous_server.Models.Game determinedGame = await SearchForGame(sig, PlatformId, true);
+                            Game determinedGame = await SearchForGame(sig, PlatformId, true);
 
                             await StoreGame(library, hash, sig, determinedPlatform, LibraryFile, 0, false);
                         }

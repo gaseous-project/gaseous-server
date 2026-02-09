@@ -7,7 +7,7 @@ using System.IO.Compression;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using gaseous_server.Models;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using System.Threading.Tasks;
 
 namespace gaseous_server.Classes

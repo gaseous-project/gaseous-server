@@ -7,13 +7,13 @@ using System.Net;
 using System.Reflection;
 using System.Security.Policy;
 using System.Threading.Tasks;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Humanizer;
 using IGDB;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using RestEase;
 
-namespace gaseous_server.Classes.Metadata
+namespace gaseous_server.Classes.Metadata.Deprecated
 {
     /// <summary>
     /// Handles all metadata API communications
@@ -37,7 +37,7 @@ namespace gaseous_server.Classes.Metadata
                     Config.IGDB.Secret
                 );
 
-        private static HasheousClient.Hasheous _hasheous { get; set;}
+        private static HasheousClient.Hasheous _hasheous { get; set; }
         // provide the hasheous client
         public static HasheousClient.Hasheous hasheousClient
         {
@@ -79,7 +79,7 @@ namespace gaseous_server.Classes.Metadata
                 {
                     HasheousClient.WebApp.HttpHelper.APIKey = Config.MetadataConfiguration.HasheousAPIKey;
                 }
-                
+
                 return _hasheous;
             }
         }
@@ -1661,7 +1661,7 @@ namespace gaseous_server.Classes.Metadata
                             new Uri("/api/v1/images/" + hasheousPlatformAttribute.Value, UriKind.Relative));
 
                         // generate a platform logo object
-                        platformLogo = new HasheousClient.Models.Metadata.IGDB.PlatformLogo
+                        platformLogo = new gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.PlatformLogo
                         {
                             AlphaChannel = false,
                             Animated = false,

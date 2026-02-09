@@ -6,7 +6,7 @@ using gaseous_server.Controllers;
 using gaseous_server.Models;
 using System.Linq;
 using HasheousClient.Models;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 
 namespace gaseous_server.Classes
 {

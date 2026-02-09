@@ -218,7 +218,49 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes
         [Models.NoDatabaseAttribute]
         public FileSignature.MetadataSources SourceType { get; set; }
 
+        /// <summary>
+        /// Gets the metadata source for this game, which is determined by the SourceType property.
+        /// This value is deprecated and exists as a legacy property for backward compatibility. Use the SourceType property directly to determine the metadata source.
+        /// </summary>
+        public FileSignature.MetadataSources MetadataSource
+        {
+            get
+            {
+                return SourceType;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this game is marked as a favorite by the user. This property is not mapped to the database and is used for in-memory tracking of user preferences.
+        /// </summary>
+        [Models.NoDatabaseAttribute]
+        public bool IsFavourite { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether this game has a saved game associated with it. This property is not mapped to the database and is used for in-memory tracking of saved game availability.
+        /// </summary>
+        [Models.NoDatabaseAttribute]
+        public bool HasSavedGame { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets the ID of the metadata map associated with this game. This property is not mapped to the database and is used for in-memory tracking of metadata mapping.
+        /// </summary>
+        [Models.NoDatabaseAttribute]
+        public long MetadataMapId { get; set; }
+
+        /// <summary>
+        /// Gets or sets a dictionary mapping metadata sources to lists of IDs for clear logo images associated with this game. This property is not mapped to the database and is used for in-memory tracking of clear logo metadata from different sources.
+        /// The dictionary keys represent the metadata sources, and the values are lists of clear logo IDs provided by each source.
+        /// </summary>
+        [Models.NoDatabaseAttribute]
+        public Dictionary<FileSignature.MetadataSources, List<long>> ClearLogos { get; set; }
+
+        /// <summary>
+        /// Gets or sets a list of IDs for clear logo images associated with this game.
+        /// </summary>
         public List<long> ClearLogo { get; set; } = new List<long>();
+
+
     }
 
     /// <summary>

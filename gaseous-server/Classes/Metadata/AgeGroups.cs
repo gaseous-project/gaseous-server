@@ -3,7 +3,7 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using gaseous_server.Models;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Microsoft.CodeAnalysis.Classification;
 
 namespace gaseous_server.Classes.Metadata
@@ -15,7 +15,7 @@ namespace gaseous_server.Classes.Metadata
 
         }
 
-        public static async Task<AgeGroup?> GetAgeGroup(Models.Game? game)
+        public static async Task<AgeGroup?> GetAgeGroup(Game? game)
         {
             if (game == null)
             {
@@ -51,7 +51,7 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        public static async Task<AgeGroup?> _GetAgeGroup(Models.Game game)
+        public static async Task<AgeGroup?> _GetAgeGroup(Game game)
         {
             // compile the maximum age group for the given game
             if (game != null)
