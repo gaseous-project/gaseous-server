@@ -53,14 +53,6 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static string PlatformMappingFile
-        {
-            get
-            {
-                return Path.Combine(ConfigurationPath, "platformmap.json");
-            }
-        }
-
         public static gaseous_server.Classes.Configuration.Models.Database DatabaseConfiguration
         {
             get
