@@ -298,7 +298,7 @@ namespace gaseous_server.Classes
             if (mediaGroupItem.Status == GameRomMediaGroupItem.GroupBuildStatus.WaitingForBuild)
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(mediaGroupItem.GameId)).PreferredMetadataMapItem;
-                Models.Game GameObject = await Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game GameObject = await Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 Platform PlatformObject = await Platforms.GetPlatform(mediaGroupItem.PlatformId);
                 PlatformMapping.PlatformMapItem platformMapItem = await PlatformMapping.GetPlatformMap(mediaGroupItem.PlatformId);
 

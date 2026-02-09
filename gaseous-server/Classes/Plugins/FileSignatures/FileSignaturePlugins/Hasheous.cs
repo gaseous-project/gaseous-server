@@ -141,17 +141,8 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                                                 }
                                                 else
                                                 {
-                                                    // immutable id is a string
-                                                    Platform hasheousPlatform = await Platforms.GetPlatform(metadataResult.ImmutableId);
-                                                    if (hasheousPlatform != null)
-                                                    {
-                                                        signature.MetadataSources.AddPlatform((long)hasheousPlatform.Id, hasheousPlatform.Name, metadataSource);
-                                                    }
-                                                    else
-                                                    {
-                                                        // unresolvable immutableid - use unknown platform
-                                                        signature.MetadataSources.AddPlatform(0, "Unknown Platform", MetadataSources.None);
-                                                    }
+                                                    // unresolvable immutableid - use unknown platform
+                                                    signature.MetadataSources.AddPlatform(0, "Unknown Platform", MetadataSources.None);
                                                 }
                                             }
                                         }
@@ -177,7 +168,7 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                                                         if (metadataResult.ImmutableId.Length > 0 && long.TryParse(metadataResult.ImmutableId, out long immutableId) == true)
                                                         {
                                                             // use immutable id
-                                                            gaseous_server.Models.Game hasheousGame = await Games.GetGame(FileSignature.MetadataSources.IGDB, immutableId);
+                                                            gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game hasheousGame = await Games.GetGame(FileSignature.MetadataSources.IGDB, immutableId);
                                                             signature.MetadataSources.AddGame((long)hasheousGame.Id, hasheousGame.Name, metadataSource);
                                                         }
                                                         else

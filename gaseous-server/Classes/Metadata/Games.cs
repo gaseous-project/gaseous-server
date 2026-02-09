@@ -2,6 +2,7 @@
 using System.Data;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using gaseous_server.Classes.Plugins.MetadataProviders;
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using gaseous_server.Models;
 

@@ -8,8 +8,8 @@ namespace gaseous_server.Models
         public NowPlayingItem? NowPlaying { get; set; }
         public class NowPlayingItem
         {
-            public Game Game { get; set; }
-            public HasheousClient.Models.Metadata.IGDB.Platform Platform { get; set; }
+            public gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game Game { get; set; }
+            public gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Platform Platform { get; set; }
             public long Duration { get; set; }
         }
         public ProfileImageItem? Avatar { get; set; }

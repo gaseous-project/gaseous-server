@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
+using gaseous_server.Classes.Plugins.MetadataProviders;
 using gaseous_server.Models;
 
 namespace gaseous_server.Classes
@@ -502,7 +503,7 @@ namespace gaseous_server.Classes
                     (string)row["Path"]
                 );
 
-                HasheousClient.Models.Metadata.IGDB.Platform platform = await Platforms.GetPlatform((long)row["PlatformId"]);
+                gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Platform platform = await Platforms.GetPlatform((long)row["PlatformId"]);
 
                 await ImportGame.StoreGame(library, hash, signature, platform, (string)row["Path"], (long)row["Id"]);
 

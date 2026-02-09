@@ -46,7 +46,7 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("{MetadataMapId}")]
-        [ProducesResponseType(typeof(gaseous_server.Models.Game), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(Game), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ResponseCache(CacheProfileName = "None")]
         public async Task<ActionResult> Game(long MetadataMapId)
@@ -54,7 +54,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).PreferredMetadataMapItem;
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId, true);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId, true);
 
                 // apply user specific localisation
                 if (game.GameLocalizations != null && game.GameLocalizations.Count > 0)
@@ -130,7 +130,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 List<AlternativeName> altNames = new List<AlternativeName>();
 
@@ -198,7 +198,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 if (game.AgeRatings != null)
                 {
@@ -232,7 +232,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 List<Artwork> artworks = new List<Artwork>();
                 if (game.Artworks != null)
@@ -264,7 +264,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 try
                 {
@@ -301,7 +301,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 if (game != null)
                 {
                     Cover coverObject = await Covers.GetCover(game.MetadataSource, (long?)game.Cover);
@@ -332,7 +332,7 @@ namespace gaseous_server.Controllers
         [Route("{MetadataMapId}/{MetadataSource}/{ImageType}/{ImageId}/image/{size}/{imagename}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameImage(long MetadataMapId, FileSignature.MetadataSources MetadataSource, ImageHandling.MetadataImageType imageType, long ImageId, Communications.IGDBAPI_ImageSize size, string imagename = "")
+        public async Task<ActionResult> GameImage(long MetadataMapId, FileSignature.MetadataSources MetadataSource, ImageHandling.MetadataImageType imageType, long ImageId, Classes.Plugins.PluginManagement.ImageResize.ImageSize size, string imagename = "")
         {
             try
             {
@@ -482,7 +482,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 if (game != null)
                 {
                     List<GameMode> gameModeObjects = new List<GameMode>();
@@ -519,7 +519,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 if (game != null)
                 {
                     List<Genre> genreObjects = new List<Genre>();
@@ -558,7 +558,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 if (game != null)
                 {
                     List<Theme> themeObjects = new List<Theme>();
@@ -597,7 +597,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 if (game != null)
                 {
                     List<Dictionary<string, object>> icObjects = new List<Dictionary<string, object>>();
@@ -650,7 +650,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 if (game != null)
                 {
                     List<Dictionary<string, object>> icObjects = new List<Dictionary<string, object>>();
@@ -694,7 +694,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 InvolvedCompany involvedCompany = await Classes.Metadata.InvolvedCompanies.GetInvolvedCompanies(CompanyId);
                 Company company = await Classes.Metadata.Companies.GetCompanies(game.MetadataSource, (long?)involvedCompany.Company);
@@ -741,7 +741,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).PreferredMetadataMapItem;
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 if (game != null)
                 {
@@ -784,7 +784,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).PreferredMetadataMapItem;
-                gaseous_server.Models.Game game = await (Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId));
+                Game game = await (Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId));
 
                 if (game != null)
                 {
@@ -824,7 +824,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).PreferredMetadataMapItem;
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 if (game != null)
                 {
@@ -971,7 +971,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 if (game != null)
                 {
                     List<ReleaseDate> rdObjects = new List<ReleaseDate>();
@@ -1369,7 +1369,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).PreferredMetadataMapItem;
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 Classes.RomMediaGroup.GameRomMediaGroupItem rom = await Classes.RomMediaGroup.GetMediaGroupAsync(RomGroupId);
                 if (rom.GameId != MetadataMapId)
@@ -1408,7 +1408,7 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("search")]
-        [ProducesResponseType(typeof(List<gaseous_server.Models.Game>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<ActionResult> GameSearch(long RomId = 0, string SearchString = "")
         {
@@ -1420,7 +1420,7 @@ namespace gaseous_server.Controllers
                     HashObject hash = new HashObject(romItem.Path);
                     FileSignature fileSignature = new FileSignature();
                     gaseous_server.Models.Signatures_Games romSig = await fileSignature.GetFileSignatureAsync(romItem.Library, hash, new FileInfo(romItem.Path), romItem.Path);
-                    List<gaseous_server.Models.Game> searchResults = await Classes.ImportGame.SearchForGame_GetAll(romSig.Game.Name, romSig.Flags.PlatformId);
+                    List<Game> searchResults = await Classes.ImportGame.SearchForGame_GetAll(romSig.Game.Name, romSig.Flags.PlatformId);
 
                     return Ok(searchResults);
                 }
@@ -1428,7 +1428,7 @@ namespace gaseous_server.Controllers
                 {
                     if (SearchString.Length > 0)
                     {
-                        List<gaseous_server.Models.Game> searchResults = await Classes.ImportGame.SearchForGame_GetAll(SearchString, 0);
+                        List<Game> searchResults = await Classes.ImportGame.SearchForGame_GetAll(SearchString, 0);
 
                         return Ok(searchResults);
                     }
@@ -1456,7 +1456,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 List<Screenshot> screenshots = new List<Screenshot>();
                 if (game.Screenshots != null)
@@ -1488,7 +1488,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 if (game != null)
                 {
                     Screenshot screenshotObject = await Screenshots.GetScreenshotAsync(game.MetadataSource, ScreenshotId);
@@ -1524,7 +1524,7 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
-                gaseous_server.Models.Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
                 List<GameVideo> videos = new List<GameVideo>();
                 if (game.Videos != null)

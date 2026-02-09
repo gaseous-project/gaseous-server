@@ -7,6 +7,7 @@ using System.Net;
 using System.Reflection;
 using System.Security.Policy;
 using System.Threading.Tasks;
+using gaseous_server.Classes.Plugins.MetadataProviders;
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Humanizer;
 using IGDB;
@@ -1644,7 +1645,8 @@ namespace gaseous_server.Classes.Metadata.Deprecated
             }
 
             // check the attributes for a logo
-            HasheousClient.Models.Metadata.IGDB.PlatformLogo? platformLogo = null;
+            gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.PlatformLogo? platformLogo = null;
+            Storage storageNone = new Storage(FileSignature.MetadataSources.None);
 
             if (hasheousPlatform.Attributes != null && hasheousPlatform.Attributes.Count > 0)
             {
@@ -1675,11 +1677,11 @@ namespace gaseous_server.Classes.Metadata.Deprecated
                         platformLogo.Id = longId;
 
                         // store the platform logo object
-                        Storage.CacheStatus cacheStatus = await Storage.GetCacheStatusAsync(FileSignature.MetadataSources.None, "PlatformLogo", longId);
+                        Storage.CacheStatus cacheStatus = await storageNone.GetCacheStatusAsync("PlatformLogo", longId);
                         switch (cacheStatus)
                         {
                             case Storage.CacheStatus.NotPresent:
-                                await Storage.NewCacheValue<PlatformLogo>(FileSignature.MetadataSources.None, platformLogo, false);
+                                await storageNone.StoreCacheValue<PlatformLogo>(platformLogo);
                                 break;
                         }
 
@@ -1696,7 +1698,7 @@ namespace gaseous_server.Classes.Metadata.Deprecated
                 {
                     platform.PlatformLogo = platformLogo.Id.Value;
                 }
-                await Storage.NewCacheValue<Platform>(FileSignature.MetadataSources.None, platform, true);
+                await storageNone.StoreCacheValue<Platform>(platform);
             }
             Logging.LogKey(Logging.LogType.Information, "process.populate_hasheous_platform_data", "populatehasheousplatformdata.platform_data_populated_for_id", null, new string[] { Id.ToString() });
         }

@@ -7,6 +7,7 @@ using static HasheousClient.Models.FixMatchModel;
 using NuGet.Protocol.Core.Types;
 using static gaseous_server.Classes.FileSignature;
 using System.Threading.Tasks;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 
 namespace gaseous_server.Classes
 {
@@ -181,10 +182,10 @@ namespace gaseous_server.Classes
 		public static async Task<GameRomItem> UpdateRomAsync(long RomId, long PlatformId, long GameId)
 		{
 			// ensure metadata for platformid is present
-			HasheousClient.Models.Metadata.IGDB.Platform platform = await Classes.Metadata.Platforms.GetPlatform(PlatformId);
+			Platform platform = await Classes.Metadata.Platforms.GetPlatform(PlatformId);
 
 			// ensure metadata for gameid is present
-			Models.Game game = await Classes.Metadata.Games.GetGame(FileSignature.MetadataSources.IGDB, GameId);
+			Game game = await Classes.Metadata.Games.GetGame(FileSignature.MetadataSources.IGDB, GameId);
 
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			string sql = "UPDATE Games_Roms SET PlatformId=@platformid, MetadataMapId=@gameid WHERE Id = @id";

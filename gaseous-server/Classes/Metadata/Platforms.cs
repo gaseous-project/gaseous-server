@@ -2,12 +2,15 @@
 using System.Data;
 using System.Net;
 using System.Threading.Tasks;
+using gaseous_server.Classes.Plugins.MetadataProviders;
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 
 namespace gaseous_server.Classes.Metadata
 {
     public class Platforms
     {
+        private static Storage storage = new Storage(FileSignature.MetadataSources.None);
+
         public Platforms()
         {
 
@@ -20,7 +23,7 @@ namespace gaseous_server.Classes.Metadata
             if ((Id == 0) || (Id == null))
             {
                 Platform returnValue = new Platform();
-                if (await Storage.GetCacheStatusAsync(Source, "Platform", 0) == Storage.CacheStatus.NotPresent)
+                if (await storage.GetCacheStatusAsync("Platform", 0) == Storage.CacheStatus.NotPresent)
                 {
                     returnValue = new Platform
                     {
@@ -28,19 +31,19 @@ namespace gaseous_server.Classes.Metadata
                         Name = "Unknown Platform",
                         Slug = "unknown"
                     };
-                    await Storage.NewCacheValue(Source, returnValue);
+                    await storage.StoreCacheValue<Platform>(returnValue);
 
                     return returnValue;
                 }
                 else
                 {
-                    return await Storage.GetCacheValue<Platform>(Source, returnValue, "id", 0);
+                    return await storage.GetCacheValue<Platform>(returnValue, "id", 0);
                 }
             }
             else
             {
                 Platform? RetVal = new Platform();
-                RetVal = (Platform?)await Storage.GetCacheValue<Platform>(FileSignature.MetadataSources.None, RetVal, "Id", (long)Id);
+                RetVal = (Platform?)await storage.GetCacheValue<Platform>(RetVal, "Id", (long)Id);
                 if (Source != FileSignature.MetadataSources.None)
                 {
                     if (RetVal == null)

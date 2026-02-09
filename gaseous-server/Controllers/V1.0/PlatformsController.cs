@@ -84,7 +84,7 @@ namespace gaseous_server.Controllers
         [Route("{PlatformId}/platformlogo/{size}/logo.png")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameImage(long PlatformId, Communications.IGDBAPI_ImageSize size)
+        public async Task<ActionResult> GameImage(long PlatformId, Classes.Plugins.PluginManagement.ImageResize.ImageSize size)
         {
             try
             {
@@ -125,17 +125,18 @@ namespace gaseous_server.Controllers
                 string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject), metadataSources.ToString());
                 string imagePath = Path.Combine(basePath, size.ToString(), logoObject.ImageId);
 
-                if (!System.IO.File.Exists(imagePath))
-                {
-                    Communications comms = new Communications();
-                    imagePath = await comms.GetSpecificImageFromServer(metadataSources, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject)), logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
-                }
+                //TODO: return an image object
+                // if (!System.IO.File.Exists(imagePath))
+                // {
+                //     Communications comms = new Communications();
+                //     imagePath = await comms.GetSpecificImageFromServer(metadataSources, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject)), logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
+                // }
 
-                if (!System.IO.File.Exists(imagePath))
-                {
-                    Communications comms = new Communications();
-                    imagePath = await comms.GetSpecificImageFromServer(metadataSources, basePath, logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
-                }
+                // if (!System.IO.File.Exists(imagePath))
+                // {
+                //     Communications comms = new Communications();
+                //     imagePath = await comms.GetSpecificImageFromServer(metadataSources, basePath, logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
+                // }
 
                 if (System.IO.File.Exists(imagePath))
                 {

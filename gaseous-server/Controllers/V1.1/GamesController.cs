@@ -20,6 +20,7 @@ using Asp.Versioning;
 using Humanizer;
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using gaseous_server.Models;
+using gaseous_server.Classes.Plugins.MetadataProviders;
 
 namespace gaseous_server.Controllers.v1_1
 {
@@ -129,7 +130,7 @@ namespace gaseous_server.Controllers.v1_1
                 dbDict.Add("id", MetadataMapId);
                 dbDict.Add("agegroupid", (int)user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction);
 
-                List<Models.Game> RetVal = new List<Models.Game>();
+                List<Game> RetVal = new List<Game>();
 
                 DataTable dbResponse = await db.ExecuteCMDAsync(sql, dbDict);
 
@@ -719,9 +720,9 @@ FROM
                 RetVal = new List<Games.MinimalGameItem>();
                 foreach (int i in Enumerable.Range(0, dbResponse.Rows.Count))
                 {
-                    Models.Game retGame = Storage.BuildCacheObject<Models.Game>(new Models.Game(), dbResponse.Rows[i]);
+                    Game retGame = Storage.BuildCacheObject<Game>(new Game(), dbResponse.Rows[i]);
                     retGame.MetadataMapId = (long)dbResponse.Rows[i]["MetadataMapId"];
-                    retGame.MetadataSource = (FileSignature.MetadataSources)dbResponse.Rows[i]["GameIdType"];
+                    retGame.SourceType = (FileSignature.MetadataSources)dbResponse.Rows[i]["GameIdType"];
 
                     Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
                     retMinGame.Index = indexInPage;
@@ -825,12 +826,12 @@ FROM
 
             }
 
-            public GameReturnPackage(int Count, List<Models.Game> Games)
+            public GameReturnPackage(int Count, List<Game> Games)
             {
                 this.Count = Count;
 
                 List<Games.MinimalGameItem> minimalGames = new List<Games.MinimalGameItem>();
-                foreach (Models.Game game in Games)
+                foreach (Game game in Games)
                 {
                     minimalGames.Add(new Classes.Metadata.Games.MinimalGameItem(game));
                 }

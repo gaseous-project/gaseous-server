@@ -8,6 +8,7 @@ using System.Data;
 using Asp.Versioning;
 using System.IO.Compression;
 using gaseous_server.Classes.Metadata;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 
 namespace gaseous_server.Controllers.v1_1
 {
@@ -270,7 +271,7 @@ namespace gaseous_server.Controllers.v1_1
                 else
                 {
                     RomMediaGroup.GameRomMediaGroupItem mediaGroupItem = await RomMediaGroup.GetMediaGroupAsync(RomId);
-                    Models.Game game = await Games.GetGame(Communications.MetadataSource, mediaGroupItem.GameId);
+                    Game game = await Games.GetGame(Config.MetadataConfiguration.DefaultMetadataSource, mediaGroupItem.GameId);
                     Classes.HashObject HashObject = new Classes.HashObject(Path.Combine(Config.LibraryConfiguration.LibraryMediaGroupDirectory, mediaGroupItem.Id.ToString() + ".zip"));
                     romName = game.Name;
                     romMd5 = HashObject.md5hash;

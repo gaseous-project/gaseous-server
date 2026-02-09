@@ -1,4 +1,5 @@
 using Newtonsoft.Json;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 
 namespace gaseous_server.Classes.Configuration.Models
 {
@@ -108,21 +109,21 @@ namespace gaseous_server.Classes.Configuration.Models
             }
         }
 
-        public string LibraryMetadataDirectory_Platform(HasheousClient.Models.Metadata.IGDB.Platform platform)
+        public string LibraryMetadataDirectory_Platform(Platform platform)
         {
             string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Platforms", platform.Slug);
             if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
             return MetadataPath;
         }
 
-        public string LibraryMetadataDirectory_Game(gaseous_server.Models.Game game)
+        public string LibraryMetadataDirectory_Game(Game game)
         {
             string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Games", game.Slug);
             if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
             return MetadataPath;
         }
 
-        public string LibraryMetadataDirectory_Company(HasheousClient.Models.Metadata.IGDB.Company company)
+        public string LibraryMetadataDirectory_Company(Company company)
         {
             string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Companies", company.Slug);
             if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }

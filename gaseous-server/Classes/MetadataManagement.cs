@@ -7,6 +7,7 @@ using gaseous_server.Models;
 using System.Linq;
 using HasheousClient.Models;
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
+using NuGet.Protocol.Plugins;
 
 namespace gaseous_server.Classes
 {
@@ -580,8 +581,7 @@ namespace gaseous_server.Classes
 					{
 						if (Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous)
 						{
-
-							await Communications.PopulateHasheousPlatformData((long)dr["id"]);
+							await Hasheous.PopulateHasheousPlatformData((long)dr["id"]);
 						}
 					}
 					else
@@ -823,7 +823,7 @@ namespace gaseous_server.Classes
 				}
 
 				Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_metadata_for_game_using_source_with_source_id", null, new string[] { metadataItem.SignatureGameName, metadataItem.Id.ToString(), item.SourceType.ToString(), item.SourceId.ToString() });
-				Models.Game? game = await Metadata.Games.GetGame(item.SourceType, item.SourceId, true, forceRefresh);
+				Game? game = await Metadata.Games.GetGame(item.SourceType, item.SourceId, true, forceRefresh);
 
 				// get supporting metadata
 				if (game != null)
@@ -844,7 +844,7 @@ namespace gaseous_server.Classes
 								{
 									foreach (long ageRatingContentDescriptionId in ageRating.RatingContentDescriptions)
 									{
-										await Metadata.AgeRatingContentDescriptionsV2.GetAgeRatingContentDescriptionsV2(item.SourceType, ageRatingContentDescriptionId);
+										await Metadata.AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(item.SourceType, ageRatingContentDescriptionId);
 									}
 								}
 							}
@@ -862,13 +862,13 @@ namespace gaseous_server.Classes
 						foreach (long artworkId in game.Artworks)
 						{
 							await Metadata.Artworks.GetArtwork(item.SourceType, artworkId);
-							await ImageHandling.GameImage((long)game.MetadataMapId, item.SourceType, ImageHandling.MetadataImageType.artwork, artworkId, Communications.IGDBAPI_ImageSize.original);
+							await ImageHandling.GameImage((long)game.MetadataMapId, item.SourceType, ImageHandling.MetadataImageType.artwork, artworkId, Plugins.PluginManagement.ImageResize.ImageSize.original);
 						}
 					}
 					if (game.Cover != null)
 					{
 						await Metadata.Covers.GetCover(item.SourceType, (long?)game.Cover);
-						await ImageHandling.GameImage((long)game.MetadataMapId, item.SourceType, ImageHandling.MetadataImageType.cover, game.Cover, Communications.IGDBAPI_ImageSize.original);
+						await ImageHandling.GameImage((long)game.MetadataMapId, item.SourceType, ImageHandling.MetadataImageType.cover, game.Cover, Plugins.PluginManagement.ImageResize.ImageSize.original);
 					}
 					if (game.GameModes != null)
 					{
@@ -937,7 +937,7 @@ namespace gaseous_server.Classes
 						foreach (long screenshotId in game.Screenshots)
 						{
 							await Metadata.Screenshots.GetScreenshotAsync(item.SourceType, screenshotId);
-							await ImageHandling.GameImage((long)game.MetadataMapId, item.SourceType, ImageHandling.MetadataImageType.screenshots, screenshotId, Communications.IGDBAPI_ImageSize.original);
+							await ImageHandling.GameImage((long)game.MetadataMapId, item.SourceType, ImageHandling.MetadataImageType.screenshots, screenshotId, Plugins.PluginManagement.ImageResize.ImageSize.original);
 						}
 					}
 					if (game.Themes != null)

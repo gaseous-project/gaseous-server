@@ -14,8 +14,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Scripting;
 using static gaseous_server.Classes.Metadata.AgeRatings;
 using Asp.Versioning;
-using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
-ataProviders.MetadataTypes;
 using Microsoft.AspNetCore.Identity;
 using Authentication;
 
