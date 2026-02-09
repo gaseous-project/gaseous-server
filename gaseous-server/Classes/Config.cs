@@ -61,7 +61,7 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static ConfigFile.Database DatabaseConfiguration
+        public static gaseous_server.Classes.Configuration.Models.Database DatabaseConfiguration
         {
             get
             {
@@ -69,7 +69,7 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static ConfigFile.Library LibraryConfiguration
+        public static gaseous_server.Classes.Configuration.Models.Library LibraryConfiguration
         {
             get
             {
@@ -77,7 +77,7 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static ConfigFile.MetadataAPI MetadataConfiguration
+        public static gaseous_server.Classes.Configuration.Models.MetadataAPI MetadataConfiguration
         {
             get
             {
@@ -85,7 +85,7 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static ConfigFile.IGDB IGDB
+        public static gaseous_server.Classes.Configuration.Models.Providers.IGDB IGDB
         {
             get
             {
@@ -93,7 +93,7 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static ConfigFile.SocialAuth SocialAuthConfiguration
+        public static gaseous_server.Classes.Configuration.Models.Security.SocialAuth SocialAuthConfiguration
         {
             get
             {
@@ -101,7 +101,7 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static ConfigFile.ReverseProxy ReverseProxyConfiguration
+        public static gaseous_server.Classes.Configuration.Models.Security.ReverseProxy ReverseProxyConfiguration
         {
             get
             {
@@ -146,7 +146,7 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static ConfigFile.Logging LoggingConfiguration
+        public static gaseous_server.Classes.Configuration.Models.Logging LoggingConfiguration
         {
             get
             {
@@ -508,20 +508,20 @@ namespace gaseous_server.Classes
 
         public class ConfigFile
         {
-            public Database DatabaseConfiguration = new Database();
+            public gaseous_server.Classes.Configuration.Models.Database DatabaseConfiguration = new gaseous_server.Classes.Configuration.Models.Database();
 
             [JsonIgnore]
-            public Library LibraryConfiguration = new Library();
+            public gaseous_server.Classes.Configuration.Models.Library LibraryConfiguration = new gaseous_server.Classes.Configuration.Models.Library();
 
-            public MetadataAPI MetadataConfiguration = new MetadataAPI();
+            public gaseous_server.Classes.Configuration.Models.MetadataAPI MetadataConfiguration = new gaseous_server.Classes.Configuration.Models.MetadataAPI();
 
-            public IGDB IGDBConfiguration = new IGDB();
+            public gaseous_server.Classes.Configuration.Models.Providers.IGDB IGDBConfiguration = new gaseous_server.Classes.Configuration.Models.Providers.IGDB();
 
-            public SocialAuth SocialAuthConfiguration = new SocialAuth();
+            public gaseous_server.Classes.Configuration.Models.Security.SocialAuth SocialAuthConfiguration = new gaseous_server.Classes.Configuration.Models.Security.SocialAuth();
 
-            public Logging LoggingConfiguration = new Logging();
+            public gaseous_server.Classes.Configuration.Models.Logging LoggingConfiguration = new gaseous_server.Classes.Configuration.Models.Logging();
 
-            public ReverseProxy ReverseProxyConfiguration = new ReverseProxy();
+            public gaseous_server.Classes.Configuration.Models.Security.ReverseProxy ReverseProxyConfiguration = new gaseous_server.Classes.Configuration.Models.Security.ReverseProxy();
 
             // Port the web server listens on (Kestrel). Default 5198.
             private static int _DefaultServerPort
@@ -551,627 +551,6 @@ namespace gaseous_server.Classes
             }
 
             public string ServerLanguage = _ServerLanguage;
-
-            public class Database
-            {
-                private static string _DefaultHostName
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("dbhost")))
-                        {
-                            return Environment.GetEnvironmentVariable("dbhost");
-                        }
-                        else
-                        {
-                            return "localhost";
-                        }
-                    }
-                }
-
-                private static string _DefaultUserName
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("dbuser")))
-                        {
-                            return Environment.GetEnvironmentVariable("dbuser");
-                        }
-                        else
-                        {
-                            return "gaseous";
-                        }
-                    }
-                }
-
-                private static string _DefaultPassword
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("dbpass")))
-                        {
-                            return Environment.GetEnvironmentVariable("dbpass");
-                        }
-                        else
-                        {
-                            return "gaseous";
-                        }
-                    }
-                }
-
-                private static string _DefaultDatabaseName
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("dbname")))
-                        {
-                            return Environment.GetEnvironmentVariable("dbname");
-                        }
-                        else
-                        {
-                            return "gaseous";
-                        }
-                    }
-                }
-
-                private static int _DefaultDatabasePort
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("dbport")))
-                        {
-                            return int.Parse(Environment.GetEnvironmentVariable("dbport"));
-                        }
-                        else
-                        {
-                            return 3306;
-                        }
-                    }
-                }
-
-                public string HostName = _DefaultHostName;
-                public string UserName = _DefaultUserName;
-                public string Password = _DefaultPassword;
-                public string DatabaseName = _DefaultDatabaseName;
-                public int Port = _DefaultDatabasePort;
-
-                [JsonIgnore]
-                public string ConnectionString
-                {
-                    get
-                    {
-                        string dbConnString = "server=" + HostName + ";port=" + Port + ";userid=" + UserName + ";password=" + Password + ";database=" + DatabaseName + "";
-                        return dbConnString;
-                    }
-                }
-
-                [JsonIgnore]
-                public string ConnectionStringNoDatabase
-                {
-                    get
-                    {
-                        string dbConnString = "server=" + HostName + ";port=" + Port + ";userid=" + UserName + ";password=" + Password + ";";
-                        return dbConnString;
-                    }
-                }
-
-                [JsonIgnore]
-                public bool UpgradeInProgress { get; set; } = false;
-            }
-
-            public class Library
-            {
-                public string LibraryRootDirectory
-                {
-                    get
-                    {
-                        return Path.Combine(Config.ConfigurationPath, "Data");
-                    }
-                }
-
-                public string LibraryImportDirectory
-                {
-                    get
-                    {
-                        return Path.Combine(LibraryRootDirectory, "Import");
-                    }
-                }
-
-                public string LibraryImportErrorDirectory
-                {
-                    get
-                    {
-                        return Path.Combine(LibraryRootDirectory, "Import Errors");
-                    }
-                }
-
-                public string LibraryImportDuplicatesDirectory
-                {
-                    get
-                    {
-                        return Path.Combine(LibraryImportErrorDirectory, "Duplicates");
-                    }
-                }
-
-                public string LibraryImportGeneralErrorDirectory
-                {
-                    get
-                    {
-                        return Path.Combine(LibraryImportErrorDirectory, "Error");
-                    }
-                }
-
-                public string LibraryBIOSDirectory
-                {
-                    get
-                    {
-                        return Path.Combine(LibraryRootDirectory, "BIOS");
-                    }
-                }
-
-                public string LibraryFirmwareDirectory
-                {
-                    get
-                    {
-                        return Path.Combine(LibraryRootDirectory, "Firmware");
-                    }
-                }
-
-                public string LibraryUploadDirectory
-                {
-                    get
-                    {
-                        return Path.Combine(LibraryRootDirectory, "Upload");
-                    }
-                }
-
-                public string LibraryMetadataDirectory
-                {
-                    get
-                    {
-                        return Path.Combine(LibraryRootDirectory, "Metadata");
-                    }
-                }
-
-                public string LibraryContentDirectory
-                {
-                    get
-                    {
-                        return Path.Combine(LibraryRootDirectory, "Content");
-                    }
-                }
-
-                public string LibraryTempDirectory
-                {
-                    get
-                    {
-                        return Path.Combine(LibraryRootDirectory, "Temp");
-                    }
-                }
-
-                public string LibraryCollectionsDirectory
-                {
-                    get
-                    {
-                        return Path.Combine(LibraryRootDirectory, "Collections");
-                    }
-                }
-
-                public string LibraryMediaGroupDirectory
-                {
-                    get
-                    {
-                        return Path.Combine(LibraryRootDirectory, "Media Groups");
-                    }
-                }
-
-                public string LibraryMetadataDirectory_Platform(HasheousClient.Models.Metadata.IGDB.Platform platform)
-                {
-                    string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Platforms", platform.Slug);
-                    if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
-                    return MetadataPath;
-                }
-
-                public string LibraryMetadataDirectory_Game(gaseous_server.Models.Game game)
-                {
-                    string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Games", game.Slug);
-                    if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
-                    return MetadataPath;
-                }
-
-                public string LibraryMetadataDirectory_Company(HasheousClient.Models.Metadata.IGDB.Company company)
-                {
-                    string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Companies", company.Slug);
-                    if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
-                    return MetadataPath;
-                }
-
-                public string LibraryMetadataDirectory_Hasheous()
-                {
-                    string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Hasheous");
-                    if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
-                    return MetadataPath;
-                }
-
-                public string LibraryMetadataDirectory_TheGamesDB()
-                {
-                    string MetadataPath = Path.Combine(LibraryMetadataDirectory, "TheGamesDB");
-                    if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
-                    return MetadataPath;
-                }
-
-                /// <summary>
-                /// Gets the metadata directory path for game bundles based on the metadata source and game ID.
-                /// </summary>
-                /// <param name="SourceType">The metadata source type.</param>
-                /// <param name="GameId">The game ID.</param>
-                /// <returns>The full path to the game bundles metadata directory.</returns>
-                public string LibraryMetadataDirectory_GameBundles(FileSignature.MetadataSources SourceType, long GameId)
-                {
-                    return LibraryMetadataDirectory_GameBundles(SourceType, "Direct", GameId);
-                }
-
-                /// <summary>
-                /// Gets the metadata directory path for game bundles based on the metadata source and game ID.
-                /// </summary>
-                /// <param name="SourceType">The metadata source type.</param>
-                /// <param name="ProxyName">The proxy name.</param>
-                /// <param name="GameId">The game ID.</param>
-                /// <returns>The full path to the game bundles metadata directory.</returns>
-                public string LibraryMetadataDirectory_GameBundles(FileSignature.MetadataSources SourceType, string ProxyName, long GameId)
-                {
-                    string MetadataPath = Path.Combine(LibraryMetadataDirectory, "GameMetadata", "Bundles", SourceType.ToString(), ProxyName, GameId.ToString());
-                    return MetadataPath;
-                }
-
-                public string LibrarySignaturesDirectory
-                {
-                    get
-                    {
-                        return Path.Combine(LibraryRootDirectory, "Signatures");
-                    }
-                }
-
-                public string LibrarySignaturesProcessedDirectory
-                {
-                    get
-                    {
-                        return Path.Combine(LibraryRootDirectory, "Signatures - Processed");
-                    }
-                }
-
-                public void InitLibrary()
-                {
-                    if (!Directory.Exists(LibraryRootDirectory)) { Directory.CreateDirectory(LibraryRootDirectory); }
-                    if (!Directory.Exists(LibraryImportDirectory)) { Directory.CreateDirectory(LibraryImportDirectory); }
-                    if (!Directory.Exists(LibraryFirmwareDirectory)) { Directory.CreateDirectory(LibraryFirmwareDirectory); }
-                    if (!Directory.Exists(LibraryUploadDirectory)) { Directory.CreateDirectory(LibraryUploadDirectory); }
-                    if (!Directory.Exists(LibraryMetadataDirectory)) { Directory.CreateDirectory(LibraryMetadataDirectory); }
-                    if (!Directory.Exists(LibraryContentDirectory)) { Directory.CreateDirectory(LibraryContentDirectory); }
-                    if (!Directory.Exists(LibraryTempDirectory)) { Directory.CreateDirectory(LibraryTempDirectory); }
-                    if (!Directory.Exists(LibraryCollectionsDirectory)) { Directory.CreateDirectory(LibraryCollectionsDirectory); }
-                    if (!Directory.Exists(LibrarySignaturesDirectory)) { Directory.CreateDirectory(LibrarySignaturesDirectory); }
-                    if (!Directory.Exists(LibrarySignaturesProcessedDirectory)) { Directory.CreateDirectory(LibrarySignaturesProcessedDirectory); }
-                }
-            }
-
-            public class MetadataAPI
-            {
-                public static string _HasheousClientAPIKey
-                {
-                    get
-                    {
-                        return "Pna5SRcbJ6R8aasytab_6vZD0aBKDGNZKRz4WY4xArpfZ-3mdZq0hXIGyy0AD43b";
-                    }
-                }
-
-                private static FileSignature.MetadataSources _MetadataSource
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("metadatasource")))
-                        {
-                            return (FileSignature.MetadataSources)Enum.Parse(typeof(FileSignature.MetadataSources), Environment.GetEnvironmentVariable("metadatasource"));
-                        }
-                        else
-                        {
-                            return FileSignature.MetadataSources.IGDB;
-                        }
-                    }
-                }
-
-                private static HasheousClient.Models.MetadataModel.SignatureSources _SignatureSource
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("signaturesource")))
-                        {
-                            return (HasheousClient.Models.MetadataModel.SignatureSources)Enum.Parse(typeof(HasheousClient.Models.MetadataModel.SignatureSources), Environment.GetEnvironmentVariable("signaturesource"));
-                        }
-                        else
-                        {
-                            return HasheousClient.Models.MetadataModel.SignatureSources.LocalOnly;
-                        }
-                    }
-                }
-
-                private static bool _HasheousSubmitFixes { get; set; } = false;
-
-                private static string _HasheousAPIKey { get; set; } = "";
-
-                private static string _HasheousHost
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("hasheoushost")))
-                        {
-                            return Environment.GetEnvironmentVariable("hasheoushost");
-                        }
-                        else
-                        {
-                            return "https://hasheous.org/";
-                        }
-                    }
-                }
-
-                public FileSignature.MetadataSources DefaultMetadataSource = _MetadataSource;
-
-                public HasheousClient.Models.MetadataModel.SignatureSources SignatureSource = _SignatureSource;
-
-                public bool HasheousSubmitFixes = _HasheousSubmitFixes;
-
-                public string HasheousAPIKey = _HasheousAPIKey;
-
-                [JsonIgnore]
-                public string HasheousClientAPIKey = _HasheousClientAPIKey;
-
-                public string HasheousHost = _HasheousHost;
-            }
-
-            public class IGDB
-            {
-                private static string _DefaultIGDBClientId
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("igdbclientid")))
-                        {
-                            return Environment.GetEnvironmentVariable("igdbclientid");
-                        }
-                        else
-                        {
-                            return "";
-                        }
-                    }
-                }
-
-                private static string _DefaultIGDBSecret
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("igdbclientsecret")))
-                        {
-                            return Environment.GetEnvironmentVariable("igdbclientsecret");
-                        }
-                        else
-                        {
-                            return "";
-                        }
-                    }
-                }
-
-                private static bool _MetadataUseHasheousProxy
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("igdbusehasheousproxy")))
-                        {
-                            return bool.Parse(Environment.GetEnvironmentVariable("igdbusehasheousproxy"));
-                        }
-                        else
-                        {
-                            return false;
-                        }
-                    }
-                }
-
-                public string ClientId = _DefaultIGDBClientId;
-                public string Secret = _DefaultIGDBSecret;
-                public bool UseHasheousProxy = _MetadataUseHasheousProxy;
-            }
-
-            public class Logging
-            {
-                public bool DebugLogging = false;
-
-                // log retention in days
-                public int LogRetention = 7;
-
-                public bool AlwaysLogToDisk = false;
-            }
-
-            public class SocialAuth
-            {
-                private static bool _PasswordLoginEnabled
-                {
-                    get
-                    {
-                        bool returnValue = true; // default to enabled
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("passwordloginenabled")))
-                        {
-                            returnValue = bool.Parse(Environment.GetEnvironmentVariable("passwordloginenabled"));
-                        }
-
-                        // password login can only be disabled if at least one other auth method is enabled
-                        if (!returnValue)
-                        {
-                            if (String.IsNullOrEmpty(_GoogleClientId) && String.IsNullOrEmpty(_MicrosoftClientId) && String.IsNullOrEmpty(_OIDCAuthority))
-                            {
-                                returnValue = true; // force password login to be enabled if no other auth methods are set
-                            }
-                        }
-                        return returnValue;
-                    }
-                }
-
-                private static string _GoogleClientId
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("googleclientid")))
-                        {
-                            return Environment.GetEnvironmentVariable("googleclientid");
-                        }
-                        else
-                        {
-                            return "";
-                        }
-                    }
-                }
-
-                private static string _GoogleClientSecret
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("googleclientsecret")))
-                        {
-                            return Environment.GetEnvironmentVariable("googleclientsecret");
-                        }
-                        else
-                        {
-                            return "";
-                        }
-                    }
-                }
-
-                private static string _MicrosoftClientId
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("microsoftclientid")))
-                        {
-                            return Environment.GetEnvironmentVariable("microsoftclientid");
-                        }
-                        else
-                        {
-                            return "";
-                        }
-                    }
-                }
-
-                private static string _MicrosoftClientSecret
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("microsoftclientsecret")))
-                        {
-                            return Environment.GetEnvironmentVariable("microsoftclientsecret");
-                        }
-                        else
-                        {
-                            return "";
-                        }
-                    }
-                }
-
-                private static string _OIDCAuthority
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("oidcauthority")))
-                        {
-                            return Environment.GetEnvironmentVariable("oidcauthority");
-                        }
-                        else
-                        {
-                            return "";
-                        }
-                    }
-                }
-
-                public static string _OIDCClientId
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("oidcclientid")))
-                        {
-                            return Environment.GetEnvironmentVariable("oidcclientid");
-                        }
-                        else
-                        {
-                            return "";
-                        }
-                    }
-                }
-
-                public static string _OIDCClientSecret
-                {
-                    get
-                    {
-                        if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("oidcclientsecret")))
-                        {
-                            return Environment.GetEnvironmentVariable("oidcclientsecret");
-                        }
-                        else
-                        {
-                            return "";
-                        }
-                    }
-                }
-
-                public bool PasswordLoginEnabled = _PasswordLoginEnabled;
-
-                public string GoogleClientId = _GoogleClientId;
-                public string GoogleClientSecret = _GoogleClientSecret;
-
-                public string MicrosoftClientId = _MicrosoftClientId;
-                public string MicrosoftClientSecret = _MicrosoftClientSecret;
-
-                public string OIDCAuthority = _OIDCAuthority;
-                public string OIDCClientId = _OIDCClientId;
-                public string OIDCClientSecret = _OIDCClientSecret;
-
-                [JsonIgnore]
-                public bool GoogleAuthEnabled
-                {
-                    get
-                    {
-                        return !String.IsNullOrEmpty(GoogleClientId) && !String.IsNullOrEmpty(GoogleClientSecret);
-                    }
-                }
-
-                [JsonIgnore]
-                public bool MicrosoftAuthEnabled
-                {
-                    get
-                    {
-                        return !String.IsNullOrEmpty(MicrosoftClientId) && !String.IsNullOrEmpty(MicrosoftClientSecret);
-                    }
-                }
-
-                [JsonIgnore]
-                public bool OIDCAuthEnabled
-                {
-                    get
-                    {
-                        return !String.IsNullOrEmpty(OIDCAuthority) && !String.IsNullOrEmpty(OIDCClientId) && !String.IsNullOrEmpty(OIDCClientSecret);
-                    }
-                }
-            }
-
-            public class ReverseProxy
-            {
-                // If you have an upstream reverse proxy (nginx/traefik/caddy), add its IPs here.
-                // Example: [ "127.0.0.1", "10.0.0.2" ]
-                public List<string> KnownProxies { get; set; } = new List<string>();
-
-                // Known networks in CIDR notation.
-                // Example: [ "10.0.0.0/8", "192.168.0.0/16" ]
-                public List<string> KnownNetworks { get; set; } = new List<string>();
-
-                // Aligns with ForwardedHeadersOptions.RequireHeaderSymmetry
-                public bool RequireHeaderSymmetry { get; set; } = false;
-            }
         }
     }
 }
