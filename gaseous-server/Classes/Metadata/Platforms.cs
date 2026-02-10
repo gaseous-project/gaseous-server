@@ -9,20 +9,19 @@ namespace gaseous_server.Classes.Metadata
 {
     public class Platforms
     {
-        private static Storage storage = new Storage(FileSignature.MetadataSources.None);
-
         public Platforms()
         {
 
         }
 
-        public static async Task<Platform?> GetPlatform(long Id, FileSignature.MetadataSources? SourceType = null)
+        public static async Task<Platform?> GetPlatform(long Id, FileSignature.MetadataSources? SourceType = null, bool ForceRefresh = false)
         {
             FileSignature.MetadataSources Source = SourceType ?? Config.MetadataConfiguration.DefaultMetadataSource;
 
             if ((Id == 0) || (Id == null))
             {
                 Platform returnValue = new Platform();
+                Storage storage = new Storage(FileSignature.MetadataSources.None);
                 if (await storage.GetCacheStatusAsync("Platform", 0) == Storage.CacheStatus.NotPresent)
                 {
                     returnValue = new Platform
@@ -42,16 +41,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Platform? RetVal = new Platform();
-                RetVal = (Platform?)await storage.GetCacheValue<Platform>(RetVal, "Id", (long)Id);
-                if (Source != FileSignature.MetadataSources.None)
-                {
-                    if (RetVal == null)
-                    {
-                        RetVal = await Metadata.GetMetadataAsync<Platform>(Source, (long)Id, false);
-                    }
-                }
-                return RetVal;
+                return await Metadata.GetMetadataAsync<Platform>(Source, (long)Id, ForceRefresh);
             }
         }
     }

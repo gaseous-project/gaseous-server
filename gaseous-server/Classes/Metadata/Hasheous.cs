@@ -20,7 +20,10 @@ namespace gaseous_server.Classes.Metadata
                     _hasheous = new HasheousClient.Hasheous();
 
                     // Configure the Hasheous client
-                    HasheousClient.WebApp.HttpHelper.BaseUri = Config.MetadataConfiguration.HasheousHost;
+                    if (HasheousClient.WebApp.HttpHelper.BaseUri == null || HasheousClient.WebApp.HttpHelper.BaseUri != Config.MetadataConfiguration.HasheousHost)
+                    {
+                        HasheousClient.WebApp.HttpHelper.BaseUri = Config.MetadataConfiguration.HasheousHost;
+                    }
 
                     // Set the API key for Hasheous Proxy
                     if (HasheousClient.WebApp.HttpHelper.ClientKey == null || HasheousClient.WebApp.HttpHelper.ClientKey != Config.MetadataConfiguration.HasheousClientAPIKey)

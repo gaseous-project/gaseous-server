@@ -332,7 +332,7 @@ namespace gaseous_server.Controllers
         [Route("{MetadataMapId}/{MetadataSource}/{ImageType}/{ImageId}/image/{size}/{imagename}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameImage(long MetadataMapId, FileSignature.MetadataSources MetadataSource, ImageHandling.MetadataImageType imageType, long ImageId, Classes.Plugins.PluginManagement.ImageResize.ImageSize size, string imagename = "")
+        public async Task<ActionResult> GameImage(long MetadataMapId, FileSignature.MetadataSources MetadataSource, ImageType imageType, long ImageId, Classes.Plugins.PluginManagement.ImageResize.ImageSize size, string imagename = "")
         {
             try
             {

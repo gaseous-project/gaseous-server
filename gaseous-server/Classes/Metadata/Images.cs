@@ -7,7 +7,7 @@ namespace gaseous_server.Classes.Metadata
 {
     public class ImageHandling
     {
-        public static async Task<Dictionary<string, string>?> GameImage(long MetadataMapId, FileSignature.MetadataSources MetadataSource, MetadataImageType imageType, long ImageId, Plugins.PluginManagement.ImageResize.ImageSize size, string imagename = "")
+        public static async Task<Dictionary<string, string>?> GameImage(long MetadataMapId, FileSignature.MetadataSources MetadataSource, ImageType imageType, long ImageId, Plugins.PluginManagement.ImageResize.ImageSize size, string imagename = "")
         {
             // validate imagename is not dangerous
             if (imagename.Contains("..") || imagename.Contains("/") || imagename.Contains("\\"))
@@ -20,7 +20,7 @@ namespace gaseous_server.Classes.Metadata
                 MetadataMap.MetadataMapItem metadataMap = null;
                 Game game = null;
 
-                if (imageType == MetadataImageType.clearlogo)
+                if (imageType == ImageType.ClearLogo)
                 {
                     // search for the first metadata map item that has a clear logo
                     List<long> metadataMapItemIds = await MetadataManagement.GetAssociatedMetadataMapIds(MetadataMapId);
@@ -54,7 +54,7 @@ namespace gaseous_server.Classes.Metadata
 
                 switch (imageType)
                 {
-                    case MetadataImageType.cover:
+                    case ImageType.Cover:
                         if (game.Cover != null)
                         {
                             // Cover cover = Classes.Metadata.Covers.GetCover(game.MetadataSource, (long?)game.Cover);
@@ -64,7 +64,7 @@ namespace gaseous_server.Classes.Metadata
                         }
                         break;
 
-                    case MetadataImageType.screenshots:
+                    case ImageType.Screenshot:
                         if (game.Screenshots != null)
                         {
                             if (game.Screenshots.Contains(ImageId))
@@ -77,7 +77,7 @@ namespace gaseous_server.Classes.Metadata
                         }
                         break;
 
-                    case MetadataImageType.artwork:
+                    case ImageType.Artwork:
                         if (game.Artworks != null)
                         {
                             if (game.Artworks.Contains(ImageId))
@@ -90,7 +90,7 @@ namespace gaseous_server.Classes.Metadata
                         }
                         break;
 
-                    case MetadataImageType.clearlogo:
+                    case ImageType.ClearLogo:
                         if (game.ClearLogos != null)
                         {
                             if (game.ClearLogos.ContainsKey(MetadataSource))
@@ -144,14 +144,6 @@ namespace gaseous_server.Classes.Metadata
             {
                 return null;
             }
-        }
-
-        public enum MetadataImageType
-        {
-            cover,
-            screenshots,
-            artwork,
-            clearlogo
         }
     }
 }

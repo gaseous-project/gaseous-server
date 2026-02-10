@@ -4234,6 +4234,7 @@ class SettingsCard {
                     logo.src = '/api/v1.1/Platforms/' + platform.igdbId + '/platformlogo/original/';
                     logo.alt = platform.igdbName;
                     logo.title = platform.igdbName;
+                    logo.loading = 'lazy';
                     logo.classList.add('platform_image');
 
                     logoBox.appendChild(logo);

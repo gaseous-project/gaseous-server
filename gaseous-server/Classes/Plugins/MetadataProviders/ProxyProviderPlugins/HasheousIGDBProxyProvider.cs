@@ -76,9 +76,20 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             else
             {
                 // only games are supported via bundles - reach out to Hasheous IGDB proxy for other types
-                var response = await hasheous.GetMetadataProxyAsync<T>(MetadataSources.IGDB, id);
-
-                return response;
+                Uri proxyUrl = new Uri($"{Config.MetadataConfiguration.HasheousHost}api/v1/MetadataProxy/IGDB/{itemType}?Id={id}");
+                Dictionary<string, string> headers = new Dictionary<string, string>
+                {
+                    { "X-Client-API-Key", Config.MetadataConfiguration.HasheousClientAPIKey }
+                };
+                var response = await comms.SendRequestAsync<T>(HTTPComms.HttpMethod.GET, proxyUrl, headers);
+                if (response != null && response.StatusCode == 200)
+                {
+                    return response.Body;
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 

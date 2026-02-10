@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using static gaseous_server.Classes.Metadata.ImageHandling;
 
 namespace gaseous_server.Classes.Metadata
 {
@@ -53,7 +54,8 @@ namespace gaseous_server.Classes.Metadata
                 },
                 ProxyProvider = new Plugins.MetadataProviders.HasheousIGDBProxyProvider()
             },
-            new Plugins.MetadataProviders.TheGamesDBProvider.Provider()
+            new Plugins.MetadataProviders.TheGamesDBProvider.Provider(),
+            new Plugins.MetadataProviders.NoneProvider.Provider()
         };
 
         #endregion Metadata Sources
@@ -259,6 +261,66 @@ namespace gaseous_server.Classes.Metadata
             }
 
             return await provider.SearchGamesAsync(searchType, platformId, searchCandidates);
+        }
+
+        /// <summary>
+        /// Retrieves an image from the specified metadata provider based on the given image type, ID, and desired size.
+        /// </summary>
+        /// <param name="SourceType">
+        /// The metadata source from which to retrieve the image.
+        /// </param>
+        /// <param name="GameId">
+        /// The ID of the game for which to retrieve the image.
+        /// </param>
+        /// <param name="imageType">
+        /// The type of image to retrieve (e.g., artwork, cover, screenshot).
+        /// </param>
+        /// <param name="Url">
+        /// The URL of the image to retrieve.
+        /// </param>
+        /// <param name="size">
+        /// The desired size of the image to retrieve.
+        /// </param>
+        /// <returns>
+        /// A byte array containing the image data, or null if the image cannot be retrieved.
+        /// </returns>
+        /// <exception cref="NoMetadataProvidersConfigured">
+        /// Thrown when no metadata provider is configured for the specified source type.
+        /// </exception>
+        public static async Task<byte[]?> GetImageAsync(FileSignature.MetadataSources SourceType, long GameId, ImageType imageType, string Url, Plugins.PluginManagement.ImageResize.ImageSize size)
+        {
+            var provider = MetadataProviders.FirstOrDefault(x => x.SourceType == SourceType);
+            if (provider == null)
+            {
+                throw new NoMetadataProvidersConfigured();
+            }
+
+            byte[]? result = await provider.GetGameImageAsync(GameId, Url, imageType);
+            if (result == null)
+            {
+                return null;
+            }
+
+            // use Magick.Net to resize the image to the desired size
+            using (var image = new ImageMagick.MagickImage(result))
+            {
+                // get the resolution attribute for the ImageSize enum value
+                var resolutionAttribute = Common.GetResolution(size);
+                if (resolutionAttribute == null)
+                {
+                    return result;
+                }
+
+                // if the resolution attribute is the default (0, 0), return the original image
+                if (resolutionAttribute.X == 0 && resolutionAttribute.Y == 0)
+                {
+                    return result;
+                }
+
+                // otherwise, resize the image to the desired resolution
+                image.Resize((uint)resolutionAttribute.X, (uint)resolutionAttribute.Y);
+                return image.ToByteArray();
+            }
         }
         #endregion
     }

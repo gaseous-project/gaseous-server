@@ -397,13 +397,45 @@ namespace gaseous_server.Classes
                         }
                     }
 
-                    // If request was successful, exit loop
-                    if (httpResponseMessage.IsSuccessStatusCode)
+                    // Check for CloudFlare rate limiting first (error code: 1015 can come with 200 status)
+                    bool isCloudFlareError = false;
+                    if (response.Body != null && typeof(T) == typeof(byte[]))
+                    {
+                        try
+                        {
+                            string bodyText = System.Text.Encoding.UTF8.GetString((byte[])(object)response.Body!).ToLower();
+                            if (bodyText.Contains("error code: 1015"))
+                            {
+                                isCloudFlareError = true;
+                                attempts++;
+                                if (attempts < maxAttempts)
+                                {
+                                    int waitTime = _rateLimit429WaitTimeSeconds;
+                                    await Task.Delay(waitTime * 1000, effectiveToken);
+                                    continue;
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            // If unable to parse response body, continue with normal flow
+                        }
+                    }
+
+                    // If request was successful and not a CloudFlare error, exit loop
+                    if (httpResponseMessage.IsSuccessStatusCode && !isCloudFlareError)
                     {
                         break;
                     }
+
+                    // If CloudFlare error with retries exhausted, break
+                    if (isCloudFlareError && attempts >= maxAttempts)
+                    {
+                        break;
+                    }
+
                     // Handle 429 Too Many Requests response
-                    else if (response.StatusCode == 429)
+                    if (response.StatusCode == 429)
                     {
                         attempts++;
                         int waitTime = _rateLimit429WaitTimeSeconds;
@@ -430,7 +462,7 @@ namespace gaseous_server.Classes
                         attempts++;
                         await Task.Delay(_rateLimit420WaitTimeSeconds * 1000, effectiveToken);
                     }
-                    else
+                    else if (!isCloudFlareError && !httpResponseMessage.IsSuccessStatusCode)
                     {
                         // For other errors, do not retry
                         break;
@@ -517,7 +549,7 @@ namespace gaseous_server.Classes
             resumeFromBytes: existingLength);
 
             // Write file (overwrite or append depending on resume)
-            if (response.Body != null)
+            if (response.Body != null && response.Body.Length > 0)
             {
                 // If resuming, append; otherwise write new
                 var mode = existingLength > 0 ? System.IO.FileMode.Append : System.IO.FileMode.Create;
