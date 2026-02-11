@@ -2,8 +2,6 @@
 using System.Data;
 using System.Reflection;
 using System.Threading.Tasks;
-using IGDB;
-using IGDB.Models;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace gaseous_server.Classes.Plugins.MetadataProviders
@@ -275,6 +273,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                                     await StoreRelations(ObjectTypeName, key.Key, (long)objectDict["Id"], newObjectValue);
                                     break;
                                 case "list":
+                                case "list`1":
                                     newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(objectValue);
                                     objectDict[key.Key] = newObjectValue;
 
@@ -282,6 +281,9 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
 
                                     break;
                                 case "int32[]":
+                                case "int64[]":
+                                case "int[]":
+                                case "long[]":
                                     newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(objectValue);
                                     objectDict[key.Key] = newObjectValue;
                                     break;
@@ -377,7 +379,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             // copy the DataRow to EndpointType
             foreach (PropertyInfo property in EndpointType.GetType().GetProperties())
             {
-                if (property.GetCustomAttribute<Models.NoDatabaseAttribute>() == null)
+                if (property.GetCustomAttribute<Models.NoDatabaseAttribute>() == null && property.CanWrite)
                 {
                     // get the value from the DataRow with the same name as the property
                     if (dataRow.Table.Columns.Contains(property.Name) == true)

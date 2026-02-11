@@ -672,8 +672,17 @@ namespace gaseous_server.Classes
 					catch (Exception ex)
 					{
 						Logging.LogKey(Logging.LogType.Critical, "process.database", "database.error_executing_sql", null, new[] { SQL }, ex);
-						Trace.WriteLine("Error executing " + SQL);
-						Trace.WriteLine("Full exception: " + ex.ToString());
+#if DEBUG
+						if (Parameters.Count > 0)
+						{
+							Logging.LogKey(Logging.LogType.Critical, "process.database", "database.parameters");
+							foreach (string param in Parameters.Keys)
+							{
+								string typeName = Parameters[param]?.GetType().ToString() ?? "unknown";
+								Logging.LogKey(Logging.LogType.Critical, "process.database", param + " = " + Parameters[param] + " (" + typeName + ")");
+							}
+						}
+#endif
 					}
 
 					Logging.LogKey(Logging.LogType.Debug, "process.database", "database.closing_database_connection", null, null, null, true);

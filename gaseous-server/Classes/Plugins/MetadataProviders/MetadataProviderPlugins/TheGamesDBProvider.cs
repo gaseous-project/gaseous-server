@@ -242,6 +242,12 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
         }
 
         /// <inheritdoc/>
+        public async Task<PlayerPerspective?> GetPlayerPerspectiveAsync(long id, bool forceRefresh = false)
+        {
+            return await GetEntityAsync<PlayerPerspective>(id, forceRefresh);
+        }
+
+        /// <inheritdoc/>
         public async Task<Region?> GetRegionAsync(long id, bool forceRefresh = false)
         {
             return null;

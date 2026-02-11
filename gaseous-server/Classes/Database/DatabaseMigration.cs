@@ -125,6 +125,14 @@ namespace gaseous_server.Classes
                             dbDict.Clear();
                             await db.ExecuteCMDAsync(sql, dbDict);
                             break;
+
+                        case 1035:
+                            Logging.LogKey(Logging.LogType.Information, "process.database", "database.running_pre_upgrade_for_schema_version", null, new[] { TargetSchemaVersion.ToString() });
+
+                            // ensure that the relation tables for games and platforms are built before we attempt to update the database schema
+                            await Storage.CreateRelationsTables<IGDB.Models.Game>();
+
+                            break;
                     }
                     break;
             }
@@ -483,7 +491,22 @@ namespace gaseous_server.Classes
             FileSignature fileSignature = new FileSignature();
 
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM view_Games_Roms WHERE RomDataVersion = 1;";
+
+            // Check if the view exists before proceeding
+            string sql = "SELECT table_name FROM information_schema.views WHERE table_schema = @dbname AND table_name = 'view_Games_Roms';";
+            Dictionary<string, object> dbDict = new Dictionary<string, object>
+            {
+                { "dbname", Config.DatabaseConfiguration.DatabaseName }
+            };
+            DataTable viewCheck = await db.ExecuteCMDAsync(sql, dbDict);
+            if (viewCheck.Rows.Count == 0)
+            {
+                // View doesn't exist, skip migration
+                Logging.LogKey(Logging.LogType.Information, "process.database", "database.view_does_not_exist_skipping_migration", null, new[] { "view_Games_Roms" });
+                return;
+            }
+
+            sql = "SELECT * FROM view_Games_Roms WHERE RomDataVersion = 1;";
             DataTable data = await db.ExecuteCMDAsync(sql);
             long count = 1;
             foreach (DataRow row in data.Rows)

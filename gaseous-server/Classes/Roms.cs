@@ -293,24 +293,6 @@ namespace gaseous_server.Classes
 				}
 			}
 
-#if DEBUG
-			try
-			{
-				Console.WriteLine("romDR dump start ---------------------------");
-				foreach (DataColumn col in romDR.Table.Columns)
-				{
-					object value = romDR[col];
-					string display = value == DBNull.Value ? "NULL" : value.ToString();
-					Console.WriteLine($"{col.ColumnName}: {display}");
-				}
-				Console.WriteLine("romDR dump end -----------------------------");
-			}
-			catch (Exception ex)
-			{
-				Console.WriteLine("Error dumping romDR: " + ex.Message);
-			}
-#endif
-
 			GameRomItem romItem = new GameRomItem
 			{
 				Id = (long)romDR["id"],

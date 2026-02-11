@@ -1,40 +1,10 @@
+using System.Security.AccessControl;
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 
 namespace gaseous_server.Classes.Metadata
 {
     public static class Hasheous
     {
-        /// <summary>
-        /// The Hasheous client instance - only use via the hasheous property.
-        /// </summary>
-        private static HasheousClient.Hasheous? _hasheous;
-        /// <summary>
-        /// Gets the Hasheous client instance, initializing it if necessary.
-        /// </summary>
-        private static HasheousClient.Hasheous hasheous
-        {
-            get
-            {
-                if (_hasheous == null)
-                {
-                    _hasheous = new HasheousClient.Hasheous();
-
-                    // Configure the Hasheous client
-                    if (HasheousClient.WebApp.HttpHelper.BaseUri == null || HasheousClient.WebApp.HttpHelper.BaseUri != Config.MetadataConfiguration.HasheousHost)
-                    {
-                        HasheousClient.WebApp.HttpHelper.BaseUri = Config.MetadataConfiguration.HasheousHost;
-                    }
-
-                    // Set the API key for Hasheous Proxy
-                    if (HasheousClient.WebApp.HttpHelper.ClientKey == null || HasheousClient.WebApp.HttpHelper.ClientKey != Config.MetadataConfiguration.HasheousClientAPIKey)
-                    {
-                        HasheousClient.WebApp.HttpHelper.ClientKey = Config.MetadataConfiguration.HasheousClientAPIKey;
-                    }
-                }
-                return _hasheous;
-            }
-        }
-
         /// <summary>
         /// HTTP communications handler for making API requests.
         /// </summary>
@@ -54,10 +24,39 @@ namespace gaseous_server.Classes.Metadata
                 return;
             }
 
+            HTTPComms comms = new HTTPComms();
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            if (!string.IsNullOrEmpty(Config.MetadataConfiguration.HasheousAPIKey))
+            {
+                headers.Add("X-API-Key", Config.MetadataConfiguration.HasheousAPIKey);
+            }
+            headers.Add("X-Client-API-Key", Config.MetadataConfiguration.HasheousClientAPIKey);
+            headers.Add("CacheControl", "no-cache");
+            headers.Add("Pragma", "no-cache");
+
             // fetch all platforms
             if (hasheousPlatforms.Count == 0)
             {
-                hasheousPlatforms = hasheous.GetPlatforms();
+                var response = await comms.SendRequestAsync<HasheousClient.Models.DataObjectsList>(HTTPComms.HttpMethod.GET, new Uri("https://hasheous.org/api/v1/Lookup/Platforms?PageSize=50&PageNumber=1"), headers);
+                if (response != null && response.StatusCode == 200)
+                {
+                    if (response.Body != null)
+                    {
+                        hasheousPlatforms = new List<HasheousClient.Models.DataObjectItem>(response.Body.Objects);
+
+                        if (response.Body.TotalPages > 1)
+                        {
+                            for (int i = 2; i <= response.Body.TotalPages; i++)
+                            {
+                                var pagedResponse = await comms.SendRequestAsync<HasheousClient.Models.DataObjectsList>(HTTPComms.HttpMethod.GET, new Uri($"https://hasheous.org/api/v1/Lookup/Platforms?PageSize=50&PageNumber={i}"), headers);
+                                if (pagedResponse != null && pagedResponse.StatusCode == 200 && pagedResponse.Body != null)
+                                {
+                                    hasheousPlatforms.AddRange(pagedResponse.Body.Objects);
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             // loop through the platforms and check if the metadata matches the IGDB platform id
@@ -95,16 +94,21 @@ namespace gaseous_server.Classes.Metadata
                         hasheousPlatformAttribute.Value != null
                         )
                     {
+                        // Convert JsonElement to string if necessary
+                        string imageIdValue = hasheousPlatformAttribute.Value is System.Text.Json.JsonElement jsonElement
+                            ? jsonElement.GetString() ?? hasheousPlatformAttribute.Value.ToString()
+                            : hasheousPlatformAttribute.Value.ToString();
+
                         Uri logoUrl = new Uri(
                             new Uri(HasheousClient.WebApp.HttpHelper.BaseUri, UriKind.Absolute),
-                            new Uri("/api/v1/images/" + hasheousPlatformAttribute.Value, UriKind.Relative));
+                            new Uri("/api/v1/images/" + imageIdValue, UriKind.Relative));
 
                         // generate a platform logo object
                         platformLogo = new gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.PlatformLogo
                         {
                             AlphaChannel = false,
                             Animated = false,
-                            ImageId = (string)hasheousPlatformAttribute.Value,
+                            ImageId = imageIdValue,
                             Url = logoUrl.ToString()
                         };
 

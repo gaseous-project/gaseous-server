@@ -833,6 +833,12 @@ namespace gaseous_server.Classes
 					continue;
 				}
 
+				// check configured metadata sources and skip if not configured
+				if (!Metadata.Metadata.MetadataProviders.Any(p => p.SourceType == item.SourceType))
+				{
+					continue;
+				}
+
 				Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_metadata_for_game_using_source_with_source_id", null, new string[] { metadataItem.SignatureGameName, metadataItem.Id.ToString(), item.SourceType.ToString(), item.SourceId.ToString() });
 				Game? game = await Metadata.Games.GetGame(item.SourceType, item.SourceId, true, forceRefresh);
 
@@ -899,7 +905,7 @@ namespace gaseous_server.Classes
 					{
 						foreach (long gameLocalizationId in game.GameLocalizations)
 						{
-							GameLocalization? gameLocalization = await Metadata.GameLocalizations.GetGame_Locatization(item.SourceType, gameLocalizationId);
+							GameLocalization? gameLocalization = await Metadata.GameLocalizations.GetGame_Localization(item.SourceType, gameLocalizationId);
 
 							if (gameLocalization != null)
 							{

@@ -281,6 +281,12 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
         }
 
         /// <inheritdoc/>
+        public async Task<PlayerPerspective?> GetPlayerPerspectiveAsync(long id, bool forceRefresh = false)
+        {
+            return await GetEntityAsync<PlayerPerspective>("player_perspectives", id, forceRefresh);
+        }
+
+        /// <inheritdoc/>
         public async Task<Region?> GetRegionAsync(long id, bool forceRefresh = false)
         {
             return await GetEntityAsync<Region>("regions", id, forceRefresh);
@@ -456,6 +462,9 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
                     var proxyResult = await ProxyProvider.GetEntityAsync<T>(endpoint, id);
                     if (proxyResult != null)
                     {
+                        // save to storage
+                        _ = Storage.StoreCacheValue<T>(proxyResult);
+
                         return proxyResult;
                     }
                 }

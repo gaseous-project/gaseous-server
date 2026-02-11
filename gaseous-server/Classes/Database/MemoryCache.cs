@@ -96,7 +96,8 @@ namespace gaseous_server.Classes
                 // Mimic Dictionary.Add (throw if key exists) so existing logic (which removes first) still behaves.
                 if (!TryAdd(key, value))
                 {
-                    throw new ArgumentException("An item with the same key has already been added. Key: " + key);
+                    // overwrite the existing value to avoid exceptions in current code paths.
+                    this[key] = value;
                 }
             }
 

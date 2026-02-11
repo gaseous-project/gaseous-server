@@ -28,13 +28,15 @@ namespace gaseous_server.Classes
         private static TimeSpan _defaultTimeout = TimeSpan.FromSeconds(30);
 
         // JsonSerializerOptions configured to handle property hiding/new keyword scenarios
-        private static readonly System.Text.Json.JsonSerializerOptions _jsonOptions = new System.Text.Json.JsonSerializerOptions
+        public static readonly System.Text.Json.JsonSerializerOptions _jsonOptions = new System.Text.Json.JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
             DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
             IncludeFields = false,
+            PreferredObjectCreationHandling = System.Text.Json.Serialization.JsonObjectCreationHandling.Populate,
             // This setting tells the serializer to prefer derived class properties over base class properties
-            TypeInfoResolver = new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver()
+            TypeInfoResolver = new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver(),
+            Converters = { new CaseInsensitiveEnumConverter(), new FlexibleNumberConverter() }
         };
 
         // Rate limiting parameters
@@ -175,6 +177,23 @@ namespace gaseous_server.Classes
         }
 
         /// <summary>
+        /// Creates a new <see cref="System.Text.Json.JsonSerializerOptions"/> instance with HTTPComms custom converters and settings.
+        /// </summary>
+        /// <returns>Configured <see cref="System.Text.Json.JsonSerializerOptions"/> with case-insensitive enums and flexible number handling.</returns>
+        public static System.Text.Json.JsonSerializerOptions GetConfiguredOptions()
+        {
+            return new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
+                IncludeFields = false,
+                PreferredObjectCreationHandling = System.Text.Json.Serialization.JsonObjectCreationHandling.Populate,
+                TypeInfoResolver = new System.Text.Json.Serialization.Metadata.DefaultJsonTypeInfoResolver(),
+                Converters = { new CaseInsensitiveEnumConverter(), new FlexibleNumberConverter() }
+            };
+        }
+
+        /// <summary>
         /// Sends an HTTP request asynchronously. Automatically enforces per-host rate limits, handles content types, supports cancellation and chunked downloads.
         /// </summary>
         /// <typeparam name="T">Expected response type. If <c>T</c> is <c>byte[]</c> or <c>string</c>, special handling is applied.</typeparam>
@@ -190,8 +209,13 @@ namespace gaseous_server.Classes
         /// <param name="chunkThresholdBytes">If content length exceeds this, stream in chunks; default 5 MB. Ignored unless T is byte[].</param>
         /// <param name="enableResume">When true and server supports ranges, attempts to resume downloads starting at <paramref name="resumeFromBytes"/>.</param>
         /// <param name="resumeFromBytes">Starting offset in bytes for resuming a download. Effective only when <paramref name="enableResume"/> is true and server supports ranges.</param>
-        public async Task<HttpResponse<T>> SendRequestAsync<T>(HttpMethod method, Uri url, Dictionary<string, string>? headers = null, object? body = null, TimeSpan? timeout = null, int retryCount = 0, System.Threading.CancellationToken cancellationToken = default, bool returnRawResponse = false, Action<long, long?>? progressHandler = null, long chunkThresholdBytes = 5 * 1024 * 1024, bool enableResume = true, long resumeFromBytes = 0)
+        /// <param name="contentType">Optional content type for the request body (e.g., "application/json", "application/xml"). Defaults to "text/plain" if not specified.</param>
+        /// <param name="jsonSerializerOptions">Optional custom JsonSerializerOptions for deserialization. If null, uses the default options configured for this class.</param>
+        public async Task<HttpResponse<T>> SendRequestAsync<T>(HttpMethod method, Uri url, Dictionary<string, string>? headers = null, object? body = null, TimeSpan? timeout = null, int retryCount = 0, System.Threading.CancellationToken cancellationToken = default, bool returnRawResponse = false, Action<long, long?>? progressHandler = null, long chunkThresholdBytes = 5 * 1024 * 1024, bool enableResume = true, long resumeFromBytes = 0, string? contentType = null, System.Text.Json.JsonSerializerOptions? jsonSerializerOptions = null)
         {
+            // Use provided options or fall back to default
+            var options = jsonSerializerOptions ?? _jsonOptions;
+
             // Clear all previous headers from the HttpClient
             _httpClient.DefaultRequestHeaders.Clear();
 
@@ -239,10 +263,10 @@ namespace gaseous_server.Classes
                     // Rate limit window and max requests - use per-host override if available
                     int window = _rateLimitWindow;
                     int maxReq = _maxRequestsPerWindow;
-                    if (_perHostRateLimits.TryGetValue(host, out var options))
+                    if (_perHostRateLimits.TryGetValue(host, out var opts))
                     {
-                        window = options.WindowSeconds;
-                        maxReq = options.MaxRequests;
+                        window = opts.WindowSeconds;
+                        maxReq = opts.MaxRequests;
                     }
                     // Remove timestamps outside the window
                     while (hostQueue.Count > 0 && (now - hostQueue.Peek()).TotalSeconds > window)
@@ -274,7 +298,18 @@ namespace gaseous_server.Classes
                         // Add body for POST/PUT requests
                         if (body != null && (method == HttpMethod.POST || method == HttpMethod.PUT))
                         {
-                            requestMessage.Content = new StringContent(body.ToString());
+                            string bodyContent;
+                            if (body is string bodyString)
+                            {
+                                bodyContent = bodyString;
+                            }
+                            else
+                            {
+                                bodyContent = System.Text.Json.JsonSerializer.Serialize(body, options);
+                            }
+
+                            string effectiveContentType = contentType ?? "application/json";
+                            requestMessage.Content = new StringContent(bodyContent, System.Text.Encoding.UTF8, effectiveContentType);
                         }
 
                         // If resuming a large binary download, add Range header
@@ -357,17 +392,17 @@ namespace gaseous_server.Classes
                             response.Body = (T)(object)bytes;
                         }
                     }
-                    else if (typeof(T) == typeof(string) || (mediaType != null && mediaType.StartsWith("text")))
+                    else if (typeof(T) == typeof(string))
                     {
                         string responseBody = await httpResponseMessage.Content.ReadAsStringAsync(effectiveToken);
                         response.Body = (T)(object)responseBody;
                     }
-                    else if (mediaType != null && mediaType.Contains("json"))
+                    else if (mediaType != null && (mediaType.Contains("json") || mediaType.StartsWith("text")))
                     {
                         string responseBody = await httpResponseMessage.Content.ReadAsStringAsync(effectiveToken);
                         if (!string.IsNullOrWhiteSpace(responseBody))
                         {
-                            response.Body = System.Text.Json.JsonSerializer.Deserialize<T>(responseBody, _jsonOptions);
+                            response.Body = System.Text.Json.JsonSerializer.Deserialize<T>(responseBody, options);
                         }
                     }
                     else if (mediaType != null && mediaType.Contains("xml"))
@@ -393,7 +428,7 @@ namespace gaseous_server.Classes
                         string responseBody = await httpResponseMessage.Content.ReadAsStringAsync(effectiveToken);
                         if (!string.IsNullOrWhiteSpace(responseBody))
                         {
-                            response.Body = System.Text.Json.JsonSerializer.Deserialize<T>(responseBody, _jsonOptions);
+                            response.Body = System.Text.Json.JsonSerializer.Deserialize<T>(responseBody, options);
                         }
                     }
 
@@ -471,6 +506,7 @@ namespace gaseous_server.Classes
                 catch (Exception ex)
                 {
                     // On exception, record error and retry with exponential backoff
+                    Logging.LogKey(Logging.LogType.Warning, "HTTPComms", $"Exception on attempt {attempts + 1} for {method} {url}: {ex.Message}", null, null, ex);
                     response.ErrorMessage = ex.Message;
                     response.ErrorType = ex.GetType().FullName;
                     response.ErrorStackTrace = ex.StackTrace;
@@ -537,7 +573,7 @@ namespace gaseous_server.Classes
             var (acceptRanges, contentLen) = await CheckDownloadCapabilitiesAsync(url, cancellationToken);
 
             // Use SendRequestAsync with resume enabled; write bytes to file as they arrive
-            var response = await SendRequestAsync<byte[]>(HttpMethod.GET, url, headers, null, _defaultTimeout, _defaultRetryCount, cancellationToken, false, (read, total) =>
+            var response = await SendRequestAsync<byte[]>(HttpMethod.GET, url, headers, null, TimeSpan.FromMinutes(5), _defaultRetryCount, cancellationToken, false, (read, total) =>
             {
                 // Report cumulative progress including existingLength if resuming
                 var reported = existingLength + read;
@@ -558,6 +594,146 @@ namespace gaseous_server.Classes
             }
 
             return response;
+        }
+
+        /// <summary>
+        /// Custom JSON converter factory that handles case-insensitive enum parsing.
+        /// </summary>
+        private class CaseInsensitiveEnumConverter : System.Text.Json.Serialization.JsonConverterFactory
+        {
+            public override bool CanConvert(Type typeToConvert)
+            {
+                return typeToConvert.IsEnum;
+            }
+
+            public override System.Text.Json.Serialization.JsonConverter? CreateConverter(Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+            {
+                var converterType = typeof(CaseInsensitiveEnumConverterInner<>).MakeGenericType(typeToConvert);
+                return (System.Text.Json.Serialization.JsonConverter?)Activator.CreateInstance(converterType);
+            }
+
+            private class CaseInsensitiveEnumConverterInner<T> : System.Text.Json.Serialization.JsonConverter<T> where T : struct, Enum
+            {
+                public override T Read(ref System.Text.Json.Utf8JsonReader reader, Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+                {
+                    switch (reader.TokenType)
+                    {
+                        case System.Text.Json.JsonTokenType.String:
+                            var stringValue = reader.GetString();
+                            if (stringValue != null)
+                            {
+                                foreach (var value in Enum.GetValues<T>())
+                                {
+                                    if (string.Equals(value.ToString(), stringValue, StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        return value;
+                                    }
+                                }
+                            }
+                            // Log and skip unknown enum value, return default
+                            Logging.LogKey(Logging.LogType.Warning, "CaseInsensitiveEnumConverter", $"Unknown enum value \"{stringValue}\" for enum \"{typeToConvert}\". Skipping and using default value.", null, null);
+                            return default;
+
+                        case System.Text.Json.JsonTokenType.Number:
+                            if (reader.TryGetInt32(out int intValue))
+                            {
+                                return (T)Enum.ToObject(typeToConvert, intValue);
+                            }
+                            // Log and skip unknown numeric value
+                            Logging.LogKey(Logging.LogType.Warning, "CaseInsensitiveEnumConverter", $"Unknown numeric enum value {intValue} for enum \"{typeToConvert}\". Skipping and using default value.", null, null);
+                            return default;
+                    }
+                    Logging.LogKey(Logging.LogType.Warning, "CaseInsensitiveEnumConverter", $"Unexpected token {reader.TokenType} when parsing enum \"{typeToConvert}\". Using default value.", null, null);
+                    return default;
+                }
+
+                public override void Write(System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options)
+                {
+                    writer.WriteStringValue(value.ToString());
+                }
+
+                public override T ReadAsPropertyName(ref System.Text.Json.Utf8JsonReader reader, Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+                {
+                    var stringValue = reader.GetString();
+                    if (stringValue != null)
+                    {
+                        foreach (var value in Enum.GetValues<T>())
+                        {
+                            if (string.Equals(value.ToString(), stringValue, StringComparison.OrdinalIgnoreCase))
+                            {
+                                return value;
+                            }
+                        }
+                    }
+                    // Log and skip unknown enum value, return default
+                    Logging.LogKey(Logging.LogType.Warning, "CaseInsensitiveEnumConverter", $"Unknown enum value \"{stringValue}\" for enum \"{typeToConvert}\" as property name. Skipping and using default value.", null, null);
+                    return default;
+                }
+
+                public override void WriteAsPropertyName(System.Text.Json.Utf8JsonWriter writer, T value, System.Text.Json.JsonSerializerOptions options)
+                {
+                    writer.WritePropertyName(value.ToString());
+                }
+            }
+        }
+
+        private class FlexibleNumberConverter : System.Text.Json.Serialization.JsonConverterFactory
+        {
+            public override bool CanConvert(Type typeToConvert)
+            {
+                return typeToConvert == typeof(int) || typeToConvert == typeof(int?) ||
+                       typeToConvert == typeof(long) || typeToConvert == typeof(long?) ||
+                       typeToConvert == typeof(uint) || typeToConvert == typeof(uint?) ||
+                       typeToConvert == typeof(ulong) || typeToConvert == typeof(ulong?) ||
+                       typeToConvert == typeof(short) || typeToConvert == typeof(short?) ||
+                       typeToConvert == typeof(ushort) || typeToConvert == typeof(ushort?) ||
+                       typeToConvert == typeof(byte) || typeToConvert == typeof(byte?) ||
+                       typeToConvert == typeof(sbyte) || typeToConvert == typeof(sbyte?) ||
+                       typeToConvert == typeof(float) || typeToConvert == typeof(float?) ||
+                       typeToConvert == typeof(double) || typeToConvert == typeof(double?) ||
+                       typeToConvert == typeof(decimal) || typeToConvert == typeof(decimal?);
+            }
+
+            public override System.Text.Json.Serialization.JsonConverter? CreateConverter(Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+            {
+                var converterType = typeof(FlexibleNumberConverterInner<>).MakeGenericType(typeToConvert);
+                return (System.Text.Json.Serialization.JsonConverter?)Activator.CreateInstance(converterType);
+            }
+
+            private class FlexibleNumberConverterInner<T> : System.Text.Json.Serialization.JsonConverter<T>
+            {
+                public override T? Read(ref System.Text.Json.Utf8JsonReader reader, Type typeToConvert, System.Text.Json.JsonSerializerOptions options)
+                {
+                    try
+                    {
+                        switch (reader.TokenType)
+                        {
+                            case System.Text.Json.JsonTokenType.Number:
+                                return (T?)Convert.ChangeType(reader.GetDecimal(), Nullable.GetUnderlyingType(typeToConvert) ?? typeToConvert);
+                            case System.Text.Json.JsonTokenType.String:
+                                var stringValue = reader.GetString();
+                                if (string.IsNullOrWhiteSpace(stringValue))
+                                    return default;
+                                return (T?)Convert.ChangeType(stringValue, Nullable.GetUnderlyingType(typeToConvert) ?? typeToConvert);
+                            case System.Text.Json.JsonTokenType.Null:
+                                return default;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logging.LogKey(Logging.LogType.Warning, "FlexibleNumberConverter", $"Failed to convert value to {typeToConvert.Name}: {ex.Message}", null, null);
+                    }
+                    return default;
+                }
+
+                public override void Write(System.Text.Json.Utf8JsonWriter writer, T? value, System.Text.Json.JsonSerializerOptions options)
+                {
+                    if (value == null)
+                        writer.WriteNullValue();
+                    else
+                        writer.WriteRawValue(value.ToString() ?? "null");
+                }
+            }
         }
     }
 }

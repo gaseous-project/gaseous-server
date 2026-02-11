@@ -1,6 +1,7 @@
 using System.Data;
 using System.Data.SqlTypes;
 using System.Threading.Tasks;
+using gaseous_server.Classes.Plugins.MetadataProviders;
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -194,6 +195,7 @@ namespace gaseous_server.Classes.Metadata
             var provider = MetadataProviders.FirstOrDefault(x => x.SourceType == SourceType);
             if (provider == null)
             {
+                Console.WriteLine("No metadata provider found for source type: " + SourceType);
                 throw new NoMetadataProvidersConfigured();
             }
 
@@ -215,7 +217,7 @@ namespace gaseous_server.Classes.Metadata
                 Type t when t == typeof(Franchise) => await provider.GetFranchiseAsync(Id, ForceRefresh) as T,
                 Type t when t == typeof(GameLocalization) => await provider.GetGameLocalizationAsync(Id, ForceRefresh) as T,
                 Type t when t == typeof(GameMode) => await provider.GetGameModeAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(Game) => await provider.GetGameAsync(Id, ForceRefresh) as T,
+                Type t when t == typeof(Game) => await _GetGameAsync(Id, ForceRefresh) as T,
                 Type t when t == typeof(GameVideo) => await provider.GetGameVideoAsync(Id, ForceRefresh) as T,
                 Type t when t == typeof(Genre) => await provider.GetGenreAsync(Id, ForceRefresh) as T,
                 Type t when t == typeof(InvolvedCompany) => await provider.GetInvolvedCompanyAsync(Id, ForceRefresh) as T,
@@ -223,12 +225,55 @@ namespace gaseous_server.Classes.Metadata
                 Type t when t == typeof(PlatformLogo) => await provider.GetPlatformLogoAsync(Id, ForceRefresh) as T,
                 Type t when t == typeof(Platform) => await provider.GetPlatformAsync(Id, ForceRefresh) as T,
                 Type t when t == typeof(PlatformVersion) => await provider.GetPlatformVersionAsync(Id, ForceRefresh) as T,
+                Type t when t == typeof(PlayerPerspective) => await provider.GetPlayerPerspectiveAsync(Id, ForceRefresh) as T,
                 Type t when t == typeof(Region) => await provider.GetRegionAsync(Id, ForceRefresh) as T,
                 Type t when t == typeof(ReleaseDate) => await provider.GetReleaseDateAsync(Id, ForceRefresh) as T,
                 Type t when t == typeof(Screenshot) => await provider.GetScreenshotAsync(Id, ForceRefresh) as T,
                 Type t when t == typeof(Theme) => await provider.GetThemeAsync(Id, ForceRefresh) as T,
                 _ => throw new NotSupportedException("Unsupported metadata type: " + typeof(T).FullName)
             };
+        }
+
+        private static async Task<Game?> _GetGameAsync(long Id, bool ForceRefresh)
+        {
+            var provider = MetadataProviders.FirstOrDefault(x => x.SourceType == FileSignature.MetadataSources.IGDB);
+            if (provider == null)
+            {
+                throw new NoMetadataProvidersConfigured();
+            }
+
+            Game? game = await provider.GetGameAsync(Id, ForceRefresh);
+            if (game == null)
+            {
+                return null;
+            }
+
+            // get all clear logos for the game and add them to the game object
+            game.ClearLogos = new Dictionary<FileSignature.MetadataSources, List<long>>();
+            List<FileSignature.MetadataSources> sourcesToCheck = new List<FileSignature.MetadataSources>
+            {
+                FileSignature.MetadataSources.TheGamesDb
+            };
+            foreach (var metadataProvider in MetadataProviders)
+            {
+                // get the game for each metadata provider and check if it has clear logos, if so add them to the game object
+                if (sourcesToCheck.Contains(metadataProvider.SourceType))
+                {
+                    List<long> clearLogoIds = new List<long>();
+                    Game? providerGame = await metadataProvider.GetGameAsync(Id, ForceRefresh);
+                    if (providerGame != null && providerGame.ClearLogo != null && providerGame.ClearLogo.Count > 0)
+                    {
+                        clearLogoIds.AddRange(providerGame.ClearLogo);
+                    }
+
+                    if (clearLogoIds != null && clearLogoIds.Count > 0)
+                    {
+                        game.ClearLogos[metadataProvider.SourceType] = clearLogoIds;
+                    }
+                }
+            }
+
+            return game;
         }
 
         /// <summary>
@@ -299,6 +344,18 @@ namespace gaseous_server.Classes.Metadata
             if (result == null)
             {
                 return null;
+            }
+
+            if (size == Plugins.PluginManagement.ImageResize.ImageSize.original)
+            {
+                return result;
+            }
+
+            // check the image type, if it's SVG, return the original image as SVG files cannot be resized
+            var info = new ImageMagick.MagickImageInfo(result);
+            if (info.Format == ImageMagick.MagickFormat.Svg)
+            {
+                return result;
             }
 
             // use Magick.Net to resize the image to the desired size

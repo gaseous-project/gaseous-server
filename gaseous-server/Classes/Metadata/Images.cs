@@ -115,21 +115,23 @@ namespace gaseous_server.Classes.Metadata
                     return null;
                 }
 
-                string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(game), imageTypePath, metadataMap.SourceType.ToString());
-                string imagePath = Path.Combine(basePath, size.ToString(), imageId + ".jpg");
+                string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(game), imageTypePath, metadataMap.SourceType.ToString(), size.ToString());
+                string imagePath = Path.Combine(basePath, imageId + ".jpg");
 
-                //TODO: return an image object
-                // if (!System.IO.File.Exists(imagePath))
-                // {
-                //     Communications comms = new Communications();
-                //     imagePath = await comms.GetSpecificImageFromServer(game.MetadataSource, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Game(game), imageTypePath), imageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
-                // }
-
-                // if (!System.IO.File.Exists(imagePath))
-                // {
-                //     Communications comms = new Communications();
-                //     imagePath = await comms.GetSpecificImageFromServer(game.MetadataSource, basePath, imageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
-                // }
+                if (!System.IO.File.Exists(imagePath))
+                {
+                    // "download" the image by writing the bytes to disk
+                    byte[]? imageBytes = await Metadata.GetImageAsync(MetadataSource, (long)game.Id, imageType, imageId, size);
+                    if (imageBytes == null)
+                    {
+                        return null;
+                    }
+                    if (!Directory.Exists(Path.GetDirectoryName(imagePath)))
+                    {
+                        Directory.CreateDirectory(Path.GetDirectoryName(imagePath));
+                    }
+                    await System.IO.File.WriteAllBytesAsync(imagePath, imageBytes);
+                }
 
                 return new Dictionary<string, string>
                 {
@@ -140,8 +142,9 @@ namespace gaseous_server.Classes.Metadata
                     { "imageName", imagename }
                 };
             }
-            catch
+            catch (Exception ex)
             {
+                Logging.LogKey(Logging.LogType.Warning, "ImageHandling", $"Failed to get image for MetadataMapId {MetadataMapId}, Source {MetadataSource}, ImageType {imageType}, ImageId {ImageId}: {ex.Message}");
                 return null;
             }
         }

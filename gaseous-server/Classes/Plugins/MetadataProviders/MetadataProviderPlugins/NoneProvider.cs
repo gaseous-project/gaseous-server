@@ -32,85 +32,85 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.NoneProvider
         /// <inheritdoc/>
         public async Task<AgeRating?> GetAgeRatingAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<AgeRating>(new AgeRating(), "id", id);
+            return await GetEntityAsync<AgeRating>(id);
         }
 
         /// <inheritdoc/>
         public async Task<AgeRatingCategory?> GetAgeRatingCategoryAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<AgeRatingCategory>(new AgeRatingCategory(), "id", id);
+            return await GetEntityAsync<AgeRatingCategory>(id);
         }
 
         /// <inheritdoc/>
         public async Task<AgeRatingContentDescription?> GetAgeRatingContentDescriptionAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<AgeRatingContentDescription>(new AgeRatingContentDescription(), "id", id);
+            return await GetEntityAsync<AgeRatingContentDescription>(id);
         }
 
         /// <inheritdoc/>
         public async Task<AgeRatingOrganization?> GetAgeRatingOrganizationAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<AgeRatingOrganization>(new AgeRatingOrganization(), "id", id);
+            return await GetEntityAsync<AgeRatingOrganization>(id);
         }
 
         /// <inheritdoc/>
         public async Task<AlternativeName?> GetAlternativeNameAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<AlternativeName>(new AlternativeName(), "id", id);
+            return await GetEntityAsync<AlternativeName>(id);
         }
 
         /// <inheritdoc/>
         public async Task<Artwork?> GetArtworkAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<Artwork>(new Artwork(), "id", id);
+            return await GetEntityAsync<Artwork>(id);
         }
 
         /// <inheritdoc/>
         public async Task<ClearLogo?> GetClearLogoAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<ClearLogo>(new ClearLogo(), "id", id);
+            return await GetEntityAsync<ClearLogo>(id);
         }
 
         /// <inheritdoc/>
         public async Task<Collection?> GetCollectionAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<Collection>(new Collection(), "id", id);
+            return await GetEntityAsync<Collection>(id);
         }
 
         /// <inheritdoc/>
         public async Task<Company?> GetCompanyAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<Company>(new Company(), "id", id);
+            return await GetEntityAsync<Company>(id);
         }
 
         /// <inheritdoc/>
         public async Task<CompanyLogo?> GetCompanyLogoAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<CompanyLogo>(new CompanyLogo(), "id", id);
+            return await GetEntityAsync<CompanyLogo>(id);
         }
 
         /// <inheritdoc/>
         public async Task<Cover?> GetCoverAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<Cover>(new Cover(), "id", id);
+            return await GetEntityAsync<Cover>(id);
         }
 
         /// <inheritdoc/>
         public async Task<ExternalGame?> GetExternalGameAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<ExternalGame>(new ExternalGame(), "id", id);
+            return await GetEntityAsync<ExternalGame>(id);
         }
 
         /// <inheritdoc/>
         public async Task<Franchise?> GetFranchiseAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<Franchise>(new Franchise(), "id", id);
+            return await GetEntityAsync<Franchise>(id);
         }
 
         /// <inheritdoc/>
         public async Task<Game?> GetGameAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<Game>(new Game(), "id", id);
+            return await GetEntityAsync<Game>(id);
         }
 
         /// <inheritdoc/>
@@ -122,85 +122,112 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.NoneProvider
         /// <inheritdoc/>
         public async Task<GameLocalization?> GetGameLocalizationAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<GameLocalization>(new GameLocalization(), "id", id);
+            return await GetEntityAsync<GameLocalization>(id);
         }
 
         /// <inheritdoc/>
         public async Task<GameMode?> GetGameModeAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<GameMode>(new GameMode(), "id", id);
+            return await GetEntityAsync<GameMode>(id);
         }
 
         /// <inheritdoc/>
         public async Task<GameVideo?> GetGameVideoAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<GameVideo>(new GameVideo(), "id", id);
+            return await GetEntityAsync<GameVideo>(id);
         }
 
         /// <inheritdoc/>
         public async Task<Genre?> GetGenreAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<Genre>(new Genre(), "id", id);
+            return await GetEntityAsync<Genre>(id);
         }
 
         /// <inheritdoc/>
         public async Task<InvolvedCompany?> GetInvolvedCompanyAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<InvolvedCompany>(new InvolvedCompany(), "id", id);
+            return await GetEntityAsync<InvolvedCompany>(id);
         }
 
         /// <inheritdoc/>
         public async Task<MultiplayerMode?> GetMultiplayerModeAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<MultiplayerMode>(new MultiplayerMode(), "id", id);
+            return await GetEntityAsync<MultiplayerMode>(id);
         }
 
         /// <inheritdoc/>
         public async Task<Platform?> GetPlatformAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<Platform>(new Platform(), "id", id);
+            return await GetEntityAsync<Platform>(id);
         }
 
         /// <inheritdoc/>
         public async Task<PlatformLogo?> GetPlatformLogoAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<PlatformLogo>(new PlatformLogo(), "id", id);
+            return await GetEntityAsync<PlatformLogo>(id);
         }
 
         /// <inheritdoc/>
         public async Task<PlatformVersion?> GetPlatformVersionAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<PlatformVersion>(new PlatformVersion(), "id", id);
+            return await GetEntityAsync<PlatformVersion>(id);
+        }
+
+        /// <inheritdoc/>
+        public async Task<PlayerPerspective?> GetPlayerPerspectiveAsync(long id, bool forceRefresh = false)
+        {
+            return await GetEntityAsync<PlayerPerspective>(id);
         }
 
         /// <inheritdoc/>
         public async Task<Region?> GetRegionAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<Region>(new Region(), "id", id);
+            return await GetEntityAsync<Region>(id);
         }
 
         /// <inheritdoc/>
         public async Task<ReleaseDate?> GetReleaseDateAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<ReleaseDate>(new ReleaseDate(), "id", id);
+            return await GetEntityAsync<ReleaseDate>(id);
         }
 
         /// <inheritdoc/>
         public async Task<Screenshot?> GetScreenshotAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<Screenshot>(new Screenshot(), "id", id);
+            return await GetEntityAsync<Screenshot>(id);
         }
 
         /// <inheritdoc/>
         public async Task<Theme?> GetThemeAsync(long id, bool forceRefresh = false)
         {
-            return await Storage.GetCacheValue<Theme>(new Theme(), "id", id);
+            return await GetEntityAsync<Theme>(id);
         }
 
         /// <inheritdoc/>
         public Task<Game[]?> SearchGamesAsync(SearchType searchType, long platformId, List<string> searchCandidates)
         {
             throw new NotImplementedException();
+        }
+
+        private async Task<T?> GetEntityAsync<T>(long id, bool forceRefresh = false) where T : class
+        {
+            if (id == 0)
+            {
+                return null;
+            }
+
+            T? metadata = Activator.CreateInstance(typeof(T)) as T;
+
+            // get name of type for storage purposes
+            string typeName = typeof(T).Name;
+
+            var cacheStatus = await Storage.GetCacheStatusAsync(typeName, id);
+            if (cacheStatus == Storage.CacheStatus.Current)
+            {
+                return await Storage.GetCacheValue<T>(metadata, "id", id);
+            }
+
+            return null;
         }
     }
 }

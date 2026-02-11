@@ -276,7 +276,7 @@ class GameCard {
             // randomly select a screenshot to display
             let randomIndex = Math.floor(Math.random() * this.gameData.screenshots.length);
             let screenshot = this.gameData.screenshots[randomIndex];
-            let screenshotUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/screenshots/${screenshot}/image/original/${screenshot}.jpg`;
+            let screenshotUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/screenshot/${screenshot}/image/original/${screenshot}.jpg`;
             this.card.SetBackgroundImage(screenshotUrl, true, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
@@ -320,9 +320,9 @@ class GameCard {
 
         // set the cover art
         let clearLogoValid = false;
-        if (this.gameData.clearLogo) {
+        if (this.gameData.clearLogos) {
             for (const provider of logoProviders) {
-                if (this.gameData.clearLogo[provider] !== undefined) {
+                if (this.gameData.clearLogos[provider] !== undefined) {
                     clearLogoValid = true;
                     break;
                 }
@@ -333,8 +333,8 @@ class GameCard {
             let clearLogoImg = this.card.cardBody.querySelector('#card-clearlogo');
             if (clearLogoImg) {
                 for (const provider of logoProviders) {
-                    if (this.gameData.clearLogo[provider] !== undefined) {
-                        let providerIds = this.gameData.clearLogo[provider];
+                    if (this.gameData.clearLogos[provider] !== undefined) {
+                        let providerIds = this.gameData.clearLogos[provider];
                         let providerId = null;
                         // check if providerIds is an array
                         if (Array.isArray(providerIds)) {
@@ -807,7 +807,7 @@ class GameCard {
 
             this.gameData.screenshots.forEach(screenshot => {
                 // create new screenshot item
-                let screenshotItem = new ScreenshotItem(screenshot, this.gameData.metadataSource, 'screenshot', `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/screenshots/${screenshot}/image/original/${screenshot}.jpg`, null, null, null, this.gameId);
+                let screenshotItem = new ScreenshotItem(screenshot, this.gameData.metadataSource, 'screenshot', `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/screenshot/${screenshot}/image/original/${screenshot}.jpg`, null, null, null, this.gameId);
                 this.screenshotItems[this.gameData.metadataSource].push(screenshotItem);
             });
         }

@@ -72,7 +72,7 @@ namespace gaseous_server.Controllers
                             Region? gameRegion = null;
                             foreach (long locId in game.GameLocalizations)
                             {
-                                GameLocalization? loc = await GameLocalizations.GetGame_Locatization(game.MetadataSource, locId);
+                                GameLocalization? loc = await GameLocalizations.GetGame_Localization(game.MetadataSource, locId);
                                 if (loc != null)
                                 {
                                     Region? region = await Regions.GetGame_Region(game.MetadataSource, loc.Region);
@@ -158,7 +158,7 @@ namespace gaseous_server.Controllers
                     {
                         foreach (long locId in game.GameLocalizations)
                         {
-                            GameLocalization loc = await GameLocalizations.GetGame_Locatization(game.MetadataSource, locId);
+                            GameLocalization loc = await GameLocalizations.GetGame_Localization(game.MetadataSource, locId);
                             if (loc != null)
                             {
                                 // make sure loc.Name is not already in the list of alternative names

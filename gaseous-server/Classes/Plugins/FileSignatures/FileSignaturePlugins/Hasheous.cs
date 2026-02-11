@@ -2,6 +2,7 @@ using gaseous_server.Models;
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using gaseous_server.Classes.Metadata;
 using static gaseous_server.Classes.FileSignature;
+using Newtonsoft.Json;
 
 namespace gaseous_server.Classes.Plugins.FileSignatures
 {
@@ -25,23 +26,15 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
             // check if hasheous is enabled, and if so use it's signature database
             if (Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous)
             {
-                HasheousClient.Hasheous hasheous = new HasheousClient.Hasheous();
-                if (HasheousClient.WebApp.HttpHelper.Headers.ContainsKey("CacheControl"))
+                HTTPComms comms = new HTTPComms();
+                Dictionary<string, string> headers = new Dictionary<string, string>();
+                if (!string.IsNullOrEmpty(Config.MetadataConfiguration.HasheousAPIKey))
                 {
-                    HasheousClient.WebApp.HttpHelper.Headers["CacheControl"] = "no-cache";
+                    headers.Add("X-API-Key", Config.MetadataConfiguration.HasheousAPIKey);
                 }
-                else
-                {
-                    HasheousClient.WebApp.HttpHelper.Headers.Add("CacheControl", "no-cache");
-                }
-                if (HasheousClient.WebApp.HttpHelper.Headers.ContainsKey("Pragma"))
-                {
-                    HasheousClient.WebApp.HttpHelper.Headers["Pragma"] = "no-cache";
-                }
-                else
-                {
-                    HasheousClient.WebApp.HttpHelper.Headers.Add("Pragma", "no-cache");
-                }
+                headers.Add("X-Client-API-Key", Config.MetadataConfiguration.HasheousClientAPIKey);
+                // headers.Add("CacheControl", "no-cache");
+                // headers.Add("Pragma", "no-cache");
 
                 HasheousClient.Models.LookupItemModel? HasheousResult = null;
                 try
@@ -70,19 +63,41 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                         if (HasheousResult == null)
                         {
                             // fetch from hasheous
-                            HasheousResult = hasheous.RetrieveFromHasheous(new HasheousClient.Models.HashLookupModel
+                            var body = new HasheousClient.Models.HashLookupModel
                             {
                                 MD5 = hash.md5hash,
                                 SHA1 = hash.sha1hash,
                                 SHA256 = hash.sha256hash,
                                 CRC = hash.crc32hash
-                            }, false);
+                            };
+                            string bodyJson = Newtonsoft.Json.JsonConvert.SerializeObject(body);
+                            string sourceList = "";
+                            // var sb = new System.Text.StringBuilder("returnSources=");
+                            // foreach (string source in Enum.GetNames(typeof(HasheousClient.Models.SignatureModel.RomItem.SignatureSourceType)))
+                            // {
+                            //     if (source != "None" && source != "Unknown")
+                            //     {
+                            //         sb.Append(source).Append(",");
+                            //     }
+                            // }
+                            // sourceList = sb.ToString();
+                            // sourceList = "?" + sourceList.TrimEnd(',');
 
-                            if (HasheousResult != null)
+                            var response = await comms.SendRequestAsync<string>(HTTPComms.HttpMethod.POST, new Uri("https://hasheous.org/api/v1/Lookup/ByHash" + sourceList), headers, body, contentType: "application/json", returnRawResponse: true);
+                            if (response != null && response.StatusCode == 200)
                             {
-                                // save to cache
-                                await File.WriteAllTextAsync(cacheFilePath, Newtonsoft.Json.JsonConvert.SerializeObject(HasheousResult));
+                                if (response.Body != "The provided hash was not found in the signature database.")
+                                {
+                                    HasheousResult = Newtonsoft.Json.JsonConvert.DeserializeObject<HasheousClient.Models.LookupItemModel>(response.Body);
+
+                                    if (HasheousResult != null)
+                                    {
+                                        // save to cache
+                                        await File.WriteAllTextAsync(cacheFilePath, Newtonsoft.Json.JsonConvert.SerializeObject(HasheousResult));
+                                    }
+                                }
                             }
+
                         }
                     }
                     catch (Exception ex)

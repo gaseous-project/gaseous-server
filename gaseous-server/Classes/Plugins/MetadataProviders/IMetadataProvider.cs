@@ -249,6 +249,13 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         public Task<PlatformVersion?> GetPlatformVersionAsync(long id, bool forceRefresh = false);
 
         /// <summary>
+        /// Retrieves player perspective information for games (e.g., First-person, Third-person, Isometric).
+        /// </summary> <param name="id">The unique identifier of the player perspective.</param>
+        /// <param name="forceRefresh">If true, bypasses cache and fetches fresh data from the source.</param>
+        /// <returns>A PlayerPerspective object if found; otherwise, null.</returns>
+        public Task<PlayerPerspective?> GetPlayerPerspectiveAsync(long id, bool forceRefresh = false);
+
+        /// <summary>
         /// Retrieves regional information (e.g., North America, Europe, Japan).
         /// </summary>
         /// <param name="id">The unique identifier of the region.</param>

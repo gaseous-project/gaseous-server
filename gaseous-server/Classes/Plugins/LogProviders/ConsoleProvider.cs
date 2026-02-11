@@ -46,6 +46,11 @@ namespace gaseous_server.Classes.Plugins.LogProviders
             string eventTypeString = logItem.EventTypeInfo.ColourEscape + logItem.EventTypeInfo.TypeString + logItem.EventTypeInfo.DefaultConsoleColourEscape;
             Console.WriteLine(logItem.EventTime.ToString("HH:mm:ss") + ": " + eventTypeString + ": " + logItem.Process + " - " + logItem.Message);
 
+            if (logItem.ExceptionValue != null && String.IsNullOrEmpty(logItem.ExceptionValue.ToString()) == false)
+            {
+                Console.WriteLine(logItem.ExceptionValue.ToString());
+            }
+
             return true;
         }
 

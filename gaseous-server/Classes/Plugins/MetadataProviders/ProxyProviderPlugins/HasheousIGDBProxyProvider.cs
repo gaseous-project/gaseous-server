@@ -1,8 +1,10 @@
 
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using HasheousClient.Models;
+using Newtonsoft.Json.Linq;
 using SharpCompress.Archives;
 using SharpCompress.Common;
+using System.Linq.Expressions;
 using System.Reflection;
 
 namespace gaseous_server.Classes.Plugins.MetadataProviders
@@ -76,6 +78,22 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             else
             {
                 // only games are supported via bundles - reach out to Hasheous IGDB proxy for other types
+
+                Dictionary<string, string> itemTypeCorrections = new Dictionary<string, string>
+                {
+                    { "age_ratings", "agerating" },
+                    { "ageratingcontentdescription", "ageratingcontentdescriptionv2" },
+                    { "age_rating_content_descriptions_v2", "ageratingcontentdescriptionv2" },
+                    { "age_rating_organizations", "ageratingorganization"},
+                    { "companies", "company" },
+                    { "covers", "cover" }
+                };
+
+                if (itemTypeCorrections.ContainsKey(itemType.ToLower()))
+                {
+                    itemType = itemTypeCorrections[itemType.ToLower()];
+                }
+
                 Uri proxyUrl = new Uri($"{Config.MetadataConfiguration.HasheousHost}api/v1/MetadataProxy/IGDB/{itemType}?Id={id}");
                 Dictionary<string, string> headers = new Dictionary<string, string>
                 {
@@ -106,51 +124,59 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
 
             foreach (var candidate in searchCandidates)
             {
-                var response = await hasheous.GetMetadataProxy_SearchGameAsync<gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game>(MetadataSources.IGDB, platformId.ToString(), candidate);
-                if (response != null)
+                try
                 {
-                    foreach (var item in response)
+                    var response = await hasheous.GetMetadataProxy_SearchGameAsync<gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game>(MetadataSources.IGDB, platformId.ToString(), candidate);
+                    if (response != null)
                     {
-                        // check if item is already in results by Id property
-                        bool exists = results.Any(r =>
+                        foreach (var item in response)
                         {
-                            var idProp = r.GetType().GetProperty("Id") ?? r.GetType().GetProperty("ID") ?? r.GetType().GetProperty("id");
-                            var itemIdProp = item.GetType().GetProperty("Id") ?? item.GetType().GetProperty("ID") ?? item.GetType().GetProperty("id");
-                            if (idProp != null && itemIdProp != null)
+                            // check if item is already in results by Id property
+                            bool exists = results.Any(r =>
                             {
-                                var rId = idProp.GetValue(r);
-                                var itemId = itemIdProp.GetValue(item);
-                                return rId != null && itemId != null && rId.Equals(itemId);
-                            }
-                            return false;
-                        });
-                        if (!exists)
-                        {
-                            // hasheous IGDB proxy search is always a search type search, so if searchType is not "search", we need to filter results here
-                            switch (searchType)
+                                var idProp = r.GetType().GetProperty("Id") ?? r.GetType().GetProperty("ID") ?? r.GetType().GetProperty("id");
+                                var itemIdProp = item.GetType().GetProperty("Id") ?? item.GetType().GetProperty("ID") ?? item.GetType().GetProperty("id");
+                                if (idProp != null && itemIdProp != null)
+                                {
+                                    var rId = idProp.GetValue(r);
+                                    var itemId = itemIdProp.GetValue(item);
+                                    return rId != null && itemId != null && rId.Equals(itemId);
+                                }
+                                return false;
+                            });
+                            if (!exists)
                             {
-                                case gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.where:
-                                    // exact match only (on name)
-                                    if (string.Equals(item.Name, candidate, StringComparison.OrdinalIgnoreCase))
-                                    {
+                                // hasheous IGDB proxy search is always a search type search, so if searchType is not "search", we need to filter results here
+                                switch (searchType)
+                                {
+                                    case gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.where:
+                                        // exact match only (on name)
+                                        if (string.Equals(item.Name, candidate, StringComparison.OrdinalIgnoreCase))
+                                        {
+                                            results.Add(item);
+                                        }
+                                        break;
+                                    case gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.wherefuzzy:
+                                        // fuzzy match - contains
+                                        if (item.Name != null && item.Name.IndexOf(candidate, StringComparison.OrdinalIgnoreCase) >= 0)
+                                        {
+                                            results.Add(item);
+                                        }
+                                        break;
+                                    default:
                                         results.Add(item);
-                                    }
-                                    break;
-                                case gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.wherefuzzy:
-                                    // fuzzy match - contains
-                                    if (item.Name != null && item.Name.IndexOf(candidate, StringComparison.OrdinalIgnoreCase) >= 0)
-                                    {
-                                        results.Add(item);
-                                    }
-                                    break;
-                                default:
-                                    results.Add(item);
-                                    break;
+                                        break;
+                                }
                             }
                         }
                     }
                 }
+                catch (Exception ex)
+                {
+                    // swallow exceptions for individual search candidates to allow processing to continue for other candidates
+                }
             }
+
 
             return results.Distinct().ToArray();
         }
@@ -195,7 +221,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                 return await File.ReadAllBytesAsync(localCachedImagePathFile);
             }
             // image not in cache - download from Hasheous Proxy
-            Uri imageUri = new Uri($"{Config.MetadataConfiguration.HasheousHost}api/v1/MetadataProxy/Images/IGDB/{gameId}/{url}.jpg");
+            Uri imageUri = new Uri($"{Config.MetadataConfiguration.HasheousHost}api/v1/MetadataProxy/IGDB/Image/{url}.jpg");
             if (!Directory.Exists(localCachedImagePath))
             {
                 Directory.CreateDirectory(localCachedImagePath);
@@ -369,40 +395,48 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                                 Type elementType = GetPropertyMetadataType(typeof(T), jsonPropName) ?? typeof(object);
                                 Type dictType = typeof(Dictionary<,>).MakeGenericType(typeof(string), elementType);
                                 var deserializedDict = Activator.CreateInstance(dictType);
-                                deserializedDict = Newtonsoft.Json.JsonConvert.DeserializeObject(serializedValue, dictType);
-
-                                if (deserializedDict != null)
+                                try
                                 {
-                                    var dictEnumerable = deserializedDict as System.Collections.IDictionary;
-                                    if (dictEnumerable != null)
-                                    {
-                                        foreach (System.Collections.DictionaryEntry item in dictEnumerable)
-                                        {
-                                            var itemValue = item.Value;
-                                            if (itemValue != null)
-                                            {
-                                                // use reflection to get the id property
-                                                var idProp = itemValue.GetType().GetProperty("id") ?? itemValue.GetType().GetProperty("Id") ?? itemValue.GetType().GetProperty("ID");
-                                                if (idProp != null)
-                                                {
-                                                    var idValue = idProp.GetValue(itemValue);
-                                                    if (idValue != null)
-                                                    {
-                                                        idList.Add(Convert.ToInt64(idValue));
+                                    deserializedDict = Newtonsoft.Json.JsonConvert.DeserializeObject(serializedValue, dictType);
 
-                                                        if (Storage != null)
+                                    if (deserializedDict != null)
+                                    {
+                                        var dictEnumerable = deserializedDict as System.Collections.IDictionary;
+                                        if (dictEnumerable != null)
+                                        {
+                                            foreach (System.Collections.DictionaryEntry item in dictEnumerable)
+                                            {
+                                                var itemValue = item.Value;
+                                                if (itemValue != null)
+                                                {
+                                                    // use reflection to get the id property
+                                                    var idProp = itemValue.GetType().GetProperty("id") ?? itemValue.GetType().GetProperty("Id") ?? itemValue.GetType().GetProperty("ID");
+                                                    if (idProp != null)
+                                                    {
+                                                        var idValue = idProp.GetValue(itemValue);
+                                                        if (idValue != null)
                                                         {
-                                                            // save the item to storage using runtime type
-                                                            await StoreCacheValueWithRuntimeType(elementType, itemValue);
+                                                            idList.Add(Convert.ToInt64(idValue));
+
+                                                            if (Storage != null)
+                                                            {
+                                                                // save the item to storage using runtime type
+                                                                await StoreCacheValueWithRuntimeType(elementType, itemValue);
+                                                            }
                                                         }
                                                     }
                                                 }
                                             }
                                         }
                                     }
-                                }
 
-                                prop.SetValue(game, idList);
+                                    prop.SetValue(game, idList);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logging.LogKey(Logging.LogType.Warning, "BundleDeserialization", $"Failed to deserialize list property {jsonPropName} for Game bundle ID {id}: {ex.Message}");
+                                    Logging.LogKey(Logging.LogType.Warning, "BundleDeserialization", $"Serialized value: {serializedValue}");
+                                }
                             }
                             else if (prop.PropertyType == typeof(long) && value is Newtonsoft.Json.Linq.JObject jObject && jObject["id"] != null)
                             {
@@ -452,6 +486,22 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                                 catch (Exception ex)
                                 {
                                     Console.WriteLine($"Error converting int property {jsonPropName}: {ex.Message}");
+                                }
+                            }
+                            else if (prop.PropertyType == typeof(int[]))
+                            {
+                                // convert to int array
+                                try
+                                {
+                                    int[]? intArrayValue = ((JArray)value).ToObject<int[]>();
+                                    if (intArrayValue != null)
+                                    {
+                                        prop.SetValue(game, intArrayValue);
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"Error converting int array property {jsonPropName}: {ex.Message}");
                                 }
                             }
                             else if (prop.PropertyType == typeof(uint) || prop.PropertyType == typeof(uint?))
