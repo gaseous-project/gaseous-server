@@ -32,6 +32,10 @@ namespace gaseous_server.Classes.Metadata
             GameAgeRating gameAgeRating = new GameAgeRating();
 
             AgeRating ageRating = await GetAgeRating(SourceType, RatingId);
+            if (ageRating == null)
+            {
+                return null;
+            }
             gameAgeRating.Id = (long)ageRating.Id;
             gameAgeRating.RatingBoard = await AgeRatingOrganizations.GetAgeRatingOrganization(SourceType, ageRating.Organization);
             gameAgeRating.RatingTitle = await AgeRatingCategorys.GetAgeRatingCategory(SourceType, ageRating.RatingCategory);

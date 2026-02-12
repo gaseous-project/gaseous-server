@@ -146,10 +146,13 @@ namespace gaseous_server.Controllers
                     {
                         AlternativeName altName = await AlternativeNames.GetAlternativeNames(game.MetadataSource, altNameId);
 
-                        // make sure the name is not already in the list of alternative names
-                        if (altNames.FirstOrDefault(x => x.Name == altName.Name) == null)
+                        if (altName != null)
                         {
-                            altNames.Add(altName);
+                            // make sure the name is not already in the list of alternative names
+                            if (altNames.FirstOrDefault(x => x.Name == altName.Name) == null)
+                            {
+                                altNames.Add(altName);
+                            }
                         }
                     }
 
@@ -205,7 +208,11 @@ namespace gaseous_server.Controllers
                     List<AgeRatings.GameAgeRating> ageRatings = new List<AgeRatings.GameAgeRating>();
                     foreach (long ageRatingId in game.AgeRatings)
                     {
-                        ageRatings.Add(await AgeRatings.GetConsolidatedAgeRating(game.MetadataSource, ageRatingId));
+                        var ageRating = await AgeRatings.GetConsolidatedAgeRating(game.MetadataSource, ageRatingId);
+                        if (ageRating != null)
+                        {
+                            ageRatings.Add(ageRating);
+                        }
                     }
                     return Ok(ageRatings);
                 }
@@ -240,7 +247,10 @@ namespace gaseous_server.Controllers
                     foreach (long ArtworkId in game.Artworks)
                     {
                         Artwork GameArtwork = await Artworks.GetArtwork(game.MetadataSource, ArtworkId);
-                        artworks.Add(GameArtwork);
+                        if (GameArtwork != null)
+                        {
+                            artworks.Add(GameArtwork);
+                        }
                     }
                 }
 
@@ -337,7 +347,10 @@ namespace gaseous_server.Controllers
             try
             {
                 Dictionary<string, string>? imgData = await ImageHandling.GameImage(MetadataMapId, MetadataSource, imageType, ImageId, size, imagename);
-
+                if (imgData == null)
+                {
+                    return NotFound();
+                }
                 if (System.IO.File.Exists(imgData["imagePath"]))
                 {
                     string filename = imgData["imageId"] + ".jpg";
@@ -490,7 +503,11 @@ namespace gaseous_server.Controllers
                     {
                         foreach (long gameModeId in game.GameModes)
                         {
-                            gameModeObjects.Add(await Classes.Metadata.GameModes.GetGame_Modes(game.MetadataSource, gameModeId));
+                            var mode = await Classes.Metadata.GameModes.GetGame_Modes(game.MetadataSource, gameModeId);
+                            if (mode != null)
+                            {
+                                gameModeObjects.Add(mode);
+                            }
                         }
                     }
 
@@ -527,7 +544,11 @@ namespace gaseous_server.Controllers
                     {
                         foreach (long genreId in game.Genres)
                         {
-                            genreObjects.Add(await Classes.Metadata.Genres.GetGenres(game.MetadataSource, genreId));
+                            var genre = await Classes.Metadata.Genres.GetGenres(game.MetadataSource, genreId);
+                            if (genre != null)
+                            {
+                                genreObjects.Add(genre);
+                            }
                         }
                     }
 
@@ -566,8 +587,17 @@ namespace gaseous_server.Controllers
                     {
                         foreach (long themeId in game.Themes)
                         {
-                            themeObjects.Add(await Classes.Metadata.Themes.GetGame_ThemesAsync(game.MetadataSource, themeId));
+                            var theme = await Classes.Metadata.Themes.GetGame_ThemesAsync(game.MetadataSource, themeId);
+                            if (theme != null)
+                            {
+                                themeObjects.Add(theme);
+                            }
                         }
+                    }
+
+                    if (themeObjects == null || themeObjects.Count == 0)
+                    {
+                        return NotFound();
                     }
 
                     List<Theme> sortedThemeObjects = themeObjects.OrderBy(o => o.Name).ToList();
@@ -607,8 +637,16 @@ namespace gaseous_server.Controllers
                         {
                             try
                             {
-                                InvolvedCompany involvedCompany = await Classes.Metadata.InvolvedCompanies.GetInvolvedCompanies(icId);
-                                Company company = await Classes.Metadata.Companies.GetCompanies(game.MetadataSource, (long?)involvedCompany.Company);
+                                InvolvedCompany? involvedCompany = await Classes.Metadata.InvolvedCompanies.GetInvolvedCompanies(game.MetadataSource, icId);
+                                if (involvedCompany == null)
+                                {
+                                    continue;
+                                }
+                                Company? company = await Classes.Metadata.Companies.GetCompanies(game.MetadataSource, (long?)involvedCompany.Company);
+                                if (company == null)
+                                {
+                                    continue;
+                                }
                                 company.Developed = null;
                                 company.Published = null;
 
@@ -656,16 +694,23 @@ namespace gaseous_server.Controllers
                     List<Dictionary<string, object>> icObjects = new List<Dictionary<string, object>>();
                     if (game.InvolvedCompanies != null)
                     {
-                        InvolvedCompany involvedCompany = await Classes.Metadata.InvolvedCompanies.GetInvolvedCompanies(CompanyId);
+                        InvolvedCompany involvedCompany = await Classes.Metadata.InvolvedCompanies.GetInvolvedCompanies(game.MetadataSource, CompanyId);
                         Company company = await Classes.Metadata.Companies.GetCompanies(game.MetadataSource, (long?)involvedCompany.Company);
-                        company.Developed = null;
-                        company.Published = null;
+                        if (company != null)
+                        {
+                            company.Developed = null;
+                            company.Published = null;
 
-                        Dictionary<string, object> companyData = new Dictionary<string, object>();
-                        companyData.Add("involvement", involvedCompany);
-                        companyData.Add("company", company);
+                            Dictionary<string, object> companyData = new Dictionary<string, object>();
+                            companyData.Add("involvement", involvedCompany);
+                            companyData.Add("company", company);
 
-                        return Ok(companyData);
+                            return Ok(companyData);
+                        }
+                        else
+                        {
+                            return NotFound();
+                        }
                     }
                     else
                     {
@@ -696,9 +741,12 @@ namespace gaseous_server.Controllers
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
                 Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
 
-                InvolvedCompany involvedCompany = await Classes.Metadata.InvolvedCompanies.GetInvolvedCompanies(CompanyId);
+                InvolvedCompany involvedCompany = await Classes.Metadata.InvolvedCompanies.GetInvolvedCompanies(game.MetadataSource, CompanyId);
                 Company company = await Classes.Metadata.Companies.GetCompanies(game.MetadataSource, (long?)involvedCompany.Company);
-
+                if (company == null)
+                {
+                    return NotFound();
+                }
                 string coverFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Company(company), "Logo_Medium.png");
                 if (System.IO.File.Exists(coverFilePath))
                 {
@@ -980,8 +1028,10 @@ namespace gaseous_server.Controllers
                         foreach (long icId in game.ReleaseDates)
                         {
                             ReleaseDate releaseDate = await Classes.Metadata.ReleaseDates.GetReleaseDates(game.MetadataSource, icId);
-
-                            rdObjects.Add(releaseDate);
+                            if (releaseDate != null)
+                            {
+                                rdObjects.Add(releaseDate);
+                            }
                         }
                     }
 
@@ -1464,7 +1514,10 @@ namespace gaseous_server.Controllers
                     foreach (long ScreenshotId in game.Screenshots)
                     {
                         Screenshot GameScreenshot = await Screenshots.GetScreenshotAsync(game.MetadataSource, ScreenshotId);
-                        screenshots.Add(GameScreenshot);
+                        if (GameScreenshot != null)
+                        {
+                            screenshots.Add(GameScreenshot);
+                        }
                     }
                 }
 
@@ -1532,7 +1585,10 @@ namespace gaseous_server.Controllers
                     foreach (long VideoId in game.Videos)
                     {
                         GameVideo gameVideo = await GamesVideos.GetGame_Videos(game.MetadataSource, VideoId);
-                        videos.Add(gameVideo);
+                        if (gameVideo != null)
+                        {
+                            videos.Add(gameVideo);
+                        }
                     }
                 }
 

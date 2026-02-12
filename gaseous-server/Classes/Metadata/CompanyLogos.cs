@@ -10,7 +10,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static async Task<CompanyLogo?> GetCompanyLogo(long? Id, string ImagePath)
+        public static async Task<CompanyLogo?> GetCompanyLogo(FileSignature.MetadataSources SourceType, long? Id, string ImagePath)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -18,7 +18,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                CompanyLogo? RetVal = await Metadata.GetMetadataAsync<CompanyLogo>((long)Id, false);
+                CompanyLogo? RetVal = await Metadata.GetMetadataAsync<CompanyLogo>(SourceType, (long)Id, false);
                 return RetVal;
             }
         }

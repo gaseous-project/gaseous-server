@@ -11,8 +11,6 @@ namespace gaseous_server.Classes.Metadata
 {
     public class AgeGroups
     {
-        private static gaseous_server.Classes.Plugins.MetadataProviders.Storage Storage = new gaseous_server.Classes.Plugins.MetadataProviders.Storage(FileSignature.MetadataSources.IGDB);
-
         public AgeGroups()
         {
 
@@ -26,6 +24,8 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
+                gaseous_server.Classes.Plugins.MetadataProviders.Storage Storage = new gaseous_server.Classes.Plugins.MetadataProviders.Storage(game.MetadataSource);
+
                 Storage.CacheStatus? cacheStatus = await Storage.GetCacheStatusAsync("AgeGroup", (long)game.Id);
 
                 AgeGroup? RetVal = new AgeGroup();

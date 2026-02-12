@@ -489,23 +489,26 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                 List<Screenshot> igdbScreenshot = new List<Screenshot>();
 
                 // create new age rating object - all TheGamesDb age ratings are ESRB ratings
-                string tgdbRatingName = game.rating.Split(" - ")[0];
-                long? igdbAgeRatingTitle = null;
-                if (AgeGroups.AgeGroupMap.RatingBoards["ESRB"].Ratings.ContainsKey(tgdbRatingName))
+                if (game.rating != null)
                 {
-                    igdbAgeRatingTitle = AgeGroups.AgeGroupMap.RatingBoards["ESRB"].Ratings[tgdbRatingName].IGDBId;
-                }
-                if (igdbAgeRatingTitle.HasValue)
-                {
-                    igdbAgeRating = new AgeRating
+                    string tgdbRatingName = game.rating.Split(" - ")[0];
+                    long? igdbAgeRatingTitle = null;
+                    if (AgeGroups.AgeGroupMap.RatingBoards["ESRB"].Ratings.ContainsKey(tgdbRatingName))
                     {
-                        Id = game.id,
-                        Organization = 1,
-                        RatingCategory = (long)igdbAgeRatingTitle,
-                        SourceType = FileSignature.MetadataSources.TheGamesDb
-                    };
-                    // update the cache
-                    await Storage.StoreCacheValue<AgeRating>(igdbAgeRating);
+                        igdbAgeRatingTitle = AgeGroups.AgeGroupMap.RatingBoards["ESRB"].Ratings[tgdbRatingName].IGDBId;
+                    }
+                    if (igdbAgeRatingTitle.HasValue)
+                    {
+                        igdbAgeRating = new AgeRating
+                        {
+                            Id = game.id,
+                            Organization = 1,
+                            RatingCategory = (long)igdbAgeRatingTitle,
+                            SourceType = FileSignature.MetadataSources.TheGamesDb
+                        };
+                        // update the cache
+                        await Storage.StoreCacheValue<AgeRating>(igdbAgeRating);
+                    }
                 }
 
                 // process images

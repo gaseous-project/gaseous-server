@@ -49,6 +49,11 @@ namespace gaseous_server.Classes.Metadata
                     game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 }
 
+                if (game == null)
+                {
+                    return null;
+                }
+
                 string? imageId = null;
                 string? imageTypePath = null;
 
@@ -59,6 +64,10 @@ namespace gaseous_server.Classes.Metadata
                         {
                             // Cover cover = Classes.Metadata.Covers.GetCover(game.MetadataSource, (long?)game.Cover);
                             Cover cover = await Classes.Metadata.Covers.GetCover(game.MetadataSource, (long?)ImageId);
+                            if (cover == null)
+                            {
+                                return null;
+                            }
                             imageId = cover.ImageId;
                             imageTypePath = "Covers";
                         }
@@ -70,7 +79,10 @@ namespace gaseous_server.Classes.Metadata
                             if (game.Screenshots.Contains(ImageId))
                             {
                                 Screenshot imageObject = await Screenshots.GetScreenshotAsync(game.MetadataSource, ImageId);
-
+                                if (imageObject == null)
+                                {
+                                    return null;
+                                }
                                 imageId = imageObject.ImageId;
                                 imageTypePath = "Screenshots";
                             }
@@ -83,7 +95,10 @@ namespace gaseous_server.Classes.Metadata
                             if (game.Artworks.Contains(ImageId))
                             {
                                 Artwork imageObject = await Artworks.GetArtwork(game.MetadataSource, ImageId);
-
+                                if (imageObject == null)
+                                {
+                                    return null;
+                                }
                                 imageId = imageObject.ImageId;
                                 imageTypePath = "Artwork";
                             }
@@ -96,12 +111,12 @@ namespace gaseous_server.Classes.Metadata
                             if (game.ClearLogos.ContainsKey(MetadataSource))
                             {
                                 ClearLogo? imageObject = await ClearLogos.GetClearLogo(game.MetadataSource, ImageId);
-
-                                if (imageObject != null)
+                                if (imageObject == null)
                                 {
-                                    imageId = imageObject.ImageId;
-                                    imageTypePath = "ClearLogo";
+                                    return null;
                                 }
+                                imageId = imageObject.ImageId;
+                                imageTypePath = "ClearLogo";
                             }
                         }
                         break;
