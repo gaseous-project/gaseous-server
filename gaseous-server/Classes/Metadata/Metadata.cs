@@ -217,7 +217,7 @@ namespace gaseous_server.Classes.Metadata
                 Type t when t == typeof(Franchise) => await provider.GetFranchiseAsync(Id, ForceRefresh) as T,
                 Type t when t == typeof(GameLocalization) => await provider.GetGameLocalizationAsync(Id, ForceRefresh) as T,
                 Type t when t == typeof(GameMode) => await provider.GetGameModeAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(Game) => await _GetGameAsync(Id, ForceRefresh) as T,
+                Type t when t == typeof(Game) => await _GetGameAsync(provider, Id, ForceRefresh) as T,
                 Type t when t == typeof(GameVideo) => await provider.GetGameVideoAsync(Id, ForceRefresh) as T,
                 Type t when t == typeof(Genre) => await provider.GetGenreAsync(Id, ForceRefresh) as T,
                 Type t when t == typeof(InvolvedCompany) => await provider.GetInvolvedCompanyAsync(Id, ForceRefresh) as T,
@@ -234,14 +234,8 @@ namespace gaseous_server.Classes.Metadata
             };
         }
 
-        private static async Task<Game?> _GetGameAsync(long Id, bool ForceRefresh)
+        private static async Task<Game?> _GetGameAsync(gaseous_server.Classes.Plugins.MetadataProviders.IMetadataProvider provider, long Id, bool ForceRefresh)
         {
-            var provider = MetadataProviders.FirstOrDefault(x => x.SourceType == FileSignature.MetadataSources.IGDB);
-            if (provider == null)
-            {
-                throw new NoMetadataProvidersConfigured();
-            }
-
             Game? game = await provider.GetGameAsync(Id, ForceRefresh);
             if (game == null)
             {
