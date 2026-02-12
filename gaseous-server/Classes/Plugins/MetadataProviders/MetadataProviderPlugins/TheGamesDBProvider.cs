@@ -294,6 +294,32 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                 return await File.ReadAllBytesAsync(combinedPath);
             }
 
+            // fallback to downloading the image directly from Hasheous if it's not present in the game bundle - this can happen if the image was added to TheGamesDB after the bundle was downloaded and hasn't been refreshed yet
+            string imageDirectory = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, gameId), imageType.ToString());
+            string directImagePath = Path.Combine(imageDirectory, url);
+
+            if (File.Exists(directImagePath))
+            {
+                return await File.ReadAllBytesAsync(directImagePath);
+            }
+
+            if (!Directory.Exists(Path.GetDirectoryName(directImagePath)))
+            {
+                Directory.CreateDirectory(Path.GetDirectoryName(directImagePath));
+            }
+
+            Uri imageUri = new Uri($"https://hasheous.org/api/v1/MetadataProxy/TheGamesDB/Images/original/{url}");
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "X-Client-API-Key", Config.MetadataConfiguration.HasheousClientAPIKey }
+            };
+
+            var response = await comms.DownloadToFileAsync(imageUri, directImagePath, headers);
+            if (response.StatusCode == 200)
+            {
+                return await File.ReadAllBytesAsync(directImagePath);
+            }
+
             return null;
         }
 
@@ -536,7 +562,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                         {
                             case "boxart":
                                 // detect cover art
-                                if (igdbCover != null && image.side == "front")
+                                if (igdbCover == null && image.side == "front")
                                 {
                                     igdbCover = new Cover
                                     {
