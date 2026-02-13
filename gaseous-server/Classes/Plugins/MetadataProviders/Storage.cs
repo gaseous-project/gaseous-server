@@ -376,8 +376,10 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         /// </returns>
         public static T BuildCacheObject<T>(T EndpointType, DataRow dataRow)
         {
+            var properties = EndpointType.GetType().GetProperties();
+
             // copy the DataRow to EndpointType
-            foreach (PropertyInfo property in EndpointType.GetType().GetProperties())
+            foreach (PropertyInfo property in properties)
             {
                 if (property.GetCustomAttribute<Models.NoDatabaseAttribute>() == null && property.CanWrite)
                 {
@@ -435,6 +437,32 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                                         break;
                                 }
                             }
+                        }
+                    }
+                }
+            }
+
+            // Handle SourceId -> SourceType mapping
+            var sourceIdColumn = dataRow.Table.Columns.Cast<DataColumn>()
+                .FirstOrDefault(c => c.ColumnName.Equals("SourceId", StringComparison.OrdinalIgnoreCase));
+
+            if (sourceIdColumn != null)
+            {
+                PropertyInfo sourceTypeProperty = EndpointType.GetType().GetProperty("SourceType");
+                if (sourceTypeProperty != null && sourceTypeProperty.CanWrite)
+                {
+                    object? sourceIdValue = dataRow[sourceIdColumn.ColumnName];
+                    if (sourceIdValue != null && sourceIdValue != DBNull.Value)
+                    {
+                        try
+                        {
+                            // Convert int to enum
+                            object enumValue = Enum.ToObject(sourceTypeProperty.PropertyType, sourceIdValue);
+                            sourceTypeProperty.SetValue(EndpointType, enumValue);
+                        }
+                        catch
+                        {
+                            // Silently ignore conversion errors
                         }
                     }
                 }

@@ -168,6 +168,20 @@ namespace gaseous_server.Classes.Configuration.Models
             return MetadataPath;
         }
 
+        /// <summary>
+        /// Gets the metadata cache directory path and ensures it exists.
+        /// </summary>
+        /// <returns>The full path to the metadata cache directory.</returns>
+        public string LibraryMetadataDirectory_Cache()
+        {
+            string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Cache");
+            if (!Directory.Exists(MetadataPath)) { Directory.CreateDirectory(MetadataPath); }
+            return MetadataPath;
+        }
+
+        /// <summary>
+        /// Gets the directory path for stored file signatures.
+        /// </summary>
         public string LibrarySignaturesDirectory
         {
             get

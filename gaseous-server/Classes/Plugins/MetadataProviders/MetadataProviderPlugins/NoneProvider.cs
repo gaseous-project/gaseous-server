@@ -20,8 +20,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.NoneProvider
         /// <summary>
         /// Proxy provider is not required for the None provider.
         /// </summary>
-        /// <exception cref="NotImplementedException">Always thrown since the None provider does not use a proxy.</exception>
-        public IProxyProvider? ProxyProvider { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public IProxyProvider? ProxyProvider { get; set; } = null;
 
         /// <inheritdoc/>
         public Dictionary<string, object>? Settings { get; set; }

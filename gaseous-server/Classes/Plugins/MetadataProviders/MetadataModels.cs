@@ -87,6 +87,24 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes
         /// </summary>
         [Models.NoDatabaseAttribute]
         public FileSignature.MetadataSources SourceType { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the metadata provider that supplied this artwork metadata. This property is not mapped to the database and is used for in-memory tracking of the metadata provider associated with this artwork.
+        /// </summary>
+        [Models.NoDatabaseAttribute]
+        public string? ProviderName { get; set; }
+
+        /// <summary>
+        /// Gets the image paths for this artwork based on its metadata source and ID.
+        /// </summary>
+        [Models.NoDatabaseAttribute]
+        public gaseous_server.Classes.Metadata.ImagePath Paths
+        {
+            get
+            {
+                return new gaseous_server.Classes.Metadata.ImagePath(SourceType, ProviderName, Game, gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.ImageType.Artwork, ImageId);
+            }
+        }
     }
 
     /// <summary>
@@ -100,6 +118,24 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes
         /// </summary>
         [Models.NoDatabaseAttribute]
         public FileSignature.MetadataSources SourceType { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the metadata provider that supplied this clear logo metadata. This property is not mapped to the database and is used for in-memory tracking of the metadata provider associated with this clear logo.
+        /// </summary>
+        [Models.NoDatabaseAttribute]
+        public string? ProviderName { get; set; }
+
+        /// <summary>
+        /// Gets the image paths for this clear logo based on its metadata source and ID.
+        /// </summary>
+        [Models.NoDatabaseAttribute]
+        public gaseous_server.Classes.Metadata.ImagePath Paths
+        {
+            get
+            {
+                return new gaseous_server.Classes.Metadata.ImagePath(SourceType, ProviderName, Game, gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.ImageType.ClearLogo, ImageId);
+            }
+        }
     }
 
     /// <summary>
@@ -152,6 +188,24 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes
         /// </summary>
         [Models.NoDatabaseAttribute]
         public FileSignature.MetadataSources SourceType { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the metadata provider that supplied this cover image metadata. This property is not mapped to the database and is used for in-memory tracking of the metadata provider associated with this cover image.
+        /// </summary>
+        [Models.NoDatabaseAttribute]
+        public string? ProviderName { get; set; }
+
+        /// <summary>
+        /// Gets the image paths for this cover based on its metadata source and ID.
+        /// </summary>
+        [Models.NoDatabaseAttribute]
+        public gaseous_server.Classes.Metadata.ImagePath Paths
+        {
+            get
+            {
+                return new gaseous_server.Classes.Metadata.ImagePath(SourceType, ProviderName, Game, gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.ImageType.Cover, ImageId);
+            }
+        }
     }
 
     /// <summary>
@@ -404,6 +458,24 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes
         /// </summary>
         [Models.NoDatabaseAttribute]
         public FileSignature.MetadataSources SourceType { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the metadata provider that supplied this screenshot metadata. This property is not mapped to the database and is used for in-memory tracking of the metadata provider associated with this screenshot.
+        /// </summary>
+        [Models.NoDatabaseAttribute]
+        public string? ProviderName { get; set; }
+
+        /// <summary>
+        /// Gets the image paths for this screenshot based on its metadata source and ID.
+        /// </summary>
+        [Models.NoDatabaseAttribute]
+        public gaseous_server.Classes.Metadata.ImagePath Paths
+        {
+            get
+            {
+                return new gaseous_server.Classes.Metadata.ImagePath(SourceType, ProviderName, Game, gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.ImageType.Screenshot, ImageId);
+            }
+        }
     }
 
     /// <summary>
@@ -474,31 +546,5 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes
         /// Represents a platform logo image asset.
         /// </summary>
         PlatformLogo
-    }
-
-    /// <summary>
-    /// Specifies the size of an image asset for metadata.
-    /// </summary>
-    public enum ImageSize
-    {
-        /// <summary>
-        /// Small image size. Resolution of 150x225 pixels.
-        /// </summary>
-        Small,
-
-        /// <summary>
-        /// Medium image size. Resolution of 300x450 pixels.
-        /// </summary>
-        Medium,
-
-        /// <summary>
-        /// Large image size. Resolution of 600x900 pixels.
-        /// </summary>
-        Large,
-
-        /// <summary>
-        /// Original image size. Resolution as provided by the source.
-        /// </summary>
-        Original
     }
 }

@@ -200,7 +200,7 @@ namespace gaseous_server.Classes.Metadata
             }
 
             // execute the metadata retrieval command based on T
-            return typeof(T) switch
+            var value = typeof(T) switch
             {
                 Type t when t == typeof(AgeRating) => await provider.GetAgeRatingAsync(Id, ForceRefresh) as T,
                 Type t when t == typeof(AgeRatingCategory) => await provider.GetAgeRatingCategoryAsync(Id, ForceRefresh) as T,
@@ -232,6 +232,33 @@ namespace gaseous_server.Classes.Metadata
                 Type t when t == typeof(Theme) => await provider.GetThemeAsync(Id, ForceRefresh) as T,
                 _ => throw new NotSupportedException("Unsupported metadata type: " + typeof(T).FullName)
             };
+
+            string providerName = "Direct";
+            if (provider.ProxyProvider != null)
+            {
+                providerName = provider.ProxyProvider.GetType().Name;
+            }
+            if (value != null)
+            {
+                foreach (var property in value.GetType().GetProperties())
+                {
+                    if (property.CanWrite)
+                    {
+                        switch (property.Name)
+                        {
+                            case "ProviderName":
+                                property.SetValue(value, providerName);
+                                break;
+
+                            case "SourceType":
+                                property.SetValue(value, SourceType);
+                                break;
+                        }
+                    }
+                }
+            }
+
+            return value;
         }
 
         private static async Task<Game?> _GetGameAsync(gaseous_server.Classes.Plugins.MetadataProviders.IMetadataProvider provider, long Id, bool ForceRefresh)

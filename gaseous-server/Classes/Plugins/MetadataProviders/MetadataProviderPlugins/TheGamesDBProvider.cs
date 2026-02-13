@@ -24,7 +24,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
         /// <summary>
         /// Proxy provider is not required for TheGamesDB.
         /// </summary>
-        public IProxyProvider? ProxyProvider { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
+        public IProxyProvider? ProxyProvider { get => null; set => throw new NotImplementedException(); }
 
         /// <inheritdoc/>
         public Dictionary<string, object>? Settings { get; set; }
