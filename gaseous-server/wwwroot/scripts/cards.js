@@ -393,6 +393,7 @@ class GameCard {
                 }
             }).then(response => response.json()).then(data => {
                 if (data) {
+                    console.log(data);
                     let userRatingOrder = GetPreference('Library.GameClassificationDisplayOrder');
                     let abortLoop = false;
                     userRatingOrder.forEach(ratingElement => {

@@ -82,6 +82,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                 Dictionary<string, string> itemTypeCorrections = new Dictionary<string, string>
                 {
                     { "age_ratings", "agerating" },
+                    { "age_rating_categories", "ageratingcategory" },
                     { "ageratingcontentdescription", "ageratingcontentdescriptionv2" },
                     { "age_rating_content_descriptions_v2", "ageratingcontentdescriptionv2" },
                     { "age_rating_organizations", "ageratingorganization"},
