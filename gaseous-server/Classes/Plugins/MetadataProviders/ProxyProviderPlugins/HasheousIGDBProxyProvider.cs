@@ -184,6 +184,9 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         /// <inheritdoc/>
         public async Task<byte[]?> GetGameImageAsync(long gameId, string url, ImageType imageType)
         {
+            // get the bundle for the game - if we have it, attempt to load the image from the bundle storage location
+            await GetGameBundleAsync<gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game>(gameId);
+
             // we should have a bundle available for the game - attempt to load image from bundle storage
             string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.Name, gameId);
 
@@ -227,7 +230,11 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                 Directory.CreateDirectory(localCachedImagePath);
             }
             // download the image
-            var response = await comms.DownloadToFileAsync(imageUri, localCachedImagePathFile);
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "X-Client-API-Key", Config.MetadataConfiguration.HasheousClientAPIKey }
+            };
+            var response = await comms.DownloadToFileAsync(imageUri, localCachedImagePathFile, headers);
             if (response.StatusCode == 200)
             {
                 return await File.ReadAllBytesAsync(localCachedImagePathFile);
@@ -248,7 +255,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             }
 
             // check if bundle exists
-            string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.Name, id);
+            string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.GetType().Name, id);
             bool forceDownloadBundle = false;
             if (Directory.Exists(bundlePath))
             {

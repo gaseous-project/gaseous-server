@@ -353,7 +353,7 @@ namespace gaseous_server.Controllers
                 }
                 if (System.IO.File.Exists(imgData["imagePath"]))
                 {
-                    string filename = imgData["imageId"] + ".jpg";
+                    string filename = imgData["imageName"];
                     string filepath = imgData["imagePath"];
                     string contentType = "image/jpg";
 

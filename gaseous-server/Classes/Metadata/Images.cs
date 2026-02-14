@@ -276,7 +276,6 @@ namespace gaseous_server.Classes.Metadata
                     {
                         filePaths[size] = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Cache(), "images", SourceType.ToString(), ProviderName, GameId.ToString(), ProviderImageType(SourceType, imageType), size.ToString(), ImageName);
                     }
-
                 }
                 return filePaths;
             }
