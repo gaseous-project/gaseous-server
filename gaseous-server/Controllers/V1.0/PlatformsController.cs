@@ -103,6 +103,10 @@ namespace gaseous_server.Controllers
                         if (platformObject.Versions.Count > 0)
                         {
                             PlatformVersion platformVersion = await Classes.Metadata.PlatformVersions.GetPlatformVersion(metadataSources, (long)platformObject.Versions[0]);
+                            if (platformVersion == null)
+                            {
+                                return GetDummyImage();
+                            }
                             logoObject = await PlatformLogos.GetPlatformLogo((long)platformVersion.PlatformLogo);
 
                             if (logoObject == null || logoObject.ImageId == null || logoObject.ImageId == "")
