@@ -144,7 +144,7 @@ namespace gaseous_server.Controllers
 
                             var cd = new System.Net.Mime.ContentDisposition
                             {
-                                FileName = filename,
+                                FileName = biosItem.filename,
                                 Inline = false,
                             };
 
