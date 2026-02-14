@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0 AS build-env
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:10.0 AS build-env
 ARG TARGETARCH
 ARG BUILDPLATFORM
 WORKDIR /App
@@ -30,7 +30,7 @@ RUN bash build/scripts/get-ejs-git.sh && mv gaseous-server/wwwroot/emulators/Emu
 RUN apt-get clean && rm -rf /var/lib/apt/lists
 
 # Build runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0
+FROM mcr.microsoft.com/dotnet/aspnet:10.0
 ENV INDOCKER=1
 WORKDIR /App
 COPY --from=build-env /App/out .
