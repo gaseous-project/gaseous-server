@@ -301,7 +301,7 @@ namespace gaseous_server.Classes
                             string bodyContent;
                             if (body is string bodyString)
                             {
-                                bodyContent = bodyString;
+                                bodyContent = System.Net.WebUtility.HtmlEncode(bodyString);
                             }
                             else
                             {
