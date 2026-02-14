@@ -655,19 +655,19 @@ FROM
     `Metadata_AlternativeName` AS `AlternativeName` ON `Game`.`Id` = `AlternativeName`.`Game` AND `Game`.`SourceId` = `AlternativeName`.`SourceId`
         LEFT JOIN
     (SELECT 
-        `GameLocalization`.`Game`,
-            `GameLocalization`.`SourceId`,
-            `GameLocalization`.`Name` AS `LocalizedName`,
+        `Metadata_GameLocalization`.`Game`,
+            `Metadata_GameLocalization`.`SourceId`,
+            `Metadata_GameLocalization`.`Name` AS `LocalizedName`,
             CASE
-                WHEN `GameLocalization`.`Name` LIKE 'The %' THEN CONCAT(TRIM(SUBSTR(`GameLocalization`.`Name`, 4)), ', The')
-                ELSE `GameLocalization`.`Name`
+                WHEN `Metadata_GameLocalization`.`Name` LIKE 'The %' THEN CONCAT(TRIM(SUBSTR(`Metadata_GameLocalization`.`Name`, 4)), ', The')
+                ELSE `Metadata_GameLocalization`.`Name`
             END AS `LocalizedNameThe`,
-            `GameLocalization`.`Cover` AS `LocalizedCover`,
+            `Metadata_GameLocalization`.`Cover` AS `LocalizedCover`,
             `Region`.`Identifier`
     FROM
-        `Metadata_GameLocalization` AS `GameLocalization`
-    JOIN `Metadata_Region` AS `Region` ON `GameLocalization`.`Region` = `Region`.`Id`
-        AND `GameLocalization`.`SourceId` = `Region`.`SourceId`
+        `Metadata_GameLocalization` AS `Metadata_GameLocalization`
+    JOIN `Metadata_Region` AS `Region` ON `Metadata_GameLocalization`.`Region` = `Region`.`Id`
+        AND `Metadata_GameLocalization`.`SourceId` = `Region`.`SourceId`
     WHERE
         `Region`.`Identifier` = @lang) `LocalizedNames` ON `Game`.`Id` = `LocalizedNames`.`Game`
         AND `Game`.`SourceId` = `LocalizedNames`.`SourceId`
