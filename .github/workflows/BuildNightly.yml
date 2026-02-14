@@ -12,8 +12,37 @@ permissions:
   id-token: write
 
 jobs:
+  check-changes:
+    name: Check for code changes
+    runs-on: ubuntu-latest
+    outputs:
+      has_changes: ${{ steps.check.outputs.has_changes }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - name: Check for changes since yesterday
+        id: check
+        run: |
+          # Get commits from the last 24 hours
+          YESTERDAY=$(date -u -d '24 hours ago' '+%Y-%m-%d %H:%M:%S')
+          CHANGES=$(git log --since="$YESTERDAY" --oneline | wc -l)
+          
+          if [ "$CHANGES" -gt 0 ]; then
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+            echo "Found $CHANGES commit(s) in the last 24 hours"
+          else
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            echo "No commits found in the last 24 hours"
+          fi
+
   call-reusable:
     name: Build Nightly Docker Image
+    needs: check-changes
+    # Run if manually triggered OR if changes detected
+    if: github.event_name == 'workflow_dispatch' || needs.check-changes.outputs.has_changes == 'true'
     uses: ./.github/workflows/_build-docker-images.yml
     with:
       version_tag: nightly
