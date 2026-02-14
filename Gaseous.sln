@@ -27,12 +27,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "gaseous-configurator", "gas
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "gaseous-server.Tests", "gaseous-server.Tests\gaseous-server.Tests.csproj", "{A476D629-DC6F-4C78-9084-8F910429AFB3}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "submodules", "submodules", "{70C93897-3214-4974-9457-0D582800DDE7}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "hasheous-client", "hasheous-client", "{32449101-B8DF-46BA-B721-5F036387BA86}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "hasheous-client", "submodules\hasheous-client\hasheous-client\hasheous-client.csproj", "{4667685A-2403-4550-88C1-A8F97BBCF266}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -51,26 +45,16 @@ Global
 		{C6A3A0D2-76AA-4C14-9A7B-7A8E6D7C9A11}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C6A3A0D2-76AA-4C14-9A7B-7A8E6D7C9A11}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C6A3A0D2-76AA-4C14-9A7B-7A8E6D7C9A11}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F2E47B9E-6F3A-4E36-B3C8-6B075F2D9D75}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{F2E47B9E-6F3A-4E36-B3C8-6B075F2D9D75}.Debug|Any CPU.Build.0 = Debug|x64
-		{F2E47B9E-6F3A-4E36-B3C8-6B075F2D9D75}.Release|Any CPU.ActiveCfg = Release|x64
-		{F2E47B9E-6F3A-4E36-B3C8-6B075F2D9D75}.Release|Any CPU.Build.0 = Release|x64
 		{A476D629-DC6F-4C78-9084-8F910429AFB3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A476D629-DC6F-4C78-9084-8F910429AFB3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A476D629-DC6F-4C78-9084-8F910429AFB3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A476D629-DC6F-4C78-9084-8F910429AFB3}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4667685A-2403-4550-88C1-A8F97BBCF266}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4667685A-2403-4550-88C1-A8F97BBCF266}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4667685A-2403-4550-88C1-A8F97BBCF266}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4667685A-2403-4550-88C1-A8F97BBCF266}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{F1A847C7-57BC-4DA9-8F83-CD060A7F5122} = {17FA6F12-8532-420C-9489-CB8FDE42137C}
-		{32449101-B8DF-46BA-B721-5F036387BA86} = {70C93897-3214-4974-9457-0D582800DDE7}
-		{4667685A-2403-4550-88C1-A8F97BBCF266} = {32449101-B8DF-46BA-B721-5F036387BA86}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {979BF092-AFBC-4F19-B55F-32E73959BD1A}

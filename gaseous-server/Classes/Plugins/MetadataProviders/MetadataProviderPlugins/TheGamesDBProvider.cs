@@ -422,15 +422,11 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                 if (response.StatusCode == 200)
                 {
                     // extract the bundle
-                    using (var zip = SharpCompress.Archives.Zip.ZipArchive.Open(downloadedBundlePath))
+                    using (var zip = SharpCompress.Archives.Zip.ZipArchive.OpenArchive(downloadedBundlePath))
                     {
                         foreach (var entry in zip.Entries.Where(entry => !entry.IsDirectory))
                         {
-                            await entry.WriteToDirectoryAsync(bundlePath, new ExtractionOptions()
-                            {
-                                ExtractFullPath = true,
-                                Overwrite = true
-                            });
+                            await entry.WriteToDirectoryAsync(bundlePath);
                         }
                     }
                     // delete the temp file

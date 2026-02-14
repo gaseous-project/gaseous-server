@@ -349,7 +349,7 @@ namespace gaseous_server.Classes
                                     case ".zip":
                                         try
                                         {
-                                            using (var archive = SharpCompress.Archives.Zip.ZipArchive.Open(rom.Path))
+                                            using (var archive = SharpCompress.Archives.Zip.ZipArchive.OpenArchive(rom.Path))
                                             {
                                                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                                                 {
@@ -364,11 +364,7 @@ namespace gaseous_server.Classes
                                                             fileNameFound = true;
                                                         }
                                                     }
-                                                    entry.WriteToDirectory(ZipFileTempPath, new ExtractionOptions()
-                                                    {
-                                                        ExtractFullPath = true,
-                                                        Overwrite = true
-                                                    });
+                                                    entry.WriteToDirectory(ZipFileTempPath);
                                                 }
                                             }
                                         }
@@ -382,7 +378,7 @@ namespace gaseous_server.Classes
                                     case ".rar":
                                         try
                                         {
-                                            using (var archive = SharpCompress.Archives.Rar.RarArchive.Open(rom.Path))
+                                            using (var archive = SharpCompress.Archives.Rar.RarArchive.OpenArchive(rom.Path))
                                             {
                                                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                                                 {
@@ -397,11 +393,7 @@ namespace gaseous_server.Classes
                                                             fileNameFound = true;
                                                         }
                                                     }
-                                                    entry.WriteToDirectory(ZipFileTempPath, new ExtractionOptions()
-                                                    {
-                                                        ExtractFullPath = true,
-                                                        Overwrite = true
-                                                    });
+                                                    entry.WriteToDirectory(ZipFileTempPath);
                                                 }
                                             }
                                         }
@@ -415,7 +407,7 @@ namespace gaseous_server.Classes
                                     case ".7z":
                                         try
                                         {
-                                            using (var archive = SharpCompress.Archives.SevenZip.SevenZipArchive.Open(rom.Path))
+                                            using (var archive = SharpCompress.Archives.SevenZip.SevenZipArchive.OpenArchive(rom.Path))
                                             {
                                                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                                                 {
@@ -430,11 +422,7 @@ namespace gaseous_server.Classes
                                                             fileNameFound = true;
                                                         }
                                                     }
-                                                    entry.WriteToDirectory(ZipFileTempPath, new ExtractionOptions()
-                                                    {
-                                                        ExtractFullPath = true,
-                                                        Overwrite = true
-                                                    });
+                                                    entry.WriteToDirectory(ZipFileTempPath);
                                                 }
                                             }
                                         }
