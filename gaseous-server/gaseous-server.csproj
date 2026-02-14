@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
   <PropertyGroup>
-    <TargetFramework>net8.0</TargetFramework>
+    <TargetFramework>net10.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>gaseous_server</RootNamespace>
@@ -12,11 +12,11 @@
   <PropertyGroup Condition=" '$(RunConfiguration)' == 'http' " />
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Debug\net8.0\gaseous-server.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\net10.0\gaseous-server.xml</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <WarningLevel>4</WarningLevel>
-    <DocumentationFile>bin\Release\net8.0\gaseous-server.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\net10.0\gaseous-server.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Asp.Versioning.Mvc" Version="8.1.1" />
@@ -118,7 +118,7 @@
       <ConfiguratorPublishDir>$(PublishDir)</ConfiguratorPublishDir>
       <!-- Compute configurator project publish directory; include RID segment if present -->
       <ConfiguratorRidSegment Condition="'$(RuntimeIdentifier)' != ''">$(RuntimeIdentifier)/</ConfiguratorRidSegment>
-      <ConfiguratorOwnPublishDir>$(MSBuildProjectDirectory)/../gaseous-configurator/bin/$(Configuration)/net8.0-windows/$(ConfiguratorRidSegment)publish/</ConfiguratorOwnPublishDir>
+      <ConfiguratorOwnPublishDir>$(MSBuildProjectDirectory)/../gaseous-configurator/bin/$(Configuration)/net10.0-windows/$(ConfiguratorRidSegment)publish/</ConfiguratorOwnPublishDir>
     </PropertyGroup>
 
     <!-- Publish gaseous-configurator with the same key publish properties -->

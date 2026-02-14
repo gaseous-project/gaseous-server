@@ -14,13 +14,13 @@ namespace gaseous_configurator
     public partial class MainForm : Form
     {
         private readonly System.Windows.Forms.Timer _statusTimer = new System.Windows.Forms.Timer();
-    // Short service name (no spaces) for SCM APIs
-    private const string ServiceName = "GaseousServer";
+        // Short service name (no spaces) for SCM APIs
+        private const string ServiceName = "GaseousServer";
         private static readonly HttpClient _http = new HttpClient(new HttpClientHandler { AllowAutoRedirect = false })
         {
             Timeout = TimeSpan.FromSeconds(2)
         };
-    private bool _statusBusy;
+        private bool _statusBusy;
 
         public MainForm()
         {
@@ -40,7 +40,7 @@ namespace gaseous_configurator
         private void MainForm_Load(object? sender, EventArgs e)
         {
             // Migrate legacy service name ("Gaseous Server") to new short name ("GaseousServer")
-            try { MigrateLegacyServiceIfNeededAsync().GetAwaiter().GetResult(); } catch {}
+            try { MigrateLegacyServiceIfNeededAsync().GetAwaiter().GetResult(); } catch { }
 
             // Display effective config path
             lblPath.Text = "Config: " + Config.ConfigurationPath;
@@ -79,8 +79,8 @@ namespace gaseous_configurator
                     scOld.Refresh();
                     if (scOld.Status == ServiceControllerStatus.Running || scOld.Status == ServiceControllerStatus.Paused)
                     {
-                        try { scOld.Stop(); } catch {}
-                        try { scOld.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30)); } catch {}
+                        try { scOld.Stop(); } catch { }
+                        try { scOld.WaitForStatus(ServiceControllerStatus.Stopped, TimeSpan.FromSeconds(30)); } catch { }
                     }
                 }
                 catch { }
@@ -92,8 +92,8 @@ namespace gaseous_configurator
                 {
                     var candidates = new[]
                     {
-                        System.IO.Path.Combine(baseDir, "..", "gaseous-server", "bin", "Release", "net8.0", "gaseous-server.exe"),
-                        System.IO.Path.Combine(baseDir, "..", "gaseous-server", "bin", "Debug", "net8.0", "gaseous-server.exe")
+                        System.IO.Path.Combine(baseDir, "..", "gaseous-server", "bin", "Release", "net10.0", "gaseous-server.exe"),
+                        System.IO.Path.Combine(baseDir, "..", "gaseous-server", "bin", "Debug", "net10.0", "gaseous-server.exe")
                     };
                     exePath = candidates.FirstOrDefault(System.IO.File.Exists) ?? exePath;
                 }
@@ -181,8 +181,8 @@ namespace gaseous_configurator
                         // Try common dev locations as a convenience
                         var candidates = new[]
                         {
-                            System.IO.Path.Combine(baseDir, "..", "gaseous-server", "bin", "Release", "net8.0", "gaseous-server.exe"),
-                            System.IO.Path.Combine(baseDir, "..", "gaseous-server", "bin", "Debug", "net8.0", "gaseous-server.exe")
+                            System.IO.Path.Combine(baseDir, "..", "gaseous-server", "bin", "Release", "net10.0", "gaseous-server.exe"),
+                            System.IO.Path.Combine(baseDir, "..", "gaseous-server", "bin", "Debug", "net10.0", "gaseous-server.exe")
                         };
                         exePath = candidates.FirstOrDefault(System.IO.File.Exists) ?? exePath;
                     }
