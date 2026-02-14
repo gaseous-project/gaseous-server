@@ -2109,10 +2109,10 @@ class GameCardRomList {
             let element = metadataMap.metadataMapItems.find(item => item.sourceType === sourceElement);
             if (!element) {
                 metadataMap.metadataMapItems.push({
-                    automaticMetadataSourceId: '',
+                    automaticMetadataSourceId: null,
                     isManual: true,
                     sourceType: sourceElement,
-                    sourceId: '',
+                    sourceId: null,
                     sourceSlug: '',
                     link: '',
                     preferred: false,
