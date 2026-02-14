@@ -1,6 +1,3 @@
 [submodule "docs"]
 	path = docs
 	url = https://github.com/gaseous-project/gaseous-server.wiki.git
-[submodule "submodules/hasheous-client"]
-	path = submodules/hasheous-client
-	url = https://github.com/gaseous-project/hasheous-client.git
