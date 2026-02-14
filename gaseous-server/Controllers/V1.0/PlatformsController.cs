@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Scripting;
 using Asp.Versioning;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 
 namespace gaseous_server.Controllers
 {
@@ -84,7 +84,7 @@ namespace gaseous_server.Controllers
         [Route("{PlatformId}/platformlogo/{size}/logo.png")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameImage(long PlatformId, Communications.IGDBAPI_ImageSize size)
+        public async Task<ActionResult> GameImage(long PlatformId, Classes.Plugins.PluginManagement.ImageResize.ImageSize size)
         {
             try
             {
@@ -103,6 +103,10 @@ namespace gaseous_server.Controllers
                         if (platformObject.Versions.Count > 0)
                         {
                             PlatformVersion platformVersion = await Classes.Metadata.PlatformVersions.GetPlatformVersion(metadataSources, (long)platformObject.Versions[0]);
+                            if (platformVersion == null)
+                            {
+                                return GetDummyImage();
+                            }
                             logoObject = await PlatformLogos.GetPlatformLogo((long)platformVersion.PlatformLogo);
 
                             if (logoObject == null || logoObject.ImageId == null || logoObject.ImageId == "")
@@ -122,27 +126,64 @@ namespace gaseous_server.Controllers
                     }
                 }
 
-                string basePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject), metadataSources.ToString());
-                string imagePath = Path.Combine(basePath, size.ToString(), logoObject.ImageId);
+                // get the original image path (this will download the image if it doesn't exist) - we'll resize it later
+                string imagePath = await PlatformLogos.GetPlatformLogoImage(platformObject, logoObject, metadataSources);
 
-                if (!System.IO.File.Exists(imagePath))
+                if (String.IsNullOrEmpty(imagePath))
                 {
-                    Communications comms = new Communications();
-                    imagePath = await comms.GetSpecificImageFromServer(metadataSources, Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Platform(platformObject)), logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
-                }
-
-                if (!System.IO.File.Exists(imagePath))
-                {
-                    Communications comms = new Communications();
-                    imagePath = await comms.GetSpecificImageFromServer(metadataSources, basePath, logoObject.ImageId, size, new List<Communications.IGDBAPI_ImageSize> { Communications.IGDBAPI_ImageSize.cover_big, Communications.IGDBAPI_ImageSize.original });
+                    // no image found, return a dummy image
+                    return GetDummyImage();
                 }
 
                 if (System.IO.File.Exists(imagePath))
                 {
-                    // get image info
-                    var info = new ImageMagick.MagickImageInfo(imagePath);
                     string extension = ".jpg";
                     string mimeType = "image/jpg";
+
+                    // Check if file is SVG (text-based format) by reading first few bytes
+                    bool isSvg = false;
+                    try
+                    {
+                        byte[] headerBytes = new byte[512];
+                        using (FileStream fs = System.IO.File.OpenRead(imagePath))
+                        {
+                            int bytesRead = fs.Read(headerBytes, 0, Math.Min(512, (int)fs.Length));
+                            string headerText = System.Text.Encoding.UTF8.GetString(headerBytes, 0, bytesRead).ToLower();
+                            isSvg = headerText.Contains("<?xml") || headerText.Contains("<svg");
+
+                            if (isSvg)
+                            {
+                                // SVG files are text-based and cannot be resized - return immediately
+                                string svgfilename = logoObject.ImageId + ".svg";
+                                var svgcd = new System.Net.Mime.ContentDisposition
+                                {
+                                    FileName = svgfilename,
+                                    Inline = true,
+                                };
+
+                                Response.Headers.Append("Content-Disposition", svgcd.ToString());
+                                Response.Headers.Append("Cache-Control", "public, max-age=604800");
+
+                                byte[] svgfiledata = null;
+                                using (FileStream svgfs = System.IO.File.OpenRead(imagePath))
+                                {
+                                    using (BinaryReader binaryReader = new BinaryReader(svgfs))
+                                    {
+                                        svgfiledata = binaryReader.ReadBytes((int)svgfs.Length);
+                                    }
+                                }
+
+                                return File(svgfiledata, "image/svg+xml");
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        // If unable to check, assume it's not SVG and continue with normal processing
+                    }
+
+                    // get image info from binary files
+                    var info = new ImageMagick.MagickImageInfo(imagePath);
                     switch (info.Format)
                     {
                         case ImageMagick.MagickFormat.Jpeg:
@@ -211,9 +252,10 @@ namespace gaseous_server.Controllers
                         Inline = true,
                     };
 
-                    Response.Headers.Add("Content-Disposition", cd.ToString());
-                    Response.Headers.Add("Cache-Control", "public, max-age=604800");
+                    Response.Headers.Append("Content-Disposition", cd.ToString());
+                    Response.Headers.Append("Cache-Control", "public, max-age=604800");
 
+                    // TODO: Resize image according to size parameter
                     byte[] filedata = null;
                     using (FileStream fs = System.IO.File.OpenRead(filepath))
                     {
@@ -230,8 +272,9 @@ namespace gaseous_server.Controllers
                     return NotFound();
                 }
             }
-            catch
+            catch (Exception ex)
             {
+                Logging.LogKey(Logging.LogType.Critical, "PlatformsController", $"An error occurred while trying to get the platform logo for platform ID {PlatformId}: {ex.Message}", null, null, ex);
                 return NotFound();
             }
         }

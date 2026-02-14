@@ -1,6 +1,6 @@
 using System;
 using System.Threading.Tasks;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 
 namespace gaseous_server.Classes.Metadata
 {
@@ -10,7 +10,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static async Task<GameLocalization?> GetGame_Locatization(FileSignature.MetadataSources SourceType, long? Id)
+        public static async Task<GameLocalization?> GetGame_Localization(FileSignature.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {

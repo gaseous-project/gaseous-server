@@ -8,12 +8,12 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
         /// <summary>
         /// Gets the type of plugin.
         /// </summary>
-        public string PluginType => "FileSignature";
+        public gaseous_server.Classes.Plugins.PluginManagement.PluginTypes PluginType => gaseous_server.Classes.Plugins.PluginManagement.PluginTypes.FileSignatureProvider;
 
         /// <summary>
         /// Gets the name of the plugin.
         /// </summary>
-        public string Name { get;}
+        public string Name { get; }
 
         /// <summary>
         /// Gets or sets the configuration settings for the file signature plugin.

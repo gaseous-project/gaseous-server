@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 
 namespace gaseous_server.Classes.Metadata
 {
@@ -10,7 +10,7 @@ namespace gaseous_server.Classes.Metadata
         {
         }
 
-        public static async Task<InvolvedCompany?> GetInvolvedCompanies(long? Id)
+        public static async Task<InvolvedCompany?> GetInvolvedCompanies(FileSignature.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -18,7 +18,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                InvolvedCompany? RetVal = await Metadata.GetMetadataAsync<InvolvedCompany>(FileSignature.MetadataSources.IGDB, (long)Id, false);
+                InvolvedCompany? RetVal = await Metadata.GetMetadataAsync<InvolvedCompany>(SourceType, (long)Id, false);
                 return RetVal;
             }
         }

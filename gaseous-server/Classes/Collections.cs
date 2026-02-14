@@ -9,7 +9,7 @@ using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
 using gaseous_server.Controllers.v1_1;
 using gaseous_server.Models;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Newtonsoft.Json;

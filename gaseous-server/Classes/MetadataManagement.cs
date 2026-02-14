@@ -6,7 +6,8 @@ using gaseous_server.Controllers;
 using gaseous_server.Models;
 using System.Linq;
 using HasheousClient.Models;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
+using NuGet.Protocol.Plugins;
 
 namespace gaseous_server.Classes
 {
@@ -557,9 +558,15 @@ namespace gaseous_server.Classes
 
 		public async Task RefreshPlatforms(bool forceRefresh = false)
 		{
+			FileSignature.MetadataSources metadataSource = FileSignature.MetadataSources.None;
+
 			// update platform metadata
-			string sql = "SELECT Id, `Name` FROM Metadata_Platform;";
-			DataTable dt = await db.ExecuteCMDAsync(sql);
+			string sql = "SELECT Id, `Name` FROM Metadata_Platform WHERE `SourceId` = @sourceId;";
+			Dictionary<string, object> dbDict = new Dictionary<string, object>()
+			{
+				{ "@sourceId", 0 }
+			};
+			DataTable dt = await db.ExecuteCMDAsync(sql, dbDict);
 
 			int StatusCounter = 1;
 			foreach (DataRow dr in dt.Rows)
@@ -570,18 +577,15 @@ namespace gaseous_server.Classes
 				{
 					Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_metadata_for_platform", null, new string[] { StatusCounter.ToString(), dt.Rows.Count.ToString(), dr["name"].ToString(), dr["id"].ToString() });
 
-					FileSignature.MetadataSources metadataSource = FileSignature.MetadataSources.None;
-
 					// fetch the platform metadata
-					Platform? platform = await Metadata.Platforms.GetPlatform((long)dr["id"], metadataSource);
+					Platform? platform = await Metadata.Platforms.GetPlatform((long)dr["id"], metadataSource, true);
 
 					// fetch the platform metadata from Hasheous
 					if ((long)dr["id"] != 0)
 					{
 						if (Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous)
 						{
-
-							await Communications.PopulateHasheousPlatformData((long)dr["id"]);
+							await Hasheous.PopulateHasheousPlatformData((long)dr["id"]);
 						}
 					}
 					else
@@ -592,9 +596,16 @@ namespace gaseous_server.Classes
 					}
 
 					// force platformLogo refresh
-					if (platform != null && platform.PlatformLogo != null)
+					if (platform != null && platform.PlatformLogo > 0)
 					{
-						await Metadata.PlatformLogos.GetPlatformLogo(platform.PlatformLogo, metadataSource);
+						var platformLogo = await Metadata.PlatformLogos.GetPlatformLogo(platform.PlatformLogo, metadataSource);
+
+						// get platform images if they don't exist or if forceRefresh is true
+						if (platformLogo != null && (platformLogo.Url == null || forceRefresh == true))
+						{
+							string imagePath = await PlatformLogos.GetPlatformLogoImage(platform, platformLogo, metadataSource);
+						}
+
 					}
 				}
 				catch (Exception ex)
@@ -822,8 +833,14 @@ namespace gaseous_server.Classes
 					continue;
 				}
 
+				// check configured metadata sources and skip if not configured
+				if (!Metadata.Metadata.MetadataProviders.Any(p => p.SourceType == item.SourceType))
+				{
+					continue;
+				}
+
 				Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_metadata_for_game_using_source_with_source_id", null, new string[] { metadataItem.SignatureGameName, metadataItem.Id.ToString(), item.SourceType.ToString(), item.SourceId.ToString() });
-				Models.Game? game = await Metadata.Games.GetGame(item.SourceType, item.SourceId, true, forceRefresh);
+				Game? game = await Metadata.Games.GetGame(item.SourceType, item.SourceId, true, forceRefresh);
 
 				// get supporting metadata
 				if (game != null)
@@ -844,7 +861,7 @@ namespace gaseous_server.Classes
 								{
 									foreach (long ageRatingContentDescriptionId in ageRating.RatingContentDescriptions)
 									{
-										await Metadata.AgeRatingContentDescriptionsV2.GetAgeRatingContentDescriptionsV2(item.SourceType, ageRatingContentDescriptionId);
+										await Metadata.AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(item.SourceType, ageRatingContentDescriptionId);
 									}
 								}
 							}
@@ -862,13 +879,13 @@ namespace gaseous_server.Classes
 						foreach (long artworkId in game.Artworks)
 						{
 							await Metadata.Artworks.GetArtwork(item.SourceType, artworkId);
-							await ImageHandling.GameImage((long)game.MetadataMapId, item.SourceType, ImageHandling.MetadataImageType.artwork, artworkId, Communications.IGDBAPI_ImageSize.original);
+							await ImageHandling.GameImage((long)game.MetadataMapId, item.SourceType, ImageType.Artwork, artworkId, Plugins.PluginManagement.ImageResize.ImageSize.original);
 						}
 					}
 					if (game.Cover != null)
 					{
 						await Metadata.Covers.GetCover(item.SourceType, (long?)game.Cover);
-						await ImageHandling.GameImage((long)game.MetadataMapId, item.SourceType, ImageHandling.MetadataImageType.cover, game.Cover, Communications.IGDBAPI_ImageSize.original);
+						await ImageHandling.GameImage((long)game.MetadataMapId, item.SourceType, ImageType.Cover, game.Cover, Plugins.PluginManagement.ImageResize.ImageSize.original);
 					}
 					if (game.GameModes != null)
 					{
@@ -888,7 +905,7 @@ namespace gaseous_server.Classes
 					{
 						foreach (long gameLocalizationId in game.GameLocalizations)
 						{
-							GameLocalization? gameLocalization = await Metadata.GameLocalizations.GetGame_Locatization(item.SourceType, gameLocalizationId);
+							GameLocalization? gameLocalization = await Metadata.GameLocalizations.GetGame_Localization(item.SourceType, gameLocalizationId);
 
 							if (gameLocalization != null)
 							{
@@ -937,7 +954,7 @@ namespace gaseous_server.Classes
 						foreach (long screenshotId in game.Screenshots)
 						{
 							await Metadata.Screenshots.GetScreenshotAsync(item.SourceType, screenshotId);
-							await ImageHandling.GameImage((long)game.MetadataMapId, item.SourceType, ImageHandling.MetadataImageType.screenshots, screenshotId, Communications.IGDBAPI_ImageSize.original);
+							await ImageHandling.GameImage((long)game.MetadataMapId, item.SourceType, ImageType.Screenshot, screenshotId, Plugins.PluginManagement.ImageResize.ImageSize.original);
 						}
 					}
 					if (game.Themes != null)

@@ -20,9 +20,9 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
-        public List<Logging.LogItem> Logs(Logging.LogsViewModel model)
+        public async Task<IActionResult> Logs(Logging.LogsViewModel model)
         {
-            return Logging.GetLogs(model);
+            return Ok(await Logging.GetLogs(model));
         }
     }
 }

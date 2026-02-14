@@ -2,6 +2,8 @@
 using System.Data;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
+using gaseous_server.Classes.Plugins.MetadataProviders;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using gaseous_server.Models;
 
 namespace gaseous_server.Classes.Metadata
@@ -40,7 +42,7 @@ namespace gaseous_server.Classes.Metadata
                     return null;
                 }
 
-                RetVal.MetadataSource = SourceType;
+                RetVal.SourceType = SourceType;
                 long? metadataMap = MetadataManagement.GetMetadataMapIdFromSourceId(SourceType, (long)Id);
                 if (metadataMap == null)
                 {
@@ -59,14 +61,6 @@ namespace gaseous_server.Classes.Metadata
 
                 return RetVal;
             }
-        }
-
-        public static async Task<Game?> GetGame(FileSignature.MetadataSources SourceType, string? Slug)
-        {
-            Game? RetVal = await Metadata.GetMetadataAsync<Game>(SourceType, Slug, false);
-            RetVal.MetadataSource = SourceType;
-            RetVal = await MassageResult(RetVal);
-            return RetVal;
         }
 
         public static Game GetGame(DataRow dataRow)
@@ -116,7 +110,7 @@ namespace gaseous_server.Classes.Metadata
             }
 
             // search for a clear logo
-            result.ClearLogo = new Dictionary<FileSignature.MetadataSources, List<long>>();
+            result.ClearLogos = new Dictionary<FileSignature.MetadataSources, List<long>>();
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             foreach (FileSignature.MetadataSources source in clearLogoSources)
             {
@@ -149,14 +143,14 @@ namespace gaseous_server.Classes.Metadata
                         DataTable data = await db.ExecuteCMDAsync(sql, dbDict);
                         foreach (DataRow row in data.Rows)
                         {
-                            if (result.ClearLogo.ContainsKey(source) == false)
+                            if (result.ClearLogos.ContainsKey(source) == false)
                             {
-                                result.ClearLogo.Add(source, new List<long>());
+                                result.ClearLogos.Add(source, new List<long>());
                             }
-                            result.ClearLogo[source].Add((long)row["Id"]);
+                            result.ClearLogos[source].Add((long)row["Id"]);
                         }
 
-                        if (result.ClearLogo.Count > 0)
+                        if (result.ClearLogos.Count > 0)
                         {
                             // found a valid source, break out of the loop
                             break;
@@ -176,21 +170,26 @@ namespace gaseous_server.Classes.Metadata
 
         private static bool AllowNoPlatformSearch = false;
 
-        public static async Task<Game[]> SearchForGame(string SearchString, long PlatformId, SearchType searchType)
+        public static async Task<Game[]> SearchForGame(List<string> SearchCandidates, long PlatformId, gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType searchType)
         {
             // search local first
-            Logging.LogKey(Logging.LogType.Information, "process.game_search", "gamesearch.attempting_local_search_for", null, new string[] { searchType.ToString(), SearchString });
-            Task<Game[]> games = _SearchForGameDatabase(SearchString, PlatformId, searchType);
-            if (games.Result.Length == 0)
+            Game[] games = [];
+            Logging.LogKey(Logging.LogType.Information, "process.game_search", "gamesearch.attempting_local_search_for", null, new string[] { searchType.ToString(), String.Join(", ", SearchCandidates) });
+            foreach (string SearchString in SearchCandidates)
+            {
+                games = await _SearchForGameDatabase(SearchString, PlatformId, searchType);
+            }
+
+            if (games.Length == 0)
             {
                 // fall back to online search
-                Logging.LogKey(Logging.LogType.Information, "process.game_search", "gamesearch.falling_back_to_remote_search_for", null, new string[] { searchType.ToString(), SearchString });
-                games = _SearchForGameRemote(SearchString, PlatformId, searchType);
+                Logging.LogKey(Logging.LogType.Information, "process.game_search", "gamesearch.falling_back_to_remote_search_for", null, new string[] { searchType.ToString(), String.Join(", ", SearchCandidates) });
+                games = await Metadata.SearchGamesAsync(searchType, PlatformId, SearchCandidates);
             }
-            return games.Result;
+            return games;
         }
 
-        private static async Task<Game[]> _SearchForGameDatabase(string SearchString, long PlatformId, SearchType searchType)
+        private static async Task<Game[]> _SearchForGameDatabase(string SearchString, long PlatformId, gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType searchType)
         {
             string whereClause = "";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
@@ -198,24 +197,24 @@ namespace gaseous_server.Classes.Metadata
             bool allowSearch = true;
             switch (searchType)
             {
-                case SearchType.searchNoPlatform:
+                case gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.searchNoPlatform:
                     whereClause = "MATCH(`Name`) AGAINST (@gamename)";
                     dbDict.Add("platformid", PlatformId);
                     dbDict.Add("gamename", SearchString);
 
                     allowSearch = AllowNoPlatformSearch;
                     break;
-                case SearchType.search:
+                case gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.search:
                     whereClause = "PlatformsId = @platformid AND MATCH(`Name`) AGAINST (@gamename)";
                     dbDict.Add("platformid", PlatformId);
                     dbDict.Add("gamename", SearchString);
                     break;
-                case SearchType.wherefuzzy:
+                case gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.wherefuzzy:
                     whereClause = "PlatformsId = @platformid AND `Name` LIKE @gamename";
                     dbDict.Add("platformid", PlatformId);
                     dbDict.Add("gamename", "%" + SearchString + "%");
                     break;
-                case SearchType.where:
+                case gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.SearchType.where:
                     whereClause = "PlatformsId = @platformid AND `Name` = @gamename";
                     dbDict.Add("platformid", PlatformId);
                     dbDict.Add("gamename", SearchString);
@@ -248,76 +247,6 @@ namespace gaseous_server.Classes.Metadata
             }
 
             return results;
-        }
-
-        private static async Task<Game[]> _SearchForGameRemote(string SearchString, long PlatformId, SearchType searchType)
-        {
-            switch (Config.MetadataConfiguration.DefaultMetadataSource)
-            {
-                case FileSignature.MetadataSources.None:
-                    return new Game[0];
-                case FileSignature.MetadataSources.IGDB:
-                    if (Config.IGDB.UseHasheousProxy == false)
-                    {
-                        string searchBody = "";
-                        string searchFields = "fields id,name,slug,platforms,summary; ";
-                        bool allowSearch = true;
-                        switch (searchType)
-                        {
-                            case SearchType.searchNoPlatform:
-                                searchBody = "search \"" + SearchString + "\"; ";
-
-                                allowSearch = AllowNoPlatformSearch;
-                                break;
-                            case SearchType.search:
-                                searchBody = "search \"" + SearchString + "\"; where platforms = (" + PlatformId + ");";
-                                break;
-                            case SearchType.wherefuzzy:
-                                searchBody = "where platforms = (" + PlatformId + ") & name ~ *\"" + SearchString + "\"*;";
-                                break;
-                            case SearchType.where:
-                                searchBody = "where platforms = (" + PlatformId + ") & name ~ \"" + SearchString + "\";";
-                                break;
-                        }
-
-                        // check search cache
-                        Game[]? games = Communications.GetSearchCache<Game[]?>(searchFields, searchBody);
-
-                        if (games == null)
-                        {
-                            // cache miss
-                            // get Game metadata
-                            Communications comms = new Communications();
-                            Game[]? results = new Game[0];
-                            if (allowSearch == true)
-                            {
-                                results = await comms.APIComm<Game>(IGDB.IGDBClient.Endpoints.Games, searchFields, searchBody);
-
-                                Communications.SetSearchCache<Game[]?>(searchFields, searchBody, results);
-                            }
-
-                            return results;
-                        }
-                        else
-                        {
-                            return games.ToArray();
-                        }
-                    }
-                    else
-                    {
-                        HasheousClient.Models.Metadata.IGDB.Game[] hResults = Communications.hasheousClient.GetMetadataProxy_SearchGame<HasheousClient.Models.Metadata.IGDB.Game>(HasheousClient.Models.MetadataSources.IGDB, PlatformId.ToString(), SearchString);
-
-                        List<Game> hGames = new List<Game>();
-                        foreach (HasheousClient.Models.Metadata.IGDB.Game hResult in hResults)
-                        {
-                            hGames.Add(Communications.ConvertToIGDBModel<Game>(hResult));
-                        }
-
-                        return hGames.ToArray();
-                    }
-                default:
-                    return new Game[0];
-            }
         }
 
         public static async Task<List<AvailablePlatformItem>> GetAvailablePlatformsAsync(string UserId, FileSignature.MetadataSources SourceType, long GameId)
@@ -526,14 +455,6 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
             public DateTime? LastPlayed { get; set; }
         }
 
-        public enum SearchType
-        {
-            where = 0,
-            wherefuzzy = 1,
-            search = 2,
-            searchNoPlatform = 3
-        }
-
         public class MinimalGameItem
         {
             public MinimalGameItem()
@@ -613,7 +534,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                 {
                     foreach (long perspectiveId in gameObject.PlayerPerspectives)
                     {
-                        HasheousClient.Models.Metadata.IGDB.PlayerPerspective? perspective = Classes.Metadata.PlayerPerspectives.GetGame_PlayerPerspectives(gameObject.MetadataSource, perspectiveId).Result;
+                        PlayerPerspective? perspective = Classes.Metadata.PlayerPerspectives.GetGame_PlayerPerspectives(gameObject.MetadataSource, perspectiveId).Result;
                         if (perspective != null)
                         {
                             if (!this.Perspectives.Contains(perspective.Name))
@@ -625,12 +546,12 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                 }
 
                 // compile age ratings
-                this.AgeRatings = new List<HasheousClient.Models.Metadata.IGDB.AgeRating>();
+                this.AgeRatings = new List<AgeRating>();
                 if (gameObject.AgeRatings != null)
                 {
                     foreach (long ageRatingId in gameObject.AgeRatings)
                     {
-                        HasheousClient.Models.Metadata.IGDB.AgeRating? rating = Classes.Metadata.AgeRatings.GetAgeRating(gameObject.MetadataSource, ageRatingId).Result;
+                        AgeRating? rating = Classes.Metadata.AgeRatings.GetAgeRating(gameObject.MetadataSource, ageRatingId).Result;
                         if (rating != null)
                         {
                             this.AgeRatings.Add(rating);
@@ -696,7 +617,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
             public DateTimeOffset? FirstReleaseDate { get; set; }
             public object Cover { get; set; }
             public List<long> Artworks { get; set; }
-            public List<HasheousClient.Models.Metadata.IGDB.AgeRating> AgeRatings { get; set; }
+            public List<AgeRating> AgeRatings { get; set; }
             public AgeGroups.AgeRestrictionGroupings AgeGroup
             {
                 get

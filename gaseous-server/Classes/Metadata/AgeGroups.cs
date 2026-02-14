@@ -3,8 +3,9 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using gaseous_server.Models;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Microsoft.CodeAnalysis.Classification;
+using gaseous_server.Classes.Plugins.MetadataProviders;
 
 namespace gaseous_server.Classes.Metadata
 {
@@ -15,7 +16,7 @@ namespace gaseous_server.Classes.Metadata
 
         }
 
-        public static async Task<AgeGroup?> GetAgeGroup(Models.Game? game)
+        public static async Task<AgeGroup?> GetAgeGroup(Game? game)
         {
             if (game == null)
             {
@@ -23,24 +24,25 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                Storage.CacheStatus? cacheStatus = await Storage.GetCacheStatusAsync(FileSignature.MetadataSources.IGDB, "AgeGroup", (long)game.Id);
+                gaseous_server.Classes.Plugins.MetadataProviders.Storage Storage = new gaseous_server.Classes.Plugins.MetadataProviders.Storage(game.MetadataSource);
+
+                Storage.CacheStatus? cacheStatus = await Storage.GetCacheStatusAsync("AgeGroup", (long)game.Id);
 
                 AgeGroup? RetVal = new AgeGroup();
 
                 switch (cacheStatus)
                 {
                     case Storage.CacheStatus.NotPresent:
-                        RetVal = await _GetAgeGroup(game);
-                        await Storage.NewCacheValue(FileSignature.MetadataSources.IGDB, RetVal, false);
-                        break;
-
                     case Storage.CacheStatus.Expired:
                         RetVal = await _GetAgeGroup(game);
-                        await Storage.NewCacheValue(FileSignature.MetadataSources.IGDB, RetVal, true);
+                        if (RetVal != null)
+                        {
+                            await Storage.StoreCacheValue<AgeGroup>(RetVal);
+                        }
                         break;
 
                     case Storage.CacheStatus.Current:
-                        RetVal = await Storage.GetCacheValue<AgeGroup>(FileSignature.MetadataSources.IGDB, RetVal, "Id", game.Id);
+                        RetVal = await Storage.GetCacheValue<AgeGroup>(RetVal, "Id", game.Id);
                         break;
 
                     default:
@@ -51,7 +53,7 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        public static async Task<AgeGroup?> _GetAgeGroup(Models.Game game)
+        public static async Task<AgeGroup?> _GetAgeGroup(Game game)
         {
             // compile the maximum age group for the given game
             if (game != null)

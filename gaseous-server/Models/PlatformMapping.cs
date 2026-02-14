@@ -9,8 +9,9 @@ using System.Web;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Controllers;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Newtonsoft.Json;
+using gaseous_server.Classes.Plugins.MetadataProviders;
 
 namespace gaseous_server.Models
 {
@@ -18,6 +19,9 @@ namespace gaseous_server.Models
     {
         // static memory cache for database queries
         private static MemoryCache DatabaseMemoryCache = new MemoryCache();
+
+        private static Storage storageNone = new Storage(FileSignature.MetadataSources.None);
+        private static Storage storageIGDB = new Storage(FileSignature.MetadataSources.IGDB);
 
         /// <summary>
         /// Updates the platform map from the embedded platform map resource
@@ -106,14 +110,14 @@ namespace gaseous_server.Models
                 AlternativeName = mapItem.AlternateNames.FirstOrDefault()
             };
 
-            if (Storage.GetCacheStatus(FileSignature.MetadataSources.None, "Platform", mapItem.IGDBId) == Storage.CacheStatus.NotPresent)
+            if (storageNone.GetCacheStatus("Platform", mapItem.IGDBId) == Storage.CacheStatus.NotPresent)
             {
-                _ = Task.Run(() => Storage.NewCacheValue(FileSignature.MetadataSources.None, platform));
+                _ = Task.Run(() => storageNone.StoreCacheValue<Platform>(platform));
             }
 
-            if (Storage.GetCacheStatus(FileSignature.MetadataSources.IGDB, "Platform", mapItem.IGDBId) == Storage.CacheStatus.NotPresent)
+            if (storageIGDB.GetCacheStatus("Platform", mapItem.IGDBId) == Storage.CacheStatus.NotPresent)
             {
-                _ = Task.Run(() => Storage.NewCacheValue(FileSignature.MetadataSources.IGDB, platform));
+                _ = Task.Run(() => storageIGDB.StoreCacheValue<Platform>(platform));
             }
 
             return platform;
@@ -373,7 +377,7 @@ namespace gaseous_server.Models
 
             // get platform data
             Platform? platform = null;
-            if (await Storage.GetCacheStatusAsync(FileSignature.MetadataSources.None, "Platform", IGDBId) == Storage.CacheStatus.NotPresent)
+            if (await storageNone.GetCacheStatusAsync("Platform", IGDBId) == Storage.CacheStatus.NotPresent)
             {
                 //platform = Platforms.GetPlatform(IGDBId, false);
             }

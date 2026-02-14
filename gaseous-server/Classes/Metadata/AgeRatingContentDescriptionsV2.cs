@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Threading.Tasks;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 
 
 namespace gaseous_server.Classes.Metadata
 {
-    public class AgeRatingContentDescriptionsV2
+    public class AgeRatingContentDescriptions
     {
-        public AgeRatingContentDescriptionsV2()
+        public AgeRatingContentDescriptions()
         {
         }
 
-        public static async Task<AgeRatingContentDescriptionV2?> GetAgeRatingContentDescriptionsV2(FileSignature.MetadataSources SourceType, long? Id)
+        public static async Task<AgeRatingContentDescription?> GetAgeRatingContentDescriptions(FileSignature.MetadataSources SourceType, long? Id)
         {
             if ((Id == 0) || (Id == null))
             {
@@ -19,7 +19,7 @@ namespace gaseous_server.Classes.Metadata
             }
             else
             {
-                AgeRatingContentDescriptionV2? RetVal = await Metadata.GetMetadataAsync<AgeRatingContentDescriptionV2>(SourceType, (long)Id, false);
+                AgeRatingContentDescription? RetVal = await Metadata.GetMetadataAsync<AgeRatingContentDescription>(SourceType, (long)Id, false);
                 return RetVal;
             }
         }

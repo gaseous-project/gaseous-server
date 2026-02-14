@@ -11,7 +11,7 @@ using Authentication;
 using Microsoft.AspNetCore.Identity;
 using gaseous_server.Models;
 using gaseous_server.Classes.Metadata;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 
 namespace gaseous_server.Controllers
 {
@@ -144,7 +144,7 @@ namespace gaseous_server.Controllers
 
                             var cd = new System.Net.Mime.ContentDisposition
                             {
-                                FileName = filename,
+                                FileName = biosItem.filename,
                                 Inline = false,
                             };
 

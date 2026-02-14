@@ -7,7 +7,7 @@ using System.IO.Compression;
 using SharpCompress.Archives;
 using SharpCompress.Common;
 using gaseous_server.Models;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using System.Threading.Tasks;
 
 namespace gaseous_server.Classes
@@ -298,7 +298,7 @@ namespace gaseous_server.Classes
             if (mediaGroupItem.Status == GameRomMediaGroupItem.GroupBuildStatus.WaitingForBuild)
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(mediaGroupItem.GameId)).PreferredMetadataMapItem;
-                Models.Game GameObject = await Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+                Game GameObject = await Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 Platform PlatformObject = await Platforms.GetPlatform(mediaGroupItem.PlatformId);
                 PlatformMapping.PlatformMapItem platformMapItem = await PlatformMapping.GetPlatformMap(mediaGroupItem.PlatformId);
 
@@ -349,7 +349,7 @@ namespace gaseous_server.Classes
                                     case ".zip":
                                         try
                                         {
-                                            using (var archive = SharpCompress.Archives.Zip.ZipArchive.Open(rom.Path))
+                                            using (var archive = SharpCompress.Archives.Zip.ZipArchive.OpenArchive(rom.Path))
                                             {
                                                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                                                 {
@@ -364,11 +364,7 @@ namespace gaseous_server.Classes
                                                             fileNameFound = true;
                                                         }
                                                     }
-                                                    entry.WriteToDirectory(ZipFileTempPath, new ExtractionOptions()
-                                                    {
-                                                        ExtractFullPath = true,
-                                                        Overwrite = true
-                                                    });
+                                                    entry.WriteToDirectory(ZipFileTempPath);
                                                 }
                                             }
                                         }
@@ -382,7 +378,7 @@ namespace gaseous_server.Classes
                                     case ".rar":
                                         try
                                         {
-                                            using (var archive = SharpCompress.Archives.Rar.RarArchive.Open(rom.Path))
+                                            using (var archive = SharpCompress.Archives.Rar.RarArchive.OpenArchive(rom.Path))
                                             {
                                                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                                                 {
@@ -397,11 +393,7 @@ namespace gaseous_server.Classes
                                                             fileNameFound = true;
                                                         }
                                                     }
-                                                    entry.WriteToDirectory(ZipFileTempPath, new ExtractionOptions()
-                                                    {
-                                                        ExtractFullPath = true,
-                                                        Overwrite = true
-                                                    });
+                                                    entry.WriteToDirectory(ZipFileTempPath);
                                                 }
                                             }
                                         }
@@ -415,7 +407,7 @@ namespace gaseous_server.Classes
                                     case ".7z":
                                         try
                                         {
-                                            using (var archive = SharpCompress.Archives.SevenZip.SevenZipArchive.Open(rom.Path))
+                                            using (var archive = SharpCompress.Archives.SevenZip.SevenZipArchive.OpenArchive(rom.Path))
                                             {
                                                 foreach (var entry in archive.Entries.Where(entry => !entry.IsDirectory))
                                                 {
@@ -430,11 +422,7 @@ namespace gaseous_server.Classes
                                                             fileNameFound = true;
                                                         }
                                                     }
-                                                    entry.WriteToDirectory(ZipFileTempPath, new ExtractionOptions()
-                                                    {
-                                                        ExtractFullPath = true,
-                                                        Overwrite = true
-                                                    });
+                                                    entry.WriteToDirectory(ZipFileTempPath);
                                                 }
                                             }
                                         }

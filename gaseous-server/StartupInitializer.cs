@@ -7,6 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Authentication;
 using gaseous_server.Classes.Metadata;
 using gaseous_server;
+using gaseous_server.Classes.Plugins.MetadataProviders;
 
 namespace gaseous_server
 {
@@ -49,7 +50,6 @@ namespace gaseous_server
                 await GameLibrary.UpdateDefaultLibraryPathAsync();
 
                 // API metadata source
-                Communications.MetadataSource = Config.MetadataConfiguration.DefaultMetadataSource;
                 HasheousClient.WebApp.HttpHelper.BaseUri = Config.MetadataConfiguration.HasheousHost;
 
                 // Storage cleanup

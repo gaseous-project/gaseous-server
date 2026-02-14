@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NuGet.Common;
@@ -57,90 +57,30 @@ namespace gaseous_server.Controllers
         [MapToApiVersion("1.1")]
         [HttpGet]
         [Route("Game")]
-        [ProducesResponseType(typeof(List<gaseous_server.Models.Game>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<Game>), StatusCodes.Status200OK)]
         public async Task<ActionResult> SearchGame(long PlatformId, string SearchString)
         {
-            List<gaseous_server.Models.Game> RetVal = await _SearchForGame(PlatformId, SearchString);
+            List<Game> RetVal = await _SearchForGame(PlatformId, SearchString);
             return Ok(RetVal);
         }
 
-        private static async Task<List<gaseous_server.Models.Game>> _SearchForGame(long PlatformId, string SearchString)
+        private static async Task<List<Game>> _SearchForGame(long PlatformId, string SearchString)
         {
             switch (Config.MetadataConfiguration.DefaultMetadataSource)
             {
                 case FileSignature.MetadataSources.IGDB:
-                    if (Config.IGDB.UseHasheousProxy == false)
-                    {
-                        string searchBody = "";
-                        string searchFields = "fields *; ";
-                        searchBody += "search \"" + SearchString + "\";";
-                        searchBody += "where platforms = (" + PlatformId + ");";
-                        searchBody += "limit 100;";
+                    string searchBody = "";
+                    string searchFields = "fields *; ";
+                    searchBody += "search \"" + SearchString + "\";";
+                    searchBody += "where platforms = (" + PlatformId + ");";
+                    searchBody += "limit 100;";
 
-                        List<gaseous_server.Models.Game>? searchCache = Communications.GetSearchCache<List<gaseous_server.Models.Game>>(searchFields, searchBody);
+                    var results = await Metadata.SearchGamesAsync(SearchType.search, PlatformId, new List<string> { SearchString });
 
-                        if (searchCache == null)
-                        {
-                            // cache miss
-                            // get Game metadata from data source
-                            Communications comms = new Communications();
-                            var results = await comms.APIComm<gaseous_server.Models.Game>("Game", searchFields, searchBody);
-
-                            List<gaseous_server.Models.Game> games = new List<gaseous_server.Models.Game>();
-                            foreach (gaseous_server.Models.Game game in results.ToList())
-                            {
-                                Storage.CacheStatus cacheStatus = await Storage.GetCacheStatusAsync(FileSignature.MetadataSources.IGDB, "Game", (long)game.Id);
-                                switch (cacheStatus)
-                                {
-                                    case Storage.CacheStatus.NotPresent:
-                                        await Storage.NewCacheValue(FileSignature.MetadataSources.IGDB, game, false);
-                                        break;
-
-                                    case Storage.CacheStatus.Expired:
-                                        await Storage.NewCacheValue(FileSignature.MetadataSources.IGDB, game, true);
-                                        break;
-
-                                }
-
-                                games.Add(game);
-                            }
-
-                            Communications.SetSearchCache<List<gaseous_server.Models.Game>>(searchFields, searchBody, games);
-
-                            return games;
-                        }
-                        else
-                        {
-                            // get full version of results from database
-                            // this is a hacky workaround due to the readonly nature of IGDB.Model.Game IdentityOrValue fields
-                            List<gaseous_server.Models.Game> gamesToReturn = new List<gaseous_server.Models.Game>();
-                            foreach (gaseous_server.Models.Game game in searchCache)
-                            {
-                                gaseous_server.Models.Game? tempGame = await Games.GetGame(Communications.MetadataSource, (long)game.Id);
-                                if (tempGame != null)
-                                {
-                                    gamesToReturn.Add(tempGame);
-                                }
-                            }
-
-                            return gamesToReturn;
-                        }
-                    }
-                    else
-                    {
-                        List<gaseous_server.Models.Game> hSearch = Communications.hasheousClient.GetMetadataProxy_SearchGame<gaseous_server.Models.Game>(HasheousClient.Models.MetadataSources.IGDB, PlatformId.ToString(), SearchString).ToList<gaseous_server.Models.Game>();
-
-                        List<gaseous_server.Models.Game> hGamesToReturn = new List<gaseous_server.Models.Game>();
-                        foreach (gaseous_server.Models.Game game in hSearch)
-                        {
-                            hGamesToReturn.Add(game);
-                        }
-
-                        return hGamesToReturn;
-                    }
+                    return results.ToList();
 
                 default:
-                    return new List<gaseous_server.Models.Game>();
+                    return new List<Game>();
             }
         }
     }

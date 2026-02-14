@@ -39,30 +39,9 @@ namespace gaseous_server.Classes
             MetadataManagement metadataGame = new MetadataManagement(this);
             metadataGame.UpdateRomCounts();
 
-            // delete old logs
-            Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.removing_old_logs", null, new string[] { Config.LoggingConfiguration.LogRetention.ToString() });
-            long deletedCount = 1;
-            long deletedEventCount = 0;
-            long maxLoops = 10000;
-            sql = "DELETE FROM ServerLogs WHERE EventTime < @EventRetentionDate LIMIT 1000; SELECT ROW_COUNT() AS Count;";
-            dbDict.Add("EventRetentionDate", DateTime.UtcNow.AddDays(Config.LoggingConfiguration.LogRetention * -1));
-            while (deletedCount > 0)
-            {
-                DataTable deletedCountTable = await db.ExecuteCMDAsync(sql, dbDict);
-                deletedCount = (long)deletedCountTable.Rows[0][0];
-                deletedEventCount += deletedCount;
-
-                Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.deleted_log_entries", null, new string[] { deletedCount.ToString() });
-
-                // check if we've hit the limit
-                maxLoops -= 1;
-                if (maxLoops <= 0)
-                {
-                    Logging.LogKey(Logging.LogType.Warning, "process.maintenance", "maintenance.hit_maximum_number_of_loops_deleting_logs_stopping");
-                    break;
-                }
-            }
-            Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.deleted_total_log_entries", null, new string[] { deletedEventCount.ToString() });
+            // run log maintenance
+            Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.running_log_maintenance");
+            await Logging.RunMaintenance();
 
             // delete files and directories older than 7 days in PathsToClean
             List<string> PathsToClean = new List<string>();

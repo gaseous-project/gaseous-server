@@ -1,5 +1,6 @@
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using HasheousClient.Models;
 
 namespace gaseous_server.Models

@@ -1,7 +1,7 @@
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using static gaseous_server.ProcessQueue.QueueProcessor.QueueItem;
 
 namespace gaseous_server.ProcessQueue.Plugins

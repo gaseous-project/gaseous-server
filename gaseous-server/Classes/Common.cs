@@ -6,7 +6,7 @@ using System.IO.Compression;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
-using static gaseous_server.Classes.Metadata.Communications;
+using static gaseous_server.Classes.Plugins.PluginManagement.ImageResize;
 
 namespace gaseous_server.Classes
 {

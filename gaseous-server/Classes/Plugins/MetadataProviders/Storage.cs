@@ -2,14 +2,28 @@
 using System.Data;
 using System.Reflection;
 using System.Threading.Tasks;
-using IGDB;
-using IGDB.Models;
 using Microsoft.Extensions.Caching.Memory;
 
-namespace gaseous_server.Classes.Metadata
+namespace gaseous_server.Classes.Plugins.MetadataProviders
 {
+    /// <summary>
+    /// Manages caching and retrieval of metadata records from various sources.
+    /// </summary>
     public class Storage
     {
+        /// <summary>
+        /// Initializes a new instance of the Storage class.
+        /// </summary>
+        /// <param name="sourceType">
+        /// The metadata source type (IGDB, RAWG, etc.)
+        /// </param>
+        public Storage(FileSignature.MetadataSources sourceType)
+        {
+            _sourceType = sourceType;
+        }
+
+        private FileSignature.MetadataSources _sourceType { get; set; }
+
         /// <summary>
         /// Cache status of a record
         /// </summary>
@@ -34,9 +48,6 @@ namespace gaseous_server.Classes.Metadata
         /// <summary>
         /// Get the cache status of a record in the database
         /// </summary>
-        /// <param name="SourceType">
-        /// The source of the metadata (IGDB, RAWG, etc.)
-        /// </param>
         /// <param name="Endpoint">
         /// The endpoint of the metadata (games, companies, etc.)
         /// </param>
@@ -46,17 +57,14 @@ namespace gaseous_server.Classes.Metadata
         /// <returns>
         /// The cache status of the record
         /// </returns>
-        public static CacheStatus GetCacheStatus(FileSignature.MetadataSources SourceType, string Endpoint, string Slug)
+        public CacheStatus GetCacheStatus(string Endpoint, string Slug)
         {
-            return _GetCacheStatus(SourceType, Endpoint, "slug", Slug).Result;
+            return _GetCacheStatus(Endpoint, "slug", Slug).Result;
         }
 
         /// <summary>
         /// Get the cache status of a record in the database
         /// </summary>
-        /// <param name="SourceType">
-        /// The source of the metadata (IGDB, RAWG, etc.)
-        /// </param>
         /// <param name="Endpoint">
         /// The endpoint of the metadata (games, companies, etc.)
         /// </param>
@@ -66,17 +74,14 @@ namespace gaseous_server.Classes.Metadata
         /// <returns>
         /// The cache status of the record
         /// </returns>
-        public static async Task<CacheStatus> GetCacheStatusAsync(FileSignature.MetadataSources SourceType, string Endpoint, string Slug)
+        public async Task<CacheStatus> GetCacheStatusAsync(string Endpoint, string Slug)
         {
-            return await _GetCacheStatus(SourceType, Endpoint, "slug", Slug);
+            return await _GetCacheStatus(Endpoint, "slug", Slug);
         }
 
         /// <summary>
         /// Get the cache status of a record in the database
         /// </summary>
-        /// <param name="SourceType">
-        /// The source of the metadata (IGDB, RAWG, etc.)
-        /// </param>
         /// <param name="Endpoint">
         /// The endpoint of the metadata (games, companies, etc.)
         /// </param>
@@ -86,17 +91,14 @@ namespace gaseous_server.Classes.Metadata
         /// <returns>
         /// The cache status of the record
         /// </returns>
-        public static CacheStatus GetCacheStatus(FileSignature.MetadataSources SourceType, string Endpoint, long Id)
+        public CacheStatus GetCacheStatus(string Endpoint, long Id)
         {
-            return _GetCacheStatus(SourceType, Endpoint, "id", Id).Result;
+            return _GetCacheStatus(Endpoint, "id", Id).Result;
         }
 
         /// <summary>
         /// Get the cache status of a record in the database
         /// </summary>
-        /// <param name="SourceType">
-        /// The source of the metadata (IGDB, RAWG, etc.)
-        /// </param>
         /// <param name="Endpoint">
         /// The endpoint of the metadata (games, companies, etc.)
         /// </param>
@@ -106,9 +108,9 @@ namespace gaseous_server.Classes.Metadata
         /// <returns>
         /// The cache status of the record
         /// </returns>
-        public static async Task<CacheStatus> GetCacheStatusAsync(FileSignature.MetadataSources SourceType, string Endpoint, long Id)
+        public async Task<CacheStatus> GetCacheStatusAsync(string Endpoint, long Id)
         {
-            return await _GetCacheStatus(SourceType, Endpoint, "id", Id);
+            return await _GetCacheStatus(Endpoint, "id", Id);
         }
 
         /// <summary>
@@ -123,7 +125,7 @@ namespace gaseous_server.Classes.Metadata
         /// <exception cref="Exception">
         /// Thrown when the DataRow object does not contain a "lastUpdated" column
         /// </exception>
-        public static CacheStatus GetCacheStatus(DataRow Row)
+        public CacheStatus GetCacheStatus(DataRow Row)
         {
             if (Row.Table.Columns.Contains("lastUpdated"))
             {
@@ -143,14 +145,14 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
-        private static async Task<CacheStatus> _GetCacheStatus(FileSignature.MetadataSources SourceType, string Endpoint, string SearchField, object SearchValue)
+        private async Task<CacheStatus> _GetCacheStatus(string Endpoint, string SearchField, object SearchValue)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
             string sql = "SELECT lastUpdated FROM `Metadata_" + Endpoint + "` WHERE SourceId = @SourceType AND " + SearchField + " = @" + SearchField;
 
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
-            dbDict.Add("SourceType", SourceType);
+            dbDict.Add("SourceType", _sourceType);
             dbDict.Add("Endpoint", Endpoint);
             dbDict.Add(SearchField, SearchValue);
 
@@ -186,26 +188,25 @@ namespace gaseous_server.Classes.Metadata
         }
 
         /// <summary>
-        /// Add a new record to the cache
+        /// Store or update record in the cache
         /// </summary>
-        /// <param name="SourceType">
-        /// The source of the metadata (IGDB, RAWG, etc.)
-        /// </param>
         /// <param name="ObjectToCache">
         /// The object to cache
         /// </param>
-        /// <param name="UpdateRecord">
-        /// Whether to update the record if it already exists
-        /// </param>
-        public static async Task NewCacheValue<T>(FileSignature.MetadataSources SourceType, T ObjectToCache, bool UpdateRecord = false)
+        public async Task StoreCacheValue<T>(T ObjectToCache)
         {
+            if (ObjectToCache == null)
+            {
+                throw new ArgumentNullException(nameof(ObjectToCache), "Object to cache cannot be null.");
+            }
+
             // get the object type name
             string ObjectTypeName = ObjectToCache.GetType().Name;
 
             // build dictionary
             Dictionary<string, object?> objectDict = new Dictionary<string, object?>
             {
-                { "SourceId", SourceType },
+                { "SourceId", _sourceType },
                 { "dateAdded", DateTime.UtcNow },
                 { "lastUpdated", DateTime.UtcNow }
             };
@@ -269,16 +270,20 @@ namespace gaseous_server.Classes.Metadata
                                     newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(newDict["Ids"]);
                                     objectDict[key.Key] = newObjectValue;
 
-                                    await StoreRelations(SourceType, ObjectTypeName, key.Key, (long)objectDict["Id"], newObjectValue);
+                                    await StoreRelations(ObjectTypeName, key.Key, (long)objectDict["Id"], newObjectValue);
                                     break;
                                 case "list":
+                                case "list`1":
                                     newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(objectValue);
                                     objectDict[key.Key] = newObjectValue;
 
-                                    await StoreRelations(SourceType, ObjectTypeName, key.Key, (long)objectDict["Id"], newObjectValue);
+                                    await StoreRelations(ObjectTypeName, key.Key, (long)objectDict["Id"], newObjectValue);
 
                                     break;
                                 case "int32[]":
+                                case "int64[]":
+                                case "int[]":
+                                case "long[]":
                                     newObjectValue = Newtonsoft.Json.JsonConvert.SerializeObject(objectValue);
                                     objectDict[key.Key] = newObjectValue;
                                     break;
@@ -288,8 +293,10 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
 
+            var cacheStatus = await GetCacheStatusAsync(ObjectTypeName, (long)objectDict["Id"]);
+
             string sql = "";
-            if (UpdateRecord == false)
+            if (cacheStatus == CacheStatus.NotPresent)
             {
                 sql = "INSERT INTO `Metadata_" + ObjectTypeName + "` (" + fieldList + ") VALUES (" + valueList + ");";
             }
@@ -300,7 +307,7 @@ namespace gaseous_server.Classes.Metadata
 
             // execute sql
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            await db.ExecuteCMDAsync(sql, objectDict);
+            _ = db.ExecuteCMDAsync(sql, objectDict);
         }
 
         /// <summary>
@@ -309,9 +316,6 @@ namespace gaseous_server.Classes.Metadata
         /// <typeparam name="T">
         /// The type of the object to return
         /// </typeparam>
-        /// <param name="SourceType">
-        /// The source of the metadata (IGDB, RAWG, etc.)
-        /// </param>
         /// <param name="EndpointType">
         /// The type of the endpoint (games, companies, etc.)
         /// </param>
@@ -327,7 +331,7 @@ namespace gaseous_server.Classes.Metadata
         /// <exception cref="Exception">
         /// Thrown when no record is found that matches the search criteria
         /// </exception>
-        public static async Task<T> GetCacheValue<T>(FileSignature.MetadataSources SourceType, T? EndpointType, string SearchField, object SearchValue)
+        public async Task<T> GetCacheValue<T>(T? EndpointType, string SearchField, object SearchValue)
         {
             string Endpoint = EndpointType.GetType().Name;
 
@@ -336,7 +340,7 @@ namespace gaseous_server.Classes.Metadata
             string sql = "SELECT * FROM `Metadata_" + Endpoint + "` WHERE SourceId = @SourceType AND " + SearchField + " = @" + SearchField;
 
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
-            dbDict.Add("SourceType", SourceType);
+            dbDict.Add("SourceType", _sourceType);
             dbDict.Add("Endpoint", Endpoint);
             dbDict.Add(SearchField, SearchValue);
 
@@ -355,12 +359,29 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
+        /// <summary>
+        /// Builds a cache object from a DataRow by mapping column values to object properties.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type of the object to build
+        /// </typeparam>
+        /// <param name="EndpointType">
+        /// The object instance to populate with values from the DataRow
+        /// </param>
+        /// <param name="dataRow">
+        /// The DataRow containing the cached data
+        /// </param>
+        /// <returns>
+        /// The populated object with values from the DataRow
+        /// </returns>
         public static T BuildCacheObject<T>(T EndpointType, DataRow dataRow)
         {
+            var properties = EndpointType.GetType().GetProperties();
+
             // copy the DataRow to EndpointType
-            foreach (PropertyInfo property in EndpointType.GetType().GetProperties())
+            foreach (PropertyInfo property in properties)
             {
-                if (property.GetCustomAttribute<Models.NoDatabaseAttribute>() == null)
+                if (property.GetCustomAttribute<Models.NoDatabaseAttribute>() == null && property.CanWrite)
                 {
                     // get the value from the DataRow with the same name as the property
                     if (dataRow.Table.Columns.Contains(property.Name) == true)
@@ -421,10 +442,36 @@ namespace gaseous_server.Classes.Metadata
                 }
             }
 
+            // Handle SourceId -> SourceType mapping
+            var sourceIdColumn = dataRow.Table.Columns.Cast<DataColumn>()
+                .FirstOrDefault(c => c.ColumnName.Equals("SourceId", StringComparison.OrdinalIgnoreCase));
+
+            if (sourceIdColumn != null)
+            {
+                PropertyInfo sourceTypeProperty = EndpointType.GetType().GetProperty("SourceType");
+                if (sourceTypeProperty != null && sourceTypeProperty.CanWrite)
+                {
+                    object? sourceIdValue = dataRow[sourceIdColumn.ColumnName];
+                    if (sourceIdValue != null && sourceIdValue != DBNull.Value)
+                    {
+                        try
+                        {
+                            // Convert int to enum
+                            object enumValue = Enum.ToObject(sourceTypeProperty.PropertyType, sourceIdValue);
+                            sourceTypeProperty.SetValue(EndpointType, enumValue);
+                        }
+                        catch
+                        {
+                            // Silently ignore conversion errors
+                        }
+                    }
+                }
+            }
+
             return EndpointType;
         }
 
-        private static async Task StoreRelations(FileSignature.MetadataSources SourceType, string PrimaryTable, string SecondaryTable, long ObjectId, string Relations)
+        private async Task StoreRelations(string PrimaryTable, string SecondaryTable, long ObjectId, string Relations)
         {
             string TableName = "Relation_" + PrimaryTable + "_" + SecondaryTable;
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -458,7 +505,7 @@ namespace gaseous_server.Classes.Metadata
                 sql = "INSERT IGNORE INTO " + TableName + " (`" + PrimaryTable + "SourceId`, `" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`) VALUES (@sourceid, @objectid, @relationvalue);";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>
                 {
-                    { "sourceid", SourceType },
+                    { "sourceid", _sourceType },
                     { "objectid", ObjectId },
                     { "relationvalue", RelationValue }
                 };
@@ -466,6 +513,12 @@ namespace gaseous_server.Classes.Metadata
             }
         }
 
+        /// <summary>
+        /// Creates relation tables for the specified type based on its properties.
+        /// </summary>
+        /// <typeparam name="T">
+        /// The type to create relation tables for
+        /// </typeparam>
         public static async Task CreateRelationsTables<T>()
         {
             string PrimaryTable = typeof(T).Name;
@@ -492,19 +545,6 @@ namespace gaseous_server.Classes.Metadata
                             PRIMARY KEY (`" + PrimaryTable + "SourceId`, `" + PrimaryTable + "Id`, `" + SecondaryTable + "Id`), INDEX `idx_PrimaryColumn` (`" + PrimaryTable + "Id` ASC) VISIBLE);";
                         await db.ExecuteCMDAsync(sql);
                     }
-                }
-            }
-        }
-
-        private class MemoryCacheObject
-        {
-            public object Object { get; set; }
-            public DateTime CreationTime { get; } = DateTime.UtcNow;
-            public DateTime ExpiryTime
-            {
-                get
-                {
-                    return CreationTime.AddMinutes(60);
                 }
             }
         }

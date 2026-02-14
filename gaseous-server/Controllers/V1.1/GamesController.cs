@@ -18,8 +18,9 @@ using Microsoft.CodeAnalysis.Scripting;
 using static gaseous_server.Classes.Metadata.AgeRatings;
 using Asp.Versioning;
 using Humanizer;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using gaseous_server.Models;
+using gaseous_server.Classes.Plugins.MetadataProviders;
 
 namespace gaseous_server.Controllers.v1_1
 {
@@ -129,7 +130,7 @@ namespace gaseous_server.Controllers.v1_1
                 dbDict.Add("id", MetadataMapId);
                 dbDict.Add("agegroupid", (int)user.SecurityProfile.AgeRestrictionPolicy.MaximumAgeRestriction);
 
-                List<Models.Game> RetVal = new List<Models.Game>();
+                List<Game> RetVal = new List<Game>();
 
                 DataTable dbResponse = await db.ExecuteCMDAsync(sql, dbDict);
 
@@ -654,19 +655,19 @@ FROM
     `Metadata_AlternativeName` AS `AlternativeName` ON `Game`.`Id` = `AlternativeName`.`Game` AND `Game`.`SourceId` = `AlternativeName`.`SourceId`
         LEFT JOIN
     (SELECT 
-        `GameLocalization`.`Game`,
-            `GameLocalization`.`SourceId`,
-            `GameLocalization`.`Name` AS `LocalizedName`,
+        `Metadata_GameLocalization`.`Game`,
+            `Metadata_GameLocalization`.`SourceId`,
+            `Metadata_GameLocalization`.`Name` AS `LocalizedName`,
             CASE
-                WHEN `GameLocalization`.`Name` LIKE 'The %' THEN CONCAT(TRIM(SUBSTR(`GameLocalization`.`Name`, 4)), ', The')
-                ELSE `GameLocalization`.`Name`
+                WHEN `Metadata_GameLocalization`.`Name` LIKE 'The %' THEN CONCAT(TRIM(SUBSTR(`Metadata_GameLocalization`.`Name`, 4)), ', The')
+                ELSE `Metadata_GameLocalization`.`Name`
             END AS `LocalizedNameThe`,
-            `GameLocalization`.`Cover` AS `LocalizedCover`,
+            `Metadata_GameLocalization`.`Cover` AS `LocalizedCover`,
             `Region`.`Identifier`
     FROM
-        `Metadata_GameLocalization` AS `GameLocalization`
-    JOIN `Metadata_Region` AS `Region` ON `GameLocalization`.`Region` = `Region`.`Id`
-        AND `GameLocalization`.`SourceId` = `Region`.`SourceId`
+        `Metadata_GameLocalization` AS `Metadata_GameLocalization`
+    JOIN `Metadata_Region` AS `Region` ON `Metadata_GameLocalization`.`Region` = `Region`.`Id`
+        AND `Metadata_GameLocalization`.`SourceId` = `Region`.`SourceId`
     WHERE
         `Region`.`Identifier` = @lang) `LocalizedNames` ON `Game`.`Id` = `LocalizedNames`.`Game`
         AND `Game`.`SourceId` = `LocalizedNames`.`SourceId`
@@ -719,9 +720,9 @@ FROM
                 RetVal = new List<Games.MinimalGameItem>();
                 foreach (int i in Enumerable.Range(0, dbResponse.Rows.Count))
                 {
-                    Models.Game retGame = Storage.BuildCacheObject<Models.Game>(new Models.Game(), dbResponse.Rows[i]);
+                    Game retGame = Storage.BuildCacheObject<Game>(new Game(), dbResponse.Rows[i]);
                     retGame.MetadataMapId = (long)dbResponse.Rows[i]["MetadataMapId"];
-                    retGame.MetadataSource = (FileSignature.MetadataSources)dbResponse.Rows[i]["GameIdType"];
+                    retGame.SourceType = (FileSignature.MetadataSources)dbResponse.Rows[i]["GameIdType"];
 
                     Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
                     retMinGame.Index = indexInPage;
@@ -825,12 +826,12 @@ FROM
 
             }
 
-            public GameReturnPackage(int Count, List<Models.Game> Games)
+            public GameReturnPackage(int Count, List<Game> Games)
             {
                 this.Count = Count;
 
                 List<Games.MinimalGameItem> minimalGames = new List<Games.MinimalGameItem>();
-                foreach (Models.Game game in Games)
+                foreach (Game game in Games)
                 {
                     minimalGames.Add(new Classes.Metadata.Games.MinimalGameItem(game));
                 }

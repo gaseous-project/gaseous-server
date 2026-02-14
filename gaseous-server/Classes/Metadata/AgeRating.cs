@@ -3,7 +3,7 @@ using System.Buffers;
 using System.Reflection;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
-using HasheousClient.Models.Metadata.IGDB;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Microsoft.CodeAnalysis.Classification;
 
 namespace gaseous_server.Classes.Metadata
@@ -32,18 +32,22 @@ namespace gaseous_server.Classes.Metadata
             GameAgeRating gameAgeRating = new GameAgeRating();
 
             AgeRating ageRating = await GetAgeRating(SourceType, RatingId);
+            if (ageRating == null)
+            {
+                return null;
+            }
             gameAgeRating.Id = (long)ageRating.Id;
             gameAgeRating.RatingBoard = await AgeRatingOrganizations.GetAgeRatingOrganization(SourceType, ageRating.Organization);
             gameAgeRating.RatingTitle = await AgeRatingCategorys.GetAgeRatingCategory(SourceType, ageRating.RatingCategory);
 
-            List<AgeRatingContentDescriptionV2> descriptions = new List<AgeRatingContentDescriptionV2>();
+            List<AgeRatingContentDescription> descriptions = new List<AgeRatingContentDescription>();
             if (ageRating.RatingContentDescriptions != null)
             {
                 foreach (long ContentId in ageRating.RatingContentDescriptions)
                 {
                     try
                     {
-                        AgeRatingContentDescriptionV2 ageRatingContentDescription = await AgeRatingContentDescriptionsV2.GetAgeRatingContentDescriptionsV2(SourceType, ContentId);
+                        AgeRatingContentDescription ageRatingContentDescription = await AgeRatingContentDescriptions.GetAgeRatingContentDescriptions(SourceType, ContentId);
                         descriptions.Add(ageRatingContentDescription);
                     }
                     catch (Exception ex)
@@ -62,7 +66,7 @@ namespace gaseous_server.Classes.Metadata
             public long Id { get; set; }
             public AgeRatingOrganization RatingBoard { get; set; }
             public AgeRatingCategory RatingTitle { get; set; }
-            public AgeRatingContentDescriptionV2[] Descriptions { get; set; }
+            public AgeRatingContentDescription[] Descriptions { get; set; }
         }
 
         public static async Task PopulateAgeMapAsync()
