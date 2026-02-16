@@ -558,8 +558,8 @@ ORDER BY Platform.`Name`; ";
                 case ProcessQueue.QueueItemType.MetadataRefresh:
                     this._UserManageable = true;
                     this._SaveLastRunTime = true;
-                    this.DefaultInterval = 360;
-                    this.MinimumAllowedInterval = 360;
+                    this.DefaultInterval = 1440;
+                    this.MinimumAllowedInterval = 1440;
                     this.DefaultAllowedDays = new List<DayOfWeek>{
                         DayOfWeek.Sunday,
                         DayOfWeek.Monday,

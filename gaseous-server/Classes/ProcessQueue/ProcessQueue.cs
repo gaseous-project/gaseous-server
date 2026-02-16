@@ -374,6 +374,13 @@ namespace gaseous_server.ProcessQueue
             private string _LastResult = "";
             private string? _LastError = null;
             private bool _ForceExecute = false;
+            public bool ForceStartRequested
+            {
+                get
+                {
+                    return _ForceExecute;
+                }
+            }
             private bool _AllowManualStart = true;
             private bool _RemoveWhenStopped = false;
             private bool _IsBlocked = false;
