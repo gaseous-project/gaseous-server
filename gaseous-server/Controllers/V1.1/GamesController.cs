@@ -591,6 +591,7 @@ namespace gaseous_server.Controllers.v1_1
     `Game`.`Genres`,
     `Game`.`GameModes`,
     `Game`.`PlayerPerspectives`,
+    `Game`.`Screenshots`,
     `Game`.`Themes`,
     `RomCounts`.`DateAdded`,
     `RomCounts`.`DateUpdated`,

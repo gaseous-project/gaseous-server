@@ -45,6 +45,8 @@ class HomePageGameRow {
             clearInterval(this.loadingInterval);
             this.games.innerHTML = "";
 
+            console.log(games);
+
             if (games.length === 0) {
                 this.games.innerHTML = '<p>' + window.lang.translate('home.no_games_found') + '</p>';
             } else {
@@ -56,7 +58,7 @@ class HomePageGameRow {
                     let gameItem = document.createElement("li");
                     gameItem.classList.add("homegame-item");
 
-                    let gameObj = new GameIcon(game);
+                    let gameObj = new WideGameIcon(game);
                     let gameTile = await gameObj.Render(showTitle, showRatings, showClassification, classificationDisplayOrder, false, true);
                     gameItem.appendChild(gameTile);
 

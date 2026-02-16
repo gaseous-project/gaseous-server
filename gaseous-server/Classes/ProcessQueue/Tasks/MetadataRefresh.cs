@@ -56,7 +56,8 @@ namespace gaseous_server.ProcessQueue.Plugins
             {
                 Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_signature_metadata_for", null, new[] { ParentSubTaskItem.TaskName });
                 MetadataManagement metadataSignatures = new MetadataManagement(ParentSubTaskItem);
-                await metadataSignatures.RefreshSignatures(true);
+                bool forceStart = (ParentSubTaskItem.ParentObject as QueueProcessor.QueueItem)?.ForceStartRequested ?? false;
+                await metadataSignatures.RefreshSignatures(forceStart);
             }
         }
 
@@ -79,7 +80,8 @@ namespace gaseous_server.ProcessQueue.Plugins
             {
                 Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_platform_metadata_for", null, new[] { ParentSubTaskItem.TaskName });
                 MetadataManagement metadataPlatform = new MetadataManagement(ParentSubTaskItem);
-                await metadataPlatform.RefreshPlatforms(true);
+                bool forceStart = (ParentSubTaskItem.ParentObject as QueueProcessor.QueueItem)?.ForceStartRequested ?? false;
+                await metadataPlatform.RefreshPlatforms(forceStart);
             }
         }
 
@@ -103,7 +105,8 @@ namespace gaseous_server.ProcessQueue.Plugins
                 Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_game_metadata_for", null, new[] { ParentSubTaskItem.TaskName });
                 MetadataManagement metadataGame = new MetadataManagement(ParentSubTaskItem);
                 metadataGame.UpdateRomCounts();
-                await metadataGame.RefreshGames(true);
+                bool forceStart = (ParentSubTaskItem.ParentObject as QueueProcessor.QueueItem)?.ForceStartRequested ?? false;
+                await metadataGame.RefreshGames(forceStart);
             }
         }
     }

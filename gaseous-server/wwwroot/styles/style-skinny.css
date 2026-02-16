@@ -356,6 +356,10 @@
         min-height: unset;
     }
 
+    #gamehome {
+        max-width: 820px;
+    }
+
     #gameprofile {
         display: none;
     }
