@@ -2,8 +2,19 @@
 
 # create the user
 echo "Creating user gaseous with UID ${PUID} and GID ${PGID}"
-groupadd -g ${PGID} gaseous
-useradd -u ${PUID} -g ${PGID} -m gaseous -d /home/gaseous -G sudo 
+getent group ${PGID} > /dev/null 2>&1 || groupadd -g ${PGID} gaseous
+
+# Check if user with PUID exists
+if id ${PUID} > /dev/null 2>&1; then
+  # User exists, get its name and rename if necessary
+  CURRENT_USER=$(id -un ${PUID})
+  if [ "$CURRENT_USER" != "gaseous" ]; then
+    usermod -l gaseous -d /home/gaseous "$CURRENT_USER"
+  fi
+else
+  # User doesn't exist, create it
+  useradd -u ${PUID} -g ${PGID} -m gaseous -d /home/gaseous -G sudo
+fi
 usermod -p "*" gaseous
 mkdir -p /home/gaseous/.aspnet
 chown -R ${PUID} /App /home/gaseous/.aspnet
