@@ -5,7 +5,6 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
-using gaseous_server.Controllers;
 using gaseous_server.Models;
 using gaseous_server.ProcessQueue.Plugins;
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
@@ -42,6 +41,7 @@ namespace gaseous_server.ProcessQueue
                 AllowedStartMinutes = defaultItem.AllowedStartMinutes;
                 AllowedEndHours = defaultItem.AllowedEndHours;
                 AllowedEndMinutes = defaultItem.AllowedEndMinutes;
+                _RunInProcess = defaultItem.RunInProcess;
 
                 AttachPlugin();
             }
@@ -65,6 +65,7 @@ namespace gaseous_server.ProcessQueue
                 AllowedStartMinutes = defaultItem.AllowedStartMinutes;
                 AllowedEndHours = defaultItem.AllowedEndHours;
                 AllowedEndMinutes = defaultItem.AllowedEndMinutes;
+                _RunInProcess = defaultItem.RunInProcess;
 
                 AttachPlugin();
             }
@@ -379,6 +380,14 @@ namespace gaseous_server.ProcessQueue
                 get
                 {
                     return _ForceExecute;
+                }
+            }
+            private bool _RunInProcess = true;
+            public bool RunInProcess
+            {
+                get
+                {
+                    return _RunInProcess;
                 }
             }
             private bool _AllowManualStart = true;

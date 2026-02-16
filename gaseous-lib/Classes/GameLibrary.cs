@@ -3,6 +3,7 @@ using System.Data;
 using System.Threading.Tasks;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
+using gaseous_server.Models;
 using Microsoft.CodeAnalysis.FlowAnalysis.DataFlow;
 
 namespace gaseous_server
@@ -83,7 +84,7 @@ namespace gaseous_server
                 LibraryItem library = new LibraryItem((int)row["Id"], (string)row["Name"], (string)row["Path"], (long)row["DefaultPlatform"], Convert.ToBoolean((int)row["DefaultLibrary"]));
                 if (GetStorageInfo == true)
                 {
-                    library.PathInfo = Controllers.SystemController.GetDisk(library.Path);
+                    library.PathInfo = SystemInfo.GetDisk(library.Path);
                 }
                 libraryItems.Add(library);
 
@@ -198,7 +199,7 @@ namespace gaseous_server
 
                 if (GetStorageInfo == true)
                 {
-                    library.PathInfo = Controllers.SystemController.GetDisk(library.Path);
+                    library.PathInfo = SystemInfo.GetDisk(library.Path);
                 }
 
                 return library;
@@ -273,7 +274,7 @@ namespace gaseous_server
             }
             public bool IsDefaultLibrary => _IsDefaultLibrary;
 
-            public Controllers.SystemController.SystemInfo.PathItem? PathInfo { get; set; }
+            public SystemInfoModel.PathItem? PathInfo { get; set; }
         }
     }
 }

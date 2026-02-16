@@ -23,7 +23,7 @@ namespace gaseous_server.ProcessQueue.Plugins
             if (ParentQueueItem.Options != null)
             {
                 Dictionary<string, object> collectionOptions = (Dictionary<string, object>)ParentQueueItem.Options;
-                Classes.Collections.CompileCollections((long)collectionOptions["Id"], (string)collectionOptions["UserId"]);
+                // Classes.Collections.CompileCollections((long)collectionOptions["Id"], (string)collectionOptions["UserId"]);
             }
         }
     }

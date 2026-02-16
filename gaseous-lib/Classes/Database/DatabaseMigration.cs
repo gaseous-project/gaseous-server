@@ -44,7 +44,7 @@ namespace gaseous_server.Classes
                             {
                                 Logging.LogKey(Logging.LogType.Information, "process.database", "database.schema_version_requires_missing_table", null, new[] { TargetSchemaVersion.ToString() });
 
-                                string resourceName = "gaseous_server.Support.Database.MySQL.gaseous-fix-1005.sql";
+                                string resourceName = "gaseous_lib.Support.Database.MySQL.gaseous-fix-1005.sql";
                                 string dbScript = "";
 
                                 string[] resources = Assembly.GetExecutingAssembly().GetManifestResourceNames();
@@ -186,7 +186,7 @@ namespace gaseous_server.Classes
                             // load country list
                             Logging.LogKey(Logging.LogType.Information, "process.database", "database.adding_country_lookup_table_contents");
 
-                            string countryResourceName = "gaseous_server.Support.Country.txt";
+                            string countryResourceName = "gaseous_lib.Support.Country.txt";
                             using (Stream stream = assembly.GetManifestResourceStream(countryResourceName))
                             using (StreamReader reader = new StreamReader(stream))
                             {
@@ -206,7 +206,7 @@ namespace gaseous_server.Classes
                             // load language list
                             Logging.LogKey(Logging.LogType.Information, "process.database", "database.adding_language_lookup_table_contents");
 
-                            string languageResourceName = "gaseous_server.Support.Language.txt";
+                            string languageResourceName = "gaseous_lib.Support.Language.txt";
                             using (Stream stream = assembly.GetManifestResourceStream(languageResourceName))
                             using (StreamReader reader = new StreamReader(stream))
                             {

@@ -2,7 +2,6 @@
 using System.Data;
 using System.Threading.Tasks;
 using gaseous_server.Classes.Metadata;
-using gaseous_server.Controllers;
 using gaseous_server.Models;
 using System.Linq;
 using HasheousClient.Models;
@@ -175,6 +174,7 @@ namespace gaseous_server.Classes
 		/// </param>
 		/// <param name="AutomaticMetadataSourceId">
 		/// The unique identifier for the data source as provided by the automatic metadata fetcher.
+		/// </param>
 		/// <remarks>
 		/// If the metadata source is preferred, all other metadata sources for the same metadata map will be set to not preferred.
 		/// </remarks>

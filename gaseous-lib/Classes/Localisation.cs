@@ -470,9 +470,9 @@ namespace gaseous_server.Classes
             var resourceNames = assembly.GetManifestResourceNames();
             foreach (var resourceName in resourceNames)
             {
-                if (resourceName.StartsWith("gaseous_server.Support.Localisation.") && resourceName.EndsWith(".json"))
+                if (resourceName.StartsWith("gaseous_lib.Support.Localisation.") && resourceName.EndsWith(".json"))
                 {
-                    string localeCode = resourceName.Substring("gaseous_server.Support.Localisation.".Length);
+                    string localeCode = resourceName.Substring("gaseous_lib.Support.Localisation.".Length);
                     localeCode = localeCode.Substring(0, localeCode.Length - ".json".Length);
                     try
                     {
@@ -519,7 +519,7 @@ namespace gaseous_server.Classes
 
         private static LocaleFileModel LoadLocaleFromResources(string locale)
         {
-            string resourceName = "gaseous_server.Support.Localisation." + locale + ".json";
+            string resourceName = "gaseous_lib.Support.Localisation." + locale + ".json";
             using (var stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
             {
                 if (stream == null)

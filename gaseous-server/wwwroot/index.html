@@ -317,7 +317,7 @@
                         supportedMetadataSources = versionFile.SupportedMetadataSources;
 
                         // load age rating mappings
-                        AgeRatingMappings = await fetch('/images/Ratings/AgeGroupMap.json')
+                        AgeRatingMappings = await fetch('/api/v1.1/AgeGroupMaps/AgeGroupMap.json')
                             .then(response => {
                                 if (response.ok) {
                                     return response.json();

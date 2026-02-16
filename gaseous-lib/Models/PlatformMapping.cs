@@ -8,7 +8,6 @@ using System.Threading.Tasks;
 using System.Web;
 using gaseous_server.Classes;
 using gaseous_server.Classes.Metadata;
-using gaseous_server.Controllers;
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Newtonsoft.Json;
 using gaseous_server.Classes.Plugins.MetadataProviders;
@@ -28,7 +27,7 @@ namespace gaseous_server.Models
         /// </summary>
         public static async Task ExtractPlatformMap(bool ResetToDefault = false)
         {
-            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("gaseous_server.Support.PlatformMap.json"))
+            using (Stream stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("gaseous_lib.Support.PlatformMap.json"))
             using (StreamReader reader = new StreamReader(stream))
             {
                 string rawJson = await reader.ReadToEndAsync();
@@ -123,7 +122,7 @@ namespace gaseous_server.Models
             return platform;
         }
 
-        // <summary>
+        /// <summary>
         /// Gets the list of supported file extensions.
         /// </summary>
         public static List<string> SupportedFileExtensions { get; } = new List<string>();

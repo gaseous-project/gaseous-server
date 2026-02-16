@@ -307,7 +307,8 @@ namespace gaseous_server.Classes.Metadata
                     }
                     else
                     {
-                        using Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("gaseous_server.wwwroot.images.Ratings.AgeGroupMap.json");
+                        // using Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("gaseous_server.wwwroot.images.Ratings.AgeGroupMap.json");
+                        using Stream? stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("gaseous_lib.Support.AgeGroupMap.json");
                         if (stream != null)
                         {
                             using StreamReader reader = new StreamReader(stream);

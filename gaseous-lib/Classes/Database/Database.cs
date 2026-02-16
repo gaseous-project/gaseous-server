@@ -143,7 +143,7 @@ namespace gaseous_server.Classes
 
 					for (int i = OuterSchemaVer; i < 10000; i++)
 					{
-						string resourceName = "gaseous_server.Support.Database.MySQL.gaseous-" + i + ".sql";
+						string resourceName = "gaseous_lib.Support.Database.MySQL.gaseous-" + i + ".sql";
 						string dbScript = "";
 
 						string[] resources = Assembly.GetExecutingAssembly().GetManifestResourceNames();
