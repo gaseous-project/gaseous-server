@@ -475,6 +475,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                 this.TotalRatingCount = gameObject.TotalRatingCount;
                 this.Cover = gameObject.Cover;
                 this.Artworks = gameObject.Artworks;
+                this.Screenshots = gameObject.Screenshots;
                 this.FirstReleaseDate = gameObject.FirstReleaseDate;
 
                 // compile genres
@@ -617,6 +618,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
             public DateTimeOffset? FirstReleaseDate { get; set; }
             public object Cover { get; set; }
             public List<long> Artworks { get; set; }
+            public List<long> Screenshots { get; set; }
             public List<AgeRating> AgeRatings { get; set; }
             public AgeGroups.AgeRestrictionGroupings AgeGroup
             {
