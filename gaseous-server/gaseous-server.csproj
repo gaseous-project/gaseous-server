@@ -88,9 +88,6 @@
     <EmbeddedResource Include="Support\Localisation\*.json" />
     <EmbeddedResource Include="wwwroot\images\Ratings\AgeGroupMap.json" />
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="../submodules/hasheous-client/hasheous-client/hasheous-client.csproj" />
-  </ItemGroup>
 
   <!-- Ensure gaseous-cli is published alongside gaseous-server -->
   <Target Name="PublishGaseousCli" AfterTargets="Publish">
