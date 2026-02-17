@@ -62,7 +62,7 @@ namespace gaseous_server.ProcessQueue
                         ProcessQueue.QueueItemType.LibraryScanWorker,
                         ProcessQueue.QueueItemType.MetadataRefresh
                     };
-                    this.RunInProcess = false;
+                    this.RunInProcess = true;
                     break;
 
                 case ProcessQueue.QueueItemType.MetadataRefresh:
@@ -90,7 +90,7 @@ namespace gaseous_server.ProcessQueue
                         ProcessQueue.QueueItemType.LibraryScanWorker,
                         ProcessQueue.QueueItemType.TitleIngestor
                     };
-                    this.RunInProcess = false;
+                    this.RunInProcess = true;
                     break;
 
                 case ProcessQueue.QueueItemType.OrganiseLibrary:
@@ -117,7 +117,7 @@ namespace gaseous_server.ProcessQueue
                         ProcessQueue.QueueItemType.TitleIngestor,
                         ProcessQueue.QueueItemType.MetadataRefresh
                     };
-                    this.RunInProcess = false;
+                    this.RunInProcess = true;
                     break;
 
                 case ProcessQueue.QueueItemType.LibraryScan:
@@ -142,7 +142,7 @@ namespace gaseous_server.ProcessQueue
                         ProcessQueue.QueueItemType.OrganiseLibrary,
                         ProcessQueue.QueueItemType.MetadataRefresh
                     };
-                    this.RunInProcess = false;
+                    this.RunInProcess = true;
                     break;
 
                 case ProcessQueue.QueueItemType.DailyMaintainer:
@@ -166,7 +166,7 @@ namespace gaseous_server.ProcessQueue
                     this._Blocks = new List<ProcessQueue.QueueItemType>{
                         ProcessQueue.QueueItemType.All
                     };
-                    this.RunInProcess = false;
+                    this.RunInProcess = true;
                     break;
 
                 case ProcessQueue.QueueItemType.WeeklyMaintainer:
@@ -184,7 +184,7 @@ namespace gaseous_server.ProcessQueue
                     this._Blocks = new List<ProcessQueue.QueueItemType>{
                         ProcessQueue.QueueItemType.All
                     };
-                    this.RunInProcess = false;
+                    this.RunInProcess = true;
                     break;
 
                 case ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade:
@@ -224,7 +224,7 @@ namespace gaseous_server.ProcessQueue
                     this.DefaultAllowedStartMinutes = 0;
                     this.DefaultAllowedEndHours = 23;
                     this.DefaultAllowedEndMinutes = 59;
-                    this.RunInProcess = false;
+                    this.RunInProcess = true;
                     break;
 
                 default:

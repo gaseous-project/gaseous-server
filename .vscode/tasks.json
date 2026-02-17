@@ -17,7 +17,7 @@
 			"type": "process",
 			"args": [
 				"clean",
-				"${workspaceFolder}/gaseous-server/gaseous-server.csproj",
+				"${workspaceFolder}/Gaseous.sln",
 				"/property:GenerateFullPaths=true",
 				"/consoleloggerparameters:NoSummary"
 			],
@@ -49,7 +49,8 @@
 			"type": "process",
 			"args": [
 				"build",
-				"${workspaceFolder}/gaseous-server/gaseous-server.csproj",
+				"${workspaceFolder}/Gaseous.sln",
+				"/t:Rebuild",
 				"/property:GenerateFullPaths=true",
 				"/consoleloggerparameters:NoSummary"
 			],

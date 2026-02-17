@@ -70,6 +70,21 @@
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach"
+        },
+        {
+            "name": "Process Host",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "full-rebuild",
+            "program": "${workspaceFolder}/gaseous-processhost/bin/Debug/net10.0/gaseous-processhost.dll",
+            "args": [
+                "--service",
+                "SignatureIngestor",
+                "--reportingserver",
+                "https://localhost:5193"
+            ],
+            "cwd": "${workspaceFolder}/gaseous-processhost",
+            "stopAtEntry": false
         }
     ]
 }

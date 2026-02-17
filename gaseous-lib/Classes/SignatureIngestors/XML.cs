@@ -385,6 +385,20 @@ namespace gaseous_server.SignatureIngestors.XML
                                             dbDict.Add("metadatasource", romObject.SignatureSource);
                                             dbDict.Add("ingestorversion", 3);
 
+                                            Dictionary<string, string>? countries = new Dictionary<string, string>();
+                                            if (romObject.Country != null)
+                                            {
+                                                countries = romObject.Country;
+                                            }
+                                            dbDict.Add("countries", Newtonsoft.Json.JsonConvert.SerializeObject(countries));
+
+                                            Dictionary<string, string>? languages = new Dictionary<string, string>();
+                                            if (romObject.Language != null)
+                                            {
+                                                languages = romObject.Language;
+                                            }
+                                            dbDict.Add("languages", Newtonsoft.Json.JsonConvert.SerializeObject(languages));
+
                                             sigDB = db.ExecuteCMD(sql, dbDict);
                                             if (sigDB.Rows.Count == 0)
                                             {
@@ -411,7 +425,7 @@ namespace gaseous_server.SignatureIngestors.XML
                                                 }
 
                                                 // update the rom entry
-                                                sql = "UPDATE Signatures_Roms SET `GameId`=@gameid, `Name`=@name, `Size`=@size,`DevelopmentStatus`=@developmentstatus, `Attributes`=@attributes, `RomType`=@romtype, `RomTypeMedia`=@romtypemedia, `MediaLabel`=@medialabel, `MetadataSource`=@metadatasource, `Countries`=@countries, `Languages`=@languages WHERE `Id`=@romid;";
+                                                sql = "UPDATE Signatures_Roms SET `GameId`=@gameid, `Name`=@name, `Size`=@size,`DevelopmentStatus`=@developmentstatus, `Attributes`=@attributes, `RomType`=@romtype, `RomTypeMedia`=@romtypemedia, `MediaLabel`=@medialabel, `MetadataSource`=@metadatasource WHERE `Id`=@romid;";
                                                 db.ExecuteCMD(sql, dbDict);
                                             }
 
