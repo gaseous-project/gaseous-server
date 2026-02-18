@@ -24,7 +24,6 @@ if (cmdArgs.Contains("--version"))
 // process other command line arguments
 string serviceName = null;
 string reportingServerUrl = null;
-string processId = Guid.Empty.ToString();
 string correlationId = null;
 
 for (int i = 0; i < cmdArgs.Length; i++)
@@ -36,10 +35,6 @@ for (int i = 0; i < cmdArgs.Length; i++)
     else if (cmdArgs[i] == "--reportingserver" && i + 1 < cmdArgs.Length)
     {
         reportingServerUrl = cmdArgs[i + 1];
-    }
-    else if (cmdArgs[i] == "--processid" && i + 1 < cmdArgs.Length)
-    {
-        processId = cmdArgs[i + 1];
     }
     else if (cmdArgs[i] == "--correlationid" && i + 1 < cmdArgs.Length)
     {
@@ -77,10 +72,11 @@ if (string.IsNullOrEmpty(correlationId))
     // If no correlation ID is provided, generate a new one
     correlationId = Guid.NewGuid().ToString();
 }
-CallContext.SetData("ProcessId", processId);
 CallContext.SetData("CorrelationId", correlationId);
 CallContext.SetData("CallingProcess", taskType.ToString());
 CallContext.SetData("CallingUser", "System");
+CallContext.SetData("ReportingServerUrl", reportingServerUrl);
+CallContext.SetData("OutProcess", true);
 
 // Initialize the service with the provided configuration
 ITaskPlugin? Task;
@@ -111,7 +107,13 @@ if (Task == null)
 // start the task
 try
 {
-    Console.WriteLine($"Starting service '{serviceName}' with reporting server '{reportingServerUrl}' and process ID '{processId}'.");
+    // Settings
+    Config.InitSettings();
+
+    // API metadata source
+    HasheousClient.WebApp.HttpHelper.BaseUri = Config.MetadataConfiguration.HasheousHost;
+
+    Console.WriteLine($"Starting service '{serviceName}' with reporting server '{reportingServerUrl}' and correlation ID '{correlationId}'.");
     await Task.Execute();
 }
 catch (Exception ex)

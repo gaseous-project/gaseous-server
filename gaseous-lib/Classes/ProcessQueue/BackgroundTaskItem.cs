@@ -90,7 +90,7 @@ namespace gaseous_server.ProcessQueue
                         ProcessQueue.QueueItemType.LibraryScanWorker,
                         ProcessQueue.QueueItemType.TitleIngestor
                     };
-                    this.RunInProcess = true;
+                    this.RunInProcess = false;
                     break;
 
                 case ProcessQueue.QueueItemType.OrganiseLibrary:
@@ -205,6 +205,7 @@ namespace gaseous_server.ProcessQueue
                     this.DefaultAllowedEndHours = 23;
                     this.DefaultAllowedEndMinutes = 59;
                     this._Blocks.Add(ProcessQueue.QueueItemType.All);
+                    this.RunInProcess = true;
                     break;
 
                 case ProcessQueue.QueueItemType.TempCleanup:
