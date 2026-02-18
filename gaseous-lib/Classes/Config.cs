@@ -439,42 +439,22 @@ namespace gaseous_server.Classes
                     {
                         Logging.LogKey(Logging.LogType.Debug, "process.database", "database.reading_setting", null, new string[] { SettingName });
 
-                        if (Database.schema_version >= 1016)
-                        {
-                            sql = "SELECT Value, ValueDate FROM Settings WHERE Setting = @SettingName";
+                        sql = "SELECT Value, ValueDate FROM Settings WHERE Setting = @SettingName";
 
-                            dbResponse = db.ExecuteCMD(sql, dbDict);
-                            Type type = typeof(T);
-                            if (dbResponse.Rows.Count == 0)
-                            {
-                                // no value with that name stored - respond with the default value
-                                SetSetting<T>(SettingName, DefaultValue);
-                                return DefaultValue;
-                            }
-                            else
-                            {
-                                if (type.ToString() == "System.DateTime")
-                                {
-                                    AppSettings.Add(SettingName, (T)dbResponse.Rows[0]["ValueDate"]);
-                                    return (T)dbResponse.Rows[0]["ValueDate"];
-                                }
-                                else
-                                {
-                                    AppSettings.Add(SettingName, (T)dbResponse.Rows[0]["Value"]);
-                                    return (T)dbResponse.Rows[0]["Value"];
-                                }
-                            }
+                        dbResponse = db.ExecuteCMD(sql, dbDict);
+                        Type type = typeof(T);
+                        if (dbResponse.Rows.Count == 0)
+                        {
+                            // no value with that name stored - respond with the default value
+                            SetSetting<T>(SettingName, DefaultValue);
+                            return DefaultValue;
                         }
                         else
                         {
-                            sql = "SELECT Value FROM Settings WHERE Setting = @SettingName";
-
-                            dbResponse = db.ExecuteCMD(sql, dbDict);
-                            if (dbResponse.Rows.Count == 0)
+                            if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(Nullable<DateTime>))
                             {
-                                // no value with that name stored - respond with the default value
-                                SetSetting<T>(SettingName, DefaultValue);
-                                return DefaultValue;
+                                AppSettings.Add(SettingName, (T)dbResponse.Rows[0]["ValueDate"]);
+                                return (T)dbResponse.Rows[0]["ValueDate"];
                             }
                             else
                             {
@@ -532,8 +512,7 @@ namespace gaseous_server.Classes
             if (Database.schema_version >= 1016)
             {
                 sql = "REPLACE INTO Settings (Setting, ValueType, Value, ValueDate) VALUES (@SettingName, @ValueType, @Value, @ValueDate)";
-                Type type = typeof(T);
-                if (type.ToString() == "System.DateTime")
+                if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(Nullable<DateTime>))
                 {
                     dbDict = new Dictionary<string, object>
                     {

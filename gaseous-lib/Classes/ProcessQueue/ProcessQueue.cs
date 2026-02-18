@@ -526,7 +526,17 @@ namespace gaseous_server.ProcessQueue
             public object? Options { get; set; } = null;
             public string CurrentState { get; set; } = "";
             public string CurrentStateProgress { get; set; } = "";
-            public string CorrelationId => _CorrelationId;
+            public string CorrelationId
+            {
+                get
+                {
+                    return _CorrelationId;
+                }
+                set
+                {
+                    _CorrelationId = value;
+                }
+            }
 
             [System.Text.Json.Serialization.JsonIgnore]
             [Newtonsoft.Json.JsonIgnore]
@@ -548,9 +558,12 @@ namespace gaseous_server.ProcessQueue
                         _LastError = null;
 
                         // set the correlation id
-                        Guid correlationId = Guid.NewGuid();
-                        _CorrelationId = correlationId.ToString();
-                        CallContext.SetData("CorrelationId", correlationId);
+                        if (string.IsNullOrEmpty(_CorrelationId))
+                        {
+                            Guid correlationId = Guid.NewGuid();
+                            _CorrelationId = correlationId.ToString();
+                            CallContext.SetData("CorrelationId", correlationId);
+                        }
                         CallContext.SetData("CallingProcess", _ItemType.ToString());
                         CallContext.SetData("CallingUser", "System");
 

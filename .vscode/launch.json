@@ -79,7 +79,7 @@
             "program": "${workspaceFolder}/gaseous-processhost/bin/Debug/net10.0/gaseous-processhost.dll",
             "args": [
                 "--service",
-                "SignatureIngestor",
+                "MetadataRefresh",
                 "--reportingserver",
                 "https://localhost:5193"
             ],

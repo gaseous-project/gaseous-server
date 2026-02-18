@@ -79,30 +79,11 @@ CallContext.SetData("ReportingServerUrl", reportingServerUrl);
 CallContext.SetData("OutProcess", true);
 
 // Initialize the service with the provided configuration
-ITaskPlugin? Task;
-
-// Find the task plugin class that matches the taskType
-var taskPluginType = typeof(ITaskPlugin).Assembly.GetTypes()
-    .Where(t => t.Namespace == "gaseous_server.ProcessQueue.Plugins" &&
-                typeof(ITaskPlugin).IsAssignableFrom(t) &&
-                !t.IsInterface &&
-                !t.IsAbstract &&
-                t.Name.Equals(taskType.ToString(), StringComparison.OrdinalIgnoreCase))
-    .FirstOrDefault();
-
-if (taskPluginType == null)
+gaseous_server.ProcessQueue.QueueProcessor.QueueItem Task = new QueueProcessor.QueueItem(taskType, false, false)
 {
-    Console.WriteLine($"Error: No plugin found for service type '{serviceName}'.");
-    return;
-}
-
-Task = (ITaskPlugin?)Activator.CreateInstance(taskPluginType);
-
-if (Task == null)
-{
-    Console.WriteLine($"Error: Failed to instantiate plugin for service type '{serviceName}'.");
-    return;
-}
+    CorrelationId = correlationId
+};
+Task.ForceExecute();
 
 // start the task
 try
