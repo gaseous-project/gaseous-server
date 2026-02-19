@@ -53,7 +53,15 @@ namespace gaseous_server.Classes
                         callingSubTask.CurrentStateProgress = progress;
                         break;
                 }
+
+                SendStatusToReportingServer();
             }
+        }
+
+        private void SendStatusToReportingServer()
+        {
+            string jsonOutput = Newtonsoft.Json.JsonConvert.SerializeObject(CallingQueueItem);
+            Console.WriteLine(jsonOutput);
         }
     }
 }

@@ -81,7 +81,9 @@
                 "--service",
                 "MetadataRefresh",
                 "--reportingserver",
-                "https://localhost:5193"
+                "https://localhost:5193",
+                "--correlationid",
+                "00000000-0000-0000-0000-000000000000"
             ],
             "cwd": "${workspaceFolder}/gaseous-processhost",
             "stopAtEntry": false

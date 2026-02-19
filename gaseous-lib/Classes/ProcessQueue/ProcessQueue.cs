@@ -265,6 +265,13 @@ namespace gaseous_server.ProcessQueue
                     }
                 }
                 private object? _ParentObject = null;
+                public string ParentCorrelationId
+                {
+                    get
+                    {
+                        return ParentObject != null ? ((QueueItem)ParentObject).CorrelationId : "";
+                    }
+                }
                 public SubTask(object? ParentObject, QueueItemSubTasks TaskType, string TaskName, object? Settings, Guid CorrelationId = default)
                 {
                     _ParentObject = ParentObject;
