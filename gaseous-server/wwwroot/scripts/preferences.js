@@ -27,7 +27,7 @@ class PreferencesWindow {
             });
 
         // load age rating mappings
-        this.AgeRatingMappings = await fetch('/images/Ratings/AgeGroupMap.json')
+        this.AgeRatingMappings = await fetch('/api/v1.1/AgeGroupMaps/AgeGroupMap.json')
             .then(async response => {
                 if (response.ok) {
                     return await response.json();
