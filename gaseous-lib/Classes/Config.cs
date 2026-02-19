@@ -41,6 +41,15 @@ namespace gaseous_server.Classes
         }
 
         /// <summary>
+        /// The port used for local communication between the main server process and the out-of-process task host. This is used for sending commands and receiving status updates from the out-of-process task host when executing long-running tasks. The default value is 5199, but it can be overridden with the "localcommsport" environment variable or by changing the value in the config file. When running in a container, the environment variable will take precedence over the config file value to allow for easy configuration without needing to modify the config file.
+        /// </summary>
+        public static int LocalCommsPort
+        {
+            get { return _config.LocalCommsPort; }
+            set { _config.LocalCommsPort = value; }
+        }
+
+        /// <summary>
         /// The default language/locale the server uses for responses and localisation. This is in the format of a standard locale string, e.g. "en-US" or "fr-FR". The default is "en-US". Can be overridden by setting the "serverlanguage" environment variable or by changing the value in the config file. When running in a container, the environment variable will take precedence over the config file value to allow for easy configuration without needing to modify the config file.
         /// </summary>
         public static string ServerLanguage

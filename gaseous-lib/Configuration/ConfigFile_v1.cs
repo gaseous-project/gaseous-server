@@ -77,6 +77,28 @@ namespace gaseous_server.Classes
             }
         }
 
+        private static int _LocalCommsPort
+        {
+            get
+            {
+                try
+                {
+                    var env = Environment.GetEnvironmentVariable("localcommsport");
+                    if (!string.IsNullOrWhiteSpace(env) && int.TryParse(env, out var p)) return p;
+                }
+                catch
+                {
+                    // errors can be ignored as we'll just return the default port if there's an issue with the environment variable
+                }
+                return 5199;
+            }
+        }
+
+        /// <summary>
+        /// The port used for local inter-process communication between the main server process and any child processes (e.g. for task execution in the process host). This is used in the setup of the local communication channel to determine which port to use for sending messages between processes. The default value is 5199, but it can be overridden with the "localcommsport" environment variable when running in Docker for easy configuration without modifying the config file. This allows users running in Docker to specify the desired local communication port through environment variables, while still providing a sensible default for users running outside of Docker.
+        /// </summary>
+        public int LocalCommsPort = _LocalCommsPort;
+
         /// <summary>
         /// The language that the server uses for its responses and localization. This is used throughout the codebase wherever localized strings are needed, and is loaded from the config file on initialization of this class. The default value is determined by the "serverlanguage" environment variable when running in Docker, allowing for easy configuration of the server language without modifying the config file. If the environment variable is not set, it falls back to the default locale defined in the Localisation class. This allows users to specify their preferred server language through environment variables when running in Docker, while still providing a sensible default for users running outside of Docker.
         /// </summary>
