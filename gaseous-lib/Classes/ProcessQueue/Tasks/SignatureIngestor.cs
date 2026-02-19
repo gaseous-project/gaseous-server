@@ -5,7 +5,7 @@ namespace gaseous_server.ProcessQueue.Plugins
     /// <summary>
     /// Represents a plugin for ingesting signature items.
     /// </summary>
-    public class SignatureIngestor : ITaskPlugin
+    public class SignatureIngestor : QueueItemStatus, ITaskPlugin
     {
         /// <inheritdoc/>
         public QueueItemType ItemType => QueueItemType.SignatureIngestor;
@@ -25,8 +25,15 @@ namespace gaseous_server.ProcessQueue.Plugins
                 CallingQueueItem = ParentQueueItem
             };
 
-            foreach (int i in Enum.GetValues(typeof(gaseous_signature_parser.parser.SignatureParser)))
+            // Set CallingQueueItem for status updates
+            CallingQueueItem = ParentQueueItem;
+
+            var parserTypes = Enum.GetValues(typeof(gaseous_signature_parser.parser.SignatureParser));
+            int counter = 0;
+            foreach (int i in parserTypes)
             {
+                counter++;
+                SetStatus(counter, parserTypes.Length, "Processing " + ((gaseous_signature_parser.parser.SignatureParser)i).ToString() + " signature files");
                 gaseous_signature_parser.parser.SignatureParser parserType = (gaseous_signature_parser.parser.SignatureParser)i;
                 if (
                     parserType != gaseous_signature_parser.parser.SignatureParser.Auto &&
@@ -51,6 +58,7 @@ namespace gaseous_server.ProcessQueue.Plugins
                     tIngest.Import(SignaturePath, SignatureProcessedPath, parserType);
                 }
             }
+            ClearStatus();
         }
     }
 }

@@ -54,14 +54,25 @@ namespace gaseous_server.Classes
                         break;
                 }
 
-                SendStatusToReportingServer();
+                SendStatusToReportingServer(CallingQueueItem.GetType());
             }
         }
 
-        private void SendStatusToReportingServer()
+        private void SendStatusToReportingServer(Type type)
         {
-            string jsonOutput = Newtonsoft.Json.JsonConvert.SerializeObject(CallingQueueItem);
-            Console.WriteLine(jsonOutput);
+            var outProcessData = CallContext.GetData("OutProcess");
+            if (CallingQueueItem != null && outProcessData != null && bool.TryParse(outProcessData.ToString(), out bool isOutProcess) && isOutProcess)
+            {
+                // structure data for reporting server
+                Dictionary<string, object> data = new Dictionary<string, object>
+                {
+                    { "Type", type.ToString() },
+                    { "Object", CallingQueueItem }
+                };
+
+                string jsonOutput = Newtonsoft.Json.JsonConvert.SerializeObject(data);
+                Console.WriteLine(jsonOutput);
+            }
         }
     }
 }
