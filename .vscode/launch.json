@@ -81,7 +81,7 @@
                 "--service",
                 "SignatureIngestor",
                 "--reportingserver",
-                "https://localhost:5193",
+                "https://localhost:5197",
                 "--correlationid",
                 "00000000-0000-0000-0000-000000000000"
             ],

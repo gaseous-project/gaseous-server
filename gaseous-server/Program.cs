@@ -48,7 +48,19 @@ if (OperatingSystem.IsWindows())
 builder.WebHost.ConfigureKestrel(options =>
 {
     options.ListenLocalhost(Config.LocalCommsPort); // for local inter-process communication (e.g. with the process host)
-    options.ListenAnyIP(Config.ServerPort); // for incoming API requests; ListenAnyIP allows external access when not running in a container, and still works with Docker's port forwarding when running in a container
+
+    if (builder.Environment.IsDevelopment())
+    {
+        // In development mode, also listen on localhost HTTPS (port 5199 from launchSettings)
+        options.ListenAnyIP(5198, listenOptions =>
+        {
+            listenOptions.UseHttps();
+        });
+    }
+    else
+    {
+        options.ListenAnyIP(Config.ServerPort); // for incoming API requests; ListenAnyIP allows external access when not running in a container, and still works with Docker's port forwarding when running in a container
+    }
 });
 
 // Add services to the container.

@@ -59,7 +59,34 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="../gaseous-lib/gaseous-lib.csproj" />
+    <ProjectReference Include="../gaseous-processhost/gaseous-processhost.csproj" />
   </ItemGroup>
+
+  <!-- Rebuild and copy gaseous-lib artifacts to output directory -->
+  <Target Name="CopyGaseousLibArtifacts" AfterTargets="Build">
+    <PropertyGroup>
+      <GaseousLibOutputDir>$(MSBuildProjectDirectory)/../gaseous-lib/bin/$(Configuration)/net10.0/</GaseousLibOutputDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <GaseousLibFiles Include="$(GaseousLibOutputDir)*.dll" />
+      <GaseousLibFiles Include="$(GaseousLibOutputDir)*.pdb" />
+      <GaseousLibFiles Include="$(GaseousLibOutputDir)*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(GaseousLibFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
+  </Target>
+
+  <!-- Rebuild and copy gaseous-processhost artifacts to output directory -->
+  <Target Name="CopyGaseousProcessHostArtifacts" AfterTargets="Build">
+    <PropertyGroup>
+      <GaseousProcessHostOutputDir>$(MSBuildProjectDirectory)/../gaseous-processhost/bin/$(Configuration)/net10.0/</GaseousProcessHostOutputDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <GaseousProcessHostFiles Include="$(GaseousProcessHostOutputDir)*.exe" />
+      <GaseousProcessHostFiles Include="$(GaseousProcessHostOutputDir)*.dll" />
+      <GaseousProcessHostFiles Include="$(GaseousProcessHostOutputDir)*.pdb" />
+    </ItemGroup>
+    <Copy SourceFiles="@(GaseousProcessHostFiles)" DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
+  </Target>
 
   <!-- Ensure gaseous-cli is published alongside gaseous-server -->
   <Target Name="PublishGaseousCli" AfterTargets="Publish">
@@ -81,8 +108,34 @@
     <Copy SourceFiles="@(CliFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" Condition="Exists('$(CliOwnPublishDir)')" />
   </Target>
 
-  <!-- Ensure gaseous-configurator is published alongside gaseous-server on Windows builds -->
-  <Target Name="PublishGaseousConfigurator" AfterTargets="Publish" Condition="'$(RuntimeIdentifier)' == '' Or $([System.String]::Copy('$(RuntimeIdentifier)').StartsWith('win'))">
+  <!-- Ensure gaseous-lib artifacts are copied to publish directory -->
+  <Target Name="PublishGaseousLib" AfterTargets="Publish">
+    <PropertyGroup>
+      <GaseousLibOutputDir>$(MSBuildProjectDirectory)/../gaseous-lib/bin/$(Configuration)/net10.0/</GaseousLibOutputDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <GaseousLibPublishFiles Include="$(GaseousLibOutputDir)*.dll" />
+      <GaseousLibPublishFiles Include="$(GaseousLibOutputDir)*.pdb" />
+      <GaseousLibPublishFiles Include="$(GaseousLibOutputDir)*.xml" />
+    </ItemGroup>
+    <Copy SourceFiles="@(GaseousLibPublishFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
+  </Target>
+
+  <!-- Ensure gaseous-processhost artifacts are copied to publish directory -->
+  <Target Name="PublishGaseousProcessHost" AfterTargets="Publish">
+    <PropertyGroup>
+      <GaseousProcessHostOutputDir>$(MSBuildProjectDirectory)/../gaseous-processhost/bin/$(Configuration)/net10.0/</GaseousProcessHostOutputDir>
+    </PropertyGroup>
+    <ItemGroup>
+      <GaseousProcessHostPublishFiles Include="$(GaseousProcessHostOutputDir)*.exe" />
+      <GaseousProcessHostPublishFiles Include="$(GaseousProcessHostOutputDir)*.dll" />
+      <GaseousProcessHostPublishFiles Include="$(GaseousProcessHostOutputDir)*.pdb" />
+    </ItemGroup>
+    <Copy SourceFiles="@(GaseousProcessHostPublishFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" OverwriteReadOnlyFiles="true" />
+  </Target>
+
+  <!-- Ensure gaseous-configurator is published alongside gaseous-server on Windows builds only -->
+  <Target Name="PublishGaseousConfigurator" AfterTargets="Publish" Condition="'$(OS)' == 'Windows_NT'">
     <PropertyGroup>
       <ConfiguratorPublishDir>$(PublishDir)</ConfiguratorPublishDir>
       <!-- Compute configurator project publish directory; include RID segment if present -->

@@ -54,24 +54,58 @@ namespace gaseous_server.Classes
                         break;
                 }
 
-                SendStatusToReportingServer(CallingQueueItem.GetType());
+                SendStatusToReportingServer(CallingQueueItem.GetType(), state, progress);
             }
         }
 
-        private void SendStatusToReportingServer(Type type)
+        private void SendStatusToReportingServer(Type type, string state, string progress)
         {
             var outProcessData = CallContext.GetData("OutProcess");
             if (CallingQueueItem != null && outProcessData != null && bool.TryParse(outProcessData.ToString(), out bool isOutProcess) && isOutProcess)
             {
                 // structure data for reporting server
-                Dictionary<string, object> data = new Dictionary<string, object>
+                Dictionary<string, string> data = new Dictionary<string, string>
                 {
-                    { "Type", type.ToString() },
-                    { "Object", CallingQueueItem }
+                    { "CurrentState", state },
+                    { "CurrentStateProgress", progress }
                 };
 
+                string url = "";
+                if (type == typeof(ProcessQueue.QueueProcessor.QueueItem))
+                {
+                    url = $"/api/v1.1/BackgroundTasks/{((ProcessQueue.QueueProcessor.QueueItem)CallingQueueItem).CorrelationId}/";
+                }
+                else if (type == typeof(ProcessQueue.QueueProcessor.QueueItem.SubTask))
+                {
+                    url = $"/api/v1.1/BackgroundTasks/{((ProcessQueue.QueueProcessor.QueueItem.SubTask)CallingQueueItem).ParentCorrelationId}/SubTask/{((ProcessQueue.QueueProcessor.QueueItem.SubTask)CallingQueueItem).CorrelationId}/";
+                }
+
                 string jsonOutput = Newtonsoft.Json.JsonConvert.SerializeObject(data);
-                Console.WriteLine(jsonOutput);
+                var reportingServerUrlData = CallContext.GetData("ReportingServerUrl");
+                if (reportingServerUrlData != null)
+                {
+                    string reportingServerUrl = reportingServerUrlData.ToString();
+                    if (!string.IsNullOrEmpty(reportingServerUrl))
+                    {
+                        // send the data to the reporting server
+                        try
+                        {
+                            using (var client = new System.Net.Http.HttpClient())
+                            {
+                                var content = new System.Net.Http.StringContent(jsonOutput, System.Text.Encoding.UTF8, "application/json");
+
+                                string sendUrl = $"{reportingServerUrl}{url}";
+
+                                var response = client.PutAsync(sendUrl, content).Result;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            // swallow the error
+                            Console.WriteLine(ex.ToString());
+                        }
+                    }
+                }
             }
         }
     }

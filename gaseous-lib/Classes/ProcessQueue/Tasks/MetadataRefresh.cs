@@ -32,9 +32,9 @@ namespace gaseous_server.ProcessQueue.Plugins
             }
 
             // set up metadata refresh subtasks
-            ParentQueueItem.AddSubTask(QueueItemSubTasks.MetadataRefresh_Platform, "Platform Metadata", null, true);
-            ParentQueueItem.AddSubTask(QueueItemSubTasks.MetadataRefresh_Signatures, "Signature Metadata", null, true);
-            ParentQueueItem.AddSubTask(QueueItemSubTasks.MetadataRefresh_Game, "Game Metadata", null, true);
+            _ = ParentQueueItem.AddSubTask(QueueItemSubTasks.MetadataRefresh_Platform, "Platform Metadata", null, true);
+            _ = ParentQueueItem.AddSubTask(QueueItemSubTasks.MetadataRefresh_Signatures, "Signature Metadata", null, true);
+            _ = ParentQueueItem.AddSubTask(QueueItemSubTasks.MetadataRefresh_Game, "Game Metadata", null, true);
         }
 
         /// <summary>

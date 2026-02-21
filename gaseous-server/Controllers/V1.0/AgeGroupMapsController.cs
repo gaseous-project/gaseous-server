@@ -22,7 +22,6 @@ namespace gaseous_server.Controllers
     [ApiVersion("1.0", Deprecated = true)]
     [ApiVersion("1.1")]
     [ApiController]
-    [Authorize]
     public class AgeGroupMapsController : Controller
     {
         [MapToApiVersion("1.0")]

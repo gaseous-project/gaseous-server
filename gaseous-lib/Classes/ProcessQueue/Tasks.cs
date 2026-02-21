@@ -90,30 +90,35 @@ namespace gaseous_server.ProcessQueue
         /// Processes items in the import queue.
         /// </summary>
         ImportQueueProcessor,
-    
+
         /// <summary>
         /// Refreshes platform-related metadata.
         /// </summary>
         MetadataRefresh_Platform,
-    
+
         /// <summary>
         /// Refreshes signature metadata.
         /// </summary>
         MetadataRefresh_Signatures,
-    
+
         /// <summary>
         /// Refreshes game metadata.
         /// </summary>
         MetadataRefresh_Game,
-    
+
         /// <summary>
         /// Executes database migration 1031.
         /// </summary>
         DatabaseMigration_1031,
-    
+
         /// <summary>
         /// Performs work for the library scan task.
         /// </summary>
-        LibraryScanWorker
+        LibraryScanWorker,
+
+        /// <summary>
+        /// Import signatures from a specific parser type - set the options attribute to the parser type to use
+        /// </summary>
+        SignatureIngest
     }
 }

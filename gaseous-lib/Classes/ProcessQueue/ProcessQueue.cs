@@ -129,36 +129,78 @@ namespace gaseous_server.ProcessQueue
             [Newtonsoft.Json.JsonIgnore]
             [System.Text.Json.Serialization.JsonIgnore]
             public List<SubTask> SubTasks { get; set; } = new List<SubTask>();
-            public Guid AddSubTask(QueueItemSubTasks TaskType, string TaskName, object? Settings, bool RemoveWhenCompleted)
+            public async Task<Guid> AddSubTask(QueueItemSubTasks TaskType, string TaskName, object? Settings, bool RemoveWhenCompleted, string CorrelationId = "")
             {
                 // check if the task already exists
                 SubTask? existingTask = SubTasks.FirstOrDefault(x => x.TaskType == TaskType && x.TaskName == TaskName);
                 if (existingTask == null)
                 {
                     // generate a new correlation id
-                    Guid correlationId = Guid.NewGuid();
+                    Guid correlationId = string.IsNullOrEmpty(CorrelationId) ? Guid.NewGuid() : Guid.Parse(CorrelationId);
 
                     // add the task to the list
                     SubTask subTask = new SubTask(this, TaskType, TaskName, Settings, correlationId);
                     subTask.RemoveWhenStopped = RemoveWhenCompleted;
                     SubTasks.Add(subTask);
 
-                    Logging.LogKey(
-                        Logging.LogType.Information,
-                        "process.queue_item",
-                        "queue.added_subtask",
-                        null,
-                        new[] { TaskName, TaskType.ToString(), correlationId.ToString() },
-                        null,
-                        false,
-                        new Dictionary<string, object>
+                    // send the creation of the new subtask to the reporting server
+                    var outProcessData = CallContext.GetData("OutProcess");
+                    if (outProcessData != null && bool.TryParse(outProcessData.ToString(), out bool isOutProcess) && isOutProcess)
+                    {
+                        // structure data for reporting server
+                        Dictionary<string, object> data = new Dictionary<string, object>
                         {
+                            { "TaskType", TaskType.ToString() },
+                            { "TaskName", TaskName },
+                            { "Settings", Settings },
+                            { "RemoveWhenCompleted", RemoveWhenCompleted },
+                            { "CorrelationId", correlationId.ToString() }
+                        };
+
+                        string jsonOutput = Newtonsoft.Json.JsonConvert.SerializeObject(data);
+                        var reportingServerUrlData = CallContext.GetData("ReportingServerUrl");
+                        if (reportingServerUrlData != null)
+                        {
+                            string reportingServerUrl = reportingServerUrlData.ToString();
+                            if (!string.IsNullOrEmpty(reportingServerUrl))
+                            {
+                                // send the data to the reporting server
+                                try
+                                {
+                                    using (var client = new System.Net.Http.HttpClient())
+                                    {
+                                        var content = new System.Net.Http.StringContent(jsonOutput, System.Text.Encoding.UTF8, "application/json");
+                                        var response = client.PostAsync($"{reportingServerUrl}/api/v1.1/BackgroundTasks/{_CorrelationId}/SubTask/", content).Result;
+                                        if (!response.IsSuccessStatusCode)
+                                        {
+                                            Logging.LogKey(Logging.LogType.Warning, "process.queue_item", "queue.failed_to_report_subtask_status", null, new[] { TaskName, TaskType.ToString(), correlationId.ToString(), reportingServerUrl }, null);
+                                        }
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Logging.LogKey(Logging.LogType.Warning, "process.queue_item", "queue.error_reporting_subtask_status", null, new[] { TaskName, TaskType.ToString(), correlationId.ToString(), reportingServerUrl }, exceptionValue: ex);
+                                }
+                            }
+                        }
+                    }
+
+                    Logging.LogKey(
+                    Logging.LogType.Information,
+                    "process.queue_item",
+                    "queue.added_subtask",
+                    null,
+                    new[] { TaskName, TaskType.ToString(), correlationId.ToString() },
+                    null,
+                    false,
+                    new Dictionary<string, object>
+                    {
                             { "ParentQueueItem", _ItemType.ToString() },
                             { "SubTaskType", TaskType.ToString() },
                             { "SubTaskName", TaskName },
                             { "SubTaskCorrelationId", correlationId.ToString() }
-                        }
-                    );
+                    }
+                );
 
                     return correlationId;
                 }
@@ -577,27 +619,73 @@ namespace gaseous_server.ProcessQueue
                         // log the start
                         Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.executing_item_with_correlation_id", null, new[] { _ItemType.ToString(), _CorrelationId });
 
-                        try
+                        string? OutProcessData = CallContext.GetData("OutProcess")?.ToString();
+                        bool isOutProcess = false;
+                        // isOutProcess is only true if we're launched from the process host with the intention to run out of process, if the value is not set, or is not a valid boolean, then we should default to running in process
+                        if (bool.TryParse(OutProcessData, out bool outProcessValue))
                         {
-                            if (Task != null)
-                            {
-                                // execute the task plugin
-                                DateTime startTime = DateTime.UtcNow;
-                                await Task.Execute();
-                                _LastRunDuration = (DateTime.UtcNow - startTime).TotalSeconds;
-                            }
+                            isOutProcess = outProcessValue;
+                        }
 
-                            // execute sub tasks
-                            if (SubTasks != null)
+                        if (isOutProcess == false && this.RunInProcess == false)
+                        {
+                            // if the task is configured to run out of process, but we're currently running in process, then we should launch a new instance of the process host to run the task, rather than running it in the current process
+                            string[] args = new string[]
                             {
-                                SubTaskExecute();
+                                "gaseous-processhost.dll",
+                                "--service", _ItemType.ToString(),
+                                "--correlationid", _CorrelationId,
+                                "--reportingserver", $"http://localhost:{Config.LocalCommsPort}"
+                            };
+                            using var process = new System.Diagnostics.Process
+                            {
+                                StartInfo = new System.Diagnostics.ProcessStartInfo
+                                {
+                                    FileName = "dotnet",
+                                    WorkingDirectory = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location),
+                                    Arguments = string.Join(" ", args),
+                                    UseShellExecute = false,
+                                    RedirectStandardOutput = false,
+                                    RedirectStandardError = false,
+                                    CreateNoWindow = true
+                                }
+                            };
+
+                            Console.WriteLine(string.Join(" ", args));
+
+                            process.Start();
+                            await process.WaitForExitAsync();
+
+                            if (process.ExitCode != 0)
+                            {
+                                throw new Exception("Service-host exited with code " + process.ExitCode);
                             }
                         }
-                        catch (Exception ex)
+                        else
                         {
-                            Logging.LogKey(Logging.LogType.Warning, "process.timered_event", "timered_event.error_occurred", null, null, ex);
-                            _LastResult = "";
-                            _LastError = ex.ToString();
+                            // execute the task in this process
+                            try
+                            {
+                                if (Task != null)
+                                {
+                                    // execute the task plugin
+                                    DateTime startTime = DateTime.UtcNow;
+                                    await Task.Execute();
+                                    _LastRunDuration = (DateTime.UtcNow - startTime).TotalSeconds;
+                                }
+
+                                // execute sub tasks
+                                if (SubTasks != null)
+                                {
+                                    SubTaskExecute();
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                Logging.LogKey(Logging.LogType.Warning, "process.timered_event", "timered_event.error_occurred", null, null, ex);
+                                _LastResult = "";
+                                _LastError = ex.ToString();
+                            }
                         }
 
                         _ForceExecute = false;

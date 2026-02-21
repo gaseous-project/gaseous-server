@@ -29,7 +29,7 @@ namespace gaseous_server.ProcessQueue.Plugins
                 // process each library
                 foreach (GameLibrary.LibraryItem library in libraries)
                 {
-                    Guid childCorrelationId = ParentQueueItem.AddSubTask(QueueItemSubTasks.LibraryScanWorker, library.Name, library, true);
+                    Guid childCorrelationId = await ParentQueueItem.AddSubTask(QueueItemSubTasks.LibraryScanWorker, library.Name, library, true);
                     Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.queuing_library_for_scanning_with_correlation_id", null, new[] { library.Name, childCorrelationId.ToString() });
                 }
             }
