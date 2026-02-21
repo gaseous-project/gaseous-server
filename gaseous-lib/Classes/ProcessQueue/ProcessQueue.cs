@@ -256,6 +256,10 @@ namespace gaseous_server.ProcessQueue
                     {
                         return _State;
                     }
+                    set
+                    {
+                        _State = value;
+                    }
                 }
                 private QueueItemState _State = QueueItemState.NeverStarted;
                 public bool AllowConcurrentExecution
@@ -627,6 +631,8 @@ namespace gaseous_server.ProcessQueue
                             isOutProcess = outProcessValue;
                         }
 
+                        DateTime startTime = DateTime.UtcNow;
+
                         if (isOutProcess == false && this.RunInProcess == false)
                         {
                             // if the task is configured to run out of process, but we're currently running in process, then we should launch a new instance of the process host to run the task, rather than running it in the current process
@@ -660,6 +666,9 @@ namespace gaseous_server.ProcessQueue
                             {
                                 throw new Exception("Service-host exited with code " + process.ExitCode);
                             }
+
+                            // clear all subtasks as they were executed in the out of process instance
+                            SubTasks.Clear();
                         }
                         else
                         {
@@ -669,9 +678,7 @@ namespace gaseous_server.ProcessQueue
                                 if (Task != null)
                                 {
                                     // execute the task plugin
-                                    DateTime startTime = DateTime.UtcNow;
                                     await Task.Execute();
-                                    _LastRunDuration = (DateTime.UtcNow - startTime).TotalSeconds;
                                 }
 
                                 // execute sub tasks
@@ -687,6 +694,8 @@ namespace gaseous_server.ProcessQueue
                                 _LastError = ex.ToString();
                             }
                         }
+
+                        _LastRunDuration = (DateTime.UtcNow - startTime).TotalSeconds;
 
                         _ForceExecute = false;
                         if (_DisableWhenComplete == false)
