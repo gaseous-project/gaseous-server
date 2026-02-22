@@ -7,7 +7,7 @@ permissions:
 on:
   pull_request:
     paths:
-      - 'gaseous-server/Support/Localisation/*.json'
+      - 'gaseous-lib/Support/Localisation/*.json'
       - '.github/workflows/language-coverage.yml'
 
 jobs:
@@ -29,7 +29,7 @@ jobs:
           const fs = require('fs');
           const path = require('path');
 
-          const locDir = path.join(process.env.GITHUB_WORKSPACE, 'gaseous-server/Support/Localisation');
+          const locDir = path.join(process.env.GITHUB_WORKSPACE, 'gaseous-lib/Support/Localisation');
           const enPath = path.join(locDir, 'en.json');
           const en = JSON.parse(fs.readFileSync(enPath, 'utf8'));
           const enStrings = Object.keys(en.strings || {});

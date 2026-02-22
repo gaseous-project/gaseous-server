@@ -5,7 +5,7 @@ on:
     branches-ignore:
       - main
     paths:
-      - 'gaseous-server/Support/Localisation/*.json'
+      - 'gaseous-lib/Support/Localisation/*.json'
       - 'docs/Localisation.md'
       - 'docs/Localisation-Glossary.md'
       - '.github/scripts/generate_locale_table.sh'
