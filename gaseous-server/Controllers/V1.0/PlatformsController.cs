@@ -282,9 +282,9 @@ namespace gaseous_server.Controllers
         private ActionResult GetDummyImage()
         {
             // return resource named DefaultPlatformLogo.svg
-            var assembly = Assembly.GetExecutingAssembly();
-            string resourceName = "gaseous_server.Support.DefaultPlatformLogo.svg";
-            string[] resources = Assembly.GetExecutingAssembly().GetManifestResourceNames();
+            var assembly = Assembly.Load("gaseous-lib");
+            string resourceName = "gaseous_lib.Support.DefaultPlatformLogo.svg";
+            string[] resources = assembly.GetManifestResourceNames();
             if (resources.Contains(resourceName))
             {
                 string svgData = "";

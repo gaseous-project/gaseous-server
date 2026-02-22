@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Asp.Versioning;
+using gaseous_server.Models;
 
 namespace gaseous_server.Controllers
 {
@@ -102,7 +103,7 @@ namespace gaseous_server.Controllers
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public ActionResult SetupDatasources(SystemSettingsModel model)
+        public ActionResult SetupDatasources(gaseous_server.Models.SystemSettingsModel model)
         {
             if (Config.ReadSetting<string>("FirstRunStatus", "0") == "1")
             {

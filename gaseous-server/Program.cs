@@ -37,18 +37,31 @@ if (OperatingSystem.IsWindows())
         options.ServiceName = "GaseousServer";
     });
 
-    // Bind Kestrel to the configured HTTP port
-    builder.WebHost.ConfigureKestrel(options =>
-    {
-        options.ListenAnyIP(Config.ServerPort);
-    });
-
     // When running as a Windows Service there is no console; route logs to Windows Event Log too.
     // Suppress CA1416 analyzer as this is guarded by a runtime OS check.
 #pragma warning disable CA1416
     builder.Logging.AddEventLog();
 #pragma warning restore CA1416
 }
+
+// Bind Kestrel to the configured HTTP port
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.ListenLocalhost(Config.LocalCommsPort); // for local inter-process communication (e.g. with the process host)
+
+    if (builder.Environment.IsDevelopment())
+    {
+        // In development mode, also listen on localhost HTTPS (port 5199 from launchSettings)
+        options.ListenAnyIP(5198, listenOptions =>
+        {
+            listenOptions.UseHttps();
+        });
+    }
+    else
+    {
+        options.ListenAnyIP(Config.ServerPort); // for incoming API requests; ListenAnyIP allows external access when not running in a container, and still works with Docker's port forwarding when running in a container
+    }
+});
 
 // Add services to the container.
 builder.Services.AddControllers().AddJsonOptions(x =>

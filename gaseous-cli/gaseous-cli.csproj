@@ -24,6 +24,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\gaseous-server\gaseous-server.csproj" />
+    <ProjectReference Include="../gaseous-lib/gaseous-lib.csproj" />
   </ItemGroup>
 </Project>

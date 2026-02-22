@@ -6,7 +6,7 @@ set -euo pipefail
 # Requires: jq
 
 DOC_FILE="docs/Localisation.md"
-LOCALE_DIR="gaseous-server/Support/Localisation"
+LOCALE_DIR="gaseous-lib/Support/Localisation"
 START_MARKER="<!-- LOCALE_TABLE_START -->"
 END_MARKER="<!-- LOCALE_TABLE_END -->"
 

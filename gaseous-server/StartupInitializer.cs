@@ -106,6 +106,9 @@ namespace gaseous_server
                 ProcessQueue.QueueProcessor.QueueItems.Add(new ProcessQueue.QueueProcessor.QueueItem(ProcessQueue.QueueItemType.WeeklyMaintainer));
                 ProcessQueue.QueueProcessor.QueueItems.Add(new ProcessQueue.QueueProcessor.QueueItem(ProcessQueue.QueueItemType.TempCleanup));
 
+                // enable the timer after all startup tasks have been queued to prevent any race conditions with the timer trying to execute tasks before they have been added to the queue
+                Config.BackgroundTasksEnabled = true;
+
                 Logging.WriteToDiskOnly = false;
                 Logging.LogKey(Logging.LogType.Information, "process.startup", "startup.initialization_complete");
             }
