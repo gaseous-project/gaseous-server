@@ -169,5 +169,38 @@ namespace gaseous_server.Controllers
 
             return NotFound();
         }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpDelete]
+        [Route("{CorrelationId}/SubTask/")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public IActionResult RemoveSubTask(string CorrelationId, string SubTaskId)
+        {
+            var remoteIp = HttpContext.Connection.RemoteIpAddress;
+            if (remoteIp == null || !IPAddress.IsLoopback(remoteIp))
+            {
+                return Forbid();
+            }
+
+            foreach (ProcessQueue.QueueProcessor.QueueItem qi in ProcessQueue.QueueProcessor.QueueItems)
+            {
+                if (qi.CorrelationId == CorrelationId)
+                {
+                    if (qi.SubTasks != null)
+                    {
+                        ProcessQueue.QueueProcessor.QueueItem.SubTask? subTask = qi.SubTasks.FirstOrDefault(st => st.CorrelationId == SubTaskId);
+                        if (subTask != null)
+                        {
+                            qi.SubTasks.Remove(subTask);
+                            return Ok();
+                        }
+                    }
+                }
+            }
+
+            return NotFound();
+        }
     }
 }

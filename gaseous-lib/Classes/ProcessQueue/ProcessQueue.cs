@@ -401,6 +401,36 @@ namespace gaseous_server.ProcessQueue
                             if (_ParentObject is QueueItem parent)
                             {
                                 parent.SubTasks.Remove(this);
+
+                                // remove the subtask from the reporting server
+                                var outProcessData = CallContext.GetData("OutProcess");
+                                if (outProcessData != null && bool.TryParse(outProcessData.ToString(), out bool isOutProcess) && isOutProcess)
+                                {
+                                    var reportingServerUrlData = CallContext.GetData("ReportingServerUrl");
+                                    if (reportingServerUrlData != null)
+                                    {
+                                        string reportingServerUrl = reportingServerUrlData.ToString();
+                                        if (!string.IsNullOrEmpty(reportingServerUrl))
+                                        {
+                                            // send the data to the reporting server
+                                            try
+                                            {
+                                                using (var client = new System.Net.Http.HttpClient())
+                                                {
+                                                    var response = client.DeleteAsync($"{reportingServerUrl}/api/v1.1/BackgroundTasks/{_CorrelationId}/SubTask/?SubTaskId={_CorrelationId}").Result;
+                                                    if (!response.IsSuccessStatusCode)
+                                                    {
+                                                        Logging.LogKey(Logging.LogType.Warning, "process.queue_item", "queue.failed_to_report_subtask_removal", null, new[] { TaskName, TaskType.ToString(), _CorrelationId.ToString(), reportingServerUrl }, null);
+                                                    }
+                                                }
+                                            }
+                                            catch (Exception ex)
+                                            {
+                                                Logging.LogKey(Logging.LogType.Warning, "process.queue_item", "queue.error_reporting_subtask_removal", null, new[] { TaskName, TaskType.ToString(), _CorrelationId.ToString(), reportingServerUrl }, exceptionValue: ex);
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
