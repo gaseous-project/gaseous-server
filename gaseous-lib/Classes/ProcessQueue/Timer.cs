@@ -7,14 +7,7 @@ namespace gaseous_server
     // see: https://learn.microsoft.com/en-us/aspnet/core/fundamentals/host/hosted-services?view=aspnetcore-5.0&tabs=visual-studio-mac#timed-background-tasks-1
     public class TimedHostedService : IHostedService, IDisposable
     {
-        private int executionCount = 0;
-        //private readonly ILogger<TimedHostedService> _logger;
-        private Timer _timer;
-
-        //public TimedHostedService(ILogger<TimedHostedService> logger)
-        //{
-        //    _logger = logger;
-        //}
+        private Timer? _timer = null;
 
         public Task StartAsync(CancellationToken stoppingToken)
         {
@@ -29,7 +22,11 @@ namespace gaseous_server
 
         private void DoWork(object state)
         {
-            var count = Interlocked.Increment(ref executionCount);
+            // if background tasks are disabled, do not execute any tasks in the queue
+            if (!Config.BackgroundTasksEnabled)
+            {
+                return;
+            }
 
             // don't execute if the server first run state is not up to date
             if (Config.FirstRunStatus != Config.FirstRunStatusWhenSet)

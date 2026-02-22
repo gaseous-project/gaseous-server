@@ -238,6 +238,13 @@ namespace gaseous_server.Classes
                 return "2";
             }
         }
+
+        /// <summary>
+        /// Whether the background task processing system is enabled. This can be used to disable background task processing if needed (e.g. for troubleshooting or if the feature is not desired). When disabled, the timer that processes the queue will not execute any tasks.
+        /// This is a runtime option to prevent running processes until the server is fully up and running.
+        /// </summary>
+        public static bool BackgroundTasksEnabled { get; set; } = false;
+
         #endregion Configuration Accessors
 
         /// <summary>

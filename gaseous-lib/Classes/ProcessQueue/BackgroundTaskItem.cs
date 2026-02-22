@@ -360,7 +360,6 @@ namespace gaseous_server.ProcessQueue
             {
                 List<ProcessQueue.QueueItemType> blockedBy = new List<ProcessQueue.QueueItemType>();
 
-                List<BackgroundTaskItem> backgroundTaskItems = new List<BackgroundTaskItem>();
                 foreach (ProcessQueue.QueueItemType blockType in Enum.GetValues(typeof(ProcessQueue.QueueItemType)))
                 {
                     if (blockType != this.TaskEnum)
