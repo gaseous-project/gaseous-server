@@ -66,6 +66,15 @@ namespace gaseous_server
                                 // execute queued process
                                 _ = Task.Run(() => qi.Execute());
 
+                                // Wait for the state to change to Running or timeout after 500ms
+                                // This prevents race conditions where the next task checks before this one sets its state
+                                var startWait = DateTime.UtcNow;
+                                while (qi.ItemState != ProcessQueue.QueueProcessor.QueueItemState.Running &&
+                                    (DateTime.UtcNow - startWait).TotalMilliseconds < 500)
+                                {
+                                    Thread.Sleep(10); // Small delay to avoid busy waiting
+                                }
+
                                 if (qi.RemoveWhenStopped == true && qi.ItemState == ProcessQueue.QueueProcessor.QueueItemState.Stopped)
                                 {
                                     ProcessQueue.QueueProcessor.QueueItems.Remove(qi);
