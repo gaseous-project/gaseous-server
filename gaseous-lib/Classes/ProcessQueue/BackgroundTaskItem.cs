@@ -279,7 +279,13 @@ namespace gaseous_server.ProcessQueue
         {
             get
             {
-                return int.Parse(Config.ReadSetting<string>("Interval_" + Task, DefaultInterval.ToString()));
+                int setInterval = int.Parse(Config.ReadSetting<string>("Interval_" + Task, DefaultInterval.ToString()));
+                if (setInterval < MinimumAllowedInterval)
+                {
+                    return DefaultInterval;
+                }
+
+                return setInterval;
             }
         }
         public int DefaultInterval { get; set; }
