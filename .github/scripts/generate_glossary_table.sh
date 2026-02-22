@@ -7,7 +7,7 @@ set -euo pipefail
 # Falls back to hard-coded mapping if specific concept not represented as a direct key.
 
 GLOSSARY_FILE="docs/Localisation-Glossary.md"
-LOCALE_DIR="gaseous-server/Support/Localisation"
+LOCALE_DIR="gaseous-lib/Support/Localisation"
 START_MARKER="<!-- GLOSSARY_TABLE_START -->"
 END_MARKER="<!-- GLOSSARY_TABLE_END -->"
 
