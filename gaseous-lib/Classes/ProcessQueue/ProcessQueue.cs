@@ -418,7 +418,7 @@ namespace gaseous_server.ProcessQueue
                                         {
                                             using (var client = new System.Net.Http.HttpClient())
                                             {
-                                                var response = client.DeleteAsync($"{reportingServerUrl}/api/v1.1/BackgroundTasks/{_CorrelationId}/SubTask/?SubTaskId={_CorrelationId}").Result;
+                                                var response = client.DeleteAsync($"{reportingServerUrl}/api/v1.1/BackgroundTasks/{ParentCorrelationId}/SubTask/?SubTaskId={_CorrelationId}").Result;
                                                 if (!response.IsSuccessStatusCode)
                                                 {
                                                     Logging.LogKey(Logging.LogType.Warning, "process.queue_item", "queue.failed_to_report_subtask_removal", null, new[] { TaskName, TaskType.ToString(), _CorrelationId.ToString(), reportingServerUrl }, null);
