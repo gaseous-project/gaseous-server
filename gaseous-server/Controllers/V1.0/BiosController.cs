@@ -139,7 +139,6 @@ namespace gaseous_server.Controllers
                         {
                             string filename = Path.GetFileName(biosItem.biosPath);
                             string filepath = biosItem.biosPath;
-                            byte[] filedata = System.IO.File.ReadAllBytes(filepath);
                             string contentType = "application/octet-stream";
 
                             var cd = new System.Net.Mime.ContentDisposition
@@ -151,7 +150,7 @@ namespace gaseous_server.Controllers
                             Response.Headers.Add("Content-Disposition", cd.ToString());
                             Response.Headers.Add("Cache-Control", "public, max-age=604800");
 
-                            return File(filedata, contentType);
+                            return PhysicalFile(filepath, contentType, enableRangeProcessing: true);
                         }
                         else
                         {

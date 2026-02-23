@@ -164,16 +164,12 @@ namespace gaseous_server.Controllers
                                 Response.Headers.Append("Content-Disposition", svgcd.ToString());
                                 Response.Headers.Append("Cache-Control", "public, max-age=604800");
 
-                                byte[] svgfiledata = null;
-                                using (FileStream svgfs = System.IO.File.OpenRead(imagePath))
-                                {
-                                    using (BinaryReader binaryReader = new BinaryReader(svgfs))
-                                    {
-                                        svgfiledata = binaryReader.ReadBytes((int)svgfs.Length);
-                                    }
-                                }
+                                // Add ETag for efficient caching
+                                var svgFileInfo = new System.IO.FileInfo(imagePath);
+                                string svgETag = $"\"{svgFileInfo.LastWriteTimeUtc.Ticks:X}-{svgFileInfo.Length:X}\"";
+                                Response.Headers.Append("ETag", svgETag);
 
-                                return File(svgfiledata, "image/svg+xml");
+                                return PhysicalFile(imagePath, "image/svg+xml", enableRangeProcessing: true);
                             }
                         }
                     }
@@ -256,16 +252,7 @@ namespace gaseous_server.Controllers
                     Response.Headers.Append("Cache-Control", "public, max-age=604800");
 
                     // TODO: Resize image according to size parameter
-                    byte[] filedata = null;
-                    using (FileStream fs = System.IO.File.OpenRead(filepath))
-                    {
-                        using (BinaryReader binaryReader = new BinaryReader(fs))
-                        {
-                            filedata = binaryReader.ReadBytes((int)fs.Length);
-                        }
-                    }
-
-                    return File(filedata, contentType);
+                    return PhysicalFile(filepath, contentType, enableRangeProcessing: true);
                 }
                 else
                 {

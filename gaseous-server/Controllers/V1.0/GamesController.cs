@@ -342,6 +342,7 @@ namespace gaseous_server.Controllers
         [Route("{MetadataMapId}/{MetadataSource}/{ImageType}/{ImageId}/image/{size}/{imagename}")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
         public async Task<ActionResult> GameImage(long MetadataMapId, FileSignature.MetadataSources MetadataSource, ImageType imageType, long ImageId, Classes.Plugins.PluginManagement.ImageResize.ImageSize size, string imagename = "")
         {
             try
@@ -355,7 +356,17 @@ namespace gaseous_server.Controllers
                 {
                     string filename = imgData["imageName"];
                     string filepath = imgData["imagePath"];
-                    string contentType = "image/jpg";
+
+                    // Determine content type based on file extension
+                    string extension = Path.GetExtension(filepath).ToLowerInvariant();
+                    string contentType = extension switch
+                    {
+                        ".png" => "image/png",
+                        ".gif" => "image/gif",
+                        ".webp" => "image/webp",
+                        ".svg" => "image/svg+xml",
+                        _ => "image/jpeg"
+                    };
 
                     var cd = new System.Net.Mime.ContentDisposition
                     {
@@ -364,24 +375,21 @@ namespace gaseous_server.Controllers
                     };
 
                     Response.Headers.Add("Content-Disposition", cd.ToString());
-                    Response.Headers.Add("Cache-Control", "public, max-age=604800");
+                    // Response.Headers.Add("Cache-Control", "public, max-age=604800");
 
-                    byte[] filedata = null;
-                    using (FileStream fs = System.IO.File.OpenRead(filepath))
-                    {
-                        using (BinaryReader binaryReader = new BinaryReader(fs))
-                        {
-                            filedata = binaryReader.ReadBytes((int)fs.Length);
-                        }
-                    }
+                    // Add ETag for efficient caching
+                    var fileInfo = new System.IO.FileInfo(filepath);
+                    string eTag = $"\"{fileInfo.LastWriteTimeUtc.Ticks:X}-{fileInfo.Length:X}\"";
+                    Response.Headers.Add("ETag", eTag);
 
-                    return File(filedata, contentType);
+                    return PhysicalFile(filepath, contentType, enableRangeProcessing: true);
                 }
 
                 return NotFound();
             }
-            catch
+            catch (Exception ex)
             {
+                Logging.LogKey(Logging.LogType.Warning, "game.image", "gameimage.error_retrieving_image", exceptionValue: ex);
                 return NotFound();
             }
         }
@@ -734,6 +742,7 @@ namespace gaseous_server.Controllers
         [Route("{MetadataMapId}/{MetadataSource}/companies/{CompanyId}/image")]
         [ProducesResponseType(typeof(FileStreamResult), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ResponseCache(CacheProfileName = "7Days")]
         public async Task<ActionResult> GameCompanyImage(long MetadataMapId, FileSignature.MetadataSources MetadataSource, long CompanyId)
         {
             try
@@ -752,7 +761,6 @@ namespace gaseous_server.Controllers
                 {
                     string filename = "Logo.png";
                     string filepath = coverFilePath;
-                    byte[] filedata = await System.IO.File.ReadAllBytesAsync(filepath);
                     string contentType = "image/png";
 
                     var cd = new System.Net.Mime.ContentDisposition
@@ -762,9 +770,9 @@ namespace gaseous_server.Controllers
                     };
 
                     Response.Headers.Add("Content-Disposition", cd.ToString());
-                    Response.Headers.Add("Cache-Control", "public, max-age=604800");
+                    // Response.Headers.Add("Cache-Control", "public, max-age=604800");
 
-                    return File(filedata, contentType);
+                    return PhysicalFile(filepath, contentType, enableRangeProcessing: true);
                 }
                 else
                 {
