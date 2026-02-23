@@ -32,7 +32,7 @@
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.24" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.3" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.0" />
-    <PackageReference Include="Microsoft.Build" Version="17.11.48" />
+    <PackageReference Include="Microsoft.Build" Version="18.3.3" />
     <!-- Enable Windows Service hosting and EventLog logging when running on Windows -->
     <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.3" />
     <PackageReference Include="Microsoft.Extensions.Logging.EventLog" Version="10.0.3" />
