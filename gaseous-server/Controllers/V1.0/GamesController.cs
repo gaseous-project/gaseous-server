@@ -375,7 +375,6 @@ namespace gaseous_server.Controllers
                     };
 
                     Response.Headers.Add("Content-Disposition", cd.ToString());
-                    // Response.Headers.Add("Cache-Control", "public, max-age=604800");
 
                     // Add ETag for efficient caching
                     var fileInfo = new System.IO.FileInfo(filepath);
@@ -770,7 +769,6 @@ namespace gaseous_server.Controllers
                     };
 
                     Response.Headers.Add("Content-Disposition", cd.ToString());
-                    // Response.Headers.Add("Cache-Control", "public, max-age=604800");
 
                     return PhysicalFile(filepath, contentType, enableRangeProcessing: true);
                 }

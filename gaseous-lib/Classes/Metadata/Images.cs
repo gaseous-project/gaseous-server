@@ -26,9 +26,13 @@ namespace gaseous_server.Classes.Metadata
                     // search for the first metadata map item that has a clear logo
                     List<long> metadataMapItemIds = await MetadataManagement.GetAssociatedMetadataMapIds(MetadataMapId);
 
-                    foreach (long metadataMapItemId in metadataMapItemIds)
+                    // Batch fetch all metadata maps to avoid N+1 queries
+                    var metadataMapTasks = metadataMapItemIds.Select(id => MetadataManagement.GetMetadataMap(id)).ToList();
+                    var metadataMaps = await Task.WhenAll(metadataMapTasks);
+
+                    foreach (var metadataMapResult in metadataMaps)
                     {
-                        metadataMap = (await MetadataManagement.GetMetadataMap(metadataMapItemId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
+                        metadataMap = metadataMapResult.MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
                         if (metadataMap != null)
                         {
                             game = await Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
@@ -141,9 +145,10 @@ namespace gaseous_server.Classes.Metadata
                     {
                         return null;
                     }
-                    if (!Directory.Exists(Path.GetDirectoryName(imagePath)))
+                    string? imageDir = Path.GetDirectoryName(imagePath);
+                    if (imageDir != null && !Directory.Exists(imageDir))
                     {
-                        Directory.CreateDirectory(Path.GetDirectoryName(imagePath));
+                        Directory.CreateDirectory(imageDir);
                     }
                     await System.IO.File.WriteAllBytesAsync(imagePath, imageBytes);
                 }
