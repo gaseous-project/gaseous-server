@@ -7,6 +7,7 @@ using System.Linq;
 using HasheousClient.Models;
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using NuGet.Protocol.Plugins;
+using static gaseous_server.Classes.FileSignature;
 
 namespace gaseous_server.Classes
 {
@@ -698,6 +699,16 @@ namespace gaseous_server.Classes
 						{
 							Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.missing_one_or_more_hashes_recalculating_hashes", null, new string[] { dr["Name"].ToString() });
 							hash = new HashObject(dr["Path"].ToString());
+						}
+
+						// get the attributes for the ROM from the datarow
+						// it is a JSON string in the database, so deserialize it into a Dictionary<string, object>
+						// The entry we're interested in is "ZipContents", the value of which is a List<ArchiveData> object, which contains the file names and hashes of the contents of the ZIP file if the ROM is a ZIP archive
+						Dictionary<string, object>? attributes = dr["Attributes"] == DBNull.Value ? null : Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(dr["Attributes"].ToString() ??"{}");
+						List<ArchiveData>? zipContents = null;
+						if (attributes != null && attributes.ContainsKey("ZipContents"))
+						{
+							zipContents = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ArchiveData>>(attributes["ZipContents"].ToString() ?? "[]");
 						}
 
 						// get the library for the ROM

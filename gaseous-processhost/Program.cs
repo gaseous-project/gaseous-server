@@ -41,7 +41,7 @@ for (int i = 0; i < cmdArgs.Length; i++)
     {
         correlationId = cmdArgs[i + 1];
     }
-    else if (cmdArgs[i] == "--force" && i + 1 < cmdArgs.Length)
+    else if (cmdArgs[i] == "--force")
     {
         forceExecute = true;
     }
