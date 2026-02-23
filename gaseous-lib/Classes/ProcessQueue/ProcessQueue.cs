@@ -673,6 +673,11 @@ namespace gaseous_server.ProcessQueue
                                 "--correlationid", _CorrelationId,
                                 "--reportingserver", $"http://localhost:{Config.LocalCommsPort}"
                             };
+                            // if we're forcing the execution, add the force flag
+                            if (_ForceExecute)
+                            {
+                                args = args.Append("--force").ToArray();
+                            }
                             using var process = new System.Diagnostics.Process
                             {
                                 StartInfo = new System.Diagnostics.ProcessStartInfo
