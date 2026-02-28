@@ -617,33 +617,212 @@ namespace gaseous_server.Classes
             return searchResults;
         }
 
-        private static List<string> GetSearchCandidates(string GameName)
+        public static List<string> GetSearchCandidates(string GameName)
         {
-            // remove version numbers from name
-            GameName = Common.StripVersionsFromFileName(GameName);
-
-            // assumption: no games have () in their titles so we'll remove them
-            int idx = GameName.IndexOf('(');
-            if (idx >= 0)
+            if (string.IsNullOrWhiteSpace(GameName))
             {
-                GameName = GameName.Substring(0, idx);
+                return new List<string>();
             }
 
-            List<string> SearchCandidates = new List<string>();
-            SearchCandidates.Add(GameName.Trim());
-            if (GameName.Contains(" - "))
+            List<string> searchCandidates = new List<string>();
+
+            string NormalizeWhitespace(string value)
             {
-                SearchCandidates.Add(GameName.Replace(" - ", ": ").Trim());
-                SearchCandidates.Add(GameName.Substring(0, GameName.IndexOf(" - ")).Trim());
-            }
-            if (GameName.Contains(": "))
-            {
-                SearchCandidates.Add(GameName.Substring(0, GameName.IndexOf(": ")).Trim());
+                return Regex.Replace(value, @"\s+", " ").Trim();
             }
 
-            Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.search_candidates", null, new string[] { String.Join(", ", SearchCandidates) });
+            string NormalizeDashes(string value)
+            {
+                return Regex.Replace(value, @"[\u2012\u2013\u2014\u2015\u2212]", "-");
+            }
 
-            return SearchCandidates;
+            void AddCandidate(string value)
+            {
+                string normalized = NormalizeWhitespace(value);
+                if (!string.IsNullOrWhiteSpace(normalized))
+                {
+                    searchCandidates.Add(normalized);
+                }
+            }
+
+            string baseName = NormalizeWhitespace(GameName);
+            AddCandidate(baseName);
+
+            string dashNormalized = NormalizeDashes(baseName);
+            if (!string.Equals(dashNormalized, baseName, StringComparison.Ordinal))
+            {
+                AddCandidate(dashNormalized);
+            }
+
+            // remove common trailing version/revision markers while keeping the original
+            string versionStripped = Regex.Replace(dashNormalized, @"\s*(?:v|ver\.?|version)\s*(\d+(?:\.\d+)*)\s*$", "", RegexOptions.IgnoreCase);
+            if (!string.Equals(versionStripped, dashNormalized, StringComparison.Ordinal))
+            {
+                AddCandidate(versionStripped);
+            }
+
+            string revisionStripped = Regex.Replace(dashNormalized, @"\s*(?:rev(?:ision)?\.?)(?:\s*[A-Za-z0-9]+)?\s*$", "", RegexOptions.IgnoreCase);
+            if (!string.Equals(revisionStripped, dashNormalized, StringComparison.Ordinal))
+            {
+                AddCandidate(revisionStripped);
+            }
+
+            // remove trailing bracketed metadata while keeping the original
+            string bracketStripped = Regex.Replace(dashNormalized, @"\s*[\(\[][^\)\]]+[\)\]]\s*$", "", RegexOptions.IgnoreCase);
+            if (!string.Equals(bracketStripped, dashNormalized, StringComparison.Ordinal))
+            {
+                AddCandidate(bracketStripped);
+            }
+
+            void AddDelimiterVariants(string value)
+            {
+                if (value.Contains(" - ", StringComparison.Ordinal))
+                {
+                    AddCandidate(value.Replace(" - ", ": "));
+                    AddCandidate(value.Replace(" - ", " "));
+                }
+
+                if (value.Contains(": ", StringComparison.Ordinal))
+                {
+                    AddCandidate(value.Replace(": ", " "));
+                }
+            }
+
+            void AddArticleVariants(string value)
+            {
+                if (value.StartsWith("The ", StringComparison.OrdinalIgnoreCase))
+                {
+                    string without = value.Substring(4).Trim();
+                    AddCandidate(without);
+                    AddCandidate($"{without}, The");
+                }
+
+                if (value.StartsWith("A ", StringComparison.OrdinalIgnoreCase))
+                {
+                    string without = value.Substring(2).Trim();
+                    AddCandidate(without);
+                    AddCandidate($"{without}, A");
+                }
+
+                if (value.StartsWith("An ", StringComparison.OrdinalIgnoreCase))
+                {
+                    string without = value.Substring(3).Trim();
+                    AddCandidate(without);
+                    AddCandidate($"{without}, An");
+                }
+
+                if (value.EndsWith(", The", StringComparison.OrdinalIgnoreCase))
+                {
+                    string without = value.Substring(0, value.Length - 5).Trim();
+                    AddCandidate(without);
+                    AddCandidate($"The {without}");
+                }
+
+                if (value.EndsWith(", A", StringComparison.OrdinalIgnoreCase))
+                {
+                    string without = value.Substring(0, value.Length - 3).Trim();
+                    AddCandidate(without);
+                    AddCandidate($"A {without}");
+                }
+
+                if (value.EndsWith(", An", StringComparison.OrdinalIgnoreCase))
+                {
+                    string without = value.Substring(0, value.Length - 4).Trim();
+                    AddCandidate(without);
+                    AddCandidate($"An {without}");
+                }
+            }
+
+            // expand with delimiter and article variants
+            foreach (string candidate in searchCandidates.ToList())
+            {
+                AddDelimiterVariants(candidate);
+                AddArticleVariants(candidate);
+            }
+
+            // convert roman numerals to numbers (token-based)
+            foreach (string candidate in searchCandidates.ToList())
+            {
+                string romanConverted = Regex.Replace(candidate, @"\b[IVXLCDM]+\b", match =>
+                {
+                    return Common.RomanNumerals.RomanToInt(match.Value).ToString();
+                }, RegexOptions.IgnoreCase);
+
+                if (!string.Equals(romanConverted, candidate, StringComparison.Ordinal))
+                {
+                    AddCandidate(romanConverted);
+                }
+            }
+
+            // convert numbers to roman numerals (token-based)
+            foreach (string candidate in searchCandidates.ToList())
+            {
+                string numberToRoman = Regex.Replace(candidate, @"\b(\d+)\b", match =>
+                {
+                    if (int.TryParse(match.Groups[1].Value, out int num) && num >= 1 && num <= 3999)
+                    {
+                        return Common.RomanNumerals.IntToRoman(num);
+                    }
+                    return match.Value;
+                });
+
+                if (!string.Equals(numberToRoman, candidate, StringComparison.Ordinal))
+                {
+                    AddCandidate(numberToRoman);
+                }
+            }
+
+            // convert numbers to English words and vice versa (token-based)
+            foreach (string candidate in searchCandidates.ToList())
+            {
+                // Convert numbers to words
+                string numberToWords = Regex.Replace(candidate, @"\b(\d+)\b", match =>
+                {
+                    if (int.TryParse(match.Groups[1].Value, out int num) && num >= 0 && num <= 999999999)
+                    {
+                        return Common.Numbers.NumberToWords(num);
+                    }
+                    return match.Value;
+                });
+
+                if (!string.Equals(numberToWords, candidate, StringComparison.Ordinal))
+                {
+                    AddCandidate(numberToWords);
+                }
+
+                // Convert English number words to numbers (look for sequences of number words)
+                string wordsToNumber = Regex.Replace(candidate, @"\b(?:Zero|One|Two|Three|Four|Five|Six|Seven|Eight|Nine|Ten|Eleven|Twelve|Thirteen|Fourteen|Fifteen|Sixteen|Seventeen|Eighteen|Nineteen|Twenty|Thirty|Forty|Fifty|Sixty|Seventy|Eighty|Ninety|Hundred|Thousand|Million|Billion)(?:\s+(?:Zero|One|Two|Three|Four|Five|Six|Seven|Eight|Nine|Ten|Eleven|Twelve|Thirteen|Fourteen|Fifteen|Sixteen|Seventeen|Eighteen|Nineteen|Twenty|Thirty|Forty|Fifty|Sixty|Seventy|Eighty|Ninety|Hundred|Thousand|Million|Billion))*\b", match =>
+                {
+                    var result = Common.Numbers.WordsToNumbers(match.Value);
+                    return result.HasValue ? result.Value.ToString() : match.Value;
+                }, RegexOptions.IgnoreCase);
+
+                if (!string.Equals(wordsToNumber, candidate, StringComparison.Ordinal))
+                {
+                    AddCandidate(wordsToNumber);
+                }
+            }
+
+            // remove duplicates while preserving order
+            List<string> distinctCandidates = new List<string>();
+            HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string candidate in searchCandidates)
+            {
+                string normalized = NormalizeWhitespace(candidate);
+                if (string.IsNullOrWhiteSpace(normalized))
+                {
+                    continue;
+                }
+
+                if (seen.Add(normalized))
+                {
+                    distinctCandidates.Add(normalized);
+                }
+            }
+
+            Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.search_candidates", null, new string[] { String.Join(", ", distinctCandidates) });
+
+            return distinctCandidates;
         }
 
         public static async Task<string> ComputeROMPath(long RomId)
