@@ -69,6 +69,121 @@ namespace gaseous_server.Classes
         }
 
         /// <summary>
+        /// Gets the file hashes for a given file path, including analysis of compressed archives to extract hashes of contained files if applicable.
+        /// </summary>
+        /// <param name="library">The library item containing the file for which to compute hashes.</param>
+        /// <param name="filePath">The path to the file for which to compute hashes.</param>
+        /// <returns>A task that represents the asynchronous operation. The task result contains the file hash information.</returns>
+        public async static Task<FileHash> GetFileHashesAsync(GameLibrary.LibraryItem library, string filePath)
+        {
+            string ImportedFileExtension = Path.GetExtension(filePath);
+
+            FileInfo fi = new FileInfo(filePath);
+
+            FileHash fileHash = new FileHash
+            {
+                Hash = new HashObject(filePath)
+            };
+
+            if (SupportedCompressionExtensions.Contains(ImportedFileExtension) && (fi.Length < 1073741824))
+            {
+                // file is a zip and less than 1 GiB
+                // extract the zip file and search the contents
+
+                string ExtractPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, library.Id.ToString(), Path.GetRandomFileName());
+                Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.decompressing_file_to_path", null, new string[] { filePath, ExtractPath });
+                if (!Directory.Exists(ExtractPath)) { Directory.CreateDirectory(ExtractPath); }
+                try
+                {
+                    var matchingPlugin = DecompressionPlugins
+                        .FirstOrDefault(plugin => plugin.Extension.Equals(ImportedFileExtension, StringComparison.OrdinalIgnoreCase));
+
+                    if (matchingPlugin != null)
+                    {
+                        await matchingPlugin.DecompressFile(filePath, ExtractPath);
+                    }
+
+                    Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.processing_decompressed_files_for_signature_matches");
+                    // loop through contents until we find the first signature match
+                    List<ArchiveData> archiveFiles = new List<ArchiveData>();
+                    bool signatureFound = false;
+                    bool signatureSelectorAlreadyApplied = false;
+                    foreach (string file in Directory.GetFiles(ExtractPath, "*.*", SearchOption.AllDirectories))
+                    {
+                        bool signatureSelector = false;
+                        if (File.Exists(file))
+                        {
+                            FileInfo zfi = new FileInfo(file);
+                            HashObject zhash = new HashObject(file);
+
+                            Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.checking_signature_of_decompressed_file", null, new string[] { file });
+
+                            if (zfi != null)
+                            {
+                                if (signatureFound == false)
+                                {
+                                    gaseous_server.Models.Signatures_Games zDiscoveredSignature = await _GetFileSignatureAsync(zhash, zfi.Name, zfi.Extension, zfi.Length, file, true);
+                                    zDiscoveredSignature.Rom.Name = Path.ChangeExtension(zDiscoveredSignature.Rom.Name, ImportedFileExtension);
+
+                                    if (zDiscoveredSignature.Score > discoveredSignature.Score)
+                                    {
+                                        if (
+                                            zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEArcade ||
+                                            zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEMess
+                                        )
+                                        {
+                                            zDiscoveredSignature.Rom.Name = zDiscoveredSignature.Game.Description + ImportedFileExtension;
+                                        }
+                                        zDiscoveredSignature.Rom.Crc = discoveredSignature.Rom.Crc;
+                                        zDiscoveredSignature.Rom.Md5 = discoveredSignature.Rom.Md5;
+                                        zDiscoveredSignature.Rom.Sha1 = discoveredSignature.Rom.Sha1;
+                                        zDiscoveredSignature.Rom.Sha256 = discoveredSignature.Rom.Sha256;
+                                        zDiscoveredSignature.Rom.Size = discoveredSignature.Rom.Size;
+                                        discoveredSignature = zDiscoveredSignature;
+
+                                        signatureFound = true;
+
+                                        if (signatureSelectorAlreadyApplied == false)
+                                        {
+                                            signatureSelector = true;
+                                            signatureSelectorAlreadyApplied = true;
+                                        }
+                                    }
+                                }
+
+                                ArchiveData archiveData = new ArchiveData
+                                {
+                                    FileName = Path.GetFileName(file),
+                                    FilePath = zfi.Directory.FullName.Replace(ExtractPath, ""),
+                                    Size = zfi.Length,
+                                    MD5 = zhash.md5hash,
+                                    SHA1 = zhash.sha1hash,
+                                    SHA256 = zhash.sha256hash,
+                                    CRC = zhash.crc32hash,
+                                    isSignatureSelector = signatureSelector
+                                };
+                                archiveFiles.Add(archiveData);
+                            }
+                        }
+                    }
+
+                    if (discoveredSignature.Rom.Attributes == null)
+                    {
+                        discoveredSignature.Rom.Attributes = new Dictionary<string, object>();
+                    }
+
+                    discoveredSignature.Rom.Attributes.Add(
+                        "ZipContents", Newtonsoft.Json.JsonConvert.SerializeObject(archiveFiles)
+                    );
+                }
+                catch (Exception ex)
+                {
+                    Logging.LogKey(Logging.LogType.Critical, "process.get_signature", "getsignature.error_processing_compressed_file", null, new string[] { GameFileImportPath }, ex);
+                }
+            }
+        }
+
+        /// <summary>
         /// Gets the file signature for a game file, including analysis of compressed archives.
         /// </summary>
         /// <param name="library">The library item containing the game file.</param>
@@ -257,6 +372,22 @@ namespace gaseous_server.Classes
             Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.platform_determined_to_be", null, new string[] { platformNameArg, platformIdArg });
 
             return discoveredSignature;
+        }
+
+        /// <summary>
+        /// Represents the hash information for a file, including any relevant metadata about archive contents if the file is a compressed archive.
+        /// </summary>
+        public class FileHash
+        {
+            /// <summary>
+            /// Gets or sets the hash information of the file.
+            /// </summary>
+            public HashObject Hash { get; set; }
+
+            /// <summary>
+            /// Gets or sets the list of files contained within the archive, if the file is a compressed archive.
+            /// </summary>
+            public List<ArchiveData> ArchiveContents { get; set; } = new List<ArchiveData>();
         }
 
         /// <summary>
