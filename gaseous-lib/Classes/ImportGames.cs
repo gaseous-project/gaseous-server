@@ -301,9 +301,9 @@ namespace gaseous_server.Classes
             {
                 Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.file_not_in_database_processing", null, new string[] { FilePath });
 
-                FileInfo fi = new FileInfo(FilePath);
                 FileSignature fileSignature = new FileSignature();
-                gaseous_server.Models.Signatures_Games discoveredSignature = fileSignature.GetFileSignatureAsync(GameLibrary.GetDefaultLibrary, Hash, fi, FilePath).Result;
+                FileHash fileHash = GetFileHashesAsync(GameLibrary.GetDefaultLibrary, FilePath).Result;
+                var (updatedFileHash, discoveredSignature) = fileSignature.GetFileSignatureAsync(GameLibrary.GetDefaultLibrary, fileHash).Result;
                 if (discoveredSignature.Flags.GameId == 0)
                 {
                     try
@@ -475,12 +475,7 @@ namespace gaseous_server.Classes
             dbDict.Add("romtypemedia", Common.ReturnValueIfNull(signature.Rom.RomTypeMedia, ""));
             dbDict.Add("medialabel", Common.ReturnValueIfNull(signature.Rom.MediaLabel, ""));
 
-            string libraryRootPath = library.Path;
-            if (libraryRootPath.EndsWith(Path.DirectorySeparatorChar.ToString()) == false)
-            {
-                libraryRootPath += Path.DirectorySeparatorChar;
-            }
-            dbDict.Add("path", filePath.Replace(libraryRootPath, ""));
+            dbDict.Add("path", Path.GetRelativePath(library.Path, filePath));
 
             DataTable romInsert = await db.ExecuteCMDAsync(sql, dbDict);
             if (romId == 0)
@@ -929,13 +924,7 @@ namespace gaseous_server.Classes
                         string sql = "UPDATE Games_Roms SET RelativePath=@path WHERE Id=@id";
                         Dictionary<string, object> dbDict = new Dictionary<string, object>();
                         dbDict.Add("id", RomId);
-
-                        string libraryRootPath = rom.Library.Path;
-                        if (libraryRootPath.EndsWith(Path.DirectorySeparatorChar.ToString()) == false)
-                        {
-                            libraryRootPath += Path.DirectorySeparatorChar;
-                        }
-                        dbDict.Add("path", DestinationPath.Replace(libraryRootPath, ""));
+                        dbDict.Add("path", Path.GetRelativePath(rom.Library.Path, DestinationPath));
                         await db.ExecuteCMDAsync(sql, dbDict);
 
                         return true;
@@ -1063,11 +1052,9 @@ namespace gaseous_server.Classes
                         // file is not in database - process it
                         Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.orphaned_file_found_in_library", null, new string[] { LibraryFile });
 
-                        HashObject hash = new HashObject(LibraryFile);
-                        FileInfo fi = new FileInfo(LibraryFile);
-
                         FileSignature fileSignature = new FileSignature();
-                        gaseous_server.Models.Signatures_Games sig = await fileSignature.GetFileSignatureAsync(library, hash, fi, LibraryFile);
+                        FileHash fileHash = await GetFileHashesAsync(library, LibraryFile);
+                        (_, gaseous_server.Models.Signatures_Games sig) = await fileSignature.GetFileSignatureAsync(library, fileHash);
 
                         try
                         {
@@ -1089,7 +1076,7 @@ namespace gaseous_server.Classes
 
                             Game determinedGame = await SearchForGame(sig, PlatformId, true);
 
-                            await StoreGame(library, hash, sig, determinedPlatform, LibraryFile, 0, false);
+                            await StoreGame(library, fileHash.Hash, sig, determinedPlatform, LibraryFile, 0, false);
                         }
                         catch (Exception ex)
                         {

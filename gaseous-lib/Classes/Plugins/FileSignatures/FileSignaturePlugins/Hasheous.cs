@@ -11,6 +11,8 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
     /// </summary>
     public class Hasheous : IFileSignaturePlugin
     {
+        private static readonly JsonSerializerSettings HasheousJsonSerializerSettings = CreateHasheousJsonSerializerSettings();
+
         /// <inheritdoc/>
         public string Name { get; } = "Hasheous";
 
@@ -19,6 +21,23 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
 
         /// <inheritdoc/>
         public bool UsesInternet { get; } = true;
+
+        private static JsonSerializerSettings CreateHasheousJsonSerializerSettings()
+        {
+            JsonSerializerSettings serializerSettings = new JsonSerializerSettings();
+            serializerSettings.Converters.Add(new UnknownEnumFallbackConverter());
+            return serializerSettings;
+        }
+
+        private static HasheousClient.Models.LookupItemModel? DeserializeLookupItemModel(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json))
+            {
+                return null;
+            }
+
+            return JsonConvert.DeserializeObject<HasheousClient.Models.LookupItemModel>(json, HasheousJsonSerializerSettings);
+        }
 
         /// <inheritdoc/>
         public async Task<Signatures_Games?> GetSignature(HashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
@@ -54,7 +73,7 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                         if (cacheFile.LastWriteTimeUtc > DateTime.UtcNow.AddDays(-30))
                         {
                             Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.using_cached_signature_from_hasheous");
-                            HasheousResult = Newtonsoft.Json.JsonConvert.DeserializeObject<HasheousClient.Models.LookupItemModel>(await File.ReadAllTextAsync(cacheFilePath));
+                            HasheousResult = DeserializeLookupItemModel(await File.ReadAllTextAsync(cacheFilePath));
                         }
                     }
 
@@ -86,9 +105,9 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                             var response = await comms.SendRequestAsync<string>(HTTPComms.HttpMethod.POST, new Uri("https://hasheous.org/api/v1/Lookup/ByHash" + sourceList), headers, body, contentType: "application/json", returnRawResponse: true);
                             if (response != null && response.StatusCode == 200)
                             {
-                                if (response.Body != "The provided hash was not found in the signature database.")
+                                if (!string.IsNullOrWhiteSpace(response.Body) && response.Body != "The provided hash was not found in the signature database.")
                                 {
-                                    HasheousResult = Newtonsoft.Json.JsonConvert.DeserializeObject<HasheousClient.Models.LookupItemModel>(response.Body);
+                                    HasheousResult = DeserializeLookupItemModel(response.Body);
 
                                     if (HasheousResult != null)
                                     {
@@ -116,7 +135,7 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                             if (File.Exists(cacheFilePath))
                             {
                                 Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.error_retrieving_signature_from_hasheous_using_cached_signature", null, null, ex);
-                                HasheousResult = Newtonsoft.Json.JsonConvert.DeserializeObject<HasheousClient.Models.LookupItemModel>(await File.ReadAllTextAsync(cacheFilePath));
+                                HasheousResult = DeserializeLookupItemModel(await File.ReadAllTextAsync(cacheFilePath));
                             }
                             else
                             {

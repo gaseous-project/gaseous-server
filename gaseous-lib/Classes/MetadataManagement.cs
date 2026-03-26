@@ -704,7 +704,7 @@ namespace gaseous_server.Classes
 						// get the attributes for the ROM from the datarow
 						// it is a JSON string in the database, so deserialize it into a Dictionary<string, object>
 						// The entry we're interested in is "ZipContents", the value of which is a List<ArchiveData> object, which contains the file names and hashes of the contents of the ZIP file if the ROM is a ZIP archive
-						Dictionary<string, object>? attributes = dr["Attributes"] == DBNull.Value ? null : Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(dr["Attributes"].ToString() ??"{}");
+						Dictionary<string, object>? attributes = dr["Attributes"] == DBNull.Value ? null : Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(dr["Attributes"].ToString() ?? "{}");
 						List<ArchiveData>? zipContents = null;
 						if (attributes != null && attributes.ContainsKey("ZipContents"))
 						{
@@ -717,7 +717,14 @@ namespace gaseous_server.Classes
 						// get the signature for the ROM
 						FileInfo fi = new FileInfo(dr["Path"].ToString());
 						FileSignature fileSignature = new FileSignature();
-						gaseous_server.Models.Signatures_Games signature = await fileSignature.GetFileSignatureAsync(library, hash, fi, fi.FullName);
+						FileHash fileHash = new FileHash()
+						{
+							Hash = hash,
+							Library = library,
+							FileName = dr["RelativePath"].ToString() ?? fi.Name,
+							ArchiveContents = zipContents != null ? zipContents : new List<ArchiveData>()
+						};
+						var (updatedFileHash, signature) = await fileSignature.GetFileSignatureAsync(library, fileHash);
 
 						// validate the signature - if it is invalid, skip the rest of the loop
 						// validation rules: 1) signature must not be null, 2) signature must have a platform ID

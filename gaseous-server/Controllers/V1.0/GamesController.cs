@@ -1480,9 +1480,9 @@ namespace gaseous_server.Controllers
                 if (RomId > 0)
                 {
                     Classes.Roms.GameRomItem romItem = await Classes.Roms.GetRom(RomId);
-                    HashObject hash = new HashObject(romItem.Path);
                     FileSignature fileSignature = new FileSignature();
-                    gaseous_server.Models.Signatures_Games romSig = await fileSignature.GetFileSignatureAsync(romItem.Library, hash, new FileInfo(romItem.Path), romItem.Path);
+                    Classes.FileSignature.FileHash fileHash = await Classes.FileSignature.GetFileHashesAsync(romItem.Library, romItem.Path);
+                    (_, gaseous_server.Models.Signatures_Games romSig) = await fileSignature.GetFileSignatureAsync(romItem.Library, fileHash);
                     List<Game> searchResults = await Classes.ImportGame.SearchForGame_GetAll(romSig.Game.Name, romSig.Flags.PlatformId);
 
                     return Ok(searchResults);
