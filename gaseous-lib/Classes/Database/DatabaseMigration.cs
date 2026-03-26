@@ -519,11 +519,17 @@ namespace gaseous_server.Classes
                     md5hash = (string)row["MD5"],
                     sha1hash = (string)row["SHA1"]
                 };
-                Signatures_Games signature = await fileSignature.GetFileSignatureAsync(
+
+                FileSignature.FileHash fileHash = new FileSignature.FileHash()
+                {
+                    Library = library,
+                    Hash = hash,
+                    FileName = (string)row["RelativePath"]
+                };
+
+                var (_, signature) = await fileSignature.GetFileSignatureAsync(
                     library,
-                    hash,
-                    new FileInfo((string)row["Path"]),
-                    (string)row["Path"]
+                    fileHash
                 );
 
                 gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Platform platform = await Platforms.GetPlatform((long)row["PlatformId"]);

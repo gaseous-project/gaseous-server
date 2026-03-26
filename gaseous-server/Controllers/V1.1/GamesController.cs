@@ -211,17 +211,14 @@ namespace gaseous_server.Controllers.v1_1
         {
             string whereClause = "";
             string havingClause = "";
-            Dictionary<string, object> whereParams = new Dictionary<string, object>();
+            Dictionary<string, object> whereParams = new Dictionary<string, object>(20);
             whereParams.Add("userid", user.Id);
 
-            List<string> joinClauses = new List<string>();
+            List<string> joinClauses = new List<string>(5);
             string joinClauseTemplate = "LEFT JOIN `Relation_Game_<Datatype>s` ON `Game`.`Id` = `Relation_Game_<Datatype>s`.`GameId` AND `Relation_Game_<Datatype>s`.`GameSourceId` = `Game`.`SourceId` LEFT JOIN `Metadata_<Datatype>` AS `<Datatype>` ON `Relation_Game_<Datatype>s`.`<Datatype>sId` = `<Datatype>`.`Id`  AND `Relation_Game_<Datatype>s`.`GameSourceId` = `<Datatype>`.`SourceId`";
-            List<string> whereClauses = new List<string>();
-            List<string> havingClauses = new List<string>();
+            List<string> whereClauses = new List<string>(10);
+            List<string> havingClauses = new List<string>(10);
 
-            string tempVal = "";
-
-            string nameWhereClause = "";
             if (model.Name.Length > 0)
             {
                 whereClauses.Add("(MATCH(`Game`.`Name`) AGAINST (@GameName IN BOOLEAN MODE) OR MATCH(`AlternativeName`.`Name`) AGAINST (@GameName IN BOOLEAN MODE))");
@@ -270,7 +267,7 @@ namespace gaseous_server.Controllers.v1_1
 
             if (model.GameRating != null)
             {
-                List<string> ratingClauses = new List<string>();
+                List<string> ratingClauses = new List<string>(4);
                 if (model.GameRating.MinimumRating != -1)
                 {
                     string ratingTempMinVal = "totalRating >= @totalMinRating";
@@ -300,18 +297,7 @@ namespace gaseous_server.Controllers.v1_1
                 }
 
                 // generate rating sub clause
-                string ratingClauseValue = "";
-                if (ratingClauses.Count > 0)
-                {
-                    foreach (string ratingClause in ratingClauses)
-                    {
-                        if (ratingClauseValue.Length > 0)
-                        {
-                            ratingClauseValue += " AND ";
-                        }
-                        ratingClauseValue += ratingClause;
-                    }
-                }
+                string ratingClauseValue = string.Join(" AND ", ratingClauses);
 
                 string unratedClause = "";
                 if (model.GameRating.IncludeUnrated == true)
@@ -336,19 +322,19 @@ namespace gaseous_server.Controllers.v1_1
             {
                 if (model.Platform.Count > 0)
                 {
-                    tempVal = "`MetadataMap`.`PlatformId` IN (";
+                    var sb = new System.Text.StringBuilder("`MetadataMap`.`PlatformId` IN (", model.Platform.Count * 15);
                     for (int i = 0; i < model.Platform.Count; i++)
                     {
                         if (i > 0)
                         {
-                            tempVal += ", ";
+                            sb.Append(", ");
                         }
                         string platformLabel = "@Platform" + i;
-                        tempVal += platformLabel;
+                        sb.Append(platformLabel);
                         whereParams.Add(platformLabel, model.Platform[i]);
                     }
-                    tempVal += ")";
-                    whereClauses.Add(tempVal);
+                    sb.Append(')');
+                    whereClauses.Add(sb.ToString());
                 }
             }
 
@@ -356,19 +342,19 @@ namespace gaseous_server.Controllers.v1_1
             {
                 if (model.Genre.Count > 0)
                 {
-                    tempVal = "Genre.`Name` IN (";
+                    var sb = new System.Text.StringBuilder("Genre.`Name` IN (", model.Genre.Count * 15);
                     for (int i = 0; i < model.Genre.Count; i++)
                     {
                         if (i > 0)
                         {
-                            tempVal += ", ";
+                            sb.Append(", ");
                         }
                         string genreLabel = "@Genre" + i;
-                        tempVal += genreLabel;
+                        sb.Append(genreLabel);
                         whereParams.Add(genreLabel, model.Genre[i]);
                     }
-                    tempVal += ")";
-                    whereClauses.Add(tempVal);
+                    sb.Append(')');
+                    whereClauses.Add(sb.ToString());
 
                     joinClauses.Add(joinClauseTemplate.Replace("<Datatype>", "Genre"));
                 }
@@ -378,19 +364,19 @@ namespace gaseous_server.Controllers.v1_1
             {
                 if (model.GameMode.Count > 0)
                 {
-                    tempVal = "GameMode.`Name` IN (";
+                    var sb = new System.Text.StringBuilder("GameMode.`Name` IN (", model.GameMode.Count * 15);
                     for (int i = 0; i < model.GameMode.Count; i++)
                     {
                         if (i > 0)
                         {
-                            tempVal += ", ";
+                            sb.Append(", ");
                         }
                         string gameModeLabel = "@GameMode" + i;
-                        tempVal += gameModeLabel;
+                        sb.Append(gameModeLabel);
                         whereParams.Add(gameModeLabel, model.GameMode[i]);
                     }
-                    tempVal += ")";
-                    whereClauses.Add(tempVal);
+                    sb.Append(')');
+                    whereClauses.Add(sb.ToString());
 
                     joinClauses.Add(joinClauseTemplate.Replace("<Datatype>", "GameMode"));
                 }
@@ -400,19 +386,19 @@ namespace gaseous_server.Controllers.v1_1
             {
                 if (model.PlayerPerspective.Count > 0)
                 {
-                    tempVal = "PlayerPerspective.`Name` IN (";
+                    var sb = new System.Text.StringBuilder("PlayerPerspective.`Name` IN (", model.PlayerPerspective.Count * 15);
                     for (int i = 0; i < model.PlayerPerspective.Count; i++)
                     {
                         if (i > 0)
                         {
-                            tempVal += ", ";
+                            sb.Append(", ");
                         }
                         string playerPerspectiveLabel = "@PlayerPerspective" + i;
-                        tempVal += playerPerspectiveLabel;
+                        sb.Append(playerPerspectiveLabel);
                         whereParams.Add(playerPerspectiveLabel, model.PlayerPerspective[i]);
                     }
-                    tempVal += ")";
-                    whereClauses.Add(tempVal);
+                    sb.Append(')');
+                    whereClauses.Add(sb.ToString());
 
                     joinClauses.Add(joinClauseTemplate.Replace("<Datatype>", "PlayerPerspective"));
                 }
@@ -422,53 +408,53 @@ namespace gaseous_server.Controllers.v1_1
             {
                 if (model.Theme.Count > 0)
                 {
-                    tempVal = "Theme.`Name` IN (";
+                    var sb = new System.Text.StringBuilder("Theme.`Name` IN (", model.Theme.Count * 15);
                     for (int i = 0; i < model.Theme.Count; i++)
                     {
                         if (i > 0)
                         {
-                            tempVal += ", ";
+                            sb.Append(", ");
                         }
                         string themeLabel = "@Theme" + i;
-                        tempVal += themeLabel;
+                        sb.Append(themeLabel);
                         whereParams.Add(themeLabel, model.Theme[i]);
                     }
-                    tempVal += ")";
-                    whereClauses.Add(tempVal);
+                    sb.Append(')');
+                    whereClauses.Add(sb.ToString());
 
                     joinClauses.Add(joinClauseTemplate.Replace("<Datatype>", "Theme"));
                 }
             }
 
-            string gameAgeRatingString = "(";
             if (model.GameAgeRating != null)
             {
+                var sb = new System.Text.StringBuilder("(");
                 if (model.GameAgeRating.AgeGroupings.Count > 0)
                 {
-                    tempVal = "AgeGroup.AgeGroupId IN (";
+                    sb.Append("AgeGroup.AgeGroupId IN (");
                     for (int i = 0; i < model.GameAgeRating.AgeGroupings.Count; i++)
                     {
                         if (i > 0)
                         {
-                            tempVal += ", ";
+                            sb.Append(", ");
                         }
                         string themeLabel = "@Rating" + i;
-                        tempVal += themeLabel;
+                        sb.Append(themeLabel);
                         whereParams.Add(themeLabel, model.GameAgeRating.AgeGroupings[i]);
                     }
-                    tempVal += ")";
+                    sb.Append(')');
                 }
 
                 if (model.GameAgeRating.IncludeUnrated == true)
                 {
-                    if (tempVal.Length > 0)
+                    if (model.GameAgeRating.AgeGroupings.Count > 0)
                     {
-                        tempVal += " OR ";
+                        sb.Append(" OR ");
                     }
-                    tempVal += "AgeGroup.AgeGroupId IS NULL";
+                    sb.Append("AgeGroup.AgeGroupId IS NULL");
                 }
-                gameAgeRatingString += tempVal + ")";
-                whereClauses.Add(gameAgeRatingString);
+                sb.Append(')');
+                whereClauses.Add(sb.ToString());
             }
 
             // build where clause
@@ -689,23 +675,43 @@ FROM
             DataTable dbResponse;
             DataTable fullDataset = null;
             int? RecordCount = null;
-            string limiter = "";
 
-            if (returnGames == true)
+            // Optimize query execution: if we need both summary and games, execute once and slice in memory
+            if (returnSummary == true && returnGames == true)
             {
-                limiter += " LIMIT @pageOffset, @pageSize";
-                whereParams.Add("pageOffset", pageSize * (pageNumber - 1));
-                whereParams.Add("pageSize", pageSize);
-            }
-
-            dbResponse = await db.ExecuteCMDAsync(sql + limiter, whereParams, new DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
-
-            // get full count for summary if needed
-            if (returnSummary == true)
-            {
-                // Execute query without limit to get total record count and full dataset for alpha list
+                // Execute full query once
                 fullDataset = await db.ExecuteCMDAsync(sql, whereParams, new DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
                 RecordCount = fullDataset.Rows.Count;
+
+                // Create a view for the paginated results
+                dbResponse = fullDataset.Clone();
+                int startIndex = pageSize * (pageNumber - 1);
+                int endIndex = Math.Min(startIndex + pageSize, fullDataset.Rows.Count);
+
+                for (int i = startIndex; i < endIndex; i++)
+                {
+                    dbResponse.ImportRow(fullDataset.Rows[i]);
+                }
+            }
+            else if (returnGames == true)
+            {
+                // Only need paginated results
+                string limiter = " LIMIT @pageOffset, @pageSize";
+                whereParams.Add("pageOffset", pageSize * (pageNumber - 1));
+                whereParams.Add("pageSize", pageSize);
+                dbResponse = await db.ExecuteCMDAsync(sql + limiter, whereParams, new DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
+            }
+            else if (returnSummary == true)
+            {
+                // Only need summary
+                fullDataset = await db.ExecuteCMDAsync(sql, whereParams, new DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 60));
+                RecordCount = fullDataset.Rows.Count;
+                dbResponse = fullDataset.Clone(); // Empty table
+            }
+            else
+            {
+                // Neither requested (edge case)
+                dbResponse = new DataTable();
             }
 
             int indexInPage = 0;
@@ -718,46 +724,25 @@ FROM
             List<Games.MinimalGameItem>? RetVal = null;
             if (returnGames == true)
             {
-                RetVal = new List<Games.MinimalGameItem>();
-                foreach (int i in Enumerable.Range(0, dbResponse.Rows.Count))
+                RetVal = new List<Games.MinimalGameItem>(dbResponse.Rows.Count);
+                for (int i = 0; i < dbResponse.Rows.Count; i++)
                 {
-                    Game retGame = Storage.BuildCacheObject<Game>(new Game(), dbResponse.Rows[i]);
-                    retGame.MetadataMapId = (long)dbResponse.Rows[i]["MetadataMapId"];
-                    retGame.SourceType = (FileSignature.MetadataSources)dbResponse.Rows[i]["GameIdType"];
+                    DataRow row = dbResponse.Rows[i];
+                    Game retGame = Storage.BuildCacheObject<Game>(new Game(), row);
+                    retGame.MetadataMapId = (long)row["MetadataMapId"];
+                    retGame.SourceType = (FileSignature.MetadataSources)row["GameIdType"];
 
                     Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
-                    retMinGame.Index = indexInPage;
-                    indexInPage += 1;
-                    if (
-                        dbResponse.Rows[i]["RomSavedStates"] != DBNull.Value ||
-                        dbResponse.Rows[i]["RomGroupSavedStates"] != DBNull.Value ||
-                        dbResponse.Rows[i]["RomSavedFiles"] != DBNull.Value ||
-                        dbResponse.Rows[i]["RomGroupSavedFiles"] != DBNull.Value
-                        )
-                    {
-                        if (
-                            (long)dbResponse.Rows[i]["RomSavedStates"] >= 1 ||
-                            (long)dbResponse.Rows[i]["RomGroupSavedStates"] >= 1 ||
-                            (long)dbResponse.Rows[i]["RomSavedFiles"] >= 1 ||
-                            (long)dbResponse.Rows[i]["RomGroupSavedFiles"] >= 1
-                            )
-                        {
-                            retMinGame.HasSavedGame = true;
-                        }
-                        else
-                        {
-                            retMinGame.HasSavedGame = false;
-                        }
-                    }
+                    retMinGame.Index = indexInPage++;
 
-                    if ((int)dbResponse.Rows[i]["Favourite"] == 0)
-                    {
-                        retMinGame.IsFavourite = false;
-                    }
-                    else
-                    {
-                        retMinGame.IsFavourite = true;
-                    }
+                    // Check for saved games more efficiently
+                    retMinGame.HasSavedGame =
+                        (row["RomSavedStates"] != DBNull.Value && (long)row["RomSavedStates"] >= 1) ||
+                        (row["RomGroupSavedStates"] != DBNull.Value && (long)row["RomGroupSavedStates"] >= 1) ||
+                        (row["RomSavedFiles"] != DBNull.Value && (long)row["RomSavedFiles"] >= 1) ||
+                        (row["RomGroupSavedFiles"] != DBNull.Value && (long)row["RomGroupSavedFiles"] >= 1);
+
+                    retMinGame.IsFavourite = (int)row["Favourite"] != 0;
 
                     RetVal.Add(retMinGame);
                 }
@@ -766,7 +751,7 @@ FROM
             Dictionary<string, GameReturnPackage.AlphaListItem>? AlphaList = null;
             if (returnSummary == true)
             {
-                AlphaList = new Dictionary<string, GameReturnPackage.AlphaListItem>();
+                AlphaList = new Dictionary<string, GameReturnPackage.AlphaListItem>(27);
 
                 // build alpha list
                 if (orderByField == "NameThe" || orderByField == "Name")
@@ -775,7 +760,7 @@ FROM
                     int nextPageIndex = pageSize > 0 ? pageSize : int.MaxValue;
 
                     string alphaSearchField = orderByField == "NameThe" ? "NameThe" : "Name";
-                    HashSet<string> seenKeys = new HashSet<string>();
+                    HashSet<string> seenKeys = new HashSet<string>(27);
 
                     for (int i = 0; i < fullDataset.Rows.Count; i++)
                     {
@@ -797,14 +782,13 @@ FROM
                             key = (firstChar >= 'A' && firstChar <= 'Z') ? firstChar.ToString() : "#";
                         }
 
-                        if (!seenKeys.Contains(key))
+                        if (seenKeys.Add(key))
                         {
                             AlphaList[key] = new GameReturnPackage.AlphaListItem
                             {
                                 Index = i,
                                 Page = currentPage
                             };
-                            seenKeys.Add(key);
                         }
                     }
                 }

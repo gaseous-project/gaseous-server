@@ -478,84 +478,107 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                 this.Screenshots = gameObject.Screenshots;
                 this.FirstReleaseDate = gameObject.FirstReleaseDate;
 
-                // compile genres
-                this.Genres = new List<string>();
-                if (gameObject.Genres != null)
+                if (gameObject != null)
                 {
-                    foreach (long genreId in gameObject.Genres)
+                    // compile genres
+                    this.Genres = new List<string>();
+                    if (gameObject.Genres != null)
                     {
-                        HasheousClient.Models.Metadata.IGDB.Genre? genre = Classes.Metadata.Genres.GetGenres(gameObject.MetadataSource, genreId).Result;
-                        if (genre != null)
+                        foreach (long genreId in gameObject.Genres)
                         {
-                            if (!this.Genres.Contains(genre.Name))
+                            if (gameObject.MetadataSource.Equals(FileSignature.MetadataSources.None))
                             {
-                                this.Genres.Add(genre.Name);
+                                continue;
+                            }
+                            HasheousClient.Models.Metadata.IGDB.Genre? genre = Classes.Metadata.Genres.GetGenres(gameObject.MetadataSource, genreId).Result;
+                            if (genre != null)
+                            {
+                                if (!this.Genres.Contains(genre.Name))
+                                {
+                                    this.Genres.Add(genre.Name);
+                                }
                             }
                         }
                     }
-                }
 
-                // compile themes
-                this.Themes = new List<string>();
-                if (gameObject.Themes != null)
-                {
-                    foreach (long themeId in gameObject.Themes)
+                    // compile themes
+                    this.Themes = new List<string>();
+                    if (gameObject.Themes != null)
                     {
-                        HasheousClient.Models.Metadata.IGDB.Theme? theme = Classes.Metadata.Themes.GetGame_ThemesAsync(gameObject.MetadataSource, themeId).Result;
-                        if (theme != null)
+                        foreach (long themeId in gameObject.Themes)
                         {
-                            if (!this.Themes.Contains(theme.Name))
+                            if (gameObject.MetadataSource.Equals(FileSignature.MetadataSources.None))
                             {
-                                this.Themes.Add(theme.Name);
+                                continue;
+                            }
+                            HasheousClient.Models.Metadata.IGDB.Theme? theme = Classes.Metadata.Themes.GetGame_ThemesAsync(gameObject.MetadataSource, themeId).Result;
+                            if (theme != null)
+                            {
+                                if (!this.Themes.Contains(theme.Name))
+                                {
+                                    this.Themes.Add(theme.Name);
+                                }
                             }
                         }
                     }
-                }
 
-                // compile players
-                this.Players = new List<string>();
-                if (gameObject.GameModes != null)
-                {
-                    foreach (long playerId in gameObject.GameModes)
+                    // compile players
+                    this.Players = new List<string>();
+                    if (gameObject.GameModes != null)
                     {
-                        HasheousClient.Models.Metadata.IGDB.GameMode? player = Classes.Metadata.GameModes.GetGame_Modes(gameObject.MetadataSource, playerId).Result;
-                        if (player != null)
+                        foreach (long playerId in gameObject.GameModes)
                         {
-                            if (!this.Players.Contains(player.Name))
+                            if (gameObject.MetadataSource.Equals(FileSignature.MetadataSources.None))
                             {
-                                this.Players.Add(player.Name);
+                                continue;
+                            }
+                            HasheousClient.Models.Metadata.IGDB.GameMode? player = Classes.Metadata.GameModes.GetGame_Modes(gameObject.MetadataSource, playerId).Result;
+                            if (player != null)
+                            {
+                                if (!this.Players.Contains(player.Name))
+                                {
+                                    this.Players.Add(player.Name);
+                                }
                             }
                         }
                     }
-                }
 
-                // compile perspectives
-                this.Perspectives = new List<string>();
-                if (gameObject.PlayerPerspectives != null)
-                {
-                    foreach (long perspectiveId in gameObject.PlayerPerspectives)
+                    // compile perspectives
+                    this.Perspectives = new List<string>();
+                    if (gameObject.PlayerPerspectives != null)
                     {
-                        PlayerPerspective? perspective = Classes.Metadata.PlayerPerspectives.GetGame_PlayerPerspectives(gameObject.MetadataSource, perspectiveId).Result;
-                        if (perspective != null)
+                        foreach (long perspectiveId in gameObject.PlayerPerspectives)
                         {
-                            if (!this.Perspectives.Contains(perspective.Name))
+                            if (gameObject.MetadataSource.Equals(FileSignature.MetadataSources.None))
                             {
-                                this.Perspectives.Add(perspective.Name);
+                                continue;
+                            }
+                            PlayerPerspective? perspective = Classes.Metadata.PlayerPerspectives.GetGame_PlayerPerspectives(gameObject.MetadataSource, perspectiveId).Result;
+                            if (perspective != null)
+                            {
+                                if (!this.Perspectives.Contains(perspective.Name))
+                                {
+                                    this.Perspectives.Add(perspective.Name);
+                                }
                             }
                         }
                     }
-                }
 
-                // compile age ratings
-                this.AgeRatings = new List<AgeRating>();
-                if (gameObject.AgeRatings != null)
-                {
-                    foreach (long ageRatingId in gameObject.AgeRatings)
+                    // compile age ratings
+                    this.AgeRatings = new List<AgeRating>();
+                    if (gameObject.AgeRatings != null)
                     {
-                        AgeRating? rating = Classes.Metadata.AgeRatings.GetAgeRating(gameObject.MetadataSource, ageRatingId).Result;
-                        if (rating != null)
+                        foreach (long ageRatingId in gameObject.AgeRatings)
                         {
-                            this.AgeRatings.Add(rating);
+                            if (gameObject.MetadataSource.Equals(FileSignature.MetadataSources.None))
+                            {
+                                continue;
+                            }
+                            AgeRating? rating = Classes.Metadata.AgeRatings.GetAgeRating(gameObject.MetadataSource, ageRatingId).Result;
+                            if (rating != null)
+                            {
+                                this.AgeRatings.Add(rating);
+                            }
                         }
                     }
                 }

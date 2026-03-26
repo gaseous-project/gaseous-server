@@ -216,25 +216,10 @@ namespace gaseous_server.Classes
             // Use provided options or fall back to default
             var options = jsonSerializerOptions ?? _jsonOptions;
 
-            // Clear all previous headers from the HttpClient
-            _httpClient.DefaultRequestHeaders.Clear();
-
-            // Set User-Agent header
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", _userAgent);
-
             // Build a per-request timeout using a linked cancellation token (avoid mutating HttpClient.Timeout)
             using var timeoutCts = new System.Threading.CancellationTokenSource(timeout ?? _defaultTimeout);
             using var linkedCts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
             var effectiveToken = linkedCts.Token;
-
-            // Add headers if provided
-            if (headers != null)
-            {
-                foreach (var header in headers)
-                {
-                    _httpClient.DefaultRequestHeaders.Add(header.Key, header.Value);
-                }
-            }
 
             // Create empty response object
             var response = new HttpResponse<T>();
@@ -312,6 +297,20 @@ namespace gaseous_server.Classes
                             requestMessage.Content = new StringContent(bodyContent, System.Text.Encoding.UTF8, effectiveContentType);
                         }
 
+                        // Set default and request-specific headers on the per-request message.
+                        // Avoid mutating HttpClient.DefaultRequestHeaders, which is unsafe under concurrent requests.
+                        requestMessage.Headers.TryAddWithoutValidation("User-Agent", _userAgent);
+                        if (headers != null)
+                        {
+                            foreach (var header in headers)
+                            {
+                                if (!requestMessage.Headers.TryAddWithoutValidation(header.Key, header.Value) && requestMessage.Content != null)
+                                {
+                                    requestMessage.Content.Headers.TryAddWithoutValidation(header.Key, header.Value);
+                                }
+                            }
+                        }
+
                         // If resuming a large binary download, add Range header
                         if (typeof(T) == typeof(byte[]) && enableResume && resumeFromBytes > 0 && (method == HttpMethod.GET))
                         {
@@ -352,6 +351,24 @@ namespace gaseous_server.Classes
                     var mediaType = httpResponseMessage.Content.Headers.ContentType?.MediaType?.ToLowerInvariant();
                     long? contentLength = httpResponseMessage.Content.Headers.ContentLength;
                     bool isBinary = mediaType != null && (mediaType.Contains("octet-stream") || mediaType.StartsWith("image/") || mediaType.StartsWith("video/") || mediaType.StartsWith("audio/"));
+                    bool isCloudFlareError = false;
+
+                    static bool IsLikelyJson(string value)
+                    {
+                        var trimmed = value.TrimStart();
+                        if (trimmed.Length == 0)
+                        {
+                            return false;
+                        }
+
+                        char first = trimmed[0];
+                        return first == '{' || first == '[' || first == '"' || first == 't' || first == 'f' || first == 'n' || first == '-' || char.IsDigit(first);
+                    }
+
+                    static bool ContainsCloudFlare1015(string value)
+                    {
+                        return value.IndexOf("error code: 1015", StringComparison.OrdinalIgnoreCase) >= 0;
+                    }
 
                     if (typeof(T) == typeof(byte[]))
                     {
@@ -391,75 +408,87 @@ namespace gaseous_server.Classes
                             var bytes = await httpResponseMessage.Content.ReadAsByteArrayAsync(effectiveToken);
                             response.Body = (T)(object)bytes;
                         }
-                    }
-                    else if (typeof(T) == typeof(string))
-                    {
-                        string responseBody = await httpResponseMessage.Content.ReadAsStringAsync(effectiveToken);
-                        response.Body = (T)(object)responseBody;
-                    }
-                    else if (mediaType != null && (mediaType.Contains("json") || mediaType.StartsWith("text")))
-                    {
-                        string responseBody = await httpResponseMessage.Content.ReadAsStringAsync(effectiveToken);
-                        if (!string.IsNullOrWhiteSpace(responseBody))
+
+                        if (response.Body != null)
                         {
-                            response.Body = System.Text.Json.JsonSerializer.Deserialize<T>(responseBody, options);
+                            try
+                            {
+                                string bodyText = System.Text.Encoding.UTF8.GetString((byte[])(object)response.Body!).ToLowerInvariant();
+                                if (bodyText.Contains("error code: 1015"))
+                                {
+                                    isCloudFlareError = true;
+                                }
+                            }
+                            catch
+                            {
+                                // Ignore decode issues and continue standard handling.
+                            }
                         }
-                    }
-                    else if (mediaType != null && mediaType.Contains("xml"))
-                    {
-                        string responseBody = await httpResponseMessage.Content.ReadAsStringAsync(effectiveToken);
-                        if (!string.IsNullOrWhiteSpace(responseBody))
-                        {
-                            var serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
-                            using var reader = new StringReader(responseBody);
-                            response.Body = (T?)serializer.Deserialize(reader);
-                        }
-                    }
-                    else if (isBinary)
-                    {
-                        var bytes = await httpResponseMessage.Content.ReadAsByteArrayAsync(effectiveToken);
-                        // If T is not byte[], attempt to deserialize is risky; return default
-                        if (typeof(T) == typeof(byte[]))
-                            response.Body = (T)(object)bytes;
                     }
                     else
                     {
-                        // Fallback: try JSON
                         string responseBody = await httpResponseMessage.Content.ReadAsStringAsync(effectiveToken);
-                        if (!string.IsNullOrWhiteSpace(responseBody))
-                        {
-                            response.Body = System.Text.Json.JsonSerializer.Deserialize<T>(responseBody, options);
-                        }
-                    }
 
-                    // Check for CloudFlare rate limiting first (error code: 1015 can come with 200 status)
-                    bool isCloudFlareError = false;
-                    if (response.Body != null && typeof(T) == typeof(byte[]))
-                    {
-                        try
+                        // CloudFlare can return HTML/text with 200 and "error code: 1015"; detect this before any JSON parsing.
+                        if (!string.IsNullOrWhiteSpace(responseBody) && ContainsCloudFlare1015(responseBody))
                         {
-                            string bodyText = System.Text.Encoding.UTF8.GetString((byte[])(object)response.Body!).ToLower();
-                            if (bodyText.Contains("error code: 1015"))
+                            isCloudFlareError = true;
+                        }
+
+                        if (!isCloudFlareError)
+                        {
+                            if (typeof(T) == typeof(string))
                             {
-                                isCloudFlareError = true;
-                                attempts++;
-                                if (attempts < maxAttempts)
+                                response.Body = (T)(object)responseBody;
+                            }
+                            else if (mediaType != null && mediaType.Contains("xml"))
+                            {
+                                if (!string.IsNullOrWhiteSpace(responseBody))
                                 {
-                                    int waitTime = _rateLimit429WaitTimeSeconds;
-                                    await Task.Delay(waitTime * 1000, effectiveToken);
-                                    continue;
+                                    var serializer = new System.Xml.Serialization.XmlSerializer(typeof(T));
+                                    using var reader = new StringReader(responseBody);
+                                    response.Body = (T?)serializer.Deserialize(reader);
+                                }
+                            }
+                            else if (mediaType != null && (mediaType.Contains("json") || mediaType.StartsWith("text")))
+                            {
+                                if (!string.IsNullOrWhiteSpace(responseBody) && IsLikelyJson(responseBody))
+                                {
+                                    response.Body = System.Text.Json.JsonSerializer.Deserialize<T>(responseBody, options);
+                                }
+                            }
+                            else if (isBinary)
+                            {
+                                // Not expected for non-byte[] callers; leave body unset.
+                            }
+                            else
+                            {
+                                // Fallback: only attempt JSON parse if payload looks like JSON.
+                                if (!string.IsNullOrWhiteSpace(responseBody) && IsLikelyJson(responseBody))
+                                {
+                                    response.Body = System.Text.Json.JsonSerializer.Deserialize<T>(responseBody, options);
                                 }
                             }
                         }
-                        catch
+                    }
+
+                    if (isCloudFlareError)
+                    {
+                        attempts++;
+                        if (attempts < maxAttempts)
                         {
-                            // If unable to parse response body, continue with normal flow
+                            int waitTime = _rateLimit429WaitTimeSeconds;
+                            await Task.Delay(waitTime * 1000, effectiveToken);
+                            continue;
                         }
                     }
 
                     // If request was successful and not a CloudFlare error, exit loop
                     if (httpResponseMessage.IsSuccessStatusCode && !isCloudFlareError)
                     {
+                        response.ErrorMessage = null;
+                        response.ErrorType = null;
+                        response.ErrorStackTrace = null;
                         break;
                     }
 

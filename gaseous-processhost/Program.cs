@@ -25,6 +25,7 @@ if (cmdArgs.Contains("--version"))
 string serviceName = null;
 string reportingServerUrl = null;
 string correlationId = null;
+bool forceExecute = false;
 
 for (int i = 0; i < cmdArgs.Length; i++)
 {
@@ -39,6 +40,10 @@ for (int i = 0; i < cmdArgs.Length; i++)
     else if (cmdArgs[i] == "--correlationid" && i + 1 < cmdArgs.Length)
     {
         correlationId = cmdArgs[i + 1];
+    }
+    else if (cmdArgs[i] == "--force")
+    {
+        forceExecute = true;
     }
 }
 
@@ -83,7 +88,10 @@ gaseous_server.ProcessQueue.QueueProcessor.QueueItem Task = new QueueProcessor.Q
 {
     CorrelationId = correlationId
 };
-Task.ForceExecute();
+if (forceExecute)
+{
+    Task.ForceExecute();
+}
 
 // start the task
 try

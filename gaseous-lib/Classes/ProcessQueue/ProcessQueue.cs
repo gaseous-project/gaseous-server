@@ -632,7 +632,15 @@ namespace gaseous_server.ProcessQueue
             {
                 if (_ItemState != QueueItemState.Disabled)
                 {
-                    if ((DateTime.UtcNow > NextRunTime || _ForceExecute == true) && _ItemState != QueueItemState.Running)
+                    string? OutProcessData = CallContext.GetData("OutProcess")?.ToString();
+                    bool isOutProcess = false;
+                    // isOutProcess is only true if we're launched from the process host with the intention to run out of process, if the value is not set, or is not a valid boolean, then we should default to running in process
+                    if (bool.TryParse(OutProcessData, out bool outProcessValue))
+                    {
+                        isOutProcess = outProcessValue;
+                    }
+
+                    if ((DateTime.UtcNow > NextRunTime || _ForceExecute == true || isOutProcess == true) && _ItemState != QueueItemState.Running)
                     {
                         // we can run - do some setup before we start processing
                         _LastRunTime = DateTime.UtcNow;
@@ -653,14 +661,6 @@ namespace gaseous_server.ProcessQueue
                         // log the start
                         Logging.LogKey(Logging.LogType.Debug, "process.timered_event", "timered_event.executing_item_with_correlation_id", null, new[] { _ItemType.ToString(), _CorrelationId });
 
-                        string? OutProcessData = CallContext.GetData("OutProcess")?.ToString();
-                        bool isOutProcess = false;
-                        // isOutProcess is only true if we're launched from the process host with the intention to run out of process, if the value is not set, or is not a valid boolean, then we should default to running in process
-                        if (bool.TryParse(OutProcessData, out bool outProcessValue))
-                        {
-                            isOutProcess = outProcessValue;
-                        }
-
                         DateTime startTime = DateTime.UtcNow;
 
                         if (isOutProcess == false && this.RunInProcess == false)
@@ -673,6 +673,11 @@ namespace gaseous_server.ProcessQueue
                                 "--correlationid", _CorrelationId,
                                 "--reportingserver", $"http://localhost:{Config.LocalCommsPort}"
                             };
+                            // if we're forcing the execution, add the force flag
+                            if (_ForceExecute)
+                            {
+                                args = args.Append("--force").ToArray();
+                            }
                             using var process = new System.Diagnostics.Process
                             {
                                 StartInfo = new System.Diagnostics.ProcessStartInfo

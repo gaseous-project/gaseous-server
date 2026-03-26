@@ -69,7 +69,7 @@ namespace gaseous_server.Classes
                         ORDER BY p.Name";
 
                     DataTable dbResponse = await db.ExecuteCMDAsync(sql, new DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 300));
-                    
+
                     foreach (DataRow dr in dbResponse.Rows)
                     {
                         FilterItem item = new FilterItem(dr);
@@ -107,7 +107,7 @@ namespace gaseous_server.Classes
                         GROUP BY AgeGroupId
                         ORDER BY AgeGroupId DESC";
                     dbResponse = await db.ExecuteCMDAsync(sql, new DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 300));
-                    
+
                     foreach (DataRow dr in dbResponse.Rows)
                     {
                         FilterItem filterAgeGrouping = new FilterItem();
@@ -203,7 +203,7 @@ namespace gaseous_server.Classes
             await db.ExecuteCMDAsync(baseFilteredGamesQuery, new DatabaseMemoryCacheOptions(CacheEnabled: false));
 
             // Now run lightweight queries against the temp table
-            
+
             // platforms
             List<FilterItem> platforms = new List<FilterItem>();
             string sql = @"
@@ -219,7 +219,7 @@ namespace gaseous_server.Classes
                 ORDER BY p.Name";
 
             DataTable dbResponse = await db.ExecuteCMDAsync(sql, new DatabaseMemoryCacheOptions(CacheEnabled: false));
-            
+
             foreach (DataRow dr in dbResponse.Rows)
             {
                 FilterItem platformItem = new FilterItem(dr);
@@ -253,7 +253,7 @@ namespace gaseous_server.Classes
                 GROUP BY AgeGroupId
                 ORDER BY AgeGroupId DESC";
             dbResponse = await db.ExecuteCMDAsync(sql, new DatabaseMemoryCacheOptions(CacheEnabled: false));
-            
+
             foreach (DataRow dr in dbResponse.Rows)
             {
                 FilterItem filterAgeGrouping = new FilterItem();
@@ -282,46 +282,37 @@ namespace gaseous_server.Classes
 
         private static async Task<List<FilterItem>> GenerateFilterSetFromTemp(Database db, string Name)
         {
-            List<FilterItem> filter = new List<FilterItem>();
             DataTable dbResponse = await GetGenericFilterItemFromTemp(db, Name);
+            Dictionary<string, FilterItem> filterDict = new Dictionary<string, FilterItem>(StringComparer.Ordinal);
 
             foreach (DataRow dr in dbResponse.Rows)
             {
                 FilterItem filterItem = new FilterItem(dr);
-                if (filterItem != null)
+                if (filterItem?.Name != null)
                 {
-                    bool nameExists = false;
-                    foreach (var filterObject in filter)
+                    if (filterDict.TryGetValue(filterItem.Name, out FilterItem? existingItem))
                     {
-                        if (filterObject.Name == filterItem.Name)
+                        // Merge with existing item
+                        if (existingItem?.Ids != null && filterItem.Ids != null)
                         {
-                            // add the ids to the existing genre
-                            if (filterObject.Ids == null)
-                            {
-                                filterObject.Ids = new Dictionary<HasheousClient.Models.MetadataSources, long>();
-                            }
-
                             foreach (var id in filterItem.Ids)
                             {
-                                if (filterObject.Ids.ContainsKey(id.Key) == false)
+                                if (!existingItem.Ids.ContainsKey(id.Key))
                                 {
-                                    filterObject.Ids.Add(id.Key, id.Value);
-                                    filterObject.GameCount += filterItem.GameCount;
+                                    existingItem.Ids[id.Key] = id.Value;
+                                    existingItem.GameCount += filterItem.GameCount;
                                 }
                             }
-
-                            nameExists = true;
                         }
                     }
-
-                    if (nameExists == false)
+                    else
                     {
-                        filter.Add(filterItem);
+                        filterDict[filterItem.Name] = filterItem;
                     }
                 }
             }
 
-            return filter;
+            return new List<FilterItem>(filterDict.Values);
         }
 
         private static async Task<DataTable> GetGenericFilterItemFromTemp(Database db, string Name)
@@ -343,52 +334,43 @@ namespace gaseous_server.Classes
                 ORDER BY item.Name";
             sql = sql.Replace("<ITEMNAME>", Name);
             DataTable dbResponse = await db.ExecuteCMDAsync(sql, new DatabaseMemoryCacheOptions(CacheEnabled: false));
-            
+
             return dbResponse;
         }
 
         private static async Task<List<FilterItem>> GenerateFilterSet(Database db, string Name, string AgeRestriction)
         {
-            List<FilterItem> filter = new List<FilterItem>();
             DataTable dbResponse = await GetGenericFilterItem(db, Name, AgeRestriction);
+            Dictionary<string, FilterItem> filterDict = new Dictionary<string, FilterItem>(StringComparer.Ordinal);
 
             foreach (DataRow dr in dbResponse.Rows)
             {
                 FilterItem filterItem = new FilterItem(dr);
-                if (filterItem != null)
+                if (filterItem?.Name != null)
                 {
-                    bool nameExists = false;
-                    foreach (var filterObject in filter)
+                    if (filterDict.TryGetValue(filterItem.Name, out FilterItem? existingItem))
                     {
-                        if (filterObject.Name == filterItem.Name)
+                        // Merge with existing item
+                        if (existingItem?.Ids != null && filterItem.Ids != null)
                         {
-                            // add the ids to the existing genre
-                            if (filterObject.Ids == null)
-                            {
-                                filterObject.Ids = new Dictionary<HasheousClient.Models.MetadataSources, long>();
-                            }
-
                             foreach (var id in filterItem.Ids)
                             {
-                                if (filterObject.Ids.ContainsKey(id.Key) == false)
+                                if (!existingItem.Ids.ContainsKey(id.Key))
                                 {
-                                    filterObject.Ids.Add(id.Key, id.Value);
-                                    filterObject.GameCount += filterItem.GameCount;
+                                    existingItem.Ids[id.Key] = id.Value;
+                                    existingItem.GameCount += filterItem.GameCount;
                                 }
                             }
-
-                            nameExists = true;
                         }
                     }
-
-                    if (nameExists == false)
+                    else
                     {
-                        filter.Add(filterItem);
+                        filterDict[filterItem.Name] = filterItem;
                     }
                 }
             }
 
-            return filter;
+            return new List<FilterItem>(filterDict.Values);
         }
 
         private static async Task<DataTable> GetGenericFilterItem(Database db, string Name, string AgeRestriction)
@@ -428,7 +410,7 @@ namespace gaseous_server.Classes
                 ORDER BY item.Name";
             sql = sql.Replace("<ITEMNAME>", Name);
             DataTable dbResponse = await db.ExecuteCMDAsync(sql, new DatabaseMemoryCacheOptions(CacheEnabled: true, ExpirationSeconds: 300));
-            
+
             return dbResponse;
         }
 
@@ -436,23 +418,29 @@ namespace gaseous_server.Classes
         {
             public FilterItem()
             {
-
+                this.Name = string.Empty;
             }
 
             public FilterItem(DataRow dr)
             {
+                this.Name = string.Empty;
+
                 if (dr.Table.Columns.Contains("GameIdType"))
                 {
-                    HasheousClient.Models.MetadataSources SourceId = (HasheousClient.Models.MetadataSources)Enum.Parse(typeof(HasheousClient.Models.MetadataSources), dr["GameIdType"].ToString());
+                    int gameIdTypeIndex = dr.Table.Columns.IndexOf("GameIdType");
+                    int idIndex = dr.Table.Columns.IndexOf("Id");
 
-                    if (this.Ids == null)
+                    object? gameIdTypeValue = dr[gameIdTypeIndex];
+                    if (gameIdTypeValue != null && gameIdTypeValue != DBNull.Value)
                     {
-                        this.Ids = new Dictionary<HasheousClient.Models.MetadataSources, long>();
-                    }
-
-                    if (this.Ids.ContainsKey(SourceId) == false)
-                    {
-                        this.Ids.Add(SourceId, (long)dr["Id"]);
+                        if (int.TryParse(gameIdTypeValue.ToString(), out int sourceIdValue))
+                        {
+                            HasheousClient.Models.MetadataSources SourceId = (HasheousClient.Models.MetadataSources)sourceIdValue;
+                            this.Ids = new Dictionary<HasheousClient.Models.MetadataSources, long>(1)
+                            {
+                                { SourceId, (long)dr[idIndex] }
+                            };
+                        }
                     }
                 }
                 else
@@ -460,7 +448,8 @@ namespace gaseous_server.Classes
                     this.Id = (long)dr["Id"];
                 }
 
-                this.Name = (string)dr["Name"];
+                object? nameValue = dr["Name"];
+                this.Name = nameValue?.ToString() ?? string.Empty;
                 this.GameCount = (int)(long)dr["GameCount"];
             }
 

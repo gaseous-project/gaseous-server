@@ -54,7 +54,14 @@ namespace gaseous_server.Classes
                         break;
                 }
 
-                SendStatusToReportingServer(CallingQueueItem.GetType(), state, progress);
+                try
+                {
+                    SendStatusToReportingServer(CallingQueueItem.GetType(), state, progress);
+                }
+                catch (Exception ex)
+                {
+                    // swallow the error
+                }
             }
         }
 
