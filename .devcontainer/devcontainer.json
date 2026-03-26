@@ -33,12 +33,13 @@
 				"GitHub.vscode-pull-request-github",
 				"AndersEAndersen.html-class-suggestions",
 				"george-alisson.html-preview-vscode",
-				"ms-dotnettools.vscodeintellicode-csharp",
 				"Zignd.html-css-class-completion",
 				"PWABuilder.pwa-studio",
 				"ms-azuretools.vscode-docker",
 				"SonarSource.sonarlint-vscode",
-				"oderwat.indent-rainbow"
+				"oderwat.indent-rainbow",
+				"GitHub.copilot-chat",
+				"eamodio.gitlens"
 			]
 		}
 	}
