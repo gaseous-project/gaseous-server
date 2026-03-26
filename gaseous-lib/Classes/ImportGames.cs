@@ -650,20 +650,20 @@ namespace gaseous_server.Classes
             }
 
             // remove common trailing version/revision markers while keeping the original
-            string versionStripped = Regex.Replace(dashNormalized, @"\s*(?:v|ver\.?|version)\s*(\d+(?:\.\d+)*)\s*$", "", RegexOptions.IgnoreCase);
+            string versionStripped = Regex.Replace(dashNormalized, @"\s*(?:v|ver\.?|version)\s*(\d+(?:\.\d+)*)\s*$", "", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
             if (!string.Equals(versionStripped, dashNormalized, StringComparison.Ordinal))
             {
                 AddCandidate(versionStripped);
             }
 
-            string revisionStripped = Regex.Replace(dashNormalized, @"\s*(?:rev(?:ision)?\.?)(?:\s*[A-Za-z0-9]+)?\s*$", "", RegexOptions.IgnoreCase);
+            string revisionStripped = Regex.Replace(dashNormalized, @"\s*(?:rev(?:ision)?\.?)(?:\s*[A-Za-z0-9]+)?\s*$", "", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
             if (!string.Equals(revisionStripped, dashNormalized, StringComparison.Ordinal))
             {
                 AddCandidate(revisionStripped);
             }
 
             // remove trailing bracketed metadata while keeping the original
-            string bracketStripped = Regex.Replace(dashNormalized, @"\s*[\(\[][^\)\]]+[\)\]]\s*$", "", RegexOptions.IgnoreCase);
+            string bracketStripped = Regex.Replace(dashNormalized, @"\s*[\(\[][^\)\]]+[\)\]]\s*$", "", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1));
             if (!string.Equals(bracketStripped, dashNormalized, StringComparison.Ordinal))
             {
                 AddCandidate(bracketStripped);
