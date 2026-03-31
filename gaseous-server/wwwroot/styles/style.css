@@ -4602,7 +4602,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     right: 0px;
     padding-top: 10px;
     padding-bottom: 10px;
-    padding-left: 85px;
+    padding-left: var(--game-tile-banner-padding-left, 85px);
     padding-right: 10px;
     background-color: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(8px);

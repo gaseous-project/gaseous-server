@@ -425,6 +425,16 @@ namespace gaseous_server.Classes
             Wikipedia = 8,
 
             /// <summary>
+            /// SteamGridDb
+            /// </summary>
+            SteamGridDb = 9,
+
+            /// <summary>
+            /// ScreenScraper
+            /// </summary>
+            ScreenScraper = 10,
+
+            /// <summary>
             /// Unknown metadata source.
             /// </summary>
             Unknown = 9999

@@ -388,11 +388,23 @@ class WideGameIcon {
             coverImage.src = coverUrl;
             coverImage.classList.add('game_tile_wide_cover');
             coverImage.style.opacity = '0';
+            const updateBannerPadding = () => {
+                const leftPaddingPx = coverImage.offsetLeft + coverImage.offsetWidth + 10;
+                gameTile.style.setProperty('--game-tile-banner-padding-left', `${leftPaddingPx}px`);
+            };
             coverImage.onload = () => {
                 coverImage.style.transition = 'opacity 1s ease-in-out';
                 coverImage.style.opacity = '1';
+                updateBannerPadding();
             };
             gameTile.appendChild(coverImage);
+
+            if (globalThis.ResizeObserver) {
+                const resizeObserver = new ResizeObserver(() => {
+                    updateBannerPadding();
+                });
+                resizeObserver.observe(coverImage);
+            }
         }
 
         // add save game icon
