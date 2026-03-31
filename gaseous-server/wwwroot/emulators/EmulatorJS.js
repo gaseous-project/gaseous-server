@@ -394,10 +394,12 @@ if (['arcade', 'mame', 'fbneo', 'fbalpha2012_cps1', 'fbalpha2012_cps2'].includes
                     }
                     sampleIds += data.items[i].attachmentId;
                 }
-                samplesArray[pathName] = `/api/v1.1/ContentManager/attachment/zipStream?attachmentIds=${sampleIds}`;
+                if (sampleIds.length > 0) {
+                    samplesArray[pathName] = `/api/v1.1/ContentManager/attachment/zipStream?attachmentIds=${sampleIds}`;
 
-                console.log(window.lang.translate("emulator.samples_array", JSON.stringify(samplesArray)));
-                EJS_externalFiles = samplesArray;
+                    console.log(window.lang.translate("emulator.samples_array", JSON.stringify(samplesArray)));
+                    EJS_externalFiles = samplesArray;
+                }
             });
     }
 }
