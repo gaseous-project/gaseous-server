@@ -4631,6 +4631,11 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     text-shadow: 1px 1px rgba(0, 0, 0, 0.44);
 }
 
+.game_tile_wide_banner.expanded>.game_tile_wide_title {
+    color: black;
+    text-shadow: none;
+}
+
 .game_tile_wide_platforms {
     padding-top: 5px;
 }

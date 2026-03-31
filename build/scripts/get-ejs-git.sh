@@ -33,7 +33,7 @@ fi
 # Recursively mirror all core files from the CDN into the local cores directory.
 # This will overwrite existing files but will not delete extra local files.
 # If you want a clean sync, delete the destination directory first.
-CORES_URL="https://cdn.emulatorjs.org/latest/data/cores/"
+CORES_URL="https://cdn.emulatorjs.org/nightly/data/cores/"
 DEST_DIR="./gaseous-server/wwwroot/emulators/EmulatorJS/data/cores"
 
 mkdir -p "$DEST_DIR"
@@ -42,7 +42,7 @@ mkdir -p "$DEST_DIR"
 # -r        : recursive
 # -np       : no parent (stay within cores/)
 # -nH       : don't create host directory
-# --cut-dirs=3 : strip 'latest/data/cores' from path so deeper structure starts at cores root
+# --cut-dirs=3 : strip 'nightly/data/cores' from path so deeper structure starts at cores root
 # -R "index.html*" : skip auto-generated index listings
 # -P DEST_DIR : set destination prefix
 # Existing files are overwritten by default.
