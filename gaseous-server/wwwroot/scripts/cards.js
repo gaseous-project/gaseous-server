@@ -1423,10 +1423,10 @@ class GameCardRomList {
                 // this.Refresh();
             });
             this.contentUploadButtons.appendChild(this.uploadManualButton);
-        }
 
-        // create the upload content button
-        this.Body.appendChild(this.contentUploadButtons);
+            // create the upload content button
+            this.Body.appendChild(this.contentUploadButtons);
+        }
 
         // create the content container
         this.contentContainer = document.createElement('div');
