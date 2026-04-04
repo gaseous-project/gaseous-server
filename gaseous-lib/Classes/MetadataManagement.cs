@@ -108,6 +108,16 @@ namespace gaseous_server.Classes
 
 			// strip version number from name
 			name = Common.StripVersionsFromFileName(name);
+			// create the "name with 'The' moved to the end" version of the name for signature matching purposes (e.g., "The Legend of Zelda" becomes "Legend of Zelda, The")
+			string nameThe = "";
+			if (name.StartsWith("The ", StringComparison.InvariantCultureIgnoreCase))
+			{
+				nameThe = name.Substring(4) + ", The";
+			}
+			else
+			{
+				nameThe = name;
+			}
 
 			// store the metadata map
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -115,7 +125,8 @@ namespace gaseous_server.Classes
 			Dictionary<string, object> dbDict = new Dictionary<string, object>()
 			{
 				{ "@platformId", platformId },
-				{ "@name", name }
+				{ "@name", name },
+				{ "@nameThe", nameThe }
 			};
 			DataTable dt = new DataTable();
 
@@ -128,17 +139,18 @@ namespace gaseous_server.Classes
 			}
 
 			// create the metadata map
-			sql = "INSERT INTO MetadataMap (PlatformId, SignatureGameName) VALUES (@platformId, @name); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+			sql = "INSERT INTO MetadataMap (PlatformId, SignatureGameName, SignatureGameNameThe) VALUES (@platformId, @name, @nameThe); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
 			dt = db.ExecuteCMD(sql, dbDict);
 
 			long metadataMapId = (long)dt.Rows[0][0];
 
 			// create dummy game metadata item and capture id
-			sql = "INSERT INTO Metadata_Game (SourceId, Name, dateAdded, lastUpdated) VALUES (@sourceid, @name, @dateadded, @lastupdated); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+			sql = "INSERT INTO Metadata_Game (SourceId, Name, NameThe, dateAdded, lastUpdated) VALUES (@sourceid, @name, @nameThe, @dateadded, @lastupdated); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
 			dbDict = new Dictionary<string, object>()
 			{
 				{ "@sourceid", FileSignature.MetadataSources.None },
 				{ "@name", name },
+				{ "@nameThe", nameThe },
 				{ "@dateadded", DateTime.UtcNow },
 				{ "@lastupdated", DateTime.UtcNow }
 			};
@@ -372,6 +384,7 @@ namespace gaseous_server.Classes
 					Id = (long)dt.Rows[0]["Id"],
 					PlatformId = (long)dt.Rows[0]["PlatformId"],
 					SignatureGameName = dt.Rows[0]["SignatureGameName"]?.ToString() ?? string.Empty,
+					SignatureGameNameThe = dt.Rows[0]["SignatureGameNameThe"]?.ToString() ?? string.Empty,
 					MetadataMapItems = new List<MetadataMap.MetadataMapItem>()
 				};
 
@@ -844,7 +857,15 @@ namespace gaseous_server.Classes
 				List<FileSignature.MetadataSources> BlockedMetadataSource = new List<FileSignature.MetadataSources>
 				{
 					FileSignature.MetadataSources.None,
-					FileSignature.MetadataSources.RetroAchievements
+					FileSignature.MetadataSources.RetroAchievements,
+					FileSignature.MetadataSources.EpicGameStore,
+					FileSignature.MetadataSources.GiantBomb,
+					FileSignature.MetadataSources.GOG,
+					FileSignature.MetadataSources.ScreenScraper,
+					FileSignature.MetadataSources.Steam,
+					FileSignature.MetadataSources.SteamGridDb,
+					FileSignature.MetadataSources.Wikipedia,
+					FileSignature.MetadataSources.Unknown
 				};
 				if (BlockedMetadataSource.Contains(item.SourceType))
 				{

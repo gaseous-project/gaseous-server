@@ -39,6 +39,10 @@ namespace gaseous_server.Models
         public long PlatformId { get; set; }
         /// <summary>Canonical signature game name.</summary>
         public string SignatureGameName { get; set; } = string.Empty;
+        /// <summary>
+        /// Canonical signature game name with "The" moved to the end, if applicable.
+        /// </summary>
+        public string SignatureGameNameThe { get; set; } = string.Empty;
         // Initialize the list to avoid null references in most usage paths. Some callers intentionally
         // create trimmed copies (e.g., for lightweight content views) and may null this out, so mark nullable.
         /// <summary>Collection of metadata items (may be null in trimmed views).</summary>

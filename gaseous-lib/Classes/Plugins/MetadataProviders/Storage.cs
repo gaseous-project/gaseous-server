@@ -2,6 +2,7 @@
 using System.Data;
 using System.Reflection;
 using System.Threading.Tasks;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace gaseous_server.Classes.Plugins.MetadataProviders
@@ -198,6 +199,57 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             if (ObjectToCache == null)
             {
                 throw new ArgumentNullException(nameof(ObjectToCache), "Object to cache cannot be null.");
+            }
+
+            // perform some basic data massaging
+            switch (typeof(T))
+            {
+                case Type t when t == typeof(Game):
+                    Game gameObject = ObjectToCache as Game;
+
+                    var provider = gaseous_server.Classes.Metadata.Metadata.MetadataProviders.FirstOrDefault(x => x.SourceType == _sourceType);
+                    if (gameObject != null)
+                    {
+                        // compute the NameThe property for sorting purposes
+                        if (!string.IsNullOrEmpty(gameObject.Name))
+                        {
+                            if (gameObject.Name.StartsWith("The ", StringComparison.OrdinalIgnoreCase))
+                            {
+                                gameObject.NameThe = gameObject.Name.Substring(4) + ", The";
+                            }
+                            else
+                            {
+                                gameObject.NameThe = gameObject.Name;
+                            }
+                        }
+                    }
+
+                    // get the age group classification for the game based on its age ratings
+                    List<AgeRating>? ageRatings = new List<AgeRating>();
+                    if (gameObject.AgeRatings != null)
+                    {
+                        foreach (var ageRatingId in gameObject.AgeRatings)
+                        {
+                            AgeRating? ageRating = await provider.GetAgeRatingAsync(ageRatingId, false);
+                            if (ageRating != null)
+                            {
+                                ageRatings.Add(ageRating);
+                            }
+                        }
+
+                        var ageGroupValue = Metadata.AgeGroups.GetAgeGroupFromAgeRatings(ageRatings);
+                        if (ageGroupValue == 0)
+                        {
+                            gameObject.AgeGroupId = null;
+                        }
+                        else
+                        {
+                            gameObject.AgeGroupId = ageGroupValue;
+                        }
+                    }
+
+                    ObjectToCache = (T)(object)gameObject;
+                    break;
             }
 
             // get the object type name
@@ -418,6 +470,10 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
 
                                     case "system.datetimeoffset":
                                         property.SetValue(EndpointType, (DateTimeOffset)(DateTime?)value);
+                                        break;
+
+                                    case "agerestrictiongroupings":
+                                        property.SetValue(EndpointType, (Metadata.AgeGroups.AgeRestrictionGroupings?)value);
                                         break;
 
                                     default:

@@ -22,6 +22,12 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
         /// <inheritdoc/>
         public bool UsesInternet { get; } = true;
 
+        private List<MetadataSources> SupportedMetadataSources = new List<MetadataSources>()
+        {
+            MetadataSources.IGDB,
+            MetadataSources.TheGamesDb
+        };
+
         private static JsonSerializerSettings CreateHasheousJsonSerializerSettings()
         {
             JsonSerializerSettings serializerSettings = new JsonSerializerSettings();
@@ -193,6 +199,11 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                                     {
                                         if (Enum.TryParse<MetadataSources>(metadataResult.Source, out MetadataSources metadataSource))
                                         {
+                                            if (!SupportedMetadataSources.Contains(metadataSource))
+                                            {
+                                                continue;
+                                            }
+
                                             if (metadataResult.ImmutableId.Length > 0)
                                             {
                                                 switch (metadataSource)

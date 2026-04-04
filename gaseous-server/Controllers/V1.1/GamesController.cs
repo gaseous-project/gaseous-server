@@ -431,7 +431,7 @@ namespace gaseous_server.Controllers.v1_1
                 var sb = new System.Text.StringBuilder("(");
                 if (model.GameAgeRating.AgeGroupings.Count > 0)
                 {
-                    sb.Append("AgeGroup.AgeGroupId IN (");
+                    sb.Append("Game.AgeGroupId IN (");
                     for (int i = 0; i < model.GameAgeRating.AgeGroupings.Count; i++)
                     {
                         if (i > 0)
@@ -451,7 +451,7 @@ namespace gaseous_server.Controllers.v1_1
                     {
                         sb.Append(" OR ");
                     }
-                    sb.Append("AgeGroup.AgeGroupId IS NULL");
+                    sb.Append("Game.AgeGroupId IS NULL");
                 }
                 sb.Append(')');
                 whereClauses.Add(sb.ToString());
@@ -539,7 +539,7 @@ namespace gaseous_server.Controllers.v1_1
     COUNT(`RomGroupSavedState`.`Id`) AS `RomGroupSavedStates`,
     COUNT(`RomSavedFile`.`Id`) AS `RomSavedFiles`,
     COUNT(`RomGroupSavedFile`.`Id`) AS `RomGroupSavedFiles`,
-    `AgeGroup`.`AgeGroupId`,
+    `Game`.`AgeGroupId`,
     CASE
         WHEN `LocalizedNames`.`LocalizedName` IS NOT NULL THEN `LocalizedNames`.`LocalizedName`
         WHEN `Game`.`Name` IS NULL THEN `MetadataMap`.`SignatureGameName`
@@ -637,8 +637,6 @@ FROM
     `Metadata_Game` AS `Game` ON `MetadataMapBridge`.`MetadataSourceType` = `Game`.`SourceId`
         AND `MetadataMapBridge`.`MetadataSourceId` = `Game`.`Id`
         LEFT JOIN
-	`Metadata_AgeGroup` AS `AgeGroup` ON `Game`.`Id` = `AgeGroup`.`GameId` AND `Game`.`SourceId` = `AgeGroup`.`SourceId`
-        LEFT JOIN
     `Metadata_AlternativeName` AS `AlternativeName` ON `Game`.`Id` = `AlternativeName`.`Game` AND `Game`.`SourceId` = `AlternativeName`.`SourceId`
         LEFT JOIN
     (SELECT 
@@ -713,6 +711,8 @@ FROM
                 // Neither requested (edge case)
                 dbResponse = new DataTable();
             }
+
+            System.IO.File.WriteAllText(Path.Combine(Config.ConfigurationPath, "last_query.sql"), sql); // For debugging purposes
 
             int indexInPage = 0;
             if (pageNumber > 1)

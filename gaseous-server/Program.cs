@@ -21,7 +21,6 @@ using System.Net;
 using System.Linq;
 using Microsoft.Extensions.Hosting.WindowsServices;
 using Microsoft.OpenApi;
-using gaseous_server.Classes.Metadata.Utility;
 
 // Defer heavy startup work so Windows Service can report RUNNING quickly
 

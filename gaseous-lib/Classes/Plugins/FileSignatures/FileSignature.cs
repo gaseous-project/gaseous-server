@@ -212,7 +212,6 @@ namespace gaseous_server.Classes
                 "ZipContents", Newtonsoft.Json.JsonConvert.SerializeObject(fileHash.ArchiveContents)
             );
 
-
             // get discovered platform
             Platform? determinedPlatform = null;
             if (library.DefaultPlatformId == null || library.DefaultPlatformId == 0)
