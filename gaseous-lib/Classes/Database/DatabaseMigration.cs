@@ -390,7 +390,7 @@ namespace gaseous_server.Classes
             }
 
             // perform any metadata table migrations that are needed
-            await gaseous_server.Classes.Metadata.Utility.MetadataTableBuilder.BuildTableFromType("gaseous", "Metadata", typeof(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game), "", "NameThe, AgeGroup");
+            await gaseous_server.Classes.Metadata.Utility.MetadataTableBuilder.BuildTableFromType("gaseous", "Metadata", typeof(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game), "", "NameThe, AgeGroupId");
             await gaseous_server.Classes.Metadata.Utility.MetadataTableBuilder.BuildTableFromType("gaseous", "Metadata", typeof(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.GameLocalization), "", "NameThe");
         }
 

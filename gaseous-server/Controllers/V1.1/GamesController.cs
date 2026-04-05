@@ -221,7 +221,7 @@ namespace gaseous_server.Controllers.v1_1
 
             if (model.Name.Length > 0)
             {
-                whereClauses.Add("(MATCH(`Game`.`Name`) AGAINST (@GameName IN BOOLEAN MODE) OR MATCH(`AlternativeName`.`Name`) AGAINST (@GameName IN BOOLEAN MODE))");
+                whereClauses.Add("(MATCH(`Game`.`Name`) AGAINST (@GameName IN BOOLEAN MODE) OR MATCH(`AlternativeName`.`Name`) AGAINST (@GameName IN BOOLEAN MODE) OR MATCH (`LocalizedNames`.`Name`) AGAINST (@GameName IN BOOLEAN MODE))");
                 whereParams.Add("@GameName", "(*" + model.Name + "*) (" + model.Name + ") ");
             }
 
@@ -517,7 +517,7 @@ namespace gaseous_server.Controllers.v1_1
 
             string sql = @"
                 SELECT 
-	`MetadataMapBridge`.`MetadataSourceId` AS `Id`,
+    `MetadataMapBridge`.`MetadataSourceId` AS `Id`,
     `MetadataMap`.`Id` AS `MetadataMapId`,
     `MetadataMapBridge`.`MetadataSourceType` AS `GameIdType`,
     `MetadataMap`.`SignatureGameName`,
@@ -541,33 +541,23 @@ namespace gaseous_server.Controllers.v1_1
     COUNT(`RomGroupSavedFile`.`Id`) AS `RomGroupSavedFiles`,
     `Game`.`AgeGroupId`,
     CASE
-        WHEN `LocalizedNames`.`LocalizedName` IS NOT NULL THEN `LocalizedNames`.`LocalizedName`
+        WHEN `LocalizedNames`.`Name` IS NOT NULL THEN `LocalizedNames`.`Name`
         WHEN `Game`.`Name` IS NULL THEN `MetadataMap`.`SignatureGameName`
         ELSE `Game`.`Name`
     END AS `Name`,
     CASE
-		WHEN `LocalizedNames`.`LocalizedNameThe` IS NOT NULL THEN `LocalizedNames`.`LocalizedNameThe`
-        WHEN `Game`.`Name` IS NULL THEN
-            CASE
-                WHEN
-                    `MetadataMap`.`SignatureGameName` LIKE 'The %'
-                THEN
-                    CONCAT(TRIM(SUBSTR(`MetadataMap`.`SignatureGameName`,
-                                    4)),
-                            ', The')
-                ELSE `MetadataMap`.`SignatureGameName`
-            END
-        WHEN `Game`.`Name` LIKE 'The %' THEN CONCAT(TRIM(SUBSTR(`Game`.`Name`, 4)), ', The')
-        ELSE `Game`.`Name`
+        WHEN `LocalizedNames`.`NameThe` IS NOT NULL THEN `LocalizedNames`.`NameThe`
+        WHEN `Game`.`NameThe` IS NULL THEN `MetadataMap`.`SignatureGameNameThe`
+        ELSE `Game`.`NameThe`
     END AS `NameThe`,
     `Game`.`Slug`,
     `Game`.`Summary`,
     `Game`.`TotalRating`,
     `Game`.`TotalRatingCount`,
     CASE
-        WHEN `LocalizedNames`.`LocalizedCover` IS NULL THEN `Game`.`Cover`
-        WHEN `LocalizedNames`.`LocalizedCover` = 0 THEN `Game`.`Cover`
-        ELSE `LocalizedNames`.`LocalizedCover`
+        WHEN `LocalizedNames`.`Cover` IS NULL THEN `Game`.`Cover`
+        WHEN `LocalizedNames`.`Cover` = 0 THEN `Game`.`Cover`
+        ELSE `LocalizedNames`.`Cover`
     END AS `Cover`,
     `Game`.`Artworks`,
     `Game`.`FirstReleaseDate`,
@@ -609,7 +599,7 @@ FROM
         `UserTimeTracking`
     WHERE
         `UserId` = @userid
-    GROUP BY `GameId`, `PlatformId`) AS `UserTimeTracking` ON `MetadataMap`.`Id` = `UserTimeTracking`.`GameId`
+    GROUP BY `GameId` , `PlatformId`) AS `UserTimeTracking` ON `MetadataMap`.`Id` = `UserTimeTracking`.`GameId`
         AND `MetadataMap`.`PlatformId` = `UserTimeTracking`.`PlatformId`
         LEFT JOIN
     `Favourites` ON `MetadataMapBridge`.`ParentMapId` = `Favourites`.`GameId`
@@ -637,24 +627,17 @@ FROM
     `Metadata_Game` AS `Game` ON `MetadataMapBridge`.`MetadataSourceType` = `Game`.`SourceId`
         AND `MetadataMapBridge`.`MetadataSourceId` = `Game`.`Id`
         LEFT JOIN
-    `Metadata_AlternativeName` AS `AlternativeName` ON `Game`.`Id` = `AlternativeName`.`Game` AND `Game`.`SourceId` = `AlternativeName`.`SourceId`
+    `Metadata_AlternativeName` AS `AlternativeName` ON `Game`.`Id` = `AlternativeName`.`Game`
+        AND `Game`.`SourceId` = `AlternativeName`.`SourceId`
         LEFT JOIN
-    (SELECT 
-        `Metadata_GameLocalization`.`Game`,
-            `Metadata_GameLocalization`.`SourceId`,
-            `Metadata_GameLocalization`.`Name` AS `LocalizedName`,
-            CASE
-                WHEN `Metadata_GameLocalization`.`Name` LIKE 'The %' THEN CONCAT(TRIM(SUBSTR(`Metadata_GameLocalization`.`Name`, 4)), ', The')
-                ELSE `Metadata_GameLocalization`.`Name`
-            END AS `LocalizedNameThe`,
-            `Metadata_GameLocalization`.`Cover` AS `LocalizedCover`,
-            `Region`.`Identifier`
-    FROM
-        `Metadata_GameLocalization` AS `Metadata_GameLocalization`
-    JOIN `Metadata_Region` AS `Region` ON `Metadata_GameLocalization`.`Region` = `Region`.`Id`
-        AND `Metadata_GameLocalization`.`SourceId` = `Region`.`SourceId`
-    WHERE
-        `Region`.`Identifier` = @lang) `LocalizedNames` ON `Game`.`Id` = `LocalizedNames`.`Game`
+    (
+        SELECT `gl`.`Game`, `gl`.`SourceId`, `gl`.`Name`, `gl`.`NameThe`, `gl`.`Cover`
+        FROM `Metadata_GameLocalization` AS `gl`
+        JOIN `Metadata_Region` AS `r`
+            ON `gl`.`Region` = `r`.`Id`
+            AND `gl`.`SourceId` = `r`.`SourceId`
+            AND `r`.`Identifier` = @lang
+    ) AS `LocalizedNames` ON `Game`.`Id` = `LocalizedNames`.`Game`
         AND `Game`.`SourceId` = `LocalizedNames`.`SourceId`
 " + String.Join(" ", joinClauses) + " " + whereClause + " GROUP BY `MetadataMapBridge`.`MetadataSourceType`, `MetadataMapBridge`.`MetadataSourceId` " + havingClause + " " + orderByClause;
 

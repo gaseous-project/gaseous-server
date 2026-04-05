@@ -474,8 +474,14 @@ namespace gaseous_server.Classes
             dbDict.Add("romtype", (int)signature.Rom.RomType);
             dbDict.Add("romtypemedia", Common.ReturnValueIfNull(signature.Rom.RomTypeMedia, ""));
             dbDict.Add("medialabel", Common.ReturnValueIfNull(signature.Rom.MediaLabel, ""));
-
-            dbDict.Add("path", Path.GetRelativePath(library.Path, filePath));
+            if (!SourceIsExternal)
+            {
+                dbDict.Add("path", Path.GetRelativePath(library.Path, filePath));
+            }
+            else
+            {
+                dbDict.Add("path", filePath);
+            }
 
             DataTable romInsert = await db.ExecuteCMDAsync(sql, dbDict);
             if (romId == 0)

@@ -570,9 +570,10 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             else
             {
                 // clean existing records for this object
-                sql = "DELETE FROM " + TableName + " WHERE `" + PrimaryTable + "Id` = @objectid";
+                sql = "DELETE FROM " + TableName + " WHERE `" + PrimaryTable + "Id` = @objectid AND `" + PrimaryTable + "SourceId` = @sourcetype;";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
                 dbDict.Add("objectid", ObjectId);
+                dbDict.Add("sourcetype", _sourceType);
                 await db.ExecuteCMDAsync(sql, dbDict);
             }
 
