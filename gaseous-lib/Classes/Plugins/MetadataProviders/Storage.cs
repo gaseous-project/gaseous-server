@@ -250,6 +250,28 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
 
                     ObjectToCache = (T)(object)gameObject;
                     break;
+
+                case Type t when t == typeof(GameLocalization):
+                    GameLocalization gameLocalizationObject = ObjectToCache as GameLocalization;
+
+                    if (gameLocalizationObject != null)
+                    {
+                        // compute the NameThe property for sorting purposes
+                        if (!string.IsNullOrEmpty(gameLocalizationObject.Name))
+                        {
+                            if (gameLocalizationObject.Name.StartsWith("The ", StringComparison.OrdinalIgnoreCase))
+                            {
+                                gameLocalizationObject.NameThe = gameLocalizationObject.Name.Substring(4) + ", The";
+                            }
+                            else
+                            {
+                                gameLocalizationObject.NameThe = gameLocalizationObject.Name;
+                            }
+                        }
+                    }
+
+                    ObjectToCache = (T)(object)gameLocalizationObject;
+                    break;
             }
 
             // get the object type name

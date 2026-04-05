@@ -245,6 +245,11 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes
         /// </summary>
         [Models.NoDatabaseAttribute]
         public FileSignature.MetadataSources SourceType { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the game with "the" prefix for sorting purposes.
+        /// </summary>
+        public string? NameThe { get; set; }
     }
 
     /// <summary>
