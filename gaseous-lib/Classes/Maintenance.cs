@@ -30,8 +30,10 @@ namespace gaseous_server.Classes
             string sqlLibraryWhereClause = "";
             if (LibraryWhereClause.Length > 0)
             {
+                DataTable affectedMetadataMaps = await db.ExecuteCMDAsync("SELECT DISTINCT MetadataMapId FROM Games_Roms WHERE LibraryId NOT IN ( " + LibraryWhereClause + " ) AND MetadataMapId IS NOT NULL;");
                 sqlLibraryWhereClause = "DELETE FROM Games_Roms WHERE LibraryId NOT IN ( " + LibraryWhereClause + " );";
                 await db.ExecuteCMDAsync(sqlLibraryWhereClause);
+                MetadataManagement.UpdateRomCounts(affectedMetadataMaps.AsEnumerable().Where(row => row["MetadataMapId"] != DBNull.Value).Select(row => (long)row["MetadataMapId"]));
             }
 
             // update rom counts

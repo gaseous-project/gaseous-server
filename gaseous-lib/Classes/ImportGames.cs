@@ -430,12 +430,22 @@ namespace gaseous_server.Classes
 
             // add or update the rom
             dbDict = new Dictionary<string, object>();
+            long previousMetadataMapId = 0;
             if (romId == 0)
             {
                 sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, SHA256, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, RelativePath, MetadataSource, MetadataGameName, MetadataVersion, LibraryId, RomDataVersion, MetadataMapId) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @sha256, @developmentstatus, @Attributes, @romtype, @romtypemedia, @medialabel, @path, @metadatasource, @metadatagamename, @metadataversion, @libraryid, @romdataversion, @metadatamapid); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
             }
             else
             {
+                DataTable existingRom = await db.ExecuteCMDAsync("SELECT MetadataMapId FROM Games_Roms WHERE Id=@id", new Dictionary<string, object>()
+                {
+                    { "id", romId }
+                });
+                if (existingRom.Rows.Count > 0 && existingRom.Rows[0]["MetadataMapId"] != DBNull.Value)
+                {
+                    previousMetadataMapId = (long)existingRom.Rows[0]["MetadataMapId"];
+                }
+
                 sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid, Name=@name, Size=@size, CRC=@crc, MD5=@md5, SHA1=@sha1, SHA256=@sha256, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion, RomDataVersion=@romdataversion, MetadataMapId=@metadatamapid, DateUpdated=@dateupdated WHERE Id=@id;";
                 dbDict.Add("id", romId);
             }
@@ -487,6 +497,12 @@ namespace gaseous_server.Classes
             if (romId == 0)
             {
                 romId = (long)romInsert.Rows[0][0];
+            }
+
+            MetadataManagement.UpdateRomCount((long)map.Id);
+            if (previousMetadataMapId != 0 && previousMetadataMapId != (long)map.Id)
+            {
+                MetadataManagement.UpdateRomCount(previousMetadataMapId);
             }
 
             // move to destination
@@ -1002,10 +1018,15 @@ namespace gaseous_server.Classes
             List<PlatformMapping.PlatformMapItem> _platformMap = PlatformMapping.PlatformMap;
 
             Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.looking_for_duplicate_library_files_to_clean_up");
+            DataTable duplicateMetadataMaps = await db.ExecuteCMDAsync("SELECT DISTINCT r1.MetadataMapId FROM Games_Roms r1 INNER JOIN Games_Roms r2 WHERE r1.Id > r2.Id AND r1.MD5 = r2.MD5 AND r1.LibraryId=@libraryid AND r2.LibraryId=@libraryid AND r1.MetadataMapId IS NOT NULL;", new Dictionary<string, object>()
+            {
+                { "libraryid", library.Id }
+            });
             string duplicateSql = "DELETE r1 FROM Games_Roms r1 INNER JOIN Games_Roms r2 WHERE r1.Id > r2.Id AND r1.MD5 = r2.MD5 AND r1.LibraryId=@libraryid AND r2.LibraryId=@libraryid;";
             Dictionary<string, object> dupDict = new Dictionary<string, object>();
             dupDict.Add("libraryid", library.Id);
             await db.ExecuteCMDAsync(duplicateSql, dupDict);
+            MetadataManagement.UpdateRomCounts(duplicateMetadataMaps.AsEnumerable().Where(row => row["MetadataMapId"] != DBNull.Value).Select(row => (long)row["MetadataMapId"]));
 
             string sql = "SELECT * FROM view_Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
@@ -1017,7 +1038,7 @@ namespace gaseous_server.Classes
             {
                 var rowsToDelete = dtRoms.AsEnumerable()
                     .Where(row => !((string)row["Path"]).StartsWith(library.Path))
-                    .Select(row => (Id: (long)row["Id"], Path: (string)row["Path"]))
+                    .Select(row => (Id: (long)row["Id"], Path: (string)row["Path"], MetadataMapId: (long)row["MetadataMapId"]))
                     .ToList();
 
                 foreach (var entry in rowsToDelete)
@@ -1030,6 +1051,7 @@ namespace gaseous_server.Classes
                         { "libraryid", library.Id }
                     };
                     await db.ExecuteCMDAsync(deleteSql, deleteDict);
+                    MetadataManagement.UpdateRomCount(entry.MetadataMapId);
                 }
             }
 
@@ -1155,6 +1177,7 @@ namespace gaseous_server.Classes
                             { "libraryid", library.Id }
                         };
                         await db.ExecuteCMDAsync(deleteSql, deleteDict);
+                        MetadataManagement.UpdateRomCount((long)dtRoms.Rows[i]["MetadataMapId"]);
                     }
                 }
             }

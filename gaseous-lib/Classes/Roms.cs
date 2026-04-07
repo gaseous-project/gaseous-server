@@ -181,6 +181,9 @@ namespace gaseous_server.Classes
 
 		public static async Task<GameRomItem> UpdateRomAsync(long RomId, long PlatformId, long GameId)
 		{
+			GameRomItem existingRom = await GetRom(RomId);
+			long previousMetadataMapId = existingRom.MetadataMapId;
+
 			// ensure metadata for platformid is present
 			Platform platform = await Classes.Metadata.Platforms.GetPlatform(PlatformId);
 
@@ -194,6 +197,11 @@ namespace gaseous_server.Classes
 			dbDict.Add("platformid", PlatformId);
 			dbDict.Add("gameid", GameId);
 			await db.ExecuteCMDAsync(sql, dbDict);
+			MetadataManagement.UpdateRomCount(GameId);
+			if (previousMetadataMapId != 0 && previousMetadataMapId != GameId)
+			{
+				MetadataManagement.UpdateRomCount(previousMetadataMapId);
+			}
 
 			GameRomItem rom = await GetRom(RomId);
 
@@ -263,6 +271,7 @@ namespace gaseous_server.Classes
 				Dictionary<string, object> dbDict = new Dictionary<string, object>();
 				dbDict.Add("id", RomId);
 				await db.ExecuteCMDAsync(sql, dbDict);
+				MetadataManagement.UpdateRomCount(rom.MetadataMapId);
 			}
 		}
 

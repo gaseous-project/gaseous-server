@@ -47,12 +47,12 @@ namespace gaseous_server.Classes
                         GamesWithRoms AS (
                             SELECT DISTINCT
                                 fg.Id,
-                                gr.PlatformId
+                                vmm.PlatformId
                             FROM FilteredGames fg
                             INNER JOIN view_MetadataMap vmm 
                                 ON vmm.MetadataSourceId = fg.Id 
                                 AND vmm.MetadataSourceType = fg.GameIdType
-                            INNER JOIN Games_Roms gr ON gr.MetadataMapId = vmm.Id
+                            WHERE vmm.RomCount > 0
                         )
                         SELECT 
                             p.Id, 
@@ -93,7 +93,7 @@ namespace gaseous_server.Classes
                             INNER JOIN view_MetadataMap vmm 
                                 ON vmm.MetadataSourceId = fg.Id 
                                 AND vmm.MetadataSourceType = fg.GameIdType
-                            INNER JOIN Games_Roms gr ON gr.MetadataMapId = vmm.Id
+                            AND vmm.RomCount > 0
                             LEFT JOIN Metadata_AgeGroup ag ON fg.Id = ag.GameId
                         )
                         SELECT 
@@ -186,14 +186,14 @@ namespace gaseous_server.Classes
                 SELECT DISTINCT
                     g.Id AS GameId,
                     g.SourceId AS GameIdType,
-                    gr.PlatformId,
+                    vmm.PlatformId,
                     g.AgeGroupId
                 FROM Metadata_Game g
                 INNER JOIN view_MetadataMap vmm 
                     ON vmm.MetadataSourceId = g.Id 
                     AND vmm.MetadataSourceType = g.SourceId
-                INNER JOIN Games_Roms gr ON gr.MetadataMapId = vmm.Id
-                WHERE (" + ageRestriction_Platform + @")";
+                WHERE (" + ageRestriction_Platform + @")
+                    AND vmm.RomCount > 0";
 
             await db.ExecuteCMDAsync(baseFilteredGamesQuery, new DatabaseMemoryCacheOptions(CacheEnabled: false));
 
@@ -387,7 +387,7 @@ namespace gaseous_server.Classes
                     INNER JOIN view_MetadataMap vmm 
                         ON vmm.MetadataSourceId = fg.Id 
                         AND vmm.MetadataSourceType = fg.GameIdType
-                    INNER JOIN Games_Roms gr ON gr.MetadataMapId = vmm.Id
+                    WHERE vmm.RomCount > 0
                 )
                 SELECT 
                     gwr.GameIdType, 

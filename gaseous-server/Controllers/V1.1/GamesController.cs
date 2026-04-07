@@ -219,6 +219,9 @@ namespace gaseous_server.Controllers.v1_1
             List<string> whereClauses = new List<string>(10);
             List<string> havingClauses = new List<string>(10);
 
+            // Only include metadata maps that currently contain ROMs.
+            whereClauses.Add("`MetadataMap`.`RomCount` > 0");
+
             if (model.Name.Length > 0)
             {
                 whereClauses.Add("(MATCH(`Game`.`Name`) AGAINST (@GameName IN BOOLEAN MODE) OR MATCH(`AlternativeName`.`Name`) AGAINST (@GameName IN BOOLEAN MODE) OR MATCH (`LocalizedNames`.`Name`) AGAINST (@GameName IN BOOLEAN MODE))");
@@ -526,19 +529,16 @@ namespace gaseous_server.Controllers.v1_1
                 ORDER BY `MetadataMap`.`PlatformId`
                 SEPARATOR ','),
             ']') AS `Platforms`,
-    `RomCounts`.`RomCount`,
-    CASE
-        WHEN `RomMediaGroup`.`Id` IS NULL THEN 0
-        ELSE 1
-    END AS `MediaGroups`,
+    `MetadataMap`.`RomCount`,
+    IFNULL(`RomGroupStats`.`MediaGroups`, 0) AS `MediaGroups`,
     CASE
         WHEN `Favourites`.`UserId` IS NULL THEN 0
         ELSE 1
     END AS `Favourite`,
-    COUNT(`RomSavedState`.`Id`) AS `RomSavedStates`,
-    COUNT(`RomGroupSavedState`.`Id`) AS `RomGroupSavedStates`,
-    COUNT(`RomSavedFile`.`Id`) AS `RomSavedFiles`,
-    COUNT(`RomGroupSavedFile`.`Id`) AS `RomGroupSavedFiles`,
+    IFNULL(`RomSaveStats`.`RomSavedStates`, 0) AS `RomSavedStates`,
+    IFNULL(`RomGroupStats`.`RomGroupSavedStates`, 0) AS `RomGroupSavedStates`,
+    IFNULL(`RomSaveStats`.`RomSavedFiles`, 0) AS `RomSavedFiles`,
+    IFNULL(`RomGroupStats`.`RomGroupSavedFiles`, 0) AS `RomGroupSavedFiles`,
     `Game`.`AgeGroupId`,
     CASE
         WHEN `LocalizedNames`.`Name` IS NOT NULL THEN `LocalizedNames`.`Name`
@@ -569,8 +569,8 @@ namespace gaseous_server.Controllers.v1_1
     `Game`.`PlayerPerspectives`,
     `Game`.`Screenshots`,
     `Game`.`Themes`,
-    `RomCounts`.`DateAdded`,
-    `RomCounts`.`DateUpdated`,
+    `RomDates`.`DateAdded`,
+    `RomDates`.`DateUpdated`,
     IFNULL(`UserTimeTracking`.`TimePlayed`, 0) AS `TimePlayed`,
     `UserTimeTracking`.`LastPlayed`
 FROM
@@ -581,14 +581,42 @@ FROM
         JOIN
     (SELECT 
         `MetadataMapId`,
-            COUNT(`Id`) AS `RomCount`,
             MIN(`DateCreated`) AS `DateAdded`,
             MAX(`DateUpdated`) AS `DateUpdated`
     FROM
         `Games_Roms`
-    GROUP BY `MetadataMapId`) AS `RomCounts` ON `MetadataMap`.`Id` = `RomCounts`.`MetadataMapId`
-        JOIN
-    `Games_Roms` ON `MetadataMap`.`Id` = `Games_Roms`.`MetadataMapId`
+    GROUP BY `MetadataMapId`) AS `RomDates` ON `MetadataMap`.`Id` = `RomDates`.`MetadataMapId`
+        LEFT JOIN
+    (SELECT 
+        `Games_Roms`.`MetadataMapId`,
+            COUNT(DISTINCT `RomSavedState`.`Id`) AS `RomSavedStates`,
+            COUNT(DISTINCT `RomSavedFile`.`Id`) AS `RomSavedFiles`
+    FROM
+        `Games_Roms`
+    LEFT JOIN `GameState` AS `RomSavedState` ON `Games_Roms`.`Id` = `RomSavedState`.`RomId`
+        AND `RomSavedState`.`IsMediaGroup` = 0
+        AND `RomSavedState`.`UserId` = @userid
+    LEFT JOIN `GameSaves` AS `RomSavedFile` ON `Games_Roms`.`Id` = `RomSavedFile`.`RomId`
+        AND `RomSavedFile`.`IsMediaGroup` = 0
+        AND `RomSavedFile`.`UserId` = @userid
+    GROUP BY `Games_Roms`.`MetadataMapId`) AS `RomSaveStats` ON `MetadataMap`.`Id` = `RomSaveStats`.`MetadataMapId`
+        LEFT JOIN
+    (SELECT 
+        `RomMediaGroup`.`GameId`,
+            `RomMediaGroup`.`PlatformId`,
+            1 AS `MediaGroups`,
+            COUNT(DISTINCT `RomGroupSavedState`.`Id`) AS `RomGroupSavedStates`,
+            COUNT(DISTINCT `RomGroupSavedFile`.`Id`) AS `RomGroupSavedFiles`
+    FROM
+        `RomMediaGroup`
+    LEFT JOIN `GameState` AS `RomGroupSavedState` ON `RomMediaGroup`.`Id` = `RomGroupSavedState`.`RomId`
+        AND `RomGroupSavedState`.`IsMediaGroup` = 1
+        AND `RomGroupSavedState`.`UserId` = @userid
+    LEFT JOIN `GameSaves` AS `RomGroupSavedFile` ON `RomMediaGroup`.`Id` = `RomGroupSavedFile`.`RomId`
+        AND `RomGroupSavedFile`.`IsMediaGroup` = 1
+        AND `RomGroupSavedFile`.`UserId` = @userid
+    GROUP BY `RomMediaGroup`.`GameId` , `RomMediaGroup`.`PlatformId`) AS `RomGroupStats` ON `MetadataMap`.`Id` = `RomGroupStats`.`GameId`
+        AND `MetadataMap`.`PlatformId` = `RomGroupStats`.`PlatformId`
         LEFT JOIN
     (SELECT 
         `GameId`,
@@ -604,25 +632,6 @@ FROM
         LEFT JOIN
     `Favourites` ON `MetadataMapBridge`.`ParentMapId` = `Favourites`.`GameId`
         AND `Favourites`.`UserId` = @userid
-        LEFT JOIN
-    `GameState` AS `RomSavedState` ON `Games_Roms`.`Id` = `RomSavedState`.`RomId`
-        AND `RomSavedState`.`IsMediaGroup` = 0
-        AND `RomSavedState`.`UserId` = @userid
-        LEFT JOIN
-    `GameSaves` AS `RomSavedFile` ON `Games_Roms`.`Id` = `RomSavedFile`.`RomId`
-        AND `RomSavedFile`.`IsMediaGroup` = 0
-        AND `RomSavedFile`.`UserId` = @userid
-        LEFT JOIN
-    `RomMediaGroup` ON `MetadataMap`.`Id` = `RomMediaGroup`.`GameId`
-        AND `MetadataMap`.`PlatformId` = `RomMediaGroup`.`PlatformId`
-        LEFT JOIN
-    `GameState` AS `RomGroupSavedState` ON `RomMediaGroup`.`Id` = `RomGroupSavedState`.`RomId`
-        AND `RomGroupSavedState`.`IsMediaGroup` = 1
-        AND `RomGroupSavedState`.`UserId` = @userid
-        LEFT JOIN
-    `GameSaves` AS `RomGroupSavedFile` ON `RomMediaGroup`.`Id` = `RomGroupSavedFile`.`RomId`
-        AND `RomGroupSavedFile`.`IsMediaGroup` = 1
-        AND `RomGroupSavedFile`.`UserId` = @userid
         LEFT JOIN
     `Metadata_Game` AS `Game` ON `MetadataMapBridge`.`MetadataSourceType` = `Game`.`SourceId`
         AND `MetadataMapBridge`.`MetadataSourceId` = `Game`.`Id`

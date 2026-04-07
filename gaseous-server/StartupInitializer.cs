@@ -1,5 +1,6 @@
 using System.Reflection;
 using System.IO;
+using System.Diagnostics;
 using gaseous_server.Classes;
 using gaseous_server.Models;
 using Microsoft.Extensions.Hosting;
@@ -11,16 +12,9 @@ using gaseous_server.Classes.Plugins.MetadataProviders;
 
 namespace gaseous_server
 {
-    public class StartupInitializer : BackgroundService
+    public static class StartupInitializer
     {
-        private readonly IServiceProvider _services;
-
-        public StartupInitializer(IServiceProvider services)
-        {
-            _services = services;
-        }
-
-        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        public static async Task InitializeAsync(IServiceProvider services, CancellationToken stoppingToken)
         {
             try
             {
@@ -68,7 +62,7 @@ namespace gaseous_server
                 ProcessQueue.QueueProcessor.QueueItems.Add(queueItem);
 
                 // Roles and system setup
-                using (var scope = _services.CreateScope())
+                using (var scope = services.CreateScope())
                 {
                     var roleManager = scope.ServiceProvider.GetRequiredService<RoleStore>();
                     var roles = new[] { "Admin", "Gamer", "Player" };
@@ -92,6 +86,14 @@ namespace gaseous_server
                 }
                 await PlatformMapping.ExtractPlatformMap();
                 Bios.MigrateToNewFolderStructure();
+
+                // Repair stale counts before the server starts serving requests.
+                Logging.LogKey(Logging.LogType.Information, "process.startup", "startup.repairing_rom_counts");
+                Stopwatch romCountRepairTimer = Stopwatch.StartNew();
+                MetadataManagement metadataManagement = new MetadataManagement();
+                metadataManagement.UpdateRomCounts();
+                romCountRepairTimer.Stop();
+                Logging.LogKey(Logging.LogType.Information, "process.startup", "startup.rom_count_repair_complete", null, new string[] { romCountRepairTimer.Elapsed.ToString() });
 
                 // Background tasks
                 ProcessQueue.QueueProcessor.QueueItems.Add(new ProcessQueue.QueueProcessor.QueueItem(ProcessQueue.QueueItemType.SignatureIngestor));

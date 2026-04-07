@@ -2,6 +2,8 @@ class HomePageGameRow {
     constructor(title, searchModel) {
         this.title = title;
         this.searchModel = searchModel;
+        this.lastRenderedGamesSignature = null;
+        this.loadingInterval = null;
 
         // Create the row
         this.row = document.createElement("div");
@@ -28,24 +30,40 @@ class HomePageGameRow {
         showRatings = false;
         showClassification = false;
 
-        // start loading indicator
-        let charCount = 0;
-        this.loadingInterval = setInterval(() => {
-            charCount++;
-            if (charCount > 3) {
-                charCount = 0;
-            }
-            // Internationalised loading indicator: base word from translations, dots remain for animation.
-            this.games.innerHTML = '<p>' + window.lang.translate('generic.loading') + '.'.repeat(charCount) + '&nbsp;'.repeat(3 - charCount) + '</p>';
-        }, 1000);
+        if (this.loadingInterval) {
+            clearInterval(this.loadingInterval);
+            this.loadingInterval = null;
+        }
+
+        // Only show loading when the row is currently empty.
+        const isGamesContainerEmpty = this.games.children.length === 0 && this.games.textContent.trim() === "";
+        if (isGamesContainerEmpty) {
+            let charCount = 0;
+            this.loadingInterval = setInterval(() => {
+                charCount++;
+                if (charCount > 3) {
+                    charCount = 0;
+                }
+                // Internationalised loading indicator: base word from translations, dots remain for animation.
+                this.games.innerHTML = '<p>' + window.lang.translate('generic.loading') + '.'.repeat(charCount) + '&nbsp;'.repeat(3 - charCount) + '</p>';
+            }, 1000);
+        }
 
         let gameFilter = new Filtering();
         gameFilter.GetSummary = false;
         gameFilter.executeCallback = async (games) => {
-            clearInterval(this.loadingInterval);
-            this.games.innerHTML = "";
+            if (this.loadingInterval) {
+                clearInterval(this.loadingInterval);
+                this.loadingInterval = null;
+            }
 
-            console.log(games);
+            const gamesSignature = JSON.stringify(games);
+            if (gamesSignature === this.lastRenderedGamesSignature) {
+                return;
+            }
+
+            this.lastRenderedGamesSignature = gamesSignature;
+            this.games.innerHTML = "";
 
             if (games.length === 0) {
                 this.games.innerHTML = '<p>' + window.lang.translate('home.no_games_found') + '</p>';
@@ -146,17 +164,22 @@ gameRows.push(new HomePageGameRow('home.top_rated_games',
     }
 ));
 
-async function populateRows() {
-    // start populating the rows
-
+async function loadHomePage() {
     targetDiv.innerHTML = "";
-
     for (let row of gameRows) {
         targetDiv.appendChild(row.row);
         await row.populate();
     }
 }
 
+async function populateRows() {
+    // start populating the rows
+    for (let row of gameRows) {
+        await row.populate();
+    }
+}
+
+loadHomePage();
 populateRows();
 
 var coverURLList = [];
@@ -201,4 +224,12 @@ if (typeof registerPageUnloadCallback === 'function') {
 // setup preferences callbacks
 prefsDialog.OkCallbacks.push(async () => {
     await populateRows();
+});
+
+// subscribe to the notifications so that we can update the home page when changes are made to the library or games
+notificationLoadEndCallbacks.push(async (notifications) => {
+    if (notifications.LastLibraryChange || notifications.LastContentChange || notifications.LastMetadataChange) {
+        console.log(window.lang.translate('console.refreshing_home_page_due_to_changes'));
+        await populateRows();
+    }
 });

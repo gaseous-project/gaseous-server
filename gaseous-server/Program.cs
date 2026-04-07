@@ -219,7 +219,6 @@ builder.Services.AddSwaggerGen(options =>
     }
 );
 builder.Services.AddHostedService<TimedHostedService>();
-builder.Services.AddHostedService<StartupInitializer>();
 
 // identity
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
@@ -435,8 +434,6 @@ app.UseHttpsRedirection();
 
 app.UseResponseCaching();
 
-// Heavy initialization moved to StartupInitializer (BackgroundService)
-
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -488,7 +485,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
-// Heavy initialization moved to StartupInitializer (BackgroundService)
+await StartupInitializer.InitializeAsync(app.Services, app.Lifetime.ApplicationStopping);
 
 // Start the web server explicitly so we only report RUNNING after Kestrel is accepting connections
 await app.StartAsync();

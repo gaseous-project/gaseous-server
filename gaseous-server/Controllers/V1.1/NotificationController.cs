@@ -105,6 +105,14 @@ namespace gaseous_server.Controllers
                 notifications.Add("databaseUpgrade", upgradeStatus);
             }
 
+            // add last metadata refresh time
+            notifications.Add("LastMetadataRefresh", Config.ReadSetting<DateTime>("LastMetadataRefresh", DateTime.UtcNow));
+
+            // change signals for clients that poll and need to know if a refresh is required
+            notifications.Add("LastLibraryChange", Config.ReadSetting<DateTime>(RefreshNotificationSignal.LastLibraryChangeSetting, DateTime.MinValue));
+            notifications.Add("LastContentChange", Config.ReadSetting<DateTime>(RefreshNotificationSignal.LastContentChangeSetting, DateTime.MinValue));
+            notifications.Add("LastMetadataChange", Config.ReadSetting<DateTime>(RefreshNotificationSignal.LastMetadataChangeSetting, DateTime.MinValue));
+
             return Ok(notifications);
         }
     }

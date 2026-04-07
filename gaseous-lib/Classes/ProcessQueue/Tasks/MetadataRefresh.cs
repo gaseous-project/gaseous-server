@@ -107,6 +107,7 @@ namespace gaseous_server.ProcessQueue.Plugins
                 metadataGame.UpdateRomCounts();
                 bool forceStart = (ParentSubTaskItem.ParentObject as QueueProcessor.QueueItem)?.ForceStartRequested ?? false;
                 await metadataGame.RefreshGames(forceStart);
+                RefreshNotificationSignal.MarkMetadataChanged();
             }
         }
     }

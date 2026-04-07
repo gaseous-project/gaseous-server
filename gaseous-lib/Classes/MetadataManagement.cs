@@ -219,6 +219,7 @@ namespace gaseous_server.Classes
 
 			// invalidate cache so subsequent GetMetadataMap sees the new/updated item
 			DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
+			RefreshNotificationSignal.MarkMetadataChanged();
 		}
 
 		/// <summary>
@@ -282,6 +283,7 @@ namespace gaseous_server.Classes
 				db.ExecuteCMD(sql, dbDict);
 				// ensure cache invalidated even if no other fields are changing
 				DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
+				RefreshNotificationSignal.MarkMetadataChanged();
 			}
 
 			// only make changes to other fields if there is something to change
@@ -296,6 +298,7 @@ namespace gaseous_server.Classes
 
 			// clear the cache for this metadata map if present (covers non-preferred updates)
 			DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
+			RefreshNotificationSignal.MarkMetadataChanged();
 
 		}
 
@@ -455,6 +458,7 @@ namespace gaseous_server.Classes
 				case MetadataMapSupportDataTypes.UserManualLink:
 					sql = "UPDATE MetadataMap SET UserManualLink = @data WHERE Id = @metadataMapId;";
 					db.ExecuteCMD(sql, dbDict);
+					RefreshNotificationSignal.MarkMetadataChanged();
 					break;
 			}
 
@@ -1008,22 +1012,73 @@ namespace gaseous_server.Classes
 		}
 
 		/// <summary>
+		/// Refreshes the ROM count for a single metadata map.
+		/// </summary>
+		/// <param name="metadataMapId">
+		/// The metadata map identifier to recalculate.
+		/// </param>
+		public static void UpdateRomCount(long metadataMapId)
+		{
+			if (metadataMapId <= 0)
+			{
+				return;
+			}
+
+			string sql = @"
+UPDATE `MetadataMap`
+        LEFT JOIN
+    (SELECT 
+        `MetadataMapId`, COUNT(`Id`) AS `RomCount`
+    FROM
+        `Games_Roms`
+    WHERE
+        `MetadataMapId` = @metadataMapId
+    GROUP BY `MetadataMapId`) AS `RomCounter` ON `MetadataMap`.`Id` = `RomCounter`.`MetadataMapId`
+SET 
+    `MetadataMap`.`RomCount` = IFNULL(`RomCounter`.`RomCount`, 0)
+WHERE
+    `MetadataMap`.`Id` = @metadataMapId;";
+			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+			db.ExecuteNonQuery(sql, new Dictionary<string, object>()
+			{
+				{ "metadataMapId", metadataMapId }
+			});
+		}
+
+		/// <summary>
+		/// Refreshes the ROM counts for the provided metadata maps.
+		/// </summary>
+		/// <param name="metadataMapIds">
+		/// The metadata map identifiers to recalculate.
+		/// </param>
+		public static void UpdateRomCounts(IEnumerable<long> metadataMapIds)
+		{
+			if (metadataMapIds == null)
+			{
+				return;
+			}
+
+			foreach (long metadataMapId in metadataMapIds.Distinct())
+			{
+				UpdateRomCount(metadataMapId);
+			}
+		}
+
+		/// <summary>
 		/// Updates the ROM counts for each metadata map in the database.
 		/// </summary>
 		public void UpdateRomCounts()
 		{
 			string sql = @"
 UPDATE `MetadataMap`
-        INNER JOIN
+		LEFT JOIN
     (SELECT 
-        `MetadataMap`.`Id`, COUNT(`Games_Roms`.`Id`) AS `RomCount`
+		`MetadataMapId`, COUNT(`Id`) AS `RomCount`
     FROM
-        `MetadataMap`
-    LEFT JOIN `Games_Roms` ON `MetadataMap`.`Id` = `Games_Roms`.`MetadataMapId`
-    GROUP BY `MetadataMap`.`Id`
-    ORDER BY `MetadataMap`.`SignatureGameName`) AS `RomCounter` ON `MetadataMap`.`Id` = `RomCounter`.`Id` 
+		`Games_Roms`
+	GROUP BY `MetadataMapId`) AS `RomCounter` ON `MetadataMap`.`Id` = `RomCounter`.`MetadataMapId` 
 SET 
-    `MetadataMap`.`RomCount` = `RomCounter`.`RomCount`;";
+	`MetadataMap`.`RomCount` = IFNULL(`RomCounter`.`RomCount`, 0);";
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 			db.ExecuteNonQuery(sql);
 		}
