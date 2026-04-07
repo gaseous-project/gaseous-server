@@ -118,7 +118,7 @@ function setupBanner() {
 
                 if (showDatabaseUpgradeNotification) {
                     // we had a change in the notification, show the notification and then store the new notification in localStorage
-                    let notificationMsg = new Notification(
+                    notificationManager.showNotification(
                         t('banner.notification.database_upgrade.title'),
                         t('banner.notification.database_upgrade.body'),
                         undefined,
@@ -126,7 +126,6 @@ function setupBanner() {
                         undefined,
                         'DatabaseUpgrade'
                     );
-                    notificationMsg.Show();
 
                     // get the date and time and add 5 minutes to it
                     let nextUpdateDateTime = new Date();
@@ -173,7 +172,7 @@ function setupBanner() {
                                 notificationState = 2;
 
                                 // show the notification
-                                let notificationMsg = new Notification(
+                                notificationManager.showNotification(
                                     window.lang.translate('banner.notification.game_imported.title'),
                                     window.lang.translate('banner.notification.game_imported.body'),
                                     undefined,
@@ -181,7 +180,6 @@ function setupBanner() {
                                     undefined,
                                     'GameImported'
                                 );
-                                notificationMsg.Show();
                             }
                         }
 

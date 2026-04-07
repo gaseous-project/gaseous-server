@@ -241,12 +241,11 @@ window.EJS_Buttons = {
                     console.log(window.lang.translate("generic.upload_complete"));
                     console.log(result);
                     // show a notification
-                    const notification = new Notification(
+                    notificationManager.showNotification(
                         window.lang.translate("generic.screenshot"),
-                        window.lang.translate("generic.screenshot.has_been_saved")
-                            `/api/v1.1/ContentManager/attachment/${result.attachmentId}/data`
+                        window.lang.translate("generic.screenshot.has_been_saved"),
+                        `/api/v1.1/ContentManager/attachment/${result.attachmentId}/data`
                     );
-                    notification.Show();
                 })
                 .catch(error => {
                     console.log(window.lang.translate("console.error_generic", error));
@@ -276,12 +275,11 @@ window.EJS_onSaveState = function (e) {
             console.log(window.lang.translate("generic.upload_complete"));
             console.log(result);
 
-            const notification = new Notification(
+            notificationManager.showNotification(
                 window.lang.translate("emulator.state.saved"),
                 window.lang.translate("emulator.state.saved_message"),
                 '/api/v1.1/StateManager/' + romId + '/' + result.value.id + '/Screenshot/image.png?IsMediaGroup=' + IsMediaGroup
             );
-            notification.Show();
         })
         .catch(error => {
             console.log("An error occurred");

@@ -2889,6 +2889,10 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     color: var(--page-font-colour);
 }
 
+.section.importNotification {
+    background-color: rgba(255, 140, 0, 0.3);
+}
+
 .section-header {
     position: relative;
     background-color: var(--section-header-background);
