@@ -734,10 +734,10 @@ function createNotificationPanelItem(importQueueItem) {
     itemName.innerHTML = importQueueItem.filename;
     itemDiv.appendChild(itemName);
 
-    // const itemDate = document.createElement('div');
-    // itemDate.classList.add('notification_item_date');
-    // itemDate.innerHTML = new Date(importQueueItem.lastupdated).toLocaleString();
-    // itemDiv.appendChild(itemDate);
+    const itemDate = document.createElement('div');
+    itemDate.classList.add('notification_item_date');
+    itemDate.innerHTML = new Date(importQueueItem.lastupdated).toLocaleString();
+    itemDiv.appendChild(itemDate);
 
     return itemDiv;
 }
