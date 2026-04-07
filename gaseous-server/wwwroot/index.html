@@ -122,25 +122,25 @@
                 let wrappedScript = `
                 (function() {
                     // Clear any existing page variables to avoid conflicts
-                    if (typeof coverURLList !== 'undefined') {
+                    if (typeof window.coverURLList !== 'undefined') {
                         delete window.coverURLList;
                     }
-                    if (typeof filter !== 'undefined') {
+                    if (typeof window.filter !== 'undefined') {
                         delete window.filter;
                     }
-                    if (typeof gameRows !== 'undefined') {
+                    if (typeof window.gameRows !== 'undefined') {
                         delete window.gameRows;
                     }
-                    if (typeof scrollTimer !== 'undefined') {
+                    if (typeof window.scrollTimer !== 'undefined') {
                         delete window.scrollTimer;
                     }
-                    if (typeof loadedPages !== 'undefined') {
+                    if (typeof window.loadedPages !== 'undefined') {
                         delete window.loadedPages;
                     }
-                    if (typeof backgroundImageHandler !== 'undefined') {
+                    if (typeof window.backgroundImageHandler !== 'undefined') {
                         // Stop any background image rotation timer
-                        if (backgroundImageHandler && backgroundImageHandler.RotationTimer) {
-                            clearInterval(backgroundImageHandler.RotationTimer);
+                        if (window.backgroundImageHandler && window.backgroundImageHandler.RotationTimer) {
+                            clearInterval(window.backgroundImageHandler.RotationTimer);
                         }
                         delete window.backgroundImageHandler;
                     }

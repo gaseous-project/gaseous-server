@@ -1,14 +1,14 @@
 class Filtering {
-    constructor(applyCallback, orderBySelector, orderDirectionSelector, pageSizeSelector, executeCallback, executeErrorCallback, executeBeginCallback, executeCompleteCallback) {
-        this.applyCallback = applyCallback;
-        this.executeCallback = executeCallback;
-        this.executeErrorCallback = executeErrorCallback;
-        this.executeBeginCallback = executeBeginCallback;
-        this.executeCompleteCallback = executeCompleteCallback;
-        this.pageSizeSelector = pageSizeSelector;
-        this.orderBySelector = orderBySelector;
-        this.orderDirectionSelector = orderDirectionSelector;
+    applyCallback = null;
+    executeCallback = null;
+    executeErrorCallback = null;
+    executeBeginCallback = null;
+    executeCompleteCallback = null;
+    pageSizeSelector = null;
+    orderBySelector = null;
+    orderDirectionSelector = null;
 
+    constructor() {
         if (this.orderBySelector) {
             this.OrderBySelector(this.orderBySelector);
         }
@@ -104,10 +104,8 @@ class Filtering {
                         delete filter[key][subKey];
                     }
                 }
-            } else {
-                if (filter[key] === false || filter[key] === '') {
-                    delete filter[key];
-                }
+            } else if (filter[key] === false || filter[key] === '') {
+                delete filter[key];
             }
         }
 
@@ -268,7 +266,6 @@ class Filtering {
         let pageNumber = 1;
 
         if (filter['limit']) {
-            pageNumber = 1;
             pageSize = filter['limit'];
         }
 
@@ -276,17 +273,20 @@ class Filtering {
         this.AlphaList = [];
 
         if (this.applyCallback) {
-            this.applyCallback();
+            const applyResult = await this.applyCallback(filterModel, { pageNumber, pageSize, filterOverride });
+            if (applyResult === false) {
+                return;
+            }
         }
 
-        this.ExecuteFilter(pageNumber, pageSize);
+        return this.ExecuteFilter(pageNumber, pageSize);
     }
 
     GetSummary = false;
     GameCount = 0;
     AlphaList = [];
 
-    async ExecuteFilter(pageNumber, pageSize) {
+    async ExecuteFilter(pageNumber, pageSize, options = {}) {
         if (!pageNumber) {
             pageNumber = 1;
         }
@@ -294,54 +294,69 @@ class Filtering {
             pageSize = this.filterSelections['pageSize'];
         }
 
-        let returnSummary = "false";
-        if (this.GetSummary === true) {
-            returnSummary = "true";
-        }
+        const requestOptions = {
+            returnSummary: this.GetSummary === true,
+            returnGames: true,
+            signal: null,
+            suppressBeginCallback: false,
+            suppressCompleteCallback: false,
+            ...options
+        };
 
-        if (this.executeBeginCallback) {
+        if (!requestOptions.suppressBeginCallback && this.executeBeginCallback) {
             this.executeBeginCallback();
         }
 
-        let url = '/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize + '&returnSummary=' + returnSummary + '&returnGames=true';
+        const url = '/api/v1.1/Games?pageNumber=' + pageNumber + '&pageSize=' + pageSize + '&returnSummary=' + String(requestOptions.returnSummary) + '&returnGames=' + String(requestOptions.returnGames);
 
-        await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(this.#computedFilterModel)
-        }).then(response => {
-            if (response.ok) {
-                return response.json();
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(this.#computedFilterModel),
+                signal: requestOptions.signal
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to load games');
             }
-            throw new Error('Failed to load games');
-        }).then(data => {
-            if (data.count) {
+
+            const data = await response.json();
+            if (data.count !== undefined && data.count !== null) {
                 this.GameCount = data.count;
             }
             if (data.alphaList) {
                 this.AlphaList = data.alphaList;
             }
 
-            if (this.executeCompleteCallback) {
+            if (!requestOptions.suppressCompleteCallback && this.executeCompleteCallback) {
                 this.executeCompleteCallback();
             }
 
             if (this.executeCallback) {
-                this.executeCallback(data.games);
+                this.executeCallback(data.games || [], data, requestOptions);
             }
-        }).catch(error => {
+
+            return data;
+        } catch (error) {
+            if (error?.name === 'AbortError') {
+                return null;
+            }
+
             console.error(error);
 
-            if (this.executeCompleteCallback) {
+            if (!requestOptions.suppressCompleteCallback && this.executeCompleteCallback) {
                 this.executeCompleteCallback();
             }
 
             if (this.executeErrorCallback) {
                 this.executeErrorCallback(error);
             }
-        });
+
+            throw error;
+        }
     }
 
     async GetGamesFilter(dontExecuteFilter = false) {
@@ -415,7 +430,7 @@ class Filtering {
         if (this.filterCollapsed['filtering.title_search'] !== undefined) {
             searchCollapsed = this.filterCollapsed['filtering.title_search'];
         }
-        panel.appendChild(this.#BuildBasicPanel('filtering.title_search', true, searchCollapsed, this.#BuildStringPanel('search', window.lang.translate('filtering.title_search')), null));
+        panel.appendChild(this.#BuildBasicPanel('filtering.title_search', true, searchCollapsed, this.#BuildStringPanel('search', globalThis.lang.translate('filtering.title_search')), null));
 
         // settings filter
         let settingsCollapsed = true;
@@ -425,12 +440,12 @@ class Filtering {
         panel.appendChild(this.#BuildBasicPanel('filtering.settings', true, settingsCollapsed, this.#BuildCheckList('settings', [
             {
                 "id": "hasSavedGame",
-                "name": window.lang.translate('filtering.settings.has_saved_game'),
+                "name": globalThis.lang.translate('filtering.settings.has_saved_game'),
                 "gameCount": 0
             },
             {
                 "id": "isFavourite",
-                "name": window.lang.translate('filtering.settings.favourite'),
+                "name": globalThis.lang.translate('filtering.settings.favourite'),
                 "gameCount": 0
             }
         ], false), null));
@@ -461,7 +476,7 @@ class Filtering {
         if (this.filterCollapsed['Release Year'] !== undefined) {
             releaseYearCollapsed = this.filterCollapsed['Release Year'];
         }
-        panel.appendChild(this.#BuildBasicPanel('filtering.release_year', true, releaseYearCollapsed, this.#BuildRangePanel('releaseyear', window.lang.translate('filtering.release_year'), 1960, new Date().getFullYear()), null));
+        panel.appendChild(this.#BuildBasicPanel('filtering.release_year', true, releaseYearCollapsed, this.#BuildRangePanel('releaseyear', globalThis.lang.translate('filtering.release_year'), 1960, new Date().getFullYear()), null));
 
         // players filter
         let playersCollapsed = true;
@@ -489,14 +504,14 @@ class Filtering {
         if (this.filterCollapsed['User Rating'] !== undefined) {
             userRatingCollapsed = this.filterCollapsed['User Rating'];
         }
-        panel.appendChild(this.#BuildBasicPanel('filtering.user_rating', true, userRatingCollapsed, this.#BuildRangePanel('userrating', window.lang.translate('filtering.user_rating'), 0, 100), null));
+        panel.appendChild(this.#BuildBasicPanel('filtering.user_rating', true, userRatingCollapsed, this.#BuildRangePanel('userrating', globalThis.lang.translate('filtering.user_rating'), 0, 100), null));
 
         // user vote count
         let userVoteCountCollapsed = true;
         if (this.filterCollapsed['User Votes'] !== undefined) {
             userVoteCountCollapsed = this.filterCollapsed['User Votes'];
         }
-        panel.appendChild(this.#BuildBasicPanel('filtering.user_votes', true, userVoteCountCollapsed, this.#BuildRangePanel('uservotecount', window.lang.translate('filtering.user_votes'), 0, 1000000), null));
+        panel.appendChild(this.#BuildBasicPanel('filtering.user_votes', true, userVoteCountCollapsed, this.#BuildRangePanel('uservotecount', globalThis.lang.translate('filtering.user_votes'), 0, 1000000), null));
 
         targetElement.appendChild(panel);
         return targetElement;
@@ -540,8 +555,8 @@ class Filtering {
         }
 
         let heading = document.createElement('div');
-        heading.innerText = window.lang.translate(headingDisplayName);
-        heading.setAttribute('data-i18n', headingDisplayName);
+        heading.innerText = globalThis.lang.translate(headingDisplayName);
+        heading.dataset.i18n = headingDisplayName;
         header.appendChild(heading);
 
         panel.appendChild(header);
