@@ -96,8 +96,6 @@ class Filtering {
             filter = filterOverride;
         }
 
-        console.log('Filter start time: ' + new Date().toLocaleTimeString());
-
         // delete entries from filterSelections that are false or empty
         for (let key in filter) {
             if (typeof filter[key] === 'object') {
@@ -346,7 +344,7 @@ class Filtering {
         });
     }
 
-    async GetGamesFilter() {
+    async GetGamesFilter(dontExecuteFilter = false) {
         try {
             const response = await fetch('/api/v1.1/Filter', { method: 'GET' });
             if (!response.ok) throw new Error('Failed to load filter content');
@@ -374,7 +372,7 @@ class Filtering {
             }
 
             for (const callback of this.FilterCallbacks) {
-                callback(filter);
+                callback(filter, dontExecuteFilter);
             }
         } catch (error) {
             console.error(error);

@@ -215,11 +215,7 @@ namespace gaseous_server.Classes
         {
             // Use provided options or fall back to default
             var options = jsonSerializerOptions ?? _jsonOptions;
-
-            // Build a per-request timeout using a linked cancellation token (avoid mutating HttpClient.Timeout)
-            using var timeoutCts = new System.Threading.CancellationTokenSource(timeout ?? _defaultTimeout);
-            using var linkedCts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
-            var effectiveToken = linkedCts.Token;
+            var requestTimeout = timeout ?? _defaultTimeout;
 
             // Create empty response object
             var response = new HttpResponse<T>();
@@ -230,6 +226,12 @@ namespace gaseous_server.Classes
             // Main retry loop
             while (attempts < maxAttempts)
             {
+                // Build a per-attempt timeout using a linked cancellation token.
+                // Retries must get a fresh timeout window rather than reusing a canceled token from a prior attempt.
+                using var timeoutCts = new System.Threading.CancellationTokenSource(requestTimeout);
+                using var linkedCts = System.Threading.CancellationTokenSource.CreateLinkedTokenSource(cancellationToken, timeoutCts.Token);
+                var effectiveToken = linkedCts.Token;
+
                 // --- Rate limiting logic scoped to host ---
                 // Extract host from URL
                 var uri = url;
@@ -270,7 +272,7 @@ namespace gaseous_server.Classes
                 // If rate limit exceeded for this host, wait before sending the request
                 if (shouldWait && waitMs > 0)
                 {
-                    await Task.Delay(waitMs, effectiveToken);
+                    await Task.Delay(waitMs, cancellationToken);
                 }
 
                 try
@@ -478,7 +480,7 @@ namespace gaseous_server.Classes
                         if (attempts < maxAttempts)
                         {
                             int waitTime = _rateLimit429WaitTimeSeconds;
-                            await Task.Delay(waitTime * 1000, effectiveToken);
+                            await Task.Delay(waitTime * 1000, cancellationToken);
                             continue;
                         }
                     }
@@ -518,19 +520,43 @@ namespace gaseous_server.Classes
                             }
                         }
                         // Wait before retrying
-                        await Task.Delay(waitTime * 1000, effectiveToken);
+                        await Task.Delay(waitTime * 1000, cancellationToken);
                     }
                     // Handle 420 Enhance Your Calm response
                     else if (response.StatusCode == 420)
                     {
                         attempts++;
-                        await Task.Delay(_rateLimit420WaitTimeSeconds * 1000, effectiveToken);
+                        await Task.Delay(_rateLimit420WaitTimeSeconds * 1000, cancellationToken);
                     }
                     else if (!isCloudFlareError && !httpResponseMessage.IsSuccessStatusCode)
                     {
                         // For other errors, do not retry
                         break;
                     }
+                }
+                catch (OperationCanceledException ex) when (cancellationToken.IsCancellationRequested)
+                {
+                    response.ErrorMessage = ex.Message;
+                    response.ErrorType = ex.GetType().FullName;
+                    response.ErrorStackTrace = ex.StackTrace;
+                    Logging.LogKey(Logging.LogType.Warning, "HTTPComms", $"Request canceled by caller on attempt {attempts + 1} for {method} {url}.", null, null, ex);
+                    throw;
+                }
+                catch (OperationCanceledException ex) when (timeoutCts.IsCancellationRequested)
+                {
+                    string timeoutMessage = $"Request timed out after {requestTimeout.TotalSeconds:0.#} seconds.";
+                    Logging.LogKey(Logging.LogType.Warning, "HTTPComms", $"{timeoutMessage} Attempt {attempts + 1} for {method} {url}.", null, null, ex);
+                    response.ErrorMessage = timeoutMessage;
+                    response.ErrorType = typeof(TimeoutException).FullName;
+                    response.ErrorStackTrace = ex.StackTrace;
+                    attempts++;
+
+                    if (attempts >= maxAttempts)
+                    {
+                        break;
+                    }
+
+                    await Task.Delay(2000 * attempts, cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -540,7 +566,13 @@ namespace gaseous_server.Classes
                     response.ErrorType = ex.GetType().FullName;
                     response.ErrorStackTrace = ex.StackTrace;
                     attempts++;
-                    await Task.Delay(2000 * attempts, effectiveToken);
+
+                    if (attempts >= maxAttempts)
+                    {
+                        break;
+                    }
+
+                    await Task.Delay(2000 * attempts, cancellationToken);
                 }
             }
 

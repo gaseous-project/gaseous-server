@@ -2,6 +2,8 @@ let notifications = {};
 let notificationLoadStartCallbacks = [];
 let notificationLoadEndCallbacks = [];
 let notificationLoadErrorCallbacks = [];
+let notificationLibraryUpdateLastUpdate = new Date();
+let notificationLibraryUpdateCallbacks = [];
 
 // fetch the latest notifications from the server every 5 seconds
 function startNotificationFetch() {
@@ -9,7 +11,11 @@ function startNotificationFetch() {
     setInterval(async () => {
         if (notificationLoadStartCallbacks) {
             for (const callback of notificationLoadStartCallbacks) {
-                callback();
+                try {
+                    callback();
+                } catch (error) {
+                    console.error((window.lang ? window.lang.translate('notifications.error.fetch_start_callback_exception_prefix', [error]) : 'Error in notification load start callback: ' + error));
+                }
             }
         }
         await fetch('/api/v1.1/Notification').then(response => {
@@ -17,9 +23,13 @@ function startNotificationFetch() {
                 return response.json();
             } else {
                 console.error((window.lang ? window.lang.translate('notifications.error.failed_fetch_prefix', [response.statusText]) : 'Failed to fetch notifications: ' + response.statusText));
-                if (notificationLoadEndCallbacks) {
+                if (notificationLoadErrorCallbacks) {
                     for (const callback of notificationLoadErrorCallbacks) {
-                        callback(response);
+                        try {
+                            callback(response);
+                        } catch (error) {
+                            console.error((window.lang ? window.lang.translate('notifications.error.fetch_error_callback_exception_prefix', [error]) : 'Error in notification load error callback: ' + error));
+                        }
                     }
                 }
             }
@@ -28,15 +38,52 @@ function startNotificationFetch() {
                 notifications = data;
                 if (notificationLoadEndCallbacks) {
                     for (const callback of notificationLoadEndCallbacks) {
-                        callback(data);
+                        try {
+                            callback(data);
+                        } catch (error) {
+                            console.error((window.lang ? window.lang.translate('notifications.error.fetch_error_callback_exception_prefix', [error]) : 'Error in notification load end callback: ' + error));
+                        }
+                    }
+                }
+                if (notificationLibraryUpdateCallbacks) {
+                    if (notifications.LastLibraryChange || notifications.LastContentChange || notifications.LastMetadataChange) {
+                        // find the latest change time among the library, content, and metadata changes
+                        let latestChangeTime = 0;
+                        if (notifications.LastLibraryChange) {
+                            latestChangeTime = Math.max(latestChangeTime, new Date(notifications.LastLibraryChange).getTime());
+                        }
+                        if (notifications.LastContentChange) {
+                            latestChangeTime = Math.max(latestChangeTime, new Date(notifications.LastContentChange).getTime());
+                        }
+                        if (notifications.LastMetadataChange) {
+                            latestChangeTime = Math.max(latestChangeTime, new Date(notifications.LastMetadataChange).getTime());
+                        }
+
+                        // check that it's been more than 30 seconds since the last library update callback was executed to prevent spamming updates during large metadata refreshes
+                        if (latestChangeTime > notificationLibraryUpdateLastUpdate.getTime() + 30000) {
+                            console.log("Executing callbacks due to change at: " + new Date(latestChangeTime).toLocaleString());
+                            notificationLibraryUpdateLastUpdate = new Date();
+
+                            for (const callback of notificationLibraryUpdateCallbacks) {
+                                try {
+                                    callback(data);
+                                } catch (error) {
+                                    console.error((window.lang ? window.lang.translate('notifications.error.fetch_error_callback_exception_prefix', [error]) : 'Error in notification library update callback: ' + error));
+                                }
+                            }
+                        }
                     }
                 }
             }
         }).catch(error => {
             console.error((window.lang ? window.lang.translate('notifications.error.fetch_exception_prefix', [error]) : 'Error fetching notifications: ' + error));
-            if (notificationLoadEndCallbacks) {
+            if (notificationLoadErrorCallbacks) {
                 for (const callback of notificationLoadErrorCallbacks) {
-                    callback(error);
+                    try {
+                        callback(error);
+                    } catch (error) {
+                        console.error((window.lang ? window.lang.translate('notifications.error.fetch_error_callback_exception_prefix', [error]) : 'Error in notification load error callback: ' + error));
+                    }
                 }
             }
         });

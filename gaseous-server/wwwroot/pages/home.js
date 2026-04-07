@@ -227,9 +227,7 @@ prefsDialog.OkCallbacks.push(async () => {
 });
 
 // subscribe to the notifications so that we can update the home page when changes are made to the library or games
-notificationLoadEndCallbacks.push(async (notifications) => {
-    if (notifications.LastLibraryChange || notifications.LastContentChange || notifications.LastMetadataChange) {
-        console.log(window.lang.translate('console.refreshing_home_page_due_to_changes'));
-        await populateRows();
-    }
+notificationLibraryUpdateCallbacks.push(async () => {
+    console.log(window.lang.translate('console.refreshing_home_page_due_to_changes'));
+    await populateRows();
 });

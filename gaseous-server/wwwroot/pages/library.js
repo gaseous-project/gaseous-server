@@ -15,7 +15,7 @@ async function SetupPage() {
     // setup filter panel
     let scrollerElement = document.getElementById('games_filter_scroller');
     if (filter) {
-        filter.FilterCallbacks.push(async (result) => {
+        filter.FilterCallbacks.push(async (result, dontExecuteFilter) => {
             filter.LoadFilterSettings();
 
             scrollerElement.innerHTML = '';
@@ -46,10 +46,10 @@ async function SetupPage() {
                 if (freshLoad === true) {
                     // render game chrome objects
                     let gameCountElement = document.getElementById('games_library_recordcount');
-                        if (filter.GameCount == 1) {
-                            gameCountElement.innerText = window.lang.translate('library.game_count.one', [filter.GameCount]);
-                        } else {
-                            gameCountElement.innerText = window.lang.translate('library.game_count.other', [filter.GameCount]);
+                    if (filter.GameCount == 1) {
+                        gameCountElement.innerText = window.lang.translate('library.game_count.one', [filter.GameCount]);
+                    } else {
+                        gameCountElement.innerText = window.lang.translate('library.game_count.other', [filter.GameCount]);
                     }
 
                     // build alphabet pager
@@ -136,7 +136,7 @@ async function SetupPage() {
                     // restore the scroll position
                     let scrollPosition = localStorage.getItem('Library.ScrollPosition');
                     if (scrollPosition) {
-                            console.log(window.lang.translate('console.restoring_scroll_position', [scrollPosition]));
+                        console.log(window.lang.translate('console.restoring_scroll_position', [scrollPosition]));
                         window.scrollTo(0, scrollPosition);
                     }
                 }
@@ -153,7 +153,7 @@ async function SetupPage() {
                         if (charCount > 3) {
                             charCount = 0;
                         }
-                            loadingElement.innerHTML = window.lang.translate('generic.loading') + '.'.repeat(charCount) + '&nbsp;'.repeat(3 - charCount);
+                        loadingElement.innerHTML = window.lang.translate('generic.loading') + '.'.repeat(charCount) + '&nbsp;'.repeat(3 - charCount);
                     }, 1000);
                     gamesElement.appendChild(loadingElement);
                 }
@@ -197,10 +197,17 @@ async function SetupPage() {
                 filter.SetOrderDirection(orderDirectionSelect.val());
             });
 
-            await filter.ApplyFilter();
+            if (dontExecuteFilter === false) {
+                await filter.ApplyFilter();
+            }
         });
 
         await filter.GetGamesFilter();
+
+        // register a callback with the notifications system to refresh the filters when a metadata refresh occurs
+        notificationLibraryUpdateCallbacks.push(async () => {
+            filter.GetGamesFilter(true);
+        });
     }
 
     // setup scroll position

@@ -199,66 +199,79 @@ namespace gaseous_server.Classes.Metadata
                 throw new NoMetadataProvidersConfigured();
             }
 
-            // execute the metadata retrieval command based on T
-            var value = typeof(T) switch
+            try
             {
-                Type t when t == typeof(AgeRating) => await provider.GetAgeRatingAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(AgeRatingCategory) => await provider.GetAgeRatingCategoryAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(AgeRatingContentDescription) => await provider.GetAgeRatingContentDescriptionAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(AgeRatingOrganization) => await provider.GetAgeRatingOrganizationAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(AlternativeName) => await provider.GetAlternativeNameAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(Artwork) => await provider.GetArtworkAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(ClearLogo) => await provider.GetClearLogoAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(Collection) => await provider.GetCollectionAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(Company) => await provider.GetCompanyAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(CompanyLogo) => await provider.GetCompanyLogoAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(Cover) => await provider.GetCoverAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(ExternalGame) => await provider.GetExternalGameAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(Franchise) => await provider.GetFranchiseAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(GameLocalization) => await provider.GetGameLocalizationAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(GameMode) => await provider.GetGameModeAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(Game) => await _GetGameAsync(provider, Id, ForceRefresh) as T,
-                Type t when t == typeof(GameVideo) => await provider.GetGameVideoAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(Genre) => await provider.GetGenreAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(InvolvedCompany) => await provider.GetInvolvedCompanyAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(MultiplayerMode) => await provider.GetMultiplayerModeAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(PlatformLogo) => await provider.GetPlatformLogoAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(Platform) => await provider.GetPlatformAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(PlatformVersion) => await provider.GetPlatformVersionAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(PlayerPerspective) => await provider.GetPlayerPerspectiveAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(Region) => await provider.GetRegionAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(ReleaseDate) => await provider.GetReleaseDateAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(Screenshot) => await provider.GetScreenshotAsync(Id, ForceRefresh) as T,
-                Type t when t == typeof(Theme) => await provider.GetThemeAsync(Id, ForceRefresh) as T,
-                _ => throw new NotSupportedException("Unsupported metadata type: " + typeof(T).FullName)
-            };
-
-            string providerName = "Direct";
-            if (provider.ProxyProvider != null)
-            {
-                providerName = provider.ProxyProvider.GetType().Name;
-            }
-            if (value != null)
-            {
-                foreach (var property in value.GetType().GetProperties())
+                // execute the metadata retrieval command based on T
+                var value = typeof(T) switch
                 {
-                    if (property.CanWrite)
-                    {
-                        switch (property.Name)
-                        {
-                            case "ProviderName":
-                                property.SetValue(value, providerName);
-                                break;
+                    Type t when t == typeof(AgeRating) => await provider.GetAgeRatingAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(AgeRatingCategory) => await provider.GetAgeRatingCategoryAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(AgeRatingContentDescription) => await provider.GetAgeRatingContentDescriptionAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(AgeRatingOrganization) => await provider.GetAgeRatingOrganizationAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(AlternativeName) => await provider.GetAlternativeNameAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(Artwork) => await provider.GetArtworkAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(ClearLogo) => await provider.GetClearLogoAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(Collection) => await provider.GetCollectionAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(Company) => await provider.GetCompanyAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(CompanyLogo) => await provider.GetCompanyLogoAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(Cover) => await provider.GetCoverAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(ExternalGame) => await provider.GetExternalGameAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(Franchise) => await provider.GetFranchiseAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(GameLocalization) => await provider.GetGameLocalizationAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(GameMode) => await provider.GetGameModeAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(Game) => await _GetGameAsync(provider, Id, ForceRefresh) as T,
+                    Type t when t == typeof(GameVideo) => await provider.GetGameVideoAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(Genre) => await provider.GetGenreAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(InvolvedCompany) => await provider.GetInvolvedCompanyAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(MultiplayerMode) => await provider.GetMultiplayerModeAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(PlatformLogo) => await provider.GetPlatformLogoAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(Platform) => await provider.GetPlatformAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(PlatformVersion) => await provider.GetPlatformVersionAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(PlayerPerspective) => await provider.GetPlayerPerspectiveAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(Region) => await provider.GetRegionAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(ReleaseDate) => await provider.GetReleaseDateAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(Screenshot) => await provider.GetScreenshotAsync(Id, ForceRefresh) as T,
+                    Type t when t == typeof(Theme) => await provider.GetThemeAsync(Id, ForceRefresh) as T,
+                    _ => throw new NotSupportedException("Unsupported metadata type: " + typeof(T).FullName)
+                };
 
-                            case "SourceType":
-                                property.SetValue(value, SourceType);
-                                break;
+                string providerName = "Direct";
+                if (provider.ProxyProvider != null)
+                {
+                    providerName = provider.ProxyProvider.GetType().Name;
+                }
+                if (value != null)
+                {
+                    foreach (var property in value.GetType().GetProperties())
+                    {
+                        if (property.CanWrite)
+                        {
+                            switch (property.Name)
+                            {
+                                case "ProviderName":
+                                    property.SetValue(value, providerName);
+                                    break;
+
+                                case "SourceType":
+                                    property.SetValue(value, SourceType);
+                                    break;
+                            }
                         }
                     }
                 }
+
+                return value;
+            }
+            catch (Exception ex)
+            {
+                Logging.LogKey(Logging.LogType.Warning, "Metadata", "Error retrieving metadata of type " + typeof(T).FullName + " with id " + Id + " from source " + SourceType + ": " + ex.Message);
             }
 
-            return value;
+            // if we got here, we've had a problem getting the metadata
+            // attempt to return cached metadata if available (regardless of expiration) to avoid returning null if the metadata is in the cache but there was an error refreshing it from the source
+            // return null if no cached metadata is available
+            var response = await _GetMetadataAsync<T>(SourceType, Id, false);
+            return response;
         }
 
         private static async Task<Game?> _GetGameAsync(gaseous_server.Classes.Plugins.MetadataProviders.IMetadataProvider provider, long Id, bool ForceRefresh)

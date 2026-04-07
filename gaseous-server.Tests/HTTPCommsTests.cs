@@ -13,7 +13,7 @@ namespace gaseous_server.Tests
 {
     public class HTTPCommsTests
     {
-        private HTTPComms CreateComms(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> responder)
+        private static HTTPComms CreateComms(Func<HttpRequestMessage, CancellationToken, Task<HttpResponseMessage>> responder)
         {
             var handler = new StubHttpMessageHandler(responder);
             var client = new HttpClient(handler);
@@ -94,7 +94,7 @@ namespace gaseous_server.Tests
         [Fact]
         public async Task SendRequestAsync_CancellationToken_Cancels()
         {
-            var cts = new CancellationTokenSource();
+            using var cts = new CancellationTokenSource();
             var comms = CreateComms(async (req, ct) =>
             {
                 await Task.Delay(1000, ct);
@@ -104,8 +104,41 @@ namespace gaseous_server.Tests
                 };
             });
 
-            cts.Cancel();
-            var ex = await Assert.ThrowsAsync<TaskCanceledException>(() => comms.SendRequestAsync<TestDto>(HTTPComms.HttpMethod.GET, new Uri("https://example.com/cancel"), cancellationToken: cts.Token));
+            await cts.CancelAsync();
+            await Assert.ThrowsAsync<TaskCanceledException>(() => comms.SendRequestAsync<TestDto>(HTTPComms.HttpMethod.GET, new Uri("https://example.com/cancel"), cancellationToken: cts.Token));
+        }
+
+        [Fact]
+        public async Task SendRequestAsync_RequestTimeout_RetryUsesFreshTimeoutWindow()
+        {
+            int call = 0;
+            var comms = CreateComms(async (req, ct) =>
+            {
+                call++;
+
+                if (call == 1)
+                {
+                    await Task.Delay(100, ct);
+                }
+
+                return new HttpResponseMessage(HttpStatusCode.OK)
+                {
+                    Content = new StringContent("{\"value\":5}", System.Text.Encoding.UTF8, "application/json")
+                };
+            });
+
+            var result = await comms.SendRequestAsync<TestDto>(
+                HTTPComms.HttpMethod.GET,
+                new Uri("https://example.com/timeout-retry"),
+                timeout: TimeSpan.FromMilliseconds(20),
+                retryCount: 2);
+
+            Assert.Equal(2, call);
+            Assert.Equal(200, result.StatusCode);
+            Assert.NotNull(result.Body);
+            Assert.Equal(5, result.Body!.Value);
+            Assert.Null(result.ErrorType);
+            Assert.Null(result.ErrorMessage);
         }
 
         [Fact]
