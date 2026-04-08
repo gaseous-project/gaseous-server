@@ -172,17 +172,19 @@ class Modal {
     close() {
         // Hide the modal
         $(this.modalBackground).fadeOut(200, () => {
-            // Show the scroll bar for the page
-            if (document.getElementsByClassName('modal-background').length === 1) {
-                document.body.style.overflow = 'auto';
-            }
-
             // Remove the modal element from the document body
             if (this.closeIsHide === false) {
                 if (this.modalBackground) {
                     this.modalBackground.remove();
                     this.modalBackground = null;
                 }
+            }
+
+            // Restore page scrolling only when no visible modal backgrounds remain.
+            const hasVisibleModal = Array.from(document.getElementsByClassName('modal-background'))
+                .some((modal) => globalThis.getComputedStyle(modal).display !== 'none');
+            if (!hasVisibleModal) {
+                document.body.style.overflow = 'auto';
             }
         });
     }
