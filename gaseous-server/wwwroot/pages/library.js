@@ -694,7 +694,56 @@ async function SetupPage() {
     libraryState.notificationCallback = async () => {
         queueNotificationRefresh();
     };
-    notificationLibraryUpdateCallbacks.push(libraryState.notificationCallback);
+    if (globalThis.notificationManager) {
+        globalThis.notificationManager.addNotificationLibraryUpdateCallback(libraryState.notificationCallback);
+    }
+
+    // Refresh the filter list when library changes
+    if (globalThis.notificationManager) {
+        globalThis.notificationManager.addNotificationLibraryUpdateCallback(async () => {
+            try {
+                // Re-fetch the filter data from API
+                const response = await fetch('/api/v1.1/Filter', { method: 'GET' });
+                if (!response.ok) throw new Error('Failed to load filter content');
+                const data = await response.json();
+
+                // Fetch all filter components in parallel
+                const filterEntries = await Promise.all(
+                    data.map(async element => {
+                        try {
+                            const res = await fetch(`/api/v1.1/Filter/${element}`, { method: 'GET' });
+                            if (!res.ok) throw new Error('Failed to load filter component');
+                            const filterItem = await res.json();
+                            return [element.toLowerCase(), filterItem];
+                        } catch (error) {
+                            console.error(error);
+                            return null;
+                        }
+                    })
+                );
+
+                // Build filter object from successful fetches
+                const filterData = {};
+                for (const entry of filterEntries) {
+                    if (entry) filterData[entry[0]] = entry[1];
+                }
+
+                // Rebuild the filter UI
+                const { scrollerElement } = getLibraryElements();
+                if (scrollerElement) {
+                    filter.LoadFilterSettings();
+                    scrollerElement.innerHTML = '';
+                    scrollerElement.appendChild(filter.BuildFilterTable(filterData));
+
+                    initializeSelect2('games_library_pagesize_select', filter.filterSelections.pageSize);
+                    initializeSelect2('games_library_orderby_select', filter.filterSelections.orderBy);
+                    initializeSelect2('games_library_orderby_direction_select', filter.filterSelections.orderDirection);
+                }
+            } catch (error) {
+                console.error('Error refreshing filter:', error);
+            }
+        });
+    }
 
     libraryState.scrollHandler = () => {
         scheduleViewportLoad();
@@ -795,9 +844,8 @@ if (typeof registerPageUnloadCallback === 'function') {
         hideLoadingIndicator();
 
         if (libraryState.notificationCallback) {
-            const callbackIndex = notificationLibraryUpdateCallbacks.indexOf(libraryState.notificationCallback);
-            if (callbackIndex !== -1) {
-                notificationLibraryUpdateCallbacks.splice(callbackIndex, 1);
+            if (globalThis.notificationManager) {
+                globalThis.notificationManager.removeNotificationLibraryUpdateCallback(libraryState.notificationCallback);
             }
             libraryState.notificationCallback = null;
         }

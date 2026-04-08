@@ -97,6 +97,12 @@
                 await unloadCurrentPage();
             }
 
+            // Recreate notifications per content page load so page-level callbacks start fresh.
+            // Global banner/panel callbacks are preserved by the reset helper.
+            if (targetDiv === 'content' && typeof resetNotificationManagerForPage === 'function') {
+                resetNotificationManagerForPage();
+            }
+
             // load page content
             let pageContentResponse = await fetch('/pages/' + page + '.html' + '?v=' + AppVersion);
             let pageContentContent = await pageContentResponse.text();
@@ -203,16 +209,9 @@
 
         // General cleanup function
         async function performGeneralCleanup() {
-            // Clear intervals and timeouts that might be running
-            const highestTimeoutId = setTimeout(() => { }, 0);
-            for (let i = 0; i < highestTimeoutId; i++) {
-                clearTimeout(i);
-            }
-
-            const highestIntervalId = setInterval(() => { }, 0);
-            for (let i = 0; i < highestIntervalId; i++) {
-                clearInterval(i);
-            }
+            // Do not clear all global timers here.
+            // Page-specific unload callbacks are responsible for cleaning up their own timers.
+            // Clearing every timer breaks app-level services such as notification polling.
 
             // Clear event listeners on elements that might have been added dynamically
             const contentDiv = document.getElementById('content');

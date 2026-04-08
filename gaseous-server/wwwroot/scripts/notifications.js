@@ -234,6 +234,58 @@ class NotificationManager {
     }
 
     /**
+     * Registers a callback to be invoked when library contents change.
+     * Allows pages to resubscribe after the manager is recreated.
+     * @param {Function} callback
+     */
+    addNotificationLibraryUpdateCallback(callback) {
+        if (typeof callback === 'function' && !this.notificationLibraryUpdateCallbacks.includes(callback)) {
+            this.notificationLibraryUpdateCallbacks.push(callback);
+        }
+    }
+
+    /**
+     * Unregisters a callback previously registered with addNotificationLibraryUpdateCallback.
+     * @param {Function} callback
+     */
+    removeNotificationLibraryUpdateCallback(callback) {
+        const index = this.notificationLibraryUpdateCallbacks.indexOf(callback);
+        if (index !== -1) {
+            this.notificationLibraryUpdateCallbacks.splice(index, 1);
+        }
+    }
+
+    /**
+     * Registers a callback to be invoked when notification fetch starts.
+     * @param {Function} callback
+     */
+    addNotificationLoadStartCallback(callback) {
+        if (typeof callback === 'function' && !this.notificationLoadStartCallbacks.includes(callback)) {
+            this.notificationLoadStartCallbacks.push(callback);
+        }
+    }
+
+    /**
+     * Registers a callback to be invoked when notification fetch completes.
+     * @param {Function} callback
+     */
+    addNotificationLoadEndCallback(callback) {
+        if (typeof callback === 'function' && !this.notificationLoadEndCallbacks.includes(callback)) {
+            this.notificationLoadEndCallbacks.push(callback);
+        }
+    }
+
+    /**
+     * Registers a callback to be invoked when notification fetch errors.
+     * @param {Function} callback
+     */
+    addNotificationLoadErrorCallback(callback) {
+        if (typeof callback === 'function' && !this.notificationLoadErrorCallbacks.includes(callback)) {
+            this.notificationLoadErrorCallbacks.push(callback);
+        }
+    }
+
+    /**
      * Registers a panel instance for history refresh notifications.
      */
     registerHistoryPanel(panel) {
@@ -363,13 +415,78 @@ class NotificationManager {
 }
 
 /** Shared notification manager instance. */
-const notificationManager = new NotificationManager();
-globalThis.notificationManager = notificationManager;
+let notificationManager = null;
+let notificationLoadStartCallbacks = [];
+let notificationLoadEndCallbacks = [];
+let notificationLoadErrorCallbacks = [];
+let notificationLibraryUpdateCallbacks = [];
 
-const notificationLoadStartCallbacks = notificationManager.notificationLoadStartCallbacks;
-const notificationLoadEndCallbacks = notificationManager.notificationLoadEndCallbacks;
-const notificationLoadErrorCallbacks = notificationManager.notificationLoadErrorCallbacks;
-const notificationLibraryUpdateCallbacks = notificationManager.notificationLibraryUpdateCallbacks;
+/**
+ * Creates a fresh notification manager and optionally keeps app-wide callback wiring.
+ * @param {{preserveGlobalCallbacks?: boolean}} options
+ * @returns {NotificationManager}
+ */
+function createNotificationManager(options = {}) {
+    const preserveGlobalCallbacks = options.preserveGlobalCallbacks !== false;
+
+    const previousManager = notificationManager;
+    const preservedLoadStartCallbacks = preserveGlobalCallbacks && previousManager
+        ? [...previousManager.notificationLoadStartCallbacks]
+        : [];
+    const preservedLoadEndCallbacks = preserveGlobalCallbacks && previousManager
+        ? [...previousManager.notificationLoadEndCallbacks]
+        : [];
+    const preservedLoadErrorCallbacks = preserveGlobalCallbacks && previousManager
+        ? [...previousManager.notificationLoadErrorCallbacks]
+        : [];
+    const preservedHistoryPanels = preserveGlobalCallbacks && previousManager
+        ? [...previousManager.historyPanels]
+        : [];
+
+    if (previousManager) {
+        previousManager.stopNotificationFetch();
+
+        // Fade out existing toasts and clear their timeout handles from the old manager.
+        for (const toast of [...previousManager.visibleNotifications]) {
+            previousManager.closeToast(toast);
+        }
+    }
+
+    notificationManager = new NotificationManager();
+    globalThis.notificationManager = notificationManager;
+
+    notificationLoadStartCallbacks = notificationManager.notificationLoadStartCallbacks;
+    notificationLoadEndCallbacks = notificationManager.notificationLoadEndCallbacks;
+    notificationLoadErrorCallbacks = notificationManager.notificationLoadErrorCallbacks;
+    notificationLibraryUpdateCallbacks = notificationManager.notificationLibraryUpdateCallbacks;
+
+    if (preservedLoadStartCallbacks.length) {
+        notificationLoadStartCallbacks.push(...preservedLoadStartCallbacks);
+    }
+    if (preservedLoadEndCallbacks.length) {
+        notificationLoadEndCallbacks.push(...preservedLoadEndCallbacks);
+    }
+    if (preservedLoadErrorCallbacks.length) {
+        notificationLoadErrorCallbacks.push(...preservedLoadErrorCallbacks);
+    }
+    if (preservedHistoryPanels.length) {
+        for (const panel of preservedHistoryPanels) {
+            notificationManager.registerHistoryPanel(panel);
+        }
+    }
+
+    return notificationManager;
+}
+
+/**
+ * Recreates notifications for a page transition and restarts polling.
+ */
+function resetNotificationManagerForPage() {
+    createNotificationManager({ preserveGlobalCallbacks: true });
+    notificationManager.startNotificationFetch();
+}
+
+createNotificationManager();
 
 /**
  * Backward-compatible global entrypoint used by existing pages.
