@@ -143,6 +143,12 @@ namespace gaseous_server.ProcessQueue.Plugins
                         {
                             platformOverride = await Platforms.GetPlatform((long)importState.PlatformOverride);
                         }
+
+                        if (importState.Method == ImportStateItem.ImportMethod.LibraryScan)
+                        {
+                            ProcessData.Add("sourceIsExternal", false);
+                        }
+
                         ImportGame.ImportGameFile(importState.FileName, hash, ref ProcessData, platformOverride);
 
                         ImportGame.UpdateImportState((Guid)ParentSubTaskItem.Settings, ImportStateItem.ImportState.Processing, ImportStateItem.ImportType.Rom, ProcessData);

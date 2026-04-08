@@ -321,11 +321,17 @@ namespace gaseous_server.Classes
 
                 }
 
+                bool sourceIsExternal = true;
+                if (GameFileInfo.ContainsKey("sourceIsExternal"))
+                {
+                    sourceIsExternal = (bool)GameFileInfo["sourceIsExternal"];
+                }
+
                 // add to database
                 Platform? determinedPlatform = Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId).Result;
                 Game? determinedGame = Metadata.Games.GetGame(discoveredSignature.Flags.GameMetadataSource, discoveredSignature.Flags.GameId).Result;
                 MetadataMap? map = MetadataManagement.NewMetadataMap((long)determinedPlatform.Id, discoveredSignature.Game.Name);
-                long RomId = StoreGame(GameLibrary.GetDefaultLibrary, Hash, discoveredSignature, determinedPlatform, FilePath, 0, true).Result;
+                long RomId = StoreGame(GameLibrary.GetDefaultLibrary, Hash, discoveredSignature, determinedPlatform, FilePath, 0, sourceIsExternal).Result;
                 gaseous_server.Classes.Roms.GameRomItem romItem = Roms.GetRom(RomId).Result;
 
                 // build return value
@@ -1077,39 +1083,42 @@ namespace gaseous_server.Classes
 
                     if (romFound == false)
                     {
-                        // file is not in database - process it
-                        Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.orphaned_file_found_in_library", null, new string[] { LibraryFile });
+                        Guid sessionId = Guid.NewGuid();
+                        AddImportState(sessionId, LibraryFile, ImportStateItem.ImportMethod.LibraryScan);
 
-                        FileSignature fileSignature = new FileSignature();
-                        FileHash fileHash = await GetFileHashesAsync(library, LibraryFile);
-                        (_, gaseous_server.Models.Signatures_Games sig) = await fileSignature.GetFileSignatureAsync(library, fileHash);
+                        // // file is not in database - process it
+                        // Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.orphaned_file_found_in_library", null, new string[] { LibraryFile });
 
-                        try
-                        {
-                            // get discovered platform
-                            long PlatformId;
-                            Platform determinedPlatform;
+                        // FileSignature fileSignature = new FileSignature();
+                        // FileHash fileHash = await GetFileHashesAsync(library, LibraryFile);
+                        // (_, gaseous_server.Models.Signatures_Games sig) = await fileSignature.GetFileSignatureAsync(library, fileHash);
 
-                            if (sig.Flags.PlatformId == null || sig.Flags.PlatformId == 0)
-                            {
-                                // no platform discovered in the signature
-                                PlatformId = library.DefaultPlatformId;
-                            }
-                            else
-                            {
-                                // use the platform discovered in the signature
-                                PlatformId = (long)sig.Flags.PlatformId;
-                            }
-                            determinedPlatform = await Platforms.GetPlatform(PlatformId);
+                        // try
+                        // {
+                        //     // get discovered platform
+                        //     long PlatformId;
+                        //     Platform determinedPlatform;
 
-                            Game determinedGame = await SearchForGame(sig, PlatformId, true);
+                        //     if (sig.Flags.PlatformId == null || sig.Flags.PlatformId == 0)
+                        //     {
+                        //         // no platform discovered in the signature
+                        //         PlatformId = library.DefaultPlatformId;
+                        //     }
+                        //     else
+                        //     {
+                        //         // use the platform discovered in the signature
+                        //         PlatformId = (long)sig.Flags.PlatformId;
+                        //     }
+                        //     determinedPlatform = await Platforms.GetPlatform(PlatformId);
 
-                            await StoreGame(library, fileHash.Hash, sig, determinedPlatform, LibraryFile, 0, false);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.LogKey(Logging.LogType.Warning, "process.library_scan", "libraryscan.error_matching_orphaned_file_skipping", null, new string[] { LibraryFile }, ex);
-                        }
+                        //     Game determinedGame = await SearchForGame(sig, PlatformId, true);
+
+                        //     await StoreGame(library, fileHash.Hash, sig, determinedPlatform, LibraryFile, 0, false);
+                        // }
+                        // catch (Exception ex)
+                        // {
+                        //     Logging.LogKey(Logging.LogType.Warning, "process.library_scan", "libraryscan.error_matching_orphaned_file_skipping", null, new string[] { LibraryFile }, ex);
+                        // }
                     }
                 }
                 StatusCount += 1;

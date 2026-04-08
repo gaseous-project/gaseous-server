@@ -20,7 +20,8 @@ namespace gaseous_server.Models
         public enum ImportMethod
         {
             ImportDirectory,
-            WebUpload
+            WebUpload,
+            LibraryScan
         }
         public enum ImportType
         {
