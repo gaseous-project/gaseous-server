@@ -194,7 +194,7 @@ class NotificationManager {
                     latestChangeTime = Math.max(latestChangeTime, new Date(notifications.LastMetadataChange).getTime());
                 }
 
-                if (latestChangeTime <= this.notificationLibraryUpdateLastUpdate.getTime() + 30000) {
+                if (latestChangeTime <= this.notificationLibraryUpdateLastUpdate.getTime() + 10000) {
                     return;
                 }
 

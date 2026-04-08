@@ -146,9 +146,19 @@ namespace gaseous_server.ProcessQueue.Plugins
 
                         if (importState.Method == ImportStateItem.ImportMethod.LibraryScan)
                         {
-                            ProcessData.Add("sourceIsExternal", false);
+                            ProcessData.Add("sourceIsExternal", true);
+                        }
+                        if (importState.AdditionalData.ContainsKey("libraryId"))
+                        {
+                            ProcessData.Add("libraryId", importState.AdditionalData["libraryId"]);
                         }
 
+                        if (!File.Exists(importState.FileName))
+                        {
+                            Logging.LogKey(Logging.LogType.Warning, "process.import_queue_processor", "importqueue.file_not_found", null, new[] { importState.FileName });
+                            ImportGame.UpdateImportState((Guid)ParentSubTaskItem.Settings, ImportStateItem.ImportState.Completed, ImportStateItem.ImportType.Rom, ProcessData);
+                            return;
+                        }
                         ImportGame.ImportGameFile(importState.FileName, hash, ref ProcessData, platformOverride);
 
                         ImportGame.UpdateImportState((Guid)ParentSubTaskItem.Settings, ImportStateItem.ImportState.Processing, ImportStateItem.ImportType.Rom, ProcessData);

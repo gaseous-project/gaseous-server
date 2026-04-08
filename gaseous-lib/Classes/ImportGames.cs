@@ -13,6 +13,7 @@ using static gaseous_server.Classes.Metadata.Games;
 using static gaseous_server.Classes.FileSignature;
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Mono.TextTemplating;
+using System.Diagnostics;
 
 namespace gaseous_server.Classes
 {
@@ -53,9 +54,12 @@ namespace gaseous_server.Classes
         /// <param name="PlatformOverride">
         /// The platform override for the import
         /// </param>
-        public static void AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, long? PlatformOverride = null)
+        /// <param name="AdditionalProcessData">
+        /// A dictionary of additional process data to be added to the import state
+        /// </param>
+        public static void AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, long? PlatformOverride = null, Dictionary<string, object>? AdditionalProcessData = null)
         {
-            _AddImportState(SessionId, FileName, Method, string.Empty, PlatformOverride);
+            _AddImportState(SessionId, FileName, Method, string.Empty, PlatformOverride, AdditionalProcessData);
         }
 
         /// <summary>
@@ -76,12 +80,15 @@ namespace gaseous_server.Classes
         /// <param name="PlatformOverride">
         /// The platform override for the import
         /// </param>
-        public static void AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, string UserId, long? PlatformOverride = null)
+        /// <param name="AdditionalProcessData">
+        /// A dictionary of additional process data to be added to the import state
+        /// </param>
+        public static void AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, string UserId, long? PlatformOverride = null, Dictionary<string, object>? AdditionalProcessData = null)
         {
-            _AddImportState(SessionId, FileName, Method, UserId, PlatformOverride);
+            _AddImportState(SessionId, FileName, Method, UserId, PlatformOverride, AdditionalProcessData);
         }
 
-        private static void _AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, string UserId = "", long? PlatformOverride = null)
+        private static void _AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, string UserId = "", long? PlatformOverride = null, Dictionary<string, object>? AdditionalProcessData = null)
         {
             // check if an import state for this session id or file exists
             ImportStateItem? existingImportState = _importStates.Find(x => x.SessionId == SessionId || x.FileName == FileName);
@@ -93,6 +100,7 @@ namespace gaseous_server.Classes
                 existingImportState.UserId = UserId;
                 existingImportState.PlatformOverride = PlatformOverride;
                 existingImportState.LastUpdated = DateTime.UtcNow;
+                existingImportState.AdditionalData = AdditionalProcessData;
             }
             else
             {
@@ -103,7 +111,8 @@ namespace gaseous_server.Classes
                     Method = Method,
                     UserId = UserId,
                     PlatformOverride = PlatformOverride,
-                    SessionId = SessionId
+                    SessionId = SessionId,
+                    AdditionalData = AdditionalProcessData
                 };
                 _importStates.Add(importState);
 
@@ -301,9 +310,15 @@ namespace gaseous_server.Classes
             {
                 Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.file_not_in_database_processing", null, new string[] { FilePath });
 
+                GameLibrary.LibraryItem gameLibrary = GameLibrary.GetDefaultLibrary;
+                if (GameFileInfo.ContainsKey("libraryId"))
+                {
+                    gameLibrary = GameLibrary.GetLibrary((int)GameFileInfo["libraryId"]).Result;
+                }
+
                 FileSignature fileSignature = new FileSignature();
-                FileHash fileHash = GetFileHashesAsync(GameLibrary.GetDefaultLibrary, FilePath).Result;
-                var (updatedFileHash, discoveredSignature) = fileSignature.GetFileSignatureAsync(GameLibrary.GetDefaultLibrary, fileHash).Result;
+                FileHash fileHash = GetFileHashesAsync(gameLibrary, FilePath).Result;
+                var (updatedFileHash, discoveredSignature) = fileSignature.GetFileSignatureAsync(gameLibrary, fileHash).Result;
                 if (discoveredSignature.Flags.GameId == 0)
                 {
                     try
@@ -331,7 +346,7 @@ namespace gaseous_server.Classes
                 Platform? determinedPlatform = Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId).Result;
                 Game? determinedGame = Metadata.Games.GetGame(discoveredSignature.Flags.GameMetadataSource, discoveredSignature.Flags.GameId).Result;
                 MetadataMap? map = MetadataManagement.NewMetadataMap((long)determinedPlatform.Id, discoveredSignature.Game.Name);
-                long RomId = StoreGame(GameLibrary.GetDefaultLibrary, Hash, discoveredSignature, determinedPlatform, FilePath, 0, sourceIsExternal).Result;
+                long RomId = StoreGame(gameLibrary, Hash, discoveredSignature, determinedPlatform, FilePath, 0, sourceIsExternal).Result;
                 gaseous_server.Classes.Roms.GameRomItem romItem = Roms.GetRom(RomId).Result;
 
                 // build return value
@@ -1084,7 +1099,10 @@ namespace gaseous_server.Classes
                     if (romFound == false)
                     {
                         Guid sessionId = Guid.NewGuid();
-                        AddImportState(sessionId, LibraryFile, ImportStateItem.ImportMethod.LibraryScan);
+                        AddImportState(sessionId, LibraryFile, ImportStateItem.ImportMethod.LibraryScan, AdditionalProcessData: new Dictionary<string, object>()
+                        {
+                            { "libraryId", library.Id }
+                        });
 
                         // // file is not in database - process it
                         // Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.orphaned_file_found_in_library", null, new string[] { LibraryFile });
