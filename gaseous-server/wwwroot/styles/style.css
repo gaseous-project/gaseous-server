@@ -2890,7 +2890,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
 }
 
 .section.importNotification {
-    background-color: rgba(255, 140, 0, 0.3);
+    background-color: var(--section-body-notificationHighlight-background);
 }
 
 .section-header {

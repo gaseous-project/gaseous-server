@@ -428,6 +428,7 @@ class NotificationPanel {
 
         this.databaseUpgradePanel = document.createElement('div');
         this.databaseUpgradePanel.classList.add('section');
+        this.databaseUpgradePanel.classList.add('importNotification');
         this.databaseUpgradePanel.style.display = 'none';
 
         const databaseUpgradeTitle = document.createElement('div');
