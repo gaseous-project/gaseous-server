@@ -146,7 +146,7 @@ namespace gaseous_server.ProcessQueue.Plugins
 
                         if (importState.Method == ImportStateItem.ImportMethod.LibraryScan)
                         {
-                            ProcessData.Add("sourceIsExternal", true);
+                            ProcessData.Add("sourceIsExternal", false);
                         }
                         if (importState.AdditionalData.ContainsKey("libraryId"))
                         {
