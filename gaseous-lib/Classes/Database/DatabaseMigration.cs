@@ -360,9 +360,27 @@ namespace gaseous_server.Classes
 
                             DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1031);
                             break;
+
+                        case 1038:
+                            MySql_1038_MigrateDateSettings();
+                            break;
                     }
                     break;
             }
+        }
+
+        public static void MySql_1038_MigrateDateSettings()
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = @"DELETE FROM Settings
+                           WHERE ValueType = 0
+                           AND (
+                               `Setting` IN ('LastContentChange', 'LastLibraryChange', 'LastMetadataChange', 'LastMetadataRefresh')
+                               OR `Setting` LIKE 'LastRun_%'
+                           );";
+
+            int deletedCount = db.ExecuteNonQuery(sql);
+            Logging.LogKey(Logging.LogType.Information, "process.database", "database.migrated_legacy_date_settings_total", null, new[] { deletedCount.ToString() });
         }
 
         public static async Task UpgradeScriptBackgroundTasks()
