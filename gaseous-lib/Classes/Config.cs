@@ -369,59 +369,59 @@ namespace gaseous_server.Classes
         /// </summary>
         public static void InitSettings()
         {
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM Settings";
+            // Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            // string sql = "SELECT * FROM Settings";
 
-            DataTable dbResponse = db.ExecuteCMD(sql);
-            foreach (DataRow dataRow in dbResponse.Rows)
-            {
-                string SettingName = (string)dataRow["Setting"];
+            // DataTable dbResponse = db.ExecuteCMD(sql);
+            // foreach (DataRow dataRow in dbResponse.Rows)
+            // {
+            //     string SettingName = (string)dataRow["Setting"];
 
-                if (AppSettings.ContainsKey(SettingName))
-                {
-                    AppSettings.Remove(SettingName);
-                }
+            //     if (AppSettings.ContainsKey(SettingName))
+            //     {
+            //         AppSettings.Remove(SettingName);
+            //     }
 
-                try
-                {
-                    if (Database.schema_version >= 1016)
-                    {
-                        switch ((int)dataRow["ValueType"])
-                        {
-                            default:
-                                // value is a string
-                                AppSettings.Add(SettingName, dataRow["Value"]);
-                                break;
+            //     try
+            //     {
+            //         if (Database.schema_version >= 1016)
+            //         {
+            //             switch ((int)dataRow["ValueType"])
+            //             {
+            //                 default:
+            //                     // value is a string
+            //                     AppSettings.Add(SettingName, dataRow["Value"]);
+            //                     break;
 
-                            case 1:
-                                // value is a datetime
-                                AppSettings.Add(SettingName, dataRow["ValueDate"]);
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        AppSettings.Add(SettingName, dataRow["Value"]);
-                    }
-                }
-                catch (InvalidCastException castEx)
-                {
-                    Logging.LogKey(Logging.LogType.Warning, "process.settings", "settings.exception_when_reading_server_setting_resetting_to_default", null, new string[] { SettingName }, castEx);
+            //                 case 1:
+            //                     // value is a datetime
+            //                     AppSettings.Add(SettingName, dataRow["ValueDate"]);
+            //                     break;
+            //             }
+            //         }
+            //         else
+            //         {
+            //             AppSettings.Add(SettingName, dataRow["Value"]);
+            //         }
+            //     }
+            //     catch (InvalidCastException castEx)
+            //     {
+            //         Logging.LogKey(Logging.LogType.Warning, "process.settings", "settings.exception_when_reading_server_setting_resetting_to_default", null, new string[] { SettingName }, castEx);
 
-                    // delete broken setting and return the default
-                    // this error is probably generated during an upgrade
-                    sql = "DELETE FROM Settings WHERE Setting = @SettingName";
-                    Dictionary<string, object> dbDict = new Dictionary<string, object>
-                    {
-                        { "SettingName", SettingName }
-                    };
-                    db.ExecuteCMD(sql, dbDict);
-                }
-                catch (Exception ex)
-                {
-                    Logging.LogKey(Logging.LogType.Critical, "process.settings", "settings.exception_when_reading_server_setting", null, new string[] { SettingName }, ex);
-                }
-            }
+            //         // delete broken setting and return the default
+            //         // this error is probably generated during an upgrade
+            //         sql = "DELETE FROM Settings WHERE Setting = @SettingName";
+            //         Dictionary<string, object> dbDict = new Dictionary<string, object>
+            //         {
+            //             { "SettingName", SettingName }
+            //         };
+            //         db.ExecuteCMD(sql, dbDict);
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         Logging.LogKey(Logging.LogType.Critical, "process.settings", "settings.exception_when_reading_server_setting", null, new string[] { SettingName }, ex);
+            //     }
+            // }
         }
 
         /// <summary>
@@ -440,7 +440,8 @@ namespace gaseous_server.Classes
             {
                 if (AppSettings.ContainsKey(SettingName))
                 {
-                    return (T)AppSettings[SettingName];
+                    var cachedValue = AppSettings[SettingName];
+                    return (T)cachedValue;
                 }
                 else
                 {

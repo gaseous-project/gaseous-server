@@ -18,8 +18,8 @@ namespace gaseous_server.Classes.Metadata
 
             try
             {
-                MetadataMap.MetadataMapItem metadataMap = null;
-                Game game = null;
+                MetadataMap.MetadataMapItem? metadataMap = null;
+                Game? game = null;
 
                 if (imageType == ImageType.ClearLogo)
                 {
@@ -50,7 +50,16 @@ namespace gaseous_server.Classes.Metadata
                 }
                 else
                 {
-                    metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
+                    var metadataMapResult = await MetadataManagement.GetMetadataMap(MetadataMapId);
+                    if (metadataMapResult == null)
+                    {
+                        return null;
+                    }
+                    metadataMap = metadataMapResult.MetadataMapItems.FirstOrDefault(x => x.SourceType == MetadataSource);
+                    if (metadataMap == null)
+                    {
+                        return null;
+                    }
                     game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
                 }
 

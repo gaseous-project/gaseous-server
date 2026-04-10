@@ -13,15 +13,15 @@ namespace gaseous_server.Classes
         public static void MarkContentChanged()
         {
             DateTime now = DateTime.UtcNow;
-            Config.SetSetting(LastContentChangeSetting, now);
-            Config.SetSetting(LastLibraryChangeSetting, now);
+            Config.SetSetting<DateTime>(LastContentChangeSetting, now);
+            Config.SetSetting<DateTime>(LastLibraryChangeSetting, now);
         }
 
         public static void MarkMetadataChanged()
         {
             DateTime now = DateTime.UtcNow;
-            Config.SetSetting(LastMetadataChangeSetting, now);
-            Config.SetSetting(LastLibraryChangeSetting, now);
+            Config.SetSetting<DateTime>(LastMetadataChangeSetting, now);
+            Config.SetSetting<DateTime>(LastLibraryChangeSetting, now);
         }
     }
 }
