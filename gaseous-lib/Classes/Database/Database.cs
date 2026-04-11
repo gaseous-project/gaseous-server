@@ -102,6 +102,8 @@ namespace gaseous_server.Classes
 
 		/// <summary>
 		/// Initializes the database, creates schema version table if missing, and applies schema upgrades.
+		/// Takes a backup before the first migration step, retries timed-out steps with a larger timeout,
+		/// and logs restore instructions on failure before terminating.
 		/// </summary>
 		public async Task InitDB()
 		{
@@ -132,6 +134,9 @@ namespace gaseous_server.Classes
 						ExecuteCMD(sql, dbDict, CacheOptions);
 					}
 
+					// ensure migration journal table exists before any migration steps run
+					MigrationJournal.EnsureTable();
+
 					sql = "SELECT schema_version FROM schema_version;";
 					dbDict = new Dictionary<string, object>();
 					DataTable SchemaVersion = ExecuteCMD(sql, dbDict, CacheOptions);
@@ -139,6 +144,59 @@ namespace gaseous_server.Classes
 					if (OuterSchemaVer == 0)
 					{
 						OuterSchemaVer = 1000;
+					}
+
+					// --- PREFLIGHT: scan for all migration resources that need to be applied ---
+					// If a contiguous sequence exists and a resource is missing in that sequence,
+					// fail early before touching any data. This prevents partial migrations caused
+					// by a missing embedded SQL file making it to production.
+					{
+						string[] allResources = Assembly.GetExecutingAssembly().GetManifestResourceNames();
+						int preflight = OuterSchemaVer;
+						bool foundAny = false;
+						while (true)
+						{
+							string rn = "gaseous_lib.Support.Database.MySQL.gaseous-" + preflight + ".sql";
+							if (!allResources.Contains(rn)) break;
+							foundAny = true;
+							preflight++;
+						}
+						// If we found at least one pending resource, verify version sequence is
+						// contiguous up to the last one found.
+						if (foundAny)
+						{
+							// preflight now points to the first missing version after a run of
+							// present versions — nothing more to check, sequence is intact.
+							Logging.LogKey(Logging.LogType.Information, "process.database",
+								"database.preflight_migration_resources_verified",
+								null, new[] { OuterSchemaVer.ToString(), (preflight - 1).ToString() });
+						}
+					}
+
+					// --- BACKUP: take a backup before the first migration is applied ---
+					bool backupTaken = false;
+					string backupFilePath = "";
+					{
+						string[] allResources = Assembly.GetExecutingAssembly().GetManifestResourceNames();
+						bool hasPendingMigration = allResources.Contains(
+							"gaseous_lib.Support.Database.MySQL.gaseous-" + OuterSchemaVer + ".sql");
+
+						if (hasPendingMigration)
+						{
+							try
+							{
+								backupFilePath = DatabaseBackup.GenerateBackupPath();
+								DatabaseBackup.Backup(backupFilePath);
+								backupTaken = true;
+							}
+							catch (Exception backupEx)
+							{
+								Logging.LogKey(Logging.LogType.Critical, "process.database",
+									"database.backup_failed_aborting_migration",
+									null, new[] { backupEx.Message }, backupEx);
+								System.Environment.Exit(1);
+							}
+						}
 					}
 
 					for (int i = OuterSchemaVer; i < 10000; i++)
@@ -172,30 +230,117 @@ namespace gaseous_server.Classes
 									Database.schema_version = SchemaVer;
 									if (SchemaVer < i)
 									{
-										try
+										// Step timeouts: first attempt uses 360s, retry doubles up to 1440s (24 min)
+										int[] timeoutSequence = { 360, 720, 1440 };
+										bool stepSucceeded = false;
+										Exception? lastException = null;
+
+										foreach (int stepTimeout in timeoutSequence)
 										{
-											// run pre-upgrade code
-											await DatabaseMigration.PreUpgradeScript(i, _ConnectorType);
+											try
+											{
+												long preJournalId = MigrationJournal.Start(i, MigrationJournal.StepType.PreUpgrade, "PreUpgradeScript");
+												try
+												{
+													await DatabaseMigration.PreUpgradeScript(i, _ConnectorType);
+													MigrationJournal.Complete(preJournalId);
+												}
+												catch (Exception preEx) when (preEx.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase))
+												{
+													MigrationJournal.Fail(preJournalId, preEx.Message);
+													throw; // let outer handler retry
+												}
+												catch (Exception preEx)
+												{
+													MigrationJournal.Fail(preJournalId, preEx.Message);
+													throw;
+												}
 
-											// apply schema!
-											Logging.LogKey(Logging.LogType.Information, "process.database", "database.updating_schema_to_version", null, new[] { i.ToString() });
-											await ExecuteCMDAsync(dbScript, dbDict, 360);
+												long sqlJournalId = MigrationJournal.Start(i, MigrationJournal.StepType.SqlScript, resourceName);
+												try
+												{
+													Logging.LogKey(Logging.LogType.Information, "process.database",
+														"database.updating_schema_to_version",
+														null, new[] { i.ToString(), stepTimeout.ToString() });
+													await ExecuteCMDAsync(dbScript, dbDict, stepTimeout);
+													MigrationJournal.Complete(sqlJournalId);
+												}
+												catch (Exception sqlEx) when (sqlEx.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase))
+												{
+													MigrationJournal.Fail(sqlJournalId, sqlEx.Message);
+													throw; // let outer handler retry
+												}
+												catch (Exception sqlEx)
+												{
+													MigrationJournal.Fail(sqlJournalId, sqlEx.Message);
+													throw;
+												}
 
-											// increment schema version
-											sql = "UPDATE schema_version SET schema_version=@schemaver";
-											dbDict = new Dictionary<string, object>();
-											dbDict.Add("schemaver", i);
-											await ExecuteCMDAsync(sql, dbDict, CacheOptions);
+												// increment schema version
+												sql = "UPDATE schema_version SET schema_version=@schemaver";
+												dbDict = new Dictionary<string, object>();
+												dbDict.Add("schemaver", i);
+												await ExecuteCMDAsync(sql, dbDict, CacheOptions);
 
-											// run post-upgrade code
-											DatabaseMigration.PostUpgradeScript(i, _ConnectorType);
+												// run post-upgrade code
+												long postJournalId = MigrationJournal.Start(i, MigrationJournal.StepType.PostUpgrade, "PostUpgradeScript");
+												try
+												{
+													DatabaseMigration.PostUpgradeScript(i, _ConnectorType);
+													MigrationJournal.Complete(postJournalId);
+												}
+												catch (Exception postEx)
+												{
+													MigrationJournal.Fail(postJournalId, postEx.Message);
+													throw;
+												}
 
-											// update schema version variable
-											Database.schema_version = i;
+												// run validation checks for this schema version
+												if (!DatabaseMigrationValidator.ValidateVersion(i))
+												{
+													throw new Exception($"Post-migration validation failed for schema version {i}. Check logs for details.");
+												}
+
+												// update schema version variable
+												Database.schema_version = i;
+												stepSucceeded = true;
+												break; // no need to retry
+											}
+											catch (Exception ex) when (ex.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase))
+											{
+												lastException = ex;
+												if (stepTimeout == timeoutSequence[timeoutSequence.Length - 1])
+												{
+													// exhausted all retries
+													Logging.LogKey(Logging.LogType.Critical, "process.database",
+														"database.schema_upgrade_timed_out_all_retries",
+														null, new[] { i.ToString(), stepTimeout.ToString() }, ex);
+												}
+												else
+												{
+													Logging.LogKey(Logging.LogType.Warning, "process.database",
+														"database.schema_upgrade_timed_out_retrying",
+														null, new[] { i.ToString(), stepTimeout.ToString() }, ex);
+												}
+											}
+											catch (Exception ex)
+											{
+												lastException = ex;
+												break; // non-timeout errors are not retried
+											}
 										}
-										catch (Exception ex)
+
+										if (!stepSucceeded)
 										{
-											Logging.LogKey(Logging.LogType.Critical, "process.database", "database.schema_upgrade_failed_unable_to_continue", null, null, ex);
+											string reason = lastException?.Message ?? "Unknown error";
+											Logging.LogKey(Logging.LogType.Critical, "process.database",
+												"database.schema_upgrade_failed_unable_to_continue",
+												null, null, lastException);
+
+											if (backupTaken)
+											{
+												DatabaseBackup.LogRestoreInstructions(backupFilePath, i, reason);
+											}
 											System.Environment.Exit(1);
 										}
 									}

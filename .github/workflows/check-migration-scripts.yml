@@ -1,0 +1,77 @@
+name: Migration Script Guard
+
+# Protects historical migration SQL files from modification.
+# Adding new files is always allowed; editing or deleting existing ones is denied.
+# Any PR that modifies a file that already existed on the base branch will fail.
+#
+# POLICY: Migration scripts are immutable once merged.
+# If a bug needs correcting, add a new migration version instead.
+
+"on":
+  pull_request:
+    branches: [main]
+    paths:
+      - 'gaseous-lib/Support/Database/MySQL/gaseous-*.sql'
+
+permissions:
+  contents: read
+
+jobs:
+  guard-migration-scripts:
+    name: Check migration scripts are immutable
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect modified or deleted historical migration scripts
+        id: check
+        run: |
+          # Get the list of files changed in this PR relative to the merge base
+          BASE_SHA=$(git merge-base HEAD origin/${{ github.base_ref }})
+
+          # Files that existed on the base branch and have been changed or removed
+          VIOLATIONS=$(git diff --name-status "$BASE_SHA" HEAD \
+            -- 'gaseous-lib/Support/Database/MySQL/gaseous-*.sql' \
+            | grep -E '^[MD]' \
+            | awk '{print $2}' \
+            || true)
+
+          if [ -n "$VIOLATIONS" ]; then
+            echo "::error::The following historical migration scripts have been modified or deleted."
+            echo "::error::Migration scripts are immutable once merged. Add a new migration version instead."
+            echo ""
+            echo "$VIOLATIONS" | while read -r f; do
+              echo "  VIOLATION: $f"
+            done
+            exit 1
+          fi
+
+          echo "No historical migration scripts were modified. Check passed."
+
+      - name: Validate manifest covers latest migration version
+        run: |
+          # Find the highest numeric migration version present in the SQL files
+          LATEST=$(ls gaseous-lib/Support/Database/MySQL/gaseous-[0-9]*.sql 2>/dev/null \
+            | grep -oE '[0-9]+' | sort -n | tail -1 || echo "0")
+
+          echo "Latest migration version in SQL files: $LATEST"
+
+          # Extract the MaxManifestVersion constant from the C# manifest file.
+          # We do this by scanning for all SchemaVersion assignments in the manifest
+          # and picking the maximum, rather than requiring a separate constant.
+          MANIFEST_MAX=$(grep -oP '(?<=SchemaVersion = )\d+' \
+            gaseous-lib/Classes/Database/DatabaseMigrationManifest.cs \
+            | sort -n | tail -1 || echo "0")
+
+          echo "Highest schema version in manifest: $MANIFEST_MAX"
+
+          if [ "$MANIFEST_MAX" -lt "$LATEST" ]; then
+            echo "::error::Migration version $LATEST has no validation entry in DatabaseMigrationManifest.cs."
+            echo "::error::Add at least one ValidationEntry with SchemaVersion = $LATEST before merging."
+            exit 1
+          fi
+
+          echo "Manifest coverage check passed."

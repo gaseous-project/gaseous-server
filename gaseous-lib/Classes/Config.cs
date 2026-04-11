@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Data;
+using System.Globalization;
 using Newtonsoft.Json;
 using gaseous_server.Classes.Metadata;
 using NuGet.Common;
@@ -364,64 +365,164 @@ namespace gaseous_server.Classes
 
         private static Dictionary<string, object> AppSettings = new Dictionary<string, object>();
 
+        private static bool IsDateSettingType(Type type)
+        {
+            return (Nullable.GetUnderlyingType(type) ?? type) == typeof(DateTime);
+        }
+
+        private static T ConvertSettingValue<T>(object value)
+        {
+            Type targetType = typeof(T);
+            Type effectiveTargetType = Nullable.GetUnderlyingType(targetType) ?? targetType;
+
+            if (value == null || value == DBNull.Value)
+            {
+                if (!targetType.IsValueType || Nullable.GetUnderlyingType(targetType) != null)
+                {
+                    return default!;
+                }
+
+                throw new InvalidCastException($"Cannot convert a null setting value to {targetType.FullName}.");
+            }
+
+            if (value is T typedValue)
+            {
+                return typedValue;
+            }
+
+            object convertedValue;
+
+            if (effectiveTargetType == typeof(DateTime))
+            {
+                if (value is DateTime dateTimeValue)
+                {
+                    convertedValue = dateTimeValue;
+                }
+                else
+                {
+                    convertedValue = DateTime.Parse(value.ToString() ?? string.Empty, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind | DateTimeStyles.AllowWhiteSpaces);
+                }
+            }
+            else if (effectiveTargetType == typeof(bool))
+            {
+                if (value is bool boolValue)
+                {
+                    convertedValue = boolValue;
+                }
+                else if (value is sbyte signedByteValue)
+                {
+                    convertedValue = signedByteValue != 0;
+                }
+                else if (value is byte byteValue)
+                {
+                    convertedValue = byteValue != 0;
+                }
+                else if (value is short shortValue)
+                {
+                    convertedValue = shortValue != 0;
+                }
+                else if (value is int intValue)
+                {
+                    convertedValue = intValue != 0;
+                }
+                else if (value is long longValue)
+                {
+                    convertedValue = longValue != 0;
+                }
+                else
+                {
+                    convertedValue = bool.Parse(value.ToString() ?? string.Empty);
+                }
+            }
+            else
+            {
+                convertedValue = Convert.ChangeType(value, effectiveTargetType, CultureInfo.InvariantCulture);
+            }
+
+            return (T)(object)convertedValue;
+        }
+
+        private static object GetStoredSettingValue(DataRow row)
+        {
+            int valueType = row["ValueType"] == DBNull.Value
+                ? 0
+                : Convert.ToInt32(row["ValueType"], CultureInfo.InvariantCulture);
+
+            return valueType == 1 ? row["ValueDate"] : row["Value"];
+        }
+
+        private static Dictionary<string, object> BuildSettingWriteParameters<T>(string settingName, T value)
+        {
+            bool isDateValue = IsDateSettingType(typeof(T)) || value is DateTime;
+            object storedValue = value is null ? DBNull.Value : value;
+
+            return new Dictionary<string, object>
+            {
+                { "SettingName", settingName },
+                { "ValueType", isDateValue ? 1 : 0 },
+                { "Value", isDateValue ? DBNull.Value : storedValue },
+                { "ValueDate", isDateValue ? storedValue : DBNull.Value }
+            };
+        }
+
         /// <summary>
         /// Initializes the application settings by loading them from the database. This method reads all settings from the Settings table in the database and stores them in the AppSettings dictionary for quick access. It handles different value types (string and datetime) based on the database schema version, and logs any exceptions that occur during the reading of settings. If a setting cannot be read due to an invalid cast (e.g. due to a schema change during an upgrade), it deletes the broken setting from the database and logs a warning, allowing the application to reset it to a default value when accessed again. This method should be called during application startup after the database connection is established to ensure that all settings are loaded and available for use throughout the application.
         /// </summary>
         public static void InitSettings()
         {
-            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql = "SELECT * FROM Settings";
+            // Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            // string sql = "SELECT * FROM Settings";
 
-            DataTable dbResponse = db.ExecuteCMD(sql);
-            foreach (DataRow dataRow in dbResponse.Rows)
-            {
-                string SettingName = (string)dataRow["Setting"];
+            // DataTable dbResponse = db.ExecuteCMD(sql);
+            // foreach (DataRow dataRow in dbResponse.Rows)
+            // {
+            //     string SettingName = (string)dataRow["Setting"];
 
-                if (AppSettings.ContainsKey(SettingName))
-                {
-                    AppSettings.Remove(SettingName);
-                }
+            //     if (AppSettings.ContainsKey(SettingName))
+            //     {
+            //         AppSettings.Remove(SettingName);
+            //     }
 
-                try
-                {
-                    if (Database.schema_version >= 1016)
-                    {
-                        switch ((int)dataRow["ValueType"])
-                        {
-                            default:
-                                // value is a string
-                                AppSettings.Add(SettingName, dataRow["Value"]);
-                                break;
+            //     try
+            //     {
+            //         if (Database.schema_version >= 1016)
+            //         {
+            //             switch ((int)dataRow["ValueType"])
+            //             {
+            //                 default:
+            //                     // value is a string
+            //                     AppSettings.Add(SettingName, dataRow["Value"]);
+            //                     break;
 
-                            case 1:
-                                // value is a datetime
-                                AppSettings.Add(SettingName, dataRow["ValueDate"]);
-                                break;
-                        }
-                    }
-                    else
-                    {
-                        AppSettings.Add(SettingName, dataRow["Value"]);
-                    }
-                }
-                catch (InvalidCastException castEx)
-                {
-                    Logging.LogKey(Logging.LogType.Warning, "process.settings", "settings.exception_when_reading_server_setting_resetting_to_default", null, new string[] { SettingName }, castEx);
+            //                 case 1:
+            //                     // value is a datetime
+            //                     AppSettings.Add(SettingName, dataRow["ValueDate"]);
+            //                     break;
+            //             }
+            //         }
+            //         else
+            //         {
+            //             AppSettings.Add(SettingName, dataRow["Value"]);
+            //         }
+            //     }
+            //     catch (InvalidCastException castEx)
+            //     {
+            //         Logging.LogKey(Logging.LogType.Warning, "process.settings", "settings.exception_when_reading_server_setting_resetting_to_default", null, new string[] { SettingName }, castEx);
 
-                    // delete broken setting and return the default
-                    // this error is probably generated during an upgrade
-                    sql = "DELETE FROM Settings WHERE Setting = @SettingName";
-                    Dictionary<string, object> dbDict = new Dictionary<string, object>
-                    {
-                        { "SettingName", SettingName }
-                    };
-                    db.ExecuteCMD(sql, dbDict);
-                }
-                catch (Exception ex)
-                {
-                    Logging.LogKey(Logging.LogType.Critical, "process.settings", "settings.exception_when_reading_server_setting", null, new string[] { SettingName }, ex);
-                }
-            }
+            //         // delete broken setting and return the default
+            //         // this error is probably generated during an upgrade
+            //         sql = "DELETE FROM Settings WHERE Setting = @SettingName";
+            //         Dictionary<string, object> dbDict = new Dictionary<string, object>
+            //         {
+            //             { "SettingName", SettingName }
+            //         };
+            //         db.ExecuteCMD(sql, dbDict);
+            //     }
+            //     catch (Exception ex)
+            //     {
+            //         Logging.LogKey(Logging.LogType.Critical, "process.settings", "settings.exception_when_reading_server_setting", null, new string[] { SettingName }, ex);
+            //     }
+            // }
         }
 
         /// <summary>
@@ -440,7 +541,8 @@ namespace gaseous_server.Classes
             {
                 if (AppSettings.ContainsKey(SettingName))
                 {
-                    return (T)AppSettings[SettingName];
+                    var cachedValue = AppSettings[SettingName];
+                    return ConvertSettingValue<T>(cachedValue);
                 }
                 else
                 {
@@ -455,10 +557,9 @@ namespace gaseous_server.Classes
                     {
                         Logging.LogKey(Logging.LogType.Debug, "process.database", "database.reading_setting", null, new string[] { SettingName });
 
-                        sql = "SELECT Value, ValueDate FROM Settings WHERE Setting = @SettingName";
+                        sql = "SELECT ValueType, Value, ValueDate FROM Settings WHERE Setting = @SettingName";
 
                         dbResponse = db.ExecuteCMD(sql, dbDict);
-                        Type type = typeof(T);
                         if (dbResponse.Rows.Count == 0)
                         {
                             // no value with that name stored - respond with the default value
@@ -467,16 +568,10 @@ namespace gaseous_server.Classes
                         }
                         else
                         {
-                            if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(Nullable<DateTime>))
-                            {
-                                AppSettings.Add(SettingName, (T)dbResponse.Rows[0]["ValueDate"]);
-                                return (T)dbResponse.Rows[0]["ValueDate"];
-                            }
-                            else
-                            {
-                                AppSettings.Add(SettingName, (T)dbResponse.Rows[0]["Value"]);
-                                return (T)dbResponse.Rows[0]["Value"];
-                            }
+                            object storedValue = GetStoredSettingValue(dbResponse.Rows[0]);
+
+                            AppSettings.Add(SettingName, storedValue);
+                            return ConvertSettingValue<T>(storedValue);
                         }
                     }
                     catch (Exception ex)
@@ -522,42 +617,9 @@ namespace gaseous_server.Classes
         public static void SetSetting<T>(string SettingName, T Value)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-            string sql;
-            Dictionary<string, object> dbDict;
-
-            if (Database.schema_version >= 1016)
-            {
-                sql = "REPLACE INTO Settings (Setting, ValueType, Value, ValueDate) VALUES (@SettingName, @ValueType, @Value, @ValueDate)";
-                if (typeof(T) == typeof(DateTime) || typeof(T) == typeof(Nullable<DateTime>))
-                {
-                    dbDict = new Dictionary<string, object>
-                    {
-                        { "SettingName", SettingName },
-                        { "ValueType", 1 },
-                        { "Value", null },
-                        { "ValueDate", Value }
-                    };
-                }
-                else
-                {
-                    dbDict = new Dictionary<string, object>
-                    {
-                        { "SettingName", SettingName },
-                        { "ValueType", 0 },
-                        { "Value", Value },
-                        { "ValueDate", null }
-                    };
-                }
-            }
-            else
-            {
-                sql = "REPLACE INTO Settings (Setting, Value) VALUES (@SettingName, @Value)";
-                dbDict = new Dictionary<string, object>
-                {
-                    { "SettingName", SettingName },
-                    { "Value", Value }
-                };
-            }
+            object storedValue = Value is null ? DBNull.Value : Value;
+            string sql = "REPLACE INTO Settings (Setting, ValueType, Value, ValueDate) VALUES (@SettingName, @ValueType, @Value, @ValueDate)";
+            Dictionary<string, object> dbDict = BuildSettingWriteParameters(SettingName, Value);
 
             Logging.LogKey(Logging.LogType.Debug, "process.database", "database.storing_setting_to_value", null, new string[] { SettingName, Value?.ToString() ?? "" });
             try
@@ -566,11 +628,11 @@ namespace gaseous_server.Classes
 
                 if (AppSettings.ContainsKey(SettingName))
                 {
-                    AppSettings[SettingName] = Value;
+                    AppSettings[SettingName] = storedValue;
                 }
                 else
                 {
-                    AppSettings.Add(SettingName, Value);
+                    AppSettings.Add(SettingName, storedValue);
                 }
             }
             catch (Exception ex)

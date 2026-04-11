@@ -477,6 +477,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                 this.Artworks = gameObject.Artworks;
                 this.Screenshots = gameObject.Screenshots;
                 this.FirstReleaseDate = gameObject.FirstReleaseDate;
+                this.AgeGroup = gameObject.AgeGroupId;
 
                 if (gameObject != null)
                 {
@@ -643,13 +644,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
             public List<long> Artworks { get; set; }
             public List<long> Screenshots { get; set; }
             public List<AgeRating> AgeRatings { get; set; }
-            public AgeGroups.AgeRestrictionGroupings AgeGroup
-            {
-                get
-                {
-                    return AgeGroups.GetAgeGroupFromAgeRatings(AgeRatings);
-                }
-            }
+            public AgeGroups.AgeRestrictionGroupings? AgeGroup { get; set; }
         }
     }
 }

@@ -195,17 +195,17 @@ class Card {
     Close() {
         // hide the modal
         $(this.modalBackground).fadeOut(200, () => {
-            // Show the scroll bar for the page
-            if (document.getElementsByClassName('modal-background').length === 1) {
-                if (document.getElementsByClassName('modal-window-body').length === 0) {
-                    document.body.style.overflow = 'auto';
-                }
-            }
-
             // Remove the modal element from the document body
             if (this.modalBackground) {
                 this.modalBackground.remove();
                 this.modalBackground = null;
+            }
+
+            // Restore page scrolling only when no visible modal backgrounds remain.
+            const hasVisibleModal = Array.from(document.getElementsByClassName('modal-background'))
+                .some((modal) => globalThis.getComputedStyle(modal).display !== 'none');
+            if (!hasVisibleModal) {
+                document.body.style.overflow = 'auto';
             }
 
             // Remove all keys from session storage that start with "Card." + this.cardType
@@ -782,27 +782,32 @@ class GameCard {
         this.screenshotItems[this.gameData.metadataSource] = [];
         this.screenshotItemsCount = [];
         this.screenshotItemsCount[this.gameData.metadataSource] = 0;
-        if (this.gameData.videos && this.gameData.videos.length > 0) {
-            this.screenshotItemsCount[this.gameData.metadataSource] += this.gameData.videos.length;
+        if (!this.gameData.videos && !this.gameData.screenshots) {
+            // hide the screenshot section
+            let screenshotSection = this.card.cardBody.querySelector('#card-screenshots-section');
+            screenshotSection.style.display = 'none';
+        } else
+            if (this.gameData.videos && this.gameData.videos.length > 0) {
+                this.screenshotItemsCount[this.gameData.metadataSource] += this.gameData.videos.length;
 
-            await fetch(`/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/videos`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            }).then(response => response.json()).then(videoData => {
-                if (!videoData) {
-                    console.error(`Error fetching video data for game ${this.gameId}`);
-                    return;
-                }
+                await fetch(`/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/videos`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                }).then(response => response.json()).then(videoData => {
+                    if (!videoData) {
+                        console.error(`Error fetching video data for game ${this.gameId}`);
+                        return;
+                    }
 
-                videoData.forEach(element => {
-                    // create new screenshot item
-                    let screenshotItem = new ScreenshotItem(element.video_id, this.gameData.metadataSource, 'youtube', `https://www.youtube.com/watch?v=${element.video_id}`, element.name, null, null, this.gameId);
-                    this.screenshotItems[this.gameData.metadataSource].push(screenshotItem);
+                    videoData.forEach(element => {
+                        // create new screenshot item
+                        let screenshotItem = new ScreenshotItem(element.video_id, this.gameData.metadataSource, 'youtube', `https://www.youtube.com/watch?v=${element.video_id}`, element.name, null, null, this.gameId);
+                        this.screenshotItems[this.gameData.metadataSource].push(screenshotItem);
+                    });
                 });
-            });
-        }
+            }
         if (this.gameData.screenshots) {
             this.screenshotItemsCount[this.gameData.metadataSource] += this.gameData.screenshots.length;
 

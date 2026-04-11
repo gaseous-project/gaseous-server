@@ -452,44 +452,61 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
             var cacheStatus = await Storage.GetCacheStatusAsync(typeName, id);
             if (forceLoadStatuses.Contains(cacheStatus) || forceRefresh)
             {
-                // check proxy provider if defined
-                if (ProxyProvider != null)
+                try
                 {
-                    if (ProxyProvider.Storage == null)
+                    // check proxy provider if defined
+                    if (ProxyProvider != null)
                     {
-                        ProxyProvider.Storage = this.Storage;
-                    }
-                    var proxyResult = await ProxyProvider.GetEntityAsync<T>(endpoint, id);
-                    if (proxyResult != null)
-                    {
-                        // save to storage
-                        _ = Storage.StoreCacheValue<T>(proxyResult);
-
-                        return proxyResult;
-                    }
-                }
-
-                // fall back to direct IGDB API call if no proxy provider available
-                if (IGDBAuthToken != null)
-                {
-                    // call the IGDB API directly
-                    string body = "fields *; where id = " + id + ";";
-                    Uri requestUrl = new Uri($"{IGDBUrl}{endpoint}");
-                    var headers = IGDBAuthToken.ToHeaders();
-                    var response = await comms.SendRequestAsync<Dictionary<string, object>[]>(HTTPComms.HttpMethod.POST, requestUrl, headers, body);
-                    if (response.StatusCode == 200 && response.Body != null && response.Body.Length > 0)
-                    {
-                        Dictionary<string, object> item = response.Body[0];
-
-                        T? result = ConvertToEntity<T>(item);
-
-                        if (result != null)
+                        if (ProxyProvider.Storage == null)
+                        {
+                            ProxyProvider.Storage = this.Storage;
+                        }
+                        var proxyResult = await ProxyProvider.GetEntityAsync<T>(endpoint, id);
+                        if (proxyResult != null)
                         {
                             // save to storage
-                            _ = Storage.StoreCacheValue<T>(result);
+                            _ = Storage.StoreCacheValue<T>(proxyResult);
 
-                            return result;
+                            return proxyResult;
                         }
+                    }
+
+                    // fall back to direct IGDB API call if no proxy provider available
+                    if (IGDBAuthToken != null)
+                    {
+                        // call the IGDB API directly
+                        string body = "fields *; where id = " + id + ";";
+                        Uri requestUrl = new Uri($"{IGDBUrl}{endpoint}");
+                        var headers = IGDBAuthToken.ToHeaders();
+                        var response = await comms.SendRequestAsync<Dictionary<string, object>[]>(HTTPComms.HttpMethod.POST, requestUrl, headers, body);
+                        if (response.StatusCode == 200 && response.Body != null && response.Body.Length > 0)
+                        {
+                            Dictionary<string, object> item = response.Body[0];
+
+                            T? result = ConvertToEntity<T>(item);
+
+                            if (result != null)
+                            {
+                                // save to storage
+                                _ = Storage.StoreCacheValue<T>(result);
+
+                                return result;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Logging.LogKey(Logging.LogType.Warning, "IGDBProvider", $"Error retrieving {typeName} with id {id} from IGDB: {ex.Message}");
+                }
+
+                if (cacheStatus == Storage.CacheStatus.Expired)
+                {
+                    // if the cache is expired and we failed to refresh, return the expired value if it exists
+                    T? expiredItem = await Storage.GetCacheValue<T>(metadata, "id", id);
+                    if (expiredItem != null)
+                    {
+                        return expiredItem;
                     }
                 }
             }

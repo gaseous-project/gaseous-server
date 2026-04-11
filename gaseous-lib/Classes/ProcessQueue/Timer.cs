@@ -54,6 +54,12 @@ namespace gaseous_server
             ActiveList.AddRange(ProcessQueue.QueueProcessor.QueueItems);
             foreach (ProcessQueue.QueueProcessor.QueueItem qi in ActiveList)
             {
+                if (qi.RemoveWhenStopped == true && qi.ItemState == ProcessQueue.QueueProcessor.QueueItemState.Stopped)
+                {
+                    ProcessQueue.QueueProcessor.QueueItems.Remove(qi);
+                    continue;
+                }
+
                 if (Config.DatabaseConfiguration.UpgradeInProgress == false || (Config.DatabaseConfiguration.UpgradeInProgress == true && qi.ItemType == ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade))
                 {
                     if (qi.ItemState != ProcessQueue.QueueProcessor.QueueItemState.Disabled)
@@ -73,11 +79,6 @@ namespace gaseous_server
                                     (DateTime.UtcNow - startWait).TotalMilliseconds < 500)
                                 {
                                     Thread.Sleep(10); // Small delay to avoid busy waiting
-                                }
-
-                                if (qi.RemoveWhenStopped == true && qi.ItemState == ProcessQueue.QueueProcessor.QueueItemState.Stopped)
-                                {
-                                    ProcessQueue.QueueProcessor.QueueItems.Remove(qi);
                                 }
                             }
                         }

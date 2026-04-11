@@ -245,6 +245,11 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes
         /// </summary>
         [Models.NoDatabaseAttribute]
         public FileSignature.MetadataSources SourceType { get; set; }
+
+        /// <summary>
+        /// Gets or sets the name of the game with "the" prefix for sorting purposes.
+        /// </summary>
+        public string? NameThe { get; set; }
     }
 
     /// <summary>
@@ -276,6 +281,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes
         /// Gets the metadata source for this game, which is determined by the SourceType property.
         /// This value is deprecated and exists as a legacy property for backward compatibility. Use the SourceType property directly to determine the metadata source.
         /// </summary>
+        [Models.NoDatabaseAttribute]
         public FileSignature.MetadataSources MetadataSource
         {
             get
@@ -283,6 +289,11 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes
                 return SourceType;
             }
         }
+
+        /// <summary>
+        /// Gets or sets the name of the game with "the" prefix for sorting purposes.
+        /// </summary>
+        public string? NameThe { get; set; }
 
         /// <summary>
         /// Gets or sets a value indicating whether this game is marked as a favorite by the user. This property is not mapped to the database and is used for in-memory tracking of user preferences.
@@ -314,7 +325,10 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes
         /// </summary>
         public List<long> ClearLogo { get; set; } = new List<long>();
 
-
+        /// <summary>
+        /// Gets or sets the age group classification for this game. This property is not mapped to the database and is used for in-memory tracking of age rating information.
+        /// </summary>
+        public Metadata.AgeGroups.AgeRestrictionGroupings? AgeGroupId { get; set; }
     }
 
     /// <summary>

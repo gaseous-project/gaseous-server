@@ -26,12 +26,10 @@ namespace gaseous_server.Classes
             List<FilterItem> returnList = new List<FilterItem>();
 
             // age restriction clauses
-            string ageRestriction_Platform = "ag.AgeGroupId <= " + (int)MaximumAgeRestriction;
-            string ageRestriction_Generic = "view_Games.AgeGroupId <= " + (int)MaximumAgeRestriction;
+            string ageRestriction_Platform = "g.AgeGroupId <= " + (int)MaximumAgeRestriction;
             if (IncludeUnrated == true)
             {
-                ageRestriction_Platform += " OR ag.AgeGroupId IS NULL";
-                ageRestriction_Generic += " OR view_Games.AgeGroupId IS NULL";
+                ageRestriction_Platform += " OR g.AgeGroupId IS NULL";
             }
 
             switch (filterType)
@@ -44,18 +42,17 @@ namespace gaseous_server.Classes
                                 g.Id,
                                 g.SourceId AS GameIdType
                             FROM Metadata_Game g
-                            LEFT JOIN Metadata_AgeGroup ag ON g.Id = ag.GameId
                             WHERE (" + ageRestriction_Platform + @")
                         ),
                         GamesWithRoms AS (
                             SELECT DISTINCT
                                 fg.Id,
-                                gr.PlatformId
+                                vmm.PlatformId
                             FROM FilteredGames fg
                             INNER JOIN view_MetadataMap vmm 
                                 ON vmm.MetadataSourceId = fg.Id 
                                 AND vmm.MetadataSourceType = fg.GameIdType
-                            INNER JOIN Games_Roms gr ON gr.MetadataMapId = vmm.Id
+                            WHERE vmm.RomCount > 0
                         )
                         SELECT 
                             p.Id, 
@@ -86,7 +83,6 @@ namespace gaseous_server.Classes
                                 g.Id,
                                 g.SourceId AS GameIdType
                             FROM Metadata_Game g
-                            LEFT JOIN Metadata_AgeGroup ag ON g.Id = ag.GameId
                             WHERE (" + ageRestriction_Platform + @")
                         ),
                         GamesWithRoms AS (
@@ -97,7 +93,7 @@ namespace gaseous_server.Classes
                             INNER JOIN view_MetadataMap vmm 
                                 ON vmm.MetadataSourceId = fg.Id 
                                 AND vmm.MetadataSourceType = fg.GameIdType
-                            INNER JOIN Games_Roms gr ON gr.MetadataMapId = vmm.Id
+                            AND vmm.RomCount > 0
                             LEFT JOIN Metadata_AgeGroup ag ON fg.Id = ag.GameId
                         )
                         SELECT 
@@ -165,10 +161,10 @@ namespace gaseous_server.Classes
             Dictionary<string, List<FilterItem>> FilterSet = new Dictionary<string, List<FilterItem>>();
 
             // Build age restriction clause once
-            string ageRestriction_Platform = "ag.AgeGroupId <= " + (int)MaximumAgeRestriction;
+            string ageRestriction_Platform = "g.AgeGroupId <= " + (int)MaximumAgeRestriction;
             if (IncludeUnrated == true)
             {
-                ageRestriction_Platform += " OR ag.AgeGroupId IS NULL";
+                ageRestriction_Platform += " OR g.AgeGroupId IS NULL";
             }
 
             // OPTIMIZED: Compute the filtered game set once using a base query
@@ -190,15 +186,14 @@ namespace gaseous_server.Classes
                 SELECT DISTINCT
                     g.Id AS GameId,
                     g.SourceId AS GameIdType,
-                    gr.PlatformId,
-                    ag.AgeGroupId
+                    vmm.PlatformId,
+                    g.AgeGroupId
                 FROM Metadata_Game g
-                LEFT JOIN Metadata_AgeGroup ag ON g.Id = ag.GameId
                 INNER JOIN view_MetadataMap vmm 
                     ON vmm.MetadataSourceId = g.Id 
                     AND vmm.MetadataSourceType = g.SourceId
-                INNER JOIN Games_Roms gr ON gr.MetadataMapId = vmm.Id
-                WHERE (" + ageRestriction_Platform + @")";
+                WHERE (" + ageRestriction_Platform + @")
+                    AND vmm.RomCount > 0";
 
             await db.ExecuteCMDAsync(baseFilteredGamesQuery, new DatabaseMemoryCacheOptions(CacheEnabled: false));
 
@@ -382,7 +377,6 @@ namespace gaseous_server.Classes
                         g.Id,
                         g.SourceId AS GameIdType
                     FROM Metadata_Game g
-                    LEFT JOIN Metadata_AgeGroup ag ON g.Id = ag.GameId
                     WHERE (" + AgeRestriction + @")
                 ),
                 GamesWithRoms AS (
@@ -393,7 +387,7 @@ namespace gaseous_server.Classes
                     INNER JOIN view_MetadataMap vmm 
                         ON vmm.MetadataSourceId = fg.Id 
                         AND vmm.MetadataSourceType = fg.GameIdType
-                    INNER JOIN Games_Roms gr ON gr.MetadataMapId = vmm.Id
+                    WHERE vmm.RomCount > 0
                 )
                 SELECT 
                     gwr.GameIdType, 

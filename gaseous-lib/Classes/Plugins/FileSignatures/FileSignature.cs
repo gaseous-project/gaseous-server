@@ -212,7 +212,6 @@ namespace gaseous_server.Classes
                 "ZipContents", Newtonsoft.Json.JsonConvert.SerializeObject(fileHash.ArchiveContents)
             );
 
-
             // get discovered platform
             Platform? determinedPlatform = null;
             if (library.DefaultPlatformId == null || library.DefaultPlatformId == 0)
@@ -423,6 +422,16 @@ namespace gaseous_server.Classes
             /// Wikipedia
             /// </summary>
             Wikipedia = 8,
+
+            /// <summary>
+            /// SteamGridDb
+            /// </summary>
+            SteamGridDb = 9,
+
+            /// <summary>
+            /// ScreenScraper
+            /// </summary>
+            ScreenScraper = 10,
 
             /// <summary>
             /// Unknown metadata source.

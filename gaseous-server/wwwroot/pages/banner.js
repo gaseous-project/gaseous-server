@@ -90,130 +90,130 @@ function setupBanner() {
     }
 
     // set notifications
-    notificationLoadEndCallbacks.push(function (data) {
-        let notificationState = 0;
+    if (globalThis.notificationManager) {
+        globalThis.notificationManager.addNotificationLoadEndCallback(function (data) {
+            let notificationState = 0;
 
-        if (data) {
-            if (data['databaseUpgrade']) {
-                // this alert should only been shown when the database upgrade notification has changed state
-                // store this alert in localStorage, and then only display if it if the notification has changed
-                let showDatabaseUpgradeNotification = false;
+            if (data) {
+                if (data['databaseUpgrade']) {
+                    // this alert should only been shown when the database upgrade notification has changed state
+                    // store this alert in localStorage, and then only display if it if the notification has changed
+                    let showDatabaseUpgradeNotification = false;
 
-                notificationState = 1; // set the notification state to 1, as we updates in progress
+                    notificationState = 1; // set the notification state to 1, as we updates in progress
 
-                // only show the notification if it's been more than 5 minutes since the last notification
-                let lastNotification = localStorage.getItem('DatabaseUpgradeNotification');
-                if (lastNotification) {
-                    lastNotification = JSON.parse(lastNotification);
-                    let lastNotificationTime = new Date(lastNotification.timestamp);
+                    // only show the notification if it's been more than 5 minutes since the last notification
+                    let lastNotification = localStorage.getItem('DatabaseUpgradeNotification');
+                    if (lastNotification) {
+                        lastNotification = JSON.parse(lastNotification);
+                        let lastNotificationTime = new Date(lastNotification.timestamp);
 
-                    // is current time greater than lastNotificationTime?
-                    let currentTime = new Date();
-                    if (currentTime > lastNotificationTime) {
-                        showDatabaseUpgradeNotification = true;
+                        // is current time greater than lastNotificationTime?
+                        let currentTime = new Date();
+                        if (currentTime > lastNotificationTime) {
+                            showDatabaseUpgradeNotification = true;
+                        }
+                    } else {
+                        showDatabaseUpgradeNotification = true; // no previous notification, so show the notification
+                    }
+
+                    if (showDatabaseUpgradeNotification) {
+                        // we had a change in the notification, show the notification and then store the new notification in localStorage
+                        notificationManager.showNotification(
+                            t('banner.notification.database_upgrade.title'),
+                            t('banner.notification.database_upgrade.body'),
+                            undefined,
+                            undefined,
+                            undefined,
+                            'DatabaseUpgrade'
+                        );
+
+                        // get the date and time and add 5 minutes to it
+                        let nextUpdateDateTime = new Date();
+                        nextUpdateDateTime.setMinutes(nextUpdateDateTime.getMinutes() + 5);
+
+                        // store the database upgrade notification time in localStorage
+                        localStorage.setItem('DatabaseUpgradeNotification', JSON.stringify(nextUpdateDateTime));
                     }
                 } else {
-                    showDatabaseUpgradeNotification = true; // no previous notification, so show the notification
+                    // remove the database upgrade notification from localStorage if it exists
+                    localStorage.removeItem('DatabaseUpgradeNotification');
                 }
+                if (data['importQueue']) {
+                    if (data['importQueue']['Pending'] || data['importQueue']['Processing']) {
+                        notificationState = 1;
+                    } else if (data['importQueue']['imported']) {
+                        // check localStorage for the notification. If there is a record with the same id, do not retrigger the notification
+                        let importQueueNotificationData = data['importQueue']['imported'];
 
-                if (showDatabaseUpgradeNotification) {
-                    // we had a change in the notification, show the notification and then store the new notification in localStorage
-                    let notificationMsg = new Notification(
-                        t('banner.notification.database_upgrade.title'),
-                        t('banner.notification.database_upgrade.body'),
-                        undefined,
-                        undefined,
-                        undefined,
-                        'DatabaseUpgrade'
-                    );
-                    notificationMsg.Show();
+                        // check if there are any notifications in the importQueue
+                        let notificationsTracker = localStorage.getItem('NotificationsTracker');
+                        if (!notificationsTracker) {
+                            localStorage.setItem('NotificationsTracker', JSON.stringify(importQueueNotificationData));
+                            notificationState = 2;
+                        } else {
+                            notificationsTracker = JSON.parse(notificationsTracker);
+                            let found = false;
 
-                    // get the date and time and add 5 minutes to it
-                    let nextUpdateDateTime = new Date();
-                    nextUpdateDateTime.setMinutes(nextUpdateDateTime.getMinutes() + 5);
+                            // check if the notification is already in the localStorage
+                            // find if notification.sessionid is in the array importQueueNotificationData
+                            for (const notification of importQueueNotificationData) {
+                                found = false;
+                                for (const notificationTracker of notificationsTracker) {
+                                    if (notification.sessionid === notificationTracker.sessionid) {
+                                        found = true;
+                                        break;
+                                    }
+                                }
+                                if (!found) {
+                                    // add the notification to the localStorage, and set the notification state to 2 as this is a new notification
+                                    notification.read = false;
+                                    notificationsTracker.push(notification);
+                                    localStorage.setItem('NotificationsTracker', JSON.stringify(notificationsTracker));
+                                    notificationState = 2;
 
-                    // store the database upgrade notification time in localStorage
-                    localStorage.setItem('DatabaseUpgradeNotification', JSON.stringify(nextUpdateDateTime));
-                }
-            } else {
-                // remove the database upgrade notification from localStorage if it exists
-                localStorage.removeItem('DatabaseUpgradeNotification');
-            }
-            if (data['importQueue']) {
-                if (data['importQueue']['Pending'] || data['importQueue']['Processing']) {
-                    notificationState = 1;
-                } else if (data['importQueue']['imported']) {
-                    // check localStorage for the notification. If there is a record with the same id, do not retrigger the notification
-                    let importQueueNotificationData = data['importQueue']['imported'];
+                                    // show the notification
+                                    notificationManager.showNotification(
+                                        window.lang.translate('banner.notification.game_imported.title'),
+                                        window.lang.translate('banner.notification.game_imported.body'),
+                                        undefined,
+                                        undefined,
+                                        undefined,
+                                        'GameImported'
+                                    );
+                                }
+                            }
 
-                    // check if there are any notifications in the importQueue
-                    let notificationsTracker = localStorage.getItem('NotificationsTracker');
-                    if (!notificationsTracker) {
-                        localStorage.setItem('NotificationsTracker', JSON.stringify(importQueueNotificationData));
-                        notificationState = 2;
-                    } else {
-                        notificationsTracker = JSON.parse(notificationsTracker);
-                        let found = false;
-
-                        // check if the notification is already in the localStorage
-                        // find if notification.sessionid is in the array importQueueNotificationData
-                        for (const notification of importQueueNotificationData) {
-                            found = false;
-                            for (const notificationTracker of notificationsTracker) {
-                                if (notification.sessionid === notificationTracker.sessionid) {
-                                    found = true;
+                            // check if there are any unread notifications in the notificationTracker
+                            for (const notification of notificationsTracker) {
+                                // check if the notification is read
+                                if (!notification.read) {
+                                    notificationState = 2;
                                     break;
                                 }
                             }
-                            if (!found) {
-                                // add the notification to the localStorage, and set the notification state to 2 as this is a new notification
-                                notification.read = false;
-                                notificationsTracker.push(notification);
-                                localStorage.setItem('NotificationsTracker', JSON.stringify(notificationsTracker));
-                                notificationState = 2;
-
-                                // show the notification
-                                let notificationMsg = new Notification(
-                                    window.lang.translate('banner.notification.game_imported.title'),
-                                    window.lang.translate('banner.notification.game_imported.body'),
-                                    undefined,
-                                    undefined,
-                                    undefined,
-                                    'GameImported'
-                                );
-                                notificationMsg.Show();
-                            }
-                        }
-
-                        // check if there are any unread notifications in the notificationTracker
-                        for (const notification of notificationsTracker) {
-                            // check if the notification is read
-                            if (!notification.read) {
-                                notificationState = 2;
-                                break;
-                            }
                         }
                     }
                 }
             }
-        }
 
-        setNotificationIconState(notificationState);
+            setNotificationIconState(notificationState);
 
-        // remove notifications older than 70 minutes from the localStorage
-        let notificationsTracker = localStorage.getItem('NotificationsTracker');
-        if (notificationsTracker) {
-            notificationsTracker = JSON.parse(notificationsTracker);
-            let currentTime = new Date();
-            let newNotificationsTracker = [];
-            for (const notification of notificationsTracker) {
-                if (new Date(notification.expiration) > currentTime) {
-                    newNotificationsTracker.push(notification);
+            // remove notifications older than 70 minutes from the localStorage
+            let notificationsTracker = localStorage.getItem('NotificationsTracker');
+            if (notificationsTracker) {
+                notificationsTracker = JSON.parse(notificationsTracker);
+                let currentTime = new Date();
+                let newNotificationsTracker = [];
+                for (const notification of notificationsTracker) {
+                    if (new Date(notification.expiration) > currentTime) {
+                        newNotificationsTracker.push(notification);
+                    }
                 }
+                localStorage.setItem('NotificationsTracker', JSON.stringify(newNotificationsTracker));
             }
-            localStorage.setItem('NotificationsTracker', JSON.stringify(newNotificationsTracker));
-        }
-    });
+        });
+    }
     const notificationCentre = new NotificationPanel();
     document.getElementById('banner_notif').addEventListener('click', (e) => {
         // mark all notifications as read
@@ -314,5 +314,10 @@ function setNotificationIconState(state) {
 const accountDialog = new AccountWindow();
 const prefsDialog = new PreferencesWindow();
 const uploadDialog = new UploadRom();
+
+// Expose dialogs globally so other pages can access them
+globalThis.prefsDialog = prefsDialog;
+globalThis.accountDialog = accountDialog;
+globalThis.uploadDialog = uploadDialog;
 
 setupBanner();

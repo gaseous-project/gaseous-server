@@ -2,6 +2,7 @@
 using System.Data;
 using System.Reflection;
 using System.Threading.Tasks;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Microsoft.Extensions.Caching.Memory;
 
 namespace gaseous_server.Classes.Plugins.MetadataProviders
@@ -198,6 +199,79 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             if (ObjectToCache == null)
             {
                 throw new ArgumentNullException(nameof(ObjectToCache), "Object to cache cannot be null.");
+            }
+
+            // perform some basic data massaging
+            switch (typeof(T))
+            {
+                case Type t when t == typeof(Game):
+                    Game gameObject = ObjectToCache as Game;
+
+                    var provider = gaseous_server.Classes.Metadata.Metadata.MetadataProviders.FirstOrDefault(x => x.SourceType == _sourceType);
+                    if (gameObject != null)
+                    {
+                        // compute the NameThe property for sorting purposes
+                        if (!string.IsNullOrEmpty(gameObject.Name))
+                        {
+                            if (gameObject.Name.StartsWith("The ", StringComparison.OrdinalIgnoreCase))
+                            {
+                                gameObject.NameThe = gameObject.Name.Substring(4) + ", The";
+                            }
+                            else
+                            {
+                                gameObject.NameThe = gameObject.Name;
+                            }
+                        }
+                    }
+
+                    // get the age group classification for the game based on its age ratings
+                    List<AgeRating>? ageRatings = new List<AgeRating>();
+                    if (gameObject.AgeRatings != null)
+                    {
+                        foreach (var ageRatingId in gameObject.AgeRatings)
+                        {
+                            AgeRating? ageRating = await provider.GetAgeRatingAsync(ageRatingId, false);
+                            if (ageRating != null)
+                            {
+                                ageRatings.Add(ageRating);
+                            }
+                        }
+
+                        var ageGroupValue = Metadata.AgeGroups.GetAgeGroupFromAgeRatings(ageRatings);
+                        if (ageGroupValue == 0)
+                        {
+                            gameObject.AgeGroupId = null;
+                        }
+                        else
+                        {
+                            gameObject.AgeGroupId = ageGroupValue;
+                        }
+                    }
+
+                    ObjectToCache = (T)(object)gameObject;
+                    break;
+
+                case Type t when t == typeof(GameLocalization):
+                    GameLocalization gameLocalizationObject = ObjectToCache as GameLocalization;
+
+                    if (gameLocalizationObject != null)
+                    {
+                        // compute the NameThe property for sorting purposes
+                        if (!string.IsNullOrEmpty(gameLocalizationObject.Name))
+                        {
+                            if (gameLocalizationObject.Name.StartsWith("The ", StringComparison.OrdinalIgnoreCase))
+                            {
+                                gameLocalizationObject.NameThe = gameLocalizationObject.Name.Substring(4) + ", The";
+                            }
+                            else
+                            {
+                                gameLocalizationObject.NameThe = gameLocalizationObject.Name;
+                            }
+                        }
+                    }
+
+                    ObjectToCache = (T)(object)gameLocalizationObject;
+                    break;
             }
 
             // get the object type name
@@ -420,6 +494,10 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                                         property.SetValue(EndpointType, (DateTimeOffset)(DateTime?)value);
                                         break;
 
+                                    case "agerestrictiongroupings":
+                                        property.SetValue(EndpointType, (Metadata.AgeGroups.AgeRestrictionGroupings?)value);
+                                        break;
+
                                     default:
                                         // check if property is an enum
                                         if (property.PropertyType.IsEnum)
@@ -492,9 +570,10 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             else
             {
                 // clean existing records for this object
-                sql = "DELETE FROM " + TableName + " WHERE `" + PrimaryTable + "Id` = @objectid";
+                sql = "DELETE FROM " + TableName + " WHERE `" + PrimaryTable + "Id` = @objectid AND `" + PrimaryTable + "SourceId` = @sourcetype;";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
                 dbDict.Add("objectid", ObjectId);
+                dbDict.Add("sourcetype", _sourceType);
                 await db.ExecuteCMDAsync(sql, dbDict);
             }
 

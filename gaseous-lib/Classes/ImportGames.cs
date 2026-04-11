@@ -13,6 +13,7 @@ using static gaseous_server.Classes.Metadata.Games;
 using static gaseous_server.Classes.FileSignature;
 using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 using Mono.TextTemplating;
+using System.Diagnostics;
 
 namespace gaseous_server.Classes
 {
@@ -53,9 +54,12 @@ namespace gaseous_server.Classes
         /// <param name="PlatformOverride">
         /// The platform override for the import
         /// </param>
-        public static void AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, long? PlatformOverride = null)
+        /// <param name="AdditionalProcessData">
+        /// A dictionary of additional process data to be added to the import state
+        /// </param>
+        public static void AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, long? PlatformOverride = null, Dictionary<string, object>? AdditionalProcessData = null)
         {
-            _AddImportState(SessionId, FileName, Method, string.Empty, PlatformOverride);
+            _AddImportState(SessionId, FileName, Method, string.Empty, PlatformOverride, AdditionalProcessData);
         }
 
         /// <summary>
@@ -76,12 +80,15 @@ namespace gaseous_server.Classes
         /// <param name="PlatformOverride">
         /// The platform override for the import
         /// </param>
-        public static void AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, string UserId, long? PlatformOverride = null)
+        /// <param name="AdditionalProcessData">
+        /// A dictionary of additional process data to be added to the import state
+        /// </param>
+        public static void AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, string UserId, long? PlatformOverride = null, Dictionary<string, object>? AdditionalProcessData = null)
         {
-            _AddImportState(SessionId, FileName, Method, UserId, PlatformOverride);
+            _AddImportState(SessionId, FileName, Method, UserId, PlatformOverride, AdditionalProcessData);
         }
 
-        private static void _AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, string UserId = "", long? PlatformOverride = null)
+        private static void _AddImportState(Guid SessionId, string FileName, ImportStateItem.ImportMethod Method, string UserId = "", long? PlatformOverride = null, Dictionary<string, object>? AdditionalProcessData = null)
         {
             // check if an import state for this session id or file exists
             ImportStateItem? existingImportState = _importStates.Find(x => x.SessionId == SessionId || x.FileName == FileName);
@@ -93,6 +100,7 @@ namespace gaseous_server.Classes
                 existingImportState.UserId = UserId;
                 existingImportState.PlatformOverride = PlatformOverride;
                 existingImportState.LastUpdated = DateTime.UtcNow;
+                existingImportState.AdditionalData = AdditionalProcessData;
             }
             else
             {
@@ -103,7 +111,8 @@ namespace gaseous_server.Classes
                     Method = Method,
                     UserId = UserId,
                     PlatformOverride = PlatformOverride,
-                    SessionId = SessionId
+                    SessionId = SessionId,
+                    AdditionalData = AdditionalProcessData
                 };
                 _importStates.Add(importState);
 
@@ -301,9 +310,15 @@ namespace gaseous_server.Classes
             {
                 Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.file_not_in_database_processing", null, new string[] { FilePath });
 
+                GameLibrary.LibraryItem gameLibrary = GameLibrary.GetDefaultLibrary;
+                if (GameFileInfo.ContainsKey("libraryId"))
+                {
+                    gameLibrary = GameLibrary.GetLibrary((int)GameFileInfo["libraryId"]).Result;
+                }
+
                 FileSignature fileSignature = new FileSignature();
-                FileHash fileHash = GetFileHashesAsync(GameLibrary.GetDefaultLibrary, FilePath).Result;
-                var (updatedFileHash, discoveredSignature) = fileSignature.GetFileSignatureAsync(GameLibrary.GetDefaultLibrary, fileHash).Result;
+                FileHash fileHash = GetFileHashesAsync(gameLibrary, FilePath).Result;
+                var (updatedFileHash, discoveredSignature) = fileSignature.GetFileSignatureAsync(gameLibrary, fileHash).Result;
                 if (discoveredSignature.Flags.GameId == 0)
                 {
                     try
@@ -321,11 +336,17 @@ namespace gaseous_server.Classes
 
                 }
 
+                bool sourceIsExternal = true;
+                if (GameFileInfo.ContainsKey("sourceIsExternal"))
+                {
+                    sourceIsExternal = (bool)GameFileInfo["sourceIsExternal"];
+                }
+
                 // add to database
                 Platform? determinedPlatform = Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId).Result;
                 Game? determinedGame = Metadata.Games.GetGame(discoveredSignature.Flags.GameMetadataSource, discoveredSignature.Flags.GameId).Result;
                 MetadataMap? map = MetadataManagement.NewMetadataMap((long)determinedPlatform.Id, discoveredSignature.Game.Name);
-                long RomId = StoreGame(GameLibrary.GetDefaultLibrary, Hash, discoveredSignature, determinedPlatform, FilePath, 0, true).Result;
+                long RomId = StoreGame(gameLibrary, Hash, discoveredSignature, determinedPlatform, FilePath, 0, sourceIsExternal).Result;
                 gaseous_server.Classes.Roms.GameRomItem romItem = Roms.GetRom(RomId).Result;
 
                 // build return value
@@ -430,12 +451,22 @@ namespace gaseous_server.Classes
 
             // add or update the rom
             dbDict = new Dictionary<string, object>();
+            long previousMetadataMapId = 0;
             if (romId == 0)
             {
                 sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, SHA256, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, RelativePath, MetadataSource, MetadataGameName, MetadataVersion, LibraryId, RomDataVersion, MetadataMapId) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @sha256, @developmentstatus, @Attributes, @romtype, @romtypemedia, @medialabel, @path, @metadatasource, @metadatagamename, @metadataversion, @libraryid, @romdataversion, @metadatamapid); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
             }
             else
             {
+                DataTable existingRom = await db.ExecuteCMDAsync("SELECT MetadataMapId FROM Games_Roms WHERE Id=@id", new Dictionary<string, object>()
+                {
+                    { "id", romId }
+                });
+                if (existingRom.Rows.Count > 0 && existingRom.Rows[0]["MetadataMapId"] != DBNull.Value)
+                {
+                    previousMetadataMapId = (long)existingRom.Rows[0]["MetadataMapId"];
+                }
+
                 sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid, Name=@name, Size=@size, CRC=@crc, MD5=@md5, SHA1=@sha1, SHA256=@sha256, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion, RomDataVersion=@romdataversion, MetadataMapId=@metadatamapid, DateUpdated=@dateupdated WHERE Id=@id;";
                 dbDict.Add("id", romId);
             }
@@ -474,13 +505,25 @@ namespace gaseous_server.Classes
             dbDict.Add("romtype", (int)signature.Rom.RomType);
             dbDict.Add("romtypemedia", Common.ReturnValueIfNull(signature.Rom.RomTypeMedia, ""));
             dbDict.Add("medialabel", Common.ReturnValueIfNull(signature.Rom.MediaLabel, ""));
-
-            dbDict.Add("path", Path.GetRelativePath(library.Path, filePath));
+            if (!SourceIsExternal)
+            {
+                dbDict.Add("path", Path.GetRelativePath(library.Path, filePath));
+            }
+            else
+            {
+                dbDict.Add("path", filePath);
+            }
 
             DataTable romInsert = await db.ExecuteCMDAsync(sql, dbDict);
             if (romId == 0)
             {
                 romId = (long)romInsert.Rows[0][0];
+            }
+
+            MetadataManagement.UpdateRomCount((long)map.Id);
+            if (previousMetadataMapId != 0 && previousMetadataMapId != (long)map.Id)
+            {
+                MetadataManagement.UpdateRomCount(previousMetadataMapId);
             }
 
             // move to destination
@@ -996,10 +1039,15 @@ namespace gaseous_server.Classes
             List<PlatformMapping.PlatformMapItem> _platformMap = PlatformMapping.PlatformMap;
 
             Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.looking_for_duplicate_library_files_to_clean_up");
+            DataTable duplicateMetadataMaps = await db.ExecuteCMDAsync("SELECT DISTINCT r1.MetadataMapId FROM Games_Roms r1 INNER JOIN Games_Roms r2 WHERE r1.Id > r2.Id AND r1.MD5 = r2.MD5 AND r1.LibraryId=@libraryid AND r2.LibraryId=@libraryid AND r1.MetadataMapId IS NOT NULL;", new Dictionary<string, object>()
+            {
+                { "libraryid", library.Id }
+            });
             string duplicateSql = "DELETE r1 FROM Games_Roms r1 INNER JOIN Games_Roms r2 WHERE r1.Id > r2.Id AND r1.MD5 = r2.MD5 AND r1.LibraryId=@libraryid AND r2.LibraryId=@libraryid;";
             Dictionary<string, object> dupDict = new Dictionary<string, object>();
             dupDict.Add("libraryid", library.Id);
             await db.ExecuteCMDAsync(duplicateSql, dupDict);
+            MetadataManagement.UpdateRomCounts(duplicateMetadataMaps.AsEnumerable().Where(row => row["MetadataMapId"] != DBNull.Value).Select(row => (long)row["MetadataMapId"]));
 
             string sql = "SELECT * FROM view_Games_Roms WHERE LibraryId=@libraryid ORDER BY `name`";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
@@ -1011,7 +1059,7 @@ namespace gaseous_server.Classes
             {
                 var rowsToDelete = dtRoms.AsEnumerable()
                     .Where(row => !((string)row["Path"]).StartsWith(library.Path))
-                    .Select(row => (Id: (long)row["Id"], Path: (string)row["Path"]))
+                    .Select(row => (Id: (long)row["Id"], Path: (string)row["Path"], MetadataMapId: (long)row["MetadataMapId"]))
                     .ToList();
 
                 foreach (var entry in rowsToDelete)
@@ -1024,6 +1072,7 @@ namespace gaseous_server.Classes
                         { "libraryid", library.Id }
                     };
                     await db.ExecuteCMDAsync(deleteSql, deleteDict);
+                    MetadataManagement.UpdateRomCount(entry.MetadataMapId);
                 }
             }
 
@@ -1049,39 +1098,45 @@ namespace gaseous_server.Classes
 
                     if (romFound == false)
                     {
-                        // file is not in database - process it
-                        Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.orphaned_file_found_in_library", null, new string[] { LibraryFile });
-
-                        FileSignature fileSignature = new FileSignature();
-                        FileHash fileHash = await GetFileHashesAsync(library, LibraryFile);
-                        (_, gaseous_server.Models.Signatures_Games sig) = await fileSignature.GetFileSignatureAsync(library, fileHash);
-
-                        try
+                        Guid sessionId = Guid.NewGuid();
+                        AddImportState(sessionId, LibraryFile, ImportStateItem.ImportMethod.LibraryScan, AdditionalProcessData: new Dictionary<string, object>()
                         {
-                            // get discovered platform
-                            long PlatformId;
-                            Platform determinedPlatform;
+                            { "libraryId", library.Id }
+                        });
 
-                            if (sig.Flags.PlatformId == null || sig.Flags.PlatformId == 0)
-                            {
-                                // no platform discovered in the signature
-                                PlatformId = library.DefaultPlatformId;
-                            }
-                            else
-                            {
-                                // use the platform discovered in the signature
-                                PlatformId = (long)sig.Flags.PlatformId;
-                            }
-                            determinedPlatform = await Platforms.GetPlatform(PlatformId);
+                        // // file is not in database - process it
+                        // Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.orphaned_file_found_in_library", null, new string[] { LibraryFile });
 
-                            Game determinedGame = await SearchForGame(sig, PlatformId, true);
+                        // FileSignature fileSignature = new FileSignature();
+                        // FileHash fileHash = await GetFileHashesAsync(library, LibraryFile);
+                        // (_, gaseous_server.Models.Signatures_Games sig) = await fileSignature.GetFileSignatureAsync(library, fileHash);
 
-                            await StoreGame(library, fileHash.Hash, sig, determinedPlatform, LibraryFile, 0, false);
-                        }
-                        catch (Exception ex)
-                        {
-                            Logging.LogKey(Logging.LogType.Warning, "process.library_scan", "libraryscan.error_matching_orphaned_file_skipping", null, new string[] { LibraryFile }, ex);
-                        }
+                        // try
+                        // {
+                        //     // get discovered platform
+                        //     long PlatformId;
+                        //     Platform determinedPlatform;
+
+                        //     if (sig.Flags.PlatformId == null || sig.Flags.PlatformId == 0)
+                        //     {
+                        //         // no platform discovered in the signature
+                        //         PlatformId = library.DefaultPlatformId;
+                        //     }
+                        //     else
+                        //     {
+                        //         // use the platform discovered in the signature
+                        //         PlatformId = (long)sig.Flags.PlatformId;
+                        //     }
+                        //     determinedPlatform = await Platforms.GetPlatform(PlatformId);
+
+                        //     Game determinedGame = await SearchForGame(sig, PlatformId, true);
+
+                        //     await StoreGame(library, fileHash.Hash, sig, determinedPlatform, LibraryFile, 0, false);
+                        // }
+                        // catch (Exception ex)
+                        // {
+                        //     Logging.LogKey(Logging.LogType.Warning, "process.library_scan", "libraryscan.error_matching_orphaned_file_skipping", null, new string[] { LibraryFile }, ex);
+                        // }
                     }
                 }
                 StatusCount += 1;
@@ -1149,6 +1204,7 @@ namespace gaseous_server.Classes
                             { "libraryid", library.Id }
                         };
                         await db.ExecuteCMDAsync(deleteSql, deleteDict);
+                        MetadataManagement.UpdateRomCount((long)dtRoms.Rows[i]["MetadataMapId"]);
                     }
                 }
             }

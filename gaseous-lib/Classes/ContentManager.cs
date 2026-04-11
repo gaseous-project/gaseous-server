@@ -225,6 +225,7 @@ namespace gaseous_server.Classes.Content
             if (result.Rows.Count > 0)
             {
                 long newId = Convert.ToInt64(result.Rows[0][0]);
+                RefreshNotificationSignal.MarkContentChanged();
                 return newId;
             }
             else
@@ -665,6 +666,7 @@ namespace gaseous_server.Classes.Content
                 { AttachmentIdParam, attachmentId }
             };
             await db.ExecuteCMDAsync(sql, parameters);
+            RefreshNotificationSignal.MarkContentChanged();
         }
 
         /// <summary>
@@ -696,6 +698,8 @@ namespace gaseous_server.Classes.Content
                 throw new InvalidOperationException("You do not have permission to update this content.");
             }
 
+            bool contentChanged = false;
+
             if (isShared.HasValue)
             {
                 // check if content type is shareable
@@ -715,6 +719,7 @@ namespace gaseous_server.Classes.Content
                 await db.ExecuteCMDAsync(sql, parameters);
 
                 existingContent.IsShared = isShared.Value;
+                contentChanged = true;
             }
 
             if (!string.IsNullOrEmpty(content))
@@ -737,6 +742,7 @@ namespace gaseous_server.Classes.Content
                         await db.ExecuteCMDAsync(sql, parameters);
 
                         existingContent.FileName = content;
+                        contentChanged = true;
                         break;
 
                     case ContentType.Note:
@@ -746,10 +752,16 @@ namespace gaseous_server.Classes.Content
                         string dirPath = Path.Combine(Config.LibraryConfiguration.LibraryContentDirectory, userDirectory, contentDir);
                         string filePath = Path.Combine(dirPath, existingContent.FileName);
                         await System.IO.File.WriteAllTextAsync(filePath, content);
+                        contentChanged = true;
                         break;
                     default:
                         throw new InvalidOperationException("This content type cannot be updated.");
                 }
+            }
+
+            if (contentChanged)
+            {
+                RefreshNotificationSignal.MarkContentChanged();
             }
 
             return existingContent;

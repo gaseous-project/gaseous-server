@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Data;
 using Authentication;
 using gaseous_server.Classes;
 using Microsoft.AspNetCore.Identity;
@@ -59,8 +60,7 @@ if (cmdArgs.Length == 1)
     Console.WriteLine("  user [command] [options] - Manage users");
     Console.WriteLine("    2fa [subcommand] - 2FA operations: resetkey|getkey|enable|genrc|countrc|redeem");
     Console.WriteLine("  role [command] [options] - Manage roles");
-    // Console.WriteLine("  backup [command] [options] - Manage backups");
-    // Console.WriteLine("  restore [command] [options] - Restore backups");
+    Console.WriteLine("  db [command] [options]   - Database operations: migrate|validate|backup|restore|status");
     Console.WriteLine("  help - Display this help message");
     return;
 }
@@ -75,8 +75,7 @@ if (cmdArgs[1] == "help")
     Console.WriteLine("  user [command] [options] - Manage users");
     Console.WriteLine("    2fa [subcommand] - 2FA operations: resetkey|getkey|enable|genrc|countrc|redeem");
     Console.WriteLine("  role [command] [options] - Manage roles");
-    // Console.WriteLine("  backup [command] [options] - Manage backups");
-    // Console.WriteLine("  restore [command] [options] - Restore backups");
+    Console.WriteLine("  db [command] [options]   - Database operations: migrate|validate|backup|restore|status");
     Console.WriteLine("  help - Display this help message");
     return;
 }
@@ -447,5 +446,168 @@ if (cmdArgs[1] == "role")
 //     }
 // }
 
+// -----------------------------------------------------------------------
+// db command: migrate, validate, backup, restore, status
+// -----------------------------------------------------------------------
+if (cmdArgs[1] == "db")
+{
+    if (cmdArgs.Length < 3)
+    {
+        Console.WriteLine("Database Management");
+        Console.WriteLine("Usage: gaseous-cli db [command] [options]");
+        Console.WriteLine("Commands:");
+        Console.WriteLine("  migrate              - Apply pending database migrations");
+        Console.WriteLine("  validate             - Validate database structure against migration manifest");
+        Console.WriteLine("  backup               - Take a backup of the database");
+        Console.WriteLine("  restore [file]       - Restore the database from a backup file");
+        Console.WriteLine("  status               - Show recent migration journal entries");
+        return;
+    }
+
+    // --- db migrate ---
+    if (cmdArgs[2] == "migrate")
+    {
+        Console.WriteLine("Starting database migration...");
+        try
+        {
+            Logging.WriteToDiskOnly = true;
+            Database migrateDb = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            await migrateDb.InitDB();
+            Logging.WriteToDiskOnly = false;
+            Console.WriteLine("Migration complete.");
+        }
+        catch (Exception ex)
+        {
+            Logging.WriteToDiskOnly = false;
+            Console.Error.WriteLine($"Migration failed: {ex.Message}");
+            Environment.Exit(1);
+        }
+        return;
+    }
+
+    // --- db validate ---
+    if (cmdArgs[2] == "validate")
+    {
+        Console.WriteLine("Validating database structure...");
+
+        Database validateDb = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+        int currentVersion = validateDb.GetDatabaseSchemaVersion();
+
+        bool passed = DatabaseMigrationValidator.ValidateRange(0, currentVersion);
+        if (passed)
+        {
+            Console.WriteLine($"All validation checks passed for schema version {currentVersion}.");
+        }
+        else
+        {
+            Console.Error.WriteLine($"One or more critical validation checks FAILED for schema version {currentVersion}. Review logs for details.");
+            Environment.Exit(2);
+        }
+        return;
+    }
+
+    // --- db backup ---
+    if (cmdArgs[2] == "backup")
+    {
+        try
+        {
+            string path = DatabaseBackup.GenerateBackupPath();
+            DatabaseBackup.Backup(path);
+            Console.WriteLine($"Backup created: {path}");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Backup failed: {ex.Message}");
+            Environment.Exit(1);
+        }
+        return;
+    }
+
+    // --- db restore [file] ---
+    if (cmdArgs[2] == "restore")
+    {
+        if (cmdArgs.Length < 4)
+        {
+            Console.Error.WriteLine("Error: Please provide a backup file path");
+            Console.Error.WriteLine("Usage: gaseous-cli db restore <path-to-backup.sql>");
+            Environment.Exit(1);
+            return;
+        }
+
+        string restorePath = cmdArgs[3];
+        Console.WriteLine($"Restoring database from: {restorePath}");
+        Console.WriteLine("WARNING: This will overwrite all current data. Press Ctrl+C within 5 seconds to abort.");
+        await Task.Delay(5000);
+
+        try
+        {
+            DatabaseBackup.Restore(restorePath);
+            Console.WriteLine("Restore complete.");
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Restore failed: {ex.Message}");
+            Environment.Exit(1);
+        }
+        return;
+    }
+
+    // --- db status ---
+    if (cmdArgs[2] == "status")
+    {
+        int limit = 20;
+        if (cmdArgs.Length >= 4) int.TryParse(cmdArgs[3], out limit);
+
+        try
+        {
+            MigrationJournal.EnsureTable();
+            DataTable journal = MigrationJournal.GetRecentEntries(limit);
+
+            Console.WriteLine($"{"Version",-10} {"Type",-15} {"Step",-40} {"Status",-12} {"Started",-22} {"Completed",-22}");
+            Console.WriteLine(new string('-', 125));
+
+            foreach (DataRow row in journal.Rows)
+            {
+                string completed = row["CompletedAt"] == DBNull.Value
+                    ? "-"
+                    : Convert.ToDateTime(row["CompletedAt"]).ToString("yyyy-MM-dd HH:mm:ss");
+                Console.WriteLine(
+                    $"{row["SchemaVersion"],-10} " +
+                    $"{row["StepType"],-15} " +
+                    $"{TruncateTo(row["StepName"].ToString(), 40),-40} " +
+                    $"{row["Status"],-12} " +
+                    $"{Convert.ToDateTime(row["StartedAt"]).ToString("yyyy-MM-dd HH:mm:ss"),-22} " +
+                    $"{completed,-22}");
+
+                if (row["Status"].ToString() == "Failed" && row["ErrorMessage"] != DBNull.Value)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.WriteLine($"  ERROR: {row["ErrorMessage"]}");
+                    Console.ResetColor();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Unable to read migration journal: {ex.Message}");
+            Environment.Exit(1);
+        }
+        return;
+    }
+
+    Console.Error.WriteLine($"Error: Unknown db subcommand '{cmdArgs[2]}'");
+    Environment.Exit(1);
+    return;
+}
+
 // the user entered an invalid command
 Console.WriteLine("Error: Invalid command");
+
+// -----------------------------------------------------------------------
+// Local helper functions
+// -----------------------------------------------------------------------
+static string TruncateTo(string? value, int maxLength)
+{
+    if (string.IsNullOrEmpty(value)) return "";
+    return value.Length <= maxLength ? value : value.Substring(0, maxLength - 3) + "...";
+}

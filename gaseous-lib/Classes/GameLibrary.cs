@@ -170,10 +170,15 @@ namespace gaseous_server
                 }
 
                 Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                DataTable affectedMetadataMaps = await db.ExecuteCMDAsync("SELECT DISTINCT MetadataMapId FROM Games_Roms WHERE LibraryId=@id AND MetadataMapId IS NOT NULL;", new Dictionary<string, object>()
+                {
+                    { "id", LibraryId }
+                });
                 string sql = "DELETE FROM Games_Roms WHERE LibraryId=@id; DELETE FROM GameLibraries WHERE Id=@id;";
                 Dictionary<string, object> dbDict = new Dictionary<string, object>();
                 dbDict.Add("id", LibraryId);
                 await db.ExecuteCMDAsync(sql, dbDict);
+                MetadataManagement.UpdateRomCounts(affectedMetadataMaps.AsEnumerable().Where(row => row["MetadataMapId"] != DBNull.Value).Select(row => (long)row["MetadataMapId"]));
 
                 Logging.LogKey(Logging.LogType.Information, "process.library_management", "librarymanagement.deleted_library_at_path", null, new string[] { library.Name, library.Path });
             }

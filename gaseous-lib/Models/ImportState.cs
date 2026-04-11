@@ -20,7 +20,8 @@ namespace gaseous_server.Models
         public enum ImportMethod
         {
             ImportDirectory,
-            WebUpload
+            WebUpload,
+            LibraryScan
         }
         public enum ImportType
         {
@@ -29,6 +30,7 @@ namespace gaseous_server.Models
             BIOS
         }
         public Dictionary<string, object>? ProcessData { get; set; } = new Dictionary<string, object>();
+        public Dictionary<string, object>? AdditionalData { get; set; } = new Dictionary<string, object>();
         public long? PlatformOverride { get; set; } = null;
         public Guid SessionId { get; set; }
     }

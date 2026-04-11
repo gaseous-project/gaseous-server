@@ -219,9 +219,12 @@ namespace gaseous_server.Controllers.v1_1
             List<string> whereClauses = new List<string>(10);
             List<string> havingClauses = new List<string>(10);
 
+            // Only include metadata maps that currently contain ROMs.
+            whereClauses.Add("`MetadataMap`.`RomCount` > 0");
+
             if (model.Name.Length > 0)
             {
-                whereClauses.Add("(MATCH(`Game`.`Name`) AGAINST (@GameName IN BOOLEAN MODE) OR MATCH(`AlternativeName`.`Name`) AGAINST (@GameName IN BOOLEAN MODE))");
+                whereClauses.Add("(MATCH(`Game`.`Name`) AGAINST (@GameName IN BOOLEAN MODE) OR MATCH(`AlternativeName`.`Name`) AGAINST (@GameName IN BOOLEAN MODE) OR MATCH (`LocalizedNames`.`Name`) AGAINST (@GameName IN BOOLEAN MODE))");
                 whereParams.Add("@GameName", "(*" + model.Name + "*) (" + model.Name + ") ");
             }
 
@@ -431,7 +434,7 @@ namespace gaseous_server.Controllers.v1_1
                 var sb = new System.Text.StringBuilder("(");
                 if (model.GameAgeRating.AgeGroupings.Count > 0)
                 {
-                    sb.Append("AgeGroup.AgeGroupId IN (");
+                    sb.Append("Game.AgeGroupId IN (");
                     for (int i = 0; i < model.GameAgeRating.AgeGroupings.Count; i++)
                     {
                         if (i > 0)
@@ -451,7 +454,7 @@ namespace gaseous_server.Controllers.v1_1
                     {
                         sb.Append(" OR ");
                     }
-                    sb.Append("AgeGroup.AgeGroupId IS NULL");
+                    sb.Append("Game.AgeGroupId IS NULL");
                 }
                 sb.Append(')');
                 whereClauses.Add(sb.ToString());
@@ -517,7 +520,7 @@ namespace gaseous_server.Controllers.v1_1
 
             string sql = @"
                 SELECT 
-	`MetadataMapBridge`.`MetadataSourceId` AS `Id`,
+    `MetadataMapBridge`.`MetadataSourceId` AS `Id`,
     `MetadataMap`.`Id` AS `MetadataMapId`,
     `MetadataMapBridge`.`MetadataSourceType` AS `GameIdType`,
     `MetadataMap`.`SignatureGameName`,
@@ -526,48 +529,35 @@ namespace gaseous_server.Controllers.v1_1
                 ORDER BY `MetadataMap`.`PlatformId`
                 SEPARATOR ','),
             ']') AS `Platforms`,
-    `RomCounts`.`RomCount`,
-    CASE
-        WHEN `RomMediaGroup`.`Id` IS NULL THEN 0
-        ELSE 1
-    END AS `MediaGroups`,
+    `MetadataMap`.`RomCount`,
+    IFNULL(`RomGroupStats`.`MediaGroups`, 0) AS `MediaGroups`,
     CASE
         WHEN `Favourites`.`UserId` IS NULL THEN 0
         ELSE 1
     END AS `Favourite`,
-    COUNT(`RomSavedState`.`Id`) AS `RomSavedStates`,
-    COUNT(`RomGroupSavedState`.`Id`) AS `RomGroupSavedStates`,
-    COUNT(`RomSavedFile`.`Id`) AS `RomSavedFiles`,
-    COUNT(`RomGroupSavedFile`.`Id`) AS `RomGroupSavedFiles`,
-    `AgeGroup`.`AgeGroupId`,
+    IFNULL(`RomSaveStats`.`RomSavedStates`, 0) AS `RomSavedStates`,
+    IFNULL(`RomGroupStats`.`RomGroupSavedStates`, 0) AS `RomGroupSavedStates`,
+    IFNULL(`RomSaveStats`.`RomSavedFiles`, 0) AS `RomSavedFiles`,
+    IFNULL(`RomGroupStats`.`RomGroupSavedFiles`, 0) AS `RomGroupSavedFiles`,
+    `Game`.`AgeGroupId`,
     CASE
-        WHEN `LocalizedNames`.`LocalizedName` IS NOT NULL THEN `LocalizedNames`.`LocalizedName`
+        WHEN `LocalizedNames`.`Name` IS NOT NULL THEN `LocalizedNames`.`Name`
         WHEN `Game`.`Name` IS NULL THEN `MetadataMap`.`SignatureGameName`
         ELSE `Game`.`Name`
     END AS `Name`,
     CASE
-		WHEN `LocalizedNames`.`LocalizedNameThe` IS NOT NULL THEN `LocalizedNames`.`LocalizedNameThe`
-        WHEN `Game`.`Name` IS NULL THEN
-            CASE
-                WHEN
-                    `MetadataMap`.`SignatureGameName` LIKE 'The %'
-                THEN
-                    CONCAT(TRIM(SUBSTR(`MetadataMap`.`SignatureGameName`,
-                                    4)),
-                            ', The')
-                ELSE `MetadataMap`.`SignatureGameName`
-            END
-        WHEN `Game`.`Name` LIKE 'The %' THEN CONCAT(TRIM(SUBSTR(`Game`.`Name`, 4)), ', The')
-        ELSE `Game`.`Name`
+        WHEN `LocalizedNames`.`NameThe` IS NOT NULL THEN `LocalizedNames`.`NameThe`
+        WHEN `Game`.`NameThe` IS NULL THEN `MetadataMap`.`SignatureGameNameThe`
+        ELSE `Game`.`NameThe`
     END AS `NameThe`,
     `Game`.`Slug`,
     `Game`.`Summary`,
     `Game`.`TotalRating`,
     `Game`.`TotalRatingCount`,
     CASE
-        WHEN `LocalizedNames`.`LocalizedCover` IS NULL THEN `Game`.`Cover`
-        WHEN `LocalizedNames`.`LocalizedCover` = 0 THEN `Game`.`Cover`
-        ELSE `LocalizedNames`.`LocalizedCover`
+        WHEN `LocalizedNames`.`Cover` IS NULL THEN `Game`.`Cover`
+        WHEN `LocalizedNames`.`Cover` = 0 THEN `Game`.`Cover`
+        ELSE `LocalizedNames`.`Cover`
     END AS `Cover`,
     `Game`.`Artworks`,
     `Game`.`FirstReleaseDate`,
@@ -579,8 +569,8 @@ namespace gaseous_server.Controllers.v1_1
     `Game`.`PlayerPerspectives`,
     `Game`.`Screenshots`,
     `Game`.`Themes`,
-    `RomCounts`.`DateAdded`,
-    `RomCounts`.`DateUpdated`,
+    `RomDates`.`DateAdded`,
+    `RomDates`.`DateUpdated`,
     IFNULL(`UserTimeTracking`.`TimePlayed`, 0) AS `TimePlayed`,
     `UserTimeTracking`.`LastPlayed`
 FROM
@@ -591,14 +581,42 @@ FROM
         JOIN
     (SELECT 
         `MetadataMapId`,
-            COUNT(`Id`) AS `RomCount`,
             MIN(`DateCreated`) AS `DateAdded`,
             MAX(`DateUpdated`) AS `DateUpdated`
     FROM
         `Games_Roms`
-    GROUP BY `MetadataMapId`) AS `RomCounts` ON `MetadataMap`.`Id` = `RomCounts`.`MetadataMapId`
-        JOIN
-    `Games_Roms` ON `MetadataMap`.`Id` = `Games_Roms`.`MetadataMapId`
+    GROUP BY `MetadataMapId`) AS `RomDates` ON `MetadataMap`.`Id` = `RomDates`.`MetadataMapId`
+        LEFT JOIN
+    (SELECT 
+        `Games_Roms`.`MetadataMapId`,
+            COUNT(DISTINCT `RomSavedState`.`Id`) AS `RomSavedStates`,
+            COUNT(DISTINCT `RomSavedFile`.`Id`) AS `RomSavedFiles`
+    FROM
+        `Games_Roms`
+    LEFT JOIN `GameState` AS `RomSavedState` ON `Games_Roms`.`Id` = `RomSavedState`.`RomId`
+        AND `RomSavedState`.`IsMediaGroup` = 0
+        AND `RomSavedState`.`UserId` = @userid
+    LEFT JOIN `GameSaves` AS `RomSavedFile` ON `Games_Roms`.`Id` = `RomSavedFile`.`RomId`
+        AND `RomSavedFile`.`IsMediaGroup` = 0
+        AND `RomSavedFile`.`UserId` = @userid
+    GROUP BY `Games_Roms`.`MetadataMapId`) AS `RomSaveStats` ON `MetadataMap`.`Id` = `RomSaveStats`.`MetadataMapId`
+        LEFT JOIN
+    (SELECT 
+        `RomMediaGroup`.`GameId`,
+            `RomMediaGroup`.`PlatformId`,
+            1 AS `MediaGroups`,
+            COUNT(DISTINCT `RomGroupSavedState`.`Id`) AS `RomGroupSavedStates`,
+            COUNT(DISTINCT `RomGroupSavedFile`.`Id`) AS `RomGroupSavedFiles`
+    FROM
+        `RomMediaGroup`
+    LEFT JOIN `GameState` AS `RomGroupSavedState` ON `RomMediaGroup`.`Id` = `RomGroupSavedState`.`RomId`
+        AND `RomGroupSavedState`.`IsMediaGroup` = 1
+        AND `RomGroupSavedState`.`UserId` = @userid
+    LEFT JOIN `GameSaves` AS `RomGroupSavedFile` ON `RomMediaGroup`.`Id` = `RomGroupSavedFile`.`RomId`
+        AND `RomGroupSavedFile`.`IsMediaGroup` = 1
+        AND `RomGroupSavedFile`.`UserId` = @userid
+    GROUP BY `RomMediaGroup`.`GameId` , `RomMediaGroup`.`PlatformId`) AS `RomGroupStats` ON `MetadataMap`.`Id` = `RomGroupStats`.`GameId`
+        AND `MetadataMap`.`PlatformId` = `RomGroupStats`.`PlatformId`
         LEFT JOIN
     (SELECT 
         `GameId`,
@@ -609,54 +627,26 @@ FROM
         `UserTimeTracking`
     WHERE
         `UserId` = @userid
-    GROUP BY `GameId`, `PlatformId`) AS `UserTimeTracking` ON `MetadataMap`.`Id` = `UserTimeTracking`.`GameId`
+    GROUP BY `GameId` , `PlatformId`) AS `UserTimeTracking` ON `MetadataMap`.`Id` = `UserTimeTracking`.`GameId`
         AND `MetadataMap`.`PlatformId` = `UserTimeTracking`.`PlatformId`
         LEFT JOIN
     `Favourites` ON `MetadataMapBridge`.`ParentMapId` = `Favourites`.`GameId`
         AND `Favourites`.`UserId` = @userid
         LEFT JOIN
-    `GameState` AS `RomSavedState` ON `Games_Roms`.`Id` = `RomSavedState`.`RomId`
-        AND `RomSavedState`.`IsMediaGroup` = 0
-        AND `RomSavedState`.`UserId` = @userid
-        LEFT JOIN
-    `GameSaves` AS `RomSavedFile` ON `Games_Roms`.`Id` = `RomSavedFile`.`RomId`
-        AND `RomSavedFile`.`IsMediaGroup` = 0
-        AND `RomSavedFile`.`UserId` = @userid
-        LEFT JOIN
-    `RomMediaGroup` ON `MetadataMap`.`Id` = `RomMediaGroup`.`GameId`
-        AND `MetadataMap`.`PlatformId` = `RomMediaGroup`.`PlatformId`
-        LEFT JOIN
-    `GameState` AS `RomGroupSavedState` ON `RomMediaGroup`.`Id` = `RomGroupSavedState`.`RomId`
-        AND `RomGroupSavedState`.`IsMediaGroup` = 1
-        AND `RomGroupSavedState`.`UserId` = @userid
-        LEFT JOIN
-    `GameSaves` AS `RomGroupSavedFile` ON `RomMediaGroup`.`Id` = `RomGroupSavedFile`.`RomId`
-        AND `RomGroupSavedFile`.`IsMediaGroup` = 1
-        AND `RomGroupSavedFile`.`UserId` = @userid
-        LEFT JOIN
     `Metadata_Game` AS `Game` ON `MetadataMapBridge`.`MetadataSourceType` = `Game`.`SourceId`
         AND `MetadataMapBridge`.`MetadataSourceId` = `Game`.`Id`
         LEFT JOIN
-	`Metadata_AgeGroup` AS `AgeGroup` ON `Game`.`Id` = `AgeGroup`.`GameId` AND `Game`.`SourceId` = `AgeGroup`.`SourceId`
+    `Metadata_AlternativeName` AS `AlternativeName` ON `Game`.`Id` = `AlternativeName`.`Game`
+        AND `Game`.`SourceId` = `AlternativeName`.`SourceId`
         LEFT JOIN
-    `Metadata_AlternativeName` AS `AlternativeName` ON `Game`.`Id` = `AlternativeName`.`Game` AND `Game`.`SourceId` = `AlternativeName`.`SourceId`
-        LEFT JOIN
-    (SELECT 
-        `Metadata_GameLocalization`.`Game`,
-            `Metadata_GameLocalization`.`SourceId`,
-            `Metadata_GameLocalization`.`Name` AS `LocalizedName`,
-            CASE
-                WHEN `Metadata_GameLocalization`.`Name` LIKE 'The %' THEN CONCAT(TRIM(SUBSTR(`Metadata_GameLocalization`.`Name`, 4)), ', The')
-                ELSE `Metadata_GameLocalization`.`Name`
-            END AS `LocalizedNameThe`,
-            `Metadata_GameLocalization`.`Cover` AS `LocalizedCover`,
-            `Region`.`Identifier`
-    FROM
-        `Metadata_GameLocalization` AS `Metadata_GameLocalization`
-    JOIN `Metadata_Region` AS `Region` ON `Metadata_GameLocalization`.`Region` = `Region`.`Id`
-        AND `Metadata_GameLocalization`.`SourceId` = `Region`.`SourceId`
-    WHERE
-        `Region`.`Identifier` = @lang) `LocalizedNames` ON `Game`.`Id` = `LocalizedNames`.`Game`
+    (
+        SELECT `gl`.`Game`, `gl`.`SourceId`, `gl`.`Name`, `gl`.`NameThe`, `gl`.`Cover`
+        FROM `Metadata_GameLocalization` AS `gl`
+        JOIN `Metadata_Region` AS `r`
+            ON `gl`.`Region` = `r`.`Id`
+            AND `gl`.`SourceId` = `r`.`SourceId`
+            AND `r`.`Identifier` = @lang
+    ) AS `LocalizedNames` ON `Game`.`Id` = `LocalizedNames`.`Game`
         AND `Game`.`SourceId` = `LocalizedNames`.`SourceId`
 " + String.Join(" ", joinClauses) + " " + whereClause + " GROUP BY `MetadataMapBridge`.`MetadataSourceType`, `MetadataMapBridge`.`MetadataSourceId` " + havingClause + " " + orderByClause;
 
@@ -713,6 +703,8 @@ FROM
                 // Neither requested (edge case)
                 dbResponse = new DataTable();
             }
+
+            System.IO.File.WriteAllText(Path.Combine(Config.ConfigurationPath, "last_query.sql"), sql); // For debugging purposes
 
             int indexInPage = 0;
             if (pageNumber > 1)

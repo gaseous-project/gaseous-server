@@ -13,6 +13,16 @@ namespace gaseous_server.Classes
     {
         public static List<int> BackgroundUpgradeTargetSchemaVersions = new List<int>();
 
+        /// <summary>
+        /// Safely adds or updates a key in a parameter dictionary without throwing on duplicate keys.
+        /// Use instead of dict.Add() everywhere in migration code to prevent "key already added" errors
+        /// when the same dbDict instance is reused across steps.
+        /// </summary>
+        public static void AddOrSet(Dictionary<string, object> dict, string key, object value)
+        {
+            dict[key] = value;
+        }
+
         public static async Task PreUpgradeScript(int TargetSchemaVersion, Database.databaseType? DatabaseType)
         {
             // load resources
@@ -120,7 +130,7 @@ namespace gaseous_server.Classes
                         case 1031:
                             Logging.LogKey(Logging.LogType.Information, "process.database", "database.running_pre_upgrade_for_schema_version", null, new[] { TargetSchemaVersion.ToString() });
                             // build tables for metadata storage
-                            Metadata.Utility.TableBuilder.BuildTables();
+                            TableBuilder_1031.BuildTables_1031();
                             sql = "RENAME TABLE AgeGroup TO Metadata_AgeGroup; RENAME TABLE ClearLogo TO Metadata_ClearLogo;";
                             dbDict.Clear();
                             await db.ExecuteCMDAsync(sql, dbDict);
@@ -147,6 +157,9 @@ namespace gaseous_server.Classes
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
             DataTable data;
 
+            Logging.LogKey(Logging.LogType.Information, "process.database",
+                "database.running_post_upgrade_for_schema_version", null, new[] { TargetSchemaVersion.ToString() });
+
             switch (DatabaseType)
             {
                 case Database.databaseType.MySql:
@@ -163,16 +176,16 @@ namespace gaseous_server.Classes
                             // copy root path to new libraries format
                             string oldRoot = Path.Combine(Config.LibraryConfiguration.LibraryRootDirectory, "Library");
                             sql = "INSERT INTO GameLibraries (Name, Path, DefaultLibrary, DefaultPlatform) VALUES (@name, @path, @defaultlibrary, @defaultplatform); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
-                            dbDict.Add("name", "Default");
-                            dbDict.Add("path", oldRoot);
-                            dbDict.Add("defaultlibrary", 1);
-                            dbDict.Add("defaultplatform", 0);
+                            AddOrSet(dbDict, "name", "Default");
+                            AddOrSet(dbDict, "path", oldRoot);
+                            AddOrSet(dbDict, "defaultlibrary", 1);
+                            AddOrSet(dbDict, "defaultplatform", 0);
                             data = db.ExecuteCMD(sql, dbDict);
 
                             // apply the new library id to the existing roms
                             sql = "UPDATE Games_Roms SET LibraryId=@libraryid;";
                             dbDict.Clear();
-                            dbDict.Add("libraryid", data.Rows[0][0]);
+                            AddOrSet(dbDict, "libraryid", data.Rows[0][0]);
                             db.ExecuteCMD(sql, dbDict);
                             break;
 
@@ -304,6 +317,15 @@ namespace gaseous_server.Classes
                                         }
                                         else
                                         {
+                                            // Path does not have the expected 3-segment structure
+                                            // (platform/game/romfile). Using as-is; this may indicate
+                                            // a ROM that was placed outside the managed library structure.
+                                            if (pathParts.Length != 3)
+                                            {
+                                                Logging.LogKey(Logging.LogType.Warning, "process.database",
+                                                    "database.rom_path_unexpected_segment_count",
+                                                    null, new[] { existingPath, pathParts.Length.ToString() });
+                                            }
                                             newPath = existingPath;
                                         }
                                     }
@@ -360,13 +382,32 @@ namespace gaseous_server.Classes
 
                             DatabaseMigration.BackgroundUpgradeTargetSchemaVersions.Add(1031);
                             break;
+
+                        case 1038:
+                            MySql_1038_MigrateDateSettings();
+                            break;
                     }
                     break;
             }
         }
 
+        public static void MySql_1038_MigrateDateSettings()
+        {
+            Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+            string sql = @"DELETE FROM Settings
+                           WHERE ValueType = 0
+                           AND (
+                               `Setting` IN ('LastContentChange', 'LastLibraryChange', 'LastMetadataChange', 'LastMetadataRefresh')
+                               OR `Setting` LIKE 'LastRun_%'
+                           );";
+
+            int deletedCount = db.ExecuteNonQuery(sql);
+            Logging.LogKey(Logging.LogType.Information, "process.database", "database.migrated_legacy_date_settings_total", null, new[] { deletedCount.ToString() });
+        }
+
         public static async Task UpgradeScriptBackgroundTasks()
         {
+            Logging.LogKey(Logging.LogType.Information, "process.database", "database.starting_background_upgrade_tasks");
             foreach (int TargetSchemaVersion in BackgroundUpgradeTargetSchemaVersions)
             {
                 try
@@ -378,7 +419,7 @@ namespace gaseous_server.Classes
                             break;
 
                         case 1031:
-                            MySql_1031_MigrateMetadataVersion();
+                            await MySql_1031_MigrateMetadataVersion();
                             break;
                     }
                 }
@@ -387,6 +428,10 @@ namespace gaseous_server.Classes
                     Logging.LogKey(Logging.LogType.Warning, "process.database", "database.error_during_background_upgrade_for_schema_version", null, new[] { TargetSchemaVersion.ToString() }, ex);
                 }
             }
+
+            // perform any metadata table migrations that are needed
+            await gaseous_server.Classes.Metadata.Utility.MetadataTableBuilder.BuildTableFromType("gaseous", "Metadata", typeof(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game), "", "NameThe, AgeGroupId");
+            await gaseous_server.Classes.Metadata.Utility.MetadataTableBuilder.BuildTableFromType("gaseous", "Metadata", typeof(gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.GameLocalization), "", "NameThe");
         }
 
         public static void MySql_1002_MigrateMetadataVersion()
@@ -472,16 +517,18 @@ namespace gaseous_server.Classes
 
                     string updateSQL = "UPDATE Signatures_Roms SET Attributes=@attributes, IngestorVersion=2 WHERE Id=@id";
                     dbDict = new Dictionary<string, object>();
-                    dbDict.Add("attributes", AttributesJson);
-                    dbDict.Add("id", (int)row["Id"]);
+                    AddOrSet(dbDict, "attributes", AttributesJson);
+                    AddOrSet(dbDict, "id", (int)row["Id"]);
                     db.ExecuteCMD(updateSQL, dbDict);
 
-                    if ((Counter - LastCounterCheck) > 10)
+                    Counter += 1;
+                    if ((Counter - LastCounterCheck) >= 100 || Counter == data.Rows.Count)
                     {
                         LastCounterCheck = Counter;
-                        Logging.LogKey(Logging.LogType.Information, "process.signature_ingest", "database.update_updating_database_entries_progress", null, new[] { Counter.ToString(), data.Rows.Count.ToString() });
+                        Logging.LogKey(Logging.LogType.Information, "process.signature_ingest",
+                            "database.update_updating_database_entries_progress",
+                            null, new[] { Counter.ToString(), data.Rows.Count.ToString() });
                     }
-                    Counter += 1;
                 }
             }
         }
@@ -540,17 +587,17 @@ namespace gaseous_server.Classes
             }
         }
 
-        public static void MySql_1031_MigrateMetadataVersion()
+        public static async Task MySql_1031_MigrateMetadataVersion()
         {
             // get the database migration task
             foreach (ProcessQueue.QueueProcessor.QueueItem qi in ProcessQueue.QueueProcessor.QueueItems)
             {
                 if (qi.ItemType == ProcessQueue.QueueItemType.BackgroundDatabaseUpgrade)
                 {
-                    qi.AddSubTask(ProcessQueue.QueueItemSubTasks.MetadataRefresh_Platform, "Platform Metadata", null, false);
-                    qi.AddSubTask(ProcessQueue.QueueItemSubTasks.MetadataRefresh_Signatures, "Signature Metadata", null, false);
-                    qi.AddSubTask(ProcessQueue.QueueItemSubTasks.MetadataRefresh_Game, "Game Metadata", null, false);
-                    qi.AddSubTask(ProcessQueue.QueueItemSubTasks.DatabaseMigration_1031, "Database Migration 1031", null, false);
+                    await qi.AddSubTask(ProcessQueue.QueueItemSubTasks.MetadataRefresh_Platform, "Platform Metadata", null, false);
+                    await qi.AddSubTask(ProcessQueue.QueueItemSubTasks.MetadataRefresh_Signatures, "Signature Metadata", null, false);
+                    await qi.AddSubTask(ProcessQueue.QueueItemSubTasks.MetadataRefresh_Game, "Game Metadata", null, false);
+                    await qi.AddSubTask(ProcessQueue.QueueItemSubTasks.DatabaseMigration_1031, "Database Migration 1031", null, false);
                 }
             }
         }
@@ -612,6 +659,219 @@ namespace gaseous_server.Classes
                     { "id", row["Id"] }
                 };
                 db.ExecuteNonQuery(sql, dbDict);
+            }
+        }
+
+        public static class TableBuilder_1031
+        {
+            public static void BuildTables_1031()
+            {
+                BuildTableFromType(typeof(IGDB.Models.AgeRating));
+                BuildTableFromType(typeof(IGDB.Models.AgeRatingCategory));
+                BuildTableFromType(typeof(IGDB.Models.AgeRatingContentDescriptionV2));
+                BuildTableFromType(typeof(IGDB.Models.AgeRatingOrganization));
+                BuildTableFromType(typeof(IGDB.Models.AlternativeName));
+                BuildTableFromType(typeof(IGDB.Models.Artwork));
+                BuildTableFromType(typeof(IGDB.Models.Character));
+                BuildTableFromType(typeof(IGDB.Models.CharacterGender));
+                BuildTableFromType(typeof(IGDB.Models.CharacterMugShot));
+                BuildTableFromType(typeof(IGDB.Models.CharacterSpecies));
+                BuildTableFromType(typeof(IGDB.Models.Collection));
+                BuildTableFromType(typeof(IGDB.Models.CollectionMembership));
+                BuildTableFromType(typeof(IGDB.Models.CollectionMembershipType));
+                BuildTableFromType(typeof(IGDB.Models.CollectionRelation));
+                BuildTableFromType(typeof(IGDB.Models.CollectionRelationType));
+                BuildTableFromType(typeof(IGDB.Models.CollectionType));
+                BuildTableFromType(typeof(IGDB.Models.Company));
+                BuildTableFromType(typeof(IGDB.Models.CompanyLogo));
+                BuildTableFromType(typeof(IGDB.Models.CompanyStatus));
+                BuildTableFromType(typeof(IGDB.Models.CompanyWebsite));
+                BuildTableFromType(typeof(IGDB.Models.Cover));
+                BuildTableFromType(typeof(IGDB.Models.Event));
+                BuildTableFromType(typeof(IGDB.Models.EventLogo));
+                BuildTableFromType(typeof(IGDB.Models.EventNetwork));
+                BuildTableFromType(typeof(IGDB.Models.ExternalGame));
+                BuildTableFromType(typeof(IGDB.Models.ExternalGameSource));
+                BuildTableFromType(typeof(IGDB.Models.Franchise));
+                BuildTableFromType(typeof(IGDB.Models.Game));
+                BuildTableFromType(typeof(IGDB.Models.GameEngine));
+                BuildTableFromType(typeof(IGDB.Models.GameEngineLogo));
+                BuildTableFromType(typeof(IGDB.Models.GameLocalization));
+                BuildTableFromType(typeof(IGDB.Models.GameMode));
+                BuildTableFromType(typeof(IGDB.Models.GameReleaseFormat));
+                BuildTableFromType(typeof(IGDB.Models.GameStatus));
+                BuildTableFromType(typeof(IGDB.Models.GameTimeToBeat));
+                BuildTableFromType(typeof(IGDB.Models.GameType));
+                BuildTableFromType(typeof(IGDB.Models.GameVersion));
+                BuildTableFromType(typeof(IGDB.Models.GameVersionFeature));
+                BuildTableFromType(typeof(IGDB.Models.GameVersionFeatureValue));
+                BuildTableFromType(typeof(IGDB.Models.GameVideo));
+                BuildTableFromType(typeof(IGDB.Models.Genre));
+                BuildTableFromType(typeof(IGDB.Models.InvolvedCompany));
+                BuildTableFromType(typeof(IGDB.Models.Keyword));
+                BuildTableFromType(typeof(IGDB.Models.Language));
+                BuildTableFromType(typeof(IGDB.Models.LanguageSupport));
+                BuildTableFromType(typeof(IGDB.Models.LanguageSupportType));
+                BuildTableFromType(typeof(IGDB.Models.MultiplayerMode));
+                BuildTableFromType(typeof(IGDB.Models.NetworkType));
+                BuildTableFromType(typeof(IGDB.Models.Platform));
+                BuildTableFromType(typeof(IGDB.Models.PlatformFamily));
+                BuildTableFromType(typeof(IGDB.Models.PlatformLogo));
+                BuildTableFromType(typeof(IGDB.Models.PlatformVersion));
+                BuildTableFromType(typeof(IGDB.Models.PlatformVersionCompany));
+                BuildTableFromType(typeof(IGDB.Models.PlatformVersionReleaseDate));
+                BuildTableFromType(typeof(IGDB.Models.PlatformWebsite));
+                BuildTableFromType(typeof(IGDB.Models.PlayerPerspective));
+                BuildTableFromType(typeof(IGDB.Models.PopularityPrimitive));
+                BuildTableFromType(typeof(IGDB.Models.PopularityType));
+                BuildTableFromType(typeof(IGDB.Models.Region));
+                BuildTableFromType(typeof(IGDB.Models.ReleaseDate));
+                BuildTableFromType(typeof(IGDB.Models.ReleaseDateRegion));
+                BuildTableFromType(typeof(IGDB.Models.ReleaseDateStatus));
+                BuildTableFromType(typeof(IGDB.Models.Screenshot));
+                BuildTableFromType(typeof(IGDB.Models.Theme));
+                BuildTableFromType(typeof(IGDB.Models.Website));
+                BuildTableFromType(typeof(IGDB.Models.WebsiteType));
+            }
+
+            /// <summary>
+            /// Builds a table from a type definition, or modifies an existing table.
+            /// This is used to create or update tables in the database based on the properties of a class.
+            /// Updates are limited to adding new columns, as the table structure should not change once created.
+            /// If the table already exists, it will only add new columns that are not already present.
+            /// This is useful for maintaining a consistent schema across different versions of the application.
+            /// The method is generic and can be used with any type that has properties that can be mapped to database columns.
+            /// The method does not return any value, but it will throw an exception if there is an error during the table creation or modification process.
+            /// </summary>
+            /// <param name="type">The type definition of the class for which the table should be built.</param>
+            public static void BuildTableFromType(Type type)
+            {
+                // Get the table name from the class name
+                string tableName = type.Name;
+
+                // Start building the SQL command
+                Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+
+                // Use migration journal to track whether the rename step for this table has run.
+                // This replaces the old Config.ReadSetting("RenameMigration_{tableName}") approach,
+                // making the tracking schema-based rather than settings-based.
+                string renameStepName = $"RenameToMetadata_{tableName}";
+                if (!MigrationJournal.AlreadySucceeded(1031, MigrationJournal.StepType.PreUpgrade, renameStepName))
+                {
+                    // rename the table if it exists
+                    // Check if the table exists via information_schema (portable, no IF EXISTS needed)
+                    string checkTableExistsQuery = $"SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = '{tableName}'";
+                    var result = db.ExecuteCMD(checkTableExistsQuery);
+                    if (Convert.ToInt32(result.Rows[0][0]) > 0)
+                    {
+                        // The table exists, so we will rename it
+                        Logging.LogKey(Logging.LogType.Information, "process.database",
+                            "database.renaming_table_to_metadata_prefix",
+                            null, new[] { tableName, $"Metadata_{tableName}" });
+
+                        string renameTableQuery = $"ALTER TABLE `{tableName}` RENAME TO `Metadata_{tableName}`";
+                        db.ExecuteNonQuery(renameTableQuery);
+                    }
+
+                    // Record success in the journal so this step is skipped on any subsequent run
+                    long jId = MigrationJournal.Start(1031, MigrationJournal.StepType.PreUpgrade, renameStepName);
+                    MigrationJournal.Complete(jId);
+                }
+                // Update the table name to include the Metadata prefix
+                tableName = $"Metadata_{tableName}";
+
+                // Get the properties of the class
+                PropertyInfo[] properties = type.GetProperties();
+
+                // Create the table with the basic structure if it does not exist
+                string createTableQuery = $"CREATE TABLE IF NOT EXISTS `{tableName}` (`Id` BIGINT PRIMARY KEY, `dateAdded` DATETIME DEFAULT CURRENT_TIMESTAMP, `lastUpdated` DATETIME DEFAULT CURRENT_TIMESTAMP )";
+                db.ExecuteNonQuery(createTableQuery);
+
+                // Add the sourceId column if it does not exist
+                string addSourceIdQuery = $"ALTER TABLE `{tableName}` ADD COLUMN IF NOT EXISTS `SourceId` INT";
+                db.ExecuteNonQuery(addSourceIdQuery);
+
+                // Loop through each property to add it as a column in the table
+                foreach (PropertyInfo property in properties)
+                {
+                    // Get the property name and type
+                    string columnName = property.Name;
+                    string columnType = "VARCHAR(255)"; // Default type, can be changed based on property type
+
+                    // Convert the property type name to a string
+                    string propertyTypeName = property.PropertyType.Name;
+                    if (propertyTypeName == "Nullable`1")
+                    {
+                        // If the property is nullable, get the underlying type
+                        propertyTypeName = property.PropertyType.GetGenericArguments()[0].Name;
+                    }
+
+                    // Determine the SQL type based on the property type
+                    switch (propertyTypeName)
+                    {
+                        case "String":
+                            columnType = "VARCHAR(255)";
+                            break;
+                        case "Int32":
+                            columnType = "INT";
+                            break;
+                        case "Int64":
+                            columnType = "BIGINT";
+                            break;
+                        case "Boolean":
+                            columnType = "BOOLEAN";
+                            break;
+                        case "DateTime":
+                        case "DateTimeOffset":
+                            columnType = "DATETIME";
+                            break;
+                        case "Double":
+                            columnType = "DOUBLE";
+                            break;
+                        case "IdentityOrValue`1":
+                            columnType = "BIGINT";
+                            break;
+                        case "IdentitiesOrValues`1":
+                            columnType = "LONGTEXT";
+                            break;
+                    }
+
+                    // check if there is a column with the name of the property
+                    string checkColumnQuery = $"SHOW COLUMNS FROM `{tableName}` LIKE '{columnName}'";
+                    var result = db.ExecuteCMD(checkColumnQuery);
+                    if (result.Rows.Count > 0)
+                    {
+                        // Column already exists, check if the type matches
+                        string existingType = result.Rows[0]["Type"].ToString();
+                        if (existingType.ToLower().Split("(")[0] != columnType.ToLower().Split("(")[0] && existingType != "text" && existingType != "longtext")
+                        {
+                            // Type mismatch: modify the column to expected type
+                            Logging.LogKey(Logging.LogType.Information, "process.database",
+                                "database.modifying_column_type",
+                                null, new[] { columnName, tableName, existingType, columnType });
+                            string alterColumnQuery = $"ALTER TABLE `{tableName}` MODIFY COLUMN `{columnName}` {columnType}";
+                            try
+                            {
+                                db.ExecuteNonQuery(alterColumnQuery);
+                            }
+                            catch (Exception ex)
+                            {
+                                Logging.LogKey(Logging.LogType.Warning, "process.database",
+                                    "database.modify_column_type_failed",
+                                    null, new[] { columnName, tableName, ex.Message }, ex);
+                            }
+                            continue;
+                        }
+                        continue; // Skip this column as it already exists with the correct type
+                    }
+
+                    // Add the column to the table
+                    Logging.LogKey(Logging.LogType.Information, "process.database",
+                        "database.adding_column_to_table",
+                        null, new[] { columnName, columnType, tableName });
+                    string addColumnQuery = $"ALTER TABLE `{tableName}` ADD COLUMN IF NOT EXISTS `{columnName}` {columnType}";
+                    db.ExecuteNonQuery(addColumnQuery);
+                }
             }
         }
     }

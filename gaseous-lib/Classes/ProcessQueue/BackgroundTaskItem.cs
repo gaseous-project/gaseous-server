@@ -142,7 +142,7 @@ namespace gaseous_server.ProcessQueue
                         ProcessQueue.QueueItemType.OrganiseLibrary,
                         ProcessQueue.QueueItemType.MetadataRefresh
                     };
-                    this.RunInProcess = false;
+                    this.RunInProcess = true;
                     break;
 
                 case ProcessQueue.QueueItemType.DailyMaintainer:

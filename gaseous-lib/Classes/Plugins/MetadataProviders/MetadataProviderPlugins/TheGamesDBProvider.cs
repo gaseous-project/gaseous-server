@@ -362,6 +362,17 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                 catch (Exception ex)
                 {
                     // Log the exception or handle it as needed
+                    Logging.LogKey(Logging.LogType.Warning, "TheGamesDBProvider", $"Error fetching game bundle for game ID {id}: {ex.Message}");
+
+                    if (cacheStatus == Storage.CacheStatus.Expired)
+                    {
+                        // fall back to returning expired cache if available
+                        T? cachedItem = await Storage.GetCacheValue<T>(metadata, "id", id);
+                        if (cachedItem != null)
+                        {
+                            return cachedItem;
+                        }
+                    }
                 }
 
                 return metadata;

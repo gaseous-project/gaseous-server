@@ -357,6 +357,9 @@ namespace gaseous_server.Classes
         /// <exception cref="FileNotFoundException">Thrown when the locale file (or required base overlay file) cannot be found.</exception>
         public static LocaleFileModel GetLanguageFile(string locale)
         {
+            string baseLanguagePath = Path.Combine(Config.LocalisationPath, locale.Split('-')[0] + ".json");
+            string localeLanguagePath = Path.Combine(Config.LocalisationPath, locale + ".json");
+
             // check if locale is already loaded
             if (_loadedLocales.ContainsKey(locale))
             {
@@ -368,7 +371,7 @@ namespace gaseous_server.Classes
             LocaleFileModel englishLocale;
             if (!_loadedLocales.ContainsKey("en"))
             {
-                LocaleFileModel enLocale = LoadLocaleFromResources("en");
+                LocaleFileModel enLocale = LoadLocaleFromResources("en", baseLanguagePath);
                 LocaleFileModel? enFileLocale = null;
                 try
                 {
@@ -404,7 +407,7 @@ namespace gaseous_server.Classes
             LocaleFileModel? resourceLocale = null;
             try
             {
-                resourceLocale = LoadLocaleFromResources(locale);
+                resourceLocale = LoadLocaleFromResources(locale, localeLanguagePath);
             }
             catch (FileNotFoundException)
             {
@@ -517,7 +520,7 @@ namespace gaseous_server.Classes
             return languages;
         }
 
-        private static LocaleFileModel LoadLocaleFromResources(string locale)
+        private static LocaleFileModel LoadLocaleFromResources(string locale, string outputPath)
         {
             string resourceName = "gaseous_lib.Support.Localisation." + locale + ".json";
             using (var stream = System.Reflection.Assembly.GetExecutingAssembly().GetManifestResourceStream(resourceName))
@@ -536,10 +539,16 @@ namespace gaseous_server.Classes
                         throw new InvalidDataException("Failed to deserialize locale resource JSON: " + resourceName);
                     }
 
+                    // write the resource locale to disk if it doesn't already exist, to allow users to easily modify and create overlay locales based on it
+                    if (!System.IO.File.Exists(outputPath))
+                    {
+                        File.WriteAllText(outputPath, json);
+                    }
+
                     if (localeFile.Type == LocaleFileModel.LocaleFileType.Overlay)
                     {
                         // load the base locale from resources
-                        LocaleFileModel baseLocale = LoadLocaleFromResources(localeFile.ParentLanguage);
+                        LocaleFileModel baseLocale = LoadLocaleFromResources(localeFile.ParentLanguage, outputPath);
                         localeFile = MergeLocaleFiles(baseLocale, localeFile);
                     }
 
@@ -548,12 +557,13 @@ namespace gaseous_server.Classes
             }
         }
 
-        private static LocaleFileModel LoadLocaleFromFile(string locale)
+        private static LocaleFileModel? LoadLocaleFromFile(string locale)
         {
             string filePath = Path.Combine(Config.LocalisationPath, locale + ".json");
             if (!System.IO.File.Exists(filePath))
             {
-                throw new FileNotFoundException("Locale file not found", filePath);
+                Logging.LogKey(Logging.LogType.Information, "Localisation", $"Locale file not found on disk for locale '{locale}': {filePath}");
+                return null;
             }
 
             string json = System.IO.File.ReadAllText(filePath);

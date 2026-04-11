@@ -2889,6 +2889,10 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     color: var(--page-font-colour);
 }
 
+.section.importNotification {
+    background-color: var(--section-body-notificationHighlight-background);
+}
+
 .section-header {
     position: relative;
     background-color: var(--section-header-background);
@@ -4602,7 +4606,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     right: 0px;
     padding-top: 10px;
     padding-bottom: 10px;
-    padding-left: 85px;
+    padding-left: var(--game-tile-banner-padding-left, 85px);
     padding-right: 10px;
     background-color: rgba(255, 255, 255, 0.25);
     backdrop-filter: blur(8px);
@@ -4629,6 +4633,11 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     word-wrap: break-word;
     overflow-wrap: break-word;
     text-shadow: 1px 1px rgba(0, 0, 0, 0.44);
+}
+
+.game_tile_wide_banner.expanded>.game_tile_wide_title {
+    color: black;
+    text-shadow: none;
 }
 
 .game_tile_wide_platforms {
