@@ -79,11 +79,31 @@ namespace gaseous_server.Classes.Configuration.Models
             }
         }
 
+        private static string _DefaultDatabaseEngine
+        {
+            get
+            {
+                if (!String.IsNullOrEmpty(Environment.GetEnvironmentVariable("dbengine")))
+                {
+                    return Environment.GetEnvironmentVariable("dbengine");
+                }
+                else
+                {
+                    return "mysql";
+                }
+            }
+        }
+
         public string HostName = _DefaultHostName;
         public string UserName = _DefaultUserName;
         public string Password = _DefaultPassword;
         public string DatabaseName = _DefaultDatabaseName;
         public int Port = _DefaultDatabasePort;
+
+        /// <summary>
+        /// Selects the database engine family used for migration tooling and backup commands.
+        /// </summary>
+        public string DatabaseEngine = _DefaultDatabaseEngine;
 
         [JsonIgnore]
         public string ConnectionString
