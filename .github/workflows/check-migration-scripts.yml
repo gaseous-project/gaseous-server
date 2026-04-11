@@ -13,6 +13,9 @@ name: Migration Script Guard
     paths:
       - 'gaseous-lib/Support/Database/MySQL/gaseous-*.sql'
 
+permissions:
+  contents: read
+
 jobs:
   guard-migration-scripts:
     name: Check migration scripts are immutable
