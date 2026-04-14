@@ -704,8 +704,6 @@ FROM
                 dbResponse = new DataTable();
             }
 
-            System.IO.File.WriteAllText(Path.Combine(Config.ConfigurationPath, "last_query.sql"), sql); // For debugging purposes
-
             int indexInPage = 0;
             if (pageNumber > 1)
             {
