@@ -181,6 +181,9 @@ namespace gaseous_server.ProcessQueue.Plugins
                 {
                     Logging.LogKey(Logging.LogType.Warning, "process.import_queue_processor", "importqueue.import_not_found", null, new[] { ParentSubTaskItem.TaskName });
                 }
+
+                // clean up old completed imports
+                Classes.ImportGame.RemoveOldImportStates();
             }
         }
     }
