@@ -357,6 +357,15 @@ namespace gaseous_server.Controllers
                     string filename = imgData["imageName"];
                     string filepath = imgData["imagePath"];
 
+                    // Compute ETag and check If-None-Match for conditional requests
+                    var fileInfo = new System.IO.FileInfo(filepath);
+                    string eTag = $"\"{fileInfo.LastWriteTimeUtc.Ticks:X}-{fileInfo.Length:X}\"";
+
+                    if (Request.Headers.IfNoneMatch.Contains(eTag))
+                    {
+                        return StatusCode(StatusCodes.Status304NotModified);
+                    }
+
                     // Determine content type based on file extension
                     string extension = Path.GetExtension(filepath).ToLowerInvariant();
                     string contentType = extension switch
@@ -375,10 +384,6 @@ namespace gaseous_server.Controllers
                     };
 
                     Response.Headers.Add("Content-Disposition", cd.ToString());
-
-                    // Add ETag for efficient caching
-                    var fileInfo = new System.IO.FileInfo(filepath);
-                    string eTag = $"\"{fileInfo.LastWriteTimeUtc.Ticks:X}-{fileInfo.Length:X}\"";
                     Response.Headers.Add("ETag", eTag);
 
                     return PhysicalFile(filepath, contentType, enableRangeProcessing: true);
