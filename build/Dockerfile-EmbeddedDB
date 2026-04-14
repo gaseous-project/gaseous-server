@@ -49,7 +49,7 @@ ENV MARIADB_ROOT_PASSWORD=${dbpass}
 
 # install mariadb
 RUN DEBIAN_FRONTEND=noninteractive && \
-    apt-get update && apt-get install -y mariadb-server
+    apt-get update && apt-get install -y mariadb-server mariadb-client
 RUN mkdir -p /run/mysqld
 COPY ../build/embeddeddb/mariadb.sh /usr/sbin/start-mariadb.sh
 RUN chmod +x /usr/sbin/start-mariadb.sh

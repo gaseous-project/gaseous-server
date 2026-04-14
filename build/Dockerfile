@@ -54,8 +54,8 @@ COPY ../build/standard/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 RUN mkdir -p /var/run/supervisord
 RUN mkdir -p /var/log/supervisord
 
-# Install curl
-RUN apt-get install -y curl
+# Install support tools
+RUN apt-get install -y curl mariadb-client
 
 # clean up apt-get
 RUN apt-get clean && rm -rf /var/lib/apt/lists
