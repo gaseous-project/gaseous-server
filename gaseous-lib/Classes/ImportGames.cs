@@ -570,7 +570,14 @@ namespace gaseous_server.Classes
 
             List<string> SearchCandidates = GetSearchCandidates(GameName);
 
-            foreach (SearchType searchType in Enum.GetValues(typeof(SearchType)))
+            List<SearchType> searchTypesToUse = new List<SearchType>
+            {
+                SearchType.where,
+                SearchType.wherefuzzy,
+                SearchType.search
+            };
+
+            foreach (SearchType searchType in searchTypesToUse)
             {
                 Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.search_type", null, new string[] { searchType.ToString() });
                 Game[] games = await Metadata.Games.SearchForGame(SearchCandidates, PlatformId, searchType);
