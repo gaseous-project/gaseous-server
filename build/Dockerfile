@@ -55,7 +55,7 @@ RUN mkdir -p /var/run/supervisord
 RUN mkdir -p /var/log/supervisord
 
 # Install support tools
-RUN apt-get install -y curl mariadb-client
+RUN apt-get install -y curl mariadb-client ffmpeg
 
 # clean up apt-get
 RUN apt-get clean && rm -rf /var/lib/apt/lists
