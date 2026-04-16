@@ -14,6 +14,8 @@ namespace gaseous_server.ProcessQueue
         {
             this.Task = TaskName.ToString();
             this.TaskEnum = TaskName;
+            this.DefaultMaxConcurrentSubTasks = 1;
+            this.MinimumAllowedMaxConcurrentSubTasks = 1;
 
             switch (TaskName)
             {
@@ -143,6 +145,29 @@ namespace gaseous_server.ProcessQueue
                         ProcessQueue.QueueItemType.MetadataRefresh
                     };
                     this.RunInProcess = true;
+                    this.DefaultMaxConcurrentSubTasks = 4;
+                    break;
+
+                case ProcessQueue.QueueItemType.ImportQueueProcessor:
+                    this._UserManageable = false;
+                    this._SaveLastRunTime = true;
+                    this.DefaultInterval = 1;
+                    this.MinimumAllowedInterval = 1;
+                    this.DefaultAllowedDays = new List<DayOfWeek>{
+                        DayOfWeek.Sunday,
+                        DayOfWeek.Monday,
+                        DayOfWeek.Tuesday,
+                        DayOfWeek.Wednesday,
+                        DayOfWeek.Thursday,
+                        DayOfWeek.Friday,
+                        DayOfWeek.Saturday
+                    };
+                    this.DefaultAllowedStartHours = 0;
+                    this.DefaultAllowedStartMinutes = 0;
+                    this.DefaultAllowedEndHours = 23;
+                    this.DefaultAllowedEndMinutes = 59;
+                    this.RunInProcess = true;
+                    this.DefaultMaxConcurrentSubTasks = 4;
                     break;
 
                 case ProcessQueue.QueueItemType.DailyMaintainer:
@@ -290,6 +315,21 @@ namespace gaseous_server.ProcessQueue
         }
         public int DefaultInterval { get; set; }
         public int MinimumAllowedInterval { get; set; }
+        public int MaxConcurrentSubTasks
+        {
+            get
+            {
+                int setMaxConcurrentSubTasks = int.Parse(Config.ReadSetting<string>("MaxConcurrentSubTasks_" + Task, DefaultMaxConcurrentSubTasks.ToString()));
+                if (setMaxConcurrentSubTasks < MinimumAllowedMaxConcurrentSubTasks)
+                {
+                    return DefaultMaxConcurrentSubTasks;
+                }
+
+                return setMaxConcurrentSubTasks;
+            }
+        }
+        public int DefaultMaxConcurrentSubTasks { get; set; }
+        public int MinimumAllowedMaxConcurrentSubTasks { get; set; }
         public bool RunInProcess { get; set; }
         public List<DayOfWeek> AllowedDays
         {
@@ -391,6 +431,7 @@ namespace gaseous_server.ProcessQueue
         public string Task { get; set; }
         public bool Enabled { get; set; }
         public int Interval { get; set; }
+        public int MaxConcurrentSubTasks { get; set; }
         public List<DayOfWeek> AllowedDays { get; set; }
         public int AllowedStartHours { get; set; }
         public int AllowedStartMinutes { get; set; }
