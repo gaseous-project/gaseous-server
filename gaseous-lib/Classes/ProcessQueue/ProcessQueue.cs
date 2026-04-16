@@ -42,6 +42,7 @@ namespace gaseous_server.ProcessQueue
                 AllowedEndHours = defaultItem.AllowedEndHours;
                 AllowedEndMinutes = defaultItem.AllowedEndMinutes;
                 _RunInProcess = defaultItem.RunInProcess;
+                _MaxConcurrentSubTasks = defaultItem.MaxConcurrentSubTasks;
 
                 AttachPlugin();
             }
@@ -66,6 +67,7 @@ namespace gaseous_server.ProcessQueue
                 AllowedEndHours = defaultItem.AllowedEndHours;
                 AllowedEndMinutes = defaultItem.AllowedEndMinutes;
                 _RunInProcess = defaultItem.RunInProcess;
+                _MaxConcurrentSubTasks = defaultItem.MaxConcurrentSubTasks;
 
                 AttachPlugin();
             }
@@ -126,23 +128,38 @@ namespace gaseous_server.ProcessQueue
             }
 
             private QueueItemType _ItemType = QueueItemType.NotConfigured;
+            private readonly object _subTaskSync = new object();
             [Newtonsoft.Json.JsonIgnore]
             [System.Text.Json.Serialization.JsonIgnore]
             public List<SubTask> SubTasks { get; set; } = new List<SubTask>();
             public async Task<Guid> AddSubTask(QueueItemSubTasks TaskType, string TaskName, object? Settings, bool RemoveWhenCompleted, string CorrelationId = "")
             {
-                // check if the task already exists
-                SubTask? existingTask = SubTasks.FirstOrDefault(x => x.TaskType == TaskType && x.TaskName == TaskName);
-                if (existingTask == null)
+                Guid correlationId;
+                bool createdTask = false;
+
+                lock (_subTaskSync)
                 {
-                    // generate a new correlation id
-                    Guid correlationId = string.IsNullOrEmpty(CorrelationId) ? Guid.NewGuid() : Guid.Parse(CorrelationId);
+                    // check if the task already exists
+                    SubTask? existingTask = SubTasks.FirstOrDefault(x => x.TaskType == TaskType && x.TaskName == TaskName);
+                    if (existingTask == null)
+                    {
+                        // generate a new correlation id
+                        correlationId = string.IsNullOrEmpty(CorrelationId) ? Guid.NewGuid() : Guid.Parse(CorrelationId);
 
-                    // add the task to the list
-                    SubTask subTask = new SubTask(this, TaskType, TaskName, Settings, correlationId);
-                    subTask.RemoveWhenStopped = RemoveWhenCompleted;
-                    SubTasks.Add(subTask);
+                        // add the task to the list
+                        SubTask subTask = new SubTask(this, TaskType, TaskName, Settings, correlationId);
+                        subTask.RemoveWhenStopped = RemoveWhenCompleted;
+                        SubTasks.Add(subTask);
+                        createdTask = true;
+                    }
+                    else
+                    {
+                        correlationId = Guid.Parse(existingTask.CorrelationId);
+                    }
+                }
 
+                if (createdTask)
+                {
                     // send the creation of the new subtask to the reporting server
                     var outProcessData = CallContext.GetData("OutProcess");
                     if (outProcessData != null && bool.TryParse(outProcessData.ToString(), out bool isOutProcess) && isOutProcess)
@@ -201,36 +218,42 @@ namespace gaseous_server.ProcessQueue
                             { "SubTaskCorrelationId", correlationId.ToString() }
                     }
                 );
+                }
 
-                    return correlationId;
-                }
-                else
-                {
-                    return Guid.Parse(existingTask.CorrelationId);
-                }
+                return correlationId;
             }
             public List<SubTask> ChildTasks
             {
                 get
                 {
-                    // return only the first 10 tasks
-                    List<SubTask> childTasks = new List<SubTask>();
-                    int maxTasks = 10;
-                    foreach (SubTask task in SubTasks)
+                    lock (_subTaskSync)
                     {
-                        if (childTasks.Count >= maxTasks)
+                        // return only the first 10 tasks
+                        List<SubTask> childTasks = new List<SubTask>();
+                        int maxTasks = 10;
+                        foreach (SubTask task in SubTasks)
                         {
-                            break;
+                            if (childTasks.Count >= maxTasks)
+                            {
+                                break;
+                            }
+                            childTasks.Add(task);
                         }
-                        childTasks.Add(task);
+                        return childTasks;
                     }
-                    return childTasks;
                 }
             }
 
             [Newtonsoft.Json.JsonIgnore]
             [System.Text.Json.Serialization.JsonIgnore]
-            Dictionary<string, Thread> BackgroundThreads = null;
+            Dictionary<string, RunningSubTask>? BackgroundThreads = null;
+
+            private class RunningSubTask
+            {
+                public required SubTask SubTask { get; set; }
+                public required Thread Thread { get; set; }
+            }
+
             public class SubTask
             {
                 public QueueItemSubTasks TaskType
@@ -273,7 +296,8 @@ namespace gaseous_server.ProcessQueue
                         _AllowConcurrentExecution = value;
                     }
                 }
-                private bool _AllowConcurrentExecution = false;
+                // Starts false, and can be set true by the subtask when its exclusive section is complete.
+                private volatile bool _AllowConcurrentExecution = false;
                 public string Status
                 {
                     get
@@ -400,7 +424,7 @@ namespace gaseous_server.ProcessQueue
                             // remove the task from the parent object
                             if (_ParentObject is QueueItem parent)
                             {
-                                parent.SubTasks.Remove(this);
+                                parent.RemoveSubTask(this);
                             }
 
                             // remove the subtask from the reporting server
@@ -473,6 +497,18 @@ namespace gaseous_server.ProcessQueue
                     return _RunInProcess;
                 }
             }
+            private int _MaxConcurrentSubTasks = 1;
+            public int MaxConcurrentSubTasks
+            {
+                get
+                {
+                    return _MaxConcurrentSubTasks;
+                }
+                set
+                {
+                    _MaxConcurrentSubTasks = Math.Max(1, value);
+                }
+            }
             private bool _AllowManualStart = true;
             private bool _RemoveWhenStopped = false;
             private bool _IsBlocked = false;
@@ -510,11 +546,14 @@ namespace gaseous_server.ProcessQueue
                     // if any subtasks are running or never started, set the state to running
                     if (SubTasks != null)
                     {
-                        foreach (SubTask task in SubTasks)
+                        lock (_subTaskSync)
                         {
-                            if (task.State == QueueItemState.Running || task.State == QueueItemState.NeverStarted)
+                            foreach (SubTask task in SubTasks)
                             {
-                                return QueueItemState.Running;
+                                if (task.State == QueueItemState.Running || task.State == QueueItemState.NeverStarted)
+                                {
+                                    return QueueItemState.Running;
+                                }
                             }
                         }
                     }
@@ -754,55 +793,58 @@ namespace gaseous_server.ProcessQueue
                 // execute any subtasks
                 if (SubTasks != null)
                 {
-                    if (BackgroundThreads == null)
-                    {
-                        BackgroundThreads = new Dictionary<string, Thread>();
-                    }
+                    // Always reset per-run thread tracking to avoid stale state from previous executions.
+                    BackgroundThreads = new Dictionary<string, RunningSubTask>();
 
-                    // execute all subtasks in order, only move to the next one is the previous one is complete, or if the task is allowed to run concurrently
+                    // Execute subtasks with a simple rule:
+                    // 1) A running task blocks new starts until it sets AllowConcurrentExecution=true.
+                    // 2) Once released, we can start more tasks up to MaxConcurrentSubTasks.
                     int subTaskProgressCount = 0;
-                    do
+                    int maxThreads = Math.Max(1, MaxConcurrentSubTasks);
+
+                    while (true)
                     {
-                        // get the next eligible task
-                        SubTask? nextTask = SubTasks.FirstOrDefault(x => x.State == QueueItemState.NeverStarted);
-
-                        int maxThreads = 4;
-
-                        // if we have too many threads running, wait for one to finish
-                        while (BackgroundThreads.Count >= maxThreads)
+                        // remove any completed threads
+                        List<string> completedThreads = new List<string>();
+                        foreach (KeyValuePair<string, RunningSubTask> runningTask in BackgroundThreads)
                         {
-                            // remove any completed threads
-                            List<string> completedThreads = new List<string>();
-                            foreach (KeyValuePair<string, Thread> thread in BackgroundThreads)
+                            if (!runningTask.Value.Thread.IsAlive || runningTask.Value.Thread.ThreadState == ThreadState.Stopped)
                             {
-                                if (thread.Value.ThreadState == ThreadState.Stopped)
-                                {
-                                    completedThreads.Add(thread.Key);
-                                }
+                                completedThreads.Add(runningTask.Key);
                             }
-                            foreach (string threadKey in completedThreads)
-                            {
-                                BackgroundThreads.Remove(threadKey);
-                            }
-
-                            // jobs can only be added to the thread pool if there is space
-                            if (BackgroundThreads.Count < maxThreads)
-                            {
-                                break;
-                            }
-
-                            // wait for a second
-                            Thread.Sleep(1000);
+                        }
+                        foreach (string threadKey in completedThreads)
+                        {
+                            BackgroundThreads.Remove(threadKey);
                         }
 
-                        // add the next task to the thread pool
+                        bool hasPendingTasks = HasPendingSubTasks();
+                        if (!hasPendingTasks && BackgroundThreads.Count == 0)
+                        {
+                            break;
+                        }
+
+                        bool hasExclusiveRunningTask = BackgroundThreads.Values.Any(x => x.Thread.IsAlive && x.SubTask.AllowConcurrentExecution == false);
+                        bool canStartTask = !hasExclusiveRunningTask && BackgroundThreads.Count < maxThreads;
+
+                        if (!canStartTask)
+                        {
+                            Thread.Sleep(200);
+                            continue;
+                        }
+
+                        // start the next never-started task that is not already tracked as running
+                        SubTask? nextTask = GetNextNeverStartedSubTask(BackgroundThreads.Keys.ToHashSet());
                         if (nextTask != null)
                         {
-                            // execute the task
                             Thread thread = new Thread(() => nextTask.Execute().GetAwaiter().GetResult());
                             thread.Name = nextTask.TaskName;
                             thread.Start();
-                            BackgroundThreads.Add(nextTask.TaskName, thread);
+                            BackgroundThreads[nextTask.CorrelationId] = new RunningSubTask
+                            {
+                                SubTask = nextTask,
+                                Thread = thread
+                            };
 
                             subTaskProgressCount += 1;
                             CurrentState = "Running " + nextTask.TaskName;
@@ -812,60 +854,48 @@ namespace gaseous_server.ProcessQueue
                             }
                             else
                             {
-                                CurrentStateProgress = subTaskProgressCount + " of " + SubTasks.Count;
+                                CurrentStateProgress = subTaskProgressCount + " of " + GetSubTaskCount();
                             }
 
-                            // wait for the thread to finish
-                            while (thread.IsAlive)
-                            {
-                                // check if the thread is still running
-                                if (thread.ThreadState == ThreadState.Stopped || (nextTask.AllowConcurrentExecution == true && SubTasks.Count == 1))
-                                {
-                                    break;
-                                }
-                                else
-                                {
-                                    // wait for a second
-                                    Thread.Sleep(1000);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            break;
+                            continue;
                         }
 
-                    } while (SubTasks.Count > 0);
-
-                    // wait for all threads to finish
-                    bool stillRunning = true;
-                    while (stillRunning)
-                    {
-                        // remove any completed threads
-                        List<string> completedThreads = new List<string>();
-                        foreach (KeyValuePair<string, Thread> thread in BackgroundThreads)
-                        {
-                            if (thread.Value.ThreadState == ThreadState.Stopped)
-                            {
-                                completedThreads.Add(thread.Key);
-                            }
-                        }
-                        foreach (string threadKey in completedThreads)
-                        {
-                            BackgroundThreads.Remove(threadKey);
-                        }
-
-                        // check if all threads are complete
-                        if (BackgroundThreads.Count == 0)
-                        {
-                            stillRunning = false;
-                        }
-                        else
-                        {
-                            // wait for a second
-                            Thread.Sleep(1000);
-                        }
+                        Thread.Sleep(200);
                     }
+
+                    BackgroundThreads.Clear();
+                }
+            }
+
+            private bool HasPendingSubTasks()
+            {
+                lock (_subTaskSync)
+                {
+                    return SubTasks.Any(x => x.State == QueueItemState.NeverStarted);
+                }
+            }
+
+            private SubTask? GetNextNeverStartedSubTask(HashSet<string> runningSubTaskIds)
+            {
+                lock (_subTaskSync)
+                {
+                    return SubTasks.FirstOrDefault(x => x.State == QueueItemState.NeverStarted && !runningSubTaskIds.Contains(x.CorrelationId));
+                }
+            }
+
+            private int GetSubTaskCount()
+            {
+                lock (_subTaskSync)
+                {
+                    return SubTasks.Count;
+                }
+            }
+
+            private void RemoveSubTask(SubTask subTask)
+            {
+                lock (_subTaskSync)
+                {
+                    SubTasks.Remove(subTask);
                 }
             }
 

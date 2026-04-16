@@ -236,6 +236,27 @@ ORDER BY Platform.`Name`; ";
                                 Logging.LogKey(Logging.LogType.Warning, "process.update_background_task", "updatebackgroundtask.interval_below_minimum_skipping", new string[] { TaskConfiguration.Interval.ToString(), TaskConfiguration.Task, taskItem.MinimumAllowedInterval.ToString() });
                             }
 
+                            // update max concurrent subtasks
+                            if (TaskConfiguration.MaxConcurrentSubTasks >= taskItem.MinimumAllowedMaxConcurrentSubTasks)
+                            {
+                                Logging.LogKey(Logging.LogType.Information, "process.update_background_task", "updatebackgroundtask.updating_task_new_max_concurrent_subtasks", new string[] { TaskConfiguration.Task, TaskConfiguration.MaxConcurrentSubTasks.ToString() });
+
+                                Config.SetSetting<string>("MaxConcurrentSubTasks_" + TaskConfiguration.Task, TaskConfiguration.MaxConcurrentSubTasks.ToString());
+
+                                // update existing process
+                                foreach (ProcessQueue.QueueProcessor.QueueItem item in ProcessQueue.QueueProcessor.QueueItems)
+                                {
+                                    if (item.ItemType.ToString().ToLower() == TaskConfiguration.Task.ToLower())
+                                    {
+                                        item.MaxConcurrentSubTasks = TaskConfiguration.MaxConcurrentSubTasks;
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                Logging.LogKey(Logging.LogType.Warning, "process.update_background_task", "updatebackgroundtask.max_concurrent_subtasks_below_minimum_skipping", new string[] { TaskConfiguration.MaxConcurrentSubTasks.ToString(), TaskConfiguration.Task, taskItem.MinimumAllowedMaxConcurrentSubTasks.ToString() });
+                            }
+
                             // update task weekdays
                             Logging.LogKey(Logging.LogType.Information, "process.update_background_task", "updatebackgroundtask.updating_task_new_weekdays", new string[] { TaskConfiguration.Task, String.Join(", ", TaskConfiguration.AllowedDays) });
 

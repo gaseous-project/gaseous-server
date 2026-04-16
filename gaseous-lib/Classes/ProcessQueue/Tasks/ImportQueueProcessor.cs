@@ -137,6 +137,8 @@ namespace gaseous_server.ProcessQueue.Plugins
                     }
                     else
                     {
+                        ParentSubTaskItem.AllowConcurrentExecution = true;
+                        
                         // file is a rom
                         Platform? platformOverride = null;
                         if (importState.PlatformOverride != null)
