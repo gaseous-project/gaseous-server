@@ -421,14 +421,14 @@
                                                 }
 
                                                 default: {
+                                                    // load page content
+                                                    let pageSelection = getQueryString('page', 'string');
+
                                                     // load page banner
                                                     await LoadPageContent('banner', 'banner_target');
 
                                                     // start notifications
                                                     startNotificationFetch();
-
-                                                    // load page content
-                                                    let pageSelection = getQueryString('page', 'string');
 
                                                     if (!pageSelection) {
                                                         pageSelection = GetPreference("Library.DefaultHomePage");
