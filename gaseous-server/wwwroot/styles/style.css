@@ -2835,6 +2835,8 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     backdrop-filter: blur(16px);
     overflow-y: auto;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     right: 0;
     top: 40px;
     bottom: 0px;
