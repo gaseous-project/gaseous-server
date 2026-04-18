@@ -453,12 +453,17 @@ h3 {
     z-index: 50;
 }
 
-#content {
+.content {
     margin-top: 35px;
     padding-top: 5px;
     padding-left: 0px;
     padding-right: 0px;
     z-index: -100;
+}
+
+.content-full {
+    margin: 0px;
+    padding: 0px;
 }
 
 #games_filter_panel {
@@ -2181,7 +2186,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     left: 0px;
     right: 0px;
     bottom: 0px;
-    top: 40px;
+    top: 0px;
 }
 
 .emulator_pausemask {

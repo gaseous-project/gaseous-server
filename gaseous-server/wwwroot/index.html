@@ -66,7 +66,7 @@
     <div id="banner_target"></div>
 
     <!-- Page Content -->
-    <div id="content"></div>
+    <div id="content" class="content"></div>
 
     <script type="text/javascript">
         // Gaseous Games - Main Application Script
@@ -424,12 +424,6 @@
                                                     // load page content
                                                     let pageSelection = getQueryString('page', 'string');
 
-                                                    // load page banner
-                                                    await LoadPageContent('banner', 'banner_target');
-
-                                                    // start notifications
-                                                    startNotificationFetch();
-
                                                     if (!pageSelection) {
                                                         pageSelection = GetPreference("Library.DefaultHomePage");
                                                     }
@@ -438,6 +432,32 @@
                                                     } else {
                                                         console.log("Loading page: " + pageSelection);
                                                     }
+
+                                                    if (!['emulator'].includes(pageSelection)) {
+                                                        // load page banner
+                                                        await LoadPageContent('banner', 'banner_target');
+
+                                                        // start notifications
+                                                        startNotificationFetch();
+                                                    } else {
+                                                        // remove bgImages and bgImage_Opacity divs since the emulator page has its own background handling and we don't want them interfering
+                                                        let bgImagesDiv = document.getElementById('bgImages');
+                                                        if (bgImagesDiv) {
+                                                            bgImagesDiv.parentNode.removeChild(bgImagesDiv);
+                                                        }
+                                                        let bgImageOpacityDiv = document.getElementById('bgImage_Opacity');
+                                                        if (bgImageOpacityDiv) {
+                                                            bgImageOpacityDiv.parentNode.removeChild(bgImageOpacityDiv);
+                                                        }
+
+                                                        // set content div to full screen for emulator page
+                                                        let contentDiv = document.getElementById('content');
+                                                        if (contentDiv) {
+                                                            contentDiv.classList.remove('content');
+                                                            contentDiv.classList.add('content-full');
+                                                        }
+                                                    }
+
                                                     await LoadPageContent(pageSelection, 'content');
 
                                                     // Set initial state for browser navigation

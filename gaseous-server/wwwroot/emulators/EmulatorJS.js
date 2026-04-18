@@ -256,6 +256,15 @@ window.EJS_Buttons = {
 
 window.EJS_onSaveState = function (e) {
     console.log(e);
+
+    if (e.screenshot === undefined || e.state === undefined) {
+        notificationManager.showNotification(
+            window.lang.translate("emulator.state.save_failed"),
+            window.lang.translate("emulator.state.save_failed_message")
+        );
+        return;
+    }
+
     let returnValue = {
         "ScreenshotByteArrayBase64": btoa(Uint8ToString(e.screenshot)),
         "StateByteArrayBase64": btoa(Uint8ToString(e.state))
