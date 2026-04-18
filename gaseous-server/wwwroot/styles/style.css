@@ -469,6 +469,14 @@ h3 {
     margin-right: 0px;
 }
 
+#games_filter_button_column_filter {
+    display: none;
+}
+
+#games_filter_button_column {
+    display: inline-block;
+}
+
 .games_filter_controls {
     position: absolute;
     z-index: 10;
