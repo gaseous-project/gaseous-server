@@ -695,6 +695,10 @@ function BuildSpaceBar(LibrarySize, OtherSize, TotalSize) {
     let OtherSizePercent = Math.floor(Number(OtherSize) / Number(TotalSize) * 100);
     let FreeSizePercent = Math.floor((Number(LibrarySize) + Number(OtherSize)) / Number(TotalSize) * 100);
 
+    if (LibrarySizePercent === 0) { LibrarySizePercent = 1; }
+    if (OtherSizePercent === 0) { OtherSizePercent = 1; }
+    if (FreeSizePercent === 0) { FreeSizePercent = 1; }
+
     let LibraryCell = document.createElement('td');
     LibraryCell.setAttribute('style', 'width: ' + LibrarySizePercent + '%; background-color: green;');
 
@@ -712,11 +716,13 @@ function BuildSpaceBar(LibrarySize, OtherSize, TotalSize) {
 
     containerDiv.appendChild(newTable);
 
-    let sizeBox = document.createElement('div');
-    sizeBox.setAttribute('style', 'width: 100%; height: 55px; position: relative;');
+    // let sizeBox = document.createElement('div');
+    // sizeBox.setAttribute('style', 'width: 100%; height: 55px; position: relative; overflow: visible;');
 
     let librarySizeSpan = document.createElement('span');
-    librarySizeSpan.style.position = 'absolute';
+    librarySizeSpan.style.position = 'fixed';
+    librarySizeSpan.style.pointerEvents = 'none';
+    librarySizeSpan.style.zIndex = '9999';
     librarySizeSpan.classList.add('sizelabel');
     librarySizeSpan.classList.add('sizelabel_left');
     librarySizeSpan.style.display = 'none';
@@ -725,49 +731,87 @@ function BuildSpaceBar(LibrarySize, OtherSize, TotalSize) {
     } else {
         librarySizeSpan.style.left = '0px';
     }
-    librarySizeSpan.innerHTML = (window.lang ? window.lang.translate('main.spacebar.library_usage') : 'Library') + ': ' + formatBytes(LibrarySize) + ' (' + LibrarySizePercent + '%)';
-    sizeBox.appendChild(librarySizeSpan);
+    librarySizeSpan.innerHTML = (window.lang ? window.lang.translate('main.spacebar.library_usage', [formatBytes(LibrarySize), LibrarySizePercent]) : 'Library');
+    document.body.appendChild(librarySizeSpan);
 
-    LibraryCell.addEventListener('mouseover', function () {
+    function positionLibrarySizeSpan(event) {
+        let leftPosition = event.clientX;
+        let topPosition = event.clientY;
+
+        librarySizeSpan.style.left = (leftPosition - 20) + 'px';
+        librarySizeSpan.style.top = topPosition + 'px';
+    }
+
+    LibraryCell.addEventListener('mouseover', function (event) {
+        positionLibrarySizeSpan(event);
         librarySizeSpan.style.display = 'block';
+    });
+    LibraryCell.addEventListener('mousemove', function (event) {
+        positionLibrarySizeSpan(event);
     });
     LibraryCell.addEventListener('mouseout', function () {
         librarySizeSpan.style.display = 'none';
     });
 
     let otherSizeSpan = document.createElement('span');
-    otherSizeSpan.style.position = 'absolute';
-    otherSizeSpan.style.left = 'calc(' + OtherSizePercent + '% - 75px)';
+    otherSizeSpan.style.position = 'fixed';
+    otherSizeSpan.style.pointerEvents = 'none';
+    otherSizeSpan.style.zIndex = '9999';
     otherSizeSpan.classList.add('sizelabel');
-    otherSizeSpan.classList.add('sizelabel_center');
+    otherSizeSpan.classList.add('sizelabel_left');
     otherSizeSpan.style.display = 'none';
-    otherSizeSpan.innerHTML = (window.lang ? window.lang.translate('main.spacebar.other_usage') : 'Other') + ': ' + formatBytes(OtherSize) + ' (' + OtherSizePercent + '%)';
-    sizeBox.appendChild(otherSizeSpan);
+    otherSizeSpan.innerHTML = (window.lang ? window.lang.translate('main.spacebar.other_usage', [formatBytes(OtherSize), OtherSizePercent]) : 'Other');
+    document.body.appendChild(otherSizeSpan);
 
-    OtherCell.addEventListener('mouseover', function () {
+    function positionOtherSizeSpan(event) {
+        let leftPosition = event.clientX;
+        let topPosition = event.clientY;
+
+        otherSizeSpan.style.left = (leftPosition - 20) + 'px';
+        otherSizeSpan.style.top = topPosition + 'px';
+    }
+
+    OtherCell.addEventListener('mouseover', function (event) {
+        positionOtherSizeSpan(event);
         otherSizeSpan.style.display = 'block';
+    });
+    OtherCell.addEventListener('mousemove', function (event) {
+        positionOtherSizeSpan(event);
     });
     OtherCell.addEventListener('mouseout', function () {
         otherSizeSpan.style.display = 'none';
     });
 
     let freeSizeSpan = document.createElement('span');
-    freeSizeSpan.style.position = 'absolute';
-    freeSizeSpan.style.right = '0px';
+    freeSizeSpan.style.position = 'fixed';
+    freeSizeSpan.style.pointerEvents = 'none';
+    freeSizeSpan.style.zIndex = '9999';
     freeSizeSpan.classList.add('sizelabel');
-    freeSizeSpan.classList.add('sizelabel_right');
+    freeSizeSpan.classList.add('sizelabel_left');
     freeSizeSpan.style.display = 'none';
-    freeSizeSpan.innerHTML = (window.lang ? window.lang.translate('main.spacebar.free_usage') : 'Free') + ': ' + formatBytes(TotalSize - (Number(LibrarySize) + Number(OtherSize))) + ' (' + FreeSizePercent + '%)';
-    sizeBox.appendChild(freeSizeSpan);
+    freeSizeSpan.innerHTML = (window.lang ? window.lang.translate('main.spacebar.free_usage', [formatBytes(TotalSize - (Number(LibrarySize) + Number(OtherSize))), FreeSizePercent]) : 'Free');
+    document.body.appendChild(freeSizeSpan);
 
-    FreeCell.addEventListener('mouseover', function () {
+    function positionFreeSizeSpan(event) {
+        let leftPosition = event.clientX;
+        let topPosition = event.clientY;
+
+        freeSizeSpan.style.left = (leftPosition - 20) + 'px';
+        freeSizeSpan.style.top = topPosition + 'px';
+    }
+
+    FreeCell.addEventListener('mouseover', function (event) {
+        positionFreeSizeSpan(event);
         freeSizeSpan.style.display = 'block';
+    });
+    FreeCell.addEventListener('mousemove', function (event) {
+        positionFreeSizeSpan(event);
     });
     FreeCell.addEventListener('mouseout', function () {
         freeSizeSpan.style.display = 'none';
     });
 
-    containerDiv.appendChild(sizeBox);
+    // containerDiv.appendChild(sizeBox);
 
     return containerDiv;
 }
