@@ -500,6 +500,7 @@ h3 {
     width: 210px;
     overflow-y: hidden;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     top: 0px;
     bottom: 0px;
