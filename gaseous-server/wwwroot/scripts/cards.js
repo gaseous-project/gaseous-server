@@ -1860,7 +1860,7 @@ class GameCardRomList {
                     if (element.romTypeMedia) {
                         let romTypeLabel = document.createElement('div');
                         romTypeLabel.classList.add('card-romlist-type');
-                        romTypeLabel.innerHTML = window.lang.translate('card.rom.media_prefix') + element.romTypeMedia;
+                        romTypeLabel.innerHTML = window.lang.translate('card.rom.media_prefix', [element.romTypeMedia]);
                         romName.appendChild(romTypeLabel);
                     }
 

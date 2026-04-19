@@ -318,7 +318,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                 HasheousClient.Models.Metadata.IGDB.Platform platform = await Platforms.GetPlatform((long)row["PlatformId"]);
 
                 // get the user emulator configuration
-                PlatformMapping.UserEmulatorConfiguration? emulatorConfiguration = await platformMapping.GetUserEmulator(UserId, GameId, (long)platform.Id);
+                PlatformMapping.UserEmulatorConfiguration? emulatorConfiguration = await platformMapping.GetUserEmulator(UserId, (long)row["MetadataMapId"], (long)platform.Id);
 
                 // if no user configuration, get the platform emulator configuration
                 if (emulatorConfiguration == null)
