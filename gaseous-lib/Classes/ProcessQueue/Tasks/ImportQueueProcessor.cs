@@ -97,6 +97,11 @@ namespace gaseous_server.ProcessQueue.Plugins
                     ProcessData.Add("path", Path.GetFileName(importState.FileName));
                     ProcessData.Add("sessionid", importState.SessionId.ToString());
 
+                    if (importState.AdditionalData == null)
+                    {
+                        importState.AdditionalData = new Dictionary<string, object>();
+                    }
+
                     // get the hash of the file
                     HashObject hash = new HashObject(importState.FileName);
                     ProcessData.Add("md5hash", hash.md5hash);
@@ -138,7 +143,7 @@ namespace gaseous_server.ProcessQueue.Plugins
                     else
                     {
                         ParentSubTaskItem.AllowConcurrentExecution = true;
-                        
+
                         // file is a rom
                         Platform? platformOverride = null;
                         if (importState.PlatformOverride != null)

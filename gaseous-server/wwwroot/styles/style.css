@@ -453,12 +453,17 @@ h3 {
     z-index: 50;
 }
 
-#content {
+.content {
     margin-top: 35px;
     padding-top: 5px;
     padding-left: 0px;
     padding-right: 0px;
     z-index: -100;
+}
+
+.content-full {
+    margin: 0px;
+    padding: 0px;
 }
 
 #games_filter_panel {
@@ -467,6 +472,14 @@ h3 {
     top: 40px;
     bottom: 0px;
     margin-right: 0px;
+}
+
+#games_filter_button_column_filter {
+    display: none;
+}
+
+#games_filter_button_column {
+    display: inline-block;
 }
 
 .games_filter_controls {
@@ -500,6 +513,7 @@ h3 {
     width: 210px;
     overflow-y: hidden;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
     top: 0px;
     bottom: 0px;
@@ -2172,7 +2186,7 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     left: 0px;
     right: 0px;
     bottom: 0px;
-    top: 40px;
+    top: 0px;
 }
 
 .emulator_pausemask {
@@ -2184,6 +2198,16 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     background-color: rgba(0, 0, 0, 0.5);
     backdrop-filter: blur(8px);
     z-index: 10000;
+}
+
+.emulator_pausemask-platform {
+    display: block;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    /* width: 48px; */
+    height: 48px;
+    object-fit: contain;
 }
 
 .emulator_pausemask-image {
@@ -2826,6 +2850,8 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     backdrop-filter: blur(16px);
     overflow-y: auto;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
     right: 0;
     top: 40px;
     bottom: 0px;
