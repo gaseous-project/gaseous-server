@@ -1352,19 +1352,25 @@
       "PC DOS"
     ],
     "Extensions": {
-      "SupportedFileExtensions": [],
+      "SupportedFileExtensions": [
+        ".com",
+        ".sh",
+        ".bat",
+        ".exe",
+        ".conf"
+      ],
       "UniqueFileExtensions": []
     },
-    "RetroPieDirectoryName": "",
+    "RetroPieDirectoryName": "pc",
     "WebEmulator": {
       "Type": "EmulatorJS",
-      "Core": "dosbox-pure",
+      "Core": "dosbox_pure",
       "AvailableWebEmulators": [
         {
           "EmulatorType": "EmulatorJS",
           "AvailableWebEmulatorCores": [
             {
-              "Core": "dosbox-pure",
+              "Core": "dosbox_pure",
               "AlternateCoreName": "",
               "Default": true
             }
