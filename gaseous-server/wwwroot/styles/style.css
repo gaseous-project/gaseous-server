@@ -2200,6 +2200,16 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     z-index: 10000;
 }
 
+.emulator_pausemask-platform {
+    display: block;
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    /* width: 48px; */
+    height: 48px;
+    object-fit: contain;
+}
+
 .emulator_pausemask-image {
     display: block;
     position: absolute;
