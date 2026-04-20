@@ -69,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NuGet.Packaging" Version="7.3.1" />
+    <PackageReference Include="NuGet.Protocol" Version="6.12.5" />
     <EmbeddedResource Include="Support\PlatformMap.json" Condition="'$(ExcludeConfigFilesFromBuildOutput)'!='true'">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
