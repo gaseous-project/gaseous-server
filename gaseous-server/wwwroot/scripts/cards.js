@@ -1860,7 +1860,7 @@ class GameCardRomList {
                     if (element.romTypeMedia) {
                         let romTypeLabel = document.createElement('div');
                         romTypeLabel.classList.add('card-romlist-type');
-                        romTypeLabel.innerHTML = window.lang.translate('card.rom.media_prefix') + element.romTypeMedia;
+                        romTypeLabel.innerHTML = window.lang.translate('card.rom.media_prefix', [element.romTypeMedia]);
                         romName.appendChild(romTypeLabel);
                     }
 
@@ -3218,27 +3218,32 @@ class SettingsCard {
                     NeverStarted: {
                         icon: "",
                         text: "",
-                        hoverText: "Never started"
+                        hoverText: "Never started",
+                        size: '20px'
                     },
                     Stopped: {
                         icon: "",
                         text: "",
-                        hoverText: "Stopped"
+                        hoverText: "Stopped",
+                        size: '20px'
                     },
                     Running: {
                         icon: "play-icon.svg",
                         text: "Running",
-                        hoverText: "Running"
+                        hoverText: "Running",
+                        size: '15px'
                     },
                     Blocked: {
                         icon: "blocked.svg",
                         text: "Blocked",
-                        hoverText: "Blocked"
+                        hoverText: "Blocked",
+                        size: '20px'
                     },
                     Unknown: {
                         icon: "",
                         text: "Unknown",
-                        hoverText: "Unknown status"
+                        hoverText: "Unknown status",
+                        size: '20px'
                     }
                 }
 
@@ -3304,7 +3309,7 @@ class SettingsCard {
                             case 'itemState':
                                 let state = task.itemState;
                                 if (states[state]) {
-                                    let stateIcon = states[state].icon ? `<img src='/images/${states[state].icon}' class='banner_button_image' style='padding-top: 5px;' title='${states[state].hoverText}'>` : '';
+                                    let stateIcon = states[state].icon ? `<img src='/images/${states[state].icon}' class='banner_button_image' style='padding-top: 5px; width: ${states[state].size}; height: ${states[state].size};' title='${states[state].hoverText}'>` : '';
                                     cell.innerHTML = stateIcon;
                                 } else {
                                     cell.innerHTML = `<img src='/images/Critical.svg' class='banner_button_image' style='padding-top: 5px;' title='Unknown status'>`;
@@ -3447,7 +3452,7 @@ class SettingsCard {
                             subRow.className = 'romrow taskrow';
 
                             let subState = states[subTask.state] || { text: subTask.state, icon: '' };
-                            let subStateIcon = subState.icon ? `<img src='/images/${subState.icon}' class='banner_button_image' style='padding-top: 5px;' title='${subState.text}'>` : '';
+                            let subStateIcon = subState.icon ? `<img src='/images/${subState.icon}' class='banner_button_image' style='padding-top: 5px; height: 10px; width: 10px;' title='${subState.text}'>` : '';
 
                             let subTaskLogLink = '';
                             if (userProfile.roles && userProfile.roles.includes("Admin") && subTask.correlationId) {
