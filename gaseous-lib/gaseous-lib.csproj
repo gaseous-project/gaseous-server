@@ -68,6 +68,7 @@
     <Folder Remove="Reference" />
   </ItemGroup>
   <ItemGroup>
+    <PackageReference Include="NuGet.Packaging" Version="6.12.5" />
     <EmbeddedResource Include="Support\PlatformMap.json" Condition="'$(ExcludeConfigFilesFromBuildOutput)'!='true'">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
