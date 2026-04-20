@@ -128,6 +128,7 @@ window.EJS_Buttons = {
                 let imgId = undefined;
                 let imgProvider = undefined;
                 let imgClass = undefined;
+                let imgPlatform = getQueryString('platformid', 'int');
                 let showLabel = false;
                 // add the clear logo if available - fallback to cover if not
                 if (gameData.clearLogo) {
@@ -148,6 +149,16 @@ window.EJS_Buttons = {
                     imgClass = 'emulator_pausemask-coverimage';
                     showLabel = true;
                 }
+
+                // if (imgPlatform) {
+                //     let imgPlatformUrl = `/api/v1.1/Platforms/${imgPlatform}/platformlogo/original/`;
+
+                //     let platformImage = document.createElement('img');
+                //     platformImage.src = imgPlatformUrl;
+                //     platformImage.alt = window.lang.translate("emulator.platform_image");
+                //     platformImage.classList.add('emulator_pausemask-platform');
+                //     bgMask.appendChild(platformImage);
+                // }
 
                 if (imgType && imgId) {
                     let imgUrl = `/api/v1.1/Games/${gameId}/${imgProvider}/${imgType}/${imgId}/image/original/${imgId}.png`;
@@ -256,6 +267,15 @@ window.EJS_Buttons = {
 
 window.EJS_onSaveState = function (e) {
     console.log(e);
+
+    if (e.screenshot === undefined || e.state === undefined) {
+        notificationManager.showNotification(
+            window.lang.translate("emulator.state.save_failed"),
+            window.lang.translate("emulator.state.save_failed_message")
+        );
+        return;
+    }
+
     let returnValue = {
         "ScreenshotByteArrayBase64": btoa(Uint8ToString(e.screenshot)),
         "StateByteArrayBase64": btoa(Uint8ToString(e.state))

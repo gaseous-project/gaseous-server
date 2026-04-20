@@ -17,6 +17,7 @@ This is the server for the Gaseous system. It offers ROM and title management, a
   * These are the database versions Gaseous has been tested and developed against. Your mileage may vary with earlier versions.
   * MariaDB is the preferred database server, while MySQL will continue to be supported for existing users (they should be interchangable).
   * Note that due to the earlier database schema using MySQL specific features, moving to MariaDB from MySQL will require rebuilding your database from scratch. The "Library Scan" background task can be used to re-import all titles.
+* ffmpeg
 * Internet Game Database API Key. See: https://api-docs.igdb.com/#account-creation - only required when not using the Hasheous proxy
 
 # Installation

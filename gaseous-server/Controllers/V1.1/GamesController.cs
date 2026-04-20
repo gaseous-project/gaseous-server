@@ -230,7 +230,7 @@ namespace gaseous_server.Controllers.v1_1
 
             if (model.HasSavedGame == true)
             {
-                string hasSavesTemp = "(RomSavedStates > 0 OR RomGroupSavedStates > 0 OR RomSavedFiles > 0 OR RomGroupSavedFiles > 0)";
+                string hasSavesTemp = "(MAX(IFNULL(`RomSaveStats`.`RomSavedStates`, 0)) > 0 OR MAX(IFNULL(`RomSaveStats`.`RomSavedFiles`, 0)) > 0 OR MAX(IFNULL(`RomGroupStats`.`RomGroupSavedStates`, 0)) > 0 OR MAX(IFNULL(`RomGroupStats`.`RomGroupSavedFiles`, 0)) > 0)";
                 havingClauses.Add(hasSavesTemp);
             }
 
@@ -535,10 +535,10 @@ namespace gaseous_server.Controllers.v1_1
         WHEN `Favourites`.`UserId` IS NULL THEN 0
         ELSE 1
     END AS `Favourite`,
-    IFNULL(`RomSaveStats`.`RomSavedStates`, 0) AS `RomSavedStates`,
-    IFNULL(`RomGroupStats`.`RomGroupSavedStates`, 0) AS `RomGroupSavedStates`,
-    IFNULL(`RomSaveStats`.`RomSavedFiles`, 0) AS `RomSavedFiles`,
-    IFNULL(`RomGroupStats`.`RomGroupSavedFiles`, 0) AS `RomGroupSavedFiles`,
+    MAX(IFNULL(`RomSaveStats`.`RomSavedStates`, 0)) AS `RomSavedStates`,
+    MAX(IFNULL(`RomGroupStats`.`RomGroupSavedStates`, 0)) AS `RomGroupSavedStates`,
+    MAX(IFNULL(`RomSaveStats`.`RomSavedFiles`, 0)) AS `RomSavedFiles`,
+    MAX(IFNULL(`RomGroupStats`.`RomGroupSavedFiles`, 0)) AS `RomGroupSavedFiles`,
     `Game`.`AgeGroupId`,
     CASE
         WHEN `LocalizedNames`.`Name` IS NOT NULL THEN `LocalizedNames`.`Name`
@@ -704,8 +704,6 @@ FROM
                 dbResponse = new DataTable();
             }
 
-            System.IO.File.WriteAllText(Path.Combine(Config.ConfigurationPath, "last_query.sql"), sql); // For debugging purposes
-
             int indexInPage = 0;
             if (pageNumber > 1)
             {
@@ -728,11 +726,16 @@ FROM
                     retMinGame.Index = indexInPage++;
 
                     // Check for saved games more efficiently
+                    long romSavedStates = row["RomSavedStates"] == DBNull.Value ? 0 : Convert.ToInt64(row["RomSavedStates"]);
+                    long romGroupSavedStates = row["RomGroupSavedStates"] == DBNull.Value ? 0 : Convert.ToInt64(row["RomGroupSavedStates"]);
+                    long romSavedFiles = row["RomSavedFiles"] == DBNull.Value ? 0 : Convert.ToInt64(row["RomSavedFiles"]);
+                    long romGroupSavedFiles = row["RomGroupSavedFiles"] == DBNull.Value ? 0 : Convert.ToInt64(row["RomGroupSavedFiles"]);
+
                     retMinGame.HasSavedGame =
-                        (row["RomSavedStates"] != DBNull.Value && (long)row["RomSavedStates"] >= 1) ||
-                        (row["RomGroupSavedStates"] != DBNull.Value && (long)row["RomGroupSavedStates"] >= 1) ||
-                        (row["RomSavedFiles"] != DBNull.Value && (long)row["RomSavedFiles"] >= 1) ||
-                        (row["RomGroupSavedFiles"] != DBNull.Value && (long)row["RomGroupSavedFiles"] >= 1);
+                        romSavedStates >= 1 ||
+                        romGroupSavedStates >= 1 ||
+                        romSavedFiles >= 1 ||
+                        romGroupSavedFiles >= 1;
 
                     retMinGame.IsFavourite = (int)row["Favourite"] != 0;
 
