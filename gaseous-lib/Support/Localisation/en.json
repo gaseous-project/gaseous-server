@@ -165,6 +165,7 @@
         "card.content.table.type": "Type",
         "card.content.type.audio_sample": "Audio Sample",
         "card.content.type.manual": "Manual",
+        "card.metadata.mapping_platform_header": "Platform",
         "card.metadata.none_source": "No Metadata Source",
         "card.metadata.id_label": "Id:",
         "card.metadata.manual_label": "Manual",

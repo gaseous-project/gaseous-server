@@ -957,7 +957,7 @@ namespace gaseous_server.Controllers
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(MetadataMap), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameMetadataSources(long MetadataMapId, List<MetadataMap.MetadataMapItem> metadataMapItems)
+        public async Task<ActionResult> GameMetadataSources(long MetadataMapId, [FromQuery] long? OverridePlatform, [FromBody] List<MetadataMap.MetadataMapItem> metadataMapItems)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
@@ -965,6 +965,17 @@ namespace gaseous_server.Controllers
             try
             {
                 MetadataMap existingMetadataMap = await Classes.MetadataManagement.GetMetadataMap(MetadataMapId);
+
+                // check if OverridePlatform is not null, if not null then update the existingMetadataMap to the configured platform
+                if (OverridePlatform != null)
+                {
+                    // update the already loaded value
+                    existingMetadataMap.PlatformId = (long)OverridePlatform;
+                    // update the database
+                    Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                    string sql = $"UPDATE MetadataMap SET PlatformId = {OverridePlatform} WHERE Id = {MetadataMapId}; UPDATE Games_Roms SET PlatformId = {OverridePlatform} WHERE MetadataMapId = {MetadataMapId};";
+                    await db.ExecuteCMDAsync(sql);
+                }
 
                 if (existingMetadataMap != null)
                 {

@@ -142,7 +142,7 @@ namespace gaseous_server.Classes
 		public static async Task<GameRomItem> GetRom(long RomId)
 		{
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "SELECT DISTINCT view_Games_Roms.*, Platform.`Name` AS platformname, view_GamesWithRoms.`Name` AS gamename FROM view_Games_Roms LEFT JOIN `Metadata_Platform` AS `Platform` ON view_Games_Roms.PlatformId = Platform.Id LEFT JOIN view_GamesWithRoms ON view_Games_Roms.MetadataMapId = view_GamesWithRoms.MetadataMapId WHERE view_Games_Roms.Id = @id";
+			string sql = "SELECT DISTINCT view_Games_Roms.*, Platform.`Name` AS platformname, view_GamesWithRoms.`Name` AS gamename FROM view_Games_Roms LEFT JOIN `Metadata_Platform` AS `Platform` ON view_Games_Roms.PlatformId = Platform.Id AND Platform.SourceId = 0 LEFT JOIN view_GamesWithRoms ON view_Games_Roms.MetadataMapId = view_GamesWithRoms.MetadataMapId WHERE view_Games_Roms.Id = @id";
 			Dictionary<string, object> dbDict = new Dictionary<string, object>();
 			dbDict.Add("id", RomId);
 			DataTable romDT = await db.ExecuteCMDAsync(sql, dbDict);

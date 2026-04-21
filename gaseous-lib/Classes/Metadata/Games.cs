@@ -315,7 +315,7 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
             List<AvailablePlatformItem> platforms = new List<AvailablePlatformItem>();
             foreach (DataRow row in data.Rows)
             {
-                HasheousClient.Models.Metadata.IGDB.Platform platform = await Platforms.GetPlatform((long)row["PlatformId"]);
+                HasheousClient.Models.Metadata.IGDB.Platform platform = await Platforms.GetPlatform((long)row["PlatformId"], FileSignature.MetadataSources.None);
 
                 // get the user emulator configuration
                 PlatformMapping.UserEmulatorConfiguration? emulatorConfiguration = await platformMapping.GetUserEmulator(UserId, (long)row["MetadataMapId"], (long)platform.Id);
