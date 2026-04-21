@@ -917,10 +917,21 @@ namespace gaseous_server.Controllers
         [Route("{MetadataMapId}/metadata")]
         [ProducesResponseType(typeof(MetadataMap), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameMetadataSources(long MetadataMapId)
+        public async Task<ActionResult> GameMetadataSources(long MetadataMapId, [FromQuery] bool ForceRefresh = false)
         {
             try
             {
+                if (ForceRefresh)
+                {
+                    var metadataManagement = new MetadataManagement();
+
+                    // refresh the signatures of this MetadataMapId
+                    await metadataManagement.RefreshSignature(MetadataMapId, ForceRefresh);
+
+                    // refresh associated metadata
+                    await metadataManagement.RefreshSpecificGameAsync(MetadataMapId);
+                }
+
                 MetadataMap metadataMap = await Classes.MetadataManagement.GetMetadataMap(MetadataMapId);
 
                 MetadataMap filteredMetadataMap = new MetadataMap();

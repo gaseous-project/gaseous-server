@@ -2301,6 +2301,18 @@ class GameCardRomList {
         });
         metadataModal.addButton(okButton);
 
+        let refreshButton = new ModalButton(window.lang.translate('task.metadata_refresh'), 0, this.gamePlatformObject, async function (callingObject) {
+            await fetch('/api/v1.1/Games/' + callingObject.metadataMapId + '/metadata?ForceRefresh=true', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json()).then(result => {
+                location.reload(true);
+            });
+        });
+        metadataModal.addButton(refreshButton);
+
         let cancelButton = new ModalButton(window.lang.translate('generic.cancel'), 0, metadataModal, async function (callingObject) {
             metadataModal.close();
         });
