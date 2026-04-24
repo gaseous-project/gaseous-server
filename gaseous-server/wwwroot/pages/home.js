@@ -9,11 +9,16 @@ class HomePageGameRow {
         this.row = document.createElement("div");
         // this.row.classList.add("section");
 
-        let titleHeader = document.createElement("div");
+        let titleHeader = document.createElement("span");
         // titleHeader.classList.add("section-header");
         titleHeader.classList.add("home-heading");
         titleHeader.textContent = window.lang.translate(this.title);
         titleHeader.setAttribute("data-i18n", this.title);
+        titleHeader.addEventListener("click", async () => {
+            this.searchModel.limit = 20;
+            localStorage.setItem("Library.Filter", JSON.stringify(this.searchModel));
+            window.location.href = "/index.html?page=library";
+        });
         this.row.appendChild(titleHeader);
 
         this.games = document.createElement("div");
