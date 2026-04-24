@@ -639,6 +639,8 @@ function initializeSelect2(elementId, selectedValue) {
         selectElement.val(selectedValue).trigger('change.select2');
     }
 
+    console.log("Value changed");
+
     return element;
 }
 
