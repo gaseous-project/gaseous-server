@@ -282,6 +282,21 @@ class Filtering {
         return this.ExecuteFilter(pageNumber, pageSize);
     }
 
+    async ClearFilter() {
+        this.filterSelections = {};
+        this.#computedFilterModel = {};
+
+        SetPreference('Library.Filter', {});
+
+        if (this.clearCallback) {
+            await this.clearCallback();
+        }
+
+        await this.GetGamesFilter(true);
+
+        return this.ApplyFilter();
+    }
+
     GetSummary = false;
     GameCount = 0;
     AlphaList = [];
@@ -582,7 +597,7 @@ class Filtering {
         input.addEventListener('keypress', (event) => {
             if (event.key === 'Enter') {
                 this.filterSelections[fieldName] = input.value;
-                this.ApplyFilter();
+                // this.ApplyFilter();
             }
         });
 
@@ -641,7 +656,7 @@ class Filtering {
                     this.filterSelections[fieldName] = {};
                 }
                 this.filterSelections[fieldName][id] = input.checked;
-                this.ApplyFilter();
+                // this.ApplyFilter();
             });
 
             let label = document.createElement('label');
@@ -719,7 +734,7 @@ class Filtering {
                 }
             }
 
-            this.ApplyFilter();
+            // this.ApplyFilter();
         });
 
         minInput.addEventListener('change', () => {
@@ -733,7 +748,7 @@ class Filtering {
             this.filterSelections[fieldName].min = Number(minInput.value);
             selectCheckbox.checked = true;
 
-            this.ApplyFilter();
+            // this.ApplyFilter();
         });
 
         maxInput.addEventListener('change', () => {
@@ -747,7 +762,7 @@ class Filtering {
             this.filterSelections[fieldName].max = Number(maxInput.value);
             selectCheckbox.checked = true;
 
-            this.ApplyFilter();
+            // this.ApplyFilter();
         });
 
         content.appendChild(selectCheckbox);

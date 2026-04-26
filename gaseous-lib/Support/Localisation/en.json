@@ -525,6 +525,8 @@
         "librarypage.order.play_time_option": "Play Time",
         "librarypage.order.direction.ascending_option": "Ascending",
         "librarypage.order.direction.descending_option": "Descending",
+        "librarypage.apply_filters_button": "Apply",
+        "librarypage.clear_filters_button": "Reset",
         "loginpage.sign_in_header": "Sign In",
         "loginpage.sign_in_button": "Sign In",
         "loginpage.sign_in_button.value": "Sign In",

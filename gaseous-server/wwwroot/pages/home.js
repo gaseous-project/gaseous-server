@@ -7,6 +7,9 @@ class HomePageGameRow {
 
         // Create the row
         this.row = document.createElement("div");
+        this.row.id = "home-row-" + title.replace(/\s+/g, '-').toLowerCase();
+        // set to hidden by default, will be shown if there are games to display after filtering
+        this.row.style.display = "none";
         // this.row.classList.add("section");
 
         let titleHeader = document.createElement("span");
@@ -72,8 +75,10 @@ class HomePageGameRow {
             this.games.innerHTML = "";
 
             if (games.length === 0) {
+                this.row.style.display = "none";
                 this.games.innerHTML = '<p>' + window.lang.translate('home.no_games_found') + '</p>';
             } else {
+                this.row.style.display = "block";
                 this.games.classList.remove("section-body");
                 let scroller = document.createElement("ul");
                 scroller.classList.add("homegame-scroller");
