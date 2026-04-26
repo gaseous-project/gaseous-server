@@ -774,7 +774,7 @@ namespace gaseous_server.Classes
 					Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.force_refresh_recalculated_hashes_for_rom", null, new string[] { dr["Name"].ToString() });
 					fileHash = await FileSignature.GetFileHashesAsync(library, dr["Path"].ToString());
 				}
-				var (updatedFileHash, signature) = await fileSignature.GetFileSignatureAsync(library, fileHash);
+				var (_, signature) = await fileSignature.GetFileSignatureAsync(library, fileHash);
 
 				// validate the signature - if it is invalid, skip the rest of the loop
 				// validation rules: 1) signature must not be null, 2) signature must have a platform ID
