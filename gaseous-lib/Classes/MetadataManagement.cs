@@ -725,22 +725,10 @@ namespace gaseous_server.Classes
 						crc != null && crc != ""
 					)
 					{
-						if (md5 != null)
-						{
-							hash.md5hash = md5;
-						}
-						if (sha1 != null)
-						{
-							hash.sha1hash = sha1;
-						}
-						if (sha256 != null)
-						{
-							hash.sha256hash = sha256;
-						}
-						if (crc != null)
-						{
-							hash.crc32hash = crc;
-						}
+						hash.md5hash = md5;
+						hash.sha1hash = sha1;
+						hash.sha256hash = sha256;
+						hash.crc32hash = crc;
 					}
 					else
 					{
