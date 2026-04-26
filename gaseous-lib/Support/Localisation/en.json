@@ -566,6 +566,7 @@
         "filtering.age_groups": "Age Groups",
         "filtering.user_rating": "User Rating",
         "filtering.user_votes": "User Votes",
+        "filtering.play_time": "Play Time",
         "logs.filter.information": "ℹ️ Information",
         "logs.filter.warning": "⚠️ Warning",
         "logs.filter.critical": "🚫 Critical",

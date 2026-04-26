@@ -202,7 +202,8 @@ namespace gaseous_server.Controllers.v1_1
                     RatingCount,
                     DateAdded,
                     LastPlayed,
-                    TimePlayed
+                    TimePlayed,
+                    ReleaseDate
                 }
             }
         }
@@ -499,6 +500,9 @@ namespace gaseous_server.Controllers.v1_1
                         break;
                     case GameSearchModel.GameSortingItem.SortField.TimePlayed:
                         orderByField = "TimePlayed";
+                        break;
+                    case GameSearchModel.GameSortingItem.SortField.ReleaseDate:
+                        orderByField = "FirstReleaseDate";
                         break;
                     default:
                         orderByField = "NameThe";

@@ -74,7 +74,9 @@ class Filtering {
     }
 
     filterSelections = {
-
+        "pageSize": 20,
+        "orderBy": "NameThe",
+        "orderDirection": "Ascending"
     }
 
     #computedFilterModel = {
@@ -86,8 +88,8 @@ class Filtering {
     }
 
     async LoadFilterSettings() {
-        this.#LoadFilterSettings();
-        this.#LoadFilterCollapsedStatus();
+        await this.#LoadFilterSettings();
+        await this.#LoadFilterCollapsedStatus();
     }
 
     async ApplyFilter(filterOverride) {
@@ -136,6 +138,10 @@ class Filtering {
             ],
             "theme": [
             ],
+            "playTime": {
+                "min": -1,
+                "max": -1
+            },
             "minimumReleaseYear": -1,
             "maximumReleaseYear": -1,
             "gameRating": {
@@ -151,7 +157,7 @@ class Filtering {
                 "includeUnrated": false
             },
             "sorting": {
-                "sortBy": "Name",
+                "sortBy": "NameThe",
                 "sortAscending": true
             },
             "HasSavedGame": false,
@@ -184,6 +190,14 @@ class Filtering {
         if (filter['Themes']) {
             for (let key in filter['Themes']) {
                 filterModel.theme.push(key);
+            }
+        }
+        if (filter['playtime']) {
+            if (filter['playtime'].min) {
+                filterModel.playTime.min = filter['playtime'].min;
+            }
+            if (filter['playtime'].max) {
+                filterModel.playTime.max = filter['playtime'].max;
             }
         }
         if (filter['releaseyear']) {
@@ -286,7 +300,7 @@ class Filtering {
         this.filterSelections = {};
         this.#computedFilterModel = {};
 
-        SetPreference('Library.Filter', {});
+        SetPreference('Library.Filter', { "orderBy": "NameThe", "orderDirection": "Ascending", "limit": 20 });
 
         if (this.clearCallback) {
             await this.clearCallback();
@@ -527,6 +541,13 @@ class Filtering {
             userVoteCountCollapsed = this.filterCollapsed['filtering.user_votes'];
         }
         panel.appendChild(this.#BuildBasicPanel('filtering.user_votes', true, userVoteCountCollapsed, this.#BuildRangePanel('uservotecount', globalThis.lang.translate('filtering.user_votes'), 0, 1000000), null));
+
+        // play time filter
+        let playTimeCollapsed = true;
+        if (this.filterCollapsed['filtering.play_time'] !== undefined) {
+            playTimeCollapsed = this.filterCollapsed['filtering.play_time'];
+        }
+        panel.appendChild(this.#BuildBasicPanel('filtering.play_time', true, playTimeCollapsed, this.#BuildRangePanel('playTime', globalThis.lang.translate('filtering.play_time'), 0, 1000000), null));
 
         targetElement.appendChild(panel);
         return targetElement;

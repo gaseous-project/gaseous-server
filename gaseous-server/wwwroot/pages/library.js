@@ -627,6 +627,7 @@ function queueNotificationRefresh() {
  * @returns {HTMLElement|null}
  */
 function initializeSelect2(elementId, selectedValue, onChange) {
+    console.log(`Initializing select2 for ${elementId} with selected value:`, selectedValue);
     const element = document.getElementById(elementId);
     if (!element) {
         return null;
@@ -637,7 +638,10 @@ function initializeSelect2(elementId, selectedValue, onChange) {
     }
 
     const selectElement = globalThis.$(element);
-    selectElement.select2();
+    const isSelect2Initialized = selectElement.hasClass('select2-hidden-accessible') || Boolean(selectElement.data('select2'));
+    if (!isSelect2Initialized) {
+        selectElement.select2();
+    }
     if (selectedValue !== undefined) {
         selectElement.val(selectedValue).trigger('change.select2');
     }
@@ -685,7 +689,9 @@ async function SetupPage() {
     }
 
     filter.FilterCallbacks.push(async (result, dontExecuteFilter) => {
-        filter.LoadFilterSettings();
+        console.log('Received filter result:', result);
+        console.log('Current filter selections:', filter.filterSelections);
+        await filter.LoadFilterSettings();
 
         scrollerElement.innerHTML = '';
         scrollerElement.appendChild(filter.BuildFilterTable(result));
@@ -696,12 +702,15 @@ async function SetupPage() {
 
         initializeSelect2('games_library_pagesize_select', filter.filterSelections.pageSize, (value) => {
             filter.filterSelections.pageSize = value;
+            filter.ApplyFilter();
         });
         initializeSelect2('games_library_orderby_select', filter.filterSelections.orderBy, (value) => {
             filter.filterSelections.orderBy = value;
+            filter.ApplyFilter();
         });
         initializeSelect2('games_library_orderby_direction_select', filter.filterSelections.orderDirection, (value) => {
             filter.filterSelections.orderDirection = value;
+            filter.ApplyFilter();
         });
 
         filter.applyCallback = async () => {
