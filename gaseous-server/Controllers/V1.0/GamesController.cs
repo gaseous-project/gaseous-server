@@ -964,10 +964,20 @@ namespace gaseous_server.Controllers
 
             try
             {
-                MetadataMap existingMetadataMap = await Classes.MetadataManagement.GetMetadataMap(MetadataMapId);
+                MetadataMap? existingMetadataMap = await Classes.MetadataManagement.GetMetadataMap(MetadataMapId);
+
+                if (existingMetadataMap == null)
+                {
+                    return NotFound();
+                }
+
+                if (metadataMapItems == null)
+                {
+                    return NotFound();
+                }
 
                 // check if OverridePlatform is not null, if not null then update the existingMetadataMap to the configured platform
-                if (OverridePlatform != null)
+                if (OverridePlatform != null && existingMetadataMap.PlatformId != OverridePlatform)
                 {
                     // update the already loaded value
                     existingMetadataMap.PlatformId = (long)OverridePlatform;
@@ -977,41 +987,44 @@ namespace gaseous_server.Controllers
                     await db.ExecuteCMDAsync(sql);
                 }
 
-                if (existingMetadataMap != null)
-                {
-                    foreach (MetadataMap.MetadataMapItem metadataMapItem in metadataMapItems)
-                    {
-                        if (metadataMapItem.SourceType != FileSignature.MetadataSources.None)
-                        {
-                            // check if existingMetadataMap.MetadataMapItems contains metadataMapItem.SourceType
-                            MetadataMap.MetadataMapItem existingMetadataMapItem = existingMetadataMap.MetadataMapItems.FirstOrDefault(x => x.SourceType == metadataMapItem.SourceType);
+                IEnumerable<MetadataMap.MetadataMapItem> existingMetadataMapItems = existingMetadataMap.MetadataMapItems ?? Enumerable.Empty<MetadataMap.MetadataMapItem>();
 
-                            if (existingMetadataMapItem != null)
+                foreach (MetadataMap.MetadataMapItem metadataMapItem in metadataMapItems)
+                {
+                    if (metadataMapItem.SourceType != FileSignature.MetadataSources.None)
+                    {
+                        // check if existingMetadataMap.MetadataMapItems contains metadataMapItem.SourceType
+                        MetadataMap.MetadataMapItem? existingMetadataMapItem = existingMetadataMapItems.FirstOrDefault(x => x.SourceType == metadataMapItem.SourceType);
+
+                        if (existingMetadataMapItem != null)
+                        {
+                            if (metadataMapItem.SourceId == null)
                             {
-                                MetadataManagement.UpdateMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, (long)metadataMapItem.SourceId, metadataMapItem.Preferred, metadataMapItem.IsManual);
+                                continue;
                             }
-                            else
-                            {
-                                // make sure the submitted record is valid
-                                if (metadataMapItem.SourceId != null)
-                                {
-                                    MetadataManagement.AddMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, (long)metadataMapItem.SourceId, metadataMapItem.Preferred, metadataMapItem.IsManual, (long)metadataMapItem.SourceId);
-                                }
-                            }
+
+                            MetadataManagement.UpdateMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, (long)metadataMapItem.SourceId, metadataMapItem.Preferred, metadataMapItem.IsManual);
                         }
                         else
                         {
-                            MetadataMap.MetadataMapItem existingMetadataMapItem = existingMetadataMap.MetadataMapItems.FirstOrDefault(x => x.SourceType == FileSignature.MetadataSources.None);
+                            // make sure the submitted record is valid
+                            if (metadataMapItem.SourceId != null)
+                            {
+                                MetadataManagement.AddMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, (long)metadataMapItem.SourceId, metadataMapItem.Preferred, metadataMapItem.IsManual, (long)metadataMapItem.SourceId);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        MetadataMap.MetadataMapItem? existingMetadataMapItem = existingMetadataMapItems.FirstOrDefault(x => x.SourceType == FileSignature.MetadataSources.None);
+                        if (existingMetadataMapItem != null && existingMetadataMapItem.SourceId != null)
+                        {
                             MetadataManagement.UpdateMetadataMapItem(MetadataMapId, existingMetadataMapItem.SourceType, (long)existingMetadataMapItem.SourceId, metadataMapItem.Preferred);
                         }
                     }
+                }
 
-                    return Ok(await Classes.MetadataManagement.GetMetadataMap(MetadataMapId));
-                }
-                else
-                {
-                    return NotFound();
-                }
+                return Ok(await Classes.MetadataManagement.GetMetadataMap(MetadataMapId));
             }
             catch
             {
