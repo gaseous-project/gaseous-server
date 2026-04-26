@@ -379,6 +379,7 @@ window.EJS_onGameStart = async function (e) {
 }
 
 // if core is arcade, mame, fbneo, fbalpha2012_cps1, fbalpha2012_cps2, then load audio samples if available
+let uploadPaths = {};
 if (['arcade', 'mame', 'fbneo', 'fbalpha2012_cps1', 'fbalpha2012_cps2'].includes(getQueryString('core', 'string'))) {
     let pathName = undefined;
     switch (getQueryString('core', 'string')) {
@@ -416,11 +417,13 @@ if (['arcade', 'mame', 'fbneo', 'fbalpha2012_cps1', 'fbalpha2012_cps2'].includes
                     samplesArray[pathName] = `/api/v1.1/ContentManager/attachment/zipStream?attachmentIds=${sampleIds}`;
 
                     console.log(window.lang.translate("emulator.samples_array", JSON.stringify(samplesArray)));
-                    EJS_externalFiles = samplesArray;
+                    uploadPaths = samplesArray;
                 }
             });
     }
 }
+
+window.EJS_externalFiles = uploadPaths;
 
 // capture save RAM every minute
 let saveRam = setInterval(async () => {

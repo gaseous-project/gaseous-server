@@ -150,6 +150,255 @@ namespace gaseous_server.Controllers.v1_1
             }
         }
 
+        private string fileSystemBasePath(string userId, long MetadataMapId, long? RomId, long? RomGroupId)
+        {
+            string romType = "";
+            string pathId = "";
+            if ((RomId == null && RomGroupId == null) || (RomId != null && RomGroupId != null))
+            {
+                throw new ArgumentException("Must provide either RomId or RomGroupId, but not both.");
+            }
+
+            if (RomId != null)
+            {
+                romType = "ROM";
+                pathId = RomId.Value.ToString();
+            }
+            else
+            {
+                romType = "ROM Group";
+                pathId = RomGroupId.Value.ToString();
+            }
+            return Path.Combine(Config.LibraryConfiguration.LibraryFileSystemDirectory, MetadataMapId.ToString(), romType, pathId, userId);
+        }
+
+        /// <summary>
+        /// Gets the file system data for a specified ROM or ROM group within a metadata map. This is used for syncing save data back to the server from clients.
+        /// This method is effectively getting a directory listing.
+        /// </summary>
+        /// <param name="MetadataMapId">The ID of the metadata map the ROM or ROM group belongs to.</param>
+        /// <param name="RomId">The ID of the ROM to get the file system data for. Optional if RomGroupId is provided.</param>
+        /// <param name="RomGroupId">The ID of the ROM group to get the file system data for. Optional if RomId is provided.</param>
+        /// <returns>A dictionary where each key is the file name and path in unix format, and the value is a list of strings representing the file system data - size, date created, date modified, etc.</returns>
+        [MapToApiVersion("1.1")]
+        [HttpGet]
+        [Route("{MetadataMapId}/roms/{RomId}/filesystem")]
+        [Route("{MetadataMapId}/romgroup/{RomGroupId}/filesystem")]
+        [ProducesResponseType(typeof(Dictionary<string, Dictionary<string, string>>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GameFilesystem(long MetadataMapId, long? RomId, long? RomGroupId)
+        {
+            // resolves to a local path for the specified ROM or ROM group
+            // response is a dictionary - each dictionary key is the file name and path in unix format, and the value is a dictionary representing the file system data - size, date created, date modified, etc.
+
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user != null)
+            {
+                if ((RomId == null && RomGroupId == null) || (RomId != null && RomGroupId != null))
+                {
+                    return BadRequest("Must provide either RomId or RomGroupId, but not both.");
+                }
+
+                Dictionary<string, Dictionary<string, string>> fileSystem;
+
+                string basePath = fileSystemBasePath(user.Id, MetadataMapId, RomId, RomGroupId);
+
+                if (Directory.Exists(basePath))
+                {
+                    fileSystem = new Dictionary<string, Dictionary<string, string>>();
+
+                    foreach (string filePath in Directory.GetFiles(basePath, "*", SearchOption.AllDirectories))
+                    {
+                        FileInfo fileInfo = new FileInfo(filePath);
+                        string relativePath = filePath.Substring(basePath.Length).TrimStart(Path.DirectorySeparatorChar);
+                        fileSystem[relativePath] = new Dictionary<string, string>
+                        {
+                            { "Size", fileInfo.Length.ToString() },
+                            { "CreationTimeUtc", fileInfo.CreationTimeUtc.ToString("o") },
+                            { "LastWriteTimeUtc", fileInfo.LastWriteTimeUtc.ToString("o") }
+                        };
+                    }
+                }
+                else
+                {
+                    return NotFound("File system data not found for the specified ROM or ROM group.");
+                }
+
+                return Ok(fileSystem);
+            }
+            else
+            {
+                return Unauthorized();
+            }
+        }
+
+        /// <summary>
+        /// Gets a specific file from the file system for a specified ROM or ROM group within a metadata map. This is used for syncing save data back to the server from clients.
+        /// </summary>
+        /// <param name="MetadataMapId">The ID of the metadata map the ROM or ROM group belongs to.</param>
+        /// <param name="RomId">The ID of the ROM to get the file for. Optional if RomGroupId is provided.</param>
+        /// <param name="RomGroupId">The ID of the ROM group to get the file for. Optional if RomId is provided.</param>
+        /// <param name="filePath">The relative path of the file to get within the ROM or ROM group directory.</param>
+        /// <returns>The specified file as a byte array, with a content type of application/octet-stream. If the file is not found, returns a 404 Not Found response.</returns>
+        [MapToApiVersion("1.1")]
+        [HttpGet]
+        [Route("{MetadataMapId}/roms/{RomId}/filesystem/{*filePath}")]
+        [Route("{MetadataMapId}/romgroup/{RomGroupId}/filesystem/{*filePath}")]
+        [ProducesResponseType(typeof(Dictionary<string, List<string>>), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GameFilesystemGetFile(long MetadataMapId, long? RomId, long? RomGroupId, string filePath)
+        {
+            // remove any http encoding from the file path
+            filePath = Uri.UnescapeDataString(filePath);
+
+            // early abort if the filePath contains any invalid characters or attempts to traverse up the directory structure
+            if (filePath.Contains("..") || filePath.Contains(":") || filePath.Contains("|") || filePath.Contains("?") || filePath.Contains("*") || filePath.Contains("\"") || filePath.Contains("<") || filePath.Contains(">"))
+            {
+                return BadRequest("Invalid file path.");
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user != null)
+            {
+                if ((RomId == null && RomGroupId == null) || (RomId != null && RomGroupId != null))
+                {
+                    return BadRequest("Must provide either RomId or RomGroupId, but not both.");
+                }
+
+                string basePath = fileSystemBasePath(user.Id, MetadataMapId, RomId, RomGroupId);
+                string fullPath = Path.Combine(basePath, filePath);
+
+                if (System.IO.File.Exists(fullPath))
+                {
+                    return PhysicalFile(fullPath, "application/octet-stream", Path.GetFileName(fullPath));
+                }
+                else
+                {
+                    return NotFound("File not found for the specified ROM or ROM group.");
+                }
+            }
+            else
+            {
+                return Unauthorized();
+            }
+        }
+
+        /// <summary>
+        /// Accepts a single file upload with metadata for a specified ROM or ROM group and saves it to the server. This is used for syncing save data back to the server from clients.
+        /// The file data is expected to be multipart form data with the following properties:
+        /// - FileName: The name of the file being uploaded, including the relative path from the base directory for the ROM or ROM group (e.g. "save1.sav" or "saves/save1.sav").
+        /// - FileContent: The file content uploaded as a form file.
+        /// - LastModified: (Optional) The last modified date of the file being uploaded, in ISO 8601 format. If provided, this will be used to set the last modified date of the saved file on the server.
+        /// The file will be saved to a directory on the server based on the metadata map ID, ROM or ROM group type, and ROM or ROM group ID. For example: "Library/File System/{MetadataMapId}/ROM/12345/save1.sav".
+        /// </summary>
+        /// <param name="MetadataMapId">The ID of the metadata map the ROM or ROM group belongs to.</param>
+        /// <param name="RomId">The ID of the ROM to upload the file for. Optional if RomGroupId is provided.</param>
+        /// <param name="RomGroupId">The ID of the ROM group to upload the file for. Optional if RomId is provided.</param>
+        /// <param name="fileData">The file data to upload.</param>
+        /// <returns>An IActionResult indicating the result of the upload operation.</returns>
+        [MapToApiVersion("1.1")]
+        [HttpPost]
+        [Route("{MetadataMapId}/roms/{RomId}/filesystem")]
+        [Route("{MetadataMapId}/romgroup/{RomGroupId}/filesystem")]
+        [RequestSizeLimit(long.MaxValue)]
+        [DisableRequestSizeLimit, RequestFormLimits(MultipartBodyLengthLimit = long.MaxValue, ValueLengthLimit = int.MaxValue)]
+        [Consumes("multipart/form-data")]
+        public async Task<IActionResult> GameFilesystemUpload(long MetadataMapId, long? RomId, long? RomGroupId, [FromForm] FileUploadModel fileData)
+        {
+            // accepts a single file upload with metadata for a specified ROM or ROM group and saves it to the server - used for syncing save data back to the server from clients
+
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user != null)
+            {
+                if ((RomId == null && RomGroupId == null) || (RomId != null && RomGroupId != null))
+                {
+                    return BadRequest("Must provide either RomId or RomGroupId, but not both.");
+                }
+
+                string basePath = fileSystemBasePath(user.Id, MetadataMapId, RomId, RomGroupId);
+
+                try
+                {
+                    if (fileData?.FileContent == null || fileData.FileContent.Length == 0)
+                    {
+                        return BadRequest("Missing file content.");
+                    }
+
+                    string requestedFileName = string.IsNullOrWhiteSpace(fileData.FileName)
+                        ? fileData.FileContent.FileName
+                        : fileData.FileName;
+
+                    if (string.IsNullOrWhiteSpace(requestedFileName))
+                    {
+                        return BadRequest("Missing file name.");
+                    }
+
+                    // Normalize the file path to be platform-agnostic
+                    // Convert all separators to forward slashes, then split and recombine with platform-appropriate separator
+                    string[] pathParts = requestedFileName.Replace('\\', '/').Split('/', StringSplitOptions.RemoveEmptyEntries);
+                    // Remove empty parts (e.g., from leading slashes)
+                    pathParts = pathParts.Where(p => p != "." && p != "..").ToArray();
+                    if (pathParts.Length == 0)
+                    {
+                        return BadRequest("Invalid file path.");
+                    }
+
+                    string normalizedFileName = Path.Combine(pathParts);
+
+                    string fullBasePath = Path.GetFullPath(basePath);
+                    string fullFilePath = Path.GetFullPath(Path.Combine(basePath, normalizedFileName));
+
+                    if (!fullFilePath.StartsWith(fullBasePath + Path.DirectorySeparatorChar) && !string.Equals(fullFilePath, fullBasePath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return BadRequest("Invalid file path.");
+                    }
+
+                    string? directoryPath = Path.GetDirectoryName(fullFilePath);
+                    if (string.IsNullOrEmpty(directoryPath))
+                    {
+                        return BadRequest("Invalid file path.");
+                    }
+
+                    if (!Directory.Exists(directoryPath))
+                    {
+                        Directory.CreateDirectory(directoryPath);
+                    }
+
+                    await using (FileStream fileStream = new FileStream(fullFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
+                    {
+                        await fileData.FileContent.CopyToAsync(fileStream);
+                    }
+
+                    // Set last modified date if provided
+                    if (fileData.LastModified.HasValue)
+                    {
+                        DateTime lastModifiedUtc = fileData.LastModified.Value.Kind == DateTimeKind.Utc
+                            ? fileData.LastModified.Value
+                            : fileData.LastModified.Value.ToUniversalTime();
+                        System.IO.File.SetLastWriteTimeUtc(fullFilePath, lastModifiedUtc);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError, "Error saving file system data: " + ex.Message);
+                }
+
+                return Ok("File system data uploaded successfully.");
+            }
+            else
+            {
+                return Unauthorized();
+            }
+        }
+
+        public class FileUploadModel
+        {
+            public string? FileName { get; set; }
+            public IFormFile? FileContent { get; set; }
+            public DateTime? LastModified { get; set; }
+        }
+
         public class GameSearchModel
         {
             public string Name { get; set; }
