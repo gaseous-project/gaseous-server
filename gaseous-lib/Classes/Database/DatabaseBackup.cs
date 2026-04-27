@@ -311,13 +311,13 @@ namespace gaseous_server.Classes
             string[] pathEntries = pathEnv.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries);
             foreach (string dir in pathEntries)
             {
-                string fullPath = Path.Combine(dir, command);
+                string fullPath = Path.Join(dir, command);
                 if (File.Exists(fullPath)) return true;
 
                 // Windows compatibility for future local builds
                 if (OperatingSystem.IsWindows())
                 {
-                    string exePath = Path.Combine(dir, command + ".exe");
+                    string exePath = Path.Join(dir, command + ".exe");
                     if (File.Exists(exePath)) return true;
                 }
             }

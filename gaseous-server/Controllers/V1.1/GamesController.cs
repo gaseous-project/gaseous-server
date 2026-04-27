@@ -271,20 +271,15 @@ namespace gaseous_server.Controllers.v1_1
 
                 string basePath = fileSystemBasePath(user.Id, MetadataMapId, RomId, RomGroupId);
 
-                string[] pathParts = filePath
-                    .Replace('\\', '/')
-                    .Split('/', StringSplitOptions.RemoveEmptyEntries)
-                    .Where(p => p != "." && p != "..")
-                    .ToArray();
+                string[] pathParts = Common.NormalizeRelativePathSegments(filePath);
 
                 if (pathParts.Length == 0)
                 {
                     return BadRequest("Invalid file path.");
                 }
 
-                string normalizedFilePath = Path.Combine(pathParts);
                 string fullBasePath = Path.GetFullPath(basePath);
-                string fullPath = Path.GetFullPath(Path.Combine(basePath, normalizedFilePath));
+                string fullPath = Path.GetFullPath(Path.Join(basePath, Path.Join(pathParts)));
 
                 if (!fullPath.StartsWith(fullBasePath + Path.DirectorySeparatorChar) && !string.Equals(fullPath, fullBasePath, StringComparison.OrdinalIgnoreCase))
                 {
@@ -356,18 +351,14 @@ namespace gaseous_server.Controllers.v1_1
                         continue;
                     }
 
-                    string[] pathParts = incomingFile
-                        .Replace('\\', '/')
-                        .Split('/', StringSplitOptions.RemoveEmptyEntries)
-                        .Where(p => p != "." && p != "..")
-                        .ToArray();
+                    string[] pathParts = Common.NormalizeRelativePathSegments(incomingFile);
 
                     if (pathParts.Length == 0)
                     {
                         continue;
                     }
 
-                    string normalizedRelativePath = Path.Combine(pathParts)
+                    string normalizedRelativePath = Path.Join(pathParts)
                         .Replace(Path.DirectorySeparatorChar, '/')
                         .Replace(Path.AltDirectorySeparatorChar, '/');
 
@@ -464,18 +455,14 @@ namespace gaseous_server.Controllers.v1_1
 
                     // Normalize the file path to be platform-agnostic
                     // Convert all separators to forward slashes, then split and recombine with platform-appropriate separator
-                    string[] pathParts = requestedFileName.Replace('\\', '/').Split('/', StringSplitOptions.RemoveEmptyEntries);
-                    // Remove empty parts (e.g., from leading slashes)
-                    pathParts = pathParts.Where(p => p != "." && p != "..").ToArray();
+                    string[] pathParts = Common.NormalizeRelativePathSegments(requestedFileName);
                     if (pathParts.Length == 0)
                     {
                         return BadRequest("Invalid file path.");
                     }
 
-                    string normalizedFileName = Path.Combine(pathParts);
-
                     string fullBasePath = Path.GetFullPath(basePath);
-                    string fullFilePath = Path.GetFullPath(Path.Combine(basePath, normalizedFileName));
+                    string fullFilePath = Path.GetFullPath(Path.Join(basePath, Path.Join(pathParts)));
 
                     if (!fullFilePath.StartsWith(fullBasePath + Path.DirectorySeparatorChar) && !string.Equals(fullFilePath, fullBasePath, StringComparison.OrdinalIgnoreCase))
                     {
