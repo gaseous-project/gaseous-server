@@ -169,7 +169,7 @@ namespace gaseous_server.Controllers.v1_1
                 romType = "ROM Group";
                 pathId = RomGroupId.Value.ToString();
             }
-            return Path.Combine(Config.LibraryConfiguration.LibraryFileSystemDirectory, MetadataMapId.ToString(), romType, pathId, userId);
+            return Path.Combine(Config.LibraryConfiguration.LibraryFileSystemDirectory, romType, pathId, userId);
         }
 
         /// <summary>
@@ -210,7 +210,10 @@ namespace gaseous_server.Controllers.v1_1
                     foreach (string filePath in Directory.GetFiles(basePath, "*", SearchOption.AllDirectories))
                     {
                         FileInfo fileInfo = new FileInfo(filePath);
-                        string relativePath = filePath.Substring(basePath.Length).TrimStart(Path.DirectorySeparatorChar);
+                        string relativePath = filePath.Substring(basePath.Length)
+                            .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                            .Replace(Path.DirectorySeparatorChar, '/')
+                            .Replace(Path.AltDirectorySeparatorChar, '/');
                         fileSystem[relativePath] = new Dictionary<string, string>
                         {
                             { "Size", fileInfo.Length.ToString() },
@@ -221,7 +224,8 @@ namespace gaseous_server.Controllers.v1_1
                 }
                 else
                 {
-                    return NotFound("File system data not found for the specified ROM or ROM group.");
+                    // No persisted filesystem exists yet for this user/game; return an empty listing.
+                    fileSystem = new Dictionary<string, Dictionary<string, string>>();
                 }
 
                 return Ok(fileSystem);
@@ -266,7 +270,26 @@ namespace gaseous_server.Controllers.v1_1
                 }
 
                 string basePath = fileSystemBasePath(user.Id, MetadataMapId, RomId, RomGroupId);
-                string fullPath = Path.Combine(basePath, filePath);
+
+                string[] pathParts = filePath
+                    .Replace('\\', '/')
+                    .Split('/', StringSplitOptions.RemoveEmptyEntries)
+                    .Where(p => p != "." && p != "..")
+                    .ToArray();
+
+                if (pathParts.Length == 0)
+                {
+                    return BadRequest("Invalid file path.");
+                }
+
+                string normalizedFilePath = Path.Combine(pathParts);
+                string fullBasePath = Path.GetFullPath(basePath);
+                string fullPath = Path.GetFullPath(Path.Combine(basePath, normalizedFilePath));
+
+                if (!fullPath.StartsWith(fullBasePath + Path.DirectorySeparatorChar) && !string.Equals(fullPath, fullBasePath, StringComparison.OrdinalIgnoreCase))
+                {
+                    return BadRequest("Invalid file path.");
+                }
 
                 if (System.IO.File.Exists(fullPath))
                 {
@@ -280,6 +303,111 @@ namespace gaseous_server.Controllers.v1_1
             else
             {
                 return Unauthorized();
+            }
+        }
+
+        /// <summary>
+        /// Reconciles server-side filesystem files against a provided set of files that still exist in the emscripten filesystem.
+        /// Files not present in the provided list will be deleted.
+        /// </summary>
+        /// <param name="MetadataMapId">The ID of the metadata map the ROM or ROM group belongs to.</param>
+        /// <param name="RomId">The ID of the ROM to reconcile files for. Optional if RomGroupId is provided.</param>
+        /// <param name="RomGroupId">The ID of the ROM group to reconcile files for. Optional if RomId is provided.</param>
+        /// <param name="model">Request body containing the current emscripten file list.</param>
+        /// <returns>An IActionResult containing deleted file count and paths.</returns>
+        [MapToApiVersion("1.1")]
+        [HttpPost]
+        [Route("{MetadataMapId}/roms/{RomId}/filesystem/reconcile")]
+        [Route("{MetadataMapId}/romgroup/{RomGroupId}/filesystem/reconcile")]
+        [Consumes("application/json")]
+        public async Task<IActionResult> GameFilesystemReconcile(long MetadataMapId, long? RomId, long? RomGroupId, [FromBody] FilesystemReconcileModel model)
+        {
+            var user = await _userManager.GetUserAsync(User);
+
+            if (user == null)
+            {
+                return Unauthorized();
+            }
+
+            if ((RomId == null && RomGroupId == null) || (RomId != null && RomGroupId != null))
+            {
+                return BadRequest("Must provide either RomId or RomGroupId, but not both.");
+            }
+
+            string basePath = fileSystemBasePath(user.Id, MetadataMapId, RomId, RomGroupId);
+            if (!Directory.Exists(basePath))
+            {
+                return Ok(new
+                {
+                    DeletedCount = 0,
+                    DeletedFiles = Array.Empty<string>()
+                });
+            }
+
+            try
+            {
+                HashSet<string> expectedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+
+                IEnumerable<string> incomingFiles = model?.FileNames ?? Enumerable.Empty<string>();
+                foreach (string incomingFile in incomingFiles)
+                {
+                    if (string.IsNullOrWhiteSpace(incomingFile))
+                    {
+                        continue;
+                    }
+
+                    string[] pathParts = incomingFile
+                        .Replace('\\', '/')
+                        .Split('/', StringSplitOptions.RemoveEmptyEntries)
+                        .Where(p => p != "." && p != "..")
+                        .ToArray();
+
+                    if (pathParts.Length == 0)
+                    {
+                        continue;
+                    }
+
+                    string normalizedRelativePath = Path.Combine(pathParts)
+                        .Replace(Path.DirectorySeparatorChar, '/')
+                        .Replace(Path.AltDirectorySeparatorChar, '/');
+
+                    expectedFiles.Add(normalizedRelativePath);
+                }
+
+                string fullBasePath = Path.GetFullPath(basePath);
+                List<string> deletedFiles = new List<string>();
+
+                foreach (string existingFilePath in Directory.GetFiles(basePath, "*", SearchOption.AllDirectories))
+                {
+                    string fullExistingFilePath = Path.GetFullPath(existingFilePath);
+                    if (!fullExistingFilePath.StartsWith(fullBasePath + Path.DirectorySeparatorChar) && !string.Equals(fullExistingFilePath, fullBasePath, StringComparison.OrdinalIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    string relativePath = fullExistingFilePath.Substring(fullBasePath.Length)
+                        .TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+                        .Replace(Path.DirectorySeparatorChar, '/')
+                        .Replace(Path.AltDirectorySeparatorChar, '/');
+
+                    if (expectedFiles.Contains(relativePath))
+                    {
+                        continue;
+                    }
+
+                    System.IO.File.Delete(fullExistingFilePath);
+                    deletedFiles.Add(relativePath);
+                }
+
+                return Ok(new
+                {
+                    DeletedCount = deletedFiles.Count,
+                    DeletedFiles = deletedFiles
+                });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, "Error reconciling file system data: " + ex.Message);
             }
         }
 
@@ -397,6 +525,11 @@ namespace gaseous_server.Controllers.v1_1
             public string? FileName { get; set; }
             public IFormFile? FileContent { get; set; }
             public DateTime? LastModified { get; set; }
+        }
+
+        public class FilesystemReconcileModel
+        {
+            public List<string>? FileNames { get; set; }
         }
 
         public class GameSearchModel
