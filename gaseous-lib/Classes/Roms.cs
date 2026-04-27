@@ -272,6 +272,13 @@ namespace gaseous_server.Classes
 				dbDict.Add("id", RomId);
 				await db.ExecuteCMDAsync(sql, dbDict);
 				MetadataManagement.UpdateRomCount(rom.MetadataMapId);
+
+				// delete any file system storage if present
+				string storagePath = Path.Combine(Config.LibraryConfiguration.LibraryFileSystemDirectory, "ROM", RomId.ToString());
+				if (Directory.Exists(storagePath))
+				{
+					Directory.Delete(storagePath, true);
+				}
 			}
 		}
 
