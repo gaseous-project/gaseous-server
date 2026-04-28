@@ -270,12 +270,6 @@ namespace gaseous_server.Controllers.v1_1
             // remove any http encoding from the file path
             filePath = Uri.UnescapeDataString(filePath);
 
-            // early abort if the filePath contains any invalid characters or attempts to traverse up the directory structure
-            if (filePath.Contains("..") || filePath.Contains(":") || filePath.Contains("|") || filePath.Contains("?") || filePath.Contains("*") || filePath.Contains("\"") || filePath.Contains("<") || filePath.Contains(">"))
-            {
-                return BadRequest("Invalid file path.");
-            }
-
             var user = await _userManager.GetUserAsync(User);
 
             if (user != null)
