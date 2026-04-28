@@ -1383,15 +1383,17 @@ class GameCardRomList {
         }
 
         // create the configure emulator button
-        this.configureEmulatorButton = document.createElement('button');
-        this.configureEmulatorButton.classList.add('modal-button');
-        this.configureEmulatorButton.classList.add('card-romlist-management-button');
-        this.configureEmulatorButton.innerHTML = window.lang.translate('card.buttons.emulator');
-        this.configureEmulatorButton.addEventListener('click', async (e) => {
-            e.stopPropagation();
-            this.ShowEmulatorConfigureModal();
-        });
-        this.managementButtons.appendChild(this.configureEmulatorButton);
+        if (this.gamePlatformObject.id !== 0) {
+            this.configureEmulatorButton = document.createElement('button');
+            this.configureEmulatorButton.classList.add('modal-button');
+            this.configureEmulatorButton.classList.add('card-romlist-management-button');
+            this.configureEmulatorButton.innerHTML = window.lang.translate('card.buttons.emulator');
+            this.configureEmulatorButton.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                this.ShowEmulatorConfigureModal();
+            });
+            this.managementButtons.appendChild(this.configureEmulatorButton);
+        }
 
         if (userProfile.roles.includes("Admin")) {
             // create the content container upload buttons
@@ -1457,7 +1459,9 @@ class GameCardRomList {
             this.createMediaGroupButton.style.display = '';
             this.deleteButton.style.display = '';
             this.metadataMappingButton.style.display = 'none';
-            this.configureEmulatorButton.style.display = 'none';
+            if (this.configureEmulatorButton) {
+                this.configureEmulatorButton.style.display = 'none';
+            }
             this.editButton.innerHTML = window.lang.translate('card.management.done');
         } else {
             this.editMode = false;
@@ -1466,7 +1470,9 @@ class GameCardRomList {
             this.createMediaGroupButton.style.display = 'none';
             this.deleteButton.style.display = 'none';
             this.metadataMappingButton.style.display = '';
-            this.configureEmulatorButton.style.display = '';
+            if (this.configureEmulatorButton) {
+                this.configureEmulatorButton.style.display = '';
+            }
             this.editButton.innerHTML = window.lang.translate('card.management.edit');
         }
 
@@ -2110,6 +2116,26 @@ class GameCardRomList {
             }
         }).then(response => response.json());
 
+        // fetch the platform map
+        let platformMapData = await fetch('/api/v1.1/Platforms', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        }).then(response => response.json());
+        let platformMap = [];
+        if (platformMapData && platformMapData.result.length > 0) {
+            platformMapData.result.forEach(element => {
+                if (element && element.id && element.name) {
+                    let item = {
+                        id: element.id,
+                        text: element.name,
+                    }
+                    platformMap.push(item);
+                }
+            });
+        }
+
         // add missing supported metadata sources to the map
         supportedMetadataSources.forEach(sourceElement => {
             let element = metadataMap.metadataMapItems.find(item => item.sourceType === sourceElement);
@@ -2127,8 +2153,41 @@ class GameCardRomList {
             }
         });
 
-        console.log(metadataMap.metadataMapItems);
+        // console.log(this.gamePlatformObject);
+        // console.log(metadataMap.metadataMapItems);
 
+        // insert platform selection drop down
+        let platformSection = document.createElement('div');
+        platformSection.className = 'section';
+        // header
+        let platformSectionHeader = document.createElement('div');
+        platformSectionHeader.className = 'section-header';
+        platformSectionHeader.innerHTML = window.lang.translate('card.metadata.mapping_platform_header');
+        platformSection.appendChild(platformSectionHeader);
+        // content
+        let platformSectionContent = document.createElement('div');
+        platformSectionContent.className = 'section-body';
+        let platformSelect = document.createElement('select');
+        platformSelect.style.width = '100%';
+        let platformSelectDefaultOption = document.createElement('option');
+        platformSelectDefaultOption.value = this.gamePlatformObject.id;
+        platformSelectDefaultOption.innerHTML = this.gamePlatformObject.name;
+        platformSelectDefaultOption.selected = true;
+        platformSelect.appendChild(platformSelectDefaultOption);
+
+        platformSectionContent.appendChild(platformSelect);
+        platformSection.appendChild(platformSectionContent);
+        metadataContent.appendChild(platformSection);
+
+        // convert platformSelect to a select2 dropdown
+        $(platformSelect).select2(
+            {
+                data: platformMap,
+                width: '100%',
+                dropdownParent: $(metadataModal.modalElement)
+            });
+
+        // insert the metadata source items
         metadataMap.metadataMapItems.forEach(element => {
             if (supportedMetadataSources.includes(element.sourceType) === false) {
                 return;
@@ -2289,7 +2348,7 @@ class GameCardRomList {
             // process the model to ensure unsupported data sources are not included
             model = model.filter(item => supportedMetadataSources.includes(item.sourceType));
 
-            await fetch('/api/v1.1/Games/' + callingObject.metadataMapId + '/metadata', {
+            await fetch('/api/v1.1/Games/' + callingObject.metadataMapId + '/metadata?OverridePlatform=' + platformSelect.value, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json'
@@ -2300,6 +2359,18 @@ class GameCardRomList {
             });
         });
         metadataModal.addButton(okButton);
+
+        let refreshButton = new ModalButton(window.lang.translate('task.metadata_refresh'), 0, this.gamePlatformObject, async function (callingObject) {
+            await fetch('/api/v1.1/Games/' + callingObject.metadataMapId + '/metadata?ForceRefresh=true', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            }).then(response => response.json()).then(result => {
+                location.reload(true);
+            });
+        });
+        metadataModal.addButton(refreshButton);
 
         let cancelButton = new ModalButton(window.lang.translate('generic.cancel'), 0, metadataModal, async function (callingObject) {
             metadataModal.close();

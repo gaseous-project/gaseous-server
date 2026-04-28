@@ -233,6 +233,7 @@ class WideGameIcon {
             data = {
                 metadataMapId: -1,
                 name: window.lang ? window.lang.translate('rendergames.unknown_game') : 'Unknown Game',
+                genres: [],
                 cover: null,
                 totalRating: null,
                 totalRatingCount: null,
@@ -350,6 +351,13 @@ class WideGameIcon {
             titleOverlayText.innerHTML = data.name;
             titleOverlay.appendChild(titleOverlayText);
         }
+
+        // if (data.genres && data.genres.length > 0) {
+        //     let genresText = document.createElement('div');
+        //     genresText.classList.add('game_tile_wide_genres');
+        //     genresText.innerHTML = data.genres.join(', ');
+        //     titleOverlay.appendChild(genresText);
+        // }
 
         if (data.platformIds && data.platformIds.length > 0) {
             let platformIconsContainer = document.createElement('div');

@@ -378,6 +378,15 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
         /// <returns>A byte array containing the image data, or null if not found.</returns>
         public async Task<byte[]?> GetGameImageAsync(long gameId, string url, ImageType imageType)
         {
+            string[] imageIdSegments = Common.NormalizeRelativePathSegments(url);
+            if (imageIdSegments.Length == 0)
+            {
+                return null;
+            }
+
+            string normalizedImageIdPath = Path.Combine(imageIdSegments);
+            string normalizedImageIdUri = string.Join("/", imageIdSegments);
+
             Game game = await GetEntityAsync<Game>("games", gameId) ?? throw new Exception("Game not found");
 
             // check the proxy first
@@ -398,7 +407,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
             if (IGDBAuthToken != null)
             {
                 string imageDirectory = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, gameId), imageType.ToString());
-                string directImagePath = Path.Combine(imageDirectory, url + ".jpg");
+                string directImagePath = Path.Join(imageDirectory, normalizedImageIdPath + ".jpg");
 
                 if (File.Exists(directImagePath))
                 {
@@ -410,7 +419,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.IGDBProvider
                     Directory.CreateDirectory(imageDirectory);
                 }
 
-                Uri imageUri = new Uri($"https://images.igdb.com/igdb/image/upload/t_original/{url}.jpg");
+                Uri imageUri = new Uri($"https://images.igdb.com/igdb/image/upload/t_original/{normalizedImageIdUri}.jpg");
 
                 var response = await comms.DownloadToFileAsync(imageUri, directImagePath);
                 if (response.StatusCode == 200)

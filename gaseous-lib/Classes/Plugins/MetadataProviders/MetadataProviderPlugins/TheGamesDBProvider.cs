@@ -280,14 +280,22 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
         /// <inheritdoc/>
         public async Task<byte[]?> GetGameImageAsync(long gameId, string url, ImageType imageType)
         {
+            string[] relativeSegments = Common.NormalizeRelativePathSegments(url);
+            if (relativeSegments.Length == 0)
+            {
+                return null;
+            }
+
+            string normalizedRelativePath = Path.Combine(relativeSegments);
+
             // supplied url is a partial file name and path in unix path format - we need to break it up so that we can combine it with the base path in a host OS compliant way
             List<string> pathSegments =
             [
                 Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(FileSignature.MetadataSources.TheGamesDb, gameId),
-                .. url.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries),
+                .. relativeSegments,
             ];
 
-            string combinedPath = Path.Combine(pathSegments.ToArray());
+            string combinedPath = Path.Join(pathSegments.ToArray());
 
             if (File.Exists(combinedPath))
             {
@@ -296,7 +304,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
 
             // fallback to downloading the image directly from Hasheous if it's not present in the game bundle - this can happen if the image was added to TheGamesDB after the bundle was downloaded and hasn't been refreshed yet
             string imageDirectory = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, gameId), imageType.ToString());
-            string directImagePath = Path.Combine(imageDirectory, url);
+            string directImagePath = Path.Join(imageDirectory, normalizedRelativePath);
 
             if (File.Exists(directImagePath))
             {
@@ -308,7 +316,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
                 Directory.CreateDirectory(Path.GetDirectoryName(directImagePath));
             }
 
-            Uri imageUri = new Uri($"https://hasheous.org/api/v1/MetadataProxy/TheGamesDB/Images/original/{url}");
+            Uri imageUri = new Uri($"https://hasheous.org/api/v1/MetadataProxy/TheGamesDB/Images/original/{string.Join("/", relativeSegments)}");
             Dictionary<string, string> headers = new Dictionary<string, string>
             {
                 { "X-Client-API-Key", Config.MetadataConfiguration.HasheousClientAPIKey }

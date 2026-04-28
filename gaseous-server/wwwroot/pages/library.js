@@ -50,7 +50,9 @@ function getLibraryElements() {
         gamesElement: document.getElementById('games_library'),
         gamesHome: document.getElementById('games_home'),
         libraryControls: document.getElementById('games_library_controls'),
-        scrollerElement: document.getElementById('games_filter_scroller')
+        scrollerElement: document.getElementById('games_filter_scroller'),
+        filterApplyButton: document.getElementById('games_filter_apply'),
+        filterClearButton: document.getElementById('games_filter_clear')
     };
 }
 
@@ -621,9 +623,11 @@ function queueNotificationRefresh() {
  * Initializes select2 for a native select while keeping logic in native listeners.
  * @param {string} elementId
  * @param {string|number|undefined} selectedValue
+ * @param {(value: string) => void} [onChange]
  * @returns {HTMLElement|null}
  */
-function initializeSelect2(elementId, selectedValue) {
+function initializeSelect2(elementId, selectedValue, onChange) {
+    console.log(`Initializing select2 for ${elementId} with selected value:`, selectedValue);
     const element = document.getElementById(elementId);
     if (!element) {
         return null;
@@ -634,10 +638,20 @@ function initializeSelect2(elementId, selectedValue) {
     }
 
     const selectElement = globalThis.$(element);
-    selectElement.select2();
+    const isSelect2Initialized = selectElement.hasClass('select2-hidden-accessible') || Boolean(selectElement.data('select2'));
+    if (!isSelect2Initialized) {
+        selectElement.select2();
+    }
     if (selectedValue !== undefined) {
         selectElement.val(selectedValue).trigger('change.select2');
     }
+
+    // Use a namespaced event to prevent duplicate handlers on repeated setup calls.
+    selectElement.off('change.select2sync').on('change.select2sync', () => {
+        if (typeof onChange === 'function') {
+            onChange(String(element.value));
+        }
+    });
 
     return element;
 }
@@ -662,8 +676,22 @@ async function SetupPage() {
         return;
     }
 
+    const { filterApplyButton, filterClearButton } = getLibraryElements();
+    if (filterApplyButton) {
+        filterApplyButton.addEventListener('click', async () => {
+            await filter.ApplyFilter();
+        });
+    }
+    if (filterClearButton) {
+        filterClearButton.addEventListener('click', async () => {
+            await filter.ClearFilter();
+        });
+    }
+
     filter.FilterCallbacks.push(async (result, dontExecuteFilter) => {
-        filter.LoadFilterSettings();
+        console.log('Received filter result:', result);
+        console.log('Current filter selections:', filter.filterSelections);
+        await filter.LoadFilterSettings();
 
         scrollerElement.innerHTML = '';
         scrollerElement.appendChild(filter.BuildFilterTable(result));
@@ -672,9 +700,18 @@ async function SetupPage() {
         filter.OrderDirectionSelector(document.getElementById('games_library_orderby_direction_select'));
         filter.PageSizeSelector(document.getElementById('games_library_pagesize_select'));
 
-        initializeSelect2('games_library_pagesize_select', filter.filterSelections.pageSize);
-        initializeSelect2('games_library_orderby_select', filter.filterSelections.orderBy);
-        initializeSelect2('games_library_orderby_direction_select', filter.filterSelections.orderDirection);
+        initializeSelect2('games_library_pagesize_select', filter.filterSelections.pageSize, (value) => {
+            filter.filterSelections.pageSize = value;
+            filter.ApplyFilter();
+        });
+        initializeSelect2('games_library_orderby_select', filter.filterSelections.orderBy, (value) => {
+            filter.filterSelections.orderBy = value;
+            filter.ApplyFilter();
+        });
+        initializeSelect2('games_library_orderby_direction_select', filter.filterSelections.orderDirection, (value) => {
+            filter.filterSelections.orderDirection = value;
+            filter.ApplyFilter();
+        });
 
         filter.applyCallback = async () => {
             await startLibraryQuery({
@@ -735,9 +772,15 @@ async function SetupPage() {
                     scrollerElement.innerHTML = '';
                     scrollerElement.appendChild(filter.BuildFilterTable(filterData));
 
-                    initializeSelect2('games_library_pagesize_select', filter.filterSelections.pageSize);
-                    initializeSelect2('games_library_orderby_select', filter.filterSelections.orderBy);
-                    initializeSelect2('games_library_orderby_direction_select', filter.filterSelections.orderDirection);
+                    initializeSelect2('games_library_pagesize_select', filter.filterSelections.pageSize, (value) => {
+                        filter.filterSelections.pageSize = value;
+                    });
+                    initializeSelect2('games_library_orderby_select', filter.filterSelections.orderBy, (value) => {
+                        filter.filterSelections.orderBy = value;
+                    });
+                    initializeSelect2('games_library_orderby_direction_select', filter.filterSelections.orderDirection, (value) => {
+                        filter.filterSelections.orderDirection = value;
+                    });
                 }
             } catch (error) {
                 console.error('Error refreshing filter:', error);

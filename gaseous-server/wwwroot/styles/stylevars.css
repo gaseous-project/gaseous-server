@@ -34,6 +34,7 @@
     --scrollbar-track: rgb(56, 56, 56);
     --scrollbar-thumb: rgb(136, 136, 136);
     --scrollbar-thumb-hover: rgb(0, 0, 0);
+    --scrollbar-width: 15px;
 
     /* input */
     --input-background: rgba(43, 43, 43, 0.5);

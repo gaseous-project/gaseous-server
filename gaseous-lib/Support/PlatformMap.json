@@ -487,7 +487,7 @@
             },
             {
               "Core": "mame",
-              "AlternateCoreName": "",
+              "AlternateCoreName": "mame2003",
               "Default": false
             }
           ]
@@ -1018,7 +1018,7 @@
           "AvailableWebEmulatorCores": [
             {
               "Core": "coleco",
-              "AlternateCoreName": "coleco",
+              "AlternateCoreName": "gearcoleco",
               "Default": true
             }
           ]
@@ -1352,19 +1352,25 @@
       "PC DOS"
     ],
     "Extensions": {
-      "SupportedFileExtensions": [],
+      "SupportedFileExtensions": [
+        ".com",
+        ".sh",
+        ".bat",
+        ".exe",
+        ".conf"
+      ],
       "UniqueFileExtensions": []
     },
-    "RetroPieDirectoryName": "",
+    "RetroPieDirectoryName": "pc",
     "WebEmulator": {
       "Type": "EmulatorJS",
-      "Core": "dosbox-pure",
+      "Core": "dosbox_pure",
       "AvailableWebEmulators": [
         {
           "EmulatorType": "EmulatorJS",
           "AvailableWebEmulatorCores": [
             {
-              "Core": "dosbox-pure",
+              "Core": "dosbox_pure",
               "AlternateCoreName": "",
               "Default": true
             }
@@ -1892,13 +1898,35 @@
       "SupportedFileExtensions": [],
       "UniqueFileExtensions": []
     },
-    "RetroPieDirectoryName": "",
+    "RetroPieDirectoryName": "intellivision",
     "WebEmulator": {
-      "Type": "",
-      "Core": "",
-      "AvailableWebEmulators": null
+      "Type": "EmulatorJS",
+      "Core": "freeintv",
+      "AvailableWebEmulators": [
+        {
+          "EmulatorType": "EmulatorJS",
+          "AvailableWebEmulatorCores": [
+            {
+              "Core": "intellivision",
+              "AlternateCoreName": "freeintv",
+              "Default": true
+            }
+          ]
+        }
+      ]
     },
-    "Bios": []
+    "Bios": [
+      {
+        "hash": "62e761035cb657903761800f4437b8af",
+        "description": "Executive ROM",
+        "filename": "exec.rom"
+      },
+      {
+        "hash": "0cd5946c6473e42e8e4c2137785e427f",
+        "description": "Graphics ROM",
+        "filename": "grom.rom"
+      }
+    ]
   },
   {
     "IGDBId": 382,
@@ -2270,6 +2298,11 @@
               "Core": "n64",
               "AlternateCoreName": "mupen64plus_next",
               "Default": true
+            },
+            {
+              "Core": "mupen64plus_next",
+              "AlternateCoreName": "parallel-n64",
+              "Default": false
             }
           ]
         }
@@ -3093,6 +3126,11 @@
               "Default": true
             },
             {
+              "Core": "genesis_plus_gx_wide",
+              "AlternateCoreName": "",
+              "Default": false
+            },
+            {
               "Core": "picodrive",
               "AlternateCoreName": "",
               "Default": false
@@ -3152,6 +3190,11 @@
               "Core": "segaGG",
               "AlternateCoreName": "genesis_plus_gx",
               "Default": true
+            },
+            {
+              "Core": "genesis_plus_gx_wide",
+              "AlternateCoreName": "",
+              "Default": false
             }
           ]
         }
@@ -3273,6 +3316,11 @@
               "Default": true
             },
             {
+              "Core": "genesis_plus_gx_wide",
+              "AlternateCoreName": "",
+              "Default": false
+            },
+            {
               "Core": "picodrive",
               "AlternateCoreName": "",
               "Default": false
@@ -3325,11 +3373,6 @@
               "Core": "segaSaturn",
               "AlternateCoreName": "yabause",
               "Default": true
-            },
-            {
-              "Core": "mgba",
-              "AlternateCoreName": "",
-              "Default": false
             }
           ]
         }
@@ -3516,6 +3559,11 @@
               "Core": "snes",
               "AlternateCoreName": "snes9x",
               "Default": true
+            },
+            {
+              "Core": "bsnes",
+              "AlternateCoreName": "",
+              "Default": false
             }
           ]
         }

@@ -379,6 +379,339 @@ window.EJS_onGameStart = async function (e) {
 }
 
 // if core is arcade, mame, fbneo, fbalpha2012_cps1, fbalpha2012_cps2, then load audio samples if available
+let uploadPaths = {};
+const managedFilesystemFiles = new Map();
+const autoSkipUploadPathPrefixes = [
+    '/data/saves',
+    '/home/web_user',
+    '/tmp/',
+    '/proc/',
+    '/dev/',
+    '/sys/',
+    '/run/',
+    '/emulators/EmulatorJS/data/',
+    '/fbneo/samples/',
+    '/mame2003-plus/samples/',
+    '/fbalpha2012_cps1/samples/',
+    '/fbalpha2012_cps2/samples/'
+];
+let filesystemSyncInProgress = false;
+let filesystemHydrationCompleted = false;
+let filesystemReconcileArmed = false;
+
+function safeDecodeURIComponent(value) {
+    if (typeof value !== 'string' || value.length === 0) {
+        return '';
+    }
+
+    try {
+        return decodeURIComponent(value);
+    } catch (_) {
+        return value;
+    }
+}
+
+function getRomPathRootSkipPrefixes() {
+    const romPathQueryValue = getQueryString('rompath', 'string') || '';
+    const decodedRomPath = safeDecodeURIComponent(safeDecodeURIComponent(romPathQueryValue));
+    const normalizedRomPath = decodedRomPath.replace(/\\+/g, '/').replace(/\/+/g, '/').trim();
+    const romPathFileName = normalizedRomPath.split('/').filter(part => part.length > 0).pop();
+
+    if (!romPathFileName) {
+        return [];
+    }
+
+    const fileNameCandidates = new Set([
+        romPathFileName,
+        safeDecodeURIComponent(romPathFileName)
+    ]);
+
+    const romPathRootSkipPrefixes = new Set();
+    for (const fileNameCandidate of fileNameCandidates) {
+        if (!fileNameCandidate) {
+            continue;
+        }
+
+        const fileNameWithoutExtension = fileNameCandidate.replace(/\.[^/.]+$/, '');
+        romPathRootSkipPrefixes.add(`/${fileNameCandidate}`);
+        if (fileNameWithoutExtension.length > 0) {
+            romPathRootSkipPrefixes.add(`/${fileNameWithoutExtension}`);
+        }
+    }
+
+    return Array.from(romPathRootSkipPrefixes);
+}
+
+const romPathRootSkipPrefixes = getRomPathRootSkipPrefixes();
+
+function pathStartsWithPathSegment(path, prefix) {
+    const normalizedPath = normalizeEmscriptenPath(path).toLowerCase();
+    const normalizedPrefix = normalizeEmscriptenPath(prefix).toLowerCase();
+
+    return normalizedPath === normalizedPrefix || normalizedPath.startsWith(`${normalizedPrefix}/`);
+}
+
+function normalizeEmscriptenPath(path) {
+    if (!path) {
+        return '/';
+    }
+
+    const normalized = path.replace(/\\+/g, '/').replace(/\/+/g, '/');
+    return normalized.startsWith('/') ? normalized : `/${normalized}`;
+}
+
+function shouldSkipUploadPath(path) {
+    const normalizedPath = normalizeEmscriptenPath(path);
+    if (autoSkipUploadPathPrefixes.some(prefix => pathStartsWithPathSegment(normalizedPath, prefix))) {
+        return true;
+    }
+
+    return romPathRootSkipPrefixes.some(prefix => pathStartsWithPathSegment(normalizedPath, prefix));
+}
+
+function getFilesystemApiBaseUrl() {
+    const isMediaGroup = String(IsMediaGroup).toLowerCase() === 'true';
+    const romPath = isMediaGroup ? 'romgroup' : 'roms';
+    return `/api/v1.1/Games/${gameId}/${romPath}/${romId}/filesystem`;
+}
+
+function encodePathForRoute(path) {
+    return path
+        .split('/')
+        .filter(segment => segment.length > 0)
+        .map(segment => encodeURIComponent(segment))
+        .join('/');
+}
+
+function statMtimeMs(stat) {
+    if (!stat) {
+        return 0;
+    }
+
+    if (stat.mtime instanceof Date) {
+        return stat.mtime.getTime();
+    }
+
+    if (typeof stat.mtime === 'number') {
+        return stat.mtime;
+    }
+
+    return 0;
+}
+
+function buildManagedFileSignature(stat) {
+    return `${stat.size}:${statMtimeMs(stat)}`;
+}
+
+function getRelativePathForSync(path) {
+    return normalizeEmscriptenPath(path).replace(/^\/+/, '');
+}
+
+async function reconcileFilesystemDeletes(currentRelativePaths) {
+    if (!filesystemHydrationCompleted) {
+        return;
+    }
+
+    const reconcileResponse = await fetch(`${getFilesystemApiBaseUrl()}/reconcile`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            fileNames: Array.from(currentRelativePaths)
+        })
+    });
+
+    if (!reconcileResponse.ok) {
+        throw new Error(`Filesystem reconcile failed: ${reconcileResponse.status}`);
+    }
+
+    let reconcileResult = null;
+    try {
+        reconcileResult = await reconcileResponse.json();
+    } catch (_) {
+        return;
+    }
+
+    if (!reconcileResult || !Array.isArray(reconcileResult.deletedFiles)) {
+        return;
+    }
+
+    for (const deletedRelativePath of reconcileResult.deletedFiles) {
+        const normalizedDeletedPath = normalizeEmscriptenPath(deletedRelativePath);
+        managedFilesystemFiles.delete(normalizedDeletedPath);
+        delete uploadPaths[normalizedDeletedPath];
+    }
+
+    window.EJS_externalFiles = uploadPaths;
+}
+
+async function hydrateFilesystemUploadPaths() {
+    try {
+        const fileSystemResponse = await fetch(getFilesystemApiBaseUrl(), {
+            method: 'GET'
+        });
+
+        if (!fileSystemResponse.ok) {
+            return;
+        }
+
+        const fileSystemData = await fileSystemResponse.json();
+        if (!fileSystemData || typeof fileSystemData !== 'object') {
+            return;
+        }
+
+        for (const relativePath of Object.keys(fileSystemData)) {
+            const emscriptenPath = normalizeEmscriptenPath(relativePath);
+
+            if (shouldSkipUploadPath(emscriptenPath)) {
+                continue;
+            }
+
+            uploadPaths[emscriptenPath] = `${getFilesystemApiBaseUrl()}/${encodePathForRoute(relativePath)}`;
+
+            const metadata = fileSystemData[relativePath];
+            if (metadata && typeof metadata === 'object') {
+                const remoteSize = Number(metadata.Size);
+                const remoteMtimeMs = new Date(metadata.LastWriteTimeUtc).getTime();
+                if (!Number.isNaN(remoteSize) && !Number.isNaN(remoteMtimeMs)) {
+                    managedFilesystemFiles.set(emscriptenPath, `${remoteSize}:${remoteMtimeMs}`);
+                }
+            }
+        }
+
+        window.EJS_externalFiles = uploadPaths;
+        filesystemHydrationCompleted = true;
+    } catch (error) {
+        console.log(window.lang.translate('console.error_generic', error));
+    }
+}
+
+function getSyncUploadStartPath() {
+    return '/';
+}
+
+function listFilesForSync(FS, startPath) {
+    const normalizedStartPath = normalizeEmscriptenPath(startPath);
+    const pending = [normalizedStartPath];
+    const files = [];
+
+    while (pending.length > 0) {
+        const currentPath = pending.pop();
+        if (shouldSkipUploadPath(currentPath)) {
+            continue;
+        }
+
+        let entries;
+        try {
+            entries = FS.readdir(currentPath);
+        } catch (error) {
+            continue;
+        }
+
+        for (const entry of entries) {
+            if (entry === '.' || entry === '..') {
+                continue;
+            }
+
+            const childPath = normalizeEmscriptenPath(`${currentPath}/${entry}`);
+            if (shouldSkipUploadPath(childPath)) {
+                continue;
+            }
+
+            let stat;
+            try {
+                stat = FS.stat(childPath);
+            } catch (error) {
+                continue;
+            }
+
+            if (FS.isDir(stat.mode)) {
+                pending.push(childPath);
+                continue;
+            }
+
+            if (FS.isFile(stat.mode)) {
+                files.push({ path: childPath, stat });
+            }
+        }
+    }
+
+    return files;
+}
+
+async function uploadFilesystemFile(FS, filePath, stat) {
+    const normalizedFilePath = normalizeEmscriptenPath(filePath);
+    const fileBytes = FS.readFile(normalizedFilePath, { encoding: 'binary' });
+    const fileNameOnly = normalizedFilePath.substring(normalizedFilePath.lastIndexOf('/') + 1);
+
+    const formData = new FormData();
+    formData.append('FileName', normalizedFilePath);
+    formData.append('FileContent', new Blob([fileBytes], { type: 'application/octet-stream' }), fileNameOnly);
+
+    const lastModifiedIso = new Date(statMtimeMs(stat)).toISOString();
+    formData.append('LastModified', lastModifiedIso);
+
+    const uploadResponse = await fetch(getFilesystemApiBaseUrl(), {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!uploadResponse.ok) {
+        throw new Error(`Upload failed for ${normalizedFilePath}: ${uploadResponse.status}`);
+    }
+}
+
+async function syncFilesystemUploads() {
+    if (filesystemSyncInProgress) {
+        return;
+    }
+
+    filesystemSyncInProgress = true;
+
+    try {
+        const FS = EJS_emulator?.gameManager?.FS;
+        if (!FS) {
+            return;
+        }
+
+        const startPath = getSyncUploadStartPath();
+        const filesToCheck = listFilesForSync(FS, startPath);
+        const currentRelativePaths = new Set();
+
+        for (const file of filesToCheck) {
+            const relativeRoutePath = getRelativePathForSync(file.path);
+            currentRelativePaths.add(relativeRoutePath);
+
+            const fileSignature = buildManagedFileSignature(file.stat);
+            const previousSignature = managedFilesystemFiles.get(file.path);
+            if (previousSignature === fileSignature) {
+                continue;
+            }
+
+            await uploadFilesystemFile(FS, file.path, file.stat);
+            managedFilesystemFiles.set(file.path, fileSignature);
+
+            uploadPaths[file.path] = `${getFilesystemApiBaseUrl()}/${encodePathForRoute(relativeRoutePath)}`;
+        }
+
+        if (!filesystemHydrationCompleted) {
+            return;
+        }
+
+        if (!filesystemReconcileArmed) {
+            filesystemReconcileArmed = true;
+            return;
+        }
+
+        await reconcileFilesystemDeletes(currentRelativePaths);
+    } catch (error) {
+        console.log(window.lang.translate('console.error_generic', error));
+    } finally {
+        filesystemSyncInProgress = false;
+    }
+}
+
 if (['arcade', 'mame', 'fbneo', 'fbalpha2012_cps1', 'fbalpha2012_cps2'].includes(getQueryString('core', 'string'))) {
     let pathName = undefined;
     switch (getQueryString('core', 'string')) {
@@ -416,11 +749,15 @@ if (['arcade', 'mame', 'fbneo', 'fbalpha2012_cps1', 'fbalpha2012_cps2'].includes
                     samplesArray[pathName] = `/api/v1.1/ContentManager/attachment/zipStream?attachmentIds=${sampleIds}`;
 
                     console.log(window.lang.translate("emulator.samples_array", JSON.stringify(samplesArray)));
-                    EJS_externalFiles = samplesArray;
+                    Object.assign(uploadPaths, samplesArray);
+                    window.EJS_externalFiles = uploadPaths;
                 }
             });
     }
 }
+
+window.EJS_externalFiles = uploadPaths;
+hydrateFilesystemUploadPaths();
 
 // capture save RAM every minute
 let saveRam = setInterval(async () => {
@@ -438,18 +775,18 @@ async function SaveRamCapture() {
 
     // get the save file
     let saveFile = EJS_emulator.gameManager.getSaveFile();
-    if (saveFile === null) {
-        // no save file
-        return;
-    }
-    let SaveByteArrayBase64 = btoa(String.fromCharCode(...saveFile));
+    if (saveFile !== null) {
+        let SaveByteArrayBase64 = btoa(String.fromCharCode(...saveFile));
 
-    // upload the save to the server
-    await fetch(`/api/v1.1/SaveFile/${getQueryString('core', 'string')}/${IsMediaGroup}/${romId}`, {
-        method: 'POST',
-        body: JSON.stringify({ SaveByteArrayBase64: SaveByteArrayBase64 }),
-        headers: {
-            'Content-Type': 'application/json'
-        }
-    });
+        // upload the save to the server
+        await fetch(`/api/v1.1/SaveFile/${getQueryString('core', 'string')}/${IsMediaGroup}/${romId}`, {
+            method: 'POST',
+            body: JSON.stringify({ SaveByteArrayBase64: SaveByteArrayBase64 }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+    }
+
+    await syncFilesystemUploads();
 }

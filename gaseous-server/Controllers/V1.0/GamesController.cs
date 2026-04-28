@@ -917,10 +917,21 @@ namespace gaseous_server.Controllers
         [Route("{MetadataMapId}/metadata")]
         [ProducesResponseType(typeof(MetadataMap), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameMetadataSources(long MetadataMapId)
+        public async Task<ActionResult> GameMetadataSources(long MetadataMapId, [FromQuery] bool ForceRefresh = false)
         {
             try
             {
+                if (ForceRefresh)
+                {
+                    var metadataManagement = new MetadataManagement();
+
+                    // refresh the signatures of this MetadataMapId
+                    await metadataManagement.RefreshSignature(MetadataMapId, ForceRefresh);
+
+                    // refresh associated metadata
+                    await metadataManagement.RefreshSpecificGameAsync(MetadataMapId);
+                }
+
                 MetadataMap metadataMap = await Classes.MetadataManagement.GetMetadataMap(MetadataMapId);
 
                 MetadataMap filteredMetadataMap = new MetadataMap();
@@ -946,50 +957,79 @@ namespace gaseous_server.Controllers
         [Authorize(Roles = "Admin")]
         [ProducesResponseType(typeof(MetadataMap), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GameMetadataSources(long MetadataMapId, List<MetadataMap.MetadataMapItem> metadataMapItems)
+        public async Task<ActionResult> GameMetadataSources(long MetadataMapId, [FromQuery] long? OverridePlatform, [FromBody] List<MetadataMap.MetadataMapItem> metadataMapItems)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             try
             {
-                MetadataMap existingMetadataMap = await Classes.MetadataManagement.GetMetadataMap(MetadataMapId);
+                MetadataMap? existingMetadataMap = await Classes.MetadataManagement.GetMetadataMap(MetadataMapId);
 
-                if (existingMetadataMap != null)
-                {
-                    foreach (MetadataMap.MetadataMapItem metadataMapItem in metadataMapItems)
-                    {
-                        if (metadataMapItem.SourceType != FileSignature.MetadataSources.None)
-                        {
-                            // check if existingMetadataMap.MetadataMapItems contains metadataMapItem.SourceType
-                            MetadataMap.MetadataMapItem existingMetadataMapItem = existingMetadataMap.MetadataMapItems.FirstOrDefault(x => x.SourceType == metadataMapItem.SourceType);
-
-                            if (existingMetadataMapItem != null)
-                            {
-                                MetadataManagement.UpdateMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, (long)metadataMapItem.SourceId, metadataMapItem.Preferred, metadataMapItem.IsManual);
-                            }
-                            else
-                            {
-                                // make sure the submitted record is valid
-                                if (metadataMapItem.SourceId != null)
-                                {
-                                    MetadataManagement.AddMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, (long)metadataMapItem.SourceId, metadataMapItem.Preferred, metadataMapItem.IsManual, (long)metadataMapItem.SourceId);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            MetadataMap.MetadataMapItem existingMetadataMapItem = existingMetadataMap.MetadataMapItems.FirstOrDefault(x => x.SourceType == FileSignature.MetadataSources.None);
-                            MetadataManagement.UpdateMetadataMapItem(MetadataMapId, existingMetadataMapItem.SourceType, (long)existingMetadataMapItem.SourceId, metadataMapItem.Preferred);
-                        }
-                    }
-
-                    return Ok(await Classes.MetadataManagement.GetMetadataMap(MetadataMapId));
-                }
-                else
+                if (existingMetadataMap == null)
                 {
                     return NotFound();
                 }
+
+                if (metadataMapItems == null)
+                {
+                    return NotFound();
+                }
+
+                // check if OverridePlatform is not null, if not null then update the existingMetadataMap to the configured platform
+                if (OverridePlatform != null && existingMetadataMap.PlatformId != OverridePlatform)
+                {
+                    // create a new metadata map with the new platform id and copy the metadata map items over, then update the games_roms to point to the new metadata map id
+                    var newMetadataMap = Classes.MetadataManagement.NewMetadataMap((long)OverridePlatform, existingMetadataMap.SignatureGameName);
+
+                    // update games_roms to point to the new metadata map id
+                    Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
+                    string sql = $"UPDATE Games_Roms SET MetadataMapId = {newMetadataMap.Id}, PlatformId = {OverridePlatform} WHERE MetadataMapId = {MetadataMapId};";
+                    await db.ExecuteCMDAsync(sql);
+
+                    // update rom counts
+                    MetadataManagement metadataGame = new MetadataManagement(this);
+                    metadataGame.UpdateRomCounts();
+                }
+
+                IEnumerable<MetadataMap.MetadataMapItem> existingMetadataMapItems = existingMetadataMap.MetadataMapItems ?? Enumerable.Empty<MetadataMap.MetadataMapItem>();
+
+                foreach (MetadataMap.MetadataMapItem metadataMapItem in metadataMapItems)
+                {
+                    if (metadataMapItem.SourceType != FileSignature.MetadataSources.None)
+                    {
+                        // check if existingMetadataMap.MetadataMapItems contains metadataMapItem.SourceType
+                        MetadataMap.MetadataMapItem? existingMetadataMapItem = existingMetadataMapItems.FirstOrDefault(x => x.SourceType == metadataMapItem.SourceType);
+
+                        if (existingMetadataMapItem != null)
+                        {
+                            if (metadataMapItem.SourceId == null)
+                            {
+                                continue;
+                            }
+
+                            MetadataManagement.UpdateMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, (long)metadataMapItem.SourceId, metadataMapItem.Preferred, metadataMapItem.IsManual);
+                        }
+                        else
+                        {
+                            // make sure the submitted record is valid
+                            if (metadataMapItem.SourceId != null)
+                            {
+                                MetadataManagement.AddMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, (long)metadataMapItem.SourceId, metadataMapItem.Preferred, metadataMapItem.IsManual, (long)metadataMapItem.SourceId);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        MetadataMap.MetadataMapItem? existingMetadataMapItem = existingMetadataMapItems.FirstOrDefault(x => x.SourceType == FileSignature.MetadataSources.None);
+                        if (existingMetadataMapItem != null && existingMetadataMapItem.SourceId != null)
+                        {
+                            MetadataManagement.UpdateMetadataMapItem(MetadataMapId, existingMetadataMapItem.SourceType, (long)existingMetadataMapItem.SourceId, metadataMapItem.Preferred);
+                        }
+                    }
+                }
+
+                return Ok(await Classes.MetadataManagement.GetMetadataMap(MetadataMapId));
             }
             catch
             {

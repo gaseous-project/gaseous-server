@@ -37,14 +37,14 @@ namespace gaseous_server.Controllers
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
-            string sql = "SELECT * FROM Platform WHERE Id IN (SELECT DISTINCT PlatformId FROM view_Games_Roms) ORDER BY `Name` ASC;";
+            string sql = "SELECT * FROM Metadata_Platform WHERE `SourceId` = 0 ORDER BY `Name` ASC;";
 
             List<Platform> RetVal = new List<Platform>();
 
             DataTable dbResponse = await db.ExecuteCMDAsync(sql);
             foreach (DataRow dr in dbResponse.Rows)
             {
-                RetVal.Add(await Classes.Metadata.Platforms.GetPlatform((long)dr["id"]));
+                RetVal.Add(await Classes.Metadata.Platforms.GetPlatform((long)dr["id"], FileSignature.MetadataSources.None));
             }
 
             return RetVal;
