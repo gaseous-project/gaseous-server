@@ -150,7 +150,7 @@ namespace gaseous_server.Controllers.v1_1
             }
         }
 
-        public string fileSystemBasePath(string userId, long MetadataMapId, long? RomId, long? RomGroupId)
+        public string FileSystemBasePath(string userId, long MetadataMapId, long? RomId, long? RomGroupId)
         {
             string romType = "";
             string pathId = "";
@@ -169,7 +169,15 @@ namespace gaseous_server.Controllers.v1_1
                 romType = "ROM Group";
                 pathId = RomGroupId.Value.ToString();
             }
-            return Path.Combine(Config.LibraryConfiguration.LibraryFileSystemDirectory, romType, pathId, userId);
+            string basePath = Path.Combine(Config.LibraryConfiguration.LibraryFileSystemDirectory, romType, pathId, userId);
+
+            // early abort if the filePath contains any invalid characters or attempts to traverse up the directory structure
+            if (basePath.Contains("..") || basePath.Contains(":") || basePath.Contains("|") || basePath.Contains("?") || basePath.Contains("*") || basePath.Contains("\"") || basePath.Contains("<") || basePath.Contains(">"))
+            {
+                throw new ArgumentException("Invalid file path.");
+            }
+
+            return basePath;
         }
 
         /// <summary>
@@ -199,15 +207,17 @@ namespace gaseous_server.Controllers.v1_1
                     return BadRequest("Must provide either RomId or RomGroupId, but not both.");
                 }
 
-                Dictionary<string, Dictionary<string, string>> fileSystem;
-
-                string basePath = fileSystemBasePath(user.Id, MetadataMapId, RomId, RomGroupId);
-
-                // early abort if the filePath contains any invalid characters or attempts to traverse up the directory structure
-                if (basePath.Contains("..") || basePath.Contains(":") || basePath.Contains("|") || basePath.Contains("?") || basePath.Contains("*") || basePath.Contains("\"") || basePath.Contains("<") || basePath.Contains(">"))
+                string basePath;
+                try
+                {
+                    basePath = FileSystemBasePath(user.Id, MetadataMapId, RomId, RomGroupId);
+                }
+                catch (ArgumentException)
                 {
                     return BadRequest("Invalid file path.");
                 }
+
+                Dictionary<string, Dictionary<string, string>> fileSystem;
 
                 if (Directory.Exists(basePath))
                 {
@@ -275,7 +285,7 @@ namespace gaseous_server.Controllers.v1_1
                     return BadRequest("Must provide either RomId or RomGroupId, but not both.");
                 }
 
-                string basePath = fileSystemBasePath(user.Id, MetadataMapId, RomId, RomGroupId);
+                string basePath = FileSystemBasePath(user.Id, MetadataMapId, RomId, RomGroupId);
 
                 string[] pathParts = Common.NormalizeRelativePathSegments(filePath);
 
@@ -335,7 +345,16 @@ namespace gaseous_server.Controllers.v1_1
                 return BadRequest("Must provide either RomId or RomGroupId, but not both.");
             }
 
-            string basePath = fileSystemBasePath(user.Id, MetadataMapId, RomId, RomGroupId);
+            string basePath;
+            try
+            {
+                basePath = FileSystemBasePath(user.Id, MetadataMapId, RomId, RomGroupId);
+            }
+            catch (ArgumentException)
+            {
+                return BadRequest("Invalid file path.");
+            }
+
             if (!Directory.Exists(basePath))
             {
                 return Ok(new
@@ -441,7 +460,15 @@ namespace gaseous_server.Controllers.v1_1
                     return BadRequest("Must provide either RomId or RomGroupId, but not both.");
                 }
 
-                string basePath = fileSystemBasePath(user.Id, MetadataMapId, RomId, RomGroupId);
+                string basePath;
+                try
+                {
+                    basePath = FileSystemBasePath(user.Id, MetadataMapId, RomId, RomGroupId);
+                }
+                catch (ArgumentException)
+                {
+                    return BadRequest("Invalid file path.");
+                }
 
                 try
                 {
