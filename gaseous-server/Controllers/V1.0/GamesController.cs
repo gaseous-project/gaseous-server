@@ -979,12 +979,17 @@ namespace gaseous_server.Controllers
                 // check if OverridePlatform is not null, if not null then update the existingMetadataMap to the configured platform
                 if (OverridePlatform != null && existingMetadataMap.PlatformId != OverridePlatform)
                 {
-                    // update the already loaded value
-                    existingMetadataMap.PlatformId = (long)OverridePlatform;
-                    // update the database
+                    // create a new metadata map with the new platform id and copy the metadata map items over, then update the games_roms to point to the new metadata map id
+                    var newMetadataMap = Classes.MetadataManagement.NewMetadataMap((long)OverridePlatform, existingMetadataMap.SignatureGameName);
+
+                    // update games_roms to point to the new metadata map id
                     Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-                    string sql = $"UPDATE MetadataMap SET PlatformId = {OverridePlatform} WHERE Id = {MetadataMapId}; UPDATE Games_Roms SET PlatformId = {OverridePlatform} WHERE MetadataMapId = {MetadataMapId};";
+                    string sql = $"UPDATE Games_Roms SET MetadataMapId = {newMetadataMap.Id}, PlatformId = {OverridePlatform} WHERE MetadataMapId = {MetadataMapId};";
                     await db.ExecuteCMDAsync(sql);
+
+                    // update rom counts
+                    MetadataManagement metadataGame = new MetadataManagement(this);
+                    metadataGame.UpdateRomCounts();
                 }
 
                 IEnumerable<MetadataMap.MetadataMapItem> existingMetadataMapItems = existingMetadataMap.MetadataMapItems ?? Enumerable.Empty<MetadataMap.MetadataMapItem>();

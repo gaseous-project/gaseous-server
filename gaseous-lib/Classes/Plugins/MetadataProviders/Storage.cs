@@ -128,6 +128,12 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         /// </exception>
         public CacheStatus GetCacheStatus(DataRow Row)
         {
+            // provider none doesn't use caching, so always return current
+            if (_sourceType == FileSignature.MetadataSources.None)
+            {
+                return CacheStatus.Current;
+            }
+
             if (Row.Table.Columns.Contains("lastUpdated"))
             {
                 DateTime CacheExpiryTime = DateTime.UtcNow.AddHours(-168);
@@ -148,6 +154,12 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
 
         private async Task<CacheStatus> _GetCacheStatus(string Endpoint, string SearchField, object SearchValue)
         {
+            // provider none doesn't use caching, so always return current
+            if (_sourceType == FileSignature.MetadataSources.None)
+            {
+                return CacheStatus.Current;
+            }
+
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
             string sql = "SELECT lastUpdated FROM `Metadata_" + Endpoint + "` WHERE SourceId = @SourceType AND " + SearchField + " = @" + SearchField;

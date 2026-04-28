@@ -570,7 +570,14 @@ namespace gaseous_server.Classes
                         {
                             object storedValue = GetStoredSettingValue(dbResponse.Rows[0]);
 
-                            AppSettings.Add(SettingName, storedValue);
+                            if (AppSettings.ContainsKey(SettingName))
+                            {
+                                AppSettings[SettingName] = storedValue;
+                            }
+                            else
+                            {
+                                AppSettings.Add(SettingName, storedValue);
+                            }
                             return ConvertSettingValue<T>(storedValue);
                         }
                     }

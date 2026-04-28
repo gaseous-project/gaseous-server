@@ -683,6 +683,11 @@ namespace gaseous_server.Classes
 			}
 		}
 
+		/// <summary>
+		/// Refreshes the signature for a single ROM identified by its MetadataMapId. Used to refresh metadata for a specific game/ROM after a manual metadata update or when triggered from the game details page.
+		/// </summary>
+		/// <param name="MetadataMapId">The MetadataMapId of the ROM to refresh.</param>
+		/// <param name="forceRefresh">Whether to force a refresh of the signature.</param>
 		public async Task RefreshSignature(long MetadataMapId, bool forceRefresh = false)
 		{
 			string sql = "SELECT * FROM view_Games_Roms WHERE MetadataMapId = @MetadataMapId;";

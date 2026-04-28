@@ -533,26 +533,29 @@ h1 {
 #games_filter_scroller {
     position: absolute;
     width: 210px;
-    overflow-y: hidden;
+    overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
     overscroll-behavior: contain;
+    scrollbar-gutter: stable;
     top: 0px;
-    bottom: 0px;
-    padding-bottom: 90px;
+    bottom: 110px;
+    /* padding-bottom: 90px; */
     /* margin-right: 10px; */
 }
 
 #games_filter_buttons {
-    position: fixed;
+    position: absolute;
     bottom: 0;
     left: 0px;
-    width: 208px;
+    right: 20px;
+    /* width: 208px; */
     height: 80px;
     padding-top: 15px;
     padding-bottom: 15px;
     text-align: center;
-    backdrop-filter: blur(16px);
+    /* backdrop-filter: blur(16px); */
+    z-index: 10;
 }
 
 .games_filter_button {
@@ -632,8 +635,42 @@ h1 {
     overflow: hidden;
 }
 
-#games_filter_scroller:hover {
-    overflow-y: auto;
+@media (hover: hover) and (pointer: fine) {
+    #games_filter_scroller {
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+    }
+
+    #games_filter_scroller:hover,
+    #games_filter_scroller:focus-within {
+        scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    }
+
+    #games_filter_scroller::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    #games_filter_scroller::-webkit-scrollbar-thumb {
+        background: transparent;
+        border-radius: 5px;
+        border: 1px solid transparent;
+        background-clip: padding-box;
+    }
+
+    #games_filter_scroller:hover::-webkit-scrollbar-track,
+    #games_filter_scroller:focus-within::-webkit-scrollbar-track {
+        background: var(--scrollbar-track);
+    }
+
+    #games_filter_scroller:hover::-webkit-scrollbar-thumb,
+    #games_filter_scroller:focus-within::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb);
+    }
+
+    #games_filter_scroller:hover::-webkit-scrollbar-thumb:hover,
+    #games_filter_scroller:focus-within::-webkit-scrollbar-thumb:hover {
+        background: var(--scrollbar-thumb-hover);
+    }
 }
 
 .filter_header {
@@ -3672,11 +3709,47 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     bottom: 0px;
     overflow-y: auto;
     overflow-x: hidden;
-    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    scrollbar-gutter: stable;
 }
 
-.card-scroller:hover {
-    scrollbar-width: auto;
+@media (hover: hover) and (pointer: fine) {
+    .card-scroller {
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+    }
+
+    .card-scroller:hover,
+    .card-scroller:focus-within {
+        scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+    }
+
+    .card-scroller::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .card-scroller::-webkit-scrollbar-thumb {
+        background: transparent;
+        border-radius: 5px;
+        border: 1px solid transparent;
+        background-clip: padding-box;
+    }
+
+    .card-scroller:hover::-webkit-scrollbar-track,
+    .card-scroller:focus-within::-webkit-scrollbar-track {
+        background: var(--scrollbar-track);
+    }
+
+    .card-scroller:hover::-webkit-scrollbar-thumb,
+    .card-scroller:focus-within::-webkit-scrollbar-thumb {
+        background: var(--scrollbar-thumb);
+    }
+
+    .card-scroller:hover::-webkit-scrollbar-thumb:hover,
+    .card-scroller:focus-within::-webkit-scrollbar-thumb:hover {
+        background: var(--scrollbar-thumb-hover);
+    }
 }
 
 .card-header {
