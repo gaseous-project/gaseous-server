@@ -676,111 +676,123 @@ namespace gaseous_server.Classes
 				int StatusCounter = 1;
 				foreach (DataRow dr in dt.Rows)
 				{
-					SetStatus(StatusCounter, dt.Rows.Count, "Refreshing signature for ROM " + dr["Name"]);
-
-					try
-					{
-						Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_signature_for_rom", null, new string[] { StatusCounter.ToString(), dt.Rows.Count.ToString(), dr["Name"].ToString(), dr["Id"].ToString() });
-
-						FileSignature fileSignature = new FileSignature();
-						GameLibrary.LibraryItem library = await GameLibrary.GetLibrary((int)dr["LibraryId"]);
-						FileHash fileHash;
-
-						if (!forceRefresh)
-						{
-							// get the hash of the ROM from the datarow
-							string? md5 = dr["MD5"] == DBNull.Value ? null : dr["MD5"].ToString();
-							string? sha1 = dr["SHA1"] == DBNull.Value ? null : dr["SHA1"].ToString();
-							string? sha256 = dr["SHA256"] == DBNull.Value ? null : dr["SHA256"].ToString();
-							string? crc = dr["CRC"] == DBNull.Value ? null : dr["CRC"].ToString();
-							HashObject hash = new HashObject();
-							if (
-								md5 != null && md5 != "" &&
-								sha1 != null && sha1 != "" &&
-								sha256 != null && sha256 != "" &&
-								crc != null && crc != ""
-							)
-							{
-								if (md5 != null)
-								{
-									hash.md5hash = md5;
-								}
-								if (sha1 != null)
-								{
-									hash.sha1hash = sha1;
-								}
-								if (sha256 != null)
-								{
-									hash.sha256hash = sha256;
-								}
-								if (crc != null)
-								{
-									hash.crc32hash = crc;
-								}
-							}
-							else
-							{
-								Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.missing_one_or_more_hashes_recalculating_hashes", null, new string[] { dr["Name"].ToString() });
-								hash = new HashObject(dr["Path"].ToString());
-							}
-
-							// get the attributes for the ROM from the datarow
-							// it is a JSON string in the database, so deserialize it into a Dictionary<string, object>
-							// The entry we're interested in is "ZipContents", the value of which is a List<ArchiveData> object, which contains the file names and hashes of the contents of the ZIP file if the ROM is a ZIP archive
-							Dictionary<string, object>? attributes = dr["Attributes"] == DBNull.Value ? null : Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(dr["Attributes"].ToString() ?? "{}");
-							List<ArchiveData>? zipContents = null;
-							if (attributes != null && attributes.ContainsKey("ZipContents"))
-							{
-								zipContents = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ArchiveData>>(attributes["ZipContents"].ToString() ?? "[]");
-							}
-
-							// get the signature for the ROM
-							FileInfo fi = new FileInfo(dr["Path"].ToString());
-							fileHash = new FileHash()
-							{
-								Hash = hash,
-								Library = library,
-								FileName = dr["RelativePath"].ToString() ?? fi.Name,
-								ArchiveContents = zipContents != null ? zipContents : new List<ArchiveData>()
-							};
-						}
-						else
-						{
-							// if forceRefresh is true, recalculate the hash of the ROM and ignore the hash values in the datarow
-							Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.force_refresh_recalculated_hashes_for_rom", null, new string[] { dr["Name"].ToString() });
-							fileHash = await FileSignature.GetFileHashesAsync(library, dr["Path"].ToString());
-						}
-						var (updatedFileHash, signature) = await fileSignature.GetFileSignatureAsync(library, fileHash);
-
-						// validate the signature - if it is invalid, skip the rest of the loop
-						// validation rules: 1) signature must not be null, 2) signature must have a platform ID
-						if (signature == null || signature.Flags.PlatformId == null)
-						{
-							Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.signature_invalid_skipping_metadata_refresh", null, new string[] { dr["Name"].ToString() });
-							StatusCounter += 1;
-							continue;
-						}
-
-						// update the signature in the database
-						Platform? signaturePlatform = await Metadata.Platforms.GetPlatform((long)signature.Flags.PlatformId);
-						if (signature.Flags.GameId == 0)
-						{
-							HasheousClient.Models.Metadata.IGDB.Game? discoveredGame = await ImportGame.SearchForGame(signature, signature.Flags.PlatformId, false);
-							if (discoveredGame != null && discoveredGame.Id != null)
-							{
-								signature.MetadataSources.AddGame((long)discoveredGame.Id, discoveredGame.Name, FileSignature.MetadataSources.IGDB);
-							}
-						}
-						await ImportGame.StoreGame(library, fileHash.Hash, signature, signaturePlatform, fileHash.FullFilePath, (long)dr["Id"], false);
-					}
-					catch (Exception ex)
-					{
-						Logging.LogKey(Logging.LogType.Critical, "process.metadata_refresh", "metadatarefresh.error_refreshing_metadata_for_rom", null, new string[] { dr["Name"].ToString() }, ex);
-					}
-
+					await _RefreshSignature(dt, dr, StatusCounter, forceRefresh);
 					StatusCounter += 1;
 				}
 				ClearStatus();
+			}
+		}
+
+		/// <summary>
+		/// Refreshes the signature for a single ROM identified by its MetadataMapId. Used to refresh metadata for a specific game/ROM after a manual metadata update or when triggered from the game details page.
+		/// </summary>
+		/// <param name="MetadataMapId">The MetadataMapId of the ROM to refresh.</param>
+		/// <param name="forceRefresh">Whether to force a refresh of the signature.</param>
+		public async Task RefreshSignature(long MetadataMapId, bool forceRefresh = false)
+		{
+			string sql = "SELECT * FROM view_Games_Roms WHERE MetadataMapId = @MetadataMapId;";
+			Dictionary<string, object> dbDict = new Dictionary<string, object>()
+			{
+				{ "@MetadataMapId", MetadataMapId }
+			};
+			DataTable dt = await db.ExecuteCMDAsync(sql, dbDict);
+
+			foreach (DataRow dr in dt.Rows)
+			{
+				await _RefreshSignature(dt, dr, 1, forceRefresh);
+			}
+		}
+
+		private async Task _RefreshSignature(DataTable dt, DataRow dr, int StatusCounter = 1, bool forceRefresh = false)
+		{
+			SetStatus(StatusCounter, dt.Rows.Count, "Refreshing signature for ROM " + dr["Name"]);
+
+			try
+			{
+				Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.refreshing_signature_for_rom", null, new string[] { StatusCounter.ToString(), dt.Rows.Count.ToString(), dr["Name"].ToString(), dr["Id"].ToString() });
+
+				FileSignature fileSignature = new FileSignature();
+				GameLibrary.LibraryItem library = await GameLibrary.GetLibrary((int)dr["LibraryId"]);
+				FileHash fileHash;
+
+				if (!forceRefresh)
+				{
+					// get the hash of the ROM from the datarow
+					string? md5 = dr["MD5"] == DBNull.Value ? null : dr["MD5"].ToString();
+					string? sha1 = dr["SHA1"] == DBNull.Value ? null : dr["SHA1"].ToString();
+					string? sha256 = dr["SHA256"] == DBNull.Value ? null : dr["SHA256"].ToString();
+					string? crc = dr["CRC"] == DBNull.Value ? null : dr["CRC"].ToString();
+					HashObject hash = new HashObject();
+					if (
+						md5 != null && md5 != "" &&
+						sha1 != null && sha1 != "" &&
+						sha256 != null && sha256 != "" &&
+						crc != null && crc != ""
+					)
+					{
+						hash.md5hash = md5;
+						hash.sha1hash = sha1;
+						hash.sha256hash = sha256;
+						hash.crc32hash = crc;
+					}
+					else
+					{
+						Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.missing_one_or_more_hashes_recalculating_hashes", null, new string[] { dr["Name"].ToString() });
+						hash = new HashObject(dr["Path"].ToString());
+					}
+
+					// get the attributes for the ROM from the datarow
+					// it is a JSON string in the database, so deserialize it into a Dictionary<string, object>
+					// The entry we're interested in is "ZipContents", the value of which is a List<ArchiveData> object, which contains the file names and hashes of the contents of the ZIP file if the ROM is a ZIP archive
+					Dictionary<string, object>? attributes = dr["Attributes"] == DBNull.Value ? null : Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(dr["Attributes"].ToString() ?? "{}");
+					List<ArchiveData>? zipContents = null;
+					if (attributes != null && attributes.ContainsKey("ZipContents"))
+					{
+						zipContents = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ArchiveData>>(attributes["ZipContents"].ToString() ?? "[]");
+					}
+
+					// get the signature for the ROM
+					FileInfo fi = new FileInfo(dr["Path"].ToString());
+					fileHash = new FileHash()
+					{
+						Hash = hash,
+						Library = library,
+						FileName = dr["RelativePath"].ToString() ?? fi.Name,
+						ArchiveContents = zipContents != null ? zipContents : new List<ArchiveData>()
+					};
+				}
+				else
+				{
+					// if forceRefresh is true, recalculate the hash of the ROM and ignore the hash values in the datarow
+					Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.force_refresh_recalculated_hashes_for_rom", null, new string[] { dr["Name"].ToString() });
+					fileHash = await FileSignature.GetFileHashesAsync(library, dr["Path"].ToString());
+				}
+				var (_, signature) = await fileSignature.GetFileSignatureAsync(library, fileHash);
+
+				// validate the signature - if it is invalid, skip the rest of the loop
+				// validation rules: 1) signature must not be null, 2) signature must have a platform ID
+				if (signature == null || signature.Flags.PlatformId == null)
+				{
+					Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.signature_invalid_skipping_metadata_refresh", null, new string[] { dr["Name"].ToString() });
+					StatusCounter += 1;
+					return;
+				}
+
+				// update the signature in the database
+				Platform? signaturePlatform = await Metadata.Platforms.GetPlatform((long)signature.Flags.PlatformId);
+				if (signature.Flags.GameId == 0)
+				{
+					HasheousClient.Models.Metadata.IGDB.Game? discoveredGame = await ImportGame.SearchForGame(signature, signature.Flags.PlatformId, false);
+					if (discoveredGame != null && discoveredGame.Id != null)
+					{
+						signature.MetadataSources.AddGame((long)discoveredGame.Id, discoveredGame.Name, FileSignature.MetadataSources.IGDB);
+					}
+				}
+				await ImportGame.StoreGame(library, fileHash.Hash, signature, signaturePlatform, fileHash.FullFilePath, (long)dr["Id"], false);
+			}
+			catch (Exception ex)
+			{
+				Logging.LogKey(Logging.LogType.Critical, "process.metadata_refresh", "metadatarefresh.error_refreshing_metadata_for_rom", null, new string[] { dr["Name"].ToString() }, ex);
 			}
 		}
 

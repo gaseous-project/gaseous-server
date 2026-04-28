@@ -109,6 +109,22 @@ namespace gaseous_server.Classes.Configuration.Models
             }
         }
 
+        public string LibrarySavesDirectory
+        {
+            get
+            {
+                return Path.Combine(LibraryRootDirectory, "Saves");
+            }
+        }
+
+        public string LibraryFileSystemDirectory
+        {
+            get
+            {
+                return Path.Combine(LibrarySavesDirectory, "File System");
+            }
+        }
+
         public string LibraryMetadataDirectory_Platform(Platform platform)
         {
             string MetadataPath = Path.Combine(LibraryMetadataDirectory, "Platforms", platform.Slug);

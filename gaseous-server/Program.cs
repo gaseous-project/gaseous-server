@@ -216,6 +216,9 @@ builder.Services.AddSwaggerGen(options =>
 
         // sort the endpoints
         options.OrderActionsBy((apiDesc) => $"{apiDesc.RelativePath}_{apiDesc.HttpMethod}");
+
+        // Use full type name (namespace + class name) for schema IDs
+        options.CustomSchemaIds(type => type.FullName);
     }
 );
 builder.Services.AddHostedService<TimedHostedService>();

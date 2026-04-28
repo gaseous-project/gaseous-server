@@ -245,6 +245,15 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
         /// <inheritdoc/>
         public async Task<byte[]?> GetGameImageAsync(long gameId, string url, ImageType imageType)
         {
+            string[] imageIdSegments = Common.NormalizeRelativePathSegments(url);
+            if (imageIdSegments.Length == 0)
+            {
+                return null;
+            }
+
+            string normalizedImageIdPath = Path.Combine(imageIdSegments);
+            string normalizedImageIdUri = string.Join("/", imageIdSegments);
+
             // get the bundle for the game - if we have it, attempt to load the image from the bundle storage location
             await GetGameBundleAsync<gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Game>(gameId);
 
@@ -269,7 +278,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
 
                 if (!String.IsNullOrEmpty(imageTypePath))
                 {
-                    string imagePath = Path.Combine(bundlePath, imageTypePath, url + ".jpg");
+                    string imagePath = Path.Join(bundlePath, imageTypePath, normalizedImageIdPath + ".jpg");
                     if (File.Exists(imagePath))
                     {
                         return await File.ReadAllBytesAsync(imagePath);
@@ -279,13 +288,13 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
 
             // image not found in bundle, attempt to download directly from Hasheous Proxy
             string localCachedImagePath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, "HasheousProxyImages", SourceType.ToString(), gameId.ToString(), imageType.ToString());
-            string localCachedImagePathFile = Path.Combine(localCachedImagePath, url + ".jpg");
+            string localCachedImagePathFile = Path.Join(localCachedImagePath, normalizedImageIdPath + ".jpg");
             if (File.Exists(localCachedImagePathFile))
             {
                 return await File.ReadAllBytesAsync(localCachedImagePathFile);
             }
             // image not in cache - download from Hasheous Proxy
-            Uri imageUri = new Uri($"{Config.MetadataConfiguration.HasheousHost}api/v1/MetadataProxy/IGDB/Image/{url}.jpg");
+            Uri imageUri = new Uri($"{Config.MetadataConfiguration.HasheousHost}api/v1/MetadataProxy/IGDB/Image/{normalizedImageIdUri}.jpg");
             if (!Directory.Exists(localCachedImagePath))
             {
                 Directory.CreateDirectory(localCachedImagePath);

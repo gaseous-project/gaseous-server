@@ -89,6 +89,20 @@ namespace gaseous_server.Classes
 					.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
 		}
 
+		public static string[] NormalizeRelativePathSegments(string? input)
+		{
+			if (string.IsNullOrWhiteSpace(input))
+			{
+				return Array.Empty<string>();
+			}
+
+			return input
+				.Replace('\\', '/')
+				.Split('/', StringSplitOptions.RemoveEmptyEntries)
+				.Where(segment => segment != "." && segment != ".." && !Path.IsPathRooted(segment) && !segment.Contains(':'))
+				.ToArray();
+		}
+
 		public static char[] GetInvalidFileNameChars() => new char[]
 		{
 			'\"', '<', '>', '|', '\0',
