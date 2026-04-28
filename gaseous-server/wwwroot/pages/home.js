@@ -7,16 +7,25 @@ class HomePageGameRow {
 
         // Create the row
         this.row = document.createElement("div");
-        this.row.classList.add("section");
+        this.row.id = "home-row-" + title.replace(/\s+/g, '-').toLowerCase();
+        // set to hidden by default, will be shown if there are games to display after filtering
+        this.row.style.display = "none";
+        // this.row.classList.add("section");
 
-        let titleHeader = document.createElement("div");
-        titleHeader.classList.add("section-header");
+        let titleHeader = document.createElement("span");
+        // titleHeader.classList.add("section-header");
+        titleHeader.classList.add("home-heading");
         titleHeader.textContent = window.lang.translate(this.title);
         titleHeader.setAttribute("data-i18n", this.title);
+        titleHeader.addEventListener("click", async () => {
+            this.searchModel.limit = 20;
+            localStorage.setItem("Library.Filter", JSON.stringify(this.searchModel));
+            window.location.href = "/index.html?page=library";
+        });
         this.row.appendChild(titleHeader);
 
         this.games = document.createElement("div");
-        this.games.classList.add("section-body");
+        // this.games.classList.add("section-body");
         this.row.appendChild(this.games);
     }
 
@@ -66,15 +75,26 @@ class HomePageGameRow {
             this.games.innerHTML = "";
 
             if (games.length === 0) {
+                this.row.style.display = "none";
                 this.games.innerHTML = '<p>' + window.lang.translate('home.no_games_found') + '</p>';
             } else {
+                this.row.style.display = "block";
                 this.games.classList.remove("section-body");
                 let scroller = document.createElement("ul");
                 scroller.classList.add("homegame-scroller");
 
+                let counter = 0;
                 for (const game of games) {
+                    counter++;
                     let gameItem = document.createElement("li");
                     gameItem.classList.add("homegame-item");
+                    if (counter === 1) {
+                        gameItem.classList.add("homegame-item-first");
+                    } else if (counter === 2) {
+                        gameItem.classList.add("homegame-item-second");
+                    } else {
+                        gameItem.classList.add("homegame-item-other");
+                    }
 
                     let gameObj = new WideGameIcon(game);
                     let gameTile = await gameObj.Render(showTitle, showRatings, showClassification, classificationDisplayOrder, false, true);
@@ -120,7 +140,7 @@ gameRows.push(new HomePageGameRow('home.favourites',
         "settings": {
             "isFavourite": true
         },
-        "limit": 10
+        "limit": 6
     }
 ));
 
@@ -131,7 +151,7 @@ gameRows.push(new HomePageGameRow('home.saved_games',
         "settings": {
             "hasSavedGame": true
         },
-        "limit": 10
+        "limit": 6
     }
 ));
 
@@ -140,7 +160,7 @@ gameRows.push(new HomePageGameRow('home.recently_played_games',
         "playTime": { "min": 1, "max": null },
         "orderBy": "LastPlayed",
         "orderDirection": "Descending",
-        "limit": 10
+        "limit": 6
     }
 ));
 
@@ -148,7 +168,7 @@ gameRows.push(new HomePageGameRow('home.recently_added_games',
     {
         "orderBy": "DateAdded",
         "orderDirection": "Descending",
-        "limit": 10
+        "limit": 6
     }
 ));
 
@@ -160,7 +180,7 @@ gameRows.push(new HomePageGameRow('home.top_rated_games',
             "min": 15,
             "max": null
         },
-        "limit": 10
+        "limit": 6
     }
 ));
 
@@ -184,10 +204,10 @@ populateRows();
 
 var coverURLList = [];
 
-let profileDiv = document.getElementById("gameprofile");
-profileDiv.innerHTML = "";
-let profileCardContent = new ProfileCard(userProfile.profileId, false);
-profileDiv.appendChild(profileCardContent);
+// let profileDiv = document.getElementById("gameprofile");
+// profileDiv.innerHTML = "";
+// let profileCardContent = new ProfileCard(userProfile.profileId, false);
+// profileDiv.appendChild(profileCardContent);
 
 // Register cleanup callback for home page
 if (typeof registerPageUnloadCallback === 'function') {

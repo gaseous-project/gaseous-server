@@ -1115,7 +1115,7 @@ async function BuildGameLaunchLink(gamePlatformObject) {
         filename = gamePlatformObject.romName;
     }
 
-    console.log(gamePlatformObject);
+    // console.log(gamePlatformObject);
     console.log('Validating launch link: Engine: ' + engine + ' Core: ' + core + ' PlatformId: ' + platformId + ' GameId: ' + gameId + ' RomId: ' + romId + ' IsMediaGroup: ' + isMediaGroup + ' Filename: ' + filename);
 
     let returnLink = null;

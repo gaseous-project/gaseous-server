@@ -23,6 +23,52 @@
 
 }
 
+@media screen and (max-width: 1100px) {
+
+    /* applies when the viewport is < 1101px */
+
+    #gamehome {
+        max-width: 800px;
+    }
+
+    .homegame-item-other>.game_tile_wide {
+        aspect-ratio: 9/16;
+        height: 283px;
+    }
+
+    .homegame-item-other>.game_tile_wide .game_tile_wide_cover {
+        left: 10px;
+        right: 10px;
+        top: 10px;
+        height: unset;
+        width: 138px;
+        display: inline-block;
+    }
+
+    .homegame-item-other>.game_tile_wide .game_tile_wide_title {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        bottom: 10px;
+        font-size: 12px;
+    }
+
+    .homegame-item-other>.game_tile_wide .game_tile_wide_banner {
+        height: 30px;
+        max-height: 30px;
+    }
+
+    .homegame-item-other>.game_tile_wide .game_tile_wide_banner.expanded {
+        height: 35px;
+        max-height: 35px;
+    }
+
+    .homegame-item-other>.game_tile_wide_platforms {
+        display: none;
+    }
+}
+
 @media screen and (max-width: 1024px) {
 
     /* applies when the viewport is < 1025px */
@@ -117,7 +163,7 @@
     }
 
     .card-screenshot-item {
-        width: 170px;
+        width: 49%;
     }
 
     .card-services-column {
@@ -357,19 +403,19 @@
     }
 
     #gamehome {
-        max-width: 820px;
+        max-width: 360px;
     }
 
     #gameprofile {
         display: none;
     }
 
-    #gamehome,
+    /* #gamehome,
     #rightcolumn {
         display: block;
         vertical-align: top;
         width: 100%;
-    }
+    } */
 
     #librarylink {
         display: block;

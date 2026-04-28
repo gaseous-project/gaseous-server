@@ -204,6 +204,13 @@ namespace gaseous_server.Classes
             {
                 File.Delete(MediaGroupZipPath);
             }
+
+            // delete any file system storage if present
+            string storagePath = Path.Combine(Config.LibraryConfiguration.LibraryFileSystemDirectory, "ROM Group", Id.ToString());
+            if (Directory.Exists(storagePath))
+            {
+                Directory.Delete(storagePath, true);
+            }
         }
 
         internal static async Task<GameRomMediaGroupItem> BuildMediaGroupFromRowAsync(DataRow row)

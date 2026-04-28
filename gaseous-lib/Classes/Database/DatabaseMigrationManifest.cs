@@ -127,6 +127,10 @@ namespace gaseous_server.Classes
                 // --- 1038: MetadataMap.SignatureGameNameThe column ---
                 new() { SchemaVersion = 1038, CheckName = "MetadataMap.SignatureGameNameThe exists",
                         Table = "MetadataMap", Column = new() { Name = "SignatureGameNameThe", TypeFamily = "varchar" } },
+
+                // --- 1039: Settings.Setting column becomes varchar(100) ---
+                new() { SchemaVersion = 1039, CheckName = "Settings.Setting is varchar",
+                        Table = "Settings", Column = new() { Name = "Setting", TypeFamily = "varchar" } }
             };
         }
 
