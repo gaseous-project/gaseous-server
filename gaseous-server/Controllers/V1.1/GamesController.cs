@@ -203,6 +203,12 @@ namespace gaseous_server.Controllers.v1_1
 
                 string basePath = fileSystemBasePath(user.Id, MetadataMapId, RomId, RomGroupId);
 
+                // early abort if the filePath contains any invalid characters or attempts to traverse up the directory structure
+                if (basePath.Contains("..") || basePath.Contains(":") || basePath.Contains("|") || basePath.Contains("?") || basePath.Contains("*") || basePath.Contains("\"") || basePath.Contains("<") || basePath.Contains(">"))
+                {
+                    return BadRequest("Invalid file path.");
+                }
+
                 if (Directory.Exists(basePath))
                 {
                     fileSystem = new Dictionary<string, Dictionary<string, string>>();
