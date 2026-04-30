@@ -270,8 +270,15 @@ namespace gaseous_server.Classes.Metadata
             // if we got here, we've had a problem getting the metadata
             // attempt to return cached metadata if available (regardless of expiration) to avoid returning null if the metadata is in the cache but there was an error refreshing it from the source
             // return null if no cached metadata is available
-            var response = await _GetMetadataAsync<T>(SourceType, Id, false);
-            return response;
+            if (ForceRefresh)
+            {
+                var response = await _GetMetadataAsync<T>(SourceType, Id, false);
+                return response;
+            }
+            else
+            {
+                return null;
+            }
         }
 
         private static async Task<Game?> _GetGameAsync(gaseous_server.Classes.Plugins.MetadataProviders.IMetadataProvider provider, long Id, bool ForceRefresh)
