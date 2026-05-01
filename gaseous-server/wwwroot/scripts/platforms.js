@@ -114,14 +114,29 @@ class BiosTable {
 
     async loadBios() {
         this.biosDict = {};
+
+        await fetch('/api/v1.1/PlatformMaps/', { method: 'GET', headers: { 'Content-Type': 'application/json' } }).then(async response => {
+            if (response.ok) {
+                const result = await response.json();
+                await result.sort((a, b) => a.igdbName.localeCompare(b.igdbName));
+                console.log(result);
+                result.forEach(item => {
+                    this.biosDict[item.igdbId] = {
+                        platformname: item.igdbName,
+                        platformid: item.igdbId,
+                        bios: []
+                    };
+                });
+            }
+        });
+
         await fetch('/api/v1.1/Bios', { method: 'GET', headers: { 'Content-Type': 'application/json' } }).then(async response => {
             if (response.ok) {
                 const result = await response.json();
-                result.sort((a, b) => a.platformname.localeCompare(b.platformname));
                 result.forEach(item => {
-                    const arr = this.biosDict[item.platformname] || [];
+                    const arr = this.biosDict[item.platformid].bios || [];
                     arr.push(item);
-                    this.biosDict[item.platformname] = arr;
+                    this.biosDict[item.platformid].bios = arr;
                 });
                 this.displayFirmwareList();
             }
@@ -132,19 +147,24 @@ class BiosTable {
         this.targetDiv.innerHTML = '';
         let totalAvailable = 0;
         let totalCount = 0;
+        let biosList = [];
         for (const [key, value] of Object.entries(this.biosDict)) {
+            biosList.push(value);
+        }
+        biosList.sort((a, b) => a.platformname.localeCompare(b.platformname));
+        for (const value of biosList) {
             const platformRow = document.createElement('div');
             platformRow.classList.add('section');
             const platformHeader = document.createElement('div');
             platformHeader.classList.add('section-header');
             const platformHeaderValue = document.createElement('span');
-            platformHeaderValue.innerHTML = key;
+            platformHeaderValue.innerHTML = value.platformname;
             platformHeader.appendChild(platformHeaderValue);
             const platformHeaderEdit = document.createElement('a');
             platformHeaderEdit.href = '#';
             platformHeaderEdit.style.float = 'right';
             platformHeaderEdit.addEventListener('click', () => {
-                const biosEditor = new BiosEditor(value[0].platformid, this.loadBios.bind(this));
+                const biosEditor = new BiosEditor(value.platformid, this.loadBios.bind(this));
                 biosEditor.OKCallback = this.loadBios.bind(this);
                 biosEditor.open();
             });
@@ -185,7 +205,7 @@ class BiosTable {
             let totalPlatformAvailable = 0;
             const showAvailable = this.showAvailableCheckbox.checked;
             const showUnavailable = this.showUnavailableCheckbox.checked;
-            value.forEach(item => {
+            value.bios.forEach(item => {
                 if (item.available) { totalAvailable++; totalPlatformAvailable++; }
                 if ((item.available && showAvailable) || (!item.available && showUnavailable)) {
                     let biosFilename = document.createElement(item.available ? 'a' : 'span');
@@ -224,12 +244,12 @@ class BiosTable {
                 }
                 totalCount++;
             });
-            platformHeaderCounter.innerHTML = window.lang ? window.lang.translate('platforms.firmware.platform_available_count', [totalPlatformAvailable, value.length]) : (totalPlatformAvailable + ' / ' + value.length + ' available');
+            platformHeaderCounter.innerHTML = window.lang ? window.lang.translate('platforms.firmware.platform_available_count', [totalPlatformAvailable, value.bios.length]) : (totalPlatformAvailable + ' / ' + value.bios.length + ' available');
             platformBody.append(newTable);
             platformRow.append(platformBody);
             this.targetDiv.append(platformRow);
         }
-        document.getElementById('firmware_totalcount').innerHTML = window.lang ? window.lang.translate('platforms.firmware.total_available_count', [totalAvailable, totalCount]) : (totalAvailable + ' / ' + totalCount + ' available');
+        // document.getElementById('firmware_totalcount').innerHTML = window.lang ? window.lang.translate('platforms.firmware.total_available_count', [totalAvailable, totalCount]) : (totalAvailable + ' / ' + totalCount + ' available');
     }
 }
 
