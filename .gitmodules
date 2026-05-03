@@ -4,3 +4,4 @@
 [submodule "gaseous-server/wwwroot/emulators/EmulatorJS"]
 	path = gaseous-server/wwwroot/emulators/EmulatorJS
 	url = https://github.com/EmulatorJS/EmulatorJS.git
+	branch = download-file-fixes
