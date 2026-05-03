@@ -246,6 +246,30 @@ namespace gaseous_server.Classes
         /// </summary>
         public static bool BackgroundTasksEnabled { get; set; } = false;
 
+        /// <summary>
+        /// The list of metadata search types to use when fetching metadata for games. This is read from the config file and can be overridden by setting the "MetadataMatch.SearchTypesToUse" setting in the config file or by setting the "metadatasearchtypes" environment variable (comma-separated list of search types) when running in a container. This allows for easy configuration of which search types to use for metadata fetching without needing to modify the code. The search types are defined in the Plugins.MetadataProviders.MetadataTypes.SearchType enum, and can include values such as "where", "wherefuzzy", and "search". This list is used in the metadata fetching process to determine which search methods to use when querying metadata sources for game information.
+        /// </summary>
+        public static List<Plugins.MetadataProviders.MetadataTypes.SearchType> MetadataSearchTypesToUse
+        {
+            get
+            {
+                List<Plugins.MetadataProviders.MetadataTypes.SearchType> defaultSearchTypes = new List<Plugins.MetadataProviders.MetadataTypes.SearchType>
+                {
+                    Plugins.MetadataProviders.MetadataTypes.SearchType.where,
+                    Plugins.MetadataProviders.MetadataTypes.SearchType.wherefuzzy
+                };
+                string jsonDefaultSearchTypes = JsonConvert.SerializeObject(defaultSearchTypes);
+
+                string dbValue = Config.ReadSetting<string>("MetadataMatch.SearchTypesToUse", jsonDefaultSearchTypes);
+                return JsonConvert.DeserializeObject<List<Plugins.MetadataProviders.MetadataTypes.SearchType>>(dbValue);
+            }
+            set
+            {
+                string jsonValue = JsonConvert.SerializeObject(value);
+                Config.SetSetting<string>("MetadataMatch.SearchTypesToUse", jsonValue);
+            }
+        }
+
         #endregion Configuration Accessors
 
         /// <summary>

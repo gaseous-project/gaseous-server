@@ -1,5 +1,6 @@
 using System.Reflection;
 using gaseous_server.Classes;
+using gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes;
 
 namespace gaseous_server.Models
 {
@@ -38,6 +39,19 @@ namespace gaseous_server.Models
         public bool AlwaysLogToDisk { get; set; }
         public int MinimumLogRetentionPeriod { get; set; }
         public bool EmulatorDebugMode { get; set; }
+        public List<SearchType> AvailableMetadataSearchTypes
+        {
+            get
+            {
+                return new List<SearchType>
+                {
+                    SearchType.where,
+                    SearchType.wherefuzzy,
+                    SearchType.search
+                };
+            }
+        }
+        public List<SearchType> EnabledMetadataSearchTypes { get; set; }
         public SignatureSourceItem SignatureSource { get; set; }
         public List<MetadataSourceItem> MetadataSources { get; set; }
 

@@ -3162,6 +3162,39 @@ class SettingsCard {
                         this.card.cardBody.querySelector('#settings_hasheousapikey').value = result.signatureSource.hasheousAPIKey;
                         this.#toggleHasheousAPIKey(hasheousSubmitCheck);
 
+                        if (result.enabledMetadataSearchTypes) {
+                            let searchTypeCheckboxes = this.card.cardBody.querySelectorAll('[name="datasources.metadata.searchtype"]');
+                            searchTypeCheckboxes.forEach(checkbox => {
+                                if (result.enabledMetadataSearchTypes.includes(checkbox.value)) {
+                                    checkbox.checked = 'checked';
+                                }
+
+                                checkbox.addEventListener('change', () => {
+                                    let enabledSearchTypes = [];
+                                    searchTypeCheckboxes.forEach(cb => {
+                                        if (cb.checked) {
+                                            enabledSearchTypes.push(cb.value);
+                                        }
+                                    });
+
+                                    let settingValueDict = {};
+                                    settingValueDict['metadataconfiguration.enabledmetadatasearchtypes'] = enabledSearchTypes;
+
+                                    fetch('/api/v1.1/System/Settings/System', {
+                                        method: 'PUT',
+                                        headers: {
+                                            'Content-Type': 'application/json'
+                                        },
+                                        body: JSON.stringify(settingValueDict)
+                                    }).then(response => response.json()).then(result => {
+                                        console.log('Enabled metadata search types updated:', result);
+                                    }).catch(error => {
+                                        console.error('Error updating enabled metadata search types:', error);
+                                    });
+                                });
+                            });
+                        }
+
                         break;
                 }
             })
