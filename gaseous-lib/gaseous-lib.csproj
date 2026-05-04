@@ -28,14 +28,14 @@
     <PackageReference Include="Asp.Versioning.Mvc" Version="10.0.0" />
     <PackageReference Include="Asp.Versioning.Mvc.ApiExplorer" Version="10.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.7" />
-    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.6" />
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.6" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="10.0.7" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="10.0.7" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="10.0.2" />
     <PackageReference Include="Microsoft.Build" Version="18.4.0" />
     <!-- Enable Windows Service hosting and EventLog logging when running on Windows -->
-    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.6" />
-    <PackageReference Include="Microsoft.Extensions.Logging.EventLog" Version="10.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Logging.EventLog" Version="10.0.7" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Controllers\" />
@@ -69,7 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="NuGet.Packaging" Version="7.3.1" />
-    <PackageReference Include="NuGet.Protocol" Version="6.12.5" />
+    <PackageReference Include="NuGet.Protocol" Version="7.3.1" />
     <EmbeddedResource Include="Support\PlatformMap.json" Condition="'$(ExcludeConfigFilesFromBuildOutput)'!='true'">
       <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
