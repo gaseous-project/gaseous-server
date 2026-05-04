@@ -420,16 +420,42 @@ namespace gaseous_server.Classes
                 {
                     // get the signature that matches this source
                     Signatures_Games.SourceValues.SourceValueItem? signatureSource = signature.MetadataSources.Games.Find(x => x.Source == source);
-                    if (signatureSource == null)
-                    {
-                        Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.no_source_found_for", null, new string[] { source.ToString() });
-                        continue;
-                    }
 
                     // get the metadata map for this source
                     map = MetadataManagement.NewMetadataMap((long)platform.Id, signature.Game.Name);
                     MetadataMap.MetadataMapItem? mapSource = map.MetadataMapItems.Find(x => x.SourceType == source);
-                    if (mapSource == null)
+                    if (signatureSource == null && mapSource != null)
+                    {
+                        // source exists in the map but not in the signature - remove it from the map if it's not marked as manual, otherwise set the automatic source id to null
+                        if (mapSource.IsManual == false)
+                        {
+                            sql = "UPDATE MetadataMapBridge SET MetadataSourceId=null, AutomaticMetadataSourceId=null, Preferred=0 WHERE ParentMapId=@id AND MetadataSourceType=@source;";
+                        }
+                        else
+                        {
+                            // source is marked as manual - only update the automatic source id
+                            sql = "UPDATE MetadataMapBridge SET AutomaticMetadataSourceId=null WHERE ParentMapId=@id AND MetadataSourceType=@source;";
+                        }
+                        dbDict.Clear();
+                        dbDict.Add("id", map.Id);
+                        dbDict.Add("source", source);
+                        await db.ExecuteCMDAsync(sql, dbDict);
+
+                        if (mapSource.Preferred == true)
+                        {
+                            // this was a preferred source - update the preferred source to none
+                            sql = "UPDATE MetadataMapBridge SET Preferred=1 WHERE ParentMapId=@id AND MetadataSourceType=@source;";
+                            dbDict.Clear();
+                            dbDict.Add("id", map.Id);
+                            dbDict.Add("source", MetadataSources.None);
+                            await db.ExecuteCMDAsync(sql, dbDict);
+                        }
+                        MetadataManagement.PurgeItemFromCache((long)map.Id);
+
+                        Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.no_source_found_for", null, new string[] { source.ToString() });
+                        continue;
+                    }
+                    else if (signatureSource != null && mapSource == null)
                     {
                         // add the source to the map
                         bool preferred = false;
@@ -438,6 +464,12 @@ namespace gaseous_server.Classes
                             preferred = true;
                         }
                         MetadataManagement.AddMetadataMapItem((long)map.Id, source, signatureSource.Id, preferred, false, signatureSource.Id);
+                    }
+                    else if (signatureSource == null && mapSource == null)
+                    {
+                        // source does not exist in the map or the signature - do nothing
+                        Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.no_source_found_for", null, new string[] { source.ToString() });
+                        continue;
                     }
                     else
                     {
@@ -570,12 +602,7 @@ namespace gaseous_server.Classes
 
             List<string> SearchCandidates = GetSearchCandidates(GameName);
 
-            List<SearchType> searchTypesToUse = new List<SearchType>
-            {
-                SearchType.where,
-                SearchType.wherefuzzy,
-                SearchType.search
-            };
+            List<SearchType> searchTypesToUse = Config.MetadataSearchTypesToUse;
 
             foreach (SearchType searchType in searchTypesToUse)
             {

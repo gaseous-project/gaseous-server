@@ -67,6 +67,11 @@ namespace gaseous_server.Classes
 
         private void SendStatusToReportingServer(Type type, string state, string progress)
         {
+            if (String.IsNullOrEmpty(CallContext.GetData("ReportingServerUrl")?.ToString()))
+            {
+                return;
+            }
+
             var outProcessData = CallContext.GetData("OutProcess");
             if (CallingQueueItem != null && outProcessData != null && bool.TryParse(outProcessData.ToString(), out bool isOutProcess) && isOutProcess)
             {

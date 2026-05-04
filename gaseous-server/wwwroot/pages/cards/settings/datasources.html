@@ -27,7 +27,7 @@
 </div>
 
 <div class="section">
-    <div class="section-header" data-i18n="datasources.default_metadata_source_header">Default Metadata Source</div>
+    <div class="section-header" data-i18n="datasources.default_metadata_source_header">Metadata Source</div>
     <div class="section-body" id="settings_metadata">
 
     </div>
@@ -69,3 +69,42 @@
         </table>
     </div>
 </div>
+
+<div class="section">
+    <div class="section-header" data-i18n="datasources.rom_identification_header">ROM Identification</div>
+    <div class="section-body">
+        <table style="width: 100%;">
+            <tr>
+                <td style="width: 30%;" data-i18n="datasources.rom_identification_method_label" colspan="2">
+                    Enabled search methods for ROMs not identified by signature, or with no matching metadata
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 30%;" data-i18n="datasources.rom_identification_searchtype.where">
+                    Exact name match
+                </td>
+                <td>
+                    <input type="checkbox" id="datasources.metadata.searchtype.where" value="where"
+                        name="datasources.metadata.searchtype">
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 30%;" data-i18n="datasources.rom_identification_searchtype.wherefuzzy">
+                    Name match - wildcard
+                </td>
+                <td>
+                    <input type="checkbox" id="datasources.metadata.searchtype.wherefuzzy" value="wherefuzzy"
+                        name="datasources.metadata.searchtype">
+                </td>
+            </tr>
+            <tr>
+                <td style="width: 30%;" data-i18n="datasources.rom_identification_searchtype.search">
+                    Search - Database full text search
+                </td>
+                <td>
+                    <input type="checkbox" id="datasources.metadata.searchtype.search" value="search"
+                        name="datasources.metadata.searchtype">
+                </td>
+            </tr>
+        </table>
+    </div>

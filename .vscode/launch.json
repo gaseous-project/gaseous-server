@@ -80,8 +80,6 @@
             "args": [
                 "--service",
                 "MetadataRefresh",
-                "--reportingserver",
-                "https://localhost:5197",
                 "--correlationid",
                 "00000000-0000-0000-0000-000000000000",
                 "--force"

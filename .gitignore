@@ -405,6 +405,6 @@ ASALocalRun/
 .localhistory/
 gaseous-server/.DS_Store
 gaseous-server/wwwroot/.DS_Store
-gaseous-server/wwwroot/emulators/EmulatorJS
+#gaseous-server/wwwroot/emulators/EmulatorJS
 .devcontainer/.env
 .mono/
