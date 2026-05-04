@@ -60,70 +60,91 @@ class HomePageGameRow {
 
         let gameFilter = new Filtering();
         gameFilter.GetSummary = false;
-        gameFilter.executeCallback = async (games) => {
-            if (this.loadingInterval) {
-                clearInterval(this.loadingInterval);
-                this.loadingInterval = null;
-            }
 
-            const gamesSignature = JSON.stringify(games);
-            if (gamesSignature === this.lastRenderedGamesSignature) {
-                return;
-            }
+        return await new Promise((resolve) => {
+            let didResolve = false;
+            const finish = (displayedCount) => {
+                if (!didResolve) {
+                    didResolve = true;
+                    resolve(displayedCount);
+                }
+            };
 
-            this.lastRenderedGamesSignature = gamesSignature;
-            this.games.innerHTML = "";
+            gameFilter.executeCallback = async (games) => {
+                this.responseCounter = games.length;
 
-            if (games.length === 0) {
-                this.row.style.display = "none";
-                this.games.innerHTML = '<p>' + window.lang.translate('home.no_games_found') + '</p>';
-            } else {
-                this.row.style.display = "block";
-                this.games.classList.remove("section-body");
-                let scroller = document.createElement("ul");
-                scroller.classList.add("homegame-scroller");
+                if (this.loadingInterval) {
+                    clearInterval(this.loadingInterval);
+                    this.loadingInterval = null;
+                }
 
-                let counter = 0;
-                for (const game of games) {
-                    counter++;
-                    let gameItem = document.createElement("li");
-                    gameItem.classList.add("homegame-item");
-                    if (counter === 1) {
-                        gameItem.classList.add("homegame-item-first");
-                    } else if (counter === 2) {
-                        gameItem.classList.add("homegame-item-second");
-                    } else {
-                        gameItem.classList.add("homegame-item-other");
-                    }
+                const gamesSignature = JSON.stringify(games);
+                if (gamesSignature === this.lastRenderedGamesSignature) {
+                    finish(this.getDisplayedGameCount());
+                    return;
+                }
 
-                    let gameObj = new WideGameIcon(game);
-                    let gameTile = await gameObj.Render(showTitle, showRatings, showClassification, classificationDisplayOrder, false, true);
-                    gameItem.appendChild(gameTile);
+                this.lastRenderedGamesSignature = gamesSignature;
+                this.games.innerHTML = "";
 
-                    scroller.appendChild(gameItem);
+                if (games.length === 0) {
+                    this.row.style.display = "none";
+                    this.games.innerHTML = '<p>' + window.lang.translate('home.no_games_found') + '</p>';
+                } else {
+                    this.row.style.display = "block";
+                    this.games.classList.remove("section-body");
+                    let scroller = document.createElement("ul");
+                    scroller.classList.add("homegame-scroller");
 
-                    if (game.cover) {
-                        let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg';
-                        if (backgroundImageHandler === undefined || (backgroundImageHandler && backgroundImageHandler.URLList && backgroundImageHandler.URLList.length === 1)) {
-                            let urls = [];
-                            urls.push(coverUrl);
-                            if (backgroundImageHandler !== undefined && backgroundImageHandler.URLList) {
-                                urls.push(backgroundImageHandler.URLList[0]);
-                            }
-                            console.log(window.lang.translate('console.creating_background_image_rotator'));
-                            backgroundImageHandler = new BackgroundImageRotator(urls, null, true, true);
+                    let counter = 0;
+                    for (const game of games) {
+                        counter++;
+                        let gameItem = document.createElement("li");
+                        gameItem.classList.add("homegame-item");
+                        if (counter === 1) {
+                            gameItem.classList.add("homegame-item-first");
+                        } else if (counter === 2) {
+                            gameItem.classList.add("homegame-item-second");
                         } else {
-                            if (backgroundImageHandler && backgroundImageHandler.URLList && !backgroundImageHandler.URLList.includes(coverUrl)) {
-                                backgroundImageHandler.URLList.push(coverUrl);
+                            gameItem.classList.add("homegame-item-other");
+                        }
+
+                        let gameObj = new WideGameIcon(game);
+                        let gameTile = await gameObj.Render(showTitle, showRatings, showClassification, classificationDisplayOrder, false, true);
+                        gameItem.appendChild(gameTile);
+
+                        scroller.appendChild(gameItem);
+
+                        if (game.cover) {
+                            let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg';
+                            if (backgroundImageHandler === undefined || (backgroundImageHandler && backgroundImageHandler.URLList && backgroundImageHandler.URLList.length === 1)) {
+                                let urls = [];
+                                urls.push(coverUrl);
+                                if (backgroundImageHandler !== undefined && backgroundImageHandler.URLList) {
+                                    urls.push(backgroundImageHandler.URLList[0]);
+                                }
+                                console.log(window.lang.translate('console.creating_background_image_rotator'));
+                                backgroundImageHandler = new BackgroundImageRotator(urls, null, true, true);
+                            } else {
+                                if (backgroundImageHandler && backgroundImageHandler.URLList && !backgroundImageHandler.URLList.includes(coverUrl)) {
+                                    backgroundImageHandler.URLList.push(coverUrl);
+                                }
                             }
                         }
                     }
+
+                    this.games.appendChild(scroller);
                 }
 
-                this.games.appendChild(scroller);
+                finish(this.getDisplayedGameCount());
             }
-        }
-        gameFilter.ApplyFilter(this.searchModel);
+
+            gameFilter.ApplyFilter(this.searchModel);
+        });
+    }
+
+    getDisplayedGameCount() {
+        return this.games.querySelectorAll(".homegame-item").length;
     }
 }
 
@@ -188,15 +209,56 @@ async function loadHomePage() {
     targetDiv.innerHTML = "";
     for (let row of gameRows) {
         targetDiv.appendChild(row.row);
-        await row.populate();
+    }
+}
+
+function showNoGamesMessage(show) {
+    let noGamesMessage = document.getElementById("no-games-message");
+    if (show === true) {
+        if (!noGamesMessage) {
+            noGamesMessage = document.createElement("div");
+            noGamesMessage.id = "no-games-message";
+            noGamesMessage.classList.add("section");
+            noGamesMessage.classList.add("section-header");
+
+            let noGamesTitle = document.createElement("div");
+            noGamesTitle.textContent = window.lang.translate('home.no_games_found');
+            noGamesTitle.setAttribute("data-i18n", 'home.no_games_found');
+            noGamesMessage.appendChild(noGamesTitle);
+
+            let noGamesIcon = document.createElement("img");
+            noGamesIcon.src = "/images/upload.svg";
+            noGamesIcon.alt = window.lang.translate('banner.upload');
+            noGamesIcon.classList.add("banner_button_image");
+            noGamesIcon.classList.add("no-games-icon");
+            noGamesMessage.appendChild(noGamesIcon);
+
+            let noGamesText = document.createElement("div");
+            noGamesText.textContent = window.lang.translate('home.click_upload_to_add_games');
+            noGamesText.setAttribute("data-i18n", 'home.click_upload_to_add_games');
+            noGamesMessage.appendChild(noGamesText);
+
+            noGamesMessage.addEventListener("click", () => {
+                uploadDialog.open();
+            });
+
+            targetDiv.appendChild(noGamesMessage);
+        }
+    } else {
+        if (noGamesMessage) {
+            noGamesMessage.remove();
+        }
     }
 }
 
 async function populateRows() {
     // start populating the rows
+    let displayedGameCount = 0;
     for (let row of gameRows) {
-        await row.populate();
+        displayedGameCount += await row.populate();
     }
+
+    showNoGamesMessage(displayedGameCount === 0);
 }
 
 loadHomePage();

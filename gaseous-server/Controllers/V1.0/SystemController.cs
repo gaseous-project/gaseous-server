@@ -333,7 +333,8 @@ ORDER BY Platform.`Name`; ";
                     new SystemSettingsModel.MetadataSourceItem(FileSignature.MetadataSources.None, false, "", "", Config.MetadataConfiguration.DefaultMetadataSource),
                     new SystemSettingsModel.MetadataSourceItem(FileSignature.MetadataSources.IGDB, Config.IGDB.UseHasheousProxy, Config.IGDB.ClientId, Config.IGDB.Secret, Config.MetadataConfiguration.DefaultMetadataSource),
                     new SystemSettingsModel.MetadataSourceItem(FileSignature.MetadataSources.TheGamesDb, true, "", "", Config.MetadataConfiguration.DefaultMetadataSource)
-                }
+                },
+                EnabledMetadataSearchTypes = Config.MetadataSearchTypesToUse
             };
 
             return Ok(systemSettingsModel);
@@ -356,6 +357,7 @@ ORDER BY Platform.`Name`; ";
                 Config.MetadataConfiguration.HasheousHost = model.SignatureSource.HasheousHost;
                 Config.MetadataConfiguration.HasheousAPIKey = model.SignatureSource.HasheousAPIKey;
                 Config.MetadataConfiguration.HasheousSubmitFixes = model.SignatureSource.HasheousSubmitFixes;
+                Config.MetadataSearchTypesToUse = model.EnabledMetadataSearchTypes;
 
                 // reset the default metadata source to none
                 Config.MetadataConfiguration.DefaultMetadataSource = FileSignature.MetadataSources.None;
@@ -440,6 +442,18 @@ ORDER BY Platform.`Name`; ";
 
                         case "metadataconfiguration.defaultmetadatasource":
                             Config.MetadataConfiguration.DefaultMetadataSource = (FileSignature.MetadataSources)Enum.Parse(typeof(FileSignature.MetadataSources), strValue);
+                            break;
+
+                        case "metadataconfiguration.enabledmetadatasearchtypes":
+                            List<Classes.Plugins.MetadataProviders.MetadataTypes.SearchType> enabledSearchTypes = new List<Classes.Plugins.MetadataProviders.MetadataTypes.SearchType>();
+                            foreach (string searchTypeStr in JsonSerializer.Deserialize<List<string>>(strValue))
+                            {
+                                if (Enum.TryParse(searchTypeStr, out Classes.Plugins.MetadataProviders.MetadataTypes.SearchType searchType))
+                                {
+                                    enabledSearchTypes.Add(searchType);
+                                }
+                            }
+                            Config.MetadataSearchTypesToUse = enabledSearchTypes;
                             break;
 
                         case "igdb.usehasheousproxy":

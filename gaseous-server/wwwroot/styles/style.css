@@ -1,6 +1,7 @@
 ﻿/* page styles */
 
 body {
+    margin: 0px;
     background-color: #383838;
     color: var(--page-font-colour);
     font-family: var(--standard-font);
@@ -480,6 +481,9 @@ h1 {
     padding-top: 5px;
     padding-left: 0px;
     padding-right: 0px;
+    box-sizing: border-box;
+    min-height: calc(100vh - 35px);
+    min-height: calc(100dvh - 35px);
     z-index: -100;
 }
 
@@ -4853,4 +4857,27 @@ button:not(.select2-selection__choice__remove):not(.select2-selection__clear):no
     /* border-color: var(--input-border-hover); */
     background-color: var(--fancybutton-background-hover);
     backdrop-filter: blur(2px);
+}
+
+#no-games-message {
+    border-style: solid;
+    border-width: 1px;
+    border-radius: var(--standard-radius);
+    border-color: var(--section-header-background);
+    padding: 20px;
+    text-align: center;
+    margin: auto;
+    font-family: var(--pixel-font);
+    font-size: 18px;
+}
+
+#no-games-message:hover {
+    cursor: pointer;
+}
+
+.no-games-icon {
+    margin-top: 10px;
+    width: 50px;
+    height: 50px;
+    margin-bottom: 10px;
 }

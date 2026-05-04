@@ -1120,7 +1120,7 @@ FROM
                     DataRow row = dbResponse.Rows[i];
                     Game retGame = Storage.BuildCacheObject<Game>(new Game(), row);
                     retGame.MetadataMapId = (long)row["MetadataMapId"];
-                    retGame.SourceType = (FileSignature.MetadataSources)row["GameIdType"];
+                    retGame.SourceType = row["GameIdType"] == DBNull.Value ? FileSignature.MetadataSources.None : (FileSignature.MetadataSources)row["GameIdType"];
 
                     Games.MinimalGameItem retMinGame = new Games.MinimalGameItem(retGame);
                     retMinGame.Index = indexInPage++;

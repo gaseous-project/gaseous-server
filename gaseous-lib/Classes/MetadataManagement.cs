@@ -299,7 +299,11 @@ namespace gaseous_server.Classes
 			// clear the cache for this metadata map if present (covers non-preferred updates)
 			DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
 			RefreshNotificationSignal.MarkMetadataChanged();
+		}
 
+		public static void PurgeItemFromCache(long metadataMapId)
+		{
+			DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
 		}
 
 		/// <summary>
@@ -368,7 +372,15 @@ namespace gaseous_server.Classes
 			MetadataMap? cachedMetadataMap = (MetadataMap?)DatabaseMemoryCache.GetCacheObject("MetadataMap_" + metadataMapId.ToString());
 			if (cachedMetadataMap != null)
 			{
-				return cachedMetadataMap;
+				if (await ValidateMetadataMap(cachedMetadataMap) == false)
+				{
+					// if the cached metadata map is invalid, remove it from the cache and continue to fetch a valid one from the database
+					DatabaseMemoryCache.RemoveCacheObject("MetadataMap_" + metadataMapId.ToString());
+				}
+				else
+				{
+					return cachedMetadataMap;
+				}
 			}
 
 			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
@@ -413,6 +425,27 @@ namespace gaseous_server.Classes
 					throw new Exception("Metadata map has no metadata map items.");
 				}
 
+				// verify there is only one preferred item
+				int preferredCount = metadataMap.MetadataMapItems.Count(x => x.Preferred);
+				if (preferredCount < 1 || preferredCount > 1)
+				{
+					// something is broken here - lets fix it!
+					// set and save the preferred item to the first non-null source id, or the none source if all source ids are null
+					FileSignature.MetadataSources preferredSourceType = FileSignature.MetadataSources.None;
+					foreach (var item in metadataMap.MetadataMapItems)
+					{
+						if (item.SourceType != FileSignature.MetadataSources.None)
+						{
+							if (item.SourceId != null)
+							{
+								preferredSourceType = item.SourceType;
+								break;
+							}
+						}
+					}
+					UpdateMetadataMapItem(metadataMap.Id, preferredSourceType, null, true, null, null);
+				}
+
 				// add to cache
 				DatabaseMemoryCache.SetCacheObject("MetadataMap_" + metadataMapId.ToString(), metadataMap, 3600);
 
@@ -420,6 +453,24 @@ namespace gaseous_server.Classes
 			}
 
 			return null;
+		}
+
+		private static async Task<bool> ValidateMetadataMap(MetadataMap metadataMap)
+		{
+			// check that the metadata map has at least the none source type
+			if (metadataMap.MetadataMapItems == null || metadataMap.MetadataMapItems.Count == 0 || !metadataMap.MetadataMapItems.Any(x => x.SourceType == FileSignature.MetadataSources.None))
+			{
+				return false;
+			}
+
+			// check that there is only one preferred item
+			int preferredCount = metadataMap.MetadataMapItems.Count(x => x.Preferred);
+			if (preferredCount < 1 || preferredCount > 1)
+			{
+				return false;
+			}
+
+			return true;
 		}
 
 		/// <summary>
@@ -780,6 +831,30 @@ namespace gaseous_server.Classes
 
 				// update the signature in the database
 				Platform? signaturePlatform = await Metadata.Platforms.GetPlatform((long)signature.Flags.PlatformId);
+				long originalPlatformId = dr["PlatformId"] != DBNull.Value ? (long)dr["PlatformId"] : 0;
+				// if the signaturePlatform id is 0, check to see if the item already has a platform id and use that. We should only ever change the platform id automatically if it's currently 0, as 0 is our placeholder for unknown platform and we don't want to overwrite a valid platform with unknown.
+				if (originalPlatformId != 0 && signaturePlatform != null && signaturePlatform.Id == 0)
+				{
+					signaturePlatform = await Metadata.Platforms.GetPlatform(originalPlatformId);
+					if (signaturePlatform != null)
+					{
+						if (signature.MetadataSources.Platforms.Count == 0)
+						{
+							signature.MetadataSources.AddPlatform((long)signaturePlatform.Id, signaturePlatform.Name, FileSignature.MetadataSources.None);
+						}
+						else
+						{
+							foreach (var platformSource in signature.MetadataSources.Platforms)
+							{
+								if (platformSource.Id == 0)
+								{
+									platformSource.Id = (long)signaturePlatform.Id;
+									platformSource.Name = signaturePlatform.Name;
+								}
+							}
+						}
+					}
+				}
 				if (signature.Flags.GameId == 0)
 				{
 					HasheousClient.Models.Metadata.IGDB.Game? discoveredGame = await ImportGame.SearchForGame(signature, signature.Flags.PlatformId, false);
