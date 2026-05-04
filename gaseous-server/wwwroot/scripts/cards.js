@@ -2255,9 +2255,10 @@ class GameCardRomList {
 
                     let contentTableIdCellInput = document.createElement('td');
                     let contentInput = document.createElement('input');
+                    let elementValue = element.sourceId ? element.sourceId : '';
                     contentInput.type = 'text';
-                    contentInput.value = element.sourceId;
-                    contentInput.placeholder = element.sourceId;
+                    contentInput.value = elementValue;
+                    contentInput.placeholder = elementValue;
                     contentInput.style.width = '95%';
                     contentTableIdCellInput.appendChild(contentInput);
 
