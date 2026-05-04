@@ -2,8 +2,8 @@ function setupBanner() {
     // translation helper (waits for global language instance if present)
     const t = (key) => {
         try {
-            if (globalThis.language && typeof globalThis.language.translate === 'function') {
-                return globalThis.language.translate(key);
+            if (window.lang && typeof window.lang.translate === 'function') {
+                return window.lang.translate(key);
             }
         } catch { }
         return key; // fallback to key if language not ready
@@ -120,8 +120,8 @@ function setupBanner() {
                     if (showDatabaseUpgradeNotification) {
                         // we had a change in the notification, show the notification and then store the new notification in localStorage
                         notificationManager.showNotification(
-                            t('banner.notification.database_upgrade.title'),
-                            t('banner.notification.database_upgrade.body'),
+                            window.lang.translate('banner.notification.database_upgrade.title'),
+                            window.lang.translate('banner.notification.database_upgrade.body'),
                             undefined,
                             undefined,
                             undefined,
