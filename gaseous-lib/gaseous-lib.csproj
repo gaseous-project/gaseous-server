@@ -34,8 +34,8 @@
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="10.0.2" />
     <PackageReference Include="Microsoft.Build" Version="18.4.0" />
     <!-- Enable Windows Service hosting and EventLog logging when running on Windows -->
-    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.6" />
-    <PackageReference Include="Microsoft.Extensions.Logging.EventLog" Version="10.0.6" />
+    <PackageReference Include="Microsoft.Extensions.Hosting.WindowsServices" Version="10.0.7" />
+    <PackageReference Include="Microsoft.Extensions.Logging.EventLog" Version="10.0.7" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Controllers\" />
