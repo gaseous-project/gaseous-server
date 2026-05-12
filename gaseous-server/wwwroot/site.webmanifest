@@ -3,17 +3,20 @@
         {
             "src": "/android-chrome-192x192.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
         },
         {
             "src": "/android-chrome-512x512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
         }
     ],
     "theme_color": "#2b2b2b",
     "background_color": "#2b2b2b",
     "display": "standalone",
+    "orientation": "any",
     "name": "Gaseous",
     "short_name": "Gaseous",
     "id": "gaseousgames",
@@ -29,10 +32,14 @@
     "categories": [
         "games"
     ],
+    "launch_handler": {
+        "client_mode": "focus-existing"
+    },
+    "prefer_related_applications": false,
     "screenshots": [
         {
             "src": "/screenshots/Library.png",
-            "sizes": "3456x2000",
+            "sizes": "3456x1868",
             "type": "image/png",
             "description": "Gaseous game library"
         },
@@ -47,6 +54,16 @@
             "sizes": "3456x2000",
             "type": "image/png",
             "description": "Web based emulator"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Home",
+            "url": "/index.html?page=home"
+        },
+        {
+            "name": "Library",
+            "url": "/index.html?page=library"
         }
     ]
 }

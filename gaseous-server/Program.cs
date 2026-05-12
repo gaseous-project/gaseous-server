@@ -465,6 +465,27 @@ app.UseStaticFiles(new StaticFileOptions
     }
 });
 
+app.MapGet("/pwa-file-list.json", (IWebHostEnvironment env) =>
+{
+    var webRootPath = env.WebRootPath;
+    if (string.IsNullOrWhiteSpace(webRootPath) || !Directory.Exists(webRootPath))
+    {
+        return Results.Json(Array.Empty<string>());
+    }
+
+    var fileList = Directory
+        .EnumerateFiles(webRootPath, "*", SearchOption.AllDirectories)
+        .Select(path =>
+        {
+            var relativePath = Path.GetRelativePath(webRootPath, path).Replace('\\', '/');
+            return "/" + relativePath;
+        })
+        .OrderBy(path => path)
+        .ToArray();
+
+    return Results.Json(fileList);
+});
+
 app.MapControllers();
 
 app.Use(async (context, next) =>
