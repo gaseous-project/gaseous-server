@@ -766,6 +766,22 @@ namespace gaseous_server.Classes
 				GameLibrary.LibraryItem library = await GameLibrary.GetLibrary((int)dr["LibraryId"]);
 				FileHash fileHash;
 
+				if (dr["DateHashed"] == DBNull.Value)
+				{
+					forceRefresh = true;
+					Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.date_hashed_is_null_for_rom_forcing_hash_refresh", null, new string[] { dr["Name"].ToString() });
+				}
+				else
+				{
+					// DateHashed is not null, but check if it's older than 90 days. If it is, set forceRefresh to true to recalculate the hash.
+					DateTime dateHashed = (DateTime)dr["DateHashed"];
+					if (dateHashed < DateTime.UtcNow.AddDays(-90))
+					{
+						forceRefresh = true;
+						Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.date_hashed_is_older_than_90_days_for_rom_forcing_hash_refresh", null, new string[] { dr["Name"].ToString() });
+					}
+				}
+
 				if (!forceRefresh)
 				{
 					// get the hash of the ROM from the datarow
@@ -817,6 +833,15 @@ namespace gaseous_server.Classes
 					// if forceRefresh is true, recalculate the hash of the ROM and ignore the hash values in the datarow
 					Logging.LogKey(Logging.LogType.Information, "process.metadata_refresh", "metadatarefresh.force_refresh_recalculated_hashes_for_rom", null, new string[] { dr["Name"].ToString() });
 					fileHash = await FileSignature.GetFileHashesAsync(library, dr["Path"].ToString());
+
+					// update the DateHashed column in the database for this ROM
+					string sql = "UPDATE Games_Roms SET DateHashed = @DateHashed WHERE Id = @romId;";
+					Dictionary<string, object> dbDict = new Dictionary<string, object>()
+					{
+						{ "@DateHashed", DateTime.UtcNow },
+						{ "@romId", (long)dr["Id"] }
+					};
+					await db.ExecuteCMDAsync(sql, dbDict);
 				}
 				var (_, signature) = await fileSignature.GetFileSignatureAsync(library, fileHash);
 
