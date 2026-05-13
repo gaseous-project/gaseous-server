@@ -100,6 +100,45 @@ function formatBytes(bytes, decimals = 2) {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
 
+function formatDateTimeForDisplay(value) {
+    if (!value) {
+        return '';
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    let hours = date.getHours();
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    const period = hours >= 12 ? 'pm' : 'am';
+
+    hours = hours % 12;
+    if (hours === 0) {
+        hours = 12;
+    }
+
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds} ${period}`;
+}
+
+function formatYearForDisplay(value) {
+    if (!value) {
+        return '';
+    }
+
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return '';
+    }
+
+    return String(date.getFullYear());
+}
+
 function showDialog(dialogPage, variables) {
     // Get the modal
     var modal = document.getElementById("myModal");
@@ -257,7 +296,7 @@ function DropDownRenderGameOption(state) {
 
     let releaseDate;
     if (state.releaseDate) {
-        releaseDate = moment(state.releaseDate).format('yyyy');
+        releaseDate = formatYearForDisplay(state.releaseDate);
     } else {
         releaseDate = '';
     }

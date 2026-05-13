@@ -265,7 +265,7 @@ class GameCard {
             let randomIndex = Math.floor(Math.random() * this.gameData.artworks.length);
             let artwork = this.gameData.artworks[randomIndex];
             // let artwork = this.gameData.artworks[0];
-            let artworkUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/artwork/${artwork}/image/original/${artwork}.jpg`;
+            let artworkUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/artwork/${artwork}/image/screenshot_small/${artwork}.jpg`;
             this.card.SetBackgroundImage(artworkUrl, true, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
@@ -276,7 +276,7 @@ class GameCard {
             // randomly select a screenshot to display
             let randomIndex = Math.floor(Math.random() * this.gameData.screenshots.length);
             let screenshot = this.gameData.screenshots[randomIndex];
-            let screenshotUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/screenshot/${screenshot}/image/original/${screenshot}.jpg`;
+            let screenshotUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/screenshot/${screenshot}/image/screenshot_small/${screenshot}.jpg`;
             this.card.SetBackgroundImage(screenshotUrl, true, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
@@ -284,7 +284,7 @@ class GameCard {
                 }
             });
         } else if (this.gameData.cover) {
-            let coverUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/cover/${this.gameData.cover}/image/original/${this.gameData.cover}.jpg`;
+            let coverUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/cover/${this.gameData.cover}/image/cover_big/${this.gameData.cover}.jpg`;
             this.card.SetBackgroundImage(coverUrl, true, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
@@ -3439,11 +3439,11 @@ class SettingsCard {
                                 break;
 
                             case 'lastRunTime':
-                                cell.innerHTML = moment(task.lastRunTime).format("YYYY-MM-DD h:mm:ss a");
+                                cell.innerHTML = formatDateTimeForDisplay(task.lastRunTime);
                                 break;
 
                             case 'nextRunTime':
-                                cell.innerHTML = moment(task.nextRunTime).format("YYYY-MM-DD h:mm:ss a");
+                                cell.innerHTML = formatDateTimeForDisplay(task.nextRunTime);
                                 break;
 
                             case 'correlationId':

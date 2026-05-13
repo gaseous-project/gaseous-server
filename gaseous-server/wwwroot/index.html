@@ -8,9 +8,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Gaseous">
     <script type="text/javascript" src="/scripts/jquery-3.6.0.min.js"></script>
-    <script type="text/javascript" src="/scripts/jquery.lazy.min.js"></script>
-    <script type="text/javascript" src="/scripts/jquery.lazy.plugins.min.js"></script>
-    <script type="text/javascript" src="/scripts/moment-with-locales.min.js"></script>
+    <!-- <script type="text/javascript" src="/scripts/jquery.lazy.min.js"></script> -->
+    <!-- <script type="text/javascript" src="/scripts/jquery.lazy.plugins.min.js"></script> -->
     <script type="text/javascript" src="/scripts/select2.min.js"></script>
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
@@ -388,8 +387,6 @@
                         const { default: Language } = await import('/scripts/language.js?v=' + AppVersion);
                         window.lang = new Language();
                         await window.lang.Init(false);
-                        moment.locale(window.lang.locale);
-
                         // Initial translation pass and dynamic observer
                         window.lang.translateAllElements();
                         window.lang._observer = window.lang.observeDynamicContent();
