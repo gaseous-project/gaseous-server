@@ -963,7 +963,13 @@ namespace gaseous_server.Classes
                 Directory.CreateDirectory(DestinationPath);
             }
 
-            string DestinationPathName = Path.Combine(DestinationPath, rom.Name);
+            string safeRomName = Path.GetFileName(rom.Name);
+            if (string.IsNullOrWhiteSpace(safeRomName))
+            {
+                safeRomName = "Unknown.rom";
+            }
+
+            string DestinationPathName = Path.Combine(DestinationPath, safeRomName);
 
             return DestinationPathName;
         }
@@ -1004,6 +1010,12 @@ namespace gaseous_server.Classes
                     }
                     else
                     {
+                        string? destinationDirectory = Path.GetDirectoryName(DestinationPath);
+                        if (!string.IsNullOrWhiteSpace(destinationDirectory) && !Directory.Exists(destinationDirectory))
+                        {
+                            Directory.CreateDirectory(destinationDirectory);
+                        }
+
                         File.Move(romPath, DestinationPath);
 
                         // update the db

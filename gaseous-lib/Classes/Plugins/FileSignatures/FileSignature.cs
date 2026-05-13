@@ -173,7 +173,8 @@ namespace gaseous_server.Classes
                     if (!signatureFound)
                     {
                         gaseous_server.Models.Signatures_Games zDiscoveredSignature = await _GetFileSignatureAsync(zhash, file.FileName, Path.GetExtension(file.FileName), file.Size, file.FilePath, true);
-                        zDiscoveredSignature.Rom.Name = Path.ChangeExtension(zDiscoveredSignature.Rom.Name, ImportedFileExtension);
+                        // zDiscoveredSignature.Rom.Name = Path.ChangeExtension(Path.GetFileName(zDiscoveredSignature.Rom.Name), ImportedFileExtension);
+                        zDiscoveredSignature.Rom.Name = Path.GetFileName(fileHash.FullFilePath);
 
                         if (zDiscoveredSignature.Score > discoveredSignature.Score)
                         {
