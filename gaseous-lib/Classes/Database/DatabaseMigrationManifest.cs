@@ -130,7 +130,11 @@ namespace gaseous_server.Classes
 
                 // --- 1039: Settings.Setting column becomes varchar(100) ---
                 new() { SchemaVersion = 1039, CheckName = "Settings.Setting is varchar",
-                        Table = "Settings", Column = new() { Name = "Setting", TypeFamily = "varchar" } }
+                        Table = "Settings", Column = new() { Name = "Setting", TypeFamily = "varchar" } },
+
+                // --- 1040: Games_Roms.DateHashed column ---
+                new() { SchemaVersion = 1040, CheckName = "Games_Roms.DateHashed column exists",
+                        Table = "Games_Roms", Column = new() { Name = "DateHashed", TypeFamily = "datetime" } }
             };
         }
 
