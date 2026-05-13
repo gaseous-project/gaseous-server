@@ -906,6 +906,11 @@ class BackgroundImageRotator {
         // get the current background image
         let currentImage = this.bgImages.querySelector('#bgImage' + this.CurrentIndex);
 
+        // prune the URLList to keep only the most recent 10 images to prevent memory leaks
+        if (this.URLList.length > 10) {
+            this.URLList = this.URLList.slice(this.URLList.length - 10);
+        }
+
         // increment the index
         this.CurrentIndex += 1;
         if (this.CurrentIndex >= this.URLList.length) {

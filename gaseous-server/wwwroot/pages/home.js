@@ -116,7 +116,7 @@ class HomePageGameRow {
                         scroller.appendChild(gameItem);
 
                         if (game.cover) {
-                            let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg';
+                            let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/cover_big/' + game.cover + '.jpg';
                             if (backgroundImageHandler === undefined || (backgroundImageHandler && backgroundImageHandler.URLList && backgroundImageHandler.URLList.length === 1)) {
                                 let urls = [];
                                 urls.push(coverUrl);

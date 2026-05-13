@@ -15,7 +15,7 @@ filter.GetSummary = false;
 const libraryState = {
     activeControllers: new Map(),
     currentPageSize: 20,
-    fetchOverscanPages: 2,
+    fetchOverscanPages: 1,
     hasLoadedAtLeastOnce: false,
     layout: {
         columns: 1,
@@ -33,7 +33,7 @@ const libraryState = {
     queryGeneration: 0,
     renderedTiles: new Map(),
     resizeHandler: null,
-    retainOverscanPages: 5,
+    retainOverscanPages: 2,
     scrollDebounceMs: 220,
     scrollHandler: null
 };
@@ -233,7 +233,7 @@ function addCoverUrl(game) {
         return;
     }
 
-    const coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg';
+    const coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/cover_small/' + game.cover + '.jpg';
     if (coverURLSet.has(coverUrl)) {
         return;
     }
@@ -380,7 +380,7 @@ async function renderPage(pageNumber, games, replaceExistingDom = false) {
     libraryState.pageTileIndexes.set(pageNumber, pageTileIndexes);
 
     hideLoadingIndicator();
-    ensureBackgroundRotator();
+    // ensureBackgroundRotator();
 }
 
 /**
