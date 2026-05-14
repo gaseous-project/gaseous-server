@@ -17,6 +17,7 @@ var emuBackground = '';
 
 // statistics
 var SessionId = undefined;
+let statisticsTimer = null;
 
 async function SetupPage() {
     if (IsMediaGroupInt == 1) { IsMediaGroup = true; }
@@ -67,8 +68,27 @@ async function SetupPage() {
         emuBios = '';
     }
 
-    setInterval(SaveStatistics, 60000);
+    if (statisticsTimer) {
+        clearInterval(statisticsTimer);
+    }
+    statisticsTimer = setInterval(SaveStatistics, 60000);
 }
+
+function cleanupEmulatorPage() {
+    if (statisticsTimer) {
+        clearInterval(statisticsTimer);
+        statisticsTimer = null;
+    }
+}
+
+if (typeof registerPageUnloadCallback === 'function') {
+    registerPageUnloadCallback('emulator', async () => {
+        cleanupEmulatorPage();
+    });
+}
+
+globalThis.addEventListener('pagehide', cleanupEmulatorPage);
+globalThis.addEventListener('beforeunload', cleanupEmulatorPage);
 
 function rotateBackground() {
     if (artworks) {

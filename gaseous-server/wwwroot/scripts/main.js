@@ -304,6 +304,10 @@ async function ensureUploadScriptLoaded() {
 
 async function openAccountDialog() {
     await ensureAccountScriptLoaded();
+    if (typeof AccountWindow !== 'function') {
+        console.error('AccountWindow is unavailable after loading account.js.');
+        return;
+    }
     if (!globalThis.accountDialog || typeof globalThis.accountDialog.open !== 'function') {
         globalThis.accountDialog = new AccountWindow();
     }
@@ -319,7 +323,7 @@ async function openUploadDialog() {
 }
 
 let preferencesDialogInstance = null;
-const prefsDialog = {
+var prefsDialog = {
     OkCallbacks: [],
     CancelCallbacks: [],
     ErrorCallbacks: [],

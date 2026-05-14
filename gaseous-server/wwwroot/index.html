@@ -46,13 +46,18 @@
             "/styles/notifications.css"
         ];
 
+        const startupPage = new URLSearchParams(window.location.search).get('page');
+        const isEmulatorStartup = startupPage === 'emulator';
+
         let scriptLinks = [
-            "/scripts/filtering.js",
-            "/scripts/rendergames.js",
             "/scripts/main.js",
             "/scripts/modals.js",
             "/scripts/notifications.js",
         ];
+
+        if (!isEmulatorStartup) {
+            scriptLinks.push("/scripts/filtering.js", "/scripts/rendergames.js");
+        }
 
         let head = document.getElementsByTagName('head')[0];
 
@@ -337,14 +342,21 @@
                             });
 
                         // load scripts and style files
-                        // update script links
-                        for (const scriptLink of scriptLinks) {
-                            let newScript = document.createElement('script');
-                            newScript.src = scriptLink + '?v=' + AppVersion;
-                            newScript.type = "text/javascript";
-                            newScript.async = false;
+                        // update script links and wait for each script to finish loading
+                        const loadScriptWithVersion = (scriptLink) => {
+                            return new Promise((resolve, reject) => {
+                                const newScript = document.createElement('script');
+                                newScript.src = scriptLink + '?v=' + AppVersion;
+                                newScript.type = "text/javascript";
+                                newScript.async = false;
+                                newScript.onload = () => resolve();
+                                newScript.onerror = () => reject(new Error('Failed to load script: ' + scriptLink));
+                                head.appendChild(newScript);
+                            });
+                        };
 
-                            head.appendChild(newScript);
+                        for (const scriptLink of scriptLinks) {
+                            await loadScriptWithVersion(scriptLink);
                         }
 
                         // update stylesheet links
@@ -357,18 +369,10 @@
                             head.appendChild(newLink);
                         }
 
-                        // wait for all scripts to load
-                        do {
-                            if (typeof getQueryString === "function") {
-                                break;
-                            }
-                            if (window.lang && window.lang.isReady()) {
-                                console.log(window.lang.translate('console.waiting_for_scripts'));
-                            } else {
-                                console.log("Waiting for scripts to load...");
-                            }
-                            await new Promise(r => setTimeout(r, 100));
-                        } while (typeof getQueryString !== "function");
+                        // scripts are loaded synchronously above; keep a defensive check in case a future change alters load flow
+                        if (typeof getQueryString !== "function") {
+                            throw new Error('Core script initialization failed: getQueryString is unavailable.');
+                        }
 
                         // Initialize language module
                         const { default: Language } = await import('/scripts/language.js?v=' + AppVersion);

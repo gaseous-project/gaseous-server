@@ -252,17 +252,21 @@ async function setupBanner() {
         }
     });
 
-    // set avatar
-    let avatarBox = document.getElementById('banner_user_image_box');
-    let avatar = new Avatar(userProfile.profileId, 30, 30);
-    avatarBox.style = 'pointer-events: none;';
-    avatar.setAttribute('style', 'margin-top: 5px; pointer-events: none; width: 30px; height: 30px;');
-    avatarBox.appendChild(avatar);
+    // set avatar and profile card only when account widgets are available
+    if (typeof Avatar === 'function' && typeof ProfileCard === 'function') {
+        let avatarBox = document.getElementById('banner_user_image_box');
+        let avatar = new Avatar(userProfile.profileId, 30, 30);
+        avatarBox.style = 'pointer-events: none;';
+        avatar.setAttribute('style', 'margin-top: 5px; pointer-events: none; width: 30px; height: 30px;');
+        avatarBox.appendChild(avatar);
 
-    // set profile card in drop down
-    let profileCard = document.getElementById('banner_user_profilecard');
-    let profileCardContent = new ProfileCard(userProfile.profileId, true);
-    profileCard.appendChild(profileCardContent);
+        // set profile card in drop down
+        let profileCard = document.getElementById('banner_user_profilecard');
+        let profileCardContent = new ProfileCard(userProfile.profileId, true);
+        profileCard.appendChild(profileCardContent);
+    } else {
+        console.warn('Banner account widgets were unavailable during setup.');
+    }
 
     // hide the upload button if it's not permitted
     let uploadButton = document.getElementById('banner_upload');

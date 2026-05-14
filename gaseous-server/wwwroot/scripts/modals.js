@@ -169,7 +169,30 @@ class Modal {
         return;
     }
 
+    cleanupSelect2InModal() {
+        if (!this.modalElement) {
+            return;
+        }
+
+        const select2Elements = this.modalElement.querySelectorAll('.select2-hidden-accessible');
+        select2Elements.forEach((element) => {
+            const selectElement = $(element);
+            if (selectElement.data('select2')) {
+                selectElement.off('.select2');
+                $(element).select2('destroy');
+            }
+        });
+
+        const detachedContainers = this.modalBackground?.querySelectorAll('.select2-container') || [];
+        detachedContainers.forEach((container) => {
+            container.remove();
+        });
+    }
+
     close() {
+        // Release select2 instances bound within this modal to reduce retained listeners and DOM.
+        this.cleanupSelect2InModal();
+
         // Hide the modal
         $(this.modalBackground).fadeOut(200, () => {
             // Remove the modal element from the document body
