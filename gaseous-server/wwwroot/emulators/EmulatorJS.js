@@ -128,6 +128,7 @@ window.EJS_Buttons = {
                 let imgId = undefined;
                 let imgProvider = undefined;
                 let imgClass = undefined;
+                let imgSize = 'original';
                 let imgPlatform = getQueryString('platformid', 'int');
                 let showLabel = false;
                 // add the clear logo if available - fallback to cover if not
@@ -147,6 +148,7 @@ window.EJS_Buttons = {
                     imgId = gameData.cover;
                     imgProvider = gameData.metadataSource;
                     imgClass = 'emulator_pausemask-coverimage';
+                    imgSize = 'cover_big';
                     showLabel = true;
                 }
 
@@ -161,7 +163,7 @@ window.EJS_Buttons = {
                 // }
 
                 if (imgType && imgId) {
-                    let imgUrl = `/api/v1.1/Games/${gameId}/${imgProvider}/${imgType}/${imgId}/image/original/${imgId}.png`;
+                    let imgUrl = `/api/v1.1/Games/${gameId}/${imgProvider}/${imgType}/${imgId}/image/${imgSize}/${imgId}.png`;
 
                     let gameImage = document.createElement('img');
                     gameImage.src = imgUrl;

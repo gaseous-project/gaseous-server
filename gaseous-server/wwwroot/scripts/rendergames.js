@@ -262,7 +262,7 @@ class WideGameIcon {
         gameTile.setAttribute('data-index', data.index);
 
         // set the background image to the first screenshot if it exists, then fall back to the first artwork, then fall back to the cover if it exists
-        this.backgroundImageUrls = this.GetBackgroundImageURLs('original');
+        this.backgroundImageUrls = this.GetBackgroundImageURLs('screenshot_med');
 
         if (this.backgroundImageUrls.length > 0) {
             // Set initial background

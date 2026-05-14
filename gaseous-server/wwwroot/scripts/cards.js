@@ -813,7 +813,17 @@ class GameCard {
 
             this.gameData.screenshots.forEach(screenshot => {
                 // create new screenshot item
-                let screenshotItem = new ScreenshotItem(screenshot, this.gameData.metadataSource, 'screenshot', `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/screenshot/${screenshot}/image/original/${screenshot}.jpg`, null, null, null, this.gameId);
+                let screenshotItem = new ScreenshotItem(
+                    screenshot,
+                    this.gameData.metadataSource,
+                    'screenshot',
+                    `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/screenshot/${screenshot}/image/original/${screenshot}.jpg`,
+                    `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/screenshot/${screenshot}/image/screenshot_small/${screenshot}.jpg`,
+                    null,
+                    null,
+                    null,
+                    this.gameId
+                );
                 this.screenshotItems[this.gameData.metadataSource].push(screenshotItem);
             });
         }

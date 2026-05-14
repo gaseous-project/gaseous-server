@@ -36,7 +36,7 @@ async function SetupPage() {
         contentSource = gameData.metadataSource;
 
         if (result.cover) {
-            emuBackground = '/api/v1.1/Games/' + gameId + '/' + contentSource + '/cover/' + result.cover + '/image/original/' + result.cover + '.jpg';
+            emuBackground = '/api/v1.1/Games/' + gameId + '/' + contentSource + '/cover/' + result.cover + '/image/cover_big/' + result.cover + '.jpg';
         }
 
         emuGameTitle = gameData.name;
@@ -90,16 +90,16 @@ if (typeof registerPageUnloadCallback === 'function') {
 globalThis.addEventListener('pagehide', cleanupEmulatorPage);
 globalThis.addEventListener('beforeunload', cleanupEmulatorPage);
 
-function rotateBackground() {
-    if (artworks) {
-        artworksPosition += 1;
-        if (artworks[artworksPosition] == null) {
-            artworksPosition = 0;
-        }
-        var bg = document.getElementById('bgImage');
-        bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/' + contentSource + '/artwork/' + artworks[artworksPosition] + '/image/original/' + artworks[artworksPosition] + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
-    }
-}
+// function rotateBackground() {
+//     if (artworks) {
+//         artworksPosition += 1;
+//         if (artworks[artworksPosition] == null) {
+//             artworksPosition = 0;
+//         }
+//         var bg = document.getElementById('bgImage');
+//         bg.setAttribute('style', 'background-image: url("/api/v1.1/Games/' + gameId + '/' + contentSource + '/artwork/' + artworks[artworksPosition] + '/image/original/' + artworks[artworksPosition] + '.jpg"); background-position: center; background-repeat: no-repeat; background-size: cover; filter: blur(10px); -webkit-filter: blur(10px);');
+//     }
+// }
 
 function SaveStatistics() {
     var model;

@@ -13,11 +13,12 @@ class ScreenshotItem {
     metadataId: The ID of the associated metadata.
     profile: The user profile object associated with the content item.
     */
-    constructor(id, source, type, url, title, uploadDate, description, metadataId, profile) {
+    constructor(id, source, type, url, smallUrl, title, uploadDate, description, metadataId, profile) {
         this.id = id;
         this.source = source;
         this.type = type;
         this.url = url;
+        this.smallUrl = smallUrl;
         this.title = title;
         this.uploadDate = uploadDate;
         this.description = description;
@@ -56,10 +57,11 @@ class ScreenshotItem {
         switch (this.type) {
             case 'screenshot':
                 if (isFull === false) {
-                    container.style.backgroundImage = `url(${this.url})`;
+                    container.style.backgroundImage = `url(${this.smallUrl})`;
                 } else {
                     let img = document.createElement('img');
-                    img.src = this.url;
+                    img.src = this.smallUrl;
+                    img.dataset.fullImageUrl = this.url;
                     img.alt = this.title || (window.lang ? window.lang.translate('screenshots.type.screenshot_alt') : 'Screenshot');
                     img.style.maxWidth = "100%";
                     img.style.maxHeight = "100%";
@@ -454,7 +456,11 @@ class ScreenshotViewer {
         // create and append the image element
         let previewElement = screenshot.createFullElement();
         for (let child of Array.from(previewElement.children)) {
-            this.screenshotContainer.appendChild(child);
+            let clonedChild = child.cloneNode(true);
+            if (clonedChild.tagName === 'IMG' && clonedChild.dataset.fullImageUrl) {
+                clonedChild.src = clonedChild.dataset.fullImageUrl;
+            }
+            this.screenshotContainer.appendChild(clonedChild);
         }
 
         // update info panel
