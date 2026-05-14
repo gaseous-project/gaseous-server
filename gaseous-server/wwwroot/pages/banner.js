@@ -1,4 +1,8 @@
-function setupBanner() {
+async function setupBanner() {
+    if (typeof ensureAccountScriptLoaded === 'function') {
+        await ensureAccountScriptLoaded();
+    }
+
     // translation helper (waits for global language instance if present)
     const t = (key) => {
         try {
@@ -47,7 +51,11 @@ function setupBanner() {
 
     let bannerCog = document.getElementById("banner_cog");
     if (bannerCog) {
-        bannerCog.addEventListener('click', () => {
+        bannerCog.addEventListener('click', async () => {
+            if (typeof ensureCardsScriptLoaded === 'function') {
+                await ensureCardsScriptLoaded();
+            }
+
             let settingsCard = new SettingsCard();
             settingsCard.ShowCard();
         });
@@ -55,8 +63,10 @@ function setupBanner() {
 
     let bannerUpload = document.getElementById("banner_upload");
     if (bannerUpload) {
-        bannerUpload.addEventListener('click', () => {
-            uploadDialog.open();
+        bannerUpload.addEventListener('click', async () => {
+            if (typeof openUploadDialog === 'function') {
+                await openUploadDialog();
+            }
         });
     }
 
@@ -242,17 +252,21 @@ function setupBanner() {
         }
     });
 
-    // set avatar
-    let avatarBox = document.getElementById('banner_user_image_box');
-    let avatar = new Avatar(userProfile.profileId, 30, 30);
-    avatarBox.style = 'pointer-events: none;';
-    avatar.setAttribute('style', 'margin-top: 5px; pointer-events: none; width: 30px; height: 30px;');
-    avatarBox.appendChild(avatar);
+    // set avatar and profile card only when account widgets are available
+    if (typeof Avatar === 'function' && typeof ProfileCard === 'function') {
+        let avatarBox = document.getElementById('banner_user_image_box');
+        let avatar = new Avatar(userProfile.profileId, 30, 30);
+        avatarBox.style = 'pointer-events: none;';
+        avatar.setAttribute('style', 'margin-top: 5px; pointer-events: none; width: 30px; height: 30px;');
+        avatarBox.appendChild(avatar);
 
-    // set profile card in drop down
-    let profileCard = document.getElementById('banner_user_profilecard');
-    let profileCardContent = new ProfileCard(userProfile.profileId, true);
-    profileCard.appendChild(profileCardContent);
+        // set profile card in drop down
+        let profileCard = document.getElementById('banner_user_profilecard');
+        let profileCardContent = new ProfileCard(userProfile.profileId, true);
+        profileCard.appendChild(profileCardContent);
+    } else {
+        console.warn('Banner account widgets were unavailable during setup.');
+    }
 
     // hide the upload button if it's not permitted
     let uploadButton = document.getElementById('banner_upload');
@@ -265,12 +279,16 @@ function setupBanner() {
         hideDropdowns(event);
     }
     // event for preferences drop down item
-    document.getElementById('dropdown-menu-preferences').addEventListener('click', function () {
-        prefsDialog.open();
+    document.getElementById('dropdown-menu-preferences').addEventListener('click', async function () {
+        if (typeof openPreferencesDialog === 'function') {
+            await openPreferencesDialog();
+        }
     });
     // event for account drop down item
-    document.getElementById('dropdown-menu-account').addEventListener('click', function () {
-        accountDialog.open();
+    document.getElementById('dropdown-menu-account').addEventListener('click', async function () {
+        if (typeof openAccountDialog === 'function') {
+            await openAccountDialog();
+        }
     });
 }
 
@@ -311,13 +329,4 @@ function setNotificationIconState(state) {
     }
 }
 
-const accountDialog = new AccountWindow();
-const prefsDialog = new PreferencesWindow();
-const uploadDialog = new UploadRom();
-
-// Expose dialogs globally so other pages can access them
-globalThis.prefsDialog = prefsDialog;
-globalThis.accountDialog = accountDialog;
-globalThis.uploadDialog = uploadDialog;
-
-setupBanner();
+void setupBanner();

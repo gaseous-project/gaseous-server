@@ -3,6 +3,11 @@ const DEFAULT_TILE_SIZE = {
     height: 283
 };
 
+const FIXED_LIBRARY_PAGE_SIZE = 20;
+
+// Library background rotation is disabled for memory stability on constrained browsers.
+const ENABLE_LIBRARY_BACKGROUND_ROTATOR = false;
+
 let coverURLList = [];
 let coverURLSet = new Set();
 let scrollTimer = null;
@@ -14,8 +19,8 @@ filter.GetSummary = false;
 
 const libraryState = {
     activeControllers: new Map(),
-    currentPageSize: 20,
-    fetchOverscanPages: 2,
+    currentPageSize: FIXED_LIBRARY_PAGE_SIZE,
+    fetchOverscanPages: 1,
     hasLoadedAtLeastOnce: false,
     layout: {
         columns: 1,
@@ -26,6 +31,7 @@ const libraryState = {
     },
     loadedPages: new Set(),
     loadingInterval: null,
+    filterRefreshCallback: null,
     notificationCallback: null,
     pageTileIndexes: new Map(),
     pendingDomReset: false,
@@ -33,7 +39,7 @@ const libraryState = {
     queryGeneration: 0,
     renderedTiles: new Map(),
     resizeHandler: null,
-    retainOverscanPages: 5,
+    retainOverscanPages: 2,
     scrollDebounceMs: 220,
     scrollHandler: null
 };
@@ -61,9 +67,7 @@ function getLibraryElements() {
  * @returns {number}
  */
 function getCurrentPageSize() {
-    const rawValue = filter.filterSelections.pageSize || '20';
-    const pageSize = Number.parseInt(rawValue, 10);
-    return Number.isNaN(pageSize) ? 20 : pageSize;
+    return FIXED_LIBRARY_PAGE_SIZE;
 }
 
 /**
@@ -224,16 +228,24 @@ function hideLoadingIndicator() {
 }
 
 function resetCoverList() {
+    if (!ENABLE_LIBRARY_BACKGROUND_ROTATOR) {
+        return;
+    }
+
     coverURLList = [];
     coverURLSet = new Set();
 }
 
 function addCoverUrl(game) {
+    if (!ENABLE_LIBRARY_BACKGROUND_ROTATOR) {
+        return;
+    }
+
     if (!game.cover) {
         return;
     }
 
-    const coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg';
+    const coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/cover_small/' + game.cover + '.jpg';
     if (coverURLSet.has(coverUrl)) {
         return;
     }
@@ -247,6 +259,10 @@ function addCoverUrl(game) {
 }
 
 function ensureBackgroundRotator() {
+    if (!ENABLE_LIBRARY_BACKGROUND_ROTATOR) {
+        return;
+    }
+
     if (!coverURLList.length) {
         return;
     }
@@ -282,6 +298,12 @@ async function buildTile(game) {
 }
 
 function clearRenderedTiles() {
+    // Clear image sources on all rendered tiles before removing them to help WebKit release
+    // decoded bitmap memory sooner — particularly important on iOS Safari.
+    for (const tileElement of libraryState.renderedTiles.values()) {
+        tileElement.querySelectorAll('img').forEach(img => { img.src = ''; });
+    }
+
     const { gamesElement } = getLibraryElements();
     if (gamesElement) {
         gamesElement.innerHTML = '';
@@ -301,6 +323,8 @@ function removePage(pageNumber) {
     for (const tileIndex of tileIndexes) {
         const tileElement = libraryState.renderedTiles.get(tileIndex);
         if (tileElement) {
+            // Clear image sources before removal to prompt WebKit to release decoded bitmap memory sooner.
+            tileElement.querySelectorAll('img').forEach(img => { img.src = ''; });
             tileElement.remove();
             libraryState.renderedTiles.delete(tileIndex);
         }
@@ -380,7 +404,7 @@ async function renderPage(pageNumber, games, replaceExistingDom = false) {
     libraryState.pageTileIndexes.set(pageNumber, pageTileIndexes);
 
     hideLoadingIndicator();
-    ensureBackgroundRotator();
+    // ensureBackgroundRotator();
 }
 
 /**
@@ -696,14 +720,10 @@ async function SetupPage() {
         scrollerElement.innerHTML = '';
         scrollerElement.appendChild(filter.BuildFilterTable(result));
 
+        filter.filterSelections.pageSize = String(FIXED_LIBRARY_PAGE_SIZE);
         filter.OrderBySelector(document.getElementById('games_library_orderby_select'));
         filter.OrderDirectionSelector(document.getElementById('games_library_orderby_direction_select'));
-        filter.PageSizeSelector(document.getElementById('games_library_pagesize_select'));
 
-        initializeSelect2('games_library_pagesize_select', filter.filterSelections.pageSize, (value) => {
-            filter.filterSelections.pageSize = value;
-            filter.ApplyFilter();
-        });
         initializeSelect2('games_library_orderby_select', filter.filterSelections.orderBy, (value) => {
             filter.filterSelections.orderBy = value;
             filter.ApplyFilter();
@@ -735,57 +755,57 @@ async function SetupPage() {
         globalThis.notificationManager.addNotificationLibraryUpdateCallback(libraryState.notificationCallback);
     }
 
-    // Refresh the filter list when library changes
-    if (globalThis.notificationManager) {
-        globalThis.notificationManager.addNotificationLibraryUpdateCallback(async () => {
-            try {
-                // Re-fetch the filter data from API
-                const response = await fetch('/api/v1.1/Filter', { method: 'GET' });
-                if (!response.ok) throw new Error('Failed to load filter content');
-                const data = await response.json();
+    // Refresh the filter list when library changes — stored as a removable reference to prevent
+    // the callback from firing against a torn-down page after SPA navigation.
+    libraryState.filterRefreshCallback = async () => {
+        try {
+            // Re-fetch the filter data from API
+            const response = await fetch('/api/v1.1/Filter', { method: 'GET' });
+            if (!response.ok) throw new Error('Failed to load filter content');
+            const data = await response.json();
 
-                // Fetch all filter components in parallel
-                const filterEntries = await Promise.all(
-                    data.map(async element => {
-                        try {
-                            const res = await fetch(`/api/v1.1/Filter/${element}`, { method: 'GET' });
-                            if (!res.ok) throw new Error('Failed to load filter component');
-                            const filterItem = await res.json();
-                            return [element.toLowerCase(), filterItem];
-                        } catch (error) {
-                            console.error(error);
-                            return null;
-                        }
-                    })
-                );
+            // Fetch all filter components in parallel
+            const filterEntries = await Promise.all(
+                data.map(async element => {
+                    try {
+                        const res = await fetch(`/api/v1.1/Filter/${element}`, { method: 'GET' });
+                        if (!res.ok) throw new Error('Failed to load filter component');
+                        const filterItem = await res.json();
+                        return [element.toLowerCase(), filterItem];
+                    } catch (error) {
+                        console.error(error);
+                        return null;
+                    }
+                })
+            );
 
-                // Build filter object from successful fetches
-                const filterData = {};
-                for (const entry of filterEntries) {
-                    if (entry) filterData[entry[0]] = entry[1];
-                }
-
-                // Rebuild the filter UI
-                const { scrollerElement } = getLibraryElements();
-                if (scrollerElement) {
-                    filter.LoadFilterSettings();
-                    scrollerElement.innerHTML = '';
-                    scrollerElement.appendChild(filter.BuildFilterTable(filterData));
-
-                    initializeSelect2('games_library_pagesize_select', filter.filterSelections.pageSize, (value) => {
-                        filter.filterSelections.pageSize = value;
-                    });
-                    initializeSelect2('games_library_orderby_select', filter.filterSelections.orderBy, (value) => {
-                        filter.filterSelections.orderBy = value;
-                    });
-                    initializeSelect2('games_library_orderby_direction_select', filter.filterSelections.orderDirection, (value) => {
-                        filter.filterSelections.orderDirection = value;
-                    });
-                }
-            } catch (error) {
-                console.error('Error refreshing filter:', error);
+            // Build filter object from successful fetches
+            const filterData = {};
+            for (const entry of filterEntries) {
+                if (entry) filterData[entry[0]] = entry[1];
             }
-        });
+
+            // Rebuild the filter UI
+            const { scrollerElement } = getLibraryElements();
+            if (scrollerElement) {
+                filter.LoadFilterSettings();
+                scrollerElement.innerHTML = '';
+                scrollerElement.appendChild(filter.BuildFilterTable(filterData));
+
+                filter.filterSelections.pageSize = String(FIXED_LIBRARY_PAGE_SIZE);
+                initializeSelect2('games_library_orderby_select', filter.filterSelections.orderBy, (value) => {
+                    filter.filterSelections.orderBy = value;
+                });
+                initializeSelect2('games_library_orderby_direction_select', filter.filterSelections.orderDirection, (value) => {
+                    filter.filterSelections.orderDirection = value;
+                });
+            }
+        } catch (error) {
+            console.error('Error refreshing filter:', error);
+        }
+    };
+    if (globalThis.notificationManager) {
+        globalThis.notificationManager.addNotificationLibraryUpdateCallback(libraryState.filterRefreshCallback);
     }
 
     libraryState.scrollHandler = () => {
@@ -891,6 +911,13 @@ if (typeof registerPageUnloadCallback === 'function') {
                 globalThis.notificationManager.removeNotificationLibraryUpdateCallback(libraryState.notificationCallback);
             }
             libraryState.notificationCallback = null;
+        }
+
+        if (libraryState.filterRefreshCallback) {
+            if (globalThis.notificationManager) {
+                globalThis.notificationManager.removeNotificationLibraryUpdateCallback(libraryState.filterRefreshCallback);
+            }
+            libraryState.filterRefreshCallback = null;
         }
 
         if (libraryState.scrollHandler) {

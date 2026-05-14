@@ -116,7 +116,7 @@ class HomePageGameRow {
                         scroller.appendChild(gameItem);
 
                         if (game.cover) {
-                            let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/original/' + game.cover + '.jpg';
+                            let coverUrl = '/api/v1.1/Games/' + game.metadataMapId + '/' + game.metadataSource + '/cover/' + game.cover + '/image/cover_big/' + game.cover + '.jpg';
                             if (backgroundImageHandler === undefined || (backgroundImageHandler && backgroundImageHandler.URLList && backgroundImageHandler.URLList.length === 1)) {
                                 let urls = [];
                                 urls.push(coverUrl);
@@ -238,8 +238,10 @@ function showNoGamesMessage(show) {
             noGamesText.setAttribute("data-i18n", 'home.click_upload_to_add_games');
             noGamesMessage.appendChild(noGamesText);
 
-            noGamesMessage.addEventListener("click", () => {
-                uploadDialog.open();
+            noGamesMessage.addEventListener("click", async () => {
+                if (typeof openUploadDialog === 'function') {
+                    await openUploadDialog();
+                }
             });
 
             targetDiv.appendChild(noGamesMessage);
@@ -299,6 +301,12 @@ if (typeof registerPageUnloadCallback === 'function') {
             backgroundImageHandler = undefined;
         }
 
+        // Remove notification callback to prevent stale updates after page navigation.
+        if (homeNotificationCallback && globalThis.notificationManager) {
+            globalThis.notificationManager.removeNotificationLibraryUpdateCallback(homeNotificationCallback);
+            homeNotificationCallback = null;
+        }
+
         console.log(window.lang.translate('console.home_page_cleanup_completed'));
     });
 }
@@ -308,10 +316,13 @@ prefsDialog.OkCallbacks.push(async () => {
     await populateRows();
 });
 
-// subscribe to the notifications so that we can update the home page when changes are made to the library or games
+// Subscribe to library changes — stored as a removable reference to prevent stale callbacks
+// from firing against a torn-down home page after SPA navigation.
+let homeNotificationCallback = null;
 if (globalThis.notificationManager) {
-    globalThis.notificationManager.addNotificationLibraryUpdateCallback(async () => {
+    homeNotificationCallback = async () => {
         console.log(window.lang.translate('console.refreshing_home_page_due_to_changes'));
         await populateRows();
-    });
+    };
+    globalThis.notificationManager.addNotificationLibraryUpdateCallback(homeNotificationCallback);
 }

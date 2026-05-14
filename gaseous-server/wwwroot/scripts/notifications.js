@@ -24,6 +24,13 @@ class NotificationManager {
     }
 
     /**
+     * Returns true when a signed-in profile is available.
+     */
+    isAuthenticated() {
+        return Boolean(globalThis.userProfile && globalThis.userProfile.profileId);
+    }
+
+    /**
      * Shows a toast notification with dedupe, stacking, and history updates.
      */
     showNotification(heading, message, image, callback, timeout, noteid) {
@@ -133,6 +140,11 @@ class NotificationManager {
      * Starts background notification polling.
      */
     startNotificationFetch() {
+        if (!this.isAuthenticated()) {
+            this.stopNotificationFetch();
+            return;
+        }
+
         if (this.fetchIntervalId) {
             return;
         }
@@ -150,6 +162,12 @@ class NotificationManager {
             await fetch('/api/v1.1/Notification').then((response) => {
                 if (response.ok) {
                     return response.json();
+                }
+
+                if (response.status === 401 || response.status === 403) {
+                    console.log(globalThis.lang ? globalThis.lang.translate('notifications.fetch_skipped_not_authenticated') : 'Notifications stopped: user is not authenticated.');
+                    this.stopNotificationFetch();
+                    return null;
                 }
 
                 console.error((globalThis.lang ? globalThis.lang.translate('notifications.error.failed_fetch_prefix', [response.statusText]) : 'Failed to fetch notifications: ' + response.statusText));
@@ -483,7 +501,9 @@ function createNotificationManager(options = {}) {
  */
 function resetNotificationManagerForPage() {
     createNotificationManager({ preserveGlobalCallbacks: true });
-    notificationManager.startNotificationFetch();
+    if (notificationManager.isAuthenticated()) {
+        notificationManager.startNotificationFetch();
+    }
 }
 
 createNotificationManager();
@@ -492,7 +512,9 @@ createNotificationManager();
  * Backward-compatible global entrypoint used by existing pages.
  */
 function startNotificationFetch() {
-    notificationManager.startNotificationFetch();
+    if (notificationManager.isAuthenticated()) {
+        notificationManager.startNotificationFetch();
+    }
 }
 
 /**

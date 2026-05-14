@@ -46,7 +46,11 @@ class GameIcon {
         }
         if (data.metadataMapId !== -1) {
             ['click'].forEach(event => {
-                gameTileBox.addEventListener(event, (e) => {
+                gameTileBox.addEventListener(event, async (e) => {
+                    if (typeof ensureCardsScriptLoaded === 'function') {
+                        await ensureCardsScriptLoaded();
+                    }
+
                     let gameCard = new GameCard(data.metadataMapId);
                     gameCard.ShowCard();
 
@@ -258,7 +262,7 @@ class WideGameIcon {
         gameTile.setAttribute('data-index', data.index);
 
         // set the background image to the first screenshot if it exists, then fall back to the first artwork, then fall back to the cover if it exists
-        this.backgroundImageUrls = this.GetBackgroundImageURLs('original');
+        this.backgroundImageUrls = this.GetBackgroundImageURLs('screenshot_med');
 
         if (this.backgroundImageUrls.length > 0) {
             // Set initial background
@@ -468,7 +472,11 @@ class WideGameIcon {
 
         if (data.metadataMapId !== -1) {
             ['click'].forEach(event => {
-                gameTile.addEventListener(event, (e) => {
+                gameTile.addEventListener(event, async (e) => {
+                    if (typeof ensureCardsScriptLoaded === 'function') {
+                        await ensureCardsScriptLoaded();
+                    }
+
                     let gameCard = new GameCard(data.metadataMapId);
                     gameCard.ShowCard();
 
