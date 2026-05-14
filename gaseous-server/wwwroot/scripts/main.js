@@ -235,6 +235,137 @@ function randomIntFromInterval(min, max) { // min and max included
     return rand;
 }
 
+const dynamicScriptLoadState = {};
+
+function loadScriptOnce(scriptPath) {
+    if (dynamicScriptLoadState[scriptPath]) {
+        return dynamicScriptLoadState[scriptPath];
+    }
+
+    dynamicScriptLoadState[scriptPath] = new Promise((resolve, reject) => {
+        const existingScript = Array.from(document.getElementsByTagName('script')).find((script) => {
+            return script.src && script.src.includes(scriptPath);
+        });
+        if (existingScript) {
+            resolve();
+            return;
+        }
+
+        const version = localStorage.getItem('System.AppVersion');
+        const script = document.createElement('script');
+        script.type = 'text/javascript';
+        script.async = false;
+        script.src = version ? `${scriptPath}?v=${encodeURIComponent(version)}` : scriptPath;
+        script.onload = () => resolve();
+        script.onerror = () => {
+            delete dynamicScriptLoadState[scriptPath];
+            reject(new Error('Failed to load script: ' + scriptPath));
+        };
+        document.head.appendChild(script);
+    });
+
+    return dynamicScriptLoadState[scriptPath];
+}
+
+async function ensureCardsScriptLoaded() {
+    if (typeof GameCard === 'function' && typeof SettingsCard === 'function') {
+        return;
+    }
+
+    const cardDependencyScripts = [
+        '/scripts/emulatorconfig.js',
+        '/scripts/libraries.js',
+        '/scripts/logviewer.js',
+        '/scripts/platforms.js',
+        '/scripts/rominfo.js',
+        '/scripts/screenshots.js',
+        '/scripts/simpleUpload.min.js',
+        '/scripts/usermgmt.js',
+        '/scripts/cards.js'
+    ];
+
+    await Promise.all(cardDependencyScripts.map((scriptPath) => {
+        return loadScriptOnce(scriptPath);
+    }));
+}
+
+globalThis.ensureCardsScriptLoaded = ensureCardsScriptLoaded;
+
+async function ensureAccountScriptLoaded() {
+    await Promise.all([
+        loadScriptOnce('/scripts/qrcode.min.js'),
+        loadScriptOnce('/scripts/account.js')
+    ]);
+}
+
+async function ensureUploadScriptLoaded() {
+    await loadScriptOnce('/scripts/uploadrom.js');
+}
+
+async function openAccountDialog() {
+    await ensureAccountScriptLoaded();
+    if (!globalThis.accountDialog || typeof globalThis.accountDialog.open !== 'function') {
+        globalThis.accountDialog = new AccountWindow();
+    }
+    await globalThis.accountDialog.open();
+}
+
+async function openUploadDialog() {
+    await ensureUploadScriptLoaded();
+    if (!globalThis.uploadDialog || typeof globalThis.uploadDialog.open !== 'function') {
+        globalThis.uploadDialog = new UploadRom();
+    }
+    await globalThis.uploadDialog.open();
+}
+
+let preferencesDialogInstance = null;
+const prefsDialog = {
+    OkCallbacks: [],
+    CancelCallbacks: [],
+    ErrorCallbacks: [],
+    async open() {
+        const instance = await ensurePreferencesDialogLoaded();
+        await instance.open();
+    }
+};
+
+async function ensurePreferencesScriptLoaded() {
+    await loadScriptOnce('/scripts/preferences.js');
+}
+
+async function ensurePreferencesDialogLoaded() {
+    await ensurePreferencesScriptLoaded();
+
+    if (!preferencesDialogInstance || typeof preferencesDialogInstance.open !== 'function') {
+        preferencesDialogInstance = new PreferencesWindow();
+
+        // Carry any callbacks registered before preferences.js was loaded.
+        preferencesDialogInstance.OkCallbacks.push(...prefsDialog.OkCallbacks);
+        preferencesDialogInstance.CancelCallbacks.push(...prefsDialog.CancelCallbacks);
+        preferencesDialogInstance.ErrorCallbacks.push(...prefsDialog.ErrorCallbacks);
+
+        // Keep existing call sites working by aliasing proxy arrays to the real dialog arrays.
+        prefsDialog.OkCallbacks = preferencesDialogInstance.OkCallbacks;
+        prefsDialog.CancelCallbacks = preferencesDialogInstance.CancelCallbacks;
+        prefsDialog.ErrorCallbacks = preferencesDialogInstance.ErrorCallbacks;
+    }
+
+    return preferencesDialogInstance;
+}
+
+async function openPreferencesDialog() {
+    const instance = await ensurePreferencesDialogLoaded();
+    await instance.open();
+}
+
+globalThis.ensureAccountScriptLoaded = ensureAccountScriptLoaded;
+globalThis.ensureUploadScriptLoaded = ensureUploadScriptLoaded;
+globalThis.openAccountDialog = openAccountDialog;
+globalThis.openUploadDialog = openUploadDialog;
+globalThis.ensurePreferencesScriptLoaded = ensurePreferencesScriptLoaded;
+globalThis.openPreferencesDialog = openPreferencesDialog;
+globalThis.prefsDialog = prefsDialog;
+
 function createTableRow(isHeader, row, rowClass, cellClass) {
     var newRow = document.createElement('tr');
     newRow.className = rowClass;

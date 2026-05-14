@@ -50,21 +50,8 @@
             "/scripts/filtering.js",
             "/scripts/rendergames.js",
             "/scripts/main.js",
-            "/scripts/simpleUpload.min.js",
-            "/scripts/qrcode.min.js",
             "/scripts/modals.js",
-            "/scripts/cards.js",
-            "/scripts/usermgmt.js",
-            "/scripts/platforms.js",
-            "/scripts/logviewer.js",
-            "/scripts/emulatorconfig.js",
-            "/scripts/preferences.js",
-            "/scripts/account.js",
-            "/scripts/libraries.js",
             "/scripts/notifications.js",
-            "/scripts/rominfo.js",
-            "/scripts/uploadrom.js",
-            "/scripts/screenshots.js"
         ];
 
         let head = document.getElementsByTagName('head')[0];
@@ -491,6 +478,10 @@
                                                                 console.log(window.lang.translate('console.restoring_game_card', [gameCard]));
                                                             } else {
                                                                 console.log("Restoring game card: " + gameCard);
+                                                            }
+
+                                                            if (typeof ensureCardsScriptLoaded === 'function') {
+                                                                await ensureCardsScriptLoaded();
                                                             }
 
                                                             let gameCardInstance = new GameCard(gameCard);

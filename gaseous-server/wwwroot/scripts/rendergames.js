@@ -46,7 +46,11 @@ class GameIcon {
         }
         if (data.metadataMapId !== -1) {
             ['click'].forEach(event => {
-                gameTileBox.addEventListener(event, (e) => {
+                gameTileBox.addEventListener(event, async (e) => {
+                    if (typeof ensureCardsScriptLoaded === 'function') {
+                        await ensureCardsScriptLoaded();
+                    }
+
                     let gameCard = new GameCard(data.metadataMapId);
                     gameCard.ShowCard();
 
@@ -468,7 +472,11 @@ class WideGameIcon {
 
         if (data.metadataMapId !== -1) {
             ['click'].forEach(event => {
-                gameTile.addEventListener(event, (e) => {
+                gameTile.addEventListener(event, async (e) => {
+                    if (typeof ensureCardsScriptLoaded === 'function') {
+                        await ensureCardsScriptLoaded();
+                    }
+
                     let gameCard = new GameCard(data.metadataMapId);
                     gameCard.ShowCard();
 
