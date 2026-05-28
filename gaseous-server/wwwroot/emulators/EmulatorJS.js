@@ -88,7 +88,7 @@ if (StateUrl) {
 }
 
 // start the emulator automatically when loaded
-window.EJS_startOnLoaded = true;
+window.EJS_startOnLoaded = false;
 
 // Path to the data directory
 window.EJS_pathtodata = '/emulators/EmulatorJS/data/';

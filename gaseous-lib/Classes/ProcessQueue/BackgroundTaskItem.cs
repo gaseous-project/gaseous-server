@@ -70,7 +70,7 @@ namespace gaseous_server.ProcessQueue
                 case ProcessQueue.QueueItemType.MetadataRefresh:
                     this._UserManageable = true;
                     this._SaveLastRunTime = true;
-                    this.DefaultInterval = 1440;
+                    this.DefaultInterval = 10080;
                     this.MinimumAllowedInterval = 1440;
                     this.DefaultAllowedDays = new List<DayOfWeek>{
                         DayOfWeek.Sunday,
