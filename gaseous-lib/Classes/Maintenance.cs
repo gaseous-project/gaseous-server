@@ -1,6 +1,7 @@
 using System;
 using System.Data;
 using System.Threading.Tasks;
+using gaseous_server.Classes.Metadata;
 using gaseous_server.Models;
 using Microsoft.VisualStudio.Web.CodeGeneration;
 
@@ -44,6 +45,10 @@ namespace gaseous_server.Classes
             // run log maintenance
             Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.running_log_maintenance");
             await Logging.RunMaintenance();
+
+            // expire image cache
+            Logging.LogKey(Logging.LogType.Information, "process.maintenance", "maintenance.expiring_image_cache");
+            await ImageHandling.ExpireImageCache();
 
             // delete files and directories older than 7 days in PathsToClean
             List<string> PathsToClean = new List<string>();

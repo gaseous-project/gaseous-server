@@ -366,7 +366,6 @@ namespace gaseous_server.Classes
                 {
                     if (memoryCache.TryGetValue(key, out var item))
                     {
-                        Console.WriteLine("\x1b[95mPurging expired cache item " + key + ". Added: " + item.addedTime + ". Expired: " + item.expirationTime);
                         memoryCache.Remove(key);
                         Interlocked.Increment(ref _evictions);
                         Interlocked.Increment(ref _expirationEvictions);

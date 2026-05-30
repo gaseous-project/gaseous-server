@@ -222,7 +222,6 @@ builder.Services.AddSwaggerGen(options =>
     }
 );
 builder.Services.AddHostedService<TimedHostedService>();
-builder.Services.AddHostedService<gaseous_server.Services.ImageCacheExpiryService>();
 
 // identity
 builder.Services.AddIdentity<ApplicationUser, ApplicationRole>(options =>

@@ -98,7 +98,7 @@ namespace gaseous_server.Classes
 			}
 		}
 
-		private static MemoryCache DatabaseMemoryCache = new MemoryCache();
+		private static MemoryCache DatabaseMemoryCache = new MemoryCache(1000);
 
 		/// <summary>
 		/// Initializes the database, creates schema version table if missing, and applies schema upgrades.
