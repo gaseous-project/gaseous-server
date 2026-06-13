@@ -14,6 +14,9 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
         public string Extension { get; } = ".zip";
 
         /// <inheritdoc/>
+        public byte[] MagicBytes { get; } = new byte[] { 0x50, 0x4B, 0x03, 0x04 };
+
+        /// <inheritdoc/>
         public Task DecompressFile(string CompressedFilePath, string OutputDirectory)
         {
             Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.decompressing_using_zip");

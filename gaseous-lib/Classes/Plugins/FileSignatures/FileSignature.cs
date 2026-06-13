@@ -20,6 +20,14 @@ namespace gaseous_server.Classes
     {
         private static List<IDecompressionPlugin> _decompressionPlugins = new List<IDecompressionPlugin>();
 
+        private static readonly HashSet<string> FastGuardExtensions = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ".exe",
+            ".com",
+            ".bat",
+            ".cmd"
+        };
+
         private static List<IDecompressionPlugin> DecompressionPlugins
         {
             get
@@ -60,12 +68,43 @@ namespace gaseous_server.Classes
             }
         }
 
-        private static string[] SupportedCompressionExtensions
+        private static IDecompressionPlugin? FindDecompressionPlugin(string filePath, bool useExtension)
         {
-            get
+            var plugins = DecompressionPlugins;
+            if (plugins.Count == 0) return null;
+
+            int maxMagicBytes = plugins.Max(p => p.MagicBytes.Length);
+            if (maxMagicBytes == 0) return null;
+
+            byte[] header = new byte[maxMagicBytes];
+            int bytesRead;
+            using (var fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
             {
-                return [.. DecompressionPlugins.Select(p => p.Extension)];
+                bytesRead = fs.Read(header, 0, maxMagicBytes);
             }
+
+            foreach (var plugin in plugins)
+            {
+                if (useExtension)
+                {
+                    if (string.Equals(Path.GetExtension(filePath), plugin.Extension, StringComparison.OrdinalIgnoreCase))
+                    {
+                        return plugin;
+                    }
+                }
+                else
+                {
+                    if (plugin.MagicBytes.Length > bytesRead) continue;
+                    bool match = true;
+                    for (int i = 0; i < plugin.MagicBytes.Length; i++)
+                    {
+                        if (header[i] != plugin.MagicBytes[i]) { match = false; break; }
+                    }
+                    if (match) return plugin;
+                }
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -76,34 +115,36 @@ namespace gaseous_server.Classes
         /// <returns>A task that represents the asynchronous operation. The task result contains the file hash information.</returns>
         public async static Task<FileHash> GetFileHashesAsync(GameLibrary.LibraryItem library, string filePath)
         {
-            string ImportedFileExtension = Path.GetExtension(filePath);
-
             FileInfo fi = new FileInfo(filePath);
 
             FileHash fileHash = new FileHash
             {
                 Library = library,
                 FileName = Path.GetRelativePath(library.Path, filePath),
+                FileExtension = fi.Extension,
                 Hash = new HashObject(filePath)
             };
 
-            if (SupportedCompressionExtensions.Contains(ImportedFileExtension) && (fi.Length < 1073741824))
+            if (FastGuardExtensions.Contains(fi.Extension))
             {
-                // file is a zip and less than 1 GiB
-                // extract the zip file and search the contents
+                return fileHash;
+            }
+
+            var matchingPlugin = FindDecompressionPlugin(filePath, true);
+
+            if (matchingPlugin != null && (fi.Length < 1073741824))
+            {
+                // file is a compressed archive and less than 1 GiB
+                // extract the archive and search the contents
                 string ExtractPath = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, library.Id.ToString(), Path.GetRandomFileName());
+
+                fileHash.FileExtension = matchingPlugin.Extension;
 
                 Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.decompressing_file_to_path", null, new string[] { filePath, ExtractPath });
                 if (!Directory.Exists(ExtractPath)) { Directory.CreateDirectory(ExtractPath); }
                 try
                 {
-                    var matchingPlugin = DecompressionPlugins
-                        .FirstOrDefault(plugin => plugin.Extension.Equals(ImportedFileExtension, StringComparison.OrdinalIgnoreCase));
-
-                    if (matchingPlugin != null)
-                    {
-                        await matchingPlugin.DecompressFile(filePath, ExtractPath);
-                    }
+                    await matchingPlugin.DecompressFile(filePath, ExtractPath);
 
                     Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.processing_decompressed_files_for_signature_matches");
 
@@ -119,10 +160,7 @@ namespace gaseous_server.Classes
                             FileName = Path.GetFileName(file),
                             FilePath = (zfi.DirectoryName ?? string.Empty).Replace(ExtractPath, ""),
                             Size = zfi.Length,
-                            MD5 = zhash.md5hash,
-                            SHA1 = zhash.sha1hash,
-                            SHA256 = zhash.sha256hash,
-                            CRC = zhash.crc32hash,
+                            Hash = zhash,
                             isSignatureSelector = false
                         };
                         archiveFiles.Add(archiveData);
@@ -148,61 +186,14 @@ namespace gaseous_server.Classes
         public async Task<(FileHash, Signatures_Games)> GetFileSignatureAsync(GameLibrary.LibraryItem library, FileHash fileHash)
         {
             Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.getting_signature_for_file", null, new string[] { fileHash.FullFilePath });
+
             gaseous_server.Models.Signatures_Games discoveredSignature = new gaseous_server.Models.Signatures_Games();
 
             FileInfo fi = new FileInfo(fileHash.FullFilePath);
 
-            string ImportedFileExtension = Path.GetExtension(fileHash.FullFilePath);
-
-            // get signature for the file itself first - if it's a zip, we'll then use this as the baseline signature to compare against signatures of the contained files to find the best match and determine if we need to apply a signature selector flag to any of the contained files in order to identify them as the primary signature match for the overall archive
-            discoveredSignature = await _GetFileSignatureAsync(fileHash.Hash, fi.Name, fi.Extension, fi.Length, fileHash.FileName, false);
+            discoveredSignature = await _GetFileSignatureAsync(fileHash, fi.Name, fi.Extension, fi.Length, fileHash.FileName, false);
 
             Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.processing_decompressed_files_for_signature_matches");
-            // loop through archive contents until we find the first signature match
-            bool signatureFound = false;
-            bool signatureSelectorAlreadyApplied = false;
-            if (fileHash.ArchiveContents != null)
-            {
-                foreach (var file in fileHash.ArchiveContents)
-                {
-                    file.isSignatureSelector = false;
-                    HashObject zhash = new HashObject(file.MD5, file.SHA1, file.SHA256, file.CRC);
-
-                    Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.checking_signature_of_decompressed_file", null, new string[] { file.FilePath });
-
-                    if (!signatureFound)
-                    {
-                        gaseous_server.Models.Signatures_Games zDiscoveredSignature = await _GetFileSignatureAsync(zhash, file.FileName, Path.GetExtension(file.FileName), file.Size, file.FilePath, true);
-                        // zDiscoveredSignature.Rom.Name = Path.ChangeExtension(Path.GetFileName(zDiscoveredSignature.Rom.Name), ImportedFileExtension);
-                        zDiscoveredSignature.Rom.Name = Path.GetFileName(fileHash.FullFilePath);
-
-                        if (zDiscoveredSignature.Score > discoveredSignature.Score)
-                        {
-                            if (
-                                zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEArcade ||
-                                zDiscoveredSignature.Rom.SignatureSource == gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.MAMEMess
-                            )
-                            {
-                                zDiscoveredSignature.Rom.Name = zDiscoveredSignature.Game.Description + ImportedFileExtension;
-                            }
-                            zDiscoveredSignature.Rom.Crc = discoveredSignature.Rom.Crc;
-                            zDiscoveredSignature.Rom.Md5 = discoveredSignature.Rom.Md5;
-                            zDiscoveredSignature.Rom.Sha1 = discoveredSignature.Rom.Sha1;
-                            zDiscoveredSignature.Rom.Sha256 = discoveredSignature.Rom.Sha256;
-                            zDiscoveredSignature.Rom.Size = discoveredSignature.Rom.Size;
-                            discoveredSignature = zDiscoveredSignature;
-
-                            signatureFound = true;
-
-                            if (!signatureSelectorAlreadyApplied)
-                            {
-                                file.isSignatureSelector = true;
-                                signatureSelectorAlreadyApplied = true;
-                            }
-                        }
-                    }
-                }
-            }
 
             if (discoveredSignature.Rom.Attributes == null)
             {
@@ -242,9 +233,9 @@ namespace gaseous_server.Classes
             return (fileHash, discoveredSignature);
         }
 
-        private async Task<Signatures_Games> _GetFileSignatureAsync(HashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath, bool IsInZip)
+        private async Task<Signatures_Games> _GetFileSignatureAsync(FileHash hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath, bool IsInZip)
         {
-            Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.checking_signature_for_file", null, new string[] { GameFileImportPath, hash.md5hash, hash.sha1hash, hash.sha256hash, hash.crc32hash });
+            Logging.LogKey(Logging.LogType.Information, "process.import_game", "importgame.checking_signature_for_file", null, new string[] { GameFileImportPath, hash.Hash.md5hash, hash.Hash.sha1hash, hash.Hash.sha256hash, hash.Hash.crc32hash });
 
             // setup plugins
             List<Plugins.FileSignatures.IFileSignaturePlugin> plugins = new List<Plugins.FileSignatures.IFileSignaturePlugin>();
@@ -307,6 +298,11 @@ namespace gaseous_server.Classes
             public required string FileName { get; set; }
 
             /// <summary>
+            /// Gets or sets the file extension of the file for which the hash information is being stored. This property is used when storing the file in the library to ensure that the file is saved with the correct extension.
+            /// </summary>
+            public required string FileExtension { get; set; }
+
+            /// <summary>
             /// Gets the full file path by combining the library path and the file name. This is a convenience property to easily access the full path of the file for which the hash information is being stored.
             /// </summary>
             public string FullFilePath
@@ -326,6 +322,35 @@ namespace gaseous_server.Classes
             /// Gets or sets the list of files contained within the archive, if the file is a compressed archive.
             /// </summary>
             public List<ArchiveData> ArchiveContents { get; set; } = new List<ArchiveData>();
+
+            /// <summary>
+            /// Gets the top 5 candidate files within the archive that are most likely to be the primary signature match for the overall archive
+            /// </summary>
+            [System.Text.Json.Serialization.JsonIgnore]
+            [Newtonsoft.Json.JsonIgnore]
+            public List<ArchiveData> MatchCandidates
+            {
+                get
+                {
+                    if (ArchiveContents == null || ArchiveContents.Count == 0)
+                    {
+                        return new List<ArchiveData>();
+                    }
+
+                    if (ArchiveContents.Any(a => new string[] { ".iso", ".bin", ".cue", ".img", ".ima" }.Contains(Path.GetExtension(a.FileName).ToLower())))
+                    {
+                        // if archive contains .cue, then we need to look for a .bin file and use that as the signature match candidate instead of the .cue file, as .cue files often contain metadata and may not be the primary signature match for the overall archive. if not, fall back to looking for .iso files as the primary signature match candidate, as these are more likely to be the primary signature match for the overall archive than other file types based on common usage in game ROMs and emulation.
+                        if (ArchiveContents.Any(a => Path.GetExtension(a.FileName).ToLower() == ".cue"))
+                        {
+                            return ArchiveContents.Where(a => Path.GetExtension(a.FileName).ToLower() == ".bin").OrderByDescending(a => a.Score).Take(1).ToList();
+                        }
+
+                        return ArchiveContents.Where(a => new string[] { ".iso", ".img", ".ima" }.Contains(Path.GetExtension(a.FileName).ToLower())).OrderByDescending(a => a.Score).Take(1).ToList();
+                    }
+
+                    return ArchiveContents.OrderByDescending(a => a.Score).Take(5).ToList();
+                }
+            }
         }
 
         /// <summary>
@@ -333,6 +358,11 @@ namespace gaseous_server.Classes
         /// </summary>
         public class ArchiveData
         {
+            readonly string[] superLikelyExtensions = new string[] { ".exe", ".com" };
+            readonly string[] likelyPrimaryExtensions = new string[] { ".smc", ".sfc", ".nes", ".gb", ".gba", ".bin", ".cue", ".iso", ".img", ".ima", ".rom", ".zip", ".7z", ".rar", ".exe", ".dll" };
+            readonly string[] unlikelyPrimaryExtensions = new string[] { ".txt", ".pdf", ".docx", ".xlsx", ".pptx", ".nfo", ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".mp3", ".ogg", ".wav", ".flac", ".aac" };
+            readonly string[] excludedFileNames = new string[] { "readme.txt", "readme.md", "license.txt", "license.md", "changelog.txt", "changelog.md", "setup.exe", "install.exe", "uninstall.exe", "autorun.exe", "thumbs.db", "desktop.ini", ".ds_store", "intro.exe", "demo.exe" };
+
             /// <summary>
             /// Gets or sets the name of the file.
             /// </summary>
@@ -346,27 +376,59 @@ namespace gaseous_server.Classes
             /// <summary>
             /// Gets or sets the size of the file in bytes.
             /// </summary>
-            public long Size { get; set; } = 0;
+            public long Size { get; set; } = 1;
 
             /// <summary>
-            /// Gets or sets the MD5 hash of the file.
+            /// Gets the score of the file as a potential signature match for the overall archive, based on factors such as file type and size. This score is used to determine which file within the archive is most likely to be the primary signature match for the overall archive when comparing against known signatures in the database.
             /// </summary>
-            public required string MD5 { get; set; }
+            [System.Text.Json.Serialization.JsonIgnore]
+            [Newtonsoft.Json.JsonIgnore]
+            public int Score
+            {
+                get
+                {
+                    if (Size == 0)
+                    {
+                        return 0;
+                    }
+
+                    int score = 1;
+
+                    // check the file type - certain file types are more likely to be the primary signature match for an archive than others based on common usage in game ROMs and emulation (e.g. .smc, .sfc, .nes, .gb, .gba, .bin, .cue, etc. are more likely to be primary signature matches than .txt, .pdf, .docx, etc.)
+                    if (excludedFileNames.Contains(FileName.ToLower()) || excludedFileNames.Contains(FilePath.ToLower()))
+                    {
+                        return 0;
+                    }
+
+                    if (
+                        superLikelyExtensions.Contains(Path.GetExtension(FileName).ToLower()) ||
+                        superLikelyExtensions.Contains(Path.GetExtension(FilePath).ToLower())
+                        )
+                    {
+                        score += 200;
+                    }
+                    if (
+                        likelyPrimaryExtensions.Contains(Path.GetExtension(FileName).ToLower()) ||
+                        likelyPrimaryExtensions.Contains(Path.GetExtension(FilePath).ToLower())
+                        )
+                    {
+                        score += 100;
+                    }
+                    else if (
+                        unlikelyPrimaryExtensions.Contains(Path.GetExtension(FileName).ToLower()) ||
+                        unlikelyPrimaryExtensions.Contains(Path.GetExtension(FilePath).ToLower())
+                        )
+                    {
+                        score += 50;
+                    }
+                    return score;
+                }
+            }
 
             /// <summary>
-            /// Gets or sets the SHA1 hash of the file.
+            /// Gets or sets the hash object for the archive file
             /// </summary>
-            public required string SHA1 { get; set; }
-
-            /// <summary>
-            /// Gets or sets the SHA256 hash of the file.
-            /// </summary>
-            public required string SHA256 { get; set; }
-
-            /// <summary>
-            /// Gets or sets the CRC32 hash of the file.
-            /// </summary>
-            public required string CRC { get; set; }
+            public required HashObject Hash { get; set; }
 
             /// <summary>
             /// Gets or sets a value indicating whether this file is used as a signature selector.

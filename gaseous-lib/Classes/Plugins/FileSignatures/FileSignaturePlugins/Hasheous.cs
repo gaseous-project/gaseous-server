@@ -11,6 +11,8 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
     /// </summary>
     public class Hasheous : IFileSignaturePlugin
     {
+        private static HTTPComms comms = new HTTPComms();
+
         private static readonly JsonSerializerSettings HasheousJsonSerializerSettings = CreateHasheousJsonSerializerSettings();
 
         /// <inheritdoc/>
@@ -46,83 +48,80 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
         }
 
         /// <inheritdoc/>
-        public async Task<Signatures_Games?> GetSignature(HashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
+        public async Task<Signatures_Games?> GetSignature(FileHash hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
         {
             // check if hasheous is enabled, and if so use it's signature database
             if (Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous)
             {
-                HTTPComms comms = new HTTPComms();
-                Dictionary<string, string> headers = new Dictionary<string, string>();
-                if (!string.IsNullOrEmpty(Config.MetadataConfiguration.HasheousAPIKey))
-                {
-                    headers.Add("X-API-Key", Config.MetadataConfiguration.HasheousAPIKey);
-                }
-                headers.Add("X-Client-API-Key", Config.MetadataConfiguration.HasheousClientAPIKey);
-                // headers.Add("CacheControl", "no-cache");
-                // headers.Add("Pragma", "no-cache");
-
                 HasheousClient.Models.LookupItemModel? HasheousResult = null;
                 try
                 {
-                    // check the cache first
-                    if (!Directory.Exists(Config.LibraryConfiguration.LibraryMetadataDirectory_Hasheous()))
-                    {
-                        Directory.CreateDirectory(Config.LibraryConfiguration.LibraryMetadataDirectory_Hasheous());
-                    }
-                    // create file name from hash object
-                    string cacheFileName = hash.md5hash + "_" + hash.sha1hash + "_" + hash.crc32hash + ".json";
-                    string cacheFilePath = Path.Combine(Config.LibraryConfiguration.LibraryMetadataDirectory_Hasheous(), cacheFileName);
-                    // use cache file if it exists and is less than 30 days old, otherwise fetch from hasheous. if the fetch from hasheous is successful, save it to the cache, if it fails, use the cache if it exists even if it's old
-                    if (File.Exists(cacheFilePath))
-                    {
-                        FileInfo cacheFile = new FileInfo(cacheFilePath);
-                        if (cacheFile.LastWriteTimeUtc > DateTime.UtcNow.AddDays(-30))
-                        {
-                            Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.using_cached_signature_from_hasheous");
-                            HasheousResult = DeserializeLookupItemModel(await File.ReadAllTextAsync(cacheFilePath));
-                        }
-                    }
-
                     try
                     {
                         if (HasheousResult == null)
                         {
-                            // fetch from hasheous
-                            var body = new HasheousClient.Models.HashLookupModel
+                            var body = new List<HasheousClient.Models.HashLookupModel>();
+                            if (hash.ArchiveContents == null || hash.ArchiveContents.Count == 0)
                             {
-                                MD5 = hash.md5hash,
-                                SHA1 = hash.sha1hash,
-                                SHA256 = hash.sha256hash,
-                                CRC = hash.crc32hash
-                            };
-                            string bodyJson = Newtonsoft.Json.JsonConvert.SerializeObject(body);
-                            string sourceList = "";
-                            // var sb = new System.Text.StringBuilder("returnSources=");
-                            // foreach (string source in Enum.GetNames(typeof(HasheousClient.Models.SignatureModel.RomItem.SignatureSourceType)))
-                            // {
-                            //     if (source != "None" && source != "Unknown")
-                            //     {
-                            //         sb.Append(source).Append(",");
-                            //     }
-                            // }
-                            // sourceList = sb.ToString();
-                            // sourceList = "?" + sourceList.TrimEnd(',');
-
-                            var response = await comms.SendRequestAsync<string>(HTTPComms.HttpMethod.POST, new Uri("https://hasheous.org/api/v1/Lookup/ByHash" + sourceList), headers, body, contentType: "application/json", returnRawResponse: true);
-                            if (response != null && response.StatusCode == 200)
-                            {
-                                if (!string.IsNullOrWhiteSpace(response.Body) && response.Body != "The provided hash was not found in the signature database.")
+                                body.Add(new HasheousClient.Models.HashLookupModel
                                 {
-                                    HasheousResult = DeserializeLookupItemModel(response.Body);
-
-                                    if (HasheousResult != null)
+                                    MD5 = hash.Hash.md5hash,
+                                    SHA1 = hash.Hash.sha1hash,
+                                    SHA256 = hash.Hash.sha256hash,
+                                    CRC = hash.Hash.crc32hash
+                                });
+                            }
+                            else
+                            {
+                                foreach (ArchiveData archiveData in hash.MatchCandidates)
+                                {
+                                    body.Add(new HasheousClient.Models.HashLookupModel
                                     {
-                                        // save to cache
-                                        await File.WriteAllTextAsync(cacheFilePath, Newtonsoft.Json.JsonConvert.SerializeObject(HasheousResult));
-                                    }
+                                        MD5 = archiveData.Hash.md5hash,
+                                        SHA1 = archiveData.Hash.sha1hash,
+                                        SHA256 = archiveData.Hash.sha256hash,
+                                        CRC = archiveData.Hash.crc32hash
+                                    });
                                 }
                             }
 
+                            string sourceList = "";
+
+                            HasheousResult = await SearchHasheous(sourceList, body);
+
+                            if (HasheousResult == null)
+                            {
+                                // fall back to full archive search
+                                body.Clear();
+                                foreach (ArchiveData archiveData in hash.ArchiveContents)
+                                {
+                                    if (archiveData.Score == 0)
+                                    {
+                                        continue;
+                                    }
+
+                                    body.Add(new HasheousClient.Models.HashLookupModel
+                                    {
+                                        MD5 = archiveData.Hash.md5hash,
+                                        SHA1 = archiveData.Hash.sha1hash,
+                                        SHA256 = archiveData.Hash.sha256hash,
+                                        CRC = archiveData.Hash.crc32hash
+                                    });
+                                }
+
+                                if (body.Count > 0)
+                                {
+                                    foreach (HasheousClient.Models.HashLookupModel lookupModel in body)
+                                    {
+                                        HasheousResult = await SearchHasheous(sourceList, new List<HasheousClient.Models.HashLookupModel> { lookupModel });
+
+                                        if (HasheousResult != null)
+                                        {
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     catch (Exception ex)
@@ -138,15 +137,15 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                         else
                         {
 
-                            if (File.Exists(cacheFilePath))
-                            {
-                                Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.error_retrieving_signature_from_hasheous_using_cached_signature", null, null, ex);
-                                HasheousResult = DeserializeLookupItemModel(await File.ReadAllTextAsync(cacheFilePath));
-                            }
-                            else
-                            {
-                                Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.error_retrieving_signature_from_hasheous", null, null, ex);
-                            }
+                            // if (File.Exists(cacheFilePath))
+                            // {
+                            //     Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.error_retrieving_signature_from_hasheous_using_cached_signature", null, null, ex);
+                            //     HasheousResult = DeserializeLookupItemModel(await File.ReadAllTextAsync(cacheFilePath));
+                            // }
+                            // else
+                            // {
+                            Logging.LogKey(Logging.LogType.Warning, "process.get_signature", "getsignature.error_retrieving_signature_from_hasheous", null, null, ex);
+                            // }
                         }
                     }
 
@@ -295,6 +294,31 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
             }
 
             return null;
+        }
+
+        private async Task<HasheousClient.Models.LookupItemModel?> SearchHasheous(string sourceList, List<HasheousClient.Models.HashLookupModel>? body)
+        {
+            HasheousClient.Models.LookupItemModel? HasheousResult = null;
+
+            Dictionary<string, string> headers = new Dictionary<string, string>();
+            if (!string.IsNullOrEmpty(Config.MetadataConfiguration.HasheousAPIKey))
+            {
+                headers.Add("X-API-Key", Config.MetadataConfiguration.HasheousAPIKey);
+            }
+            headers.Add("X-Client-API-Key", Config.MetadataConfiguration.HasheousClientAPIKey);
+            // headers.Add("CacheControl", "no-cache");
+            // headers.Add("Pragma", "no-cache");
+
+            var response = await comms.SendRequestAsync<string>(HTTPComms.HttpMethod.POST, new Uri("https://hasheous.org/api/v1/Lookup/ByHash" + sourceList), headers, body, contentType: "application/json", returnRawResponse: true);
+            if (response != null && response.StatusCode == 200)
+            {
+                if (!string.IsNullOrWhiteSpace(response.Body) && response.Body != "The provided hash was not found in the signature database.")
+                {
+                    HasheousResult = DeserializeLookupItemModel(response.Body);
+                }
+            }
+
+            return HasheousResult;
         }
     }
 }

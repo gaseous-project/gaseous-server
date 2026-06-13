@@ -14,6 +14,9 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
         public string Extension { get; } = ".7z";
 
         /// <inheritdoc/>
+        public byte[] MagicBytes { get; } = new byte[] { 0x37, 0x7A, 0xBC, 0xAF, 0x27, 0x1C };
+
+        /// <inheritdoc/>
         public Task DecompressFile(string CompressedFilePath, string OutputDirectory)
         {
             Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.decompressing_using_7z");
