@@ -19,6 +19,18 @@ namespace gaseous_server.Classes
 {
     public class ImportGame : QueueItemStatus
     {
+        private static HasheousClient.Models.SignatureModel.RomItem.SignatureSourceType[] SourcesThatAllowROMRename = new HasheousClient.Models.SignatureModel.RomItem.SignatureSourceType[]
+        {
+            HasheousClient.Models.SignatureModel.RomItem.SignatureSourceType.TOSEC,
+            HasheousClient.Models.SignatureModel.RomItem.SignatureSourceType.NoIntros,
+            HasheousClient.Models.SignatureModel.RomItem.SignatureSourceType.MAMEArcade,
+            HasheousClient.Models.SignatureModel.RomItem.SignatureSourceType.MAMEMess,
+            HasheousClient.Models.SignatureModel.RomItem.SignatureSourceType.WHDLoad,
+            HasheousClient.Models.SignatureModel.RomItem.SignatureSourceType.RetroAchievements,
+            HasheousClient.Models.SignatureModel.RomItem.SignatureSourceType.FBNeo,
+            HasheousClient.Models.SignatureModel.RomItem.SignatureSourceType.Generic
+        };
+
         public ImportGame()
         {
 
@@ -356,7 +368,7 @@ namespace gaseous_server.Classes
                 Platform? determinedPlatform = Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId).Result;
                 Game? determinedGame = Metadata.Games.GetGame(discoveredSignature.Flags.GameMetadataSource, discoveredSignature.Flags.GameId).Result;
                 MetadataMap? map = MetadataManagement.NewMetadataMap((long)determinedPlatform.Id, discoveredSignature.Game.Name);
-                long RomId = StoreGame(gameLibrary, Hash, discoveredSignature, determinedPlatform, FilePath, 0, sourceIsExternal).Result;
+                long RomId = StoreGame(gameLibrary, updatedFileHash, discoveredSignature, determinedPlatform, FilePath, 0, sourceIsExternal).Result;
                 gaseous_server.Classes.Roms.GameRomItem romItem = Roms.GetRom(RomId).Result;
 
                 // build return value
@@ -391,7 +403,7 @@ namespace gaseous_server.Classes
         /// <param name="SourceIsExternal">
         /// Whether the source of the file is external to the library
         /// </param>
-        public static async Task<long> StoreGame(GameLibrary.LibraryItem library, HashObject hash, Signatures_Games signature, Platform platform, string filePath, long romId = 0, bool SourceIsExternal = false)
+        public static async Task<long> StoreGame(GameLibrary.LibraryItem library, FileHash hash, Signatures_Games signature, Platform platform, string filePath, long romId = 0, bool SourceIsExternal = false)
         {
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
 
@@ -512,14 +524,21 @@ namespace gaseous_server.Classes
                 sql = "UPDATE Games_Roms SET PlatformId=@platformid, GameId=@gameid, Name=@name, Size=@size, CRC=@crc, MD5=@md5, SHA1=@sha1, SHA256=@sha256, DevelopmentStatus=@developmentstatus, Attributes=@Attributes, RomType=@romtype, RomTypeMedia=@romtypemedia, MediaLabel=@medialabel, MetadataSource=@metadatasource, MetadataGameName=@metadatagamename, MetadataVersion=@metadataversion, RomDataVersion=@romdataversion, MetadataMapId=@metadatamapid, DateUpdated=@dateupdated WHERE Id=@id;";
                 dbDict.Add("id", romId);
             }
+
+            string fileName = Path.GetFileName(filePath);
+            // if (SourcesThatAllowROMRename.Contains(signature.Rom.SignatureSource))
+            // {
+            //     fileName = Common.ReturnValueIfNull(signature.Rom.Name, 0).ToString();
+            // }
+
             dbDict.Add("platformid", Common.ReturnValueIfNull(platform.Id, 0));
             dbDict.Add("gameid", 0); // set to 0 - no longer required as game is mapped using the MetadataMapBridge table
-            dbDict.Add("name", Common.ReturnValueIfNull(signature.Rom.Name, 0));
+            dbDict.Add("name", fileName);
             dbDict.Add("size", Common.ReturnValueIfNull(signature.Rom.Size, 0));
-            dbDict.Add("md5", hash.md5hash);
-            dbDict.Add("sha1", hash.sha1hash);
-            dbDict.Add("sha256", hash.sha256hash);
-            dbDict.Add("crc", hash.crc32hash);
+            dbDict.Add("md5", hash.Hash.md5hash);
+            dbDict.Add("sha1", hash.Hash.sha1hash);
+            dbDict.Add("sha256", hash.Hash.sha256hash);
+            dbDict.Add("crc", hash.Hash.crc32hash);
             dbDict.Add("developmentstatus", Common.ReturnValueIfNull(signature.Rom.DevelopmentStatus, ""));
             dbDict.Add("metadatasource", signature.Rom.SignatureSource);
             dbDict.Add("metadatagamename", Common.StripVersionsFromFileName(signature.Game.Name));

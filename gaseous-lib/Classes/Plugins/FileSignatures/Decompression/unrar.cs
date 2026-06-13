@@ -14,6 +14,9 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
         public string Extension { get; } = ".rar";
 
         /// <inheritdoc/>
+        public byte[] MagicBytes { get; } = new byte[] { 0x52, 0x61, 0x72, 0x21, 0x1A, 0x07 };
+
+        /// <inheritdoc/>
         public Task DecompressFile(string CompressedFilePath, string OutputDirectory)
         {
             Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.decompressing_using_rar");

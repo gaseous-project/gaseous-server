@@ -571,7 +571,8 @@ namespace gaseous_server.Classes
                 {
                     Library = library,
                     Hash = hash,
-                    FileName = (string)row["RelativePath"]
+                    FileName = (string)row["RelativePath"],
+                    FileExtension = Path.GetExtension((string)row["RelativePath"])
                 };
 
                 var (_, signature) = await fileSignature.GetFileSignatureAsync(
@@ -581,7 +582,7 @@ namespace gaseous_server.Classes
 
                 gaseous_server.Classes.Plugins.MetadataProviders.MetadataTypes.Platform platform = await Platforms.GetPlatform((long)row["PlatformId"]);
 
-                await ImportGame.StoreGame(library, hash, signature, platform, (string)row["Path"], (long)row["Id"]);
+                await ImportGame.StoreGame(library, fileHash, signature, platform, (string)row["Path"], (long)row["Id"]);
 
                 count += 1;
             }

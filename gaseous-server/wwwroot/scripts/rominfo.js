@@ -93,7 +93,7 @@ class rominfodialog {
                                 let hashRow = zipBody.insertRow();
                                 let hashCell1 = hashRow.insertCell();
                                 hashCell1.classList.add("romcell");
-                                hashCell1.innerHTML = "MD5: " + (zipContents[i].MD5 ? zipContents[i].MD5 : (window.lang ? window.lang.translate('generic.na') : 'N/A')) + "<br>SHA1: " + (zipContents[i].SHA1 ? zipContents[i].SHA1 : (window.lang ? window.lang.translate('generic.na') : 'N/A')) + "<br>SHA256: " + (zipContents[i].SHA256 ? zipContents[i].SHA256 : (window.lang ? window.lang.translate('generic.na') : 'N/A')) + "<br>CRC: " + (zipContents[i].CRC ? zipContents[i].CRC : (window.lang ? window.lang.translate('generic.na') : 'N/A'));
+                                hashCell1.innerHTML = "MD5: " + (zipContents[i].Hash.md5hash ? zipContents[i].Hash.md5hash : (window.lang ? window.lang.translate('generic.na') : 'N/A')) + "<br>SHA1: " + (zipContents[i].Hash.sha1hash ? zipContents[i].Hash.sha1hash : (window.lang ? window.lang.translate('generic.na') : 'N/A')) + "<br>SHA256: " + (zipContents[i].Hash.sha256hash ? zipContents[i].Hash.sha256hash : (window.lang ? window.lang.translate('generic.na') : 'N/A')) + "<br>CRC: " + (zipContents[i].Hash.crc32hash ? zipContents[i].Hash.crc32hash : (window.lang ? window.lang.translate('generic.na') : 'N/A'));
                                 hashCell1.colSpan = 2;
                                 hashCell1.setAttribute('style', 'padding-left: 20px;');
 

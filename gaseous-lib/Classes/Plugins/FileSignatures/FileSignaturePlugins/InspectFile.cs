@@ -1,4 +1,5 @@
 using gaseous_server.Models;
+using static gaseous_server.Classes.FileSignature;
 
 namespace gaseous_server.Classes.Plugins.FileSignatures
 {
@@ -17,7 +18,7 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
         public bool UsesInternet { get; } = false;
 
         /// <inheritdoc/>
-        public async Task<Signatures_Games?> GetSignature(HashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
+        public async Task<Signatures_Games?> GetSignature(FileHash hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
         {
             SignatureManagement signatureManagement = new SignatureManagement();
 
@@ -69,9 +70,10 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
 
                 // get rom data
                 ri.Name = Path.GetFileName(GameFileImportPath);
-                ri.Md5 = hash.md5hash;
-                ri.Sha1 = hash.sha1hash;
-                ri.Crc = hash.crc32hash;
+                ri.Md5 = hash.Hash.md5hash;
+                ri.Sha1 = hash.Hash.sha1hash;
+                ri.Crc = hash.Hash.crc32hash;
+                ri.Sha256 = hash.Hash.sha256hash;
                 ri.Size = ImageSize;
                 ri.SignatureSource = gaseous_server.Models.Signatures_Games.RomItem.SignatureSourceType.None;
 
