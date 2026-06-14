@@ -230,8 +230,8 @@ namespace gaseous_server.Classes
 								{
 									if (archiveData.isSignatureSelector == true)
 									{
-										md5String = archiveData.MD5;
-										sha1String = archiveData.SHA1;
+										md5String = archiveData.Hash.md5hash;
+										sha1String = archiveData.Hash.sha1hash;
 										selectorFound = true;
 										break;
 									}

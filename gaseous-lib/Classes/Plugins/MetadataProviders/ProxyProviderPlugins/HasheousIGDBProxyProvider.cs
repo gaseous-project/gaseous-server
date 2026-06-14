@@ -314,7 +314,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             return null;
         }
 
-        private async Task<T?> GetGameBundleAsync<T>(long id) where T : class
+        private async Task<T?> GetGameBundleAsync<T>(long id, bool forceDownload = false) where T : class
         {
             // we can only handle bundles for games - check T type
             // abort if T is not Game
@@ -326,7 +326,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
 
             // check if bundle exists
             string bundlePath = Config.LibraryConfiguration.LibraryMetadataDirectory_GameBundles(SourceType, this.GetType().Name, id);
-            bool forceDownloadBundle = false;
+            bool forceDownloadBundle = forceDownload;
             if (Directory.Exists(bundlePath))
             {
                 // open the game.json file
@@ -342,7 +342,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                     Dictionary<string, object>? gameDict = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, object>>(gameJsonContent);
                     if (gameDict != null)
                     {
-                        // check the updated_at field - if older than 7 days, redownload
+                        // check the updated_at field - if older than 365 days, redownload
                         if (gameDict.ContainsKey("updated_at"))
                         {
                             if (!DateTime.TryParse(gameDict["updated_at"].ToString(), System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out DateTime updatedAt))
@@ -350,9 +350,9 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
                                 // could not parse date, force download
                                 forceDownloadBundle = true;
                             }
-                            else if (DateTime.UtcNow.Subtract(updatedAt).TotalDays > 7)
+                            else if (DateTime.UtcNow.Subtract(updatedAt).TotalDays > 365)
                             {
-                                // older than 7 days, force download
+                                // older than 365 days, force download
                                 forceDownloadBundle = true;
                             }
                             else

@@ -13,12 +13,17 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
         /// <summary>
         /// Gets the name of the plugin.
         /// </summary>
-        public string Name { get;}
+        public string Name { get; }
 
         /// <summary>
         /// Gets the file extension that this plugin handles.
         /// </summary>
         public string Extension { get; }
+
+        /// <summary>
+        /// Gets the magic bytes (file header signature) that identify files handled by this plugin.
+        /// </summary>
+        public byte[] MagicBytes { get; }
 
         /// <summary>
         /// Decompresses a file from the specified compressed file path to the output directory.

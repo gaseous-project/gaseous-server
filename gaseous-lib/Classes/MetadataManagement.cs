@@ -825,6 +825,7 @@ namespace gaseous_server.Classes
 						Hash = hash,
 						Library = library,
 						FileName = dr["RelativePath"].ToString() ?? fi.Name,
+						FileExtension = Path.GetExtension(fi.Name),
 						ArchiveContents = zipContents != null ? zipContents : new List<ArchiveData>()
 					};
 				}
@@ -888,7 +889,7 @@ namespace gaseous_server.Classes
 						signature.MetadataSources.AddGame((long)discoveredGame.Id, discoveredGame.Name, FileSignature.MetadataSources.IGDB);
 					}
 				}
-				await ImportGame.StoreGame(library, fileHash.Hash, signature, signaturePlatform, fileHash.FullFilePath, (long)dr["Id"], false);
+				await ImportGame.StoreGame(library, fileHash, signature, signaturePlatform, fileHash.FullFilePath, (long)dr["Id"], false);
 			}
 			catch (Exception ex)
 			{

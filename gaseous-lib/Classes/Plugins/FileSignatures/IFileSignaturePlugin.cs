@@ -1,3 +1,5 @@
+using static gaseous_server.Classes.FileSignature;
+
 namespace gaseous_server.Classes.Plugins.FileSignatures
 {
     /// <summary>
@@ -34,6 +36,6 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
         /// <param name="ImageSize">The size of the image file</param>
         /// <param name="GameFileImportPath">The import path of the game file</param>
         /// <returns>A task that represents the asynchronous operation. The task result contains the signature games model or null if not found.</returns>
-        public Task<gaseous_server.Models.Signatures_Games?> GetSignature(HashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath);
+        public Task<gaseous_server.Models.Signatures_Games?> GetSignature(FileHash hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath);
     }
 }

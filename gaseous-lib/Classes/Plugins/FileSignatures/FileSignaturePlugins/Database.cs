@@ -1,4 +1,5 @@
 using gaseous_server.Models;
+using static gaseous_server.Classes.FileSignature;
 
 namespace gaseous_server.Classes.Plugins.FileSignatures
 {
@@ -9,7 +10,7 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
     {
         /// <inheritdoc/>
         public string Name { get; } = "Database";
-        
+
         /// <inheritdoc/>
         public Dictionary<string, object>? Settings { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
 
@@ -17,14 +18,14 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
         public bool UsesInternet { get; } = false;
 
         /// <inheritdoc/>
-        public async Task<Signatures_Games?> GetSignature(HashObject hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
+        public async Task<Signatures_Games?> GetSignature(FileHash hash, string ImageName, string ImageExtension, long ImageSize, string GameFileImportPath)
         {
-             // check 1: do we have a signature for it?
+            // check 1: do we have a signature for it?
             gaseous_server.Classes.SignatureManagement sc = new SignatureManagement();
 
-            Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.checking_local_database_for_hash", null, new string[] { hash.sha256hash });
+            Logging.LogKey(Logging.LogType.Information, "process.get_signature", "getsignature.checking_local_database_for_hash", null, new string[] { hash.Hash.sha256hash });
 
-            List<gaseous_server.Models.Signatures_Games> signatures = await sc.GetSignature(hash);
+            List<gaseous_server.Models.Signatures_Games> signatures = await sc.GetSignature(hash.Hash);
 
             gaseous_server.Models.Signatures_Games? discoveredSignature = null;
             if (signatures.Count == 1)
