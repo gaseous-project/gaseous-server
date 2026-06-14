@@ -432,7 +432,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders
             dbDict.Add("Endpoint", Endpoint);
             dbDict.Add(SearchField, SearchValue);
 
-            DataTable dt = await db.ExecuteCMDAsync(sql, dbDict, new DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromHours(8).Ticks));
+            DataTable dt = await db.ExecuteCMDAsync(sql, dbDict, new DatabaseMemoryCacheOptions(true, (int)TimeSpan.FromHours(8).TotalSeconds));
             if (dt.Rows.Count == 0)
             {
                 // no data stored for this item
