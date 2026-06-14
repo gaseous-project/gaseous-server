@@ -265,7 +265,7 @@ class GameCard {
             let randomIndex = Math.floor(Math.random() * this.gameData.artworks.length);
             let artwork = this.gameData.artworks[randomIndex];
             // let artwork = this.gameData.artworks[0];
-            let artworkUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/artwork/${artwork}/image/screenshot_small/${artwork}.jpg`;
+            let artworkUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/artwork/${artwork}/image/screenshot_huge/${artwork}.jpg`;
             this.card.SetBackgroundImage(artworkUrl, true, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
@@ -276,7 +276,7 @@ class GameCard {
             // randomly select a screenshot to display
             let randomIndex = Math.floor(Math.random() * this.gameData.screenshots.length);
             let screenshot = this.gameData.screenshots[randomIndex];
-            let screenshotUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/screenshot/${screenshot}/image/screenshot_small/${screenshot}.jpg`;
+            let screenshotUrl = `/api/v1.1/Games/${this.gameId}/${this.gameData.metadataSource}/screenshot/${screenshot}/image/screenshot_huge/${screenshot}.jpg`;
             this.card.SetBackgroundImage(screenshotUrl, true, () => {
                 if (this.card.contrastColour !== 'fff') {
                     let ratingIgdbLogo = this.card.cardBody.querySelector('#card-userrating-igdb-logo');
