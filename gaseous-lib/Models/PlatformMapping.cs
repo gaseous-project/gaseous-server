@@ -348,7 +348,7 @@ namespace gaseous_server.Models
             Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
             string sql = "";
             Dictionary<string, object> dbDict = new Dictionary<string, object>();
-            sql = "UPDATE PlatformMap SET RetroPieDirectoryName=@RetroPieDirectoryName, WebEmulator_Type=@WebEmulator_Type, WebEmulator_Core=@WebEmulator_Core, AvailableWebEmulators=@AvailableWebEmulators WHERE Id = @Id; ";
+            sql = "UPDATE PlatformMap SET RetroPieDirectoryName=@RetroPieDirectoryName, WebEmulator_Type=@WebEmulator_Type, WebEmulator_Core=@WebEmulator_Core, AvailableWebEmulators=@AvailableWebEmulators, AdditionalFiles=@AdditionalFiles WHERE Id = @Id; ";
 
             dbDict.Add("Id", item.IGDBId);
             dbDict.Add("RetroPieDirectoryName", item.RetroPieDirectoryName);
@@ -357,12 +357,14 @@ namespace gaseous_server.Models
                 dbDict.Add("WebEmulator_Type", item.WebEmulator.Type);
                 dbDict.Add("WebEmulator_Core", item.WebEmulator.Core);
                 dbDict.Add("AvailableWebEmulators", Newtonsoft.Json.JsonConvert.SerializeObject(item.WebEmulator.AvailableWebEmulators));
+                dbDict.Add("AdditionalFiles", Newtonsoft.Json.JsonConvert.SerializeObject(item.WebEmulator.AdditionalFiles));
             }
             else
             {
                 dbDict.Add("WebEmulator_Type", "");
                 dbDict.Add("WebEmulator_Core", "");
                 dbDict.Add("AvailableWebEmulators", "");
+                dbDict.Add("AdditionalFiles", "");
             }
             await db.ExecuteCMDAsync(sql, dbDict);
         }
@@ -483,7 +485,8 @@ namespace gaseous_server.Models
                 {
                     Type = (string)Common.ReturnValueIfNull(row["WebEmulator_Type"], ""),
                     Core = (string)Common.ReturnValueIfNull(row["WebEmulator_Core"], ""),
-                    AvailableWebEmulators = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PlatformMapItem.WebEmulatorItem.AvailableWebEmulatorItem>>((string)Common.ReturnValueIfNull(row["AvailableWebEmulators"], "[]"))
+                    AvailableWebEmulators = Newtonsoft.Json.JsonConvert.DeserializeObject<List<PlatformMapItem.WebEmulatorItem.AvailableWebEmulatorItem>>((string)Common.ReturnValueIfNull(row["AvailableWebEmulators"], "[]")),
+                    AdditionalFiles = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<string, string>>((string)Common.ReturnValueIfNull(row["AdditionalFiles"], "{}"))
                 };
                 mapItem.Bios = bioss;
                 mapItem.EnabledBIOSHashes = enabledBios;
@@ -641,6 +644,7 @@ namespace gaseous_server.Models
             {
                 public string Type { get; set; }
                 public string Core { get; set; }
+                public Dictionary<string, string> AdditionalFiles { get; set; } = new Dictionary<string, string>();
 
                 public List<AvailableWebEmulatorItem> AvailableWebEmulators { get; set; } = new List<AvailableWebEmulatorItem>();
 
@@ -675,6 +679,7 @@ namespace gaseous_server.Models
             public string EmulatorType { get; set; }
             public string Core { get; set; }
             public List<string> EnableBIOSFiles { get; set; } = new List<string>();
+            public Dictionary<string, string> AdditionalFiles { get; set; } = new Dictionary<string, string>();
         }
     }
 }

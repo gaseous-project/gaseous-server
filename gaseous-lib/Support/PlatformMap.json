@@ -1365,6 +1365,9 @@
     "WebEmulator": {
       "Type": "EmulatorJS",
       "Core": "dosbox_pure",
+      "AdditionalFiles": {
+        "BOOTUP.BAT": "@ECHO OFF\nSET BLASTER=A220 I7 D1 H5 T6\nSET PATH=Z:;A:\nZ:\nMOUNT C /emulator/c\nC:\n"
+      },
       "AvailableWebEmulators": [
         {
           "EmulatorType": "EmulatorJS",
