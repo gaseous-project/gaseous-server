@@ -6,7 +6,7 @@ REPO_URL="https://github.com/EmulatorJS/EmulatorJS.git"
 SUBREPO_DIR="gaseous-server/wwwroot/emulators/EmulatorJS"
 REPO_DIR="./$SUBREPO_DIR"
 
-TARGET_BRANCH="download-file-fixes" # Default target branch
+TARGET_BRANCH="main" # Default target branch
 
 # Reset submodule to ensure a clean state
 git submodule update --init --recursive --remote --force "$SUBREPO_DIR"
