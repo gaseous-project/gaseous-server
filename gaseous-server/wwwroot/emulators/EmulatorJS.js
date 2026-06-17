@@ -395,7 +395,8 @@ const autoSkipUploadPathPrefixes = [
     '/fbneo/samples/',
     '/mame2003-plus/samples/',
     '/fbalpha2012_cps1/samples/',
-    '/fbalpha2012_cps2/samples/'
+    '/fbalpha2012_cps2/samples/',
+    '/BOOTUP.BAT'
 ];
 let filesystemSyncInProgress = false;
 let filesystemHydrationCompleted = false;
@@ -544,8 +545,6 @@ async function reconcileFilesystemDeletes(currentRelativePaths) {
         managedFilesystemFiles.delete(normalizedDeletedPath);
         delete uploadPaths[normalizedDeletedPath];
     }
-
-    window.EJS_externalFiles = uploadPaths;
 }
 
 async function hydrateFilesystemUploadPaths() {
@@ -582,7 +581,6 @@ async function hydrateFilesystemUploadPaths() {
             }
         }
 
-        window.EJS_externalFiles = uploadPaths;
         filesystemHydrationCompleted = true;
     } catch (error) {
         console.log(window.lang.translate('console.error_generic', error));
@@ -752,7 +750,6 @@ if (['arcade', 'mame', 'fbneo', 'fbalpha2012_cps1', 'fbalpha2012_cps2'].includes
 
                     console.log(window.lang.translate("emulator.samples_array", JSON.stringify(samplesArray)));
                     Object.assign(uploadPaths, samplesArray);
-                    window.EJS_externalFiles = uploadPaths;
                 }
             });
     }

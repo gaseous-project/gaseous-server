@@ -34,6 +34,20 @@ class WebEmulatorConfiguration {
 
         // load the bios list
         this.#LoadBiosList();
+
+        // show the startup script if we're on DOS
+        if (this.PlatformMap.igdbId === 13) {
+            this.panel.querySelector('#webemulator_core_configuration').style.display = '';
+            let startupScriptTextArea = this.panel.querySelector('#webemulator_core_configuration_startupscript');
+            if (this.PlatformMap.webEmulator.additionalFiles['BOOTUP.BAT']) {
+                startupScriptTextArea.value = this.PlatformMap.webEmulator.additionalFiles['BOOTUP.BAT'];
+                startupScriptTextArea.addEventListener('change', () => {
+                    this.PlatformMap.webEmulator.additionalFiles['BOOTUP.BAT'] = startupScriptTextArea.value;
+                });
+            }
+        } else {
+            this.panel.querySelector('#webemulator_core_configuration').style.display = 'none';
+        }
     }
 
     #LoadEmulatorList() {

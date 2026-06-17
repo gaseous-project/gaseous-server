@@ -795,8 +795,8 @@ namespace gaseous_server.Controllers
         [Authorize]
         [ProducesResponseType(typeof(UserEmulatorConfiguration), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GetGameEmulator(long MetadataMapId, long PlatformId)
-        {
+            public async Task<ActionResult> GetGameEmulator(long MetadataMapId, long PlatformId)
+            {
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).PreferredMetadataMapItem;
