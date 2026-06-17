@@ -20,7 +20,7 @@ RUN dotnet publish "gaseous-server/gaseous-server.csproj" --use-current-runtime 
 # download and unzip EmulatorJS from CDN
 RUN bash build/scripts/get-ejs-git.sh
 # Copy the downloaded cores to the output directory
-RUN cp -r gaseous-server/wwwroot/emulators/EmulatorJS/* out/wwwroot/emulators/EmulatorJS/
+RUN cp -r gaseous-server/wwwroot/emulators/EmulatorJS out/wwwroot/emulators/
 
 # update apt-get
 RUN apt-get update && apt upgrade -y
