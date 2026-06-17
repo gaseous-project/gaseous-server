@@ -21,7 +21,7 @@ RUN dotnet restore "gaseous-server/gaseous-server.csproj" -a $TARGETARCH
 RUN dotnet publish "gaseous-server/gaseous-server.csproj" --use-current-runtime --self-contained true -c Release -o out -a $TARGETARCH
 
 # Copy the downloaded cores to the output directory
-RUN mv gaseous-server/wwwroot/emulators/EmulatorJS/data/cores out/wwwroot/emulators/EmulatorJS/data/
+RUN mv gaseous-server/wwwroot/emulators/EmulatorJS/data/cores out/wwwroot/emulators/EmulatorJS/data/cores
 
 # update apt-get
 RUN apt-get update && apt upgrade -y
