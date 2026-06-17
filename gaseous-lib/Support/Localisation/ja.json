@@ -478,6 +478,8 @@
         "webemulatormodal.core_maps_to_core": "コア対応: {0}",
         "webemulatormodal.core_default_suffix": "既定",
         "webemulatormodal.bios_description_filename": "{0} ({1})",
+        "webemulatormodal.core_configuration_header": "コアの構成",
+        "webemulatormodal.core_configuration_description.startupscript": "スタートアップスクリプトは、コアが起動したときに実行されるスクリプトです。BIOS ファイルの読み込みやコアのオプション設定など、ゲームを実行する前にコアを設定するために使用できます。",
         "firstpage.header_label": "Gaseous",
         "firstpage.get_started_button": "開始",
         "firstpage.link.github": "GitHub",

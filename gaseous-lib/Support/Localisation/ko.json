@@ -478,6 +478,8 @@
     "webemulatormodal.core_maps_to_core": "코어 매핑: {0}",
     "webemulatormodal.core_default_suffix": "기본값",
     "webemulatormodal.bios_description_filename": "{0} ({1})",
+    "webemulatormodal.core_configuration_header": "코어 구성",
+    "webemulatormodal.core_configuration_description.startupscript": "시작 스크립트는 코어가 시작될 때 실행되는 스크립트입니다. BIOS 파일을 로드하거나 코어 옵션을 설정하는 등 게임 실행 전에 코어를 설정하는 데 사용할 수 있습니다.",
     "firstpage.header_label": "Gaseous",
     "firstpage.get_started_button": "시작하기",
     "firstpage.link.github": "GitHub",
