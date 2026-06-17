@@ -12,16 +12,15 @@ COPY .. ./
 
 # Build Gaseous Web Server
 
-# download and unzip EmulatorJS from CDN
-RUN bash build/scripts/get-ejs-git.sh
-
 # Restore as distinct layers
 RUN dotnet restore "gaseous-server/gaseous-server.csproj" -a $TARGETARCH
 # Build and publish a release
 RUN dotnet publish "gaseous-server/gaseous-server.csproj" --use-current-runtime --self-contained true -c Release -o out -a $TARGETARCH
 
+# download and unzip EmulatorJS from CDN
+RUN bash build/scripts/get-ejs-git.sh
 # Copy the downloaded cores to the output directory
-RUN mv gaseous-server/wwwroot/emulators/EmulatorJS/data/cores out/wwwroot/emulators/EmulatorJS/data/cores
+RUN mv gaseous-server/wwwroot/emulators/EmulatorJS out/wwwroot/emulators/EmulatorJS
 
 # update apt-get
 RUN apt-get update && apt upgrade -y
