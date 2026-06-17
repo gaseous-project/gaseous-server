@@ -11,6 +11,10 @@ RUN echo "Build: $BUILDPLATFORM"
 COPY .. ./
 
 # Build Gaseous Web Server
+
+# download and unzip EmulatorJS from CDN
+RUN bash build/scripts/get-ejs-git.sh && mkdir -p out/wwwroot/emulators/EmulatorJS/data/cores && mv gaseous-server/wwwroot/emulators/EmulatorJS/data/cores out/wwwroot/emulators/EmulatorJS/data/
+
 # Restore as distinct layers
 RUN dotnet restore "gaseous-server/gaseous-server.csproj" -a $TARGETARCH
 # Build and publish a release
@@ -18,13 +22,6 @@ RUN dotnet publish "gaseous-server/gaseous-server.csproj" --use-current-runtime 
 
 # update apt-get
 RUN apt-get update && apt upgrade -y
-
-# download and unzip EmulatorJS from CDN
-# RUN apt-get install -y p7zip-full
-# RUN mkdir -p out/wwwroot/emulators/EmulatorJS
-# RUN wget https://cdn.emulatorjs.org/releases/4.2.3.7z
-# RUN 7z x -y -oout/wwwroot/emulators/EmulatorJS 4.2.3.7z
-RUN bash build/scripts/get-ejs-git.sh && mkdir -p out/wwwroot/emulators/EmulatorJS/data/cores && mv gaseous-server/wwwroot/emulators/EmulatorJS/data/cores out/wwwroot/emulators/EmulatorJS/data/
 
 # clean up apt-get
 RUN apt-get clean && rm -rf /var/lib/apt/lists
