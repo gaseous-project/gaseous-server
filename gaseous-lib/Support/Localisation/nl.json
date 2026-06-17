@@ -479,6 +479,8 @@
         "webemulatormodal.core_maps_to_core": "koppelt aan core: {0}",
         "webemulatormodal.core_default_suffix": "Standaard",
         "webemulatormodal.bios_description_filename": "{0} ({1})",
+        "webemulatormodal.core_configuration_header": "Core-configuratie",
+        "webemulatormodal.core_configuration_description.startupscript": "Het opstartscript wordt uitgevoerd wanneer de core wordt gestart. Het kan worden gebruikt om de core voor te bereiden voordat een spel wordt uitgevoerd, zoals het laden van een BIOS-bestand of het instellen van core-opties.",
         "firstpage.header_label": "Gaseous",
         "firstpage.get_started_button": "Aan de slag",
         "firstpage.link.github": "GitHub",

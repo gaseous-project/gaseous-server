@@ -482,6 +482,8 @@
         "webemulatormodal.core_maps_to_core": "maps to core: {0}",
         "webemulatormodal.core_default_suffix": "Default",
         "webemulatormodal.bios_description_filename": "{0} ({1})",
+        "webemulatormodal.core_configuration_header": "Core Configuration",
+        "webemulatormodal.core_configuration_description.startupscript": "Startup Script is a script that is run when the core is started. It can be used to set up the core before running a game, such as loading a BIOS file or setting core options.",
         "firstpage.header_label": "Gaseous",
         "firstpage.get_started_button": "Get Started",
         "firstpage.link.github": "GitHub",

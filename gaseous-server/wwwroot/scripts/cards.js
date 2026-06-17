@@ -2420,6 +2420,9 @@ class GameCardRomList {
                 platformMap.webEmulator.type = userEmuConfig.emulatorType;
                 platformMap.webEmulator.core = userEmuConfig.core;
             }
+            if (userEmuConfig.additionalFiles) {
+                platformMap.webEmulator.additionalFiles = userEmuConfig.additionalFiles;
+            }
             if (userEmuConfig.enableBIOSFiles) {
                 platformMap.enabledBIOSHashes = userEmuConfig.enableBIOSFiles;
             }
@@ -2442,6 +2445,7 @@ class GameCardRomList {
             });
             callingObject.gamePlatformObject.emulatorConfiguration.emulatorType = defaultPlatformMap.webEmulator.type;
             callingObject.gamePlatformObject.emulatorConfiguration.core = defaultPlatformMap.webEmulator.core;
+            callingObject.gamePlatformObject.emulatorConfiguration.additionalFiles = defaultPlatformMap.webEmulator.additionalFiles;
             callingObject.gamePlatformObject.emulatorConfiguration.enabledBIOSHashes = defaultPlatformMap.enabledBIOSHashes;
             callingObject.Refresh();
             mappingModal.close();
@@ -2452,6 +2456,7 @@ class GameCardRomList {
             let model = {
                 EmulatorType: emuConfig.PlatformMap.webEmulator.type,
                 Core: emuConfig.PlatformMap.webEmulator.core,
+                AdditionalFiles: emuConfig.PlatformMap.webEmulator.additionalFiles,
                 EnableBIOSFiles: emuConfig.PlatformMap.enabledBIOSHashes
             }
 
@@ -2464,6 +2469,7 @@ class GameCardRomList {
             });
             callingObject.gamePlatformObject.emulatorConfiguration.emulatorType = emuConfig.PlatformMap.webEmulator.type;
             callingObject.gamePlatformObject.emulatorConfiguration.core = emuConfig.PlatformMap.webEmulator.core;
+            callingObject.gamePlatformObject.emulatorConfiguration.additionalFiles = emuConfig.PlatformMap.webEmulator.additionalFiles;
             callingObject.gamePlatformObject.emulatorConfiguration.enabledBIOSHashes = emuConfig.PlatformMap.enabledBIOSHashes;
 
             callingObject.Refresh();

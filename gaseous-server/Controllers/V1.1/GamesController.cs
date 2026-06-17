@@ -150,6 +150,7 @@ namespace gaseous_server.Controllers.v1_1
             }
         }
 
+        [NonAction]
         public string FileSystemBasePath(string userId, long MetadataMapId, long? RomId, long? RomGroupId)
         {
             string romType = "";

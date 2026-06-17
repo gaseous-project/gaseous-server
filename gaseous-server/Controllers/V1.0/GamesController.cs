@@ -795,8 +795,8 @@ namespace gaseous_server.Controllers
         [Authorize]
         [ProducesResponseType(typeof(UserEmulatorConfiguration), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public async Task<ActionResult> GetGameEmulator(long MetadataMapId, long PlatformId)
-        {
+            public async Task<ActionResult> GetGameEmulator(long MetadataMapId, long PlatformId)
+            {
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).PreferredMetadataMapItem;
@@ -818,6 +818,75 @@ namespace gaseous_server.Controllers
                             if (platformMappingObject != null)
                             {
                                 return Ok(platformMappingObject);
+                            }
+                        }
+                    }
+                }
+
+                return NotFound();
+            }
+            catch
+            {
+                return NotFound();
+            }
+        }
+
+        [MapToApiVersion("1.0")]
+        [MapToApiVersion("1.1")]
+        [HttpGet]
+        [Route("{MetadataMapId}/emulatorconfiguration/{PlatformId}/files/{filename}")]
+        [Authorize]
+        [ProducesResponseType(typeof(FileResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult> GetGameEmulator_File(long MetadataMapId, long PlatformId, string filename)
+        {
+            try
+            {
+                MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).PreferredMetadataMapItem;
+                Game game = await Classes.Metadata.Games.GetGame(metadataMap.SourceType, metadataMap.SourceId);
+
+                if (game != null)
+                {
+                    Platform platformObject = await Classes.Metadata.Platforms.GetPlatform(PlatformId);
+
+                    if (platformObject != null)
+                    {
+                        var user = await _userManager.GetUserAsync(User);
+
+                        if (user != null)
+                        {
+                            PlatformMapping platformMapping = new PlatformMapping();
+                            UserEmulatorConfiguration platformMappingObject = await platformMapping.GetUserEmulator(user.Id, MetadataMapId, PlatformId);
+
+                            string returnFile = "";
+                            if (platformMappingObject != null)
+                            {
+                                if (platformMappingObject.AdditionalFiles.ContainsKey(filename))
+                                {
+                                    if (platformMappingObject.AdditionalFiles.ContainsKey(filename) && platformMappingObject.AdditionalFiles[filename] != null)
+                                    {
+                                        // get the user specified startup script for this game and core
+                                        returnFile = platformMappingObject.AdditionalFiles[filename];
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // return the default startup script for this core
+                                var platformMap = PlatformMapping.PlatformMap.Find(x => x.IGDBId == PlatformId);
+                                if (platformMap != null)
+                                {
+                                    if (platformMap.WebEmulator != null && platformMap.WebEmulator.AdditionalFiles.ContainsKey(filename))
+                                    {
+                                        returnFile = platformMap.WebEmulator.AdditionalFiles[filename];
+                                    }
+                                }
+                            }
+
+                            if (!String.IsNullOrEmpty(returnFile))
+                            {
+                                // return string returnFile as a synthetic FileResult
+                                return File(System.Text.Encoding.UTF8.GetBytes(returnFile), "text/plain", filename);
                             }
                         }
                     }

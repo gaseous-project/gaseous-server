@@ -332,7 +332,8 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                             {
                                 EmulatorType = platformMap.WebEmulator.Type,
                                 Core = platformMap.WebEmulator.Core,
-                                EnableBIOSFiles = platformMap.EnabledBIOSHashes
+                                EnableBIOSFiles = platformMap.EnabledBIOSHashes,
+                                AdditionalFiles = platformMap.WebEmulator.AdditionalFiles
                             };
                         }
                     }
@@ -345,7 +346,8 @@ ORDER BY Platform.`Name`, view_Games_Roms.MetadataGameName;";
                     {
                         EmulatorType = "",
                         Core = "",
-                        EnableBIOSFiles = new List<string>()
+                        EnableBIOSFiles = new List<string>(),
+                        AdditionalFiles = new Dictionary<string, string>()
                     };
                 }
 

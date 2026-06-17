@@ -509,6 +509,8 @@
         "webemulatormodal.core_maps_to_core": "соответствует ядру: {0}",
         "webemulatormodal.core_default_suffix": "По умолчанию",
         "webemulatormodal.bios_description_filename": "{0} ({1})",
+        "webemulatormodal.core_configuration_header": "Конфигурация ядра",
+        "webemulatormodal.core_configuration_description.startupscript": "Startup Script — это скрипт, выполняющийся при запуске ядра. Он может использоваться для настройки ядра перед запуском игры, например для загрузки BIOS или установки параметров ядра.",
         "firstpage.header_label": "Gaseous",
         "firstpage.get_started_button": "Начать",
         "firstpage.link.github": "GitHub",

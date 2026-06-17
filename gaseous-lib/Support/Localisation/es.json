@@ -482,6 +482,8 @@
         "webemulatormodal.core_maps_to_core": "se asigna al core: {0}",
         "webemulatormodal.core_default_suffix": "Predeterminado",
         "webemulatormodal.bios_description_filename": "{0} ({1})",
+        "webemulatormodal.core_configuration_header": "Configuración del núcleo",
+        "webemulatormodal.core_configuration_description.startupscript": "El script de inicio se ejecuta cuando se inicia el core. Se puede usar para preparar el core antes de ejecutar un juego, por ejemplo cargar un archivo BIOS o establecer opciones del core.",
         "firstpage.header_label": "Gaseous",
         "firstpage.get_started_button": "Comenzar",
         "firstpage.link.github": "GitHub",

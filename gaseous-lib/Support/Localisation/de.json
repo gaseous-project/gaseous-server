@@ -479,6 +479,8 @@
         "webemulatormodal.core_maps_to_core": "mappt zu Core: {0}",
         "webemulatormodal.core_default_suffix": "Standard",
         "webemulatormodal.bios_description_filename": "{0} ({1})",
+        "webemulatormodal.core_configuration_header": "Core-Konfiguration",
+        "webemulatormodal.core_configuration_description.startupscript": "Ein Startskript wird ausgeführt, wenn der Core gestartet wird. Es kann verwendet werden, um den Core vor dem Start eines Spiels vorzubereiten, z. B. um ein BIOS zu laden oder Core-Optionen festzulegen.",
         "firstpage.header_label": "Gaseous",
         "firstpage.get_started_button": "Erste Schritte",
         "firstpage.link.github": "GitHub",

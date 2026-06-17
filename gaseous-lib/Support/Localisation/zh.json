@@ -478,6 +478,8 @@
         "webemulatormodal.core_maps_to_core": "映射到核心: {0}",
         "webemulatormodal.core_default_suffix": "默认",
         "webemulatormodal.bios_description_filename": "{0} ({1})",
+        "webemulatormodal.core_configuration_header": "核心配置",
+        "webemulatormodal.core_configuration_description.startupscript": "启动脚本是在核心启动时运行的脚本。它可用于在运行游戏之前设置核心，例如加载 BIOS 文件或设置核心选项。",
         "firstpage.header_label": "Gaseous",
         "firstpage.get_started_button": "开始使用",
         "firstpage.link.github": "GitHub",
