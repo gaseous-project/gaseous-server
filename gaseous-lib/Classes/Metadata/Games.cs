@@ -74,7 +74,7 @@ namespace gaseous_server.Classes.Metadata
 
             if (result.ParentGame != null)
             {
-                parentGame = await GetGame(result.MetadataSource, (long)result.ParentGame);
+                parentGame = await GetGame(result.MetadataSource, (long)result.ParentGame, false);
             }
 
             // get cover art from parent if this has no cover
