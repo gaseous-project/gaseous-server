@@ -497,6 +497,16 @@ namespace gaseous_server.Classes
             ScreenScraper = 10,
 
             /// <summary>
+            /// Launchbox
+            /// </summary>
+            Launchbox = 11,
+
+            /// <summary>
+            /// Hasheous file signature database
+            /// </summary>
+            Hasheous = 9000,
+
+            /// <summary>
             /// Unknown metadata source.
             /// </summary>
             Unknown = 9999

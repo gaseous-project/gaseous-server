@@ -27,7 +27,8 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
         private List<MetadataSources> SupportedMetadataSources = new List<MetadataSources>()
         {
             MetadataSources.IGDB,
-            MetadataSources.TheGamesDb
+            MetadataSources.TheGamesDb,
+            MetadataSources.Hasheous
         };
 
         private static JsonSerializerSettings CreateHasheousJsonSerializerSettings()
@@ -187,6 +188,12 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                                         }
                                     }
                                 }
+                            }
+
+                            // add the Hasheous id
+                            if (HasheousResult.Name != null)
+                            {
+                                signature.MetadataSources.AddGame(HasheousResult.Id, HasheousResult.Name, MetadataSources.Hasheous);
                             }
 
                             // get game metadata
