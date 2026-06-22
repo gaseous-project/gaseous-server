@@ -27,7 +27,8 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
         private List<MetadataSources> SupportedMetadataSources = new List<MetadataSources>()
         {
             MetadataSources.IGDB,
-            MetadataSources.TheGamesDb
+            MetadataSources.TheGamesDb,
+            MetadataSources.Hasheous
         };
 
         private static JsonSerializerSettings CreateHasheousJsonSerializerSettings()
@@ -189,6 +190,12 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
                                 }
                             }
 
+                            // add the Hasheous id
+                            if (HasheousResult.Name != null)
+                            {
+                                signature.MetadataSources.AddGame(HasheousResult.Id, HasheousResult.Name, MetadataSources.Hasheous);
+                            }
+
                             // get game metadata
                             if (HasheousResult.Metadata != null)
                             {
@@ -309,7 +316,7 @@ namespace gaseous_server.Classes.Plugins.FileSignatures
             // headers.Add("CacheControl", "no-cache");
             // headers.Add("Pragma", "no-cache");
 
-            var response = await comms.SendRequestAsync<string>(HTTPComms.HttpMethod.POST, new Uri("https://hasheous.org/api/v1/Lookup/ByHash" + sourceList), headers, body, contentType: "application/json", returnRawResponse: true);
+            var response = await comms.SendRequestAsync<string>(HTTPComms.HttpMethod.POST, new Uri($"{Config.MetadataConfiguration.HasheousHost}/api/v1/Lookup/ByHash{sourceList}"), headers, body, contentType: "application/json", returnRawResponse: true);
             if (response != null && response.StatusCode == 200)
             {
                 if (!string.IsNullOrWhiteSpace(response.Body) && response.Body != "The provided hash was not found in the signature database.")

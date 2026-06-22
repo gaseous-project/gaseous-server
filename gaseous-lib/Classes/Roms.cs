@@ -179,83 +179,6 @@ namespace gaseous_server.Classes
 			}
 		}
 
-		public static async Task<GameRomItem> UpdateRomAsync(long RomId, long PlatformId, long GameId)
-		{
-			GameRomItem existingRom = await GetRom(RomId);
-			long previousMetadataMapId = existingRom.MetadataMapId;
-
-			// ensure metadata for platformid is present
-			Platform platform = await Classes.Metadata.Platforms.GetPlatform(PlatformId);
-
-			// ensure metadata for gameid is present
-			Game game = await Classes.Metadata.Games.GetGame(FileSignature.MetadataSources.IGDB, GameId);
-
-			Database db = new Database(Database.databaseType.MySql, Config.DatabaseConfiguration.ConnectionString);
-			string sql = "UPDATE Games_Roms SET PlatformId=@platformid, MetadataMapId=@gameid WHERE Id = @id";
-			Dictionary<string, object> dbDict = new Dictionary<string, object>();
-			dbDict.Add("id", RomId);
-			dbDict.Add("platformid", PlatformId);
-			dbDict.Add("gameid", GameId);
-			await db.ExecuteCMDAsync(sql, dbDict);
-			MetadataManagement.UpdateRomCount(GameId);
-			if (previousMetadataMapId != 0 && previousMetadataMapId != GameId)
-			{
-				MetadataManagement.UpdateRomCount(previousMetadataMapId);
-			}
-
-			GameRomItem rom = await GetRom(RomId);
-
-			// send update to Hasheous if enabled
-			if (PlatformId != 0 && GameId != 0)
-			{
-				if (Config.MetadataConfiguration.HasheousSubmitFixes == true)
-				{
-					if (
-						Config.MetadataConfiguration.SignatureSource == HasheousClient.Models.MetadataModel.SignatureSources.Hasheous &&
-						(
-							Config.MetadataConfiguration.HasheousAPIKey != null &&
-							Config.MetadataConfiguration.HasheousAPIKey != "")
-						)
-					{
-						try
-						{
-							// find signature used for identifing the rom
-							string md5String = rom.Md5;
-							string sha1String = rom.Sha1;
-							if (rom.Attributes.ContainsKey("ZipContents"))
-							{
-								bool selectorFound = false;
-								List<ArchiveData> archiveDataValues = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ArchiveData>>(rom.Attributes["ZipContents"].ToString());
-								foreach (ArchiveData archiveData in archiveDataValues)
-								{
-									if (archiveData.isSignatureSelector == true)
-									{
-										md5String = archiveData.Hash.md5hash;
-										sha1String = archiveData.Hash.sha1hash;
-										selectorFound = true;
-										break;
-									}
-								}
-							}
-
-							HasheousClient.WebApp.HttpHelper.APIKey = Config.MetadataConfiguration.HasheousAPIKey;
-							HasheousClient.WebApp.HttpHelper.ClientKey = Config.MetadataConfiguration.HasheousClientAPIKey;
-							HasheousClient.Hasheous hasheousClient = new HasheousClient.Hasheous();
-							List<MetadataMatch> metadataMatchList = new List<MetadataMatch>();
-							metadataMatchList.Add(new MetadataMatch(HasheousClient.Models.MetadataSources.IGDB, platform.Slug, game.Slug));
-							hasheousClient.FixMatch(new HasheousClient.Models.FixMatchModel(md5String, sha1String, metadataMatchList));
-						}
-						catch (Exception ex)
-						{
-							Logging.LogKey(Logging.LogType.Critical, "process.fix_match", "fixmatch.error_sending_fixed_match_to_hasheous", null, null, ex);
-						}
-					}
-				}
-			}
-
-			return rom;
-		}
-
 		public static async void DeleteRom(long RomId)
 		{
 			GameRomItem rom = await GetRom(RomId);
@@ -379,7 +302,24 @@ namespace gaseous_server.Classes
 			public GameLibrary.LibraryItem Library { get; set; }
 			public bool RomUserLastUsed { get; set; }
 			public bool RomUserFavourite { get; set; }
+
+			/// <summary>
+			/// This is a convienience property to return the contents of the ArchiveContents attribute as a list of ArchiveData objects. It is not stored in the database, but is generated on the fly when accessed. It will return null if the ArchiveContents attribute is not present or is not in the correct format.
+			/// </summary>
+			public List<ArchiveData>? ArchiveContents
+			{
+				get
+				{
+					if (Attributes != null && Attributes.ContainsKey("ZipContents"))
+					{
+						return Newtonsoft.Json.JsonConvert.DeserializeObject<List<ArchiveData>>((string)Attributes["ZipContents"]);
+					}
+					else
+					{
+						return null;
+					}
+				}
+			}
 		}
 	}
 }
-
