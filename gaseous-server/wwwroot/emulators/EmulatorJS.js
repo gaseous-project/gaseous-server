@@ -757,10 +757,12 @@ if (['arcade', 'mame', 'fbneo', 'fbalpha2012_cps1', 'fbalpha2012_cps2'].includes
 
 // load in bootup.bat file if we're using the dosbox_pure core
 let bootupPath = '';
-if (getQueryString('core', 'string') === 'dosbox_pure') {
-    console.log('Writing BOOTUP.BAT upload path for dosbox_pure core');
-    uploadPaths['/BOOTUP.BAT'] = `/api/v1.1/Games/${gameId}/emulatorconfiguration/${getQueryString('platformid', 'int')}/files/BOOTUP.BAT`;
-    bootupPath = '/BOOTUP.BAT';
+switch (getQueryString('core', 'string')) {
+    case 'dosbox_pure':
+        console.log('Writing BOOTUP.BAT upload path for dosbox_pure core');
+        uploadPaths['/BOOTUP.BAT'] = `/api/v1.1/Games/${gameId}/emulatorconfiguration/${getQueryString('platformid', 'int')}/files/BOOTUP.BAT`;
+        bootupPath = '/BOOTUP.BAT';
+        break;
 }
 
 window.EJS_externalFiles = uploadPaths;

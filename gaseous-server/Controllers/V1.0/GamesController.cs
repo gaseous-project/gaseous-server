@@ -795,8 +795,8 @@ namespace gaseous_server.Controllers
         [Authorize]
         [ProducesResponseType(typeof(UserEmulatorConfiguration), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-            public async Task<ActionResult> GetGameEmulator(long MetadataMapId, long PlatformId)
-            {
+        public async Task<ActionResult> GetGameEmulator(long MetadataMapId, long PlatformId)
+        {
             try
             {
                 MetadataMap.MetadataMapItem metadataMap = (await Classes.MetadataManagement.GetMetadataMap(MetadataMapId)).PreferredMetadataMapItem;
@@ -1063,6 +1063,9 @@ namespace gaseous_server.Controllers
 
                 IEnumerable<MetadataMap.MetadataMapItem> existingMetadataMapItems = existingMetadataMap.MetadataMapItems ?? Enumerable.Empty<MetadataMap.MetadataMapItem>();
 
+                List<gaseous_server.Models.FixMatchModel.MetadataMatch> hasheousFixes = new List<gaseous_server.Models.FixMatchModel.MetadataMatch>();
+                long effectivePlatformId = OverridePlatform ?? existingMetadataMap.PlatformId;
+
                 foreach (MetadataMap.MetadataMapItem metadataMapItem in metadataMapItems)
                 {
                     if (metadataMapItem.SourceType != FileSignature.MetadataSources.None)
@@ -1078,6 +1081,13 @@ namespace gaseous_server.Controllers
                             }
 
                             MetadataManagement.UpdateMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, (long)metadataMapItem.SourceId, metadataMapItem.Preferred, metadataMapItem.IsManual);
+
+                            hasheousFixes.Add(new gaseous_server.Models.FixMatchModel.MetadataMatch
+                            {
+                                Source = (HasheousClient.Models.MetadataSources)metadataMapItem.SourceType,
+                                PlatformId = effectivePlatformId.ToString(),
+                                GameId = metadataMapItem.SourceId.ToString()
+                            });
                         }
                         else
                         {
@@ -1085,6 +1095,13 @@ namespace gaseous_server.Controllers
                             if (metadataMapItem.SourceId != null)
                             {
                                 MetadataManagement.AddMetadataMapItem(MetadataMapId, metadataMapItem.SourceType, (long)metadataMapItem.SourceId, metadataMapItem.Preferred, metadataMapItem.IsManual, (long)metadataMapItem.SourceId);
+
+                                hasheousFixes.Add(new gaseous_server.Models.FixMatchModel.MetadataMatch
+                                {
+                                    Source = (HasheousClient.Models.MetadataSources)metadataMapItem.SourceType,
+                                    PlatformId = effectivePlatformId.ToString(),
+                                    GameId = metadataMapItem.SourceId.ToString()
+                                });
                             }
                         }
                     }
@@ -1095,6 +1112,75 @@ namespace gaseous_server.Controllers
                         {
                             MetadataManagement.UpdateMetadataMapItem(MetadataMapId, existingMetadataMapItem.SourceType, (long)existingMetadataMapItem.SourceId, metadataMapItem.Preferred);
                         }
+                    }
+                }
+
+                if (hasheousFixes.Count > 0 && Config.MetadataConfiguration.HasheousSubmitFixes && !String.IsNullOrEmpty(Config.MetadataConfiguration.HasheousAPIKey))
+                {
+                    var roms = await Classes.Roms.GetRomsAsync(MetadataMapId, (long)OverridePlatform);
+                    Console.WriteLine(Newtonsoft.Json.JsonConvert.SerializeObject(roms.GameRomItems[0].ArchiveContents));
+
+                    HTTPComms comms = new HTTPComms();
+
+                    var sendFix = async (gaseous_server.Classes.Roms.GameRomItem rom, gaseous_server.Models.FixMatchModel fixMatchModel) =>
+                    {
+                        Uri hasheousBaseUrl = new Uri($"{Config.MetadataConfiguration.HasheousHost.TrimEnd('/')}/");
+                        Uri hasheousUrl = new Uri(hasheousBaseUrl, "api/v1/Submissions/FixMatch");
+                        Dictionary<string, string> headers = new Dictionary<string, string>
+                        {
+                            { "X-API-Key", Config.MetadataConfiguration.HasheousAPIKey },
+                            { "x-api-version", "1.0" }
+                        };
+                        try
+                        {
+                            var response = await comms.SendRequestAsync<gaseous_server.Models.FixMatchModel>(HTTPComms.HttpMethod.POST, hasheousUrl, headers, fixMatchModel, contentType: "application/json-patch+json");
+                            if (response.StatusCode == (int)System.Net.HttpStatusCode.OK)
+                            {
+                                Console.WriteLine($"Successfully submitted fix match to Hasheous for ROM {rom.Id}");
+                            }
+                            else
+                            {
+                                Console.WriteLine($"Failed to submit fix match to Hasheous for ROM {rom.Id}: {response.StatusCode}");
+                                Console.WriteLine($"Request URL: {hasheousUrl}");
+                                Console.WriteLine($"Request: {Newtonsoft.Json.JsonConvert.SerializeObject(fixMatchModel, Newtonsoft.Json.Formatting.Indented)}");
+                                Console.WriteLine($"Response: {Newtonsoft.Json.JsonConvert.SerializeObject(response, Newtonsoft.Json.Formatting.Indented)}");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"Error submitting fix match to Hasheous for ROM {rom.Id}: {ex.Message}");
+                        }
+                    };
+
+                    foreach (var rom in roms.GameRomItems)
+                    {
+                        if (rom.ArchiveContents == null || rom.ArchiveContents.Count == 0)
+                        {
+                            await sendFix(rom, new gaseous_server.Models.FixMatchModel
+                            {
+                                MD5 = rom.Md5,
+                                SHA1 = rom.Sha1,
+                                SHA256 = rom.Sha256,
+                                CRC = rom.Crc,
+                                MetadataMatches = hasheousFixes
+                            });
+                        }
+                        else
+                        {
+                            foreach (var archiveContent in rom.ArchiveContents)
+                            {
+                                await sendFix(rom, new gaseous_server.Models.FixMatchModel
+                                {
+                                    MD5 = archiveContent.Hash.md5hash,
+                                    SHA1 = archiveContent.Hash.sha1hash,
+                                    SHA256 = archiveContent.Hash.sha256hash,
+                                    CRC = archiveContent.Hash.crc32hash,
+                                    MetadataMatches = hasheousFixes
+                                });
+                            }
+                        }
+
+
                     }
                 }
 

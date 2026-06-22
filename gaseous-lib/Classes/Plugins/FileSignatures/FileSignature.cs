@@ -358,10 +358,10 @@ namespace gaseous_server.Classes
         /// </summary>
         public class ArchiveData
         {
-            readonly string[] superLikelyExtensions = new string[] { ".exe", ".com" };
-            readonly string[] likelyPrimaryExtensions = new string[] { ".smc", ".sfc", ".nes", ".gb", ".gba", ".bin", ".cue", ".iso", ".img", ".ima", ".rom", ".zip", ".7z", ".rar", ".exe", ".dll" };
-            readonly string[] unlikelyPrimaryExtensions = new string[] { ".txt", ".pdf", ".docx", ".xlsx", ".pptx", ".nfo", ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".mp3", ".ogg", ".wav", ".flac", ".aac" };
-            readonly string[] excludedFileNames = new string[] { "readme.txt", "readme.md", "license.txt", "license.md", "changelog.txt", "changelog.md", "setup.exe", "install.exe", "uninstall.exe", "autorun.exe", "thumbs.db", "desktop.ini", ".ds_store", "intro.exe", "demo.exe" };
+            private readonly string[] superLikelyExtensions = new string[] { ".exe", ".com" };
+            private readonly string[] likelyPrimaryExtensions = new string[] { ".smc", ".sfc", ".nes", ".gb", ".gba", ".bin", ".cue", ".iso", ".img", ".ima", ".rom", ".zip", ".7z", ".rar", ".exe", ".dll" };
+            private readonly string[] unlikelyPrimaryExtensions = new string[] { ".txt", ".pdf", ".docx", ".xlsx", ".pptx", ".nfo", ".jpg", ".jpeg", ".png", ".gif", ".bmp", ".mp3", ".ogg", ".wav", ".flac", ".aac" };
+            private readonly string[] excludedFileNames = new string[] { "readme.txt", "readme.md", "license.txt", "license.md", "changelog.txt", "changelog.md", "setup.exe", "install.exe", "uninstall.exe", "autorun.exe", "thumbs.db", "desktop.ini", ".ds_store", "intro.exe", "demo.exe" };
 
             /// <summary>
             /// Gets or sets the name of the file.
