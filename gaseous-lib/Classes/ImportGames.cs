@@ -287,7 +287,10 @@ namespace gaseous_server.Classes
         /// <param name="OverridePlatform">
         /// The platform to use for the game file
         /// </param>
-        public static void ImportGameFile(string FilePath, HashObject Hash, ref Dictionary<string, object> GameFileInfo, Platform? OverridePlatform)
+        /// <param name="CallingSubTask">
+        /// The calling subtask item, if the import is being performed as part of a library scan
+        /// </param>
+        public static void ImportGameFile(string FilePath, HashObject Hash, ref Dictionary<string, object> GameFileInfo, Platform? OverridePlatform, ProcessQueue.Plugins.ImportQueueProcessor.SubTaskItem? CallingSubTask = null)
         {
             GameFileInfo.Add("type", "rom");
 
@@ -338,9 +341,29 @@ namespace gaseous_server.Classes
                     gameLibrary = GameLibrary.GetLibrary((int)GameFileInfo["libraryId"]).Result;
                 }
 
+                int totalSteps = 7;
+
+                if (CallingSubTask != null)
+                {
+                    CallingSubTask.ParentSubTaskItem.CurrentState = "Computing file hashes";
+                    CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"1 of {totalSteps}";
+
+                }
                 FileSignature fileSignature = new FileSignature();
                 FileHash fileHash = GetFileHashesAsync(gameLibrary, FilePath).Result;
+
+                if (CallingSubTask != null)
+                {
+                    CallingSubTask.ParentSubTaskItem.CurrentState = "Determining file signature";
+                    CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"2 of {totalSteps}";
+                }
                 var (updatedFileHash, discoveredSignature) = fileSignature.GetFileSignatureAsync(gameLibrary, fileHash).Result;
+
+                if (CallingSubTask != null)
+                {
+                    CallingSubTask.ParentSubTaskItem.CurrentState = "Searching for metadata";
+                    CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"3 of {totalSteps}";
+                }
                 if (discoveredSignature.Flags.GameId == 0)
                 {
                     try
@@ -365,9 +388,26 @@ namespace gaseous_server.Classes
                 }
 
                 // add to database
+                if (CallingSubTask != null)
+                {
+                    CallingSubTask.ParentSubTaskItem.CurrentState = "Fetching metadata";
+                    CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"4 of {totalSteps}";
+                }
                 Platform? determinedPlatform = Metadata.Platforms.GetPlatform((long)discoveredSignature.Flags.PlatformId).Result;
                 Game? determinedGame = Metadata.Games.GetGame(discoveredSignature.Flags.GameMetadataSource, discoveredSignature.Flags.GameId).Result;
+
+                if (CallingSubTask != null)
+                {
+                    CallingSubTask.ParentSubTaskItem.CurrentState = "Fetching metadata assets";
+                    CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"5 of {totalSteps}";
+                }
                 MetadataMap? map = MetadataManagement.NewMetadataMap((long)determinedPlatform.Id, discoveredSignature.Game.Name);
+
+                if (CallingSubTask != null)
+                {
+                    CallingSubTask.ParentSubTaskItem.CurrentState = "Storing game in library";
+                    CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"6 of {totalSteps}";
+                }
                 long RomId = StoreGame(gameLibrary, updatedFileHash, discoveredSignature, determinedPlatform, FilePath, 0, sourceIsExternal).Result;
                 gaseous_server.Classes.Roms.GameRomItem romItem = Roms.GetRom(RomId).Result;
 
@@ -379,6 +419,12 @@ namespace gaseous_server.Classes
                 GameFileInfo.Add("signature", discoveredSignature);
                 GameFileInfo.Add("rom", romItem);
                 GameFileInfo.Add("status", "imported");
+
+                if (CallingSubTask != null)
+                {
+                    CallingSubTask.ParentSubTaskItem.CurrentState = "Completed";
+                    CallingSubTask.ParentSubTaskItem.CurrentStateProgress = $"7 of {totalSteps}";
+                }
             }
         }
 
@@ -508,7 +554,7 @@ namespace gaseous_server.Classes
             long previousMetadataMapId = 0;
             if (romId == 0)
             {
-                sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, Size, CRC, MD5, SHA1, SHA256, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, RelativePath, MetadataSource, MetadataGameName, MetadataVersion, LibraryId, RomDataVersion, MetadataMapId) VALUES (@platformid, @gameid, @name, @size, @crc, @md5, @sha1, @sha256, @developmentstatus, @Attributes, @romtype, @romtypemedia, @medialabel, @path, @metadatasource, @metadatagamename, @metadataversion, @libraryid, @romdataversion, @metadatamapid); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
+                sql = "INSERT INTO Games_Roms (PlatformId, GameId, Name, OriginalFileName, Size, CRC, MD5, SHA1, SHA256, DevelopmentStatus, Attributes, RomType, RomTypeMedia, MediaLabel, RelativePath, MetadataSource, MetadataGameName, MetadataVersion, LibraryId, RomDataVersion, MetadataMapId) VALUES (@platformid, @gameid, @name, @originalfilename, @size, @crc, @md5, @sha1, @sha256, @developmentstatus, @Attributes, @romtype, @romtypemedia, @medialabel, @path, @metadatasource, @metadatagamename, @metadataversion, @libraryid, @romdataversion, @metadatamapid); SELECT CAST(LAST_INSERT_ID() AS SIGNED);";
             }
             else
             {
@@ -526,14 +572,16 @@ namespace gaseous_server.Classes
             }
 
             string fileName = Path.GetFileName(filePath);
-            // if (SourcesThatAllowROMRename.Contains(signature.Rom.SignatureSource))
-            // {
-            //     fileName = Common.ReturnValueIfNull(signature.Rom.Name, 0).ToString();
-            // }
+            if (SourcesThatAllowROMRename.Contains(signature.Rom.SignatureSource))
+            {
+                // the source of the signature allows us to rename the ROM to match the game name - use the game name as the file name if it's not null or empty, otherwise use the original file name
+                fileName = Common.ReturnValueIfNull(signature.Rom.Name, fileName).ToString();
+            }
 
             dbDict.Add("platformid", Common.ReturnValueIfNull(platform.Id, 0));
             dbDict.Add("gameid", 0); // set to 0 - no longer required as game is mapped using the MetadataMapBridge table
             dbDict.Add("name", fileName);
+            dbDict.Add("originalfilename", Path.GetFileName(filePath));
             dbDict.Add("size", Common.ReturnValueIfNull(signature.Rom.Size, 0));
             dbDict.Add("md5", hash.Hash.md5hash);
             dbDict.Add("sha1", hash.Hash.sha1hash);
@@ -1178,40 +1226,6 @@ namespace gaseous_server.Classes
                         {
                             { "libraryId", library.Id }
                         });
-
-                        // // file is not in database - process it
-                        // Logging.LogKey(Logging.LogType.Information, "process.library_scan", "libraryscan.orphaned_file_found_in_library", null, new string[] { LibraryFile });
-
-                        // FileSignature fileSignature = new FileSignature();
-                        // FileHash fileHash = await GetFileHashesAsync(library, LibraryFile);
-                        // (_, gaseous_server.Models.Signatures_Games sig) = await fileSignature.GetFileSignatureAsync(library, fileHash);
-
-                        // try
-                        // {
-                        //     // get discovered platform
-                        //     long PlatformId;
-                        //     Platform determinedPlatform;
-
-                        //     if (sig.Flags.PlatformId == null || sig.Flags.PlatformId == 0)
-                        //     {
-                        //         // no platform discovered in the signature
-                        //         PlatformId = library.DefaultPlatformId;
-                        //     }
-                        //     else
-                        //     {
-                        //         // use the platform discovered in the signature
-                        //         PlatformId = (long)sig.Flags.PlatformId;
-                        //     }
-                        //     determinedPlatform = await Platforms.GetPlatform(PlatformId);
-
-                        //     Game determinedGame = await SearchForGame(sig, PlatformId, true);
-
-                        //     await StoreGame(library, fileHash.Hash, sig, determinedPlatform, LibraryFile, 0, false);
-                        // }
-                        // catch (Exception ex)
-                        // {
-                        //     Logging.LogKey(Logging.LogType.Warning, "process.library_scan", "libraryscan.error_matching_orphaned_file_skipping", null, new string[] { LibraryFile }, ex);
-                        // }
                     }
                 }
                 StatusCount += 1;

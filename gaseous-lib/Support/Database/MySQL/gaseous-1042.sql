@@ -1,0 +1,2 @@
+ALTER TABLE `Games_Roms`
+ADD COLUMN `OriginalFileName` VARCHAR(255) DEFAULT `Name` AFTER `Name`;

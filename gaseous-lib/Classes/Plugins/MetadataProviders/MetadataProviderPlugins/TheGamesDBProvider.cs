@@ -425,7 +425,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
             if (forceDownloadBundle)
             {
                 // download the bundle
-                Uri bundleUrl = new Uri($"{Config.MetadataConfiguration.HasheousHost}api/v1/MetadataProxy/Bundles/TheGamesDB/{id}.bundle");
+                Uri bundleUrl = new Uri($"{Config.MetadataConfiguration.HasheousHost}/api/v1/MetadataProxy/Bundles/TheGamesDB/{id}.bundle");
                 string downloadDirectory = Path.Combine(Config.LibraryConfiguration.LibraryTempDirectory, Path.GetRandomFileName());
                 string downloadedBundlePath = Path.Combine(downloadDirectory, $"{id}.bundle.zip");
                 if (Directory.Exists(downloadDirectory))
@@ -473,7 +473,7 @@ namespace gaseous_server.Classes.Plugins.MetadataProviders.TheGamesDBProvider
             }
             if (!File.Exists(genresJsonFilePath) || (DateTime.UtcNow - File.GetLastWriteTime(genresJsonFilePath)).TotalDays > 30)
             {
-                Uri genresUrl = new Uri($"{Config.MetadataConfiguration.HasheousHost}api/v1/MetadataProxy/TheGamesDB/Genres");
+                Uri genresUrl = new Uri($"{Config.MetadataConfiguration.HasheousHost}/api/v1/MetadataProxy/TheGamesDB/Genres");
                 var genresResponse = await comms.SendRequestAsync<Dictionary<string, object>>(HTTPComms.HttpMethod.GET, genresUrl, headers);
                 if (genresResponse.StatusCode == 200 && genresResponse.Body != null)
                 {
